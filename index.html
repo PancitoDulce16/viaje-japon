@@ -58,12 +58,10 @@
             background: linear-gradient(135deg, #059669 0%, #10b981 100%);
         }
         
-        /* Scroll suave */
         html {
             scroll-behavior: smooth;
         }
         
-        /* Animación de entrada */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -79,7 +77,6 @@
             animation: fadeIn 0.5s ease-out;
         }
         
-        /* Loading state */
         .loading {
             display: inline-block;
             width: 20px;
@@ -92,6 +89,19 @@
         
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        .tab-btn {
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            border-bottom: 3px solid #dc2626;
+            color: #dc2626;
+        }
+
+        .train-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
         }
     </style>
 </head>
@@ -115,115 +125,441 @@
         </div>
     </div>
 
-    <!-- Day Selector -->
-    <div class="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-        <div class="max-w-6xl mx-auto p-4">
-            <div class="flex gap-2 overflow-x-auto pb-2" id="daySelector">
-                <!-- Days will be inserted here -->
+    <!-- Tabs Navigation -->
+    <div class="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex gap-1 overflow-x-auto">
+                <button onclick="switchTab('itinerary')" id="tab-itinerary" class="tab-btn active px-6 py-4 font-semibold text-gray-700 whitespace-nowrap">
+                    📅 Itinerario
+                </button>
+                <button onclick="switchTab('map')" id="tab-map" class="tab-btn px-6 py-4 font-semibold text-gray-700 whitespace-nowrap">
+                    🗺️ Mapa
+                </button>
+                <button onclick="switchTab('flights')" id="tab-flights" class="tab-btn px-6 py-4 font-semibold text-gray-700 whitespace-nowrap">
+                    ✈️ Vuelos
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="max-w-6xl mx-auto p-4 md:p-6">
-        <div class="grid md:grid-cols-3 gap-6">
-            <!-- Day Overview (Sidebar) -->
-            <div class="md:col-span-1">
-                <div class="bg-white rounded-xl shadow-lg p-6 sticky top-24 fade-in" id="dayOverview">
-                    <div class="loading mx-auto"></div>
-                </div>
-            </div>
-
-            <!-- Activities Timeline -->
-            <div class="md:col-span-2">
-                <div class="space-y-4" id="activitiesTimeline">
-                    <div class="text-center py-8">
-                        <div class="loading mx-auto"></div>
-                    </div>
+    <!-- ITINERARY TAB -->
+    <div id="content-itinerary" class="tab-content">
+        <!-- Day Selector -->
+        <div class="bg-white border-b border-gray-200 sticky top-16 z-10 shadow-sm">
+            <div class="max-w-6xl mx-auto p-4">
+                <div class="flex gap-2 overflow-x-auto pb-2" id="daySelector">
+                    <!-- Days will be inserted here -->
                 </div>
             </div>
         </div>
 
-        <!-- Important Notes -->
-        <div class="mt-8 bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-xl shadow-md fade-in">
-            <div class="flex items-start gap-3">
-                <span class="text-2xl flex-shrink-0">⚠️</span>
-                <div>
-                    <h3 class="font-bold text-yellow-800 mb-3 text-lg">Notas Importantes</h3>
-                    <ul class="space-y-2 text-sm text-yellow-900">
-                        <li class="flex gap-2"><span>•</span><span><strong>Pokemon Cafe:</strong> Reservas abren a las 6:00 PM JST, 31 días antes. ¡Se agotan en minutos!</span></li>
-                        <li class="flex gap-2"><span>•</span><span><strong>Kirby Cafe:</strong> Reservas el día 10 de cada mes para el mes siguiente. ¡Segundos!</span></li>
-                        <li class="flex gap-2"><span>•</span><span><strong>Square Enix Cafe Akihabara:</strong> CERRADO. Visita Artnia en Shinjuku.</span></li>
-                        <li class="flex gap-2"><span>•</span><span><strong>Suica Card:</strong> Compra inmediatamente en Narita Airport.</span></li>
-                        <li class="flex gap-2"><span>•</span><span><strong>NO comprar JR Pass:</strong> Ahorras ~$100 USD sin él.</span></li>
-                        <li class="flex gap-2"><span>•</span><span><strong>Día 15:</strong> Wake up 4:30 AM para vuelo 9:30 AM!</span></li>
+        <!-- Main Content -->
+        <div class="max-w-6xl mx-auto p-4 md:p-6">
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Day Overview -->
+                <div class="md:col-span-1">
+                    <div class="bg-white rounded-xl shadow-lg p-6 sticky top-32 fade-in" id="dayOverview">
+                        <div class="loading mx-auto"></div>
+                    </div>
+                </div>
+
+                <!-- Activities Timeline -->
+                <div class="md:col-span-2">
+                    <div class="space-y-4" id="activitiesTimeline">
+                        <div class="text-center py-8">
+                            <div class="loading mx-auto"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Important Notes -->
+            <div class="mt-8 bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-xl shadow-md fade-in">
+                <div class="flex items-start gap-3">
+                    <span class="text-2xl flex-shrink-0">⚠️</span>
+                    <div>
+                        <h3 class="font-bold text-yellow-800 mb-3 text-lg">Notas Importantes</h3>
+                        <ul class="space-y-2 text-sm text-yellow-900">
+                            <li class="flex gap-2"><span>•</span><span><strong>Pokemon Cafe:</strong> Reservas abren a las 6:00 PM JST, 31 días antes. ¡Se agotan en minutos!</span></li>
+                            <li class="flex gap-2"><span>•</span><span><strong>Kirby Cafe:</strong> Reservas el día 10 de cada mes para el mes siguiente. ¡Segundos!</span></li>
+                            <li class="flex gap-2"><span>•</span><span><strong>Square Enix Cafe Akihabara:</strong> CERRADO. Visita Artnia en Shinjuku.</span></li>
+                            <li class="flex gap-2"><span>•</span><span><strong>Suica Card:</strong> Compra inmediatamente en Narita Airport.</span></li>
+                            <li class="flex gap-2"><span>•</span><span><strong>NO comprar JR Pass:</strong> Ahorras ~$100 USD sin él.</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Summary -->
+            <div class="mt-8 gradient-budget text-white p-6 rounded-xl shadow-lg fade-in">
+                <h3 class="text-2xl font-bold mb-4">💰 Resumen de Presupuesto</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4">
+                        <p class="text-sm opacity-90 mb-1">Total por persona</p>
+                        <p class="text-3xl font-bold">$1,138</p>
+                        <p class="text-xs opacity-75 mt-1">15 días</p>
+                    </div>
+                    <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4">
+                        <p class="text-sm opacity-90 mb-1">Promedio diario</p>
+                        <p class="text-3xl font-bold">$76</p>
+                        <p class="text-xs opacity-75 mt-1">por día</p>
+                    </div>
+                    <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4">
+                        <p class="text-sm opacity-90 mb-1">Total 2 personas</p>
+                        <p class="text-3xl font-bold">$2,276</p>
+                        <p class="text-xs opacity-75 mt-1">ambos hermanos</p>
+                    </div>
+                    <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4">
+                        <p class="text-sm opacity-90 mb-1">Dentro presupuesto</p>
+                        <p class="text-3xl font-bold">✓</p>
+                        <p class="text-xs opacity-75 mt-1">$100/día objetivo</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Tips -->
+            <div class="mt-8 grid md:grid-cols-3 gap-4 fade-in">
+                <div class="bg-white p-5 rounded-xl shadow-md border-t-4 border-blue-500 hover:shadow-lg transition-shadow">
+                    <h4 class="font-bold text-lg mb-3 text-blue-700">🍜 Comidas Imperdibles</h4>
+                    <ul class="text-sm space-y-2 text-gray-700">
+                        <li class="flex gap-2"><span>•</span><span>Ramen (Ichiran)</span></li>
+                        <li class="flex gap-2"><span>•</span><span>Takoyaki en Dotonbori</span></li>
+                        <li class="flex gap-2"><span>•</span><span>Kaiten Sushi</span></li>
+                        <li class="flex gap-2"><span>•</span><span>Yakiniku all-you-can-eat</span></li>
+                        <li class="flex gap-2"><span>•</span><span>Taiyaki y Mochi</span></li>
+                        <li class="flex gap-2"><span>•</span><span>Matcha ice cream</span></li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-5 rounded-xl shadow-md border-t-4 border-purple-500 hover:shadow-lg transition-shadow">
+                    <h4 class="font-bold text-lg mb-3 text-purple-700">📸 Top Fotos</h4>
+                    <ul class="text-sm space-y-2 text-gray-700">
+                        <li class="flex gap-2"><span>•</span><span>Shibuya Crossing</span></li>
+                        <li class="flex gap-2"><span>•</span><span>Fushimi Inari torii gates</span></li>
+                        <li class="flex gap-2"><span>•</span><span>Nara deer feeding</span></li>
+                        <li class="flex gap-2"><span>•</span><span>Dotonbori Glico Man</span></li>
+                        <li class="flex gap-2"><span>•</span><span>Kamakura Great Buddha</span></li>
+                        <li class="flex gap-2"><span>•</span><span>Arashiyama bamboo</span></li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-5 rounded-xl shadow-md border-t-4 border-pink-500 hover:shadow-lg transition-shadow">
+                    <h4 class="font-bold text-lg mb-3 text-pink-700">🎯 Cafés Temáticos</h4>
+                    <ul class="text-sm space-y-2 text-gray-700">
+                        <li class="flex gap-2"><span>•</span><span>Pokemon Cafe (reserva!)</span></li>
+                        <li class="flex gap-2"><span>•</span><span>Kirby Cafe (reserva!)</span></li>
+                        <li class="flex gap-2"><span>•</span><span>Steins;Gate Maid Cafe</span></li>
+                        <li class="flex gap-2"><span>•</span><span>Artnia Square Enix</span></li>
+                        <li class="flex gap-2"><span>•</span><span>Character Street Tokyo</span></li>
                     </ul>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Budget Summary -->
-        <div class="mt-8 gradient-budget text-white p-6 rounded-xl shadow-lg fade-in">
-            <h3 class="text-2xl font-bold mb-4">💰 Resumen de Presupuesto</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4">
-                    <p class="text-sm opacity-90 mb-1">Total por persona</p>
-                    <p class="text-3xl font-bold">$1,138</p>
-                    <p class="text-xs opacity-75 mt-1">15 días</p>
+    <!-- MAP TAB -->
+    <div id="content-map" class="tab-content hidden">
+        <div class="max-w-6xl mx-auto p-4 md:p-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">🗺️ Mapa del Viaje</h2>
+                <p class="text-gray-600 mb-4">Todos los lugares que visitarás marcados en el mapa:</p>
+                
+                <!-- Google My Maps Embed -->
+                <div class="rounded-xl overflow-hidden shadow-md">
+                    <iframe 
+                        src="https://www.google.com/maps/d/embed?mid=1T8vqm4PqvXZPfQzk-J7lTnE3W_KkxKo&ehbc=2E312F" 
+                        width="100%" 
+                        height="600"
+                        style="border:0;"
+                        loading="lazy">
+                    </iframe>
                 </div>
-                <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4">
-                    <p class="text-sm opacity-90 mb-1">Promedio diario</p>
-                    <p class="text-3xl font-bold">$76</p>
-                    <p class="text-xs opacity-75 mt-1">por día</p>
+                
+                <div class="mt-6 grid md:grid-cols-3 gap-4">
+                    <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-500">
+                        <h3 class="font-bold text-red-700 mb-2">🔴 Tokyo</h3>
+                        <p class="text-sm text-gray-700">Días 1-3, 8-15</p>
+                        <p class="text-xs text-gray-500 mt-1">Shinjuku, Shibuya, Akihabara, Asakusa, Kamakura</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
+                        <h3 class="font-bold text-purple-700 mb-2">🟣 Kyoto</h3>
+                        <p class="text-sm text-gray-700">Días 4-5</p>
+                        <p class="text-xs text-gray-500 mt-1">Gion, Arashiyama, Fushimi Inari, Nara</p>
+                    </div>
+                    <div class="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
+                        <h3 class="font-bold text-orange-700 mb-2">🟠 Osaka</h3>
+                        <p class="text-sm text-gray-700">Días 6-7</p>
+                        <p class="text-xs text-gray-500 mt-1">Dotonbori, Namba, Aquarium Kaiyukan</p>
+                    </div>
                 </div>
-                <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4">
-                    <p class="text-sm opacity-90 mb-1">Total 2 personas</p>
-                    <p class="text-3xl font-bold">$2,276</p>
-                    <p class="text-xs opacity-75 mt-1">ambos hermanos</p>
+            </div>
+
+            <!-- Key Locations -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">📍 Lugares Principales</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                            <span class="text-2xl">🏯</span>
+                            <div>
+                                <p class="font-semibold">Kamakura Great Buddha</p>
+                                <p class="text-gray-600">Día 2 • 12:45 PM</p>
+                                <a href="https://maps.app.goo.gl/abc123" class="text-blue-600 text-xs hover:underline">Ver en mapa →</a>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                            <span class="text-2xl">⛩️</span>
+                            <div>
+                                <p class="font-semibold">Fushimi Inari Shrine</p>
+                                <p class="text-gray-600">Día 5 • 5:30 PM</p>
+                                <a href="https://maps.app.goo.gl/def456" class="text-blue-600 text-xs hover:underline">Ver en mapa →</a>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                            <span class="text-2xl">🎋</span>
+                            <div>
+                                <p class="font-semibold">Arashiyama Bamboo</p>
+                                <p class="text-gray-600">Día 6 • 8:30 AM</p>
+                                <a href="https://maps.app.goo.gl/ghi789" class="text-blue-600 text-xs hover:underline">Ver en mapa →</a>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                            <span class="text-2xl">🌃</span>
+                            <div>
+                                <p class="font-semibold">Dotonbori</p>
+                                <p class="text-gray-600">Día 6 • 8:30 PM</p>
+                                <a href="https://maps.app.goo.gl/jkl012" class="text-blue-600 text-xs hover:underline">Ver en mapa →</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4">
-                    <p class="text-sm opacity-90 mb-1">Dentro presupuesto</p>
-                    <p class="text-3xl font-bold">✓</p>
-                    <p class="text-xs opacity-75 mt-1">$100/día objetivo</p>
+
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">🏨 Hoteles</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="p-3 bg-gray-50 rounded-lg border-l-4 border-red-500">
+                            <p class="font-semibold">Hotel Tokyo Papa Shinjuku</p>
+                            <p class="text-gray-600">Feb 16-19 (Días 1-3)</p>
+                            <p class="text-xs text-gray-500 mt-1">Shinjuku-Gyoemmae, Tokyo</p>
+                            <a href="https://maps.app.goo.gl/xyz789" class="text-blue-600 text-xs hover:underline">Ver ubicación →</a>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg border-l-4 border-purple-500">
+                            <p class="font-semibold">Tune Stay Kyoto</p>
+                            <p class="text-gray-600">Feb 19-21 (Días 4-5)</p>
+                            <p class="text-xs text-gray-500 mt-1">5 min de Kyoto Station</p>
+                            <a href="https://maps.app.goo.gl/abc456" class="text-blue-600 text-xs hover:underline">Ver ubicación →</a>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg border-l-4 border-orange-500">
+                            <p class="font-semibold">Toyoko Inn Osaka Namba</p>
+                            <p class="text-gray-600">Feb 21-24 (Días 6-7)</p>
+                            <p class="text-xs text-gray-500 mt-1">10 min de Dotonbori</p>
+                            <a href="https://maps.app.goo.gl/def789" class="text-blue-600 text-xs hover:underline">Ver ubicación →</a>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg border-l-4 border-red-500">
+                            <p class="font-semibold">Hotel Apa Yamanote Otsuka</p>
+                            <p class="text-gray-600">Feb 24-Mar 2 (Días 8-15)</p>
+                            <p class="text-xs text-gray-500 mt-1">Otsuka Station, Tokyo</p>
+                            <a href="https://maps.app.goo.gl/ghi123" class="text-blue-600 text-xs hover:underline">Ver ubicación →</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Quick Tips -->
-        <div class="mt-8 grid md:grid-cols-3 gap-4 fade-in">
-            <div class="bg-white p-5 rounded-xl shadow-md border-t-4 border-blue-500 hover:shadow-lg transition-shadow">
-                <h4 class="font-bold text-lg mb-3 text-blue-700">🍜 Comidas Imperdibles</h4>
-                <ul class="text-sm space-y-2 text-gray-700">
-                    <li class="flex gap-2"><span>•</span><span>Ramen (Ichiran)</span></li>
-                    <li class="flex gap-2"><span>•</span><span>Takoyaki en Dotonbori</span></li>
-                    <li class="flex gap-2"><span>•</span><span>Kaiten Sushi</span></li>
-                    <li class="flex gap-2"><span>•</span><span>Yakiniku all-you-can-eat</span></li>
-                    <li class="flex gap-2"><span>•</span><span>Taiyaki y Mochi</span></li>
-                    <li class="flex gap-2"><span>•</span><span>Matcha ice cream</span></li>
-                </ul>
-            </div>
-            
-            <div class="bg-white p-5 rounded-xl shadow-md border-t-4 border-purple-500 hover:shadow-lg transition-shadow">
-                <h4 class="font-bold text-lg mb-3 text-purple-700">📸 Top Fotos</h4>
-                <ul class="text-sm space-y-2 text-gray-700">
-                    <li class="flex gap-2"><span>•</span><span>Shibuya Crossing</span></li>
-                    <li class="flex gap-2"><span>•</span><span>Fushimi Inari torii gates</span></li>
-                    <li class="flex gap-2"><span>•</span><span>Nara deer feeding</span></li>
-                    <li class="flex gap-2"><span>•</span><span>Dotonbori Glico Man</span></li>
-                    <li class="flex gap-2"><span>•</span><span>Kamakura Great Buddha</span></li>
-                    <li class="flex gap-2"><span>•</span><span>Arashiyama bamboo</span></li>
-                </ul>
-            </div>
-            
-            <div class="bg-white p-5 rounded-xl shadow-md border-t-4 border-pink-500 hover:shadow-lg transition-shadow">
-                <h4 class="font-bold text-lg mb-3 text-pink-700">🎯 Cafés Temáticos</h4>
-                <ul class="text-sm space-y-2 text-gray-700">
-                    <li class="flex gap-2"><span>•</span><span>Pokemon Cafe (reserva!)</span></li>
-                    <li class="flex gap-2"><span>•</span><span>Kirby Cafe (reserva!)</span></li>
-                    <li class="flex gap-2"><span>•</span><span>Steins;Gate Maid Cafe</span></li>
-                    <li class="flex gap-2"><span>•</span><span>Artnia Square Enix</span></li>
-                    <li class="flex gap-2"><span>•</span><span>Character Street Tokyo</span></li>
-                </ul>
+    <!-- FLIGHTS TAB -->
+    <div id="content-flights" class="tab-content hidden">
+        <div class="max-w-4xl mx-auto p-4 md:p-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800">✈️ Información de Vuelos</h2>
+                
+                <!-- Flight 1: Going -->
+                <div class="mb-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-l-4 border-blue-500">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="text-3xl">🛫</span>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Ida: Costa Rica → Japón</h3>
+                            <p class="text-sm text-gray-600">Domingo, 16 de Febrero 2025</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <!-- Leg 1 -->
+                        <div class="bg-white p-4 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-gray-800">Vuelo AM691</span>
+                                <span class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-semibold">Aeroméxico</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-500">Salida</p>
+                                    <p class="font-semibold">SJO - San José</p>
+                                    <p class="text-xs text-gray-600">Costa Rica</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-gray-500">→</p>
+                                    <p class="font-semibold">MEX - CDMX</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-gray-500">Llegada</p>
+                                    <p class="font-semibold">Ciudad de México</p>
+                                    <p class="text-xs text-gray-600">México</p>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex gap-2">
+                                <a href="https://www.flightradar24.com/data/flights/am691" target="_blank" class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">
+                                    📡 Track en FlightRadar24
+                                </a>
+                                <a href="https://flightaware.com/live/flight/AMX691" target="_blank" class="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition">
+                                    📊 Ver en FlightAware
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Leg 2 -->
+                        <div class="bg-white p-4 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-gray-800">Vuelo AM952</span>
+                                <span class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-semibold">Aeroméxico</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-500">Salida</p>
+                                    <p class="font-semibold">MEX - CDMX</p>
+                                    <p class="text-xs text-gray-600">México</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-gray-500">→</p>
+                                    <p class="font-semibold">MTY</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-gray-500">Llegada</p>
+                                    <p class="font-semibold">Monterrey</p>
+                                    <p class="text-xs text-gray-600">México</p>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex gap-2">
+                                <a href="https://www.flightradar24.com/data/flights/am952" target="_blank" class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">
+                                    📡 Track en FlightRadar24
+                                </a>
+                                <a href="https://flightaware.com/live/flight/AMX952" target="_blank" class="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition">
+                                    📊 Ver en FlightAware
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Leg 3 -->
+                        <div class="bg-white p-4 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-gray-800">Vuelo AM58</span>
+                                <span class="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-semibold">Aeroméxico</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-500">Salida</p>
+                                    <p class="font-semibold">MTY - Monterrey</p>
+                                    <p class="text-xs text-gray-600">México</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-gray-500">→</p>
+                                    <p class="font-semibold">NRT</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-gray-500">Llegada</p>
+                                    <p class="font-semibold text-green-600">✓ 6:30 AM</p>
+                                    <p class="text-xs text-gray-600">Narita Airport, Tokyo</p>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex gap-2">
+                                <a href="https://www.flightradar24.com/data/flights/am58" target="_blank" class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">
+                                    📡 Track en FlightRadar24
+                                </a>
+                                <a href="https://flightaware.com/live/flight/AMX58" target="_blank" class="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition">
+                                    📊 Ver en FlightAware
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flight 2: Return -->
+                <div class="p-6 bg-gradient-to-r from-orange-50 to-red-50 rounded-xl border-l-4 border-orange-500">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="text-3xl">🛬</span>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Regreso: Japón → Costa Rica</h3>
+                            <p class="text-sm text-gray-600">Domingo, 2 de Marzo 2025</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-gray-800">Vuelo AM58</span>
+                            <span class="text-sm bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-semibold">Aeroméxico</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <p class="text-gray-500">Salida</p>
+                                <p class="font-semibold text-red-600">⚠️ 9:30 AM</p>
+                                <p class="text-xs text-gray-600">Narita Airport, Tokyo</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-gray-500">→</p>
+                                <p class="font-semibold">Via MTY/MEX</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-gray-500">Llegada</p>
+                                <p class="font-semibold">SJO - San José</p>
+                                <p class="text-xs text-gray-600">Costa Rica</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 p-3 bg-red-50 rounded border-l-4 border-red-500">
+                            <p class="text-sm font-semibold text-red-700">⚠️ ¡IMPORTANTE!</p>
+                            <p class="text-xs text-red-600 mt-1">Wake up: 4:30 AM • Salida hotel: 5:30 AM</p>
+                            <p class="text-xs text-red-600">Narita Express sale 5:45 AM de Otsuka</p>
+                        </div>
+                        <div class="mt-3 flex gap-2">
+                            <a href="https://www.flightradar24.com/data/flights/am58" target="_blank" class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">
+                                📡 Track en FlightRadar24
+                            </a>
+                            <a href="https://flightaware.com/live/flight/AMX58" target="_blank" class="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition">
+                                📊 Ver en FlightAware
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flight Tracking Instructions -->
+                <div class="mt-6 bg-blue-50 p-6 rounded-xl border-l-4 border-blue-500">
+                    <h4 class="font-bold text-blue-800 mb-3">📱 Cómo Trackear tu Vuelo en Tiempo Real</h4>
+                    <div class="space-y-3 text-sm text-gray-700">
+                        <div>
+                            <p class="font-semibold">1. FlightRadar24 (Recomendado):</p>
+                            <ul class="ml-4 mt-1 space-y-1">
+                                <li>• App gratis para iOS/Android</li>
+                                <li>• Muestra el avión en el mapa en tiempo real</li>
+                                <li>• Altitud, velocidad, tiempo estimado de llegada</li>
+                                <li>• Click en los links arriba el día de tu vuelo</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="font-semibold">2. FlightAware:</p>
+                            <ul class="ml-4 mt-1 space-y-1">
+                                <li>• Más información sobre delays y gates</li>
+                                <li>• Historial de vuelos</li>
+                                <li>• Notificaciones de cambios</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="font-semibold">3. Aeroméxico App:</p>
+                            <ul class="ml-4 mt-1 space-y-1">
+                                <li>• Boarding pass digital</li>
+                                <li>• Gate y seat info oficial</li>
+                                <li>• Baggage tracking</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -238,80 +574,98 @@
     </div>
 
     <script>
-        // Datos del itinerario
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            document.getElementById('tab-' + tabName).classList.add('active');
+        }
+
+        // Itinerary data with train info
         const itinerary = [
             {
                 day: 1, date: "Feb 16 - Domingo", title: "Llegada a Tokyo", location: "Shinjuku",
                 hotel: "Hotel Tokyo Papa Shinjuku Gyoemmae", budget: 63,
                 activities: [
                     { time: "6:30 AM", icon: "✈️", title: "Llegada Narita", desc: "Vuelo AM58", cost: 0 },
-                    { time: "8:00 AM", icon: "🚆", title: "Narita Express → Shinjuku", desc: "Comprar Welcome Suica", cost: 23 },
-                    { time: "10:30 AM", icon: "📸", title: "Shinjuku Gyoen Garden", desc: "Jardín nacional, 2 horas", cost: 3.5 },
-                    { time: "1:00 PM", icon: "🍜", title: "Ichiran Ramen", desc: "¡Primer ramen japonés!", cost: 9 },
-                    { time: "4:00 PM", icon: "⭐", title: "Tokyo Metropolitan Govt Building", desc: "Vista panorámica GRATIS", cost: 0 },
-                    { time: "6:00 PM", icon: "🍢", title: "Cena en Omoide Yokocho", desc: "Yakitori en callejones nostálgicos", cost: 35 }
+                    { time: "8:00 AM", icon: "🚆", title: "Narita Express → Shinjuku", desc: "Comprar Welcome Suica", cost: 23, train: {from: "Narita Airport Terminal 1", to: "Shinjuku Station", line: "Narita Express (N'EX)", duration: "90 min"} },
+                    { time: "10:30 AM", icon: "📸", title: "Shinjuku Gyoen Garden", desc: "Jardín nacional, 2 horas", cost: 3.5, station: "Shinjuku-Gyoemmae (5 min walk)" },
+                    { time: "1:00 PM", icon: "🍜", title: "Ichiran Ramen", desc: "¡Primer ramen japonés!", cost: 9, station: "Shinjuku Station área" },
+                    { time: "4:00 PM", icon: "⭐", title: "Tokyo Metropolitan Govt Building", desc: "Vista panorámica GRATIS", cost: 0, station: "Tochomae Station (Exit A4)" },
+                    { time: "6:00 PM", icon: "🍢", title: "Cena en Omoide Yokocho", desc: "Yakitori en callejones nostálgicos", cost: 35, station: "Shinjuku West Exit" }
                 ]
             },
             {
                 day: 2, date: "Feb 17 - Lunes", title: "Kamakura Day Trip", location: "Kamakura",
                 hotel: "Hotel Tokyo Papa Shinjuku", budget: 72,
                 activities: [
-                    { time: "9:00 AM", icon: "🚆", title: "JR Line → Kamakura", desc: "57 minutos directo", cost: 7 },
-                    { time: "10:15 AM", icon: "⛩️", title: "Tsurugaoka Hachimangu", desc: "Santuario principal, gratis", cost: 0 },
-                    { time: "11:30 AM", icon: "🏯", title: "Hasedera Temple", desc: "Templo en la colina con vistas al mar", cost: 3 },
-                    { time: "12:45 PM", icon: "🗿", title: "Great Buddha (Kotoku-in)", desc: "¡Buda gigante de bronce!", cost: 2.5 },
-                    { time: "5:30 PM", icon: "🥪", title: "AGE.3 en Ginza", desc: "Sándwiches fritos virales", cost: 10 },
-                    { time: "8:00 PM", icon: "🥩", title: "Yakiniku Rikimaru", desc: "All-you-can-eat 90 min", cost: 26 }
+                    { time: "9:00 AM", icon: "🚆", title: "JR Line → Kamakura", desc: "57 minutos directo", cost: 7, train: {from: "Shinjuku Station", to: "Kamakura Station", line: "JR Shonan-Shinjuku Line", duration: "57 min"} },
+                    { time: "10:15 AM", icon: "⛩️", title: "Tsurugaoka Hachimangu", desc: "Santuario principal, gratis", cost: 0, station: "10 min walk from Kamakura Station" },
+                    { time: "11:30 AM", icon: "🏯", title: "Hasedera Temple", desc: "Templo en la colina con vistas al mar", cost: 3, station: "Hase Station (Enoden Line)" },
+                    { time: "12:45 PM", icon: "🗿", title: "Great Buddha (Kotoku-in)", desc: "¡Buda gigante de bronce!", cost: 2.5, station: "7 min walk from Hase Station" },
+                    { time: "5:30 PM", icon: "🥪", title: "AGE.3 en Ginza", desc: "Sándwiches fritos virales", cost: 10, station: "Ginza Station (Marunouchi Line)" },
+                    { time: "8:00 PM", icon: "🥩", title: "Yakiniku Rikimaru", desc: "All-you-can-eat 90 min", cost: 26, station: "Ikebukuro Station (East Exit)" }
                 ]
             },
             {
                 day: 3, date: "Feb 18 - Martes", title: "Tokyo Highlights", location: "Tokyo",
                 hotel: "Hotel Tokyo Papa Shinjuku", budget: 70,
                 activities: [
-                    { time: "9:00 AM", icon: "⭐", title: "Tokyo Station", desc: "Character Street: Pokemon, Kirby, Ghibli", cost: 0 },
-                    { time: "11:00 AM", icon: "⛩️", title: "Asakusa - Sensoji Temple", desc: "Templo más antiguo + Nakamise Street", cost: 0 },
-                    { time: "12:00 PM", icon: "🐟", title: "Taiyaki", desc: "Naruto Taiyaki Honpo", cost: 2.5 },
-                    { time: "12:30 PM", icon: "🍣", title: "Kaiten Sushi", desc: "¡Sushi en cinta transportadora!", cost: 18 },
-                    { time: "2:30 PM", icon: "🎮", title: "Akihabara", desc: "Distrito electrónico + anime", cost: 0 },
-                    { time: "3:30 PM", icon: "☕", title: "Cafe Mai:lish", desc: "Steins;Gate maid cafe", cost: 13 },
-                    { time: "6:00 PM", icon: "🌆", title: "Shibuya Sky", desc: "Rooftop al aire libre, 47° piso", cost: 18 },
-                    { time: "7:30 PM", icon: "🚶", title: "Shibuya Crossing", desc: "¡El cruce más famoso del mundo!", cost: 0 }
+                    { time: "9:00 AM", icon: "⭐", title: "Tokyo Station", desc: "Character Street: Pokemon, Kirby, Ghibli", cost: 0, station: "Tokyo Station (B1F First Avenue)" },
+                    { time: "11:00 AM", icon: "⛩️", title: "Asakusa - Sensoji Temple", desc: "Templo más antiguo + Nakamise Street", cost: 0, station: "Asakusa Station (Exit 1)" },
+                    { time: "12:30 PM", icon: "🍣", title: "Kaiten Sushi", desc: "¡Sushi en cinta transportadora!", cost: 18, station: "Kura Sushi - múltiples ubicaciones" },
+                    { time: "2:30 PM", icon: "🎮", title: "Akihabara", desc: "Distrito electrónico + anime", cost: 0, station: "Akihabara Station (Electric Town Exit)" },
+                    { time: "3:30 PM", icon: "☕", title: "Cafe Mai:lish", desc: "Steins;Gate maid cafe", cost: 13, station: "5 min walk from Akihabara" },
+                    { time: "6:00 PM", icon: "🌆", title: "Shibuya Sky", desc: "Rooftop al aire libre, 47° piso", cost: 18, station: "Shibuya Station (Hachiko Exit)" },
+                    { time: "7:30 PM", icon: "🚶", title: "Shibuya Crossing", desc: "¡El cruce más famoso del mundo!", cost: 0, station: "Shibuya Station (Hachiko Exit)" }
                 ]
             },
             {
                 day: 4, date: "Feb 19 - Miércoles", title: "Tokyo → Kyoto", location: "Kyoto",
                 hotel: "Tune Stay Kyoto", budget: 133,
                 activities: [
-                    { time: "9:00 AM", icon: "🚄", title: "Shinkansen Hikari → Kyoto", desc: "2h 20min en tren bala", cost: 93 },
-                    { time: "11:30 AM", icon: "🏨", title: "Check-in Tune Stay", desc: "5 min caminando de Kyoto Station", cost: 0 },
-                    { time: "1:30 PM", icon: "⛩️", title: "Nishi Hongan-ji", desc: "UNESCO World Heritage, gratis", cost: 0 },
-                    { time: "5:00 PM", icon: "👘", title: "Distrito Gion", desc: "Buscar geishas en calles tradicionales", cost: 0 },
-                    { time: "6:30 PM", icon: "🍱", title: "Cena en Pontocho", desc: "Callejón tradicional junto al canal", cost: 35 }
+                    { time: "9:00 AM", icon: "🚄", title: "Shinkansen Hikari → Kyoto", desc: "2h 20min en tren bala", cost: 93, train: {from: "Tokyo Station", to: "Kyoto Station", line: "Tokaido Shinkansen (Hikari)", platform: "Platforms 14-19", duration: "2h 20min"} },
+                    { time: "11:30 AM", icon: "🏨", title: "Check-in Tune Stay", desc: "5 min caminando de Kyoto Station", cost: 0, station: "5 min walk from Kyoto Station" },
+                    { time: "1:30 PM", icon: "⛩️", title: "Nishi Hongan-ji", desc: "UNESCO World Heritage, gratis", cost: 0, station: "8 min walk from hotel" },
+                    { time: "5:00 PM", icon: "👘", title: "Distrito Gion", desc: "Buscar geishas en calles tradicionales", cost: 0, station: "Gion-Shijo Station (Keihan Line)" },
+                    { time: "6:30 PM", icon: "🍱", title: "Cena en Pontocho", desc: "Callejón tradicional junto al canal", cost: 35, station: "Between Shijo and Sanjo" }
                 ]
             },
             {
                 day: 5, date: "Feb 20 - Jueves", title: "Nara Day Trip", location: "Nara",
                 hotel: "Tune Stay Kyoto", budget: 47,
                 activities: [
-                    { time: "8:15 AM", icon: "🚆", title: "JR Nara Line → Nara", desc: "45 minutos", cost: 5 },
-                    { time: "9:30 AM", icon: "🦌", title: "Nara Park - Alimentar venados", desc: "¡Los venados se inclinan!", cost: 1.5 },
-                    { time: "10:30 AM", icon: "🏯", title: "Todai-ji Temple", desc: "Gran Buda de 15m", cost: 6 },
-                    { time: "11:45 AM", icon: "🏮", title: "Kasuga Taisha Shrine", desc: "Miles de linternas de piedra", cost: 3.5 },
-                    { time: "2:00 PM", icon: "🍡", title: "Nakatanidou Mochi", desc: "¡Show de mochi de alta velocidad!", cost: 1.5 },
-                    { time: "5:30 PM", icon: "⛩️", title: "Fushimi Inari", desc: "Mil puertas torii naranjas", cost: 0 },
-                    { time: "7:30 PM", icon: "🍜", title: "Ramen en Kyoto", desc: "Regreso a Kyoto Station", cost: 11 }
+                    { time: "8:15 AM", icon: "🚆", title: "JR Nara Line → Nara", desc: "45 minutos", cost: 5, train: {from: "Kyoto Station", to: "Nara Station", line: "JR Nara Line (Miyakoji Rapid)", platform: "Platforms 8-10", duration: "45 min"} },
+                    { time: "9:30 AM", icon: "🦌", title: "Nara Park - Alimentar venados", desc: "¡Los venados se inclinan!", cost: 1.5, station: "15 min walk from JR Nara Station" },
+                    { time: "10:30 AM", icon: "🏯", title: "Todai-ji Temple", desc: "Gran Buda de 15m", cost: 6, station: "Inside Nara Park" },
+                    { time: "11:45 AM", icon: "🏮", title: "Kasuga Taisha Shrine", desc: "Miles de linternas de piedra", cost: 3.5, station: "15 min walk through forest" },
+                    { time: "2:00 PM", icon: "🍡", title: "Nakatanidou Mochi", desc: "¡Show de mochi de alta velocidad!", cost: 1.5, station: "Near Kintetsu Nara Station" },
+                    { time: "5:30 PM", icon: "⛩️", title: "Fushimi Inari", desc: "Mil puertas torii naranjas", cost: 0, station: "Inari Station (JR Nara Line, 5 min from Kyoto)" },
+                    { time: "7:30 PM", icon: "🍜", title: "Ramen en Kyoto", desc: "Regreso a Kyoto Station", cost: 11, station: "Kyoto Station Ramen Street" }
                 ]
             },
             {
                 day: 6, date: "Feb 21 - Viernes", title: "Arashiyama → Osaka", location: "Osaka",
                 hotel: "Toyoko Inn Osaka Namba", budget: 57,
                 activities: [
-                    { time: "8:30 AM", icon: "🎋", title: "Arashiyama Bamboo Grove", desc: "¡Temprano para evitar multitudes!", cost: 0 },
-                    { time: "9:30 AM", icon: "🏯", title: "Tenryu-ji Temple", desc: "Jardín zen hermoso", cost: 3.5 },
-                    { time: "2:00 PM", icon: "🚆", title: "Kyoto → Osaka", desc: "29 minutos en JR", cost: 4 },
-                    { time: "6:00 PM", icon: "🐙", title: "TAKOYAKI en Dotonbori", desc: "Wanaka + Kukuru", cost: 6 },
-                    { time: "7:00 PM", icon: "🥞", title: "OKONOMIYAKI", desc: "¡Comida emblema de Osaka!", cost: 12 },
-                    { time: "8:30 PM", icon: "🌃", title: "Dotonbori de noche", desc: "Glico Man + luces neón", cost: 0 }
+                    { time: "8:00 AM", icon: "🚆", title: "JR → Arashiyama", desc: "15 minutos", cost: 1.7, train: {from: "Kyoto Station", to: "Saga-Arashiyama Station", line: "JR Sagano Line", duration: "15 min"} },
+                    { time: "8:30 AM", icon: "🎋", title: "Arashiyama Bamboo Grove", desc: "¡Temprano para evitar multitudes!", cost: 0, station: "10 min walk from Saga-Arashiyama" },
+                    { time: "9:30 AM", icon: "🏯", title: "Tenryu-ji Temple", desc: "Jardín zen hermoso", cost: 3.5, station: "Near bamboo grove" },
+                    { time: "2:00 PM", icon: "🚆", title: "Kyoto → Osaka", desc: "29 minutos en JR", cost: 4, train: {from: "Kyoto Station", to: "Osaka Station", line: "JR Kyoto Line (Special Rapid)", platform: "Platforms 4-7", duration: "29 min"} },
+                    { time: "3:00 PM", icon: "🚇", title: "Osaka → Namba", desc: "Transfer", cost: 2, train: {from: "Osaka Station", to: "Namba Station", line: "Midosuji Line (Red)", duration: "10 min"} },
+                    { time: "6:00 PM", icon: "🐙", title: "TAKOYAKI en Dotonbori", desc: "Wanaka + Kukuru", cost: 6, station: "5 min walk from Namba Station" },
+                    { time: "7:00 PM", icon: "🥞", title: "OKONOMIYAKI", desc: "¡Comida emblema de Osaka!", cost: 12, station: "Dotonbori area" },
+                    { time: "8:30 PM", icon: "🌃", title: "Dotonbori de noche", desc: "Glico Man + luces neón", cost: 0, station: "Walk around Dotonbori" }
                 ]
             },
             {
@@ -319,30 +673,32 @@
                 hotel: "Toyoko Inn Osaka Namba", budget: 60,
                 activities: [
                     { time: "7:00 AM", icon: "🍳", title: "Desayuno gratis hotel", desc: "Buffet incluido 6:30-9:00 AM", cost: 0 },
-                    { time: "9:45 AM", icon: "🐋", title: "Osaka Aquarium Kaiyukan", desc: "¡Tiburones ballena! 2-3 horas", cost: 21 },
-                    { time: "3:30 PM", icon: "🍢", title: "Kuromon Market", desc: "Mercado de comida callejera", cost: 18 },
-                    { time: "5:00 PM", icon: "🛍️", title: "Shinsaibashi Shopping", desc: "600m de tiendas cubiertas", cost: 0 },
-                    { time: "7:00 PM", icon: "🥩", title: "Yakiniku 298 Nikuya", desc: "All-you-can-eat ¡súper barato!", cost: 28 }
+                    { time: "9:00 AM", icon: "🚇", title: "Namba → Osakako", desc: "Transfer en Bentencho", cost: 2, train: {from: "Namba Station", to: "Osakako Station", line: "Chuo Line", transfer: "at Bentencho", duration: "30-40 min"} },
+                    { time: "9:45 AM", icon: "🐋", title: "Osaka Aquarium Kaiyukan", desc: "¡Tiburones ballena! 2-3 horas", cost: 21, station: "5 min walk from Osakako Station" },
+                    { time: "3:30 PM", icon: "🍢", title: "Kuromon Market", desc: "Mercado de comida callejera", cost: 18, station: "Nipponbashi Station (Exit 10)" },
+                    { time: "5:00 PM", icon: "🛍️", title: "Shinsaibashi Shopping", desc: "600m de tiendas cubiertas", cost: 0, station: "Shinsaibashi Station" },
+                    { time: "7:00 PM", icon: "🥩", title: "Yakiniku 298 Nikuya", desc: "All-you-can-eat ¡súper barato!", cost: 28, station: "Near Shinsaibashi" }
                 ]
             },
             {
                 day: 8, date: "Feb 23 - Domingo", title: "Osaka → Tokyo", location: "Tokyo - Otsuka",
                 hotel: "Hotel Apa Yamanote Otsuka", budget: 141,
                 activities: [
-                    { time: "9:00 AM", icon: "🚄", title: "Shinkansen → Tokyo", desc: "2h 40min", cost: 93 },
-                    { time: "12:15 PM", icon: "🏨", title: "Check-in Otsuka", desc: "En Yamanote Line, muy conveniente", cost: 0 },
-                    { time: "2:30 PM", icon: "🏙️", title: "Sunshine City Observatory", desc: "Piso 60, vistas de Tokyo", cost: 6 },
-                    { time: "7:00 PM", icon: "🍵", title: "Matcha Ice Cream", desc: "Suzukien Asakusa - 7 niveles!", cost: 5 }
+                    { time: "8:30 AM", icon: "🚇", title: "Namba → Shin-Osaka", desc: "Transfer", cost: 2, train: {from: "Namba Station", to: "Shin-Osaka Station", line: "Midosuji Line", duration: "15 min"} },
+                    { time: "9:00 AM", icon: "🚄", title: "Shinkansen → Tokyo", desc: "2h 40min", cost: 93, train: {from: "Shin-Osaka Station", to: "Tokyo Station", line: "Tokaido Shinkansen (Hikari)", platform: "Platforms 21-26", duration: "2h 40min"} },
+                    { time: "12:00 PM", icon: "🚆", title: "Tokyo → Otsuka", desc: "10 minutos", cost: 1.2, train: {from: "Tokyo Station", to: "Otsuka Station", line: "JR Yamanote Line", duration: "10 min"} },
+                    { time: "12:15 PM", icon: "🏨", title: "Check-in Otsuka", desc: "Frente a la estación", cost: 0, station: "Right at Otsuka Station" },
+                    { time: "2:30 PM", icon: "🏙️", title: "Sunshine City Observatory", desc: "Piso 60, vistas de Tokyo", cost: 6, station: "Ikebukuro Station (1 stop, 2 min)" },
+                    { time: "7:00 PM", icon: "🍵", title: "Matcha Ice Cream", desc: "Suzukien Asakusa - 7 niveles!", cost: 5, station: "Asakusa Station" }
                 ]
             },
             {
                 day: 9, date: "Feb 24 - Lunes", title: "Tokyo Libre", location: "Tokyo",
                 hotel: "Hotel Apa Yamanote Otsuka", budget: 63,
                 activities: [
-                    { time: "10:00 AM", icon: "👗", title: "Harajuku Takeshita Street", desc: "Moda juvenil", cost: 0 },
-                    { time: "11:00 AM", icon: "⛩️", title: "Meiji Shrine", desc: "Santuario en el bosque, gratis", cost: 0 },
-                    { time: "12:00 PM", icon: "🐟", title: "Taiyaki original", desc: "Naniwaya Sohonten (1909)", cost: 2.5 },
-                    { time: "4:00 PM", icon: "☕", title: "Artnia Square Enix", desc: "Café y tienda en Shinjuku", cost: 18 },
+                    { time: "10:00 AM", icon: "👗", title: "Harajuku Takeshita Street", desc: "Moda juvenil", cost: 0, station: "Harajuku Station (Omotesando Exit)" },
+                    { time: "11:00 AM", icon: "⛩️", title: "Meiji Shrine", desc: "Santuario en el bosque, gratis", cost: 0, station: "5 min walk from Harajuku" },
+                    { time: "4:00 PM", icon: "☕", title: "Artnia Square Enix", desc: "Café y tienda en Shinjuku", cost: 18, station: "Shinjuku East Side Square" },
                     { time: "7:30 PM", icon: "🍽️", title: "Cena final yakiniku o sushi", desc: "¡Lo que más te gustó!", cost: 35 }
                 ]
             },
@@ -388,7 +744,7 @@
                 hotel: "Vuelo 9:30 AM", budget: 26,
                 activities: [
                     { time: "4:30 AM", icon: "⏰", title: "Wake up!", desc: "Última verificación", cost: 0 },
-                    { time: "5:30 AM", icon: "🚆", title: "Narita Express", desc: "Otsuka → Narita (75 min)", cost: 22 },
+                    { time: "5:30 AM", icon: "🚆", title: "Narita Express", desc: "Otsuka → Tokyo → Narita (90 min total)", cost: 22, train: {from: "Otsuka → Tokyo → Narita", to: "Narita Airport Terminal 1", line: "Yamanote + Narita Express", duration: "90 min total"} },
                     { time: "9:30 AM", icon: "✈️", title: "Vuelo AM58", desc: "¡Sayonara Japón! 👋🇯🇵", cost: 0 }
                 ]
             }
@@ -473,24 +829,72 @@
                             </div>
                             
                             <div class="flex-1 min-w-0">
-                                <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <span class="text-base">🕐</span>
-                                            <span class="text-sm font-semibold text-gray-600">${activity.time}</span>
+                                <div class="flex flex-col gap-3">
+                                    <div class="flex items-start justify-between gap-4">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="text-base">🕐</span>
+                                                <span class="text-sm font-semibold text-gray-600">${activity.time}</span>
+                                            </div>
+                                            <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-1 leading-tight">
+                                                ${activity.title}
+                                            </h3>
+                                            <p class="text-gray-600 text-sm md:text-base leading-relaxed">${activity.desc}</p>
                                         </div>
-                                        <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-1 leading-tight">
-                                            ${activity.title}
-                                        </h3>
-                                        <p class="text-gray-600 text-sm md:text-base leading-relaxed">${activity.desc}</p>
+                                        
+                                        <div class="flex-shrink-0">
+                                            ${activity.cost > 0 
+                                                ? `<div class="bg-green-100 text-green-700 px-3 py-1.5 rounded-full font-bold text-sm whitespace-nowrap inline-block">$${activity.cost}</div>`
+                                                : `<div class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full font-bold text-sm whitespace-nowrap inline-block">GRATIS</div>`
+                                            }
+                                        </div>
                                     </div>
-                                    
-                                    <div class="flex-shrink-0">
-                                        ${activity.cost > 0 
-                                            ? `<div class="bg-green-100 text-green-700 px-3 py-1.5 rounded-full font-bold text-sm whitespace-nowrap inline-block">$${activity.cost}</div>`
-                                            : `<div class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full font-bold text-sm whitespace-nowrap inline-block">GRATIS</div>`
-                                        }
-                                    </div>
+
+                                    ${activity.train ? `
+                                        <div class="train-info text-white p-3 rounded-lg text-sm">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <span class="text-lg">🚆</span>
+                                                <span class="font-bold">Info de Tren</span>
+                                            </div>
+                                            <div class="space-y-1 text-xs">
+                                                <div class="flex justify-between">
+                                                    <span class="opacity-90">Desde:</span>
+                                                    <span class="font-semibold">${activity.train.from}</span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span class="opacity-90">Hasta:</span>
+                                                    <span class="font-semibold">${activity.train.to}</span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span class="opacity-90">Línea:</span>
+                                                    <span class="font-semibold">${activity.train.line}</span>
+                                                </div>
+                                                ${activity.train.platform ? `
+                                                <div class="flex justify-between">
+                                                    <span class="opacity-90">Plataforma:</span>
+                                                    <span class="font-semibold">${activity.train.platform}</span>
+                                                </div>
+                                                ` : ''}
+                                                ${activity.train.transfer ? `
+                                                <div class="flex justify-between">
+                                                    <span class="opacity-90">Transfer:</span>
+                                                    <span class="font-semibold">${activity.train.transfer}</span>
+                                                </div>
+                                                ` : ''}
+                                                <div class="flex justify-between">
+                                                    <span class="opacity-90">Duración:</span>
+                                                    <span class="font-semibold">${activity.train.duration}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+
+                                    ${activity.station ? `
+                                        <div class="bg-gray-50 p-2 rounded text-xs text-gray-600 flex items-center gap-2">
+                                            <span>📍</span>
+                                            <span>${activity.station}</span>
+                                        </div>
+                                    ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -513,7 +917,6 @@
             selectDay(1);
         });
 
-        // Initialize immediately as backup
         setTimeout(() => selectDay(1), 100);
     </script>
 </body>
