@@ -334,10 +334,10 @@
                         🏨 Hoteles
                     </h3>
                     <div class="grid md:grid-cols-2 gap-4">
-                        <a href="https://www.google.com/maps/search/Hotel+Tokyo+Apa+Shinjuku+Gyoemmae" target="_blank" class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-l-4 border-red-500 hover:shadow-lg transition">
+                        <a href="https://www.google.com/maps/search/Hotel+Tokyo+Papa+Shinjuku+Gyoemmae" target="_blank" class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-l-4 border-red-500 hover:shadow-lg transition">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <p class="font-bold text-gray-800 dark:text-white">Hotel Tokyo Apa Shinjuku</p>
+                                    <p class="font-bold text-gray-800 dark:text-white">Hotel Tokyo Papa Shinjuku</p>
                                     <p class="text-sm text-gray-600 dark:text-gray-400">Feb 16-19 (Días 1-3)</p>
                                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">📍 Shinjuku-Gyoemmae, Tokyo</p>
                                 </div>
@@ -721,9 +721,9 @@
                     </h3>
                     <div class="space-y-3 text-sm">
                         <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            <p class="font-semibold mb-2 dark:text-white">Hotel Tokyo Apa</p>
+                            <p class="font-semibold mb-2 dark:text-white">Hotel Tokyo Papa</p>
                             <p class="text-xs text-gray-600 dark:text-gray-400">〒160-0022 東京都新宿区新宿御苑前</p>
-                            <button onclick="generateQR('Hotel Tokyo Apa Shinjuku')" class="mt-2 text-xs bg-blue-600 text-white px-3 py-1 rounded">
+                            <button onclick="generateQR('Hotel Tokyo Papa Shinjuku')" class="mt-2 text-xs bg-blue-600 text-white px-3 py-1 rounded">
                                 Generar QR
                             </button>
                         </div>
@@ -960,18 +960,165 @@ Ejemplos:
     </div>
 
     <script>
-        // Itinerary data (shortened for brevity - use your full data)
+        // Complete itinerary data
         const itinerary = [
             {
                 day: 1, date: "Feb 16 - Domingo", title: "Llegada a Tokyo", location: "Shinjuku",
-                hotel: "Hotel Tokyo Apa Shinjuku Gyoemmae", budget: 63,
+                hotel: "Hotel Tokyo Papa Shinjuku Gyoemmae", budget: 63,
                 activities: [
                     { time: "6:30 AM", icon: "✈️", title: "Llegada Narita", desc: "Vuelo AM58", cost: 0, id: "1-0" },
                     { time: "8:00 AM", icon: "🚆", title: "Narita Express → Shinjuku", desc: "Comprar Welcome Suica", cost: 23, train: {from: "Narita Airport Terminal 1", to: "Shinjuku Station", line: "Narita Express (N'EX)", duration: "90 min"}, id: "1-1" },
                     { time: "10:30 AM", icon: "📸", title: "Shinjuku Gyoen Garden", desc: "Jardín nacional, 2 horas", cost: 3.5, station: "Shinjuku-Gyoemmae (5 min walk)", id: "1-2" },
+                    { time: "1:00 PM", icon: "🍜", title: "Ichiran Ramen", desc: "¡Primer ramen japonés!", cost: 9, station: "Shinjuku Station área", id: "1-3" },
+                    { time: "4:00 PM", icon: "⭐", title: "Tokyo Metropolitan Govt Building", desc: "Vista panorámica GRATIS", cost: 0, station: "Tochomae Station (Exit A4)", id: "1-4" },
+                    { time: "6:00 PM", icon: "🍢", title: "Cena en Omoide Yokocho", desc: "Yakitori en callejones nostálgicos", cost: 35, station: "Shinjuku West Exit", id: "1-5" }
                 ]
             },
-            // Add all other days here...
+            {
+                day: 2, date: "Feb 17 - Lunes", title: "Kamakura Day Trip", location: "Kamakura",
+                hotel: "Hotel Tokyo Papa Shinjuku", budget: 72,
+                activities: [
+                    { time: "9:00 AM", icon: "🚆", title: "JR Line → Kamakura", desc: "57 minutos directo", cost: 7, train: {from: "Shinjuku Station", to: "Kamakura Station", line: "JR Shonan-Shinjuku Line", duration: "57 min"}, id: "2-0" },
+                    { time: "10:15 AM", icon: "⛩️", title: "Tsurugaoka Hachimangu", desc: "Santuario principal, gratis", cost: 0, station: "10 min walk from Kamakura Station", id: "2-1" },
+                    { time: "11:30 AM", icon: "🏯", title: "Hasedera Temple", desc: "Templo en la colina con vistas al mar", cost: 3, station: "Hase Station (Enoden Line)", id: "2-2" },
+                    { time: "12:45 PM", icon: "🗿", title: "Great Buddha (Kotoku-in)", desc: "¡Buda gigante de bronce!", cost: 2.5, station: "7 min walk from Hase Station", id: "2-3" },
+                    { time: "5:30 PM", icon: "🥪", title: "AGE.3 en Ginza", desc: "Sándwiches fritos virales", cost: 10, station: "Ginza Station (Marunouchi Line)", id: "2-4" },
+                    { time: "8:00 PM", icon: "🥩", title: "Yakiniku Rikimaru", desc: "All-you-can-eat 90 min", cost: 26, station: "Ikebukuro Station (East Exit)", id: "2-5" }
+                ]
+            },
+            {
+                day: 3, date: "Feb 18 - Martes", title: "Tokyo Highlights", location: "Tokyo",
+                hotel: "Hotel Tokyo Papa Shinjuku", budget: 70,
+                activities: [
+                    { time: "9:00 AM", icon: "⭐", title: "Tokyo Station", desc: "Character Street: Pokemon, Kirby, Ghibli", cost: 0, station: "Tokyo Station (B1F First Avenue)", id: "3-0" },
+                    { time: "11:00 AM", icon: "⛩️", title: "Asakusa - Sensoji Temple", desc: "Templo más antiguo + Nakamise Street", cost: 0, station: "Asakusa Station (Exit 1)", id: "3-1" },
+                    { time: "12:00 PM", icon: "🐟", title: "Taiyaki", desc: "Naruto Taiyaki Honpo", cost: 2.5, id: "3-2" },
+                    { time: "12:30 PM", icon: "🍣", title: "Kaiten Sushi", desc: "¡Sushi en cinta transportadora!", cost: 18, station: "Kura Sushi - múltiples ubicaciones", id: "3-3" },
+                    { time: "2:30 PM", icon: "🎮", title: "Akihabara", desc: "Distrito electrónico + anime", cost: 0, station: "Akihabara Station (Electric Town Exit)", id: "3-4" },
+                    { time: "3:30 PM", icon: "☕", title: "Cafe Mai:lish", desc: "Steins;Gate maid cafe", cost: 13, station: "5 min walk from Akihabara", id: "3-5" },
+                    { time: "6:00 PM", icon: "🌆", title: "Shibuya Sky", desc: "Rooftop al aire libre, 47° piso", cost: 18, station: "Shibuya Station (Hachiko Exit)", id: "3-6" },
+                    { time: "7:30 PM", icon: "🚶", title: "Shibuya Crossing", desc: "¡El cruce más famoso del mundo!", cost: 0, station: "Shibuya Station (Hachiko Exit)", id: "3-7" }
+                ]
+            },
+            {
+                day: 4, date: "Feb 19 - Miércoles", title: "Tokyo → Kyoto", location: "Kyoto",
+                hotel: "Tune Stay Kyoto", budget: 133,
+                activities: [
+                    { time: "9:00 AM", icon: "🚄", title: "Shinkansen Hikari → Kyoto", desc: "2h 20min en tren bala", cost: 93, train: {from: "Tokyo Station", to: "Kyoto Station", line: "Tokaido Shinkansen (Hikari)", platform: "Platforms 14-19", duration: "2h 20min"}, id: "4-0" },
+                    { time: "11:30 AM", icon: "🏨", title: "Check-in Tune Stay", desc: "5 min caminando de Kyoto Station", cost: 0, station: "5 min walk from Kyoto Station", id: "4-1" },
+                    { time: "1:30 PM", icon: "⛩️", title: "Nishi Hongan-ji", desc: "UNESCO World Heritage, gratis", cost: 0, station: "8 min walk from hotel", id: "4-2" },
+                    { time: "5:00 PM", icon: "👘", title: "Distrito Gion", desc: "Buscar geishas en calles tradicionales", cost: 0, station: "Gion-Shijo Station (Keihan Line)", id: "4-3" },
+                    { time: "6:30 PM", icon: "🍱", title: "Cena en Pontocho", desc: "Callejón tradicional junto al canal", cost: 35, station: "Between Shijo and Sanjo", id: "4-4" }
+                ]
+            },
+            {
+                day: 5, date: "Feb 20 - Jueves", title: "Nara Day Trip", location: "Nara",
+                hotel: "Tune Stay Kyoto", budget: 47,
+                activities: [
+                    { time: "8:15 AM", icon: "🚆", title: "JR Nara Line → Nara", desc: "45 minutos", cost: 5, train: {from: "Kyoto Station", to: "Nara Station", line: "JR Nara Line (Miyakoji Rapid)", platform: "Platforms 8-10", duration: "45 min"}, id: "5-0" },
+                    { time: "9:30 AM", icon: "🦌", title: "Nara Park - Alimentar venados", desc: "¡Los venados se inclinan!", cost: 1.5, station: "15 min walk from JR Nara Station", id: "5-1" },
+                    { time: "10:30 AM", icon: "🏯", title: "Todai-ji Temple", desc: "Gran Buda de 15m", cost: 6, station: "Inside Nara Park", id: "5-2" },
+                    { time: "11:45 AM", icon: "🏮", title: "Kasuga Taisha Shrine", desc: "Miles de linternas de piedra", cost: 3.5, station: "15 min walk through forest", id: "5-3" },
+                    { time: "2:00 PM", icon: "🍡", title: "Nakatanidou Mochi", desc: "¡Show de mochi de alta velocidad!", cost: 1.5, station: "Near Kintetsu Nara Station", id: "5-4" },
+                    { time: "5:30 PM", icon: "⛩️", title: "Fushimi Inari", desc: "Mil puertas torii naranjas", cost: 0, station: "Inari Station (JR Nara Line, 5 min from Kyoto)", id: "5-5" },
+                    { time: "7:30 PM", icon: "🍜", title: "Ramen en Kyoto", desc: "Regreso a Kyoto Station", cost: 11, station: "Kyoto Station Ramen Street", id: "5-6" }
+                ]
+            },
+            {
+                day: 6, date: "Feb 21 - Viernes", title: "Arashiyama → Osaka", location: "Osaka",
+                hotel: "Toyoko Inn Osaka Namba", budget: 57,
+                activities: [
+                    { time: "8:00 AM", icon: "🚆", title: "JR → Arashiyama", desc: "15 minutos", cost: 1.7, train: {from: "Kyoto Station", to: "Saga-Arashiyama Station", line: "JR Sagano Line", duration: "15 min"}, id: "6-0" },
+                    { time: "8:30 AM", icon: "🎋", title: "Arashiyama Bamboo Grove", desc: "¡Temprano para evitar multitudes!", cost: 0, station: "10 min walk from Saga-Arashiyama", id: "6-1" },
+                    { time: "9:30 AM", icon: "🏯", title: "Tenryu-ji Temple", desc: "Jardín zen hermoso", cost: 3.5, station: "Near bamboo grove", id: "6-2" },
+                    { time: "2:00 PM", icon: "🚆", title: "Kyoto → Osaka", desc: "29 minutos en JR", cost: 4, train: {from: "Kyoto Station", to: "Osaka Station", line: "JR Kyoto Line (Special Rapid)", platform: "Platforms 4-7", duration: "29 min"}, id: "6-3" },
+                    { time: "3:00 PM", icon: "🚇", title: "Osaka → Namba", desc: "Transfer", cost: 2, train: {from: "Osaka Station", to: "Namba Station", line: "Midosuji Line (Red)", duration: "10 min"}, id: "6-4" },
+                    { time: "6:00 PM", icon: "🐙", title: "TAKOYAKI en Dotonbori", desc: "Wanaka + Kukuru", cost: 6, station: "5 min walk from Namba Station", id: "6-5" },
+                    { time: "7:00 PM", icon: "🥞", title: "OKONOMIYAKI", desc: "¡Comida emblema de Osaka!", cost: 12, station: "Dotonbori area", id: "6-6" },
+                    { time: "8:30 PM", icon: "🌃", title: "Dotonbori de noche", desc: "Glico Man + luces neón", cost: 0, station: "Walk around Dotonbori", id: "6-7" }
+                ]
+            },
+            {
+                day: 7, date: "Feb 22 - Sábado", title: "Osaka Aquarium", location: "Osaka",
+                hotel: "Toyoko Inn Osaka Namba", budget: 60,
+                activities: [
+                    { time: "7:00 AM", icon: "🍳", title: "Desayuno gratis hotel", desc: "Buffet incluido 6:30-9:00 AM", cost: 0, id: "7-0" },
+                    { time: "9:00 AM", icon: "🚇", title: "Namba → Osakako", desc: "Transfer en Bentencho", cost: 2, train: {from: "Namba Station", to: "Osakako Station", line: "Chuo Line", transfer: "at Bentencho", duration: "30-40 min"}, id: "7-1" },
+                    { time: "9:45 AM", icon: "🐋", title: "Osaka Aquarium Kaiyukan", desc: "¡Tiburones ballena! 2-3 horas", cost: 21, station: "5 min walk from Osakako Station", id: "7-2" },
+                    { time: "3:30 PM", icon: "🍢", title: "Kuromon Market", desc: "Mercado de comida callejera", cost: 18, station: "Nipponbashi Station (Exit 10)", id: "7-3" },
+                    { time: "5:00 PM", icon: "🛍️", title: "Shinsaibashi Shopping", desc: "600m de tiendas cubiertas", cost: 0, station: "Shinsaibashi Station", id: "7-4" },
+                    { time: "7:00 PM", icon: "🥩", title: "Yakiniku 298 Nikuya", desc: "All-you-can-eat ¡súper barato!", cost: 28, station: "Near Shinsaibashi", id: "7-5" }
+                ]
+            },
+            {
+                day: 8, date: "Feb 23 - Domingo", title: "Osaka → Tokyo", location: "Tokyo - Otsuka",
+                hotel: "Hotel Apa Yamanote Otsuka", budget: 141,
+                activities: [
+                    { time: "8:30 AM", icon: "🚇", title: "Namba → Shin-Osaka", desc: "Transfer", cost: 2, train: {from: "Namba Station", to: "Shin-Osaka Station", line: "Midosuji Line", duration: "15 min"}, id: "8-0" },
+                    { time: "9:00 AM", icon: "🚄", title: "Shinkansen → Tokyo", desc: "2h 40min", cost: 93, train: {from: "Shin-Osaka Station", to: "Tokyo Station", line: "Tokaido Shinkansen (Hikari)", platform: "Platforms 21-26", duration: "2h 40min"}, id: "8-1" },
+                    { time: "12:00 PM", icon: "🚆", title: "Tokyo → Otsuka", desc: "10 minutos", cost: 1.2, train: {from: "Tokyo Station", to: "Otsuka Station", line: "JR Yamanote Line", duration: "10 min"}, id: "8-2" },
+                    { time: "12:15 PM", icon: "🏨", title: "Check-in Otsuka", desc: "Frente a la estación", cost: 0, station: "Right at Otsuka Station", id: "8-3" },
+                    { time: "2:30 PM", icon: "🏙️", title: "Sunshine City Observatory", desc: "Piso 60, vistas de Tokyo", cost: 6, station: "Ikebukuro Station (1 stop, 2 min)", id: "8-4" },
+                    { time: "7:00 PM", icon: "🍵", title: "Matcha Ice Cream", desc: "Suzukien Asakusa - 7 niveles!", cost: 5, station: "Asakusa Station", id: "8-5" }
+                ]
+            },
+            {
+                day: 9, date: "Feb 24 - Lunes", title: "Tokyo Libre", location: "Tokyo",
+                hotel: "Hotel Apa Yamanote Otsuka", budget: 63,
+                activities: [
+                    { time: "10:00 AM", icon: "👗", title: "Harajuku Takeshita Street", desc: "Moda juvenil", cost: 0, station: "Harajuku Station (Omotesando Exit)", id: "9-0" },
+                    { time: "11:00 AM", icon: "⛩️", title: "Meiji Shrine", desc: "Santuario en el bosque, gratis", cost: 0, station: "5 min walk from Harajuku", id: "9-1" },
+                    { time: "12:00 PM", icon: "🐟", title: "Taiyaki original", desc: "Naniwaya Sohonten (1909)", cost: 2.5, id: "9-2" },
+                    { time: "4:00 PM", icon: "☕", title: "Artnia Square Enix", desc: "Café y tienda en Shinjuku", cost: 18, station: "Shinjuku East Side Square", id: "9-3" },
+                    { time: "7:30 PM", icon: "🍽️", title: "Cena final yakiniku o sushi", desc: "¡Lo que más te gustó!", cost: 35, id: "9-4" }
+                ]
+            },
+            {
+                day: 10, date: "Feb 25 - Martes", title: "Día Libre Tokyo", location: "Tokyo",
+                hotel: "Hotel Apa Yamanote Otsuka", budget: 70,
+                activities: [
+                    { time: "Todo el día", icon: "🗺️", title: "Actividades sugeridas", desc: "Odaiba, compras, lugares favoritos, Imperial Palace", cost: 70, id: "10-0" }
+                ]
+            },
+            {
+                day: 11, date: "Feb 26 - Miércoles", title: "Día Libre Tokyo", location: "Tokyo",
+                hotel: "Hotel Apa Yamanote Otsuka", budget: 70,
+                activities: [
+                    { time: "Todo el día", icon: "🗺️", title: "Más exploración", desc: "Tsukiji Market, Roppongi, cafés temáticos", cost: 70, id: "11-0" }
+                ]
+            },
+            {
+                day: 12, date: "Feb 27 - Jueves", title: "Día Libre Tokyo", location: "Tokyo",
+                hotel: "Hotel Apa Yamanote Otsuka", budget: 70,
+                activities: [
+                    { time: "Todo el día", icon: "⛰️", title: "Aventura opcional", desc: "Mount Takao hiking o más compras", cost: 70, id: "12-0" }
+                ]
+            },
+            {
+                day: 13, date: "Feb 28 - Viernes", title: "Día Libre Tokyo", location: "Tokyo",
+                hotel: "Hotel Apa Yamanote Otsuka", budget: 70,
+                activities: [
+                    { time: "Todo el día", icon: "🛍️", title: "Último día completo", desc: "Compras finales, lugares pendientes", cost: 70, id: "13-0" }
+                ]
+            },
+            {
+                day: 14, date: "Mar 1 - Sábado", title: "Preparación salida", location: "Tokyo",
+                hotel: "Hotel Apa Yamanote Otsuka", budget: 56,
+                activities: [
+                    { time: "Día entero", icon: "📦", title: "Día ligero", desc: "Souvenirs finales, empacar", cost: 0, id: "14-0" },
+                    { time: "6:00 PM", icon: "🍜", title: "Cena temprano", desc: "Acostarse temprano", cost: 35, id: "14-1" },
+                    { time: "10:00 PM", icon: "😴", title: "Dormir temprano", desc: "Wake up 4:30 AM mañana!", cost: 0, id: "14-2" }
+                ]
+            },
+            {
+                day: 15, date: "Mar 2 - Domingo", title: "Regreso a casa", location: "Aeropuerto Narita",
+                hotel: "Vuelo 9:30 AM", budget: 26,
+                activities: [
+                    { time: "4:30 AM", icon: "⏰", title: "Wake up!", desc: "Última verificación", cost: 0, id: "15-0" },
+                    { time: "5:30 AM", icon: "🚆", title: "Narita Express", desc: "Otsuka → Tokyo → Narita (90 min total)", cost: 22, train: {from: "Otsuka → Tokyo → Narita", to: "Narita Airport Terminal 1", line: "Yamanote + Narita Express", duration: "90 min total"}, id: "15-1" },
+                    { time: "9:30 AM", icon: "✈️", title: "Vuelo AM58", desc: "¡Sayonara Japón! 👋🇯🇵", cost: 0, id: "15-2" }
+                ]
+            }
         ];
 
         let currentDay = 1;
