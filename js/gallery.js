@@ -1,12 +1,12 @@
 // js/gallery.js
+expor// js/gallery.js
 export const GalleryHandler = {
   renderGallery() {
     const container = document.getElementById('galleryContainer');
     if (!container) return;
-    // Ejemplo: Lista de fotos placeholder
     const photos = [
-      { src: 'images/photo1.jpg', alt: 'Templo en Kyoto' },
-      { src: 'images/photo2.jpg', alt: 'Calle de Tokyo' }
+      { src: 'images/tokyo/tokyo-tower.jpg', alt: 'Tokyo Tower' },
+      { src: 'images/kyoto/fushimi-inari.jpg', alt: 'Fushimi Inari Shrine' }
     ];
     container.innerHTML = `
       <h2 class="text-3xl font-bold mb-4 text-gray-800 dark:text-white">📸 Galería de Fotos</h2>
