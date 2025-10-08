@@ -3,35 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🇯🇵 Viaje a Japón - Itinerario Interactivo</title>
+    <meta name="description" content="Planificador interactivo para viaje de 15 días a Japón - Feb 16 a Mar 2, 2025">
+    <meta name="theme-color" content="#dc2626">
+    
+    <title>🇯🇵 Viaje a Japón 2025 - Itinerario Interactivo</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/viaje-japon/css/main.css">
-    <link rel="manifest" href="/viaje-japon/manifest.json">
-    <link rel="icon" type="image/png" href="/viaje-japon/images/icons/icon-192.png">
     <script>
-        tailwind.config = { darkMode: 'class' }
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'japan-red': '#dc2626',
+                        'japan-pink': '#ec4899'
+                    }
+                }
+            }
+        }
     </script>
+    
+    <link rel="stylesheet" href="./css/main.css">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" href="./images/icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="./images/icons/icon-192.png">
 </head>
 <body class="gradient-bg">
     
     <div class="z-50 fixed bottom-8 right-8 flex flex-col gap-4">
-        <button data-modal="budget" class="floating-btn" title="Budget">💰</button>
-        <button data-modal="phrases" class="floating-btn" title="Frases">🗣️</button>
-        <button data-modal="notes" class="floating-btn" title="Notas">📝</button>
+        <button data-modal="budget" class="floating-btn" title="Budget Tracker" aria-label="Abrir Budget">
+            💰
+        </button>
+        <button data-modal="phrases" class="floating-btn" title="Frases Útiles" aria-label="Abrir Frases">
+            🗣️
+        </button>
+        <button data-modal="notes" class="floating-btn" title="Mis Notas" aria-label="Abrir Notas">
+            📝
+        </button>
     </div>
 
     <header class="gradient-header text-white p-6 shadow-lg">
         <div class="max-w-6xl mx-auto">
-            <div class="flex justify-between items-center">
-                <div class="flex-1">
-                    <h1 class="text-3xl md:text-4xl font-bold">🇯🇵 Viaje a Japón</h1>
-                    <div class="mt-2 flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 w-max">
-                        <span class="text-xl">⏰</span> <span id="countdown">Calculando...</span>
+            <div class="flex justify-between items-center flex-wrap gap-4">
+                <div class="flex-1 min-w-[250px]">
+                    <h1 class="text-3xl md:text-4xl font-bold mb-2">🇯🇵 Viaje a Japón</h1>
+                    <div class="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2 w-max backdrop-blur-sm">
+                        <span class="text-xl">⏰</span>
+                        <span id="countdown" class="font-semibold">Calculando...</span>
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <button id="themeToggle" class="bg-white/20 hover:bg-white/30 rounded-lg p-3 transition"><span id="darkModeIcon" class="text-2xl">🌙</span></button>
-                    <button data-modal="emergency" class="bg-red-500/80 hover:bg-red-600 rounded-lg px-4 py-2 transition text-lg">🚨 SOS</button>
+                    <button 
+                        id="themeToggle" 
+                        class="bg-white/20 hover:bg-white/30 rounded-lg p-3 transition backdrop-blur-sm"
+                        aria-label="Cambiar tema"
+                        title="Cambiar tema"
+                    >
+                        <span id="darkModeIcon" class="text-2xl">🌙</span>
+                    </button>
+                    <button 
+                        data-modal="emergency" 
+                        class="bg-red-500/80 hover:bg-red-600 rounded-lg px-4 py-2 transition text-lg font-semibold backdrop-blur-sm"
+                        aria-label="Emergencias"
+                        title="Números de emergencia"
+                    >
+                        🚨 SOS
+                    </button>
                 </div>
             </div>
         </div>
@@ -55,15 +94,32 @@
 
     <div id="modalsContainer"></div>
 
-    <footer class="bg-gray-800 text-white p-8 mt-12 text-center">
-        <p>¡Que tengan un viaje increíble! 🎌</p>
+    <footer class="bg-gray-800 dark:bg-gray-900 text-white p-8 mt-12 text-center">
+        <div class="max-w-6xl mx-auto">
+            <p class="text-lg mb-2">¡Que tengan un viaje increíble! 🎌</p>
+            <p class="text-sm text-gray-400">
+                <strong>いってらっしゃい！</strong> (Itterasshai - ¡Buen viaje!)
+            </p>
+            <p class="text-xs text-gray-500 mt-4">
+                Febrero 16 - Marzo 2, 2025 • Tokyo · Kyoto · Osaka
+            </p>
+        </div>
     </footer>
 
-    <script type="module" src="/viaje-japon/js/app.js"></script>
+    <script type="module" src="./js/app.js"></script>
+    
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => navigator.serviceWorker.register('/viaje-japon/service-worker.js'));
-      }
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registrado:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('❌ Error al registrar Service Worker:', error);
+                    });
+            });
+        }
     </script>
 </body>
 </html>
