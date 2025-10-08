@@ -1,4 +1,5 @@
 // js/itinerary.js
+
 import { ITINERARY_DATA } from './itinerary-data.js';
 import { AppCore } from './core.js';
 
@@ -176,3 +177,4 @@ export const ItineraryHandler = {
     }
   }
 };
+
