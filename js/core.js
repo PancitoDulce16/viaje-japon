@@ -4,64 +4,52 @@ import { TabsHandler } from './tabs.js';
 
 const App = {
     init() {
-        // Cargar estado guardado (como el modo oscuro)
         if (localStorage.getItem('darkMode') === 'true') {
             document.documentElement.classList.add('dark');
-            const icon = document.getElementById('darkModeIcon');
-            if (icon) icon.textContent = '☀️';
+            document.getElementById('darkModeIcon').textContent = '☀️';
         }
         
-        // Renderizar todo el contenido dinámico en la página
         ModalRenderer.renderModals();
-        ItineraryHandler.renderItinerary(); // ¡CORREGIDO!
+        ItineraryHandler.renderItinerary();
         TabsHandler.renderAllTabs();
 
-        // Configurar TODOS los event listeners
         this.setupEventListeners();
         
-        // Iniciar la cuenta regresiva
         updateCountdown();
         setInterval(updateCountdown, 60000);
     },
 
     setupEventListeners() {
         // Botón de Modo Oscuro
-        document.getElementById('themeToggle')?.addEventListener('click', toggleDarkMode);
+        document.getElementById('themeToggle').addEventListener('click', toggleDarkMode);
 
-        // Navegación por Pestañas (Tabs)
-        document.getElementById('tabSelector')?.addEventListener('click', (e) => {
+        // Pestañas de Navegación
+        document.getElementById('tabSelector').addEventListener('click', (e) => {
             const tabButton = e.target.closest('.tab-btn');
-            if (tabButton) {
-                switchTab(tabButton.dataset.tab);
-            }
+            if (tabButton) switchTab(tabButton.dataset.tab);
         });
 
-        // Botón de Emergencia (SOS)
-        document.querySelector('button[data-modal="emergency"]')?.addEventListener('click', () => AppModals.open('emergency'));
-
-        // Botones Flotantes
-        document.querySelectorAll('.floating-btn[data-modal]').forEach(btn => {
+        // Botones que abren modales (SOS y los flotantes)
+        document.querySelectorAll('button[data-modal]').forEach(btn => {
             btn.addEventListener('click', () => AppModals.open(btn.dataset.modal));
+        });
+        document.querySelectorAll('div[data-modal]').forEach(div => {
+            div.addEventListener('click', () => AppModals.open(div.dataset.modal));
         });
 
         // Lógica para CERRAR los modales
-        document.getElementById('modalsContainer')?.addEventListener('click', (e) => {
+        document.getElementById('modalsContainer').addEventListener('click', (e) => {
             const closeButton = e.target.closest('.modal-close-btn');
-            if (closeButton) {
-                AppModals.close(closeButton.dataset.modalClose);
-            }
+            if (closeButton) AppModals.close(closeButton.dataset.modalClose);
         });
     }
 };
-
-// --- FUNCIONES GLOBALES ---
 
 function toggleDarkMode() {
     document.documentElement.classList.toggle('dark');
     const isDark = document.documentElement.classList.contains('dark');
     localStorage.setItem('darkMode', isDark);
-    const icon = document.getElementById('darkModeIcon');
-    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+    document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
 }
 
 function switchTab(tabName) {
@@ -81,13 +69,7 @@ function updateCountdown() {
     const diff = tripStart.getTime() - now.getTime();
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
     const elem = document.getElementById('countdown');
-    if (!elem) return;
-
-    if (days > 0) {
-        elem.textContent = `Faltan ${days} días`;
-    } else {
-        elem.textContent = 'Viaje completado ✓';
-    }
+    elem.textContent = days > 0 ? `Faltan ${days} días` : 'Viaje completado ✓';
 }
 
 export { App };
