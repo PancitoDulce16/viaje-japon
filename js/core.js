@@ -93,7 +93,7 @@ export const AppCore = {
     },
 
     updateCountdown() {
-        const tripStart = new Date('2025-02-16T00:00:00');
+        const tripStart = new Date('2026-02-16T00:00:00');
         const now = new Date();
         const diff = tripStart.getTime() - now.getTime();
         const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
