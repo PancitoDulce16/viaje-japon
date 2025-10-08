@@ -1,22 +1,171 @@
-<!-- Scripts - En orden de carga -->
-<script type="module" src="js/core.js"></script>
-<script type="module" src="js/itinerary-data.js"></script>
-<script type="module" src="js/itinerary.js"></script>
-<script type="module" src="js/modals.js"></script>
-<script type="module" src="js/utils.js"></script>
-<script type="module" src="js/tabs.js"></script>
-<script type="module" src="js/budget-tracker.js"></script>
-<script type="module" src="js/map.js"></script>
-<script type="module" src="js/gallery.js"></script>
-<script type="module" src="js/app.js"></script>
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viaje a Japón</title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="images/favicon.png">
+  <!-- Tailwind CSS CDN (puedes reemplazar con css/main.css si usas Tailwind local) -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Leaflet CSS para el mapa (si implementas MapHandler) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <!-- CSS local -->
+  <link rel="stylesheet" href="css/main.css">
+  <!-- Manifest para PWA -->
+  <link rel="manifest" href="manifest.json">
+</head>
+<body class="gradient-bg min-h-screen text-gray-800 dark:text-white">
+  <!-- Header -->
+  <header class="bg-blue-600 dark:bg-blue-800 text-white p-4 shadow-md">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Viaje a Japón 🇯🇵</h1>
+      <div class="flex items-center space-x-4">
+        <span id="countdown" class="text-lg">Faltan X días</span>
+        <button id="themeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">🌙</button>
+        <button id="emergencyBtn" class="p-2 rounded-full bg-red-500 text-white">🚨 SOS</button>
+      </div>
+    </div>
+  </header>
 
-<!-- Service Worker Registration -->
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('service-worker.js')
-                .then(reg => console.log('✅ Service Worker registrado'))
-                .catch(err => console.log('❌ Error:', err));
-        });
-    }
-</script>
+  <!-- Tabs -->
+  <nav class="container mx-auto mt-4">
+    <ul id="tabSelector" class="flex space-x-2 overflow-x-auto scrollbar-hide">
+      <li class="tab-item bg-blue-500 text-white px-4 py-2 rounded cursor-pointer" data-tab="itinerary">Itinerario</li>
+      <li class="tab-item bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded cursor-pointer" data-tab="map">Mapa</li>
+      <li class="tab-item bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded cursor-pointer" data-tab="flights">Vuelos</li>
+      <li class="tab-item bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded cursor-pointer" data-tab="restaurants">Comida</li>
+      <li class="tab-item bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded cursor-pointer" data-tab="souvenirs">Souvenirs</li>
+      <li class="tab-item bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded cursor-pointer" data-tab="gallery">Galería</li>
+      <li class="tab-item bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded cursor-pointer" data-tab="utils">Utilidades</li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container mx-auto mt-6 p-4">
+    <!-- Itinerario -->
+    <section id="itinerary" class="tab-content hidden">
+      <h2 class="text-2xl font-bold mb-4">Itinerario</h2>
+      <select id="daySelector" class="w-full p-2 mb-4 rounded bg-gray-100 dark:bg-gray-800">
+        <!-- Días generados dinámicamente por itinerary.js -->
+      </select>
+      <div id="dayOverview" class="bg-white dark:bg-gray-800 p-4 rounded shadow-md mb-4">
+        <!-- Resumen del día -->
+      </div>
+      <div id="activitiesTimeline" class="space-y-4">
+        <!-- Actividades del día -->
+      </div>
+    </section>
+
+    <!-- Mapa -->
+    <section id="map" class="tab-content hidden">
+      <h2 class="text-2xl font-bold mb-4">Mapa</h2>
+      <div id="mapContainer" class="h-96 bg-gray-100 dark:bg-gray-800 rounded">
+        <p>Mapa en construcción...</p>
+      </div>
+    </section>
+
+    <!-- Vuelos -->
+    <section id="flights" class="tab-content hidden">
+      <h2 class="text-2xl font-bold mb-4">Vuelos</h2>
+      <div id="flightsContainer" class="bg-white dark:bg-gray-800 p-4 rounded shadow-md">
+        <p>Vuelo AM58: Monterrey → Narita (16 Feb, 6:30 AM)</p>
+        <p>Vuelo AM58: Narita → Monterrey (2 Mar, 9:30 AM)</p>
+      </div>
+    </section>
+
+    <!-- Comida -->
+    <section id="restaurants" class="tab-content hidden">
+      <h2 class="text-2xl font-bold mb-4">Comida</h2>
+      <div id="restaurantsContainer" class="bg-white dark:bg-gray-800 p-4 rounded shadow-md">
+        <!-- Generado por tabs.js desde data/restaurants.json -->
+      </div>
+    </section>
+
+    <!-- Souvenirs -->
+    <section id="souvenirs" class="tab-content hidden">
+      <h2 class="text-2xl font-bold mb-4">Souvenirs</h2>
+      <div id="souvenirsContainer" class="bg-white dark:bg-gray-800 p-4 rounded shadow-md">
+        <!-- Generado por tabs.js desde data/souvenirs.json -->
+      </div>
+    </section>
+
+    <!-- Galería -->
+    <section id="gallery" class="tab-content hidden">
+      <h2 class="text-2xl font-bold mb-4">Galería</h2>
+      <div id="galleryContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Generado por gallery.js -->
+      </div>
+    </section>
+
+    <!-- Utilidades -->
+    <section id="utils" class="tab-content hidden">
+      <h2 class="text-2xl font-bold mb-4">Utilidades</h2>
+      <div id="utilsContainer" class="bg-white dark:bg-gray-800 p-4 rounded shadow-md">
+        <p>Frases, checklist, y más...</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Budget Tracker -->
+  <section class="container mx-auto mt-6 p-4">
+    <h2 class="text-xl font-bold">Presupuesto</h2>
+    <p>Total gastado: <span id="totalSpent">0 JPY</span></p>
+    <p>Presupuesto restante: <span id="remainingBudget">7000 JPY</span></p>
+  </section>
+
+  <!-- Floating Buttons -->
+  <div class="fixed bottom-4 right-4 flex flex-col space-y-2">
+    <button id="budgetBtn" class="floating-btn bg-green-500 text-white">💰</button>
+    <button id="phrasesBtn" class="floating-btn bg-blue-500 text-white">🗣️</button>
+    <button id="checklistBtn" class="floating-btn bg-yellow-500 text-white">🧳</button>
+    <button id="emergencyModalBtn" class="floating-btn bg-red-500 text-white">🚨</button>
+    <button id="notesBtn" class="floating-btn bg-purple-500 text-white">📝</button>
+  </div>
+
+  <!-- Modals -->
+  <div id="budgetModal" class="modal hidden">
+    <div class="modal-content bg-white dark:bg-gray-800 p-6 rounded shadow-lg">
+      <h2 class="text-xl font-bold mb-4">Agregar Gasto</h2>
+      <input id="expenseAmount" type="number" placeholder="Monto (JPY)" class="w-full p-2 mb-4 rounded">
+      <input id="expenseDesc" type="text" placeholder="Descripción" class="w-full p-2 mb-4 rounded">
+      <button id="addExpense" class="bg-green-500 text-white px-4 py-2 rounded">Agregar</button>
+      <button class="modal-close bg-gray-500 text-white px-4 py-2 rounded">Cerrar</button>
+    </div>
+  </div>
+  <div id="phrasesModal" class="modal hidden">
+    <div class="modal-content bg-white dark:bg-gray-800 p-6 rounded shadow-lg">
+      <h2 class="text-xl font-bold mb-4">Frases Útiles</h2>
+      <p>¡Arigato! - Gracias</p>
+      <p>Sumimasen - Disculpe / Perdón</p>
+      <button class="modal-close bg-gray-500 text-white px-4 py-2 rounded">Cerrar</button>
+    </div>
+  </div>
+  <div id="checklistModal" class="modal hidden">
+    <div class="modal-content bg-white dark:bg-gray-800 p-6 rounded shadow-lg">
+      <h2 class="text-xl font-bold mb-4">Checklist</h2>
+      <p>Pasaporte, JR Pass, Suica Card...</p>
+      <button class="modal-close bg-gray-500 text-white px-4 py-2 rounded">Cerrar</button>
+    </div>
+  </div>
+  <div id="emergencyModal" class="modal hidden">
+    <div class="modal-content bg-white dark:bg-gray-800 p-6 rounded shadow-lg">
+      <h2 class="text-xl font-bold mb-4">Emergencias</h2>
+      <p>Emergencia: 110 (Policía), 119 (Ambulancia)</p>
+      <button class="modal-close bg-gray-500 text-white px-4 py-2 rounded">Cerrar</button>
+    </div>
+  </div>
+  <div id="notesModal" class="modal hidden">
+    <div class="modal-content bg-white dark:bg-gray-800 p-6 rounded shadow-lg">
+      <h2 class="text-xl font-bold mb-4">Notas</h2>
+      <textarea id="notesInput" class="w-full p-2 mb-4 rounded"></textarea>
+      <button id="saveNotes" class="bg-blue-500 text-white px-4 py-2 rounded">Guardar</button>
+      <button class="modal-close bg-gray-500 text-white px-4 py-2 rounded">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/app.js"></script>
+  <script src="service-worker.js"></script>
+</body>
+</html>
