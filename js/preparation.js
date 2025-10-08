@@ -104,8 +104,8 @@ export const PreparationHandler = {
                     return `
                         <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                             <button 
-                                class="w-full p-4 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition flex items-center justify-between"
-                                onclick="PreparationHandler.toggleCategory('${key}')"
+                                class="w-full p-4 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition flex items-center justify-between category-toggle-btn"
+                                data-category="${key}"
                             >
                                 <div class="flex items-center gap-3">
                                     <span class="text-2xl">${cat.icon}</span>
@@ -118,17 +118,18 @@ export const PreparationHandler = {
                                     <div class="w-24 h-2 bg-gray-200 dark:bg-gray-600 rounded-full">
                                         <div class="h-2 bg-${cat.color}-500 rounded-full transition-all" style="width: ${progress}%"></div>
                                     </div>
-                                    <span class="text-gray-400" id="arrow-${key}">▼</span>
+                                    <span class="text-gray-400 category-arrow" data-category="${key}">▼</span>
                                 </div>
                             </button>
-                            <div id="category-${key}" class="hidden p-4 space-y-2 bg-white dark:bg-gray-800">
+                            <div class="category-content hidden p-4 space-y-2 bg-white dark:bg-gray-800" data-category="${key}">
                                 ${items.map((item, index) => `
                                     <label class="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer ${item.checked ? 'opacity-50' : ''}">
                                         <input 
                                             type="checkbox" 
                                             ${item.checked ? 'checked' : ''}
-                                            onchange="PreparationHandler.toggleItem('${key}', ${index})"
-                                            class="w-5 h-5 accent-${cat.color}-500"
+                                            class="packing-checkbox w-5 h-5 accent-${cat.color}-500"
+                                            data-category="${key}"
+                                            data-index="${index}"
                                         >
                                         <span class="flex-1 dark:text-gray-300 ${item.checked ? 'line-through' : ''}">${item.name}</span>
                                     </label>
@@ -231,7 +232,7 @@ export const PreparationHandler = {
                         <p class="font-bold text-gray-800 dark:text-white mb-1">💊 Farmacias 24/7:</p>
                         <div class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                             <p>• Matsumoto Kiyoshi (grandes ciudades)</p>
-                            <p>• Sundrug (多く ubicaciones)</p>
+                            <p>• Sundrug (múltiples ubicaciones)</p>
                             <p>• Palabra clave: "薬局" (Yakkyoku)</p>
                         </div>
                     </div>
@@ -249,22 +250,26 @@ export const PreparationHandler = {
     },
 
     toggleCategory(category) {
-        const content = document.getElementById(`category-${category}`);
-        const arrow = document.getElementById(`arrow-${category}`);
+        const content = document.querySelector(`.category-content[data-category="${category}"]`);
+        const arrow = document.querySelector(`.category-arrow[data-category="${category}"]`);
         
-        if (content.classList.contains('hidden')) {
-            content.classList.remove('hidden');
-            arrow.textContent = '▲';
-        } else {
-            content.classList.add('hidden');
-            arrow.textContent = '▼';
+        if (content && arrow) {
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                arrow.textContent = '▲';
+            } else {
+                content.classList.add('hidden');
+                arrow.textContent = '▼';
+            }
         }
     },
 
     toggleItem(category, index) {
-        this.packingList[category][index].checked = !this.packingList[category][index].checked;
-        this.savePackingList();
-        this.renderPreparation();
+        if (this.packingList[category] && this.packingList[category][index]) {
+            this.packingList[category][index].checked = !this.packingList[category][index].checked;
+            this.savePackingList();
+            this.renderPreparation();
+        }
     },
 
     savePackingList() {
@@ -282,8 +287,25 @@ export const PreparationHandler = {
     },
 
     attachEventListeners() {
-        // Event listeners are inline in the HTML for simplicity
+        // Category toggles
+        document.querySelectorAll('.category-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const category = e.currentTarget.dataset.category;
+                this.toggleCategory(category);
+            });
+        });
+
+        // Checkbox toggles
+        document.querySelectorAll('.packing-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const category = e.target.dataset.category;
+                const index = parseInt(e.target.dataset.index);
+                this.toggleItem(category, index);
+            });
+        });
     }
 };
 
+// Exponer globalmente para compatibilidad
 window.PreparationHandler = PreparationHandler;
