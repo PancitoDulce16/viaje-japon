@@ -1,7 +1,7 @@
 // js/map.js
 export const MapHandler = {
   renderMap() {
-    const container = document.getElementById('mapContainer');
+    const container = document.getElementById('content-map');
     if (!container) return;
     container.innerHTML = `
       <h2 class="text-3xl font-bold mb-4 text-gray-800 dark:text-white">🗺️ Mapa Interactivo</h2>
