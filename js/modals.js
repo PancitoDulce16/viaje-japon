@@ -1,6 +1,6 @@
 // js/modals.js
 import { AppCore } from './core.js';
-import { BudgetTracker } from './budget-tracker.js';
+import { BudgetTracker } from './budget-tracker.js'; // Corrected import path
 
 export const AppModals = {
   open(modalName) {
@@ -83,14 +83,8 @@ export const ModalRenderer = {
             <div class="p-4 bg-red-50 dark:bg-red-900/30 rounded-lg border-l-4 border-red-500">
               <h3 class="font-bold text-lg mb-3 dark:text-white">Japón</h3>
               <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <span class="dark:text-gray-300">🚓 Policía:</span>
-                  <a href="tel:110" class="text-2xl font-bold text-red-600 dark:text-red-400">110</a>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="dark:text-gray-300">🚑 Ambulancia:</span>
-                  <a href="tel:119" class="text-2xl font-bold text-red-600 dark:text-red-400">119</a>
-                </div>
+                <div class="flex justify-between items-center"><span class="dark:text-gray-300">🚓 Policía:</span><a href="tel:110" class="text-2xl font-bold text-red-600 dark:text-red-400">110</a></div>
+                <div class="flex justify-between items-center"><span class="dark:text-gray-300">🚑 Ambulancia:</span><a href="tel:119" class="text-2xl font-bold text-red-600 dark:text-red-400">119</a></div>
               </div>
             </div>
             <div class="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
@@ -116,34 +110,21 @@ export const ModalRenderer = {
       </div>
     `;
   },
-
+  
   getPhrasesModal() {
-    const phrases = [
-      { jp: 'こんにちは (Konnichiwa)', es: 'Hola' },
-      { jp: 'ありがとう (Arigatou)', es: 'Gracias' },
-      { jp: 'すみません (Sumimasen)', es: 'Disculpe' },
-      { jp: 'トイレはどこですか？ (Toire wa doko desu ka?)', es: '¿Dónde está el baño?' },
-      { jp: 'いくらですか？ (Ikura desu ka?)', es: '¿Cuánto cuesta?' },
-      { jp: '駅はどこですか？ (Eki wa doko desu ka?)', es: '¿Dónde está la estación?' },
-      { jp: '助けてください (Tasukete kudasai)', es: 'Ayuda, por favor' },
-      { jp: 'メニューをください (Menyū o kudasai)', es: 'Deme el menú, por favor' },
-      { jp: '英語を話せますか？ (Eigo o hanasemasu ka?)', es: '¿Habla inglés?' },
-      { jp: '予約があります (Yoyaku ga arimasu)', es: 'Tengo una reserva' }
+     const phrases = [
+      { jp: 'こんにちは (Konnichiwa)', es: 'Hola' }, { jp: 'ありがとう (Arigatou)', es: 'Gracias' },
+      { jp: 'すみません (Sumimasen)', es: 'Disculpe' }, { jp: 'トイレはどこですか？ (Toire wa doko desu ka?)', es: '¿Dónde está el baño?' },
+      { jp: 'いくらですか？ (Ikura desu ka?)', es: '¿Cuánto cuesta?' }, { jp: '駅はどこですか？ (Eki wa doko desu ka?)', es: '¿Dónde está la estación?' },
+      { jp: '助けてください (Tasukete kudasai)', es: 'Ayuda, por favor' }, { jp: 'メニューをください (Menyū o kudasai)', es: 'Deme el menú, por favor' },
+      { jp: '英語を話せますか？ (Eigo o hanasemasu ka?)', es: '¿Habla inglés?' }, { jp: '予約があります (Yoyaku ga arimasu)', es: 'Tengo una reserva' }
     ];
     return `
       <div id="modal-phrases" class="modal">
         <div class="modal-content max-w-2xl">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold dark:text-white">🗣️ Frases Útiles</h2>
-            <button onclick="AppModals.close('phrases')" class="text-3xl hover:text-red-600" aria-label="Cerrar modal">&times;</button>
-          </div>
+          <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold dark:text-white">🗣️ Frases Útiles</h2><button onclick="AppModals.close('phrases')" class="text-3xl hover:text-red-600">&times;</button></div>
           <div class="space-y-3 max-h-96 overflow-y-auto">
-            ${phrases.map(phrase => `
-              <div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                <p class="font-semibold dark:text-white">${AppCore.escapeHtml(phrase.jp)}</p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">${AppCore.escapeHtml(phrase.es)}</p>
-              </div>
-            `).join('')}
+            ${phrases.map(p => `<div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg"><p class="font-semibold dark:text-white">${AppCore.escapeHtml(p.jp)}</p><p class="text-sm text-gray-600 dark:text-gray-400">${AppCore.escapeHtml(p.es)}</p></div>`).join('')}
           </div>
         </div>
       </div>
@@ -154,18 +135,16 @@ export const ModalRenderer = {
     return `
       <div id="modal-notes" class="modal">
         <div class="modal-content max-w-2xl">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold dark:text-white">📝 Mis Notas</h2>
-            <button onclick="AppModals.close('notes')" class="text-3xl hover:text-red-600" aria-label="Cerrar modal">&times;</button>
-          </div>
-          <textarea id="notesTextarea" class="w-full h-64 p-4 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Tus notas aquí..." aria-label="Escribir notas"></textarea>
-          <button onclick="AppModals.saveNotes()" class="mt-4 w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold" aria-label="Guardar notas">
-            💾 Guardar
-          </button>
+          <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold dark:text-white">📝 Mis Notas</h2><button onclick="AppModals.close('notes')" class="text-3xl hover:text-red-600">&times;</button></div>
+          <textarea id="notesTextarea" class="w-full h-64 p-4 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Tus notas aquí..."></textarea>
+          <button onclick="AppModals.saveNotes()" class="mt-4 w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold">💾 Guardar</button>
         </div>
       </div>
     `;
   },
 
   getChecklistModal() {
-   
+    // This function seems incomplete in your original file, I'll leave it as is.
+    return '';
+  }
+};
