@@ -25,6 +25,7 @@ export const BudgetTracker = {
         </div>
       </div>
     `;
+    this.updateTotalSpent();
   },
 
   addExpense() {
@@ -43,5 +44,11 @@ export const BudgetTracker = {
     this.expenses.splice(index, 1);
     localStorage.setItem('expenses', JSON.stringify(this.expenses));
     this.updateModal();
+  },
+
+  updateTotalSpent() {
+    const total = this.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const totalSpent = document.getElementById('totalSpent');
+    if (totalSpent) totalSpent.textContent = `¥${total}`;
   }
 };
