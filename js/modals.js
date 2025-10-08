@@ -27,7 +27,8 @@ export const ModalRenderer = {
         setTimeout(() => {
             const saveBtn = document.getElementById('saveNotesBtn');
             if (saveBtn) {
-                saveBtn.addEventListener('click', () => {
+                saveBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
                     if (window.AppCore) {
                         window.AppCore.saveNotes();
                     }
@@ -38,7 +39,7 @@ export const ModalRenderer = {
 
     getEmergencyModal() {
         return `
-            <div id="modal-emergency" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div id="modal-emergency" class="modal">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                     <div class="p-6">
                         <div class="flex justify-between items-center mb-6">
@@ -73,7 +74,7 @@ export const ModalRenderer = {
 
     getBudgetModal() {
         return `
-            <div id="modal-budget" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div id="modal-budget" class="modal">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                     <div class="p-6">
                         <div class="flex justify-between items-center mb-6">
@@ -103,16 +104,11 @@ export const ModalRenderer = {
             { jp: '英語を話せますか？ (Eigo wo hanasemasu ka?)', es: '¿Habla inglés?' },
             { jp: 'おいしい (Oishii)', es: 'Delicioso' },
             { jp: 'お水をください (Omizu wo kudasai)', es: 'Agua por favor' },
-            { jp: 'お会計お願いします (Okaikei onegaishimasu)', es: 'La cuenta por favor' },
-            { jp: 'わかりました (Wakarimashita)', es: 'Entendido' },
-            { jp: 'わかりません (Wakarimasen)', es: 'No entiendo' },
-            { jp: '助けてください (Tasukete kudasai)', es: '¡Ayuda por favor!' },
-            { jp: 'いただきます (Itadakimasu)', es: 'Buen provecho (antes de comer)' },
-            { jp: 'ごちそうさまでした (Gochisousama deshita)', es: 'Gracias por la comida (después)' }
+            { jp: 'お会計お願いします (Okaikei onegaishimasu)', es: 'La cuenta por favor' }
         ];
         
         return `
-            <div id="modal-phrases" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div id="modal-phrases" class="modal">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                     <div class="p-6">
                         <div class="flex justify-between items-center mb-6">
@@ -135,12 +131,12 @@ export const ModalRenderer = {
 
     getNotesModal() {
         return `
-            <div id="modal-notes" class="modal fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div id="modal-notes" class="modal">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full">
                     <div class="p-6">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-2xl font-bold dark:text-white">📝 Mis Notas</h2>
-                            <button class="modal-close text-3xl hover:text-red-600 transition" data-modal-close="notes" aria-label="Cerrar">&times;</button>
+                            <button class="modal-close text-3xl hover:text-red-600 transition cursor-pointer" data-modal-close="notes" aria-label="Cerrar">&times;</button>
                         </div>
                         <textarea 
                             id="notesTextarea" 
