@@ -5,8 +5,8 @@ export const AppCore = {
   state: {
     currentDay: 1,
     currentTab: 'itinerary',
-    checkedActivities: {},
-    darkMode: false
+    darkMode: false,
+    checkedActivities: {}
   },
 
   init() {
@@ -18,46 +18,52 @@ export const AppCore = {
   },
 
   loadState() {
-    this.state.checkedActivities = JSON.parse(localStorage.getItem('checkedActivities') || '{}');
+    // Dark Mode
     this.state.darkMode = localStorage.getItem('darkMode') === 'true';
     if (this.state.darkMode) {
       document.documentElement.classList.add('dark');
-      document.getElementById('themeToggle').textContent = '☀️';
+      document.getElementById('darkModeIcon').textContent = '☀️';
     }
+    // Checked activities
+    this.state.checkedActivities = JSON.parse(localStorage.getItem('checkedActivities') || '{}');
   },
 
   setupEventListeners() {
-    // Manejador de pestañas
+    // Header Buttons
+    document.getElementById('themeToggle').addEventListener('click', () => this.toggleDarkMode());
+    document.querySelector('button[data-modal="emergency"]').addEventListener('click', () => AppModals.open('emergency'));
+
+    // Tab Navigation
     document.getElementById('tabSelector').addEventListener('click', (e) => {
-      if (e.target.matches('.tab-btn')) this.switchTab(e.target.dataset.tab);
+      if (e.target.matches('.tab-btn')) {
+        this.switchTab(e.target.dataset.tab);
+      }
     });
 
-    // Botones del header
-    document.getElementById('themeToggle').addEventListener('click', () => this.toggleDarkMode());
-    document.getElementById('emergencyBtn').addEventListener('click', () => AppModals.open('emergency'));
-
-    // Botones flotantes
-    document.getElementById('budgetBtn').addEventListener('click', () => AppModals.open('budget'));
-    document.getElementById('phrasesBtn').addEventListener('click', () => AppModals.open('phrases'));
-    document.getElementById('checklistBtn').addEventListener('click', () => AppModals.open('checklist'));
-    document.getElementById('notesBtn').addEventListener('click', () => AppModals.open('notes'));
+    // Floating Action Buttons
+    document.getElementById('floating-buttons-container').addEventListener('click', (e) => {
+        const fab = e.target.closest('.floating-btn');
+        if (fab) {
+            AppModals.open(fab.dataset.modal);
+        }
+    });
     
-    // *** NUEVO: Manejador central para cerrar modales ***
+    // Modal Close Logic
     document.getElementById('modalsContainer').addEventListener('click', (e) => {
         const closeButton = e.target.closest('.modal-close-btn');
         if (closeButton) {
             AppModals.close(closeButton.dataset.modalClose);
         }
     });
-
-    // Cerrar modales al hacer clic fuera o presionar Escape
     window.addEventListener('click', (e) => {
-      if (e.target.classList.contains('modal')) e.target.classList.remove('active');
+        if (e.target.classList.contains('modal')) {
+            e.target.classList.remove('active');
+        }
     });
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        document.querySelectorAll('.modal.active').forEach(modal => modal.classList.remove('active'));
-      }
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal.active').forEach(modal => modal.classList.remove('active'));
+        }
     });
   },
 
@@ -65,7 +71,7 @@ export const AppCore = {
     document.documentElement.classList.toggle('dark');
     this.state.darkMode = document.documentElement.classList.contains('dark');
     localStorage.setItem('darkMode', this.state.darkMode);
-    document.getElementById('themeToggle').textContent = this.state.darkMode ? '☀️' : '🌙';
+    document.getElementById('darkModeIcon').textContent = this.state.darkMode ? '☀️' : '🌙';
   },
 
   switchTab(tabName) {
@@ -92,7 +98,8 @@ export const AppCore = {
     if (days > 0) {
       elem.textContent = `Faltan ${days} días`;
     } else {
-      elem.textContent = 'Viaje completado ✓';
+      const currentDay = Math.floor((now - tripStart) / (1000 * 60 * 60 * 24)) + 1;
+      elem.textContent = currentDay <= 15 ? `Día ${currentDay} de 15` : 'Viaje completado ✓';
     }
   },
 
