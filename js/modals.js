@@ -37,7 +37,7 @@ export const AppModals = {
     items.push({ name: input.value.trim(), checked: false });
     localStorage.setItem('checklistItems', JSON.stringify(items));
     input.value = '';
-    AppCore.renderModals();
+    ModalRenderer.renderModals();
   },
 
   toggleChecklistItem(index) {
@@ -45,7 +45,7 @@ export const AppModals = {
     if (items[index]) {
       items[index].checked = !items[index].checked;
       localStorage.setItem('checklistItems', JSON.stringify(items));
-      AppCore.renderModals();
+      ModalRenderer.renderModals();
     }
   },
 
@@ -54,7 +54,7 @@ export const AppModals = {
     const items = JSON.parse(localStorage.getItem('checklistItems') || '[]');
     items.splice(index, 1);
     localStorage.setItem('checklistItems', JSON.stringify(items));
-    AppCore.renderModals();
+    ModalRenderer.renderModals();
   }
 };
 
@@ -168,40 +168,4 @@ export const ModalRenderer = {
   },
 
   getChecklistModal() {
-    const items = JSON.parse(localStorage.getItem('checklistItems') || '[]');
-    return `
-      <div id="modal-checklist" class="modal">
-        <div class="modal-content max-w-2xl">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold dark:text-white">🧳 Checklist de Equipaje</h2>
-            <button onclick="AppModals.close('checklist')" class="text-3xl hover:text-red-600" aria-label="Cerrar modal">&times;</button>
-          </div>
-          <div class="space-y-3">
-            <div class="flex gap-2">
-              <input id="checklistInput" type="text" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Agregar item (ej. Pasaporte)" aria-label="Agregar nuevo item al checklist">
-              <button onclick="AppModals.addChecklistItem()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700" aria-label="Añadir item">➕</button>
-            </div>
-            <div id="checklistItems" class="space-y-2 max-h-96 overflow-y-auto">
-              ${items.map((item, index) => `
-                <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <input 
-                    type="checkbox" 
-                    id="checklist-${index}"
-                    ${item.checked ? 'checked' : ''} 
-                    onchange="AppModals.toggleChecklistItem(${index})"
-                    class="w-5 h-5 cursor-pointer accent-yellow-600"
-                    aria-checked="${item.checked}"
-                    aria-label="Marcar ${item.name}"
-                  >
-                  <label for="checklist-${index}" class="flex-1 dark:text-white ${item.checked ? 'line-through text-gray-500 dark:text-gray-400' : ''}">${AppCore.escapeHtml(item.name)}</label>
-                  <button onclick="AppModals.deleteChecklistItem(${index})" class="text-red-600 hover:text-red-700" aria-label="Eliminar ${item.name}">🗑️</button>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-};
-
+   
