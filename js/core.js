@@ -27,30 +27,32 @@ export const AppCore = {
   },
 
   setupEventListeners() {
-    // Tab switching
+    // Manejador de pestañas
     document.getElementById('tabSelector').addEventListener('click', (e) => {
-      if (e.target.matches('.tab-btn')) {
-        this.switchTab(e.target.dataset.tab);
-      }
+      if (e.target.matches('.tab-btn')) this.switchTab(e.target.dataset.tab);
     });
 
-    // Dark mode
+    // Botones del header
     document.getElementById('themeToggle').addEventListener('click', () => this.toggleDarkMode());
-    
-    // Header SOS Button
     document.getElementById('emergencyBtn').addEventListener('click', () => AppModals.open('emergency'));
 
-    // Floating Buttons
+    // Botones flotantes
     document.getElementById('budgetBtn').addEventListener('click', () => AppModals.open('budget'));
     document.getElementById('phrasesBtn').addEventListener('click', () => AppModals.open('phrases'));
     document.getElementById('checklistBtn').addEventListener('click', () => AppModals.open('checklist'));
     document.getElementById('notesBtn').addEventListener('click', () => AppModals.open('notes'));
     
-    // Global listener to close modals
+    // *** NUEVO: Manejador central para cerrar modales ***
+    document.getElementById('modalsContainer').addEventListener('click', (e) => {
+        const closeButton = e.target.closest('.modal-close-btn');
+        if (closeButton) {
+            AppModals.close(closeButton.dataset.modalClose);
+        }
+    });
+
+    // Cerrar modales al hacer clic fuera o presionar Escape
     window.addEventListener('click', (e) => {
-      if (e.target.classList.contains('modal')) {
-        e.target.classList.remove('active');
-      }
+      if (e.target.classList.contains('modal')) e.target.classList.remove('active');
     });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
@@ -77,7 +79,6 @@ export const AppCore = {
     if (btn) btn.classList.add('active');
     
     this.state.currentTab = tabName;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 
   updateCountdown() {
@@ -90,11 +91,8 @@ export const AppCore = {
     
     if (days > 0) {
       elem.textContent = `Faltan ${days} días`;
-    } else if (days === 0) {
-      elem.textContent = '¡HOY es el día!';
     } else {
-      const currentDay = Math.abs(days) + 1;
-      elem.textContent = currentDay <= 15 ? `Día ${currentDay} de 15` : 'Viaje completado ✓';
+      elem.textContent = 'Viaje completado ✓';
     }
   },
 
