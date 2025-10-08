@@ -1,68 +1,78 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Viaje a Japón</title>
-  <link rel="icon" type="image/png" href="/viaje-japon/images/icons/icon-192.png">
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="/viaje-japon/css/main.css">
-  <link rel="manifest" href="/viaje-japon/manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🇯🇵 Viaje a Japón - Itinerario Interactivo</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/viaje-japon/css/main.css">
+    <link rel="manifest" href="/viaje-japon/manifest.json">
+    <link rel="icon" type="image/png" href="/viaje-japon/images/icons/icon-192.png">
 </head>
-<body class="gradient-bg min-h-screen text-gray-800 dark:text-white">
-  
-  <header class="bg-blue-600 dark:bg-blue-800 text-white p-4 shadow-md sticky top-0 z-50">
-    <div class="container mx-auto flex justify-between items-center">
-      <h1 class="text-2xl font-bold">Viaje a Japón 🇯🇵</h1>
-      <div class="flex items-center space-x-4">
-        <span id="countdown" class="text-lg hidden md:block"></span>
-        <button id="themeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-xl">🌙</button>
-        <button id="emergencyBtn" class="p-2 rounded-full bg-red-500 text-white text-xl">🚨</button>
-      </div>
+<body class="gradient-bg">
+
+    <div id="floating-buttons-container" class="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
+        <button data-modal="budget" class="floating-btn" title="Budget Tracker">💰</button>
+        <button data-modal="phrases" class="floating-btn" title="Frases en Japonés">🗣️</button>
+        <button data-modal="notes" class="floating-btn" title="Mis Notas">📝</button>
     </div>
-  </header>
 
-  <nav class="container mx-auto mt-4 px-2">
-    <div id="tabSelector" class="flex space-x-2 overflow-x-auto scrollbar-hide pb-2">
-      <button class="tab-btn active" data-tab="itinerary">Itinerario</button>
-      <button class="tab-btn" data-tab="map">Mapa</button>
-      <button class="tab-btn" data-tab="flights">Vuelos</button>
-      <button class="tab-btn" data-tab="food">Comida</button>
-      <button class="tab-btn" data-tab="souvenirs">Souvenirs</button>
-      <button class="tab-btn" data-tab="gallery">Galería</button>
-      <button class="tab-btn" data-tab="utils">Utilidades</button>
-    </div>
-  </nav>
+    <header class="gradient-header text-white p-6 shadow-lg">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <h1 class="text-3xl md:text-4xl font-bold mb-2">🇯🇵 Viaje a Japón</h1>
+                    <p class="text-lg md:text-xl opacity-90">2 Hermanos • 15 Días • Feb 16 - Mar 2, 2025</p>
+                    <div class="mt-4 flex flex-wrap gap-4 text-sm md:text-base">
+                        <div class="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2">
+                            <span class="text-xl">⏰</span>
+                            <span id="countdown">Calculando...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button id="themeToggle" class="bg-white/20 hover:bg-white/30 rounded-lg px-4 py-2 transition"><span id="darkModeIcon">🌙</span></button>
+                    <button data-modal="emergency" class="bg-red-500/80 hover:bg-red-600 rounded-lg px-4 py-2 transition">🚨 SOS</button>
+                </div>
+            </div>
+        </div>
+    </header>
 
-  <main class="container mx-auto mt-6 p-4">
-    <div id="content-itinerary" class="tab-content"></div>
-    <div id="content-map" class="tab-content hidden"></div>
-    <div id="content-flights" class="tab-content hidden"></div>
-    <div id="content-food" class="tab-content hidden"></div>
-    <div id="content-souvenirs" class="tab-content hidden"></div>
-    <div id="content-gallery" class="tab-content hidden"></div>
-    <div id="content-utils" class="tab-content hidden"></div>
-  </main>
+    <nav id="tabs-nav" class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4">
+            <div id="tabSelector" class="flex gap-1 overflow-x-auto scrollbar-hide">
+                <button data-tab="itinerary" class="tab-btn active">📅 Itinerario</button>
+                <button data-tab="map" class="tab-btn">🗺️ Mapa</button>
+                <button data-tab="flights" class="tab-btn">✈️ Vuelos</button>
+                <button data-tab="utils" class="tab-btn">🛠️ Utilidades</button>
+            </div>
+        </div>
+    </nav>
 
-  <div class="fixed bottom-4 right-4 flex flex-col space-y-2 z-40">
-    <button id="budgetBtn" class="floating-btn bg-green-500 text-white">💰</button>
-    <button id="phrasesBtn" class="floating-btn bg-blue-500 text-white">🗣️</button>
-    <button id="checklistBtn" class="floating-btn bg-yellow-500 text-white">🧳</button>
-    <button id="notesBtn" class="floating-btn bg-purple-500 text-white">📝</button>
-  </div>
-  
-  <div id="modalsContainer"></div>
+    <main>
+        <div id="content-itinerary" class="tab-content"></div>
+        <div id="content-map" class="tab-content hidden"></div>
+        <div id="content-flights" class="tab-content hidden"></div>
+        <div id="content-utils" class="tab-content hidden"></div>
+    </main>
 
-  <script type="module" src="/viaje-japon/js/app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/viaje-japon/service-worker.js')
-          .then(reg => console.log('Service Worker registered.', reg))
-          .catch(err => console.error('Service Worker registration failed:', err));
-      });
-    }
-  </script>
+    <div id="modalsContainer"></div>
+
+    <footer class="bg-gray-800 text-white p-8 mt-12">
+        <div class="max-w-6xl mx-auto text-center">
+            <p class="text-xl font-bold mb-2">¡Que tengan un viaje increíble! 🎌</p>
+            <p class="text-gray-400 mb-4">いってらっしゃい (Itterasshai - ¡Buen viaje!)</p>
+            <p class="text-xs text-gray-500">Creado con ❤️ para dos hermanos aventureros</p>
+        </div>
+    </footer>
+
+    <script type="module" src="/viaje-japon/js/app.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/viaje-japon/service-worker.js');
+        });
+      }
+    </script>
 </body>
 </html>
