@@ -3,18 +3,20 @@
    =================================== */
 
 const CACHE_NAME = 'japan-trip-v1.1';
-const BASE_PATH = location.hostname === 'localhost' ? '' : '/viaje-japon';
 
+// Rutas corregidas con el prefijo del repositorio
 const urlsToCache = [
-    `${BASE_PATH}/`,
-    `${BASE_PATH}/index.html`,
-    `${BASE_PATH}/css/main.css`,
-    `${BASE_PATH}/js/app.js`,
-    `${BASE_PATH}/js/itinerary-data.js`,
-    `${BASE_PATH}/js/budget-tracker.js`,
-    `${BASE_PATH}/js/map.js`,
-    `${BASE_PATH}/js/gallery.js`,
-    `${BASE_PATH}/manifest.json`
+    '/viaje-japon/',
+    '/viaje-japon/index.html',
+    '/viaje-japon/css/main.css',
+    '/viaje-japon/js/app.js',
+    '/viaje-japon/js/itinerary-data.js',
+    '/viaje-japon/js/budget-tracker.js',
+    '/viaje-japon/js/map.js',
+    '/viaje-japon/js/gallery.js',
+    '/viaje-japon/manifest.json',
+    '/viaje-japon/images/icons/icon-192.png',
+    '/viaje-japon/images/icons/icon-512.png'
 ];
 
 self.addEventListener('install', event => {
@@ -48,7 +50,7 @@ self.addEventListener('fetch', event => {
             .then(response => response || fetch(event.request))
             .catch(() => {
                 if (event.request.destination === 'document') {
-                    return caches.match(`${BASE_PATH}/index.html`);
+                    return caches.match('/viaje-japon/index.html');
                 }
             })
     );
