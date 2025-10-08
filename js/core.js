@@ -10,7 +10,7 @@ const App = {
         }
         
         ModalRenderer.renderModals();
-        ItineraryHandler.renderItinerary();
+        ItineraryHandler.init(); // Usamos init para configurar el itinerario
         TabsHandler.renderAllTabs();
 
         this.setupEventListeners();
@@ -29,12 +29,12 @@ const App = {
             if (tabButton) switchTab(tabButton.dataset.tab);
         });
 
-        // Botones que abren modales (SOS y los flotantes)
-        document.querySelectorAll('button[data-modal]').forEach(btn => {
-            btn.addEventListener('click', () => AppModals.open(btn.dataset.modal));
-        });
-        document.querySelectorAll('div[data-modal]').forEach(div => {
-            div.addEventListener('click', () => AppModals.open(div.dataset.modal));
+        // Botones que abren modales (TODOS)
+        document.body.addEventListener('click', (e) => {
+            const modalButton = e.target.closest('[data-modal]');
+            if (modalButton) {
+                AppModals.open(modalButton.dataset.modal);
+            }
         });
 
         // Lógica para CERRAR los modales
