@@ -1,6 +1,6 @@
 // js/modals.js
 import { AppCore } from './core.js';
-import { BudgetTracker } from './budget-tracker.js'; // Corrected import path
+import { BudgetTracker } from './budget-tracker.js';
 
 export const AppModals = {
   open(modalName) {
@@ -12,9 +12,6 @@ export const AppModals = {
     }
     if (modalName === 'budget') {
       BudgetTracker.updateModal();
-    }
-    if (modalName === 'checklist') {
-      document.getElementById('checklistInput')?.focus();
     }
   },
 
@@ -28,33 +25,6 @@ export const AppModals = {
     localStorage.setItem('travelNotes', notes);
     alert('✅ Notas guardadas!');
     this.close('notes');
-  },
-
-  addChecklistItem() {
-    const input = document.getElementById('checklistInput');
-    if (!input || !input.value.trim()) return;
-    const items = JSON.parse(localStorage.getItem('checklistItems') || '[]');
-    items.push({ name: input.value.trim(), checked: false });
-    localStorage.setItem('checklistItems', JSON.stringify(items));
-    input.value = '';
-    ModalRenderer.renderModals();
-  },
-
-  toggleChecklistItem(index) {
-    const items = JSON.parse(localStorage.getItem('checklistItems') || '[]');
-    if (items[index]) {
-      items[index].checked = !items[index].checked;
-      localStorage.setItem('checklistItems', JSON.stringify(items));
-      ModalRenderer.renderModals();
-    }
-  },
-
-  deleteChecklistItem(index) {
-    if (!confirm('¿Eliminar este item?')) return;
-    const items = JSON.parse(localStorage.getItem('checklistItems') || '[]');
-    items.splice(index, 1);
-    localStorage.setItem('checklistItems', JSON.stringify(items));
-    ModalRenderer.renderModals();
   }
 };
 
@@ -77,7 +47,7 @@ export const ModalRenderer = {
         <div class="modal-content max-w-2xl">
           <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold text-red-600 dark:text-red-400">🚨 Emergencias</h2>
-            <button onclick="AppModals.close('emergency')" class="text-3xl hover:text-red-600" aria-label="Cerrar modal">&times;</button>
+            <button class="modal-close-btn text-3xl hover:text-red-600" data-modal-close="emergency" aria-label="Cerrar modal">&times;</button>
           </div>
           <div class="space-y-4">
             <div class="p-4 bg-red-50 dark:bg-red-900/30 rounded-lg border-l-4 border-red-500">
@@ -103,7 +73,7 @@ export const ModalRenderer = {
         <div class="modal-content max-w-2xl">
           <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold dark:text-white">💰 Budget Tracker</h2>
-            <button onclick="AppModals.close('budget')" class="text-3xl hover:text-red-600" aria-label="Cerrar modal">&times;</button>
+            <button class="modal-close-btn text-3xl hover:text-red-600" data-modal-close="budget" aria-label="Cerrar modal">&times;</button>
           </div>
           <div id="budgetModalContent"></div>
         </div>
@@ -115,14 +85,12 @@ export const ModalRenderer = {
      const phrases = [
       { jp: 'こんにちは (Konnichiwa)', es: 'Hola' }, { jp: 'ありがとう (Arigatou)', es: 'Gracias' },
       { jp: 'すみません (Sumimasen)', es: 'Disculpe' }, { jp: 'トイレはどこですか？ (Toire wa doko desu ka?)', es: '¿Dónde está el baño?' },
-      { jp: 'いくらですか？ (Ikura desu ka?)', es: '¿Cuánto cuesta?' }, { jp: '駅はどこですか？ (Eki wa doko desu ka?)', es: '¿Dónde está la estación?' },
-      { jp: '助けてください (Tasukete kudasai)', es: 'Ayuda, por favor' }, { jp: 'メニューをください (Menyū o kudasai)', es: 'Deme el menú, por favor' },
-      { jp: '英語を話せますか？ (Eigo o hanasemasu ka?)', es: '¿Habla inglés?' }, { jp: '予約があります (Yoyaku ga arimasu)', es: 'Tengo una reserva' }
+      { jp: 'いくらですか？ (Ikura desu ka?)', es: '¿Cuánto cuesta?' }
     ];
     return `
       <div id="modal-phrases" class="modal">
         <div class="modal-content max-w-2xl">
-          <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold dark:text-white">🗣️ Frases Útiles</h2><button onclick="AppModals.close('phrases')" class="text-3xl hover:text-red-600">&times;</button></div>
+          <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold dark:text-white">🗣️ Frases Útiles</h2><button class="modal-close-btn" data-modal-close="phrases">&times;</button></div>
           <div class="space-y-3 max-h-96 overflow-y-auto">
             ${phrases.map(p => `<div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg"><p class="font-semibold dark:text-white">${AppCore.escapeHtml(p.jp)}</p><p class="text-sm text-gray-600 dark:text-gray-400">${AppCore.escapeHtml(p.es)}</p></div>`).join('')}
           </div>
@@ -135,7 +103,7 @@ export const ModalRenderer = {
     return `
       <div id="modal-notes" class="modal">
         <div class="modal-content max-w-2xl">
-          <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold dark:text-white">📝 Mis Notas</h2><button onclick="AppModals.close('notes')" class="text-3xl hover:text-red-600">&times;</button></div>
+          <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold dark:text-white">📝 Mis Notas</h2><button class="modal-close-btn" data-modal-close="notes">&times;</button></div>
           <textarea id="notesTextarea" class="w-full h-64 p-4 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Tus notas aquí..."></textarea>
           <button onclick="AppModals.saveNotes()" class="mt-4 w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold">💾 Guardar</button>
         </div>
@@ -143,8 +111,5 @@ export const ModalRenderer = {
     `;
   },
 
-  getChecklistModal() {
-    // This function seems incomplete in your original file, I'll leave it as is.
-    return '';
-  }
+  getChecklistModal() { return ''; }
 };
