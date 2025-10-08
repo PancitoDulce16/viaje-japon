@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Viaje a Japón</title>
-  <link rel="icon" type="image/png" href="/viaje-japon/images/favicon.png">
+  <link rel="icon" type="image/png" href="/viaje-japon/images/icons/icon-192.png">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="/viaje-japon/css/main.css">
@@ -45,102 +45,29 @@
         </div>
     </section>
 
-    <section id="map" class="tab-content hidden">
-      <h2 class="text-2xl font-bold mb-4">Mapa</h2>
-      <div id="mapContainer" class="h-96 bg-gray-100 dark:bg-gray-800 rounded">
-        <p>Mapa en construcción...</p>
-      </div>
-    </section>
-
-    <section id="flights" class="tab-content hidden">
-      <h2 class="text-2xl font-bold mb-4">Vuelos</h2>
-      <div id="flightsContainer" class="bg-white dark:bg-gray-800 p-4 rounded shadow-md">
-        <p>Vuelo AM58: Monterrey → Narita (16 Feb, 6:30 AM)</p>
-        <p>Vuelo AM58: Narita → Monterrey (2 Mar, 9:30 AM)</p>
-      </div>
-    </section>
-
-    <section id="restaurants" class="tab-content hidden">
-      <h2 class="text-2xl font-bold mb-4">Comida</h2>
-      <div id="restaurantsContainer" class="bg-white dark:bg-gray-800 p-4 rounded shadow-md">
-        </div>
-    </section>
-
-    <section id="souvenirs" class="tab-content hidden">
-      <h2 class="text-2xl font-bold mb-4">Souvenirs</h2>
-      <div id="souvenirsContainer" class="bg-white dark:bg-gray-800 p-4 rounded shadow-md">
-        </div>
-    </section>
-
-    <section id="gallery" class="tab-content hidden">
-      <h2 class="text-2xl font-bold mb-4">Galería</h2>
-      <div id="galleryContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        </div>
-    </section>
-
-    <section id="utils" class="tab-content hidden">
-      <h2 class="text-2xl font-bold mb-4">Utilidades</h2>
-      <div id="utilsContainer" class="bg-white dark:bg-gray-800 p-4 rounded shadow-md">
-        <p>Frases, checklist, y más...</p>
-      </div>
-    </section>
+    <section id="map" class="tab-content hidden"></section>
+    <section id="flights" class="tab-content hidden"></section>
+    <section id="restaurants" class="tab-content hidden"></section>
+    <section id="souvenirs" class="tab-content hidden"></section>
+    <section id="gallery" class="tab-content hidden"></section>
+    <section id="utils" class="tab-content hidden"></section>
   </main>
-
-  <section class="container mx-auto mt-6 p-4">
-    <h2 class="text-xl font-bold">Presupuesto</h2>
-    <p>Total gastado: <span id="totalSpent">0 JPY</span></p>
-    <p>Presupuesto restante: <span id="remainingBudget">7000 JPY</span></p>
-  </section>
-
-  <div class="fixed bottom-4 right-4 flex flex-col space-y-2">
-    <button id="budgetBtn" class="floating-btn bg-green-500 text-white">💰</button>
-    <button id="phrasesBtn" class="floating-btn bg-blue-500 text-white">🗣️</button>
-    <button id="checklistBtn" class="floating-btn bg-yellow-500 text-white">🧳</button>
-    <button id="emergencyModalBtn" class="floating-btn bg-red-500 text-white">🚨</button>
-    <button id="notesBtn" class="floating-btn bg-purple-500 text-white">📝</button>
-  </div>
-
-  <div id="budgetModal" class="modal hidden">
-    <div class="modal-content bg-white dark:bg-gray-800 p-6 rounded shadow-lg">
-      <h2 class="text-xl font-bold mb-4">Agregar Gasto</h2>
-      <input id="expenseAmount" type="number" placeholder="Monto (JPY)" class="w-full p-2 mb-4 rounded">
-      <input id="expenseDesc" type="text" placeholder="Descripción" class="w-full p-2 mb-4 rounded">
-      <button id="addExpense" class="bg-green-500 text-white px-4 py-2 rounded">Agregar</button>
-      <button class="modal-close bg-gray-500 text-white px-4 py-2 rounded">Cerrar</button>
-    </div>
-  </div>
-  <div id="phrasesModal" class="modal hidden">
-    <div class="modal-content bg-white dark:bg-gray-800 p-6 rounded shadow-lg">
-      <h2 class="text-xl font-bold mb-4">Frases Útiles</h2>
-      <p>¡Arigato! - Gracias</p>
-      <p>Sumimasen - Disculpe / Perdón</p>
-      <button class="modal-close bg-gray-500 text-white px-4 py-2 rounded">Cerrar</button>
-    </div>
-  </div>
-  <div id="checklistModal" class="modal hidden">
-    <div class="modal-content bg-white dark:bg-gray-800 p-6 rounded shadow-lg">
-      <h2 class="text-xl font-bold mb-4">Checklist</h2>
-      <p>Pasaporte, JR Pass, Suica Card...</p>
-      <button class="modal-close bg-gray-500 text-white px-4 py-2 rounded">Cerrar</button>
-    </div>
-  </div>
-  <div id="emergencyModal" class="modal hidden">
-    <div class="modal-content bg-white dark:bg-gray-800 p-6 rounded shadow-lg">
-      <h2 class="text-xl font-bold mb-4">Emergencias</h2>
-      <p>Emergencia: 110 (Policía), 119 (Ambulancia)</p>
-      <button class="modal-close bg-gray-500 text-white px-4 py-2 rounded">Cerrar</button>
-    </div>
-  </div>
-  <div id="notesModal" class="modal hidden">
-    <div class="modal-content bg-white dark:bg-gray-800 p-6 rounded shadow-lg">
-      <h2 class="text-xl font-bold mb-4">Notas</h2>
-      <textarea id="notesInput" class="w-full p-2 mb-4 rounded"></textarea>
-      <button id="saveNotes" class="bg-blue-500 text-white px-4 py-2 rounded">Guardar</button>
-      <button class="modal-close bg-gray-500 text-white px-4 py-2 rounded">Cerrar</button>
-    </div>
-  </div>
+  
+  <div id="modalsContainer"></div>
 
   <script type="module" src="/viaje-japon/js/app.js"></script>
-  <script src="/viaje-japon/service-worker.js"></script>
+  
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/viaje-japon/service-worker.js')
+          .then(registration => {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          }, err => {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+      });
+    }
+  </script>
 </body>
 </html>
