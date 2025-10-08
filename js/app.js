@@ -4,7 +4,8 @@ import { ItineraryHandler } from './itinerary.js';
 import { TabsHandler } from './tabs.js';
 import { ModalRenderer } from './modals.js';
 import { MapHandler } from './map.js';
-import { AttractionsHandler } from './attractions.js'; // ← NUEVO
+import { AttractionsHandler } from './attractions.js';
+import { PreparationHandler } from './preparation.js'; // ← NUEVO
 
 function initApp() {
     console.log('🚀 Iniciando aplicación...');
@@ -13,7 +14,8 @@ function initApp() {
     ItineraryHandler.init();
     MapHandler.renderMap();
     TabsHandler.renderAllTabs();
-    AttractionsHandler.renderAttractions(); // ← NUEVO
+    AttractionsHandler.renderAttractions();
+    PreparationHandler.renderPreparation(); // ← NUEVO
     AppCore.init();
     
     console.log('✅ Aplicación iniciada correctamente');
