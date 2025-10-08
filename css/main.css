@@ -2,20 +2,28 @@
 
 /* Variables CSS para colores consistentes */
 :root {
-  --primary-red: #dc2626;
+  --primary-red: #dc2626; /* Rojo inspirado en Japón */
   --dark-red: #b91c1c;
+  --primary-blue: #3b82f6; /* Para trenes y badges */
   --gradient-bg: linear-gradient(to bottom, #f3f4f6, #e5e7eb);
   --gradient-header: linear-gradient(to right, #dc2626, #b91c1c);
   --gradient-budget: linear-gradient(to right, #059669, #047857);
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
 }
 
 .dark {
   --gradient-bg: linear-gradient(to bottom, #1f2937, #111827);
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
 }
 
-/* Body y fondo general */
+/* Fondo general del body */
 body {
   background: var(--gradient-bg);
+  color: var(--text-primary);
+  transition: background 0.3s ease, color 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* Header con gradiente */
@@ -39,8 +47,15 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   transition: transform 0.2s ease, background 0.2s ease;
-  z-index: 100;
+  z-index: 1000;
 }
+
+/* Posiciones específicas para cada botón flotante */
+#budgetBtn { bottom: 12rem; }
+#phrasesBtn { bottom: 9rem; }
+#checklistBtn { bottom: 6rem; }
+#emergencyModalBtn { bottom: 3rem; }
+#notesBtn { bottom: 0rem; }
 
 .floating-btn:hover {
   transform: scale(1.1);
@@ -57,7 +72,7 @@ body {
   scrollbar-width: none;
 }
 
-/* Animación fade-in */
+/* Animación fade-in para elementos */
 .fade-in {
   animation: fadeIn 0.5s ease-in forwards;
 }
@@ -76,11 +91,12 @@ body {
 /* Hover lift para tarjetas */
 .hover-lift:hover {
   transform: translateY(-4px);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
 }
 
 .hover-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 /* Barra de progreso para itinerario */
@@ -117,7 +133,7 @@ body {
   background: var(--gradient-budget);
 }
 
-/* Mejoras para modales */
+/* Modales */
 .modal {
   display: none;
   position: fixed;
@@ -146,16 +162,18 @@ body {
 
 .dark .modal-content {
   background: #1f2937;
-  color: white;
+  color: var(--text-primary);
 }
 
-/* Train info con gradiente */
+/* Info de tren con gradiente */
 .train-info {
   background: linear-gradient(to right, #3b82f6, #1d4ed8);
   color: white;
+  padding: 1rem;
+  border-radius: 8px;
 }
 
-/* Badge para vuelos y comida */
+/* Badges para vuelos y comida */
 .badge {
   padding: 0.25rem 0.5rem;
   border-radius: 9999px;
@@ -183,13 +201,58 @@ body {
   color: #fed7aa;
 }
 
-/* Animación para tarjetas de actividades */
+/* Tarjetas de actividades */
 .activity-card {
+  background: #ffffff;
+  border-left: 4px solid var(--primary-red);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
   transition: all 0.3s ease;
 }
 
 .activity-card:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.dark .activity-card {
+  background: #374151;
+}
+
+/* Estilos para pestañas */
+.tab-item {
+  background: #e5e7eb;
+  color: var(--text-primary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.tab-item.active {
+  background: var(--primary-red);
+  color: white;
+}
+
+.dark .tab-item {
+  background: #374151;
+}
+
+.dark .tab-item.active {
+  background: var(--primary-red);
+}
+
+/* Estilos para el selector de días */
+#daySelector {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.dark #daySelector {
+  background: #374151;
+  border-color: #4b5563;
 }
 
 /* Responsive para móviles */
@@ -199,10 +262,19 @@ body {
     height: 3rem;
     font-size: 1.25rem;
   }
-  
-  .tab-btn {
+
+  .tab-item {
     font-size: 0.875rem;
     padding: 0.75rem 1rem;
+  }
+
+  .modal-content {
+    margin: 1rem;
+    padding: 1rem;
+  }
+
+  .activity-card {
+    padding: 0.75rem;
   }
 }
 
