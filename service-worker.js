@@ -2,62 +2,54 @@
    SERVICE WORKER - SOPORTE OFFLINE
    =================================== */
 
-   const CACHE_NAME = 'japan-trip-v1';
-   const urlsToCache = [
-       '/',
-       '/index.html',
-       '/css/main.css',
-       '/js/app.js',
-       '/js/itinerary-data.js',
-       '/js/budget-tracker.js',
-       '/js/map.js',
-       '/js/gallery.js',
-       '/manifest.json'
-   ];
-   
-   // Install - Cache resources
-   self.addEventListener('install', event => {
-       console.log('✅ Service Worker: Installing...');
-       event.waitUntil(
-           caches.open(CACHE_NAME)
-               .then(cache => {
-                   console.log('✅ Service Worker: Caching files');
-                   return cache.addAll(urlsToCache);
-               })
-               .then(() => self.skipWaiting())
-       );
-   });
-   
-   // Activate - Clean old caches
-   self.addEventListener('activate', event => {
-       console.log('✅ Service Worker: Activating...');
-       event.waitUntil(
-           caches.keys().then(cacheNames => {
-               return Promise.all(
-                   cacheNames.map(cacheName => {
-                       if (cacheName !== CACHE_NAME) {
-                           console.log('✅ Service Worker: Removing old cache', cacheName);
-                           return caches.delete(cacheName);
-                       }
-                   })
-               );
-           }).then(() => self.clients.claim())
-       );
-   });
-   
-   // Fetch - Serve from cache when offline
-   self.addEventListener('fetch', event => {
-       event.respondWith(
-           caches.match(event.request)
-               .then(response => {
-                   // Return cached version or fetch from network
-                   return response || fetch(event.request)
-                       .catch(() => {
-                           // If both cache and network fail, return offline page
-                           if (event.request.destination === 'document') {
-                               return caches.match('/index.html');
-                           }
-                       });
-               })
-       );
-   });
+const CACHE_NAME = 'japan-trip-v1.1';
+const BASE_PATH = location.hostname === 'localhost' ? '' : '/viaje-japon';
+
+const urlsToCache = [
+    `${BASE_PATH}/`,
+    `${BASE_PATH}/index.html`,
+    `${BASE_PATH}/css/main.css`,
+    `${BASE_PATH}/js/app.js`,
+    `${BASE_PATH}/js/itinerary-data.js`,
+    `${BASE_PATH}/js/budget-tracker.js`,
+    `${BASE_PATH}/js/map.js`,
+    `${BASE_PATH}/js/gallery.js`,
+    `${BASE_PATH}/manifest.json`
+];
+
+self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then(cache => cache.addAll(urlsToCache))
+            .then(() => self.skipWaiting())
+            .catch(err => console.error('Cache failed:', err))
+    );
+});
+
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys()
+            .then(keys => Promise.all(
+                keys.filter(key => key !== CACHE_NAME)
+                    .map(key => caches.delete(key))
+            ))
+            .then(() => self.clients.claim())
+    );
+});
+
+self.addEventListener('fetch', event => {
+    // Skip cross-origin requests
+    if (!event.request.url.startsWith(self.location.origin)) {
+        return;
+    }
+    
+    event.respondWith(
+        caches.match(event.request)
+            .then(response => response || fetch(event.request))
+            .catch(() => {
+                if (event.request.destination === 'document') {
+                    return caches.match(`${BASE_PATH}/index.html`);
+                }
+            })
+    );
+});
