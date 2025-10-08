@@ -8,12 +8,13 @@ import { getStorage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-s
 // 🔥 TU CONFIGURACIÓN DE FIREBASE
 // REEMPLAZA ESTO con tu firebaseConfig del paso anterior
 const firebaseConfig = {
-  apiKey: "TU_API_KEY_AQUI",                    // ← Reemplazar
-  authDomain: "viaje-japon.firebaseapp.com",    // ← Reemplazar
-  projectId: "viaje-japon",                      // ← Reemplazar
-  storageBucket: "viaje-japon.appspot.com",     // ← Reemplazar
-  messagingSenderId: "123456789012",             // ← Reemplazar
-  appId: "1:123456789012:web:XXXXX"             // ← Reemplazar
+  apiKey: "AIzaSyAfydxW2angrEgZ7TT2PJxv7RGGUUiGbW4",
+  authDomain: "japan-itin-dev.firebaseapp.com",
+  projectId: "japan-itin-dev",
+  storageBucket: "japan-itin-dev.firebasestorage.app",
+  messagingSenderId: "545081226259",
+  appId: "1:545081226259:web:d06fd9962e05d42d40fbe6",
+  measurementId: "G-DJ00DQ3MC8
 };
 
 // Inicializar Firebase
