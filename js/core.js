@@ -4,58 +4,64 @@ import { TabsHandler } from './tabs.js';
 
 const App = {
     init() {
-        // Cargar estado
+        // Cargar estado guardado (como el modo oscuro)
         if (localStorage.getItem('darkMode') === 'true') {
             document.documentElement.classList.add('dark');
-            if (document.getElementById('darkModeIcon')) {
-                document.getElementById('darkModeIcon').textContent = '☀️';
-            }
+            const icon = document.getElementById('darkModeIcon');
+            if (icon) icon.textContent = '☀️';
         }
         
-        // Renderizar contenido
+        // Renderizar todo el contenido dinámico en la página
         ModalRenderer.renderModals();
-        ItineraryHandler.renderItinerary();
+        ItineraryHandler.renderItinerary(); // ¡CORREGIDO!
         TabsHandler.renderAllTabs();
 
-        // Configurar Listeners
+        // Configurar TODOS los event listeners
         this.setupEventListeners();
         
-        // Actualizar UI
+        // Iniciar la cuenta regresiva
         updateCountdown();
         setInterval(updateCountdown, 60000);
     },
+
     setupEventListeners() {
-        // Theme Toggle
+        // Botón de Modo Oscuro
         document.getElementById('themeToggle')?.addEventListener('click', toggleDarkMode);
 
-        // Tab Selector
-        document.getElementById('tabSelector')?.addEventListener('click', e => {
-            if (e.target.matches('.tab-btn')) {
-                switchTab(e.target.dataset.tab);
+        // Navegación por Pestañas (Tabs)
+        document.getElementById('tabSelector')?.addEventListener('click', (e) => {
+            const tabButton = e.target.closest('.tab-btn');
+            if (tabButton) {
+                switchTab(tabButton.dataset.tab);
             }
         });
 
-        // Modals Openers (CORREGIDO)
+        // Botón de Emergencia (SOS)
         document.querySelector('button[data-modal="emergency"]')?.addEventListener('click', () => AppModals.open('emergency'));
+
+        // Botones Flotantes
         document.querySelectorAll('.floating-btn[data-modal]').forEach(btn => {
             btn.addEventListener('click', () => AppModals.open(btn.dataset.modal));
         });
 
-        // Modals Closers
-        document.getElementById('modalsContainer')?.addEventListener('click', e => {
-            const btn = e.target.closest('.modal-close-btn');
-            if (btn) AppModals.close(btn.dataset.modalClose);
+        // Lógica para CERRAR los modales
+        document.getElementById('modalsContainer')?.addEventListener('click', (e) => {
+            const closeButton = e.target.closest('.modal-close-btn');
+            if (closeButton) {
+                AppModals.close(closeButton.dataset.modalClose);
+            }
         });
     }
 };
+
+// --- FUNCIONES GLOBALES ---
 
 function toggleDarkMode() {
     document.documentElement.classList.toggle('dark');
     const isDark = document.documentElement.classList.contains('dark');
     localStorage.setItem('darkMode', isDark);
-    if (document.getElementById('darkModeIcon')) {
-        document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
-    }
+    const icon = document.getElementById('darkModeIcon');
+    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
 }
 
 function switchTab(tabName) {
@@ -84,4 +90,4 @@ function updateCountdown() {
     }
 }
 
-export { App, toggleDarkMode, switchTab, updateCountdown };
+export { App };
