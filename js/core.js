@@ -1,4 +1,4 @@
-// js/core.js - Núcleo de la aplicación
+// js/core.js
 
 import { ModalRenderer } from './modals.js';
 import { ItineraryHandler } from './itinerary.js';
@@ -12,12 +12,7 @@ export const AppCore = {
             if (icon) icon.textContent = '☀️';
         }
         
-        ModalRenderer.renderModals();
-        ItineraryHandler.init();
-        TabsHandler.renderAllTabs();
-
         this.setupEventListeners();
-        
         this.updateCountdown();
         setInterval(() => this.updateCountdown(), 60000);
     },
@@ -39,6 +34,7 @@ export const AppCore = {
         document.body.addEventListener('click', (e) => {
             const modalButton = e.target.closest('[data-modal]');
             if (modalButton) {
+                e.preventDefault();
                 this.openModal(modalButton.dataset.modal);
             }
         });
@@ -48,7 +44,10 @@ export const AppCore = {
             modalsContainer.addEventListener('click', (e) => {
                 const closeButton = e.target.closest('.modal-close');
                 if (closeButton) {
-                    this.closeModal(closeButton.dataset.modalClose);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const modalId = closeButton.dataset.modalClose;
+                    this.closeModal(modalId);
                     return;
                 }
                 
