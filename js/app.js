@@ -1,31 +1,24 @@
-// js/app.js - CORREGIDO
-
+// js/app.js
 import { AppCore } from './core.js';
 import { ItineraryHandler } from './itinerary.js';
 import { TabsHandler } from './tabs.js';
 import { ModalRenderer } from './modals.js';
 import { MapHandler } from './map.js';
+import { AttractionsHandler } from './attractions.js'; // ← NUEVO
 
 function initApp() {
     console.log('🚀 Iniciando aplicación...');
     
-    // Renderizar modales primero
     ModalRenderer.renderModals();
-    
-    // Inicializar itinerario
     ItineraryHandler.init();
-    
-    // Renderizar otras tabs
     MapHandler.renderMap();
     TabsHandler.renderAllTabs();
-    
-    // Inicializar el núcleo (event listeners, countdown, etc.)
+    AttractionsHandler.renderAttractions(); // ← NUEVO
     AppCore.init();
     
     console.log('✅ Aplicación iniciada correctamente');
 }
 
-// Iniciar cuando el DOM esté listo
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initApp);
 } else {
