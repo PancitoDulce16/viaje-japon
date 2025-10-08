@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🇯🇵 Viaje a Japón - Itinerario Interactivo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Arial', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            line-height: 1.5;
+            transition: background-color 0.3s ease;
+        }
+        
+        .activity-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .activity-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .day-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .day-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .gradient-header {
+            background: linear-gradient(135deg, #dc2626 0%, #ec4899 100%);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #fef2f2 0%, #ffffff 50%, #fce7f3 100%);
+            min-height: 100vh;
+        }
+        
+        .dark .gradient-bg {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #1f2937 100%);
+        }
+        
+        .gradient-budget {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .tab-btn {
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            border-bottom: 3px solid #dc2626;
+            color: #dc2626;
+        }
+
+        .dark .tab-btn.active {
+            color: #f87171;
+        }
+
+        .train-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 1rem;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .dark .modal-content {
+            background: #1f2937;
+            color: white;
+        }
+
+        .checkbox-done {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .progress-ring {
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .floating-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #dc2626 0%, #ec4899 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 100;
+            transition: transform 0.2s ease;
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .floating-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+    
+    <!-- Floating Action Buttons -->
+    <div class="floating-btn" style="bottom: 8rem;" onclick="openModal('budget')" title="Budget Tracker">
+        💰
+    </div>
+    <div class="floating-btn" style="bottom: 14rem;" onclick="openModal('phrases')" title="Frases en Japonés">
+        🗣️
+    </div>
+    <div class="floating-btn" style="bottom: 20rem;" onclick="openModal('notes')" title="Mis Notas">
+        📝
+    </div>
+
+    <!-- Header -->
+    <div class="gradient-header text-white p-6 shadow-lg">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex justify-between items-start">
+                <div class="flex-1">
+                    <h1 class="text-3xl md:text-4xl font-bold mb-2">🇯🇵 Viaje a Japón</h1>
+                    <p class="text-lg md:text-xl opacity-90">2 Hermanos • 15 Días • Feb 16 - Mar 2, 2025</p>
+                    <div class="mt-4 flex flex-wrap gap-4 text-sm md:text-base">
+                        <div class="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2">
+                            <span class="text-xl">💰</span>
+                            <span>Presupuesto: $100/día</span>
+                        </div>
+                        <div class="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2">
+                            <span class="text-xl">📍</span>
+                            <span>Tokyo → Kyoto → Osaka → Tokyo</span>
+                        </div>
+                        <div class="flex items-center gap-2 bg-white/20 rounded-full px-4 py-2">
+                            <span class="text-xl">⏰</span>
+                            <span id="countdown">Calculando...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="toggleDarkMode()" class="bg-white/20 hover:bg-white/30 rounded-lg px-4 py-2 transition">
+                        <span id="darkModeIcon">🌙</span>
+                    </button>
+                    <button onclick="openModal('emergency')" class="bg-red-500/80 hover:bg-red-600 rounded-lg px-4 py-2 transition">
+                        🚨 SOS
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex gap-1 overflow-x-auto">
+                <button onclick="switchTab('itinerary')" id="tab-itinerary" class="tab-btn active px-6 py-4 font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                    📅 Itinerario
+                </button>
+                <button onclick="switchTab('map')" id="tab-map" class="tab-btn px-6 py-4 font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                    🗺️ Mapa
+                </button>
+                <button onclick="switchTab('flights')" id="tab-flights" class="tab-btn px-6 py-4 font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                    ✈️ Vuelos
+                </button>
+                <button onclick="switchTab('utils')" id="tab-utils" class="tab-btn px-6 py-4 font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                    🛠️ Utilidades
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ITINERARY TAB -->
+    <div id="content-itinerary" class="tab-content">
+        <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-16 z-10 shadow-sm">
+            <div class="max-w-6xl mx-auto p-4">
+                <div class="flex gap-2 overflow-x-auto pb-2" id="daySelector"></div>
+            </div>
+        </div>
+
+        <div class="max-w-6xl mx-auto p-4 md:p-6">
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="md:col-span-1">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sticky top-32 fade-in" id="dayOverview">
+                        <div class="loading mx-auto"></div>
+                    </div>
+                </div>
+
+                <div class="md:col-span-2">
+                    <div class="space-y-4" id="activitiesTimeline">
+                        <div class="text-center py-8">
+                            <div class="loading mx-auto"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-6 rounded-r-xl shadow-md fade-in">
+                <div class="flex items-start gap-3">
+                    <span class="text-2xl flex-shrink-0">⚠️</span>
+                    <div>
+                        <h3 class="font-bold text-yellow-800 dark:text-yellow-200 mb-3 text-lg">Notas Importantes</h3>
+                        <ul class="space-y-2 text-sm text-yellow-900 dark:text-yellow-100">
+                            <li class="flex gap-2"><span>•</span><span><strong>Pokemon Cafe:</strong> Reservas abren a las 6:00 PM JST, 31 días antes. ¡Se agotan en minutos!</span></li>
+                            <li class="flex gap-2"><span>•</span><span><strong>Kirby Cafe:</strong> Reservas el día 10 de cada mes para el mes siguiente. ¡Segundos!</span></li>
+                            <li class="flex gap-2"><span>•</span><span><strong>Suica Card:</strong> Compra inmediatamente en Narita Airport.</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 gradient-budget text-white p-6 rounded-xl shadow-lg fade-in">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold">💰 Resumen de Presupuesto</h3>
+                    <button onclick="openModal('budget')" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition">
+                        Ver Tracker →
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4">
+                        <p class="text-sm opacity-90 mb-1">Total por persona</p>
+                        <p class="text-3xl font-bold">$1,138</p>
+                        <p class="text-xs opacity-75 mt-1">15 días</p>
+                    </div>
+                    <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4">
+                        <p class="text-sm opacity-90 mb-1">Promedio diario</p>
+                        <p class="text-3xl font-bold">$76</p>
+                        <p class="text-xs opacity-75 mt-1">por día</p>
+                    </div>
+                    <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4">
+                        <p class="text-sm opacity-90 mb-1">Total 2 personas</p>
+                        <p class="text-3xl font-bold">$2,276</p>
+                        <p class="text-xs opacity-75 mt-1">ambos hermanos</p>
+                    </div>
+                    <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4">
+                        <p class="text-sm opacity-90 mb-1">Gastado</p>
+                        <p class="text-3xl font-bold" id="totalSpent">$0</p>
+                        <p class="text-xs opacity-75 mt-1">tracking activo</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAP TAB -->
+    <div id="content-map" class="tab-content hidden">
+        <div class="max-w-6xl mx-auto p-4 md:p-6">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">🗺️ Ubicaciones del Viaje</h2>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">Click en cualquier lugar para abrirlo en Google Maps y obtener direcciones 📍</p>
+                
+                <!-- Hotels Section -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                        🏨 Hoteles
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <a href="https://www.google.com/maps/search/Hotel+Tokyo+Papa+Shinjuku+Gyoemmae" target="_blank" class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-l-4 border-red-500 hover:shadow-lg transition">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-bold text-gray-800 dark:text-white">Hotel Tokyo Papa Shinjuku</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Feb 16-19 (Días 1-3)</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">📍 Shinjuku-Gyoemmae, Tokyo</p>
+                                </div>
+                                <span class="text-2xl">🗺️</span>
+                            </div>
+                        </a>
+
+                        <a href="https://www.google.com/maps/search/Tune+Stay+Kyoto" target="_blank" class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border-l-4 border-purple-500 hover:shadow-lg transition">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-bold text-gray-800 dark:text-white">Tune Stay Kyoto</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Feb 19-21 (Días 4-5)</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">📍 5 min de Kyoto Station</p>
+                                </div>
+                                <span class="text-2xl">🗺️</span>
+                            </div>
+                        </a>
+
+                        <a href="https://www.google.com/maps/search/Toyoko+Inn+Osaka+Namba" target="_blank" class="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border-l-4 border-orange-500 hover:shadow-lg transition">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-bold text-gray-800 dark:text-white">Toyoko Inn Osaka Namba</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Feb 21-24 (Días 6-7)</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">📍 10 min de Dotonbori</p>
+                                </div>
+                                <span class="text-2xl">🗺️</span>
+                            </div>
+                        </a>
+
+                        <a href="https://www.google.com/maps/search/Hotel+Apa+Yamanote+Otsuka+Station" target="_blank" class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border-l-4 border-red-500 hover:shadow-lg transition">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-bold text-gray-800 dark:text-white">Hotel Apa Yamanote Otsuka</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Feb 24-Mar 2 (Días 8-15)</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">📍 Otsuka Station, Tokyo</p>
+                                </div>
+                                <span class="text-2xl">🗺️</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Top Attractions -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                        ⭐ Atracciones Principales
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-3">
+                        <a href="https://www.google.com/maps/search/Shibuya+Crossing+Tokyo" target="_blank" class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-md transition flex items-center gap-3">
+                            <span class="text-2xl">🚶</span>
+                            <div>
+                                <p class="font-semibold dark:text-white">Shibuya Crossing</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Tokyo • Día 3</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.google.com/maps/search/Shibuya+Sky+Tokyo" target="_blank" class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-md transition flex items-center gap-3">
+                            <span class="text-2xl">🌆</span>
+                            <div>
+                                <p class="font-semibold dark:text-white">Shibuya Sky</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Tokyo • Día 3</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.google.com/maps/search/Kamakura+Great+Buddha" target="_blank" class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-md transition flex items-center gap-3">
+                            <span class="text-2xl">🗿</span>
+                            <div>
+                                <p class="font-semibold dark:text-white">Great Buddha Kamakura</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Kamakura • Día 2</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.google.com/maps/search/Fushimi+Inari+Taisha+Kyoto" target="_blank" class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-md transition flex items-center gap-3">
+                            <span class="text-2xl">⛩️</span>
+                            <div>
+                                <p class="font-semibold dark:text-white">Fushimi Inari Shrine</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Kyoto • Día 5</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.google.com/maps/search/Arashiyama+Bamboo+Grove+Kyoto" target="_blank" class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-md transition flex items-center gap-3">
+                            <span class="text-2xl">🎋</span>
+                            <div>
+                                <p class="font-semibold dark:text-white">Arashiyama Bamboo Forest</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Kyoto • Día 6</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.google.com/maps/search/Dotonbori+Osaka" target="_blank" class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-md transition flex items-center gap-3">
+                            <span class="text-2xl">🌃</span>
+                            <div>
+                                <p class="font-semibold dark:text-white">Dotonbori</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Osaka • Día 6</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.google.com/maps/search/Nara+Park+Deer" target="_blank" class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-md transition flex items-center gap-3">
+                            <span class="text-2xl">🦌</span>
+                            <div>
+                                <p class="font-semibold dark:text-white">Nara Park (Venados)</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Nara • Día 5</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.google.com/maps/search/Osaka+Aquarium+Kaiyukan" target="_blank" class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-md transition flex items-center gap-3">
+                            <span class="text-2xl">🐋</span>
+                            <div>
+                                <p class="font-semibold dark:text-white">Osaka Aquarium Kaiyukan</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Osaka • Día 7</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.google.com/maps/search/Akihabara+Electric+Town+Tokyo" target="_blank" class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-md transition flex items-center gap-3">
+                            <span class="text-2xl">🎮</span>
+                            <div>
+                                <p class="font-semibold dark:text-white">Akihabara</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Tokyo • Día 3</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.google.com/maps/search/Sensoji+Temple+Asakusa+Tokyo" target="_blank" class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-md transition flex items-center gap-3">
+                            <span class="text-2xl">🏮</span>
+                            <div>
+                                <p class="font-semibold dark:text-white">Sensoji Temple</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Asakusa • Día 3</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Stations -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                        🚆 Estaciones Principales
+                    </h3>
+                    <div class="grid md:grid-cols-3 gap-3">
+                        <a href="https://www.google.com/maps/search/Narita+Airport+Terminal+1" target="_blank" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:shadow-md transition text-center">
+                            <p class="font-semibold dark:text-white">✈️ Narita Airport</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Llegada/Salida</p>
+                        </a>
+                        <a href="https://www.google.com/maps/search/Shinjuku+Station+Tokyo" target="_blank" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:shadow-md transition text-center">
+                            <p class="font-semibold dark:text-white">🚉 Shinjuku Station</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Tokyo - Base 1</p>
+                        </a>
+                        <a href="https://www.google.com/maps/search/Kyoto+Station" target="_blank" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:shadow-md transition text-center">
+                            <p class="font-semibold dark:text-white">🚉 Kyoto Station</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Kyoto - Base 2</p>
+                        </a>
+                        <a href="https://www.google.com/maps/search/Namba+Station+Osaka" target="_blank" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:shadow-md transition text-center">
+                            <p class="font-semibold dark:text-white">🚉 Namba Station</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Osaka - Base 3</p>
+                        </a>
+                        <a href="https://www.google.com/maps/search/Otsuka+Station+Tokyo" target="_blank" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:shadow-md transition text-center">
+                            <p class="font-semibold dark:text-white">🚉 Otsuka Station</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Tokyo - Base 4</p>
+                        </a>
+                        <a href="https://www.google.com/maps/search/Tokyo+Station" target="_blank" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:shadow-md transition text-center">
+                            <p class="font-semibold dark:text-white">🚉 Tokyo Station</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Hub Principal</p>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Food Spots -->
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                        🍜 Lugares de Comida
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-3">
+                        <a href="https://www.google.com/maps/search/Ichiran+Ramen+Shinjuku" target="_blank" class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg hover:shadow-md transition flex items-center gap-3">
+                            <span class="text-2xl">🍜</span>
+                            <div>
+                                <p class="font-semibold dark:text-white">Ichiran Ramen</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Shinjuku • Múltiples ubicaciones</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.google.com/maps/search/Omoide+Yokocho+Shinjuku" target="_blank" class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg hover:shadow-md transition flex items-center gap-3">
+                            <span class="text-2xl">🍢</span>
+                            <div>
+                                <p class="font-semibold dark:text-white">Omoide Yokocho</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Shinjuku • Yakitori</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.google.com/maps/search/Takoyaki+Wanaka+Dotonbori" target="_blank" class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg hover:shadow-md transition flex items-center gap-3">
+                            <span class="text-2xl">🐙</span>
+                            <div>
+                                <p class="font-semibold dark:text-white">Takoyaki Wanaka</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Dotonbori, Osaka</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.google.com/maps/search/Kuromon+Market+Osaka" target="_blank" class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg hover:shadow-md transition flex items-center gap-3">
+                            <span class="text-2xl">🦐</span>
+                            <div>
+                                <p class="font-semibold dark:text-white">Kuromon Market</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Osaka • Food Street</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500">
+                    <p class="text-sm dark:text-gray-300">
+                        💡 <strong>Tip:</strong> Al hacer click en cualquier lugar, se abrirá Google Maps en tu celular. 
+                        Desde ahí puedes obtener direcciones en tiempo real y ver fotos del lugar.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FLIGHTS TAB -->
+    <div id="content-flights" class="tab-content hidden">
+        <div class="max-w-4xl mx-auto p-4 md:p-6">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+                <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">✈️ Información de Vuelos</h2>
+                
+                <div class="mb-6 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl border-l-4 border-blue-500">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="text-3xl">🛫</span>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 dark:text-white">Ida: Costa Rica → Japón</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Domingo, 16 de Febrero 2025</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-white dark:bg-gray-700 p-4 rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-gray-800 dark:text-white">Vuelo AM58</span>
+                                <span class="text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 px-3 py-1 rounded-full font-semibold">Aeroméxico</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4 text-sm dark:text-gray-300">
+                                <div>
+                                    <p class="text-gray-500 dark:text-gray-400">Salida</p>
+                                    <p class="font-semibold">MTY - Monterrey</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-gray-500 dark:text-gray-400">→</p>
+                                    <p class="font-semibold">NRT</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-gray-500 dark:text-gray-400">Llegada</p>
+                                    <p class="font-semibold text-green-600 dark:text-green-400">✓ 6:30 AM</p>
+                                </div>
+                            </div>
+                            <div class="mt-3 flex gap-2">
+                                <a href="https://www.flightradar24.com/data/flights/am58" target="_blank" class="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition">
+                                    📡 Track Live
+                                </a>
+                                <a href="https://flightaware.com/live/flight/AMX58" target="_blank" class="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition">
+                                    📊 FlightAware
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl border-l-4 border-orange-500">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="text-3xl">🛬</span>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 dark:text-white">Regreso: Japón → Costa Rica</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">Domingo, 2 de Marzo 2025</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white dark:bg-gray-700 p-4 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-gray-800 dark:text-white">Vuelo AM58</span>
+                            <span class="text-sm bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-200 px-3 py-1 rounded-full font-semibold">Aeroméxico</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 text-sm dark:text-gray-300">
+                            <div>
+                                <p class="text-gray-500 dark:text-gray-400">Salida</p>
+                                <p class="font-semibold text-red-600 dark:text-red-400">⚠️ 9:30 AM</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Narita Airport</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-gray-500 dark:text-gray-400">→</p>
+                                <p class="font-semibold">Via MTY</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-gray-500 dark:text-gray-400">Llegada</p>
+                                <p class="font-semibold">SJO</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Costa Rica</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 p-3 bg-red-50 dark:bg-red-900/30 rounded border-l-4 border-red-500">
+                            <p class="text-sm font-semibold text-red-700 dark:text-red-300">⚠️ ¡IMPORTANTE!</p>
+                            <p class="text-xs text-red-600 dark:text-red-400 mt-1">Wake up: 4:30 AM • Salida hotel: 5:30 AM</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UTILITIES TAB -->
+    <div id="content-utils" class="tab-content hidden">
+        <div class="max-w-6xl mx-auto p-4 md:p-6">
+            <div class="grid md:grid-cols-2 gap-6">
+                
+                <!-- Currency Converter -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                        💴 Conversor de Moneda
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2 dark:text-gray-300">USD Dólares</label>
+                            <input type="number" id="usdInput" onkeyup="convertCurrency('usd')" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                        </div>
+                        <div class="text-center text-2xl">⇅</div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2 dark:text-gray-300">JPY Yenes</label>
+                            <input type="number" id="jpyInput" onkeyup="convertCurrency('jpy')" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0">
+                        </div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 text-center">
+                            Tasa: 1 USD = <span id="exchangeRate">143</span> JPY
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 text-xs">
+                            <button onclick="quickConvert(10)" class="bg-blue-100 dark:bg-blue-900 p-2 rounded hover:bg-blue-200 dark:hover:bg-blue-800">$10</button>
+                            <button onclick="quickConvert(50)" class="bg-blue-100 dark:bg-blue-900 p-2 rounded hover:bg-blue-200 dark:hover:bg-blue-800">$50</button>
+                            <button onclick="quickConvert(100)" class="bg-blue-100 dark:bg-blue-900 p-2 rounded hover:bg-blue-200 dark:hover:bg-blue-800">$100</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weather -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                        🌤️ Clima en Japón (Febrero)
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="font-semibold dark:text-white">Tokyo</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">5-12°C (41-54°F)</p>
+                                </div>
+                                <span class="text-3xl">🌤️</span>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="font-semibold dark:text-white">Kyoto</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">4-10°C (39-50°F)</p>
+                                </div>
+                                <span class="text-3xl">⛅</span>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="font-semibold dark:text-white">Osaka</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">5-11°C (41-52°F)</p>
+                                </div>
+                                <span class="text-3xl">🌥️</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm">
+                            <p class="font-semibold mb-2 dark:text-white">👕 Qué llevar:</p>
+                            <ul class="space-y-1 text-gray-600 dark:text-gray-300">
+                                <li>• Abrigo o chamarra</li>
+                                <li>• Suéteres y capas</li>
+                                <li>• Pantalones largos</li>
+                                <li>• Paraguas (puede llover)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QR Codes -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                        📱 QR Codes Útiles
+                    </h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p class="font-semibold mb-2 dark:text-white">Hotel Tokyo Papa</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">〒160-0022 東京都新宿区新宿御苑前</p>
+                            <button onclick="generateQR('Hotel Tokyo Papa Shinjuku')" class="mt-2 text-xs bg-blue-600 text-white px-3 py-1 rounded">
+                                Generar QR
+                            </button>
+                        </div>
+                        <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p class="font-semibold mb-2 dark:text-white">Embajada Costa Rica</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">+81-3-3486-1812</p>
+                            <button onclick="generateQR('+81-3-3486-1812')" class="mt-2 text-xs bg-blue-600 text-white px-3 py-1 rounded">
+                                Generar QR
+                            </button>
+                        </div>
+                        <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p class="font-semibold mb-2 dark:text-white">Emergencias</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">Policía: 110 • Ambulancia: 119</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                        ⚡ Acciones Rápidas
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="openModal('phrases')" class="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition">
+                            <div class="text-2xl mb-1">🗣️</div>
+                            <div class="text-sm font-semibold">Frases</div>
+                        </button>
+                        <button onclick="openModal('emergency')" class="p-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition">
+                            <div class="text-2xl mb-1">🚨</div>
+                            <div class="text-sm font-semibold">SOS</div>
+                        </button>
+                        <button onclick="openModal('budget')" class="p-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition">
+                            <div class="text-2xl mb-1">💰</div>
+                            <div class="text-sm font-semibold">Budget</div>
+                        </button>
+                        <button onclick="openModal('notes')" class="p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition">
+                            <div class="text-2xl mb-1">📝</div>
+                            <div class="text-sm font-semibold">Notas</div>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    
+    <!-- Budget Tracker Modal -->
+    <div id="modal-budget" class="modal">
+        <div class="modal-content max-w-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold dark:text-white">💰 Budget Tracker</h2>
+                <button onclick="closeModal('budget')" class="text-3xl hover:text-red-600">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg text-center">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Presupuesto</p>
+                        <p class="text-2xl font-bold text-green-600 dark:text-green-400">$3,000</p>
+                    </div>
+                    <div class="bg-red-50 dark:bg-red-900/30 p-4 rounded-lg text-center">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Gastado</p>
+                        <p class="text-2xl font-bold text-red-600 dark:text-red-400" id="modalTotalSpent">$0</p>
+                    </div>
+                    <div class="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg text-center">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Restante</p>
+                        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400" id="modalRemaining">$3,000</p>
+                    </div>
+                </div>
+                
+                <div class="border-t dark:border-gray-600 pt-4">
+                    <h3 class="font-bold mb-3 dark:text-white">Agregar Gasto</h3>
+                    <div class="flex gap-2">
+                        <input type="number" id="expenseAmount" placeholder="$0" class="flex-1 p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <input type="text" id="expenseDesc" placeholder="Descripción" class="flex-1 p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <button onclick="addExpense()" class="bg-blue-600 text-white px-4 rounded hover:bg-blue-700">+ Agregar</button>
+                    </div>
+                </div>
+
+                <div id="expensesList" class="space-y-2 max-h-60 overflow-y-auto">
+                    <!-- Expenses will be listed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phrases Modal -->
+    <div id="modal-phrases" class="modal">
+        <div class="modal-content max-w-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold dark:text-white">🗣️ Frases Útiles en Japonés</h2>
+                <button onclick="closeModal('phrases')" class="text-3xl hover:text-red-600">&times;</button>
+            </div>
+            <div class="space-y-4 max-h-96 overflow-y-auto">
+                <div class="grid gap-3">
+                    <div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                        <p class="font-semibold dark:text-white">こんにちは (Konnichiwa)</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Hola / Buenos días</p>
+                    </div>
+                    <div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                        <p class="font-semibold dark:text-white">ありがとうございます (Arigatou gozaimasu)</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Muchas gracias</p>
+                    </div>
+                    <div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                        <p class="font-semibold dark:text-white">すみません (Sumimasen)</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Disculpe / Perdón</p>
+                    </div>
+                    <div class="p-3 bg-red-50 dark:bg-red-900/30 rounded-lg">
+                        <p class="font-semibold dark:text-white">トイレはどこですか？ (Toire wa doko desu ka?)</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">¿Dónde está el baño?</p>
+                    </div>
+                    <div class="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                        <p class="font-semibold dark:text-white">いくらですか？ (Ikura desu ka?)</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">¿Cuánto cuesta?</p>
+                    </div>
+                    <div class="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                        <p class="font-semibold dark:text-white">これをください (Kore wo kudasai)</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Esto, por favor</p>
+                    </div>
+                    <div class="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                        <p class="font-semibold dark:text-white">英語を話せますか？ (Eigo wo hanasemasu ka?)</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">¿Habla inglés?</p>
+                    </div>
+                    <div class="p-3 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
+                        <p class="font-semibold dark:text-white">お会計お願いします (Okaikei onegaishimasu)</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">La cuenta, por favor</p>
+                    </div>
+                    <div class="p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
+                        <p class="font-semibold dark:text-white">助けて！ (Tasukete!)</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">¡Ayuda!</p>
+                    </div>
+                    <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <p class="font-semibold mb-2 dark:text-white">Números:</p>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div>1 = 一 (ichi)</div>
+                            <div>2 = 二 (ni)</div>
+                            <div>3 = 三 (san)</div>
+                            <div>4 = 四 (shi/yon)</div>
+                            <div>5 = 五 (go)</div>
+                            <div>10 = 十 (juu)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Modal -->
+    <div id="modal-emergency" class="modal">
+        <div class="modal-content max-w-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-red-600 dark:text-red-400">🚨 Información de Emergencia</h2>
+                <button onclick="closeModal('emergency')" class="text-3xl hover:text-red-600">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <div class="p-4 bg-red-50 dark:bg-red-900/30 rounded-lg border-l-4 border-red-500">
+                    <h3 class="font-bold text-lg mb-2 dark:text-white">Números de Emergencia en Japón</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="dark:text-gray-300">🚓 Policía:</span>
+                            <a href="tel:110" class="text-2xl font-bold text-red-600 dark:text-red-400">110</a>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="dark:text-gray-300">🚑 Ambulancia/Bomberos:</span>
+                            <a href="tel:119" class="text-2xl font-bold text-red-600 dark:text-red-400">119</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                    <h3 class="font-bold mb-2 dark:text-white">🇨🇷 Embajada de Costa Rica en Japón</h3>
+                    <div class="space-y-1 text-sm dark:text-gray-300">
+                        <p>📞 Teléfono: <a href="tel:+81-3-3486-1812" class="text-blue-600 dark:text-blue-400 font-semibold">+81-3-3486-1812</a></p>
+                        <p>📍 Dirección: Kowa Bldg. 38, 4-12-24 Nishi-Azabu, Minato-ku, Tokyo</p>
+                        <p>⏰ Horario: Lun-Vie 9:30-12:30, 14:00-17:00</p>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                    <h3 class="font-bold mb-2 dark:text-white">🏥 Hospitales con Servicio en Inglés</h3>
+                    <div class="space-y-2 text-sm dark:text-gray-300">
+                        <div>
+                            <p class="font-semibold">Tokyo Medical & Surgical Clinic</p>
+                            <p>📞 +81-3-3436-3028</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Japan Helpline (24/7)</p>
+                            <p>📞 0570-000-911</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
+                    <h3 class="font-bold mb-2 dark:text-white">💳 Emergencia de Tarjetas</h3>
+                    <div class="space-y-1 text-sm dark:text-gray-300">
+                        <p>Visa: +1-303-967-1096</p>
+                        <p>Mastercard: +1-636-722-7111</p>
+                        <p>Llama INMEDIATAMENTE si pierdes tu tarjeta</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes Modal -->
+    <div id="modal-notes" class="modal">
+        <div class="modal-content max-w-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold dark:text-white">📝 Mis Notas del Viaje</h2>
+                <button onclick="closeModal('notes')" class="text-3xl hover:text-red-600">&times;</button>
+            </div>
+            <textarea id="notesTextarea" class="w-full h-64 p-4 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Escribe tus notas aquí...
+
+Ejemplos:
+- Restaurantes recomendados que encontraste
+- Cosas que no debes olvidar
+- Lugares que alguien te recomendó
+- Recuerdos del viaje"></textarea>
+            <button onclick="saveNotes()" class="mt-4 w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold">
+                💾 Guardar Notas
+            </button>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">Tus notas se guardan en tu dispositivo</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="bg-gray-800 text-white p-8 mt-12">
+        <div class="max-w-6xl mx-auto text-center">
+            <p class="text-xl font-bold mb-2">¡Que tengan un viaje increíble! 🎌</p>
+            <p class="text-gray-400 mb-4">いってらっしゃい (Itterasshai - Have a good trip!)</p>
+            <p class="text-xs text-gray-500">Creado con ❤️ para dos hermanos aventureros</p>
+        </div>
+    </div>
+
+    <script>
+        // Complete itinerary data
+        const itinerary = [
+            {
+                day: 1, date: "Feb 16 - Domingo", title: "Llegada a Tokyo", location: "Shinjuku",
+                hotel: "Hotel Tokyo Papa Shinjuku Gyoemmae", budget: 63,
+                activities: [
+                    { time: "6:30 AM", icon: "✈️", title: "Llegada Narita", desc: "Vuelo AM58", cost: 0, id: "1-0" },
+                    { time: "8:00 AM", icon: "🚆", title: "Narita Express → Shinjuku", desc: "Comprar Welcome Suica", cost: 23, train: {from: "Narita Airport Terminal 1", to: "Shinjuku Station", line: "Narita Express (N'EX)", duration: "90 min"}, id: "1-1" },
+                    { time: "10:30 AM", icon: "📸", title: "Shinjuku Gyoen Garden", desc: "Jardín nacional, 2 horas", cost: 3.5, station: "Shinjuku-Gyoemmae (5 min walk)", id: "1-2" },
+                    { time: "1:00 PM", icon: "🍜", title: "Ichiran Ramen", desc: "¡Primer ramen japonés!", cost: 9, station: "Shinjuku Station área", id: "1-3" },
+                    { time: "4:00 PM", icon: "⭐", title: "Tokyo Metropolitan Govt Building", desc: "Vista panorámica GRATIS", cost: 0, station: "Tochomae Station (Exit A4)", id: "1-4" },
+                    { time: "6:00 PM", icon: "🍢", title: "Cena en Omoide Yokocho", desc: "Yakitori en callejones nostálgicos", cost: 35, station: "Shinjuku West Exit", id: "1-5" }
+                ]
+            },
+            {
+                day: 2, date: "Feb 17 - Lunes", title: "Kamakura Day Trip", location: "Kamakura",
+                hotel: "Hotel Tokyo Papa Shinjuku", budget: 72,
+                activities: [
+                    { time: "9:00 AM", icon: "🚆", title: "JR Line → Kamakura", desc: "57 minutos directo", cost: 7, train: {from: "Shinjuku Station", to: "Kamakura Station", line: "JR Shonan-Shinjuku Line", duration: "57 min"}, id: "2-0" },
+                    { time: "10:15 AM", icon: "⛩️", title: "Tsurugaoka Hachimangu", desc: "Santuario principal, gratis", cost: 0, station: "10 min walk from Kamakura Station", id: "2-1" },
+                    { time: "11:30 AM", icon: "🏯", title: "Hasedera Temple", desc: "Templo en la colina con vistas al mar", cost: 3, station: "Hase Station (Enoden Line)", id: "2-2" },
+                    { time: "12:45 PM", icon: "🗿", title: "Great Buddha (Kotoku-in)", desc: "¡Buda gigante de bronce!", cost: 2.5, station: "7 min walk from Hase Station", id: "2-3" },
+                    { time: "5:30 PM", icon: "🥪", title: "AGE.3 en Ginza", desc: "Sándwiches fritos virales", cost: 10, station: "Ginza Station (Marunouchi Line)", id: "2-4" },
+                    { time: "8:00 PM", icon: "🥩", title: "Yakiniku Rikimaru", desc: "All-you-can-eat 90 min", cost: 26, station: "Ikebukuro Station (East Exit)", id: "2-5" }
+                ]
+            },
+            {
+                day: 3, date: "Feb 18 - Martes", title: "Tokyo Highlights", location: "Tokyo",
+                hotel: "Hotel Tokyo Papa Shinjuku", budget: 70,
+                activities: [
+                    { time: "9:00 AM", icon: "⭐", title: "Tokyo Station", desc: "Character Street: Pokemon, Kirby, Ghibli", cost: 0, station: "Tokyo Station (B1F First Avenue)", id: "3-0" },
+                    { time: "11:00 AM", icon: "⛩️", title: "Asakusa - Sensoji Temple", desc: "Templo más antiguo + Nakamise Street", cost: 0, station: "Asakusa Station (Exit 1)", id: "3-1" },
+                    { time: "12:00 PM", icon: "🐟", title: "Taiyaki", desc: "Naruto Taiyaki Honpo", cost: 2.5, id: "3-2" },
+                    { time: "12:30 PM", icon: "🍣", title: "Kaiten Sushi", desc: "¡Sushi en cinta transportadora!", cost: 18, station: "Kura Sushi - múltiples ubicaciones", id: "3-3" },
+                    { time: "2:30 PM", icon: "🎮", title: "Akihabara", desc: "Distrito electrónico + anime", cost: 0, station: "Akihabara Station (Electric Town Exit)", id: "3-4" },
+                    { time: "3:30 PM", icon: "☕", title: "Cafe Mai:lish", desc: "Steins;Gate maid cafe", cost: 13, station: "5 min walk from Akihabara", id: "3-5" },
+                    { time: "6:00 PM", icon: "🌆", title: "Shibuya Sky", desc: "Rooftop al aire libre, 47° piso", cost: 18, station: "Shibuya Station (Hachiko Exit)", id: "3-6" },
+                    { time: "7:30 PM", icon: "🚶", title: "Shibuya Crossing", desc: "¡El cruce más famoso del mundo!", cost: 0, station: "Shibuya Station (Hachiko Exit)", id: "3-7" }
+                ]
+            },
+            {
+                day: 4, date: "Feb 19 - Miércoles", title: "Tokyo → Kyoto", location: "Kyoto",
+                hotel: "Tune Stay Kyoto", budget: 133,
+                activities: [
+                    { time: "9:00 AM", icon: "🚄", title: "Shinkansen Hikari → Kyoto", desc: "2h 20min en tren bala", cost: 93, train: {from: "Tokyo Station", to: "Kyoto Station", line: "Tokaido Shinkansen (Hikari)", platform: "Platforms 14-19", duration: "2h 20min"}, id: "4-0" },
+                    { time: "11:30 AM", icon: "🏨", title: "Check-in Tune Stay", desc: "5 min caminando de Kyoto Station", cost: 0, station: "5 min walk from Kyoto Station", id: "4-1" },
+                    { time: "1:30 PM", icon: "⛩️", title: "Nishi Hongan-ji", desc: "UNESCO World Heritage, gratis", cost: 0, station: "8 min walk from hotel", id: "4-2" },
+                    { time: "5:00 PM", icon: "👘", title: "Distrito Gion", desc: "Buscar geishas en calles tradicionales", cost: 0, station: "Gion-Shijo Station (Keihan Line)", id: "4-3" },
+                    { time: "6:30 PM", icon: "🍱", title: "Cena en Pontocho", desc: "Callejón tradicional junto al canal", cost: 35, station: "Between Shijo and Sanjo", id: "4-4" }
+                ]
+            },
+            {
+                day: 5, date: "Feb 20 - Jueves", title: "Nara Day Trip", location: "Nara",
+                hotel: "Tune Stay Kyoto", budget: 47,
+                activities: [
+                    { time: "8:15 AM", icon: "🚆", title: "JR Nara Line → Nara", desc: "45 minutos", cost: 5, train: {from: "Kyoto Station", to: "Nara Station", line: "JR Nara Line (Miyakoji Rapid)", platform: "Platforms 8-10", duration: "45 min"}, id: "5-0" },
+                    { time: "9:30 AM", icon: "🦌", title: "Nara Park - Alimentar venados", desc: "¡Los venados se inclinan!", cost: 1.5, station: "15 min walk from JR Nara Station", id: "5-1" },
+                    { time: "10:30 AM", icon: "🏯", title: "Todai-ji Temple", desc: "Gran Buda de 15m", cost: 6, station: "Inside Nara Park", id: "5-2" },
+                    { time: "11:45 AM", icon: "🏮", title: "Kasuga Taisha Shrine", desc: "Miles de linternas de piedra", cost: 3.5, station: "15 min walk through forest", id: "5-3" },
+                    { time: "2:00 PM", icon: "🍡", title: "Nakatanidou Mochi", desc: "¡Show de mochi de alta velocidad!", cost: 1.5, station: "Near Kintetsu Nara Station", id: "5-4" },
+                    { time: "5:30 PM", icon: "⛩️", title: "Fushimi Inari", desc: "Mil puertas torii naranjas", cost: 0, station: "Inari Station (JR Nara Line, 5 min from Kyoto)", id: "5-5" },
+                    { time: "7:30 PM", icon: "🍜", title: "Ramen en Kyoto", desc: "Regreso a Kyoto Station", cost: 11, station: "Kyoto Station Ramen Street", id: "5-6" }
+                ]
+            },
+            {
+                day: 6, date: "Feb 21 - Viernes", title: "Arashiyama → Osaka", location: "Osaka",
+                hotel: "Toyoko Inn Osaka Namba", budget: 57,
+                activities: [
+                    { time: "8:00 AM", icon: "🚆", title: "JR → Arashiyama", desc: "15 minutos", cost: 1.7, train: {from: "Kyoto Station", to: "Saga-Arashiyama Station", line: "JR Sagano Line", duration: "15 min"}, id: "6-0" },
+                    { time: "8:30 AM", icon: "🎋", title: "Arashiyama Bamboo Grove", desc: "¡Temprano para evitar multitudes!", cost: 0, station: "10 min walk from Saga-Arashiyama", id: "6-1" },
+                    { time: "9:30 AM", icon: "🏯", title: "Tenryu-ji Temple", desc: "Jardín zen hermoso", cost: 3.5, station: "Near bamboo grove", id: "6-2" },
+                    { time: "2:00 PM", icon: "🚆", title: "Kyoto → Osaka", desc: "29 minutos en JR", cost: 4, train: {from: "Kyoto Station", to: "Osaka Station", line: "JR Kyoto Line (Special Rapid)", platform: "Platforms 4-7", duration: "29 min"}, id: "6-3" },
+                    { time: "3:00 PM", icon: "🚇", title: "Osaka → Namba", desc: "Transfer", cost: 2, train: {from: "Osaka Station", to: "Namba Station", line: "Midosuji Line (Red)", duration: "10 min"}, id: "6-4" },
+                    { time: "6:00 PM", icon: "🐙", title: "TAKOYAKI en Dotonbori", desc: "Wanaka + Kukuru", cost: 6, station: "5 min walk from Namba Station", id: "6-5" },
+                    { time: "7:00 PM", icon: "🥞", title: "OKONOMIYAKI", desc: "¡Comida emblema de Osaka!", cost: 12, station: "Dotonbori area", id: "6-6" },
+                    { time: "8:30 PM", icon: "🌃", title: "Dotonbori de noche", desc: "Glico Man + luces neón", cost: 0, station: "Walk around Dotonbori", id: "6-7" }
+                ]
+            },
+            {
+                day: 7, date: "Feb 22 - Sábado", title: "Osaka Aquarium", location: "Osaka",
+                hotel: "Toyoko Inn Osaka Namba", budget: 60,
+                activities: [
+                    { time: "7:00 AM", icon: "🍳", title: "Desayuno gratis hotel", desc: "Buffet incluido 6:30-9:00 AM", cost: 0, id: "7-0" },
+                    { time: "9:00 AM", icon: "🚇", title: "Namba → Osakako", desc: "Transfer en Bentencho", cost: 2, train: {from: "Namba Station", to: "Osakako Station", line: "Chuo Line", transfer: "at Bentencho", duration: "30-40 min"}, id: "7-1" },
+                    { time: "9:45 AM", icon: "🐋", title: "Osaka Aquarium Kaiyukan", desc: "¡Tiburones ballena! 2-3 horas", cost: 21, station: "5 min walk from Osakako Station", id: "7-2" },
+                    { time: "3:30 PM", icon: "🍢", title: "Kuromon Market", desc: "Mercado de comida callejera", cost: 18, station: "Nipponbashi Station (Exit 10)", id: "7-3" },
+                    { time: "5:00 PM", icon: "🛍️", title: "Shinsaibashi Shopping", desc: "600m de tiendas cubiertas", cost: 0, station: "Shinsaibashi Station", id: "7-4" },
+                    { time: "7:00 PM", icon: "🥩", title: "Yakiniku 298 Nikuya", desc: "All-you-can-eat ¡súper barato!", cost: 28, station: "Near Shinsaibashi", id: "7-5" }
+                ]
+            },
+            {
+                day: 8, date: "Feb 23 - Domingo", title: "Osaka → Tokyo", location: "Tokyo - Otsuka",
+                hotel: "Hotel Apa Yamanote Otsuka", budget: 141,
+                activities: [
+                    { time: "8:30 AM", icon: "🚇", title: "Namba → Shin-Osaka", desc: "Transfer", cost: 2, train: {from: "Namba Station", to: "Shin-Osaka Station", line: "Midosuji Line", duration: "15 min"}, id: "8-0" },
+                    { time: "9:00 AM", icon: "🚄", title: "Shinkansen → Tokyo", desc: "2h 40min", cost: 93, train: {from: "Shin-Osaka Station", to: "Tokyo Station", line: "Tokaido Shinkansen (Hikari)", platform: "Platforms 21-26", duration: "2h 40min"}, id: "8-1" },
+                    { time: "12:00 PM", icon: "🚆", title: "Tokyo → Otsuka", desc: "10 minutos", cost: 1.2, train: {from: "Tokyo Station", to: "Otsuka Station", line: "JR Yamanote Line", duration: "10 min"}, id: "8-2" },
+                    { time: "12:15 PM", icon: "🏨", title: "Check-in Otsuka", desc: "Frente a la estación", cost: 0, station: "Right at Otsuka Station", id: "8-3" },
+                    { time: "2:30 PM", icon: "🏙️", title: "Sunshine City Observatory", desc: "Piso 60, vistas de Tokyo", cost: 6, station: "Ikebukuro Station (1 stop, 2 min)", id: "8-4" },
+                    { time: "7:00 PM", icon: "🍵", title: "Matcha Ice Cream", desc: "Suzukien Asakusa - 7 niveles!", cost: 5, station: "Asakusa Station", id: "8-5" }
+                ]
+            },
+            {
+                day: 9, date: "Feb 24 - Lunes", title: "Tokyo Libre", location: "Tokyo",
+                hotel: "Hotel Apa Yamanote Otsuka", budget: 63,
+                activities: [
+                    { time: "10:00 AM", icon: "👗", title: "Harajuku Takeshita Street", desc: "Moda juvenil", cost: 0, station: "Harajuku Station (Omotesando Exit)", id: "9-0" },
+                    { time: "11:00 AM", icon: "⛩️", title: "Meiji Shrine", desc: "Santuario en el bosque, gratis", cost: 0, station: "5 min walk from Harajuku", id: "9-1" },
+                    { time: "12:00 PM", icon: "🐟", title: "Taiyaki original", desc: "Naniwaya Sohonten (1909)", cost: 2.5, id: "9-2" },
+                    { time: "4:00 PM", icon: "☕", title: "Artnia Square Enix", desc: "Café y tienda en Shinjuku", cost: 18, station: "Shinjuku East Side Square", id: "9-3" },
+                    { time: "7:30 PM", icon: "🍽️", title: "Cena final yakiniku o sushi", desc: "¡Lo que más te gustó!", cost: 35, id: "9-4" }
+                ]
+            },
+            {
+                day: 10, date: "Feb 25 - Martes", title: "Día Libre Tokyo", location: "Tokyo",
+                hotel: "Hotel Apa Yamanote Otsuka", budget: 70,
+                activities: [
+                    { time: "Todo el día", icon: "🗺️", title: "Actividades sugeridas", desc: "Odaiba, compras, lugares favoritos, Imperial Palace", cost: 70, id: "10-0" }
+                ]
+            },
+            {
+                day: 11, date: "Feb 26 - Miércoles", title: "Día Libre Tokyo", location: "Tokyo",
+                hotel: "Hotel Apa Yamanote Otsuka", budget: 70,
+                activities: [
+                    { time: "Todo el día", icon: "🗺️", title: "Más exploración", desc: "Tsukiji Market, Roppongi, cafés temáticos", cost: 70, id: "11-0" }
+                ]
+            },
+            {
+                day: 12, date: "Feb 27 - Jueves", title: "Día Libre Tokyo", location: "Tokyo",
+                hotel: "Hotel Apa Yamanote Otsuka", budget: 70,
+                activities: [
+                    { time: "Todo el día", icon: "⛰️", title: "Aventura opcional", desc: "Mount Takao hiking o más compras", cost: 70, id: "12-0" }
+                ]
+            },
+            {
+                day: 13, date: "Feb 28 - Viernes", title: "Día Libre Tokyo", location: "Tokyo",
+                hotel: "Hotel Apa Yamanote Otsuka", budget: 70,
+                activities: [
+                    { time: "Todo el día", icon: "🛍️", title: "Último día completo", desc: "Compras finales, lugares pendientes", cost: 70, id: "13-0" }
+                ]
+            },
+            {
+                day: 14, date: "Mar 1 - Sábado", title: "Preparación salida", location: "Tokyo",
+                hotel: "Hotel Apa Yamanote Otsuka", budget: 56,
+                activities: [
+                    { time: "Día entero", icon: "📦", title: "Día ligero", desc: "Souvenirs finales, empacar", cost: 0, id: "14-0" },
+                    { time: "6:00 PM", icon: "🍜", title: "Cena temprano", desc: "Acostarse temprano", cost: 35, id: "14-1" },
+                    { time: "10:00 PM", icon: "😴", title: "Dormir temprano", desc: "Wake up 4:30 AM mañana!", cost: 0, id: "14-2" }
+                ]
+            },
+            {
+                day: 15, date: "Mar 2 - Domingo", title: "Regreso a casa", location: "Aeropuerto Narita",
+                hotel: "Vuelo 9:30 AM", budget: 26,
+                activities: [
+                    { time: "4:30 AM", icon: "⏰", title: "Wake up!", desc: "Última verificación", cost: 0, id: "15-0" },
+                    { time: "5:30 AM", icon: "🚆", title: "Narita Express", desc: "Otsuka → Tokyo → Narita (90 min total)", cost: 22, train: {from: "Otsuka → Tokyo → Narita", to: "Narita Airport Terminal 1", line: "Yamanote + Narita Express", duration: "90 min total"}, id: "15-1" },
+                    { time: "9:30 AM", icon: "✈️", title: "Vuelo AM58", desc: "¡Sayonara Japón! 👋🇯🇵", cost: 0, id: "15-2" }
+                ]
+            }
+        ];
+
+        let currentDay = 1;
+        let expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+        let checkedActivities = JSON.parse(localStorage.getItem('checkedActivities') || '{}');
+
+        // Dark mode
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('darkMode', isDark);
+            document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
+        }
+
+        // Load dark mode preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.documentElement.classList.add('dark');
+            document.getElementById('darkModeIcon').textContent = '☀️';
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            document.getElementById('tab-' + tabName).classList.add('active');
+        }
+
+        // Modal functions
+        function openModal(modalName) {
+            document.getElementById('modal-' + modalName).classList.add('active');
+            if (modalName === 'notes') {
+                document.getElementById('notesTextarea').value = localStorage.getItem('travelNotes') || '';
+            }
+            if (modalName === 'budget') {
+                updateBudgetModal();
+            }
+        }
+
+        function closeModal(modalName) {
+            document.getElementById('modal-' + modalName).classList.remove('active');
+        }
+
+        // Budget functions
+        function addExpense() {
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const desc = document.getElementById('expenseDesc').value;
+            if (amount && desc) {
+                expenses.push({amount, desc, date: new Date().toLocaleDateString()});
+                localStorage.setItem('expenses', JSON.stringify(expenses));
+                document.getElementById('expenseAmount').value = '';
+                document.getElementById('expenseDesc').value = '';
+                updateBudgetDisplay();
+                updateBudgetModal();
+            }
+        }
+
+        function updateBudgetDisplay() {
+            const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            document.getElementById('totalSpent').textContent = '$' + total.toFixed(0);
+        }
+
+        function updateBudgetModal() {
+            const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            document.getElementById('modalTotalSpent').textContent = '$' + total.toFixed(0);
+            document.getElementById('modalRemaining').textContent = '$' + (3000 - total).toFixed(0);
+            
+            const list = document.getElementById('expensesList');
+            list.innerHTML = expenses.map((exp, i) => `
+                <div class="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                    <div class="flex-1">
+                        <p class="font-semibold dark:text-white">${exp.desc}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">${exp.date}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-red-600 dark:text-red-400">$${exp.amount}</span>
+                        <button onclick="deleteExpense(${i})" class="text-red-600 hover:text-red-700">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteExpense(index) {
+            expenses.splice(index, 1);
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+            updateBudgetDisplay();
+            updateBudgetModal();
+        }
+
+        // Currency converter
+        const EXCHANGE_RATE = 143;
+        function convertCurrency(from) {
+            if (from === 'usd') {
+                const usd = parseFloat(document.getElementById('usdInput').value) || 0;
+                document.getElementById('jpyInput').value = Math.round(usd * EXCHANGE_RATE);
+            } else {
+                const jpy = parseFloat(document.getElementById('jpyInput').value) || 0;
+                document.getElementById('usdInput').value = (jpy / EXCHANGE_RATE).toFixed(2);
+            }
+        }
+
+        function quickConvert(amount) {
+            document.getElementById('usdInput').value = amount;
+            convertCurrency('usd');
+        }
+
+        // Notes functions
+        function saveNotes() {
+            const notes = document.getElementById('notesTextarea').value;
+            localStorage.setItem('travelNotes', notes);
+            alert('✅ Notas guardadas!');
+            closeModal('notes');
+        }
+
+        // Countdown
+        function updateCountdown() {
+            const tripStart = new Date('2025-02-16');
+            const now = new Date();
+            const diff = tripStart - now;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            if (days > 0) {
+                document.getElementById('countdown').textContent = `Faltan ${days} días`;
+            } else if (days === 0) {
+                document.getElementById('countdown').textContent = '¡HOY es el día!';
+            } else {
+                const currentDay = Math.abs(days) + 1;
+                if (currentDay <= 15) {
+                    document.getElementById('countdown').textContent = `Día ${currentDay} de 15`;
+                } else {
+                    document.getElementById('countdown').textContent = 'Viaje completado ✓';
+                }
+            }
+        }
+
+        // Checkbox functions
+        function toggleActivity(activityId) {
+            checkedActivities[activityId] = !checkedActivities[activityId];
+            localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));
+            renderActivities(itinerary[currentDay - 1]);
+        }
+
+        // Day selector and activities (simplified)
+        function renderDaySelector() {
+            const selector = document.getElementById('daySelector');
+            selector.innerHTML = itinerary.map(day => `
+                <button 
+                    onclick="selectDay(${day.day})"
+                    class="day-btn px-4 py-2 rounded-lg whitespace-nowrap font-medium ${
+                        currentDay === day.day 
+                            ? 'bg-red-600 text-white shadow-md' 
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }"
+                >
+                    Día ${day.day}
+                </button>
+            `).join('');
+        }
+
+        function renderDayOverview(day) {
+            const overview = document.getElementById('dayOverview');
+            const completedActivities = day.activities.filter(a => checkedActivities[a.id]).length;
+            const progress = (completedActivities / day.activities.length) * 100;
+            
+            overview.innerHTML = `
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-2xl">📅</span>
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Día ${day.day}</h2>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm mb-1 dark:text-gray-300">
+                        <span>Progreso</span>
+                        <span>${completedActivities}/${day.activities.length}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div class="bg-green-600 h-2 rounded-full transition-all" style="width: ${progress}%"></div>
+                    </div>
+                </div>
+                
+                <div class="space-y-3 text-sm">
+                    <div>
+                        <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide mb-1">Fecha</p>
+                        <p class="font-semibold text-lg dark:text-white">${day.date}</p>
+                    </div>
+                    
+                    <div class="pt-3 border-t border-gray-100 dark:border-gray-700">
+                        <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide mb-1">Título</p>
+                        <p class="font-bold text-lg text-red-600 dark:text-red-400">${day.title}</p>
+                    </div>
+                    
+                    <div class="pt-3 border-t border-gray-100 dark:border-gray-700">
+                        <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide mb-1">Ubicación</p>
+                        <p class="font-semibold flex items-center gap-2 dark:text-white">
+                            <span class="text-lg">📍</span> 
+                            <span>${day.location}</span>
+                        </p>
+                    </div>
+                    
+                    <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <p class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wide mb-2">Presupuesto</p>
+                        <p class="text-4xl font-bold text-green-600 dark:text-green-400">$${day.budget}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderActivities(day) {
+            const timeline = document.getElementById('activitiesTimeline');
+            timeline.innerHTML = day.activities.map((activity, index) => `
+                <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border-l-4 border-red-500 fade-in ${checkedActivities[activity.id] ? 'checkbox-done' : ''}" style="animation-delay: ${index * 0.05}s">
+                    <div class="p-5">
+                        <div class="flex items-start gap-4">
+                            <input type="checkbox" 
+                                ${checkedActivities[activity.id] ? 'checked' : ''} 
+                                onchange="toggleActivity('${activity.id}')"
+                                class="mt-1 w-5 h-5 cursor-pointer">
+                            
+                            <div class="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-lg flex-shrink-0 text-2xl">
+                                ${activity.icon}
+                            </div>
+                            
+                            <div class="flex-1 min-w-0">
+                                <div class="flex flex-col gap-3">
+                                    <div class="flex items-start justify-between gap-4">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="text-base">🕐</span>
+                                                <span class="text-sm font-semibold text-gray-600 dark:text-gray-400">${activity.time}</span>
+                                            </div>
+                                            <h3 class="text-lg md:text-xl font-bold text-gray-800 dark:text-white mb-1 leading-tight">
+                                                ${activity.title}
+                                            </h3>
+                                            <p class="text-gray-600 dark:text-gray-300 text-sm md:text-base leading-relaxed">${activity.desc}</p>
+                                        </div>
+                                        
+                                        <div class="flex-shrink-0">
+                                            ${activity.cost > 0 
+                                                ? `<div class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-3 py-1.5 rounded-full font-bold text-sm whitespace-nowrap inline-block">$${activity.cost}</div>`
+                                                : `<div class="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-full font-bold text-sm whitespace-nowrap inline-block">GRATIS</div>`
+                                            }
+                                        </div>
+                                    </div>
+
+                                    ${activity.train ? `
+                                        <div class="train-info text-white p-3 rounded-lg text-sm">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <span class="text-lg">🚆</span>
+                                                <span class="font-bold">Info de Tren</span>
+                                            </div>
+                                            <div class="space-y-1 text-xs">
+                                                <div class="flex justify-between">
+                                                    <span class="opacity-90">Desde:</span>
+                                                    <span class="font-semibold">${activity.train.from}</span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span class="opacity-90">Hasta:</span>
+                                                    <span class="font-semibold">${activity.train.to}</span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span class="opacity-90">Línea:</span>
+                                                    <span class="font-semibold">${activity.train.line}</span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span class="opacity-90">Duración:</span>
+                                                    <span class="font-semibold">${activity.train.duration}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+
+                                    ${activity.station ? `
+                                        <div class="bg-gray-50 dark:bg-gray-700 p-2 rounded text-xs text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                                            <span>📍</span>
+                                            <span>${activity.station}</span>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectDay(dayNumber) {
+            currentDay = dayNumber;
+            const day = itinerary.find(d => d.day === dayNumber);
+            renderDaySelector();
+            renderDayOverview(day);
+            renderActivities(day);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // QR Code generator (placeholder)
+        function generateQR(text) {
+            alert('QR Code para: ' + text + '\n\nEn producción, esto generaría un QR code real. Por ahora, guarda este texto: ' + text);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            selectDay(1);
+            updateCountdown();
+            updateBudgetDisplay();
+            setInterval(updateCountdown, 60000); // Update every minute
+        });
+
+        setTimeout(() => {
+            selectDay(1);
+            updateCountdown();
+        }, 100);
+
+        // Close modals on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+    </script>
+
+<!-- FOOD BY REGION TAB -->
+<div id="content-foodregions" class="tab-content hidden">
+  <div class="max-w-6xl mx-auto p-4 md:p-6">
+    <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">🍱 Comida Japonesa por Región</h2>
+    <p class="text-gray-600 dark:text-gray-400 mb-6">Explora los platos típicos de cada región y sus rangos de precio por persona.</p>
+    <div class="space-y-6">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <h3 class="text-xl font-bold mb-2 text-red-600 dark:text-red-400">Tokyo</h3>
+        <ul class="list-disc pl-5 text-gray-700 dark:text-gray-300">
+          <li><strong>Sushi Edomae</strong> – ¥2,000–¥10,000 • <em>Sushi Dai (Toyosu Market)</em></li>
+          <li><strong>Monjayaki</strong> – ¥800–¥1,500 • <em>Tsukishima Monja Street</em></li>
+          <li><strong>Tempura</strong> – ¥1,500–¥5,000 • <em>Tenmatsu Ginza</em></li>
+        </ul>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <h3 class="text-xl font-bold mb-2 text-purple-600 dark:text-purple-400">Kyoto</h3>
+        <ul class="list-disc pl-5 text-gray-700 dark:text-gray-300">
+          <li><strong>Kaiseki Ryori</strong> – ¥5,000–¥15,000 • <em>Gion Karyo</em></li>
+          <li><strong>Yudofu</strong> – ¥1,000–¥2,000 • <em>Nanzenji Junsei</em></li>
+          <li><strong>Matcha y Wagashi</strong> – ¥500–¥1,500 • <em>Ippodo Tea Co.</em></li>
+        </ul>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <h3 class="text-xl font-bold mb-2 text-orange-600 dark:text-orange-400">Osaka</h3>
+        <ul class="list-disc pl-5 text-gray-700 dark:text-gray-300">
+          <li><strong>Takoyaki</strong> – ¥400–¥800 • <em>Wanaka Dotonbori</em></li>
+          <li><strong>Okonomiyaki</strong> – ¥800–¥1,500 • <em>Mizuno</em></li>
+          <li><strong>Kushikatsu</strong> – ¥1,000–¥2,000 • <em>Daruma Shinsekai</em></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SOUVENIRS TAB -->
+<div id="content-souvenirs" class="tab-content hidden">
+  <div class="max-w-6xl mx-auto p-4 md:p-6">
+    <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">🎁 Souvenirs Japoneses</h2>
+    <p class="text-gray-600 dark:text-gray-400 mb-6">Descubre los recuerdos más populares y dónde comprarlos.</p>
+    <div class="space-y-6">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <h3 class="text-xl font-bold mb-2 text-yellow-600 dark:text-yellow-400">🎎 Tradicionales</h3>
+        <ul class="list-disc pl-5 text-gray-700 dark:text-gray-300">
+          <li><strong>Abanicos japoneses</strong> – Tiendas de artesanía en Kyoto</li>
+          <li><strong>Furoshiki</strong> – Tiendas de regalos en Asakusa</li>
+          <li><strong>Palillos decorativos</strong> – Don Quijote, Daiso</li>
+        </ul>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <h3 class="text-xl font-bold mb-2 text-pink-600 dark:text-pink-400">🐱 Kawaii</h3>
+        <ul class="list-disc pl-5 text-gray-700 dark:text-gray-300">
+          <li><strong>Peluches de personajes</strong> – Pokémon Center, Sanrio Puroland</li>
+          <li><strong>Papelería adorable</strong> – Loft, Tokyu Hands</li>
+          <li><strong>Accesorios de moda</strong> – Takeshita Street, WEGO</li>
+        </ul>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <h3 class="text-xl font-bold mb-2 text-blue-600 dark:text-blue-400">📚 Anime & Manga</h3>
+        <ul class="list-disc pl-5 text-gray-700 dark:text-gray-300">
+          <li><strong>Figuras coleccionables</strong> – Akihabara, Mandarake</li>
+          <li><strong>Mangas y artbooks</strong> – Animate, Book-Off</li>
+          <li><strong>Posters y llaveros</strong> – tiendas especializadas en Ikebukuro</li>
+        </ul>
+      </div>
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <h3 class="text-xl font-bold mb-2 text-green-600 dark:text-green-400">🍬 Snacks</h3>
+        <ul class="list-disc pl-5 text-gray-700 dark:text-gray-300">
+          <li><strong>Kit Kat de sabores japoneses</strong> – Aeropuertos, Don Quijote</li>
+          <li><strong>Galletas de arroz (Senbei)</strong> – Konbinis, supermercados</li>
+          <li><strong>Matcha y dulces tradicionales</strong> – Tiendas de té en Kyoto</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
