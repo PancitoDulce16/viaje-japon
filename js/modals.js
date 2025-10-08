@@ -177,38 +177,6 @@ export const ModalRenderer = {
                     </div>
                 </div>
             </div>
-
-            <script>
-                // Tab switching
-                document.addEventListener('click', (e) => {
-                    if (e.target.id === 'loginTab') {
-                        document.getElementById('loginTab').classList.add('border-blue-500', 'text-blue-600');
-                        document.getElementById('loginTab').classList.remove('border-transparent', 'text-gray-500');
-                        document.getElementById('registerTab').classList.remove('border-blue-500', 'text-blue-600');
-                        document.getElementById('registerTab').classList.add('border-transparent', 'text-gray-500');
-                        document.getElementById('loginForm').classList.remove('hidden');
-                        document.getElementById('registerForm').classList.add('hidden');
-                    }
-                    
-                    if (e.target.id === 'registerTab') {
-                        document.getElementById('registerTab').classList.add('border-blue-500', 'text-blue-600');
-                        document.getElementById('registerTab').classList.remove('border-transparent', 'text-gray-500');
-                        document.getElementById('loginTab').classList.remove('border-blue-500', 'text-blue-600');
-                        document.getElementById('loginTab').classList.add('border-transparent', 'text-gray-500');
-                        document.getElementById('registerForm').classList.remove('hidden');
-                        document.getElementById('loginForm').classList.add('hidden');
-                    }
-                });
-
-                // Form submissions
-                document.getElementById('loginForm')?.addEventListener('submit', (e) => {
-                    AuthHandler.handleLoginForm(e);
-                });
-
-                document.getElementById('registerForm')?.addEventListener('submit', (e) => {
-                    AuthHandler.handleRegisterForm(e);
-                });
-            </script>
         `;
     },
 
