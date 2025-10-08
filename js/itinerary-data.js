@@ -1,22 +1,15 @@
 /* ===================================
-   DATOS DEL ITINERARIO - 15 DÍAS EN JAPÓN (16 Feb - 2 Mar 2025)
+   DATOS DEL ITINERARIO - 15 DÍAS EN JAPÓN (16 Feb - 2 Mar 2026)
    ===================================
-   Presupuesto libre: ~$100 (~7000 JPY para 2 personas, ~700 JPY/día total).
-   Hoteles: APA Hotel Shinjuku Gyoemmae (16-19 Feb), Hotel Kyoto Tune Stay (19-21 Feb),
-   Toyoko Inn Osaka Namba (21-24 Feb), APA Hotel Yamanote Otsuka Eki Mae (24 Feb - 2 Mar).
-   Rutas: Optimizadas con JR Pass (Tokyo-Kyoto: 2h20m, Kyoto-Osaka: 30min, Osaka-Tokyo: 2h40m).
-   Comida: Ichiran (ramen), Nemuro Hanamaru (kaiten sushi), Mai:lish (Steins;Gate maid cafe),
-   Wanaka (takoyaki), Chibo (okonomiyaki), Naruto Taiyaki, Gekko (mochi), Suzukien (matcha ice cream),
-   Gyukaku (yakiniku). Reservas: Kirby/Pokemon/Square Enix cafes (1 mes antes).
 */
 
 export const ITINERARY_DATA = [
   {
     day: 1,
-    date: '2025-02-16',
+    date: '2026-02-16',
     title: 'Llegada a Tokyo',
     location: 'Shinjuku, Tokyo',
-    budget: 700, // JPY total para 2
+    budget: 700,
     hotel: 'APA Hotel Shinjuku Gyoemmae',
     activities: [
       {
@@ -64,7 +57,7 @@ export const ITINERARY_DATA = [
   },
   {
     day: 2,
-    date: '2025-02-17',
+    date: '2026-02-17',
     title: 'Shibuya y Kamakura',
     location: 'Tokyo/Kamakura',
     budget: 700,
@@ -115,7 +108,7 @@ export const ITINERARY_DATA = [
   },
   {
     day: 3,
-    date: '2025-02-18',
+    date: '2026-02-18',
     title: 'Akihabara y Cafés Temáticos',
     location: 'Tokyo',
     budget: 700,
@@ -152,7 +145,7 @@ export const ITINERARY_DATA = [
   },
   {
     day: 4,
-    date: '2025-02-19',
+    date: '2026-02-19',
     title: 'Tokyo a Kyoto',
     location: 'Kyoto',
     budget: 700,
@@ -194,7 +187,7 @@ export const ITINERARY_DATA = [
   },
   {
     day: 5,
-    date: '2025-02-20',
+    date: '2026-02-20',
     title: 'Nara y Arashiyama',
     location: 'Kyoto/Nara',
     budget: 700,
@@ -245,7 +238,7 @@ export const ITINERARY_DATA = [
   },
   {
     day: 6,
-    date: '2025-02-21',
+    date: '2026-02-21',
     title: 'Kyoto a Osaka',
     location: 'Osaka',
     budget: 700,
@@ -296,7 +289,7 @@ export const ITINERARY_DATA = [
   },
   {
     day: 7,
-    date: '2025-02-22',
+    date: '2026-02-22',
     title: 'Osaka Aquarium y Food',
     location: 'Osaka',
     budget: 700,
@@ -324,7 +317,7 @@ export const ITINERARY_DATA = [
   },
   {
     day: 8,
-    date: '2025-02-23',
+    date: '2026-02-23',
     title: 'Osaka Food y Regreso a Tokyo',
     location: 'Osaka/Tokyo',
     budget: 700,
@@ -366,7 +359,7 @@ export const ITINERARY_DATA = [
   },
   {
     day: 9,
-    date: '2025-02-24',
+    date: '2026-02-24',
     title: 'Cafés Temáticos en Tokyo',
     location: 'Tokyo',
     budget: 700,
@@ -394,7 +387,7 @@ export const ITINERARY_DATA = [
   },
   {
     day: 10,
-    date: '2025-02-25',
+    date: '2026-02-25',
     title: 'Tokyo Skytree y Asakusa',
     location: 'Tokyo',
     budget: 700,
@@ -431,7 +424,7 @@ export const ITINERARY_DATA = [
   },
   {
     day: 11,
-    date: '2025-02-26',
+    date: '2026-02-26',
     title: 'Harajuku y Shinjuku',
     location: 'Tokyo',
     budget: 700,
@@ -477,7 +470,7 @@ export const ITINERARY_DATA = [
   },
   {
     day: 12,
-    date: '2025-02-27',
+    date: '2026-02-27',
     title: 'Tokyo Station y Yakiniku',
     location: 'Tokyo',
     budget: 700,
@@ -514,7 +507,7 @@ export const ITINERARY_DATA = [
   },
   {
     day: 13,
-    date: '2025-02-28',
+    date: '2026-02-28',
     title: 'Observatorios y Mochi',
     location: 'Tokyo',
     budget: 700,
@@ -551,7 +544,7 @@ export const ITINERARY_DATA = [
   },
   {
     day: 14,
-    date: '2025-03-01',
+    date: '2026-03-01',
     title: 'Compras y Preparación',
     location: 'Tokyo',
     budget: 700,
@@ -588,7 +581,7 @@ export const ITINERARY_DATA = [
   },
   {
     day: 15,
-    date: '2025-03-02',
+    date: '2026-03-02',
     title: 'Regreso a Casa',
     location: 'Tokyo/Narita',
     budget: 700,
