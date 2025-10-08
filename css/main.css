@@ -206,7 +206,7 @@ body {
   }
 }
 
-/* Utility para backdrop blur (si Tailwind no lo cubre) */
+/* Utility para backdrop blur */
 .backdrop-blur-sm {
   backdrop-filter: blur(4px);
 }
