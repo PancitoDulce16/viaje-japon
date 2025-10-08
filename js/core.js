@@ -1,112 +1,82 @@
-// js/core.js
-import { AppModals } from './modals.js';
+import { AppModals, ModalRenderer } from './modals.js';
+import { ItineraryHandler } from './itinerary.js';
+// Importa los otros handlers si es necesario
+import { TabsHandler } from './tabs.js';
 
-export const AppCore = {
-  state: {
-    currentDay: 1,
-    currentTab: 'itinerary',
-    darkMode: false,
-    checkedActivities: {}
-  },
+const App = {
+    state: {
+        currentTab: 'itinerary',
+        darkMode: false,
+    },
+    init() {
+        // Cargar estado
+        this.state.darkMode = localStorage.getItem('darkMode') === 'true';
+        if (this.state.darkMode) {
+            document.documentElement.classList.add('dark');
+            document.getElementById('darkModeIcon').textContent = '☀️';
+        }
+        
+        // Renderizar contenido dinámico
+        ModalRenderer.renderModals();
+        ItineraryHandler.renderItinerary();
+        TabsHandler.renderAllTabs(); // Asegúrate de que esto renderice map, flights, utils.
 
-  init() {
-    this.loadState();
-    this.setupEventListeners();
-    this.updateCountdown();
-    this.switchTab(this.state.currentTab);
-    setInterval(() => this.updateCountdown(), 60000);
-  },
+        // Configurar Listeners
+        this.setupEventListeners();
+        
+        // Actualizar UI
+        updateCountdown();
+        setInterval(updateCountdown, 60000);
+    },
+    setupEventListeners() {
+        // Theme Toggle
+        document.getElementById('themeToggle').addEventListener('click', toggleDarkMode);
 
-  loadState() {
-    // Dark Mode
-    this.state.darkMode = localStorage.getItem('darkMode') === 'true';
-    if (this.state.darkMode) {
-      document.documentElement.classList.add('dark');
-      document.getElementById('darkModeIcon').textContent = '☀️';
+        // Tab Selector
+        document.getElementById('tabSelector').addEventListener('click', e => {
+            if (e.target.matches('.tab-btn')) {
+                switchTab(e.target.dataset.tab);
+            }
+        });
+
+        // Modals
+        document.querySelector('button[data-modal="emergency"]').addEventListener('click', () => AppModals.open('emergency'));
+        document.querySelectorAll('.floating-btn').forEach(btn => {
+            btn.addEventListener('click', () => AppModals.open(btn.dataset.modal));
+        });
+        document.getElementById('modalsContainer').addEventListener('click', e => {
+            const btn = e.target.closest('.modal-close-btn');
+            if (btn) AppModals.close(btn.dataset.modalClose);
+        });
     }
-    // Checked activities
-    this.state.checkedActivities = JSON.parse(localStorage.getItem('checkedActivities') || '{}');
-  },
+};
 
-  setupEventListeners() {
-    // Header Buttons
-    document.getElementById('themeToggle').addEventListener('click', () => this.toggleDarkMode());
-    document.querySelector('button[data-modal="emergency"]').addEventListener('click', () => AppModals.open('emergency'));
-
-    // Tab Navigation
-    document.getElementById('tabSelector').addEventListener('click', (e) => {
-      if (e.target.matches('.tab-btn')) {
-        this.switchTab(e.target.dataset.tab);
-      }
-    });
-
-    // Floating Action Buttons
-    document.getElementById('floating-buttons-container').addEventListener('click', (e) => {
-        const fab = e.target.closest('.floating-btn');
-        if (fab) {
-            AppModals.open(fab.dataset.modal);
-        }
-    });
-    
-    // Modal Close Logic
-    document.getElementById('modalsContainer').addEventListener('click', (e) => {
-        const closeButton = e.target.closest('.modal-close-btn');
-        if (closeButton) {
-            AppModals.close(closeButton.dataset.modalClose);
-        }
-    });
-    window.addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal')) {
-            e.target.classList.remove('active');
-        }
-    });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            document.querySelectorAll('.modal.active').forEach(modal => modal.classList.remove('active'));
-        }
-    });
-  },
-
-  toggleDarkMode() {
+function toggleDarkMode() {
     document.documentElement.classList.toggle('dark');
-    this.state.darkMode = document.documentElement.classList.contains('dark');
-    localStorage.setItem('darkMode', this.state.darkMode);
-    document.getElementById('darkModeIcon').textContent = this.state.darkMode ? '☀️' : '🌙';
-  },
+    const isDark = document.documentElement.classList.contains('dark');
+    localStorage.setItem('darkMode', isDark);
+    document.getElementById('darkModeIcon').textContent = isDark ? '☀️' : '🌙';
+}
 
-  switchTab(tabName) {
+function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    
-    const content = document.getElementById(`content-${tabName}`);
-    const btn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
-    
-    if (content) content.classList.remove('hidden');
-    if (btn) btn.classList.add('active');
-    
-    this.state.currentTab = tabName;
-  },
+    document.getElementById(`content-${tabName}`).classList.remove('hidden');
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+}
 
-  updateCountdown() {
+function updateCountdown() {
     const tripStart = new Date('2025-02-16T00:00:00');
     const now = new Date();
     const diff = tripStart.getTime() - now.getTime();
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
     const elem = document.getElementById('countdown');
-    if (!elem) return;
-    
     if (days > 0) {
-      elem.textContent = `Faltan ${days} días`;
+        elem.textContent = `Faltan ${days} días`;
     } else {
-      const currentDay = Math.floor((now - tripStart) / (1000 * 60 * 60 * 24)) + 1;
-      elem.textContent = currentDay <= 15 ? `Día ${currentDay} de 15` : 'Viaje completado ✓';
+        elem.textContent = '¡Disfrutando el viaje!';
     }
-  },
+}
 
-  escapeHtml(text) {
-    if (typeof text !== 'string') return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-};
+// Exportar funciones globales si algún módulo las necesita, o mantenerlas aquí.
+export { App, toggleDarkMode, switchTab, updateCountdown };
