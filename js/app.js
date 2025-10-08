@@ -590,67 +590,365 @@ const AppCore = {
         if (!container) return;
         
         container.innerHTML = `
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">💴 Conversor de Moneda</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-2 dark:text-gray-300">USD Dólares</label>
-                            <input type="number" id="usdInput" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                <!-- CONTACTOS DE EMERGENCIA - SECCIÓN PRINCIPAL -->
+                <div class="mb-8 bg-red-50 dark:bg-red-900/20 rounded-xl shadow-lg p-6 border-l-4 border-red-600">
+                    <h2 class="text-2xl font-bold mb-6 text-red-700 dark:text-red-400 flex items-center gap-3">
+                        <span class="text-3xl">🚨</span>
+                        Contactos de Emergencia
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Emergencias Japón -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md">
+                            <h3 class="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800 dark:text-white">
+                                <span class="text-2xl">🇯🇵</span> Emergencias en Japón
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-3 bg-red-100 dark:bg-red-900/30 rounded">
+                                    <span class="font-semibold dark:text-gray-300">🚓 Policía</span>
+                                    <a href="tel:110" class="text-3xl font-bold text-red-600 dark:text-red-400 hover:text-red-700">110</a>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-red-100 dark:bg-red-900/30 rounded">
+                                    <span class="font-semibold dark:text-gray-300">🚑 Ambulancia/Bomberos</span>
+                                    <a href="tel:119" class="text-3xl font-bold text-red-600 dark:text-red-400 hover:text-red-700">119</a>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-blue-100 dark:bg-blue-900/30 rounded">
+                                    <span class="font-semibold text-sm dark:text-gray-300">📞 Japan Helpline (24/7)</span>
+                                    <a href="tel:0570-000-911" class="font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700">0570-000-911</a>
+                                </div>
+                            </div>
                         </div>
-                        <div class="text-center text-2xl text-gray-400">⇅</div>
-                        <div>
-                            <label class="block text-sm font-medium mb-2 dark:text-gray-300">JPY Yenes</label>
-                            <input type="number" id="jpyInput" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0">
+        
+                        <!-- Embajada Costa Rica -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md">
+                            <h3 class="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800 dark:text-white">
+                                <span class="text-2xl">🇨🇷</span> Embajada Costa Rica
+                            </h3>
+                            <div class="space-y-2 text-sm">
+                                <div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded">
+                                    <p class="font-semibold dark:text-white">📞 Desde Japón</p>
+                                    <a href="tel:+81-3-3486-1812" class="text-blue-600 dark:text-blue-400 font-bold text-lg">+81-3-3486-1812</a>
+                                </div>
+                                <div class="p-3 bg-green-50 dark:bg-green-900/30 rounded">
+                                    <p class="font-semibold dark:text-white">📞 Desde Costa Rica</p>
+                                    <a href="tel:+506-2257-5855" class="text-green-600 dark:text-green-400 font-bold">+506-2257-5855</a>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Cancillería CR (emergencias)</p>
+                                </div>
+                                <div class="p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                                    <p class="text-xs text-gray-600 dark:text-gray-400">📍 4-12-24 Nishi-Azabu, Minato-ku, Tokyo</p>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400">⏰ Lun-Vie: 9:30-12:30, 14:00-17:00</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="text-sm text-gray-600 dark:text-gray-400 text-center bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                            Tasa: 1 USD = 143 JPY
+        
+                        <!-- Hospitales -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md">
+                            <h3 class="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800 dark:text-white">
+                                <span class="text-2xl">🏥</span> Clínicas con Inglés
+                            </h3>
+                            <div class="space-y-3 text-sm">
+                                <div class="p-3 bg-green-50 dark:bg-green-900/30 rounded">
+                                    <p class="font-bold dark:text-white">Tokyo Medical & Surgical</p>
+                                    <a href="tel:+81-3-3436-3028" class="text-blue-600 dark:text-blue-400">📞 +81-3-3436-3028</a>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Shiba, Minato-ku, Tokyo</p>
+                                </div>
+                                <div class="p-3 bg-green-50 dark:bg-green-900/30 rounded">
+                                    <p class="font-bold dark:text-white">St. Luke's International</p>
+                                    <a href="tel:+81-3-5550-7166" class="text-blue-600 dark:text-blue-400">📞 +81-3-5550-7166</a>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Akashi-cho, Chuo-ku, Tokyo</p>
+                                </div>
+                                <div class="p-3 bg-green-50 dark:bg-green-900/30 rounded">
+                                    <p class="font-bold dark:text-white">Kyoto City Hospital</p>
+                                    <a href="tel:+81-75-311-5311" class="text-blue-600 dark:text-blue-400">📞 +81-75-311-5311</a>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Nakagyo-ku, Kyoto</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="grid grid-cols-3 gap-2">
-                            <button onclick="AppUtils.quickConvert(10)" class="bg-blue-100 dark:bg-blue-900 p-2 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition">$10</button>
-                            <button onclick="AppUtils.quickConvert(50)" class="bg-blue-100 dark:bg-blue-900 p-2 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition">$50</button>
-                            <button onclick="AppUtils.quickConvert(100)" class="bg-blue-100 dark:bg-blue-900 p-2 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition">$100</button>
+        
+                        <!-- Tarjetas de Crédito -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md">
+                            <h3 class="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800 dark:text-white">
+                                <span class="text-2xl">💳</span> Bloquear Tarjetas
+                            </h3>
+                            <div class="space-y-3 text-sm">
+                                <div class="p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded">
+                                    <p class="font-bold text-blue-800 dark:text-blue-300">Visa</p>
+                                    <a href="tel:+1-303-967-1096" class="text-blue-600 dark:text-blue-400">📞 +1-303-967-1096</a>
+                                </div>
+                                <div class="p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded">
+                                    <p class="font-bold text-orange-800 dark:text-orange-300">Mastercard</p>
+                                    <a href="tel:+1-636-722-7111" class="text-blue-600 dark:text-blue-400">📞 +1-636-722-7111</a>
+                                </div>
+                                <div class="p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded">
+                                    <p class="font-bold text-blue-900 dark:text-blue-200">American Express</p>
+                                    <a href="tel:+1-336-393-1111" class="text-blue-600 dark:text-blue-400">📞 +1-336-393-1111</a>
+                                </div>
+                                <div class="p-2 bg-red-100 dark:bg-red-900/40 rounded text-xs text-red-700 dark:text-red-300">
+                                    ⚠️ ¡Llama INMEDIATAMENTE si pierdes tu tarjeta!
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">🌤️ Clima Febrero</h3>
-                    <div class="space-y-3">
-                        <div class="p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg">
-                            <div class="flex justify-between items-center">
+        
+                <!-- INFORMACIÓN DE HOTELES -->
+                <div class="mb-8 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl shadow-lg p-6 border-l-4 border-purple-600">
+                    <h2 class="text-2xl font-bold mb-6 text-purple-700 dark:text-purple-400 flex items-center gap-3">
+                        <span class="text-3xl">🏨</span>
+                        Información de Hoteles
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Hotel 1: APA Shinjuku -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border-l-4 border-red-500">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-2xl">🗼</span>
                                 <div>
-                                    <p class="font-bold text-lg dark:text-white">Tokyo</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">5-12°C (41-54°F)</p>
+                                    <h3 class="font-bold text-lg dark:text-white">APA Hotel Shinjuku Gyoemmae</h3>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400">Feb 16-19 (Días 1-3)</p>
                                 </div>
-                                <span class="text-4xl">🌤️</span>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-start gap-2">
+                                    <span>📍</span>
+                                    <div>
+                                        <p class="dark:text-gray-300">2-8, Shinjuku 2-chome</p>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">Shinjuku-ku, Tokyo 160-0022</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span>📞</span>
+                                    <a href="tel:+81-3-5369-3622" class="text-blue-600 dark:text-blue-400">+81-3-5369-3622</a>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span>🚉</span>
+                                    <p class="text-xs dark:text-gray-300">Shinjuku-Gyoemmae Station (Exit 1) - 1 min walk</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span>🕐</span>
+                                    <p class="text-xs dark:text-gray-300">Check-in: 3:00 PM • Check-out: 10:00 AM</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-lg">
-                            <div class="flex justify-between items-center">
+        
+                        <!-- Hotel 2: Tune Stay Kyoto -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border-l-4 border-purple-500">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-2xl">⛩️</span>
                                 <div>
-                                    <p class="font-bold text-lg dark:text-white">Kyoto</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">4-10°C (39-50°F)</p>
+                                    <h3 class="font-bold text-lg dark:text-white">TUNE STAY Kyoto</h3>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400">Feb 19-21 (Días 4-5)</p>
                                 </div>
-                                <span class="text-4xl">⛅</span>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-start gap-2">
+                                    <span>📍</span>
+                                    <div>
+                                        <p class="dark:text-gray-300">Shimogyo-Ku Nanajo Shinmachi</p>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">Ebisuno-Cho 708, Kyoto 600-8310</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span>📞</span>
+                                    <a href="tel:+81-75-644-6660" class="text-blue-600 dark:text-blue-400">+81-75-644-6660</a>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span>🚉</span>
+                                    <p class="text-xs dark:text-gray-300">Kyoto Station - 5 min walk</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span>🕐</span>
+                                    <p class="text-xs dark:text-gray-300">Check-in: 4:00 PM • Check-out: 11:00 AM</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="p-4 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-800/30 rounded-lg">
-                            <div class="flex justify-between items-center">
+        
+                        <!-- Hotel 3: Toyoko Inn Osaka -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border-l-4 border-orange-500">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-2xl">🏯</span>
                                 <div>
-                                    <p class="font-bold text-lg dark:text-white">Osaka</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">5-11°C (41-52°F)</p>
+                                    <h3 class="font-bold text-lg dark:text-white">Toyoko Inn Osaka Namba Nishi</h3>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400">Feb 21-24 (Días 6-7)</p>
                                 </div>
-                                <span class="text-4xl">🌥️</span>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-start gap-2">
+                                    <span>📍</span>
+                                    <div>
+                                        <p class="dark:text-gray-300">2-8-7 Moto-Machi</p>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">Naniwa-ku, Osaka 556-0016</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span>📞</span>
+                                    <p class="text-xs dark:text-gray-300">Ver en recepción del hotel</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span>🚉</span>
+                                    <p class="text-xs dark:text-gray-300">Namba Station - 3 min walk</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span>🕐</span>
+                                    <p class="text-xs dark:text-gray-300">Check-in: 3:00 PM • Check-out: 10:00 AM</p>
+                                </div>
+                            </div>
+                        </div>
+        
+                        <!-- Hotel 4: APA Otsuka -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border-l-4 border-red-500">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-2xl">🗼</span>
+                                <div>
+                                    <h3 class="font-bold text-lg dark:text-white">APA Hotel Yamanote Otsuka Ekimae</h3>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400">Feb 24 - Mar 2 (Días 8-15)</p>
+                                </div>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-start gap-2">
+                                    <span>📍</span>
+                                    <div>
+                                        <p class="dark:text-gray-300">3-31-10, Minami-Otsuka</p>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">Toshima-ku, Tokyo 170-0005</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span>📞</span>
+                                    <a href="tel:+81-3-5985-5911" class="text-blue-600 dark:text-blue-400">+81-3-5985-5911</a>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span>🚉</span>
+                                    <p class="text-xs dark:text-gray-300">Otsuka Station (South Exit) - 3 min walk</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span>🕐</span>
+                                    <p class="text-xs dark:text-gray-300">Check-in: 3:00 PM • Check-out: 10:00 AM</p>
+                                </div>
                             </div>
                         </div>
                     </div>
+        
+                    <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500">
+                        <p class="text-sm dark:text-gray-300">
+                            💡 <strong>Tip:</strong> Guarda las direcciones en Google Maps antes del viaje. 
+                            Muestra la dirección en japonés al taxista si lo necesitas.
+                        </p>
+                    </div>
                 </div>
-            </div>
-        `;
+        
+                <!-- RESTO DE UTILIDADES (conversor, clima, etc) -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    
+                    <!-- Currency Converter -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                            💴 Conversor de Moneda
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2 dark:text-gray-300">USD Dólares</label>
+                                <input type="number" id="usdInput" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                            </div>
+                            <div class="text-center text-2xl">⇅</div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2 dark:text-gray-300">JPY Yenes</label>
+                                <input type="number" id="jpyInput" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0">
+                            </div>
+                            <div class="text-sm text-gray-600 dark:text-gray-400 text-center bg-gray-50 dark:bg-gray-700 p-2 rounded">
+                                Tasa: 1 USD = 143 JPY
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button onclick="AppUtils.quickConvert(10)" class="bg-blue-100 dark:bg-blue-900 p-2 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition">$10</button>
+                                <button onclick="AppUtils.quickConvert(50)" class="bg-blue-100 dark:bg-blue-900 p-2 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition">$50</button>
+                                <button onclick="AppUtils.quickConvert(100)" class="bg-blue-100 dark:bg-blue-900 p-2 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition">$100</button>
+                            </div>
+                        </div>
+                    </div>
+        
+                    <!-- Weather -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                            🌤️ Clima en Japón (Febrero)
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="font-semibold dark:text-white">Tokyo</p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">5-12°C (41-54°F)</p>
+                                    </div>
+                                    <span class="text-3xl">🌤️</span>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="font-semibold dark:text-white">Kyoto</p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">4-10°C (39-50°F)</p>
+                                    </div>
+                                    <span class="text-3xl">⛅</span>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="font-semibold dark:text-white">Osaka</p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">5-11°C (41-52°F)</p>
+                                    </div>
+                                    <span class="text-3xl">🌥️</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm">
+                                <p class="font-semibold mb-2 dark:text-white">👕 Qué llevar:</p>
+                                <ul class="space-y-1 text-gray-600 dark:text-gray-300">
+                                    <li>• Abrigo o chamarra</li>
+                                    <li>• Suéteres y capas</li>
+                                    <li>• Pantalones largos</li>
+                                    <li>• Paraguas (puede llover)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+        
+                    <!-- Quick Actions -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:col-span-2">
+                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                            ⚡ Acciones Rápidas
+                        </h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <button onclick="AppModals.open('phrases')" class="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition">
+                                <div class="text-2xl mb-1">🗣️</div>
+                                <div class="text-sm font-semibold">Frases</div>
+                            </button>
+                            <button onclick="AppModals.open('emergency')" class="p-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition">
+                                <div class="text-2xl mb-1">🚨</div>
+                                <div class="text-sm font-semibold">SOS</div>
+                            </button>
+                            <button onclick="AppModals.open('budget')" class="p-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition">
+                                <div class="text-2xl mb-1">💰</div>
+                                <div class="text-sm font-semibold">Budget</div>
+                            </button>
+                            <button onclick="AppModals.open('notes')" class="p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition">
+                                <div class="text-2xl mb-1">📝</div>
+                                <div class="text-sm font-semibold">Notas</div>
+                            </button>
+                        </div>
+                    </div>
+        
+                </div>
+            `;
+        
+            // Setup currency converter
+            AppUtils.setupCurrencyConverter();
+        }
+        
+        /* ============================================
+           EL RESTO DE TU app.js SE QUEDA IGUAL
+           No cambies nada más - solo este método
+           ============================================ */
 
-        // Setup currency converter
-        AppUtils.setupCurrencyConverter();
+
+        
     },
 
     renderModals() {
