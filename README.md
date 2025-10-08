@@ -44,6 +44,7 @@ git remote add origin https://github.com/TU-USUARIO/viaje-japon.git
 git push -u origin main
 ```
 
+
 ### Paso 3: Habilitar GitHub Pages
 
 1. En tu repositorio, ve a **Settings**
