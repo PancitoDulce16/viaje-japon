@@ -8,8 +8,9 @@ import { AttractionsHandler } from './attractions.js';
 import { PreparationHandler } from './preparation.js';
 import { TransportHandler } from './transport.js';
 
-// 🔥 NUEVO: Firebase imports
+// 🔥 Firebase imports
 import { AuthHandler } from './auth.js';
+import { TripsManager } from './trips-manager.js';
 import './firebase-config.js'; // Inicializar Firebase primero
 
 function initApp() {

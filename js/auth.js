@@ -1,4 +1,4 @@
-// js/auth.js - Sistema de Autenticación ARREGLADO
+// js/auth.js - Sistema de Autenticación CON SEGURIDAD
 
 import { auth } from './firebase-config.js';
 import { 
@@ -7,7 +7,8 @@ import {
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  sendPasswordResetEmail
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 export const AuthHandler = {
@@ -34,11 +35,11 @@ export const AuthHandler = {
       }
     });
 
-    // NUEVO: Configurar event listeners del modal después de que se renderice
+    // Configurar event listeners del modal después de que se renderice
     this.setupModalListeners();
   },
 
-  // NUEVO: Configurar event listeners del modal
+  // Configurar event listeners del modal
   setupModalListeners() {
     // Esperar a que el modal se renderice
     setTimeout(() => {
@@ -75,11 +76,20 @@ export const AuthHandler = {
         });
       }
 
+      // Forgot password link
+      const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+      if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.showForgotPasswordPrompt();
+        });
+      }
+
       console.log('✅ Event listeners del modal configurados');
     }, 500);
   },
 
-  // NUEVO: Cambiar a tab de login
+  // Cambiar a tab de login
   switchToLoginTab() {
     const loginTab = document.getElementById('loginTab');
     const registerTab = document.getElementById('registerTab');
@@ -96,7 +106,7 @@ export const AuthHandler = {
     }
   },
 
-  // NUEVO: Cambiar a tab de registro
+  // Cambiar a tab de registro
   switchToRegisterTab() {
     const loginTab = document.getElementById('loginTab');
     const registerTab = document.getElementById('registerTab');
@@ -170,7 +180,7 @@ export const AuthHandler = {
         'auth/invalid-email': 'Email inválido.',
         'auth/user-disabled': 'Usuario deshabilitado.',
         'auth/invalid-credential': 'Email o contraseña incorrectos.',
-        'auth/too-many-requests': 'Demasiados intentos fallidos. Intenta más tarde.',
+        'auth/too-many-requests': 'Demasiados intentos fallidos. Intenta más tarde o restablece tu contraseña.',
         'auth/network-request-failed': 'Error de red. Verifica tu conexión a internet.'
       };
       
@@ -207,7 +217,7 @@ export const AuthHandler = {
       
       if (error.code === 'auth/popup-closed-by-user') {
         console.log('Usuario cerró el popup');
-        return; // No mostrar error si el usuario cerró el popup
+        return;
       }
 
       if (error.code === 'auth/popup-blocked') {
@@ -222,6 +232,48 @@ export const AuthHandler = {
       
       alert('❌ Error al iniciar sesión con Google:\n\n' + error.message);
       throw error;
+    }
+  },
+
+  // Restablecer contraseña
+  async resetPassword(email) {
+    if (!auth || !auth.app) {
+      alert('⚠️ Firebase no está configurado.');
+      return;
+    }
+
+    if (!email || !email.trim()) {
+      alert('⚠️ Por favor ingresa tu email.');
+      return;
+    }
+
+    try {
+      console.log('🔄 Enviando email de recuperación a:', email);
+      await sendPasswordResetEmail(auth, email);
+      console.log('✅ Email de recuperación enviado');
+      alert('✅ ¡Email enviado!\n\nRevisa tu bandeja de entrada (y spam) para restablecer tu contraseña.\n\nEl link expira en 1 hora.');
+      return true;
+    } catch (error) {
+      console.error('❌ Error enviando email de recuperación:', error);
+      
+      const errorMessages = {
+        'auth/invalid-email': 'Email inválido. Verifica el formato.',
+        'auth/user-not-found': 'No existe una cuenta con este email.',
+        'auth/too-many-requests': 'Demasiados intentos. Intenta de nuevo en unos minutos.',
+        'auth/network-request-failed': 'Error de red. Verifica tu conexión a internet.'
+      };
+      
+      alert('❌ Error al enviar email de recuperación:\n\n' + (errorMessages[error.code] || error.message));
+      throw error;
+    }
+  },
+
+  // Mostrar prompt para olvidé mi contraseña
+  showForgotPasswordPrompt() {
+    const email = prompt('🔑 Restablecer Contraseña\n\nIngresa tu email y te enviaremos un link para crear una nueva contraseña:');
+    
+    if (email) {
+      this.resetPassword(email.trim());
     }
   },
 
@@ -344,14 +396,33 @@ export const AuthHandler = {
     console.log('Email:', email);
     console.log('Password length:', password.length);
 
+    // Validaciones de seguridad
+    if (!email || !password || !confirmPassword) {
+      alert('⚠️ Por favor completa todos los campos');
+      return;
+    }
+
     if (password !== confirmPassword) {
-      alert('❌ Las contraseñas no coinciden');
+      alert('❌ Las contraseñas no coinciden\n\nVerifica que ambas contraseñas sean iguales.');
       return;
     }
 
     if (password.length < 6) {
-      alert('❌ La contraseña debe tener al menos 6 caracteres');
+      alert('❌ Contraseña muy corta\n\nLa contraseña debe tener al menos 6 caracteres.');
       return;
+    }
+
+    // Validar formato de email básico
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      alert('❌ Email inválido\n\nVerifica que el formato sea correcto (ejemplo@dominio.com)');
+      return;
+    }
+
+    // Validación de contraseña segura (recomendación)
+    if (password.length < 8) {
+      const proceed = confirm('⚠️ Contraseña débil\n\nTu contraseña tiene menos de 8 caracteres. Se recomienda usar al menos 8 caracteres.\n\n¿Deseas continuar de todas formas?');
+      if (!proceed) return;
     }
 
     this.register(email, password);
@@ -367,6 +438,11 @@ export const AuthHandler = {
     
     console.log('Email:', email);
     console.log('Password length:', password.length);
+
+    if (!email || !password) {
+      alert('⚠️ Por favor completa todos los campos');
+      return;
+    }
     
     this.login(email, password);
   }

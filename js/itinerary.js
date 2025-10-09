@@ -1,19 +1,145 @@
-// js/itinerary.js
+// js/itinerary.js - CON MODO COLABORATIVO
 
 import { ITINERARY_DATA } from './itinerary-data.js';
+import { db, auth } from './firebase-config.js';
+import { 
+  doc,
+  setDoc,
+  getDoc,
+  onSnapshot
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-let checkedActivities = JSON.parse(localStorage.getItem('checkedActivities') || '{}');
+let checkedActivities = {};
 let currentDay = 1;
+let unsubscribe = null;
+
+// Obtener el tripId actual
+function getCurrentTripId() {
+  // Intentar obtener del TripsManager si existe
+  if (window.TripsManager && window.TripsManager.currentTrip) {
+    return window.TripsManager.currentTrip.id;
+  }
+  // Fallback a localStorage
+  return localStorage.getItem('currentTripId');
+}
+
+// Inicializar listener en tiempo real
+async function initRealtimeSync() {
+  // Si ya hay un listener, limpiarlo
+  if (unsubscribe) {
+    unsubscribe();
+  }
+
+  // Si no hay usuario, cargar de localStorage
+  if (!auth.currentUser) {
+    checkedActivities = JSON.parse(localStorage.getItem('checkedActivities') || '{}');
+    render();
+    return;
+  }
+
+  const tripId = getCurrentTripId();
+
+  // Si NO hay trip seleccionado, usar el sistema antiguo (por usuario)
+  if (!tripId) {
+    console.log('⚠️ No hay trip seleccionado, usando modo individual');
+    const userId = auth.currentUser.uid;
+    const checklistRef = doc(db, `users/${userId}/checklist`, 'activities');
+
+    unsubscribe = onSnapshot(checklistRef, (docSnapshot) => {
+      if (docSnapshot.exists()) {
+        checkedActivities = docSnapshot.data().checked || {};
+      } else {
+        checkedActivities = {};
+      }
+      
+      localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));
+      render();
+      
+      console.log('✅ Checklist (individual) sincronizado:', Object.keys(checkedActivities).length);
+    }, (error) => {
+      console.error('❌ Error en sync de checklist:', error);
+      checkedActivities = JSON.parse(localStorage.getItem('checkedActivities') || '{}');
+      render();
+    });
+    
+    return;
+  }
+
+  // 🔥 MODO COLABORATIVO: Usar el trip compartido
+  console.log('🤝 Modo colaborativo activado para trip:', tripId);
+  const checklistRef = doc(db, `trips/${tripId}/activities`, 'checklist');
+
+  unsubscribe = onSnapshot(checklistRef, (docSnapshot) => {
+    if (docSnapshot.exists()) {
+      checkedActivities = docSnapshot.data().checked || {};
+    } else {
+      checkedActivities = {};
+    }
+    
+    // También guardar en localStorage como backup
+    localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));
+    
+    // Re-renderizar
+    render();
+    
+    console.log('✅ Checklist COMPARTIDO sincronizado:', Object.keys(checkedActivities).length, 'actividades');
+  }, (error) => {
+    console.error('❌ Error en sync de checklist compartido:', error);
+    // Fallback a localStorage si falla
+    checkedActivities = JSON.parse(localStorage.getItem('checkedActivities') || '{}');
+    render();
+  });
+}
 
 function selectDay(dayNumber) {
     currentDay = dayNumber;
     render();
 }
 
-function toggleActivity(activityId) {
+async function toggleActivity(activityId) {
     checkedActivities[activityId] = !checkedActivities[activityId];
-    localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));
-    render();
+    
+    try {
+      if (!auth.currentUser) {
+        // Si no hay usuario, solo guardar localmente
+        localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));
+        render();
+        return;
+      }
+
+      const tripId = getCurrentTripId();
+
+      if (!tripId) {
+        // Modo individual (sin trip)
+        const userId = auth.currentUser.uid;
+        const checklistRef = doc(db, `users/${userId}/checklist`, 'activities');
+        
+        await setDoc(checklistRef, {
+          checked: checkedActivities,
+          lastUpdated: new Date().toISOString(),
+          updatedBy: auth.currentUser.email
+        });
+        
+        console.log('✅ Actividad sincronizada (individual)');
+      } else {
+        // 🔥 Modo colaborativo
+        const checklistRef = doc(db, `trips/${tripId}/activities`, 'checklist');
+        
+        await setDoc(checklistRef, {
+          checked: checkedActivities,
+          lastUpdated: new Date().toISOString(),
+          updatedBy: auth.currentUser.email // Registrar quién hizo el cambio
+        });
+        
+        console.log('✅ Actividad sincronizada (COMPARTIDO) por:', auth.currentUser.email);
+      }
+    } catch (error) {
+      console.error('❌ Error guardando actividad:', error);
+      // Revertir cambio si falla
+      checkedActivities[activityId] = !checkedActivities[activityId];
+      render();
+      alert('Error al sincronizar. Intenta de nuevo.');
+    }
 }
 
 function render() {
@@ -46,6 +172,17 @@ function renderDayOverview(day) {
     const completed = day.activities.filter(a => checkedActivities[a.id]).length;
     const progress = day.activities.length > 0 ? (completed / day.activities.length) * 100 : 0;
     
+    const tripId = getCurrentTripId();
+    let syncStatus;
+    
+    if (!auth.currentUser) {
+      syncStatus = '<span class="text-xs text-yellow-600 dark:text-yellow-400">📱 Solo local</span>';
+    } else if (tripId) {
+      syncStatus = '<span class="text-xs text-green-600 dark:text-green-400">🤝 Modo Colaborativo</span>';
+    } else {
+      syncStatus = '<span class="text-xs text-blue-600 dark:text-blue-400">☁️ Sincronizado</span>';
+    }
+    
     container.innerHTML = `
         <div class="flex items-center gap-2 mb-4">
             <span class="text-2xl">📅</span>
@@ -58,6 +195,9 @@ function renderDayOverview(day) {
             </div>
             <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div class="bg-red-600 h-2 rounded-full transition-all duration-500" style="width: ${progress}%"></div>
+            </div>
+            <div class="mt-2 text-right">
+                ${syncStatus}
             </div>
         </div>
         <div class="space-y-3 text-sm">
@@ -131,7 +271,8 @@ export const ItineraryHandler = {
             </div>
         `;
 
-        render();
+        // Inicializar sync en tiempo real
+        initRealtimeSync();
 
         const daySelector = document.getElementById('daySelector');
         if (daySelector) {
@@ -148,5 +289,20 @@ export const ItineraryHandler = {
                 if (checkbox) toggleActivity(checkbox.dataset.id);
             });
         }
+    },
+    
+    // Re-inicializar cuando cambie el trip
+    reinitialize() {
+        initRealtimeSync();
     }
 };
+
+// Inicializar cuando cambia el estado de autenticación
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+onAuthStateChanged(auth, (user) => {
+  initRealtimeSync();
+});
+
+// Exponer globalmente para que TripsManager pueda re-inicializar
+window.ItineraryHandler = ItineraryHandler;
