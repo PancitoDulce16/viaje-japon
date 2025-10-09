@@ -214,26 +214,114 @@ export const TripsManager = {
   },
 
   // 🔥 NUEVO: Mostrar código para compartir
-  showShareCode() {
+  async showShareCode() {
     if (!this.currentTrip) {
       alert('⚠️ Debes seleccionar un viaje primero');
       return;
     }
 
-    const shareCode = this.currentTrip.info.shareCode;
-    const tripName = this.currentTrip.info.name;
+    let shareCode = this.currentTrip.info?.shareCode;
     
-    const message = `🔗 Código del viaje: ${shareCode}\n\n📝 Viaje: ${tripName}\n\n👉 Para unirse:\n1. Abre la app\n2. Click en "Unirse a un Viaje"\n3. Ingresa este código: ${shareCode}`;
+    // Si no existe shareCode, generarlo y guardarlo
+    if (!shareCode) {
+      console.log('⚠️ No hay shareCode, generando uno nuevo...');
+      shareCode = this.generateTripCode();
+      
+      try {
+        const tripRef = doc(db, 'trips', this.currentTrip.id);
+        await updateDoc(tripRef, {
+          'info.shareCode': shareCode
+        });
+        
+        // Actualizar localmente
+        if (!this.currentTrip.info) this.currentTrip.info = {};
+        this.currentTrip.info.shareCode = shareCode;
+        
+        console.log('✅ ShareCode generado y guardado:', shareCode);
+      } catch (error) {
+        console.error('❌ Error guardando shareCode:', error);
+        alert('Error al generar código. Intenta de nuevo.');
+        return;
+      }
+    }
+
+    const tripName = this.currentTrip.info?.name || 'Viaje';
     
-    // Copiar al portapapeles
+    // Crear modal personalizado
+    const modalHtml = `
+      <div id="shareCodeModal" class="modal active" style="z-index: 9999;">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+          <div class="text-center">
+            <div class="text-6xl mb-4">🔗</div>
+            <h2 class="text-2xl font-bold dark:text-white mb-2">Código del viaje</h2>
+            <div class="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-6 mb-4">
+              <p class="text-4xl font-mono font-bold text-blue-600 dark:text-blue-400 tracking-wider">${shareCode}</p>
+            </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <strong>Viaje:</strong> ${tripName}
+            </p>
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4 text-left">
+              <p class="text-sm font-semibold dark:text-white mb-2">👉 Para unirse:</p>
+              <ol class="text-sm text-gray-600 dark:text-gray-400 space-y-1 list-decimal list-inside">
+                <li>Abre la app</li>
+                <li>Click en "Unirse a un Viaje"</li>
+                <li>Ingresa este código: <strong>${shareCode}</strong></li>
+              </ol>
+            </div>
+            <button 
+              onclick="TripsManager.copyShareCode('${shareCode}')"
+              class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold mb-2"
+            >
+              📋 Copiar Código
+            </button>
+            <button 
+              onclick="TripsManager.closeShareCodeModal()"
+              class="w-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white py-2 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Agregar modal al DOM
+    const existingModal = document.getElementById('shareCodeModal');
+    if (existingModal) existingModal.remove();
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.body.style.overflow = 'hidden';
+  },
+
+  // Copiar código al portapapeles
+  copyShareCode(code) {
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareCode).then(() => {
-        alert(`${message}\n\n✅ Código copiado al portapapeles!`);
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = '✅ ¡Copiado!';
+        btn.classList.add('bg-green-600', 'hover:bg-green-700');
+        btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+          btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        }, 2000);
       }).catch(() => {
-        alert(message);
+        alert('No se pudo copiar automáticamente. Copia manualmente: ' + code);
       });
     } else {
-      alert(message);
+      alert('Copia este código: ' + code);
+    }
+  },
+
+  // Cerrar modal de compartir
+  closeShareCodeModal() {
+    const modal = document.getElementById('shareCodeModal');
+    if (modal) {
+      modal.remove();
+      document.body.style.overflow = '';
     }
   },
 
