@@ -1,14 +1,136 @@
-// js/preparation.js - Tab de Preparación del Viaje
+// js/preparation.js - Tab de Preparación con Modo Colaborativo
+
+import { db, auth } from './firebase-config.js';
+import { 
+  doc,
+  setDoc,
+  getDoc,
+  onSnapshot
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 export const PreparationHandler = {
-    packingList: JSON.parse(localStorage.getItem('packingList') || JSON.stringify({
+    packingList: {
         documents: [],
         clothing: [],
         electronics: [],
         health: [],
         money: [],
         misc: []
-    })),
+    },
+    unsubscribe: null,
+
+    // Obtener el tripId actual
+    getCurrentTripId() {
+        if (window.TripsManager && window.TripsManager.currentTrip) {
+            return window.TripsManager.currentTrip.id;
+        }
+        return localStorage.getItem('currentTripId');
+    },
+
+    // 🔥 Inicializar listener en tiempo real
+    async initRealtimeSync() {
+        // Si ya hay un listener, limpiarlo
+        if (this.unsubscribe) {
+            this.unsubscribe();
+        }
+
+        // Si no hay usuario, cargar de localStorage
+        if (!auth.currentUser) {
+            const saved = localStorage.getItem('packingList');
+            if (saved) {
+                this.packingList = JSON.parse(saved);
+            } else {
+                this.initializeDefaultPackingList();
+            }
+            this.renderPreparation();
+            return;
+        }
+
+        const tripId = this.getCurrentTripId();
+        const userId = auth.currentUser.uid;
+
+        // Si NO hay trip, usar el sistema antiguo (por usuario)
+        if (!tripId) {
+            console.log('⚠️ Packing: No hay trip seleccionado, usando modo individual');
+            const packingRef = doc(db, `users/${userId}/packing`, 'list');
+
+            this.unsubscribe = onSnapshot(packingRef, (docSnapshot) => {
+                if (docSnapshot.exists()) {
+                    this.packingList = docSnapshot.data().items || this.getDefaultPackingList();
+                } else {
+                    this.initializeDefaultPackingList();
+                }
+                
+                localStorage.setItem('packingList', JSON.stringify(this.packingList));
+                this.renderPreparation();
+                
+                console.log('✅ Packing list (individual) sincronizado');
+            }, (error) => {
+                console.error('❌ Error en sync de packing list:', error);
+                const saved = localStorage.getItem('packingList');
+                this.packingList = saved ? JSON.parse(saved) : this.getDefaultPackingList();
+                this.renderPreparation();
+            });
+
+            return;
+        }
+
+        // 🔥 MODO COLABORATIVO: Usar el trip compartido
+        console.log('🤝 Packing: Modo colaborativo activado para trip:', tripId);
+        const packingRef = doc(db, `trips/${tripId}/data`, 'packing');
+
+        this.unsubscribe = onSnapshot(packingRef, (docSnapshot) => {
+            if (docSnapshot.exists()) {
+                this.packingList = docSnapshot.data().items || this.getDefaultPackingList();
+            } else {
+                this.initializeDefaultPackingList();
+            }
+            
+            // También guardar en localStorage como backup
+            localStorage.setItem('packingList', JSON.stringify(this.packingList));
+            
+            // Re-renderizar
+            this.renderPreparation();
+            
+            console.log('✅ Packing list COMPARTIDO sincronizado');
+        }, (error) => {
+            console.error('❌ Error en sync de packing list compartido:', error);
+            const saved = localStorage.getItem('packingList');
+            this.packingList = saved ? JSON.parse(saved) : this.getDefaultPackingList();
+            this.renderPreparation();
+        });
+    },
+
+    // Inicializar lista por defecto
+    initializeDefaultPackingList() {
+        const defaults = this.getDefaultPackingList();
+        Object.keys(defaults).forEach(category => {
+            if (!this.packingList[category] || this.packingList[category].length === 0) {
+                this.packingList[category] = defaults[category];
+            }
+        });
+    },
+
+    getDefaultPackingList() {
+        const defaultItems = {
+            documents: ['Pasaporte (válido 6+ meses)', 'Visa (si aplica)', 'JR Pass voucher', 'Seguro de viaje', 'Reservas de hotel', 'Boletos de avión'],
+            clothing: ['Abrigo/chamarra', 'Suéteres (3-4)', 'Camisetas (5-6)', 'Pantalones (3-4)', 'Ropa interior', 'Calcetines', 'Zapatos cómodos', 'Pijama'],
+            electronics: ['Celular + cargador', 'Adaptador Type A (100V)', 'Power bank', 'Cámara (opcional)', 'Audífonos', 'Cable USB'],
+            health: ['Medicamentos personales', 'Analgésicos', 'Medicina para estómago', 'Banditas', 'Desinfectante de manos', 'Mascarillas'],
+            money: ['Tarjetas de crédito (2)', 'Efectivo (¥20,000-30,000)', 'Suica/Pasmo card', 'Copias de tarjetas'],
+            misc: ['Mochila pequeña', 'Botella de agua', 'Paraguas', 'Bolsas ziplock', 'Snacks', 'Guía de conversación']
+        };
+
+        const packingList = {};
+        Object.keys(defaultItems).forEach(category => {
+            packingList[category] = defaultItems[category].map(item => ({
+                name: item,
+                checked: false
+            }));
+        });
+
+        return packingList;
+    },
 
     renderPreparation() {
         const container = document.getElementById('content-preparation');
@@ -17,6 +139,17 @@ export const PreparationHandler = {
         const totalItems = this.getTotalItems();
         const checkedItems = this.getCheckedItems();
         const progress = totalItems > 0 ? (checkedItems / totalItems) * 100 : 0;
+
+        const tripId = this.getCurrentTripId();
+        let syncStatus;
+        
+        if (!auth.currentUser) {
+            syncStatus = '<span class="text-yellow-600 dark:text-yellow-400">📱 Solo local</span>';
+        } else if (tripId) {
+            syncStatus = '<span class="text-green-600 dark:text-green-400">🤝 Modo Colaborativo</span>';
+        } else {
+            syncStatus = '<span class="text-blue-600 dark:text-blue-400">☁️ Sincronizado</span>';
+        }
 
         container.innerHTML = `
             <div class="max-w-6xl mx-auto p-4 md:p-6">
@@ -28,6 +161,7 @@ export const PreparationHandler = {
                         <div>
                             <h3 class="text-2xl font-bold">¿Listo para Japón?</h3>
                             <p class="text-sm opacity-90">${checkedItems} de ${totalItems} items completados</p>
+                            <p class="text-xs mt-1">${syncStatus}</p>
                         </div>
                         <div class="text-5xl">${progress === 100 ? '🎉' : '✈️'}</div>
                     </div>
@@ -73,25 +207,6 @@ export const PreparationHandler = {
             money: { name: 'Dinero 💰', icon: '💰', color: 'purple' },
             misc: { name: 'Otros 🎒', icon: '🎒', color: 'gray' }
         };
-
-        const defaultItems = {
-            documents: ['Pasaporte (válido 6+ meses)', 'Visa (si aplica)', 'JR Pass voucher', 'Seguro de viaje', 'Reservas de hotel', 'Boletos de avión'],
-            clothing: ['Abrigo/chamarra', 'Suéteres (3-4)', 'Camisetas (5-6)', 'Pantalones (3-4)', 'Ropa interior', 'Calcetines', 'Zapatos cómodos', 'Pijama'],
-            electronics: ['Celular + cargador', 'Adaptador Type A (100V)', 'Power bank', 'Cámara (opcional)', 'Audífonos', 'Cable USB'],
-            health: ['Medicamentos personales', 'Analgésicos', 'Medicina para estómago', 'Banditas', 'Desinfectante de manos', 'Mascarillas'],
-            money: ['Tarjetas de crédito (2)', 'Efectivo (¥20,000-30,000)', 'Suica/Pasmo card', 'Copias de tarjetas'],
-            misc: ['Mochila pequeña', 'Botella de agua', 'Paraguas', 'Bolsas ziplock', 'Snacks', 'Guía de conversación']
-        };
-
-        // Initialize packing list if empty
-        Object.keys(defaultItems).forEach(category => {
-            if (!this.packingList[category] || this.packingList[category].length === 0) {
-                this.packingList[category] = defaultItems[category].map(item => ({
-                    name: item,
-                    checked: false
-                }));
-            }
-        });
 
         return `
             <div class="space-y-4">
@@ -264,16 +379,52 @@ export const PreparationHandler = {
         }
     },
 
-    toggleItem(category, index) {
+    async toggleItem(category, index) {
         if (this.packingList[category] && this.packingList[category][index]) {
             this.packingList[category][index].checked = !this.packingList[category][index].checked;
-            this.savePackingList();
-            this.renderPreparation();
-        }
-    },
+            
+            try {
+                if (!auth.currentUser) {
+                    // Sin usuario, solo guardar localmente
+                    localStorage.setItem('packingList', JSON.stringify(this.packingList));
+                    this.renderPreparation();
+                    return;
+                }
 
-    savePackingList() {
-        localStorage.setItem('packingList', JSON.stringify(this.packingList));
+                const tripId = this.getCurrentTripId();
+
+                if (!tripId) {
+                    // Modo individual
+                    const userId = auth.currentUser.uid;
+                    const packingRef = doc(db, `users/${userId}/packing`, 'list');
+                    
+                    await setDoc(packingRef, {
+                        items: this.packingList,
+                        lastUpdated: new Date().toISOString(),
+                        updatedBy: auth.currentUser.email
+                    });
+                    
+                    console.log('✅ Packing list sincronizado (individual)');
+                } else {
+                    // 🔥 Modo colaborativo
+                    const packingRef = doc(db, `trips/${tripId}/data`, 'packing');
+                    
+                    await setDoc(packingRef, {
+                        items: this.packingList,
+                        lastUpdated: new Date().toISOString(),
+                        updatedBy: auth.currentUser.email
+                    });
+                    
+                    console.log('✅ Packing list sincronizado (COMPARTIDO) por:', auth.currentUser.email);
+                }
+            } catch (error) {
+                console.error('❌ Error guardando packing list:', error);
+                // Revertir cambio si falla
+                this.packingList[category][index].checked = !this.packingList[category][index].checked;
+                this.renderPreparation();
+                alert('Error al sincronizar. Intenta de nuevo.');
+            }
+        }
     },
 
     getTotalItems() {
@@ -304,8 +455,27 @@ export const PreparationHandler = {
                 this.toggleItem(category, index);
             });
         });
+    },
+
+    // Re-inicializar cuando cambie el trip
+    reinitialize() {
+        this.initRealtimeSync();
+    },
+
+    // Cleanup
+    cleanup() {
+        if (this.unsubscribe) {
+            this.unsubscribe();
+        }
     }
 };
 
-// Exponer globalmente para compatibilidad
+// Inicializar cuando cambia el estado de autenticación
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+onAuthStateChanged(auth, (user) => {
+    PreparationHandler.initRealtimeSync();
+});
+
+// Exponer globalmente
 window.PreparationHandler = PreparationHandler;

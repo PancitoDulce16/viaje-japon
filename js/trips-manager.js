@@ -1,4 +1,4 @@
-// js/trips-manager.js - Sistema de Gestión de Viajes Compartidos
+// js/trips-manager.js - Sistema de Gestión de Viajes Compartidos (MEJORADO)
 
 import { db, auth } from './firebase-config.js';
 import { 
@@ -48,6 +48,10 @@ export const TripsManager = {
       // Si no hay trip seleccionado, seleccionar el primero
       if (!this.currentTrip && this.userTrips.length > 0) {
         this.selectTrip(this.userTrips[0].id);
+      } else if (!this.currentTrip && this.userTrips.length === 0) {
+        // Si no hay trips, mostrar mensaje de bienvenida
+        console.log('⚠️ No hay trips, mostrar modal de crear trip');
+        this.updateTripHeaderEmpty();
       }
     });
   },
@@ -87,8 +91,11 @@ export const TripsManager = {
 
       await setDoc(doc(db, 'trips', tripId), newTrip);
       
+      // 🔥 NUEVO: Copiar plantilla de itinerario
+      await this.copyItineraryTemplate(tripId);
+      
       console.log('✅ Viaje creado:', tripId);
-      alert('✅ ¡Viaje creado exitosamente!');
+      alert('✅ ¡Viaje creado exitosamente!\n\nSe ha copiado una plantilla de itinerario de 15 días que puedes personalizar.');
       
       // Seleccionar el nuevo viaje
       this.selectTrip(tripId);
@@ -98,6 +105,28 @@ export const TripsManager = {
       console.error('❌ Error creando viaje:', error);
       alert('Error al crear viaje. Intenta de nuevo.');
       throw error;
+    }
+  },
+
+  // 🔥 NUEVO: Copiar plantilla de itinerario al trip
+  async copyItineraryTemplate(tripId) {
+    try {
+      // Importar la plantilla
+      const { ITINERARY_DATA } = await import('./itinerary-data.js');
+      
+      // Guardar cada día del itinerario en Firestore
+      const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+      
+      await setDoc(itineraryRef, {
+        days: ITINERARY_DATA,
+        lastUpdated: new Date().toISOString(),
+        isTemplate: true
+      });
+      
+      console.log('✅ Plantilla de itinerario copiada al trip:', tripId);
+    } catch (error) {
+      console.error('❌ Error copiando plantilla de itinerario:', error);
+      // No lanzar error, el trip se creó exitosamente
     }
   },
 
@@ -128,25 +157,118 @@ export const TripsManager = {
         if (window.BudgetTracker && window.BudgetTracker.reinitialize) {
           window.BudgetTracker.reinitialize();
         }
+        if (window.PreparationHandler && window.PreparationHandler.reinitialize) {
+          window.PreparationHandler.reinitialize();
+        }
+        if (window.AppCore && window.AppCore.reinitialize) {
+          window.AppCore.reinitialize();
+        }
         
         // Cerrar modal si está abierto
         this.closeTripsListModal();
         
-        console.log('🔄 Módulos re-inicializados para el trip:', tripId);
+        console.log('🔄 Todos los módulos re-inicializados para el trip:', tripId);
       }
     } catch (error) {
       console.error('❌ Error seleccionando trip:', error);
     }
   },
 
-  // Invitar miembro al viaje
-  async inviteMember(tripId, memberEmail) {
+  // 🔥 NUEVO: Invitar miembro al viaje (MVP)
+  async inviteMember() {
+    if (!this.currentTrip) {
+      alert('⚠️ Debes seleccionar un viaje primero');
+      return;
+    }
+
+    const userIdToInvite = prompt('🔗 Para invitar a alguien, necesitas su User ID.\n\nPide a tu hermano que vaya a la consola del navegador (F12) y escriba:\n\nauth.currentUser.uid\n\nLuego ingresa ese User ID aquí:');
+    
+    if (!userIdToInvite || userIdToInvite.trim() === '') {
+      return;
+    }
+
     try {
-      // Aquí implementaremos la búsqueda por email
-      // Por ahora, asumimos que tienes el userId
-      alert('🚧 Función de invitar en desarrollo. Por ahora, comparte el Trip ID: ' + tripId);
+      const tripRef = doc(db, 'trips', this.currentTrip.id);
+      
+      // Verificar si el usuario ya es miembro
+      if (this.currentTrip.members.includes(userIdToInvite.trim())) {
+        alert('⚠️ Este usuario ya es miembro del viaje');
+        return;
+      }
+
+      await updateDoc(tripRef, {
+        members: arrayUnion(userIdToInvite.trim())
+      });
+
+      alert('✅ ¡Miembro invitado exitosamente!\n\nAhora podrán ver y editar este viaje juntos.');
+      console.log('✅ Miembro agregado al trip:', userIdToInvite);
     } catch (error) {
       console.error('❌ Error invitando miembro:', error);
+      alert('Error al invitar. Verifica que el User ID sea correcto.');
+    }
+  },
+
+  // 🔥 NUEVO: Copiar Trip ID para compartir
+  copyTripId() {
+    if (!this.currentTrip) {
+      alert('⚠️ Debes seleccionar un viaje primero');
+      return;
+    }
+
+    const tripId = this.currentTrip.id;
+    
+    // Copiar al portapapeles
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(tripId).then(() => {
+        alert(`✅ Trip ID copiado al portapapeles:\n\n${tripId}\n\nComparte este ID con tu hermano para que pueda unirse.`);
+      }).catch(() => {
+        // Fallback si clipboard no funciona
+        prompt('📋 Copia este Trip ID:', tripId);
+      });
+    } else {
+      // Fallback para navegadores antiguos
+      prompt('📋 Copia este Trip ID:', tripId);
+    }
+  },
+
+  // 🔥 NUEVO: Unirse a un trip existente
+  async joinTrip() {
+    const tripId = prompt('🔗 Ingresa el Trip ID que te compartieron:');
+    
+    if (!tripId || tripId.trim() === '') {
+      return;
+    }
+
+    try {
+      const tripRef = doc(db, 'trips', tripId.trim());
+      const tripSnap = await getDoc(tripRef);
+
+      if (!tripSnap.exists()) {
+        alert('⚠️ No se encontró ningún viaje con ese ID. Verifica que esté correcto.');
+        return;
+      }
+
+      const userId = auth.currentUser.uid;
+      const tripData = tripSnap.data();
+
+      // Verificar si ya es miembro
+      if (tripData.members.includes(userId)) {
+        alert('✅ Ya eres miembro de este viaje. Seleccionándolo...');
+        this.selectTrip(tripId.trim());
+        return;
+      }
+
+      // Agregar como miembro
+      await updateDoc(tripRef, {
+        members: arrayUnion(userId)
+      });
+
+      alert('✅ ¡Te has unido al viaje exitosamente!');
+      this.selectTrip(tripId.trim());
+      console.log('✅ Usuario se unió al trip:', tripId);
+    } catch (error) {
+      console.error('❌ Error uniéndose al trip:', error);
+      alert('Error al unirse al viaje. Intenta de nuevo.');
     }
   },
 
@@ -176,6 +298,12 @@ export const TripsManager = {
           >
             ➕ Crear Primer Viaje
           </button>
+          <button 
+            onclick="TripsManager.joinTrip()" 
+            class="mt-3 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-semibold block w-full"
+          >
+            🔗 Unirse a un Viaje
+          </button>
         </div>
       `;
       return;
@@ -193,7 +321,7 @@ export const TripsManager = {
             onclick="TripsManager.selectTrip('${trip.id}')"
           >
             <div class="flex justify-between items-start">
-              <div>
+              <div class="flex-1">
                 <h3 class="font-bold text-lg dark:text-white">${trip.info.name}</h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400">
                   ${new Date(trip.info.dateStart).toLocaleDateString('es')} - 
@@ -213,6 +341,13 @@ export const TripsManager = {
           class="w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
         >
           <span class="text-gray-600 dark:text-gray-400 font-semibold">➕ Crear Nuevo Viaje</span>
+        </button>
+
+        <button 
+          onclick="TripsManager.joinTrip()" 
+          class="w-full p-4 border-2 border-dashed border-green-300 dark:border-green-600 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition"
+        >
+          <span class="text-green-600 dark:text-green-400 font-semibold">🔗 Unirse a un Viaje</span>
         </button>
       </div>
     `;
@@ -298,16 +433,61 @@ export const TripsManager = {
           <p class="text-sm text-white/80">
             ${startDate.toLocaleDateString('es')} - ${endDate.toLocaleDateString('es')}
           </p>
+          <p class="text-xs text-white/60">
+            ${this.currentTrip.members.length > 1 ? '🤝 Viaje colaborativo' : '👤 Viaje individual'}
+          </p>
         </div>
         <div class="text-right">
           <p class="text-sm text-white/80">
             ${daysUntil > 0 ? `Faltan ${daysUntil} días` : daysUntil === 0 ? '¡HOY!' : 'En curso'}
           </p>
+          <div class="flex gap-2 mt-2">
+            <button 
+              onclick="TripsManager.showTripsListModal()"
+              class="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition"
+            >
+              Cambiar viaje
+            </button>
+            ${this.currentTrip.members.length === 1 ? `
+              <button 
+                onclick="TripsManager.inviteMember()"
+                class="text-xs bg-green-500/80 hover:bg-green-500 px-3 py-1 rounded transition"
+                title="Invitar a alguien a este viaje"
+              >
+                + Invitar
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  // 🔥 NUEVO: Header cuando no hay trip seleccionado
+  updateTripHeaderEmpty() {
+    const headerContainer = document.getElementById('currentTripHeader');
+    if (!headerContainer) return;
+
+    headerContainer.innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="flex-1">
+          <h2 class="text-xl font-bold text-white">👋 ¡Bienvenido!</h2>
+          <p class="text-sm text-white/80">
+            Crea tu primer viaje o únete a uno existente
+          </p>
+        </div>
+        <div class="flex gap-2">
           <button 
-            onclick="TripsManager.showTripsListModal()"
-            class="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition"
+            onclick="TripsManager.showCreateTripModal()"
+            class="text-xs bg-white/20 hover:bg-white/30 px-4 py-2 rounded transition font-semibold"
           >
-            Cambiar viaje
+            ➕ Crear Viaje
+          </button>
+          <button 
+            onclick="TripsManager.joinTrip()"
+            class="text-xs bg-green-500/80 hover:bg-green-500 px-4 py-2 rounded transition font-semibold"
+          >
+            🔗 Unirse
           </button>
         </div>
       </div>

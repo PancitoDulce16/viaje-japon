@@ -1,10 +1,20 @@
-// js/core.js
+// js/core.js - Con sincronización de notas
 
 import { ModalRenderer } from './modals.js';
 import { ItineraryHandler } from './itinerary.js';
 import { TabsHandler } from './tabs.js';
+import { db, auth } from './firebase-config.js';
+import { 
+  doc,
+  setDoc,
+  getDoc,
+  onSnapshot
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 export const AppCore = {
+    notes: '',
+    notesUnsubscribe: null,
+
     init() {
         if (localStorage.getItem('darkMode') === 'true') {
             document.documentElement.classList.add('dark');
@@ -15,6 +25,89 @@ export const AppCore = {
         this.setupEventListeners();
         this.updateCountdown();
         setInterval(() => this.updateCountdown(), 60000);
+        
+        // Inicializar sync de notas
+        this.initNotesSync();
+    },
+
+    // Obtener el tripId actual
+    getCurrentTripId() {
+        if (window.TripsManager && window.TripsManager.currentTrip) {
+            return window.TripsManager.currentTrip.id;
+        }
+        return localStorage.getItem('currentTripId');
+    },
+
+    // 🔥 Inicializar listener de notas en tiempo real
+    async initNotesSync() {
+        // Si ya hay un listener, limpiarlo
+        if (this.notesUnsubscribe) {
+            this.notesUnsubscribe();
+        }
+
+        // Si no hay usuario, cargar de localStorage
+        if (!auth.currentUser) {
+            this.notes = localStorage.getItem('travelNotes') || '';
+            return;
+        }
+
+        const tripId = this.getCurrentTripId();
+        const userId = auth.currentUser.uid;
+
+        // Si NO hay trip, usar el sistema antiguo (por usuario)
+        if (!tripId) {
+            console.log('⚠️ Notes: No hay trip seleccionado, usando modo individual');
+            const notesRef = doc(db, `users/${userId}/notes`, 'travel');
+
+            this.notesUnsubscribe = onSnapshot(notesRef, (docSnapshot) => {
+                if (docSnapshot.exists()) {
+                    this.notes = docSnapshot.data().content || '';
+                } else {
+                    this.notes = '';
+                }
+                
+                localStorage.setItem('travelNotes', this.notes);
+                
+                // Actualizar textarea si está abierto
+                const textarea = document.getElementById('notesTextarea');
+                if (textarea && document.getElementById('modal-notes').classList.contains('active')) {
+                    textarea.value = this.notes;
+                }
+                
+                console.log('✅ Notas (individual) sincronizadas');
+            }, (error) => {
+                console.error('❌ Error en sync de notas:', error);
+                this.notes = localStorage.getItem('travelNotes') || '';
+            });
+
+            return;
+        }
+
+        // 🔥 MODO COLABORATIVO: Usar el trip compartido
+        console.log('🤝 Notes: Modo colaborativo activado para trip:', tripId);
+        const notesRef = doc(db, `trips/${tripId}/data`, 'notes');
+
+        this.notesUnsubscribe = onSnapshot(notesRef, (docSnapshot) => {
+            if (docSnapshot.exists()) {
+                this.notes = docSnapshot.data().content || '';
+            } else {
+                this.notes = '';
+            }
+            
+            // También guardar en localStorage como backup
+            localStorage.setItem('travelNotes', this.notes);
+            
+            // Actualizar textarea si está abierto
+            const textarea = document.getElementById('notesTextarea');
+            if (textarea && document.getElementById('modal-notes').classList.contains('active')) {
+                textarea.value = this.notes;
+            }
+            
+            console.log('✅ Notas COMPARTIDAS sincronizadas');
+        }, (error) => {
+            console.error('❌ Error en sync de notas compartidas:', error);
+            this.notes = localStorage.getItem('travelNotes') || '';
+        });
     },
 
     setupEventListeners() {
@@ -120,8 +213,11 @@ export const AppCore = {
         if (modalName === 'notes') {
             const textarea = document.getElementById('notesTextarea');
             if (textarea) {
-                textarea.value = localStorage.getItem('travelNotes') || '';
+                textarea.value = this.notes || localStorage.getItem('travelNotes') || '';
             }
+            
+            // Actualizar indicador de sync
+            this.updateNotesSyncIndicator();
         }
         
         if (modalName === 'budget') {
@@ -139,13 +235,78 @@ export const AppCore = {
         }
     },
 
-    saveNotes() {
-        const textarea = document.getElementById('notesTextarea');
-        if (textarea) {
-            localStorage.setItem('travelNotes', textarea.value);
-            alert('✅ Notas guardadas!');
-            this.closeModal('notes');
+    updateNotesSyncIndicator() {
+        const syncBadge = document.querySelector('#modal-notes .sync-badge');
+        if (!syncBadge) return;
+
+        const tripId = this.getCurrentTripId();
+        let syncStatus;
+        
+        if (!auth.currentUser) {
+            syncStatus = '<span class="text-sm text-yellow-600 dark:text-yellow-400">📱 Solo local</span>';
+        } else if (tripId) {
+            syncStatus = '<span class="text-sm text-green-600 dark:text-green-400">🤝 Modo Colaborativo - Cambios se sincronizan en tiempo real</span>';
+        } else {
+            syncStatus = '<span class="text-sm text-blue-600 dark:text-blue-400">☁️ Sincronizado con tu cuenta</span>';
         }
+        
+        syncBadge.innerHTML = syncStatus;
+    },
+
+    async saveNotes() {
+        const textarea = document.getElementById('notesTextarea');
+        if (!textarea) return;
+
+        this.notes = textarea.value;
+
+        try {
+            if (!auth.currentUser) {
+                // Sin usuario, solo guardar localmente
+                localStorage.setItem('travelNotes', this.notes);
+                alert('✅ Notas guardadas localmente!');
+                this.closeModal('notes');
+                return;
+            }
+
+            const tripId = this.getCurrentTripId();
+
+            if (!tripId) {
+                // Modo individual
+                const userId = auth.currentUser.uid;
+                const notesRef = doc(db, `users/${userId}/notes`, 'travel');
+                
+                await setDoc(notesRef, {
+                    content: this.notes,
+                    lastUpdated: new Date().toISOString(),
+                    updatedBy: auth.currentUser.email
+                });
+                
+                console.log('✅ Notas sincronizadas (individual)');
+                alert('✅ Notas guardadas y sincronizadas!');
+            } else {
+                // 🔥 Modo colaborativo
+                const notesRef = doc(db, `trips/${tripId}/data`, 'notes');
+                
+                await setDoc(notesRef, {
+                    content: this.notes,
+                    lastUpdated: new Date().toISOString(),
+                    updatedBy: auth.currentUser.email
+                });
+                
+                console.log('✅ Notas sincronizadas (COMPARTIDAS) por:', auth.currentUser.email);
+                alert('✅ Notas guardadas y compartidas con el equipo!');
+            }
+
+            this.closeModal('notes');
+        } catch (error) {
+            console.error('❌ Error guardando notas:', error);
+            alert('Error al guardar. Intenta de nuevo.');
+        }
+    },
+
+    // Re-inicializar cuando cambie el trip
+    reinitialize() {
+        this.initNotesSync();
     },
 
     escapeHtml(text) {
@@ -154,5 +315,12 @@ export const AppCore = {
         return div.innerHTML;
     }
 };
+
+// Inicializar cuando cambia el estado de autenticación
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+onAuthStateChanged(auth, (user) => {
+    AppCore.initNotesSync();
+});
 
 window.AppCore = AppCore;
