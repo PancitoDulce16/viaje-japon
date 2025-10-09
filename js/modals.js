@@ -432,6 +432,29 @@ export const ModalRenderer = {
                                 </div>
                             </div>
 
+                            <!-- Plantilla de Itinerario -->
+                            <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
+                                <h3 class="font-bold text-lg mb-4 dark:text-white">📋 Itinerario</h3>
+                                <div class="p-4 bg-white dark:bg-gray-700 rounded-lg border-2 border-yellow-400 dark:border-yellow-600">
+                                    <label class="flex items-start gap-3 cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            id="useItineraryTemplate"
+                                            class="mt-1 w-5 h-5 accent-yellow-500"
+                                        >
+                                        <div>
+                                            <p class="font-semibold text-gray-800 dark:text-white mb-1">
+                                                ¿Usar plantilla de itinerario de 15 días?
+                                            </p>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                                Incluye un itinerario pre-planeado con actividades, transporte y costos estimados para Japón. 
+                                                Puedes personalizarlo después o empezar desde cero.
+                                            </p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
                             <!-- Vuelo de Regreso -->
                             <div class="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4">
                                 <h3 class="font-bold text-lg mb-4 dark:text-white">🛬 Vuelo de Regreso</h3>

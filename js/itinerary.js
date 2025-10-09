@@ -1,4 +1,4 @@
-// js/itinerary.js - CON MODO COLABORATIVO
+// js/itinerary.js - CON SELECTOR DE VIAJES
 
 import { ITINERARY_DATA } from './itinerary-data.js';
 import { db, auth } from './firebase-config.js';
@@ -13,24 +13,18 @@ let checkedActivities = {};
 let currentDay = 1;
 let unsubscribe = null;
 
-// Obtener el tripId actual
 function getCurrentTripId() {
-  // Intentar obtener del TripsManager si existe
   if (window.TripsManager && window.TripsManager.currentTrip) {
     return window.TripsManager.currentTrip.id;
   }
-  // Fallback a localStorage
   return localStorage.getItem('currentTripId');
 }
 
-// Inicializar listener en tiempo real
 async function initRealtimeSync() {
-  // Si ya hay un listener, limpiarlo
   if (unsubscribe) {
     unsubscribe();
   }
 
-  // Si no hay usuario, cargar de localStorage
   if (!auth.currentUser) {
     checkedActivities = JSON.parse(localStorage.getItem('checkedActivities') || '{}');
     render();
@@ -39,33 +33,12 @@ async function initRealtimeSync() {
 
   const tripId = getCurrentTripId();
 
-  // Si NO hay trip seleccionado, usar el sistema antiguo (por usuario)
   if (!tripId) {
-    console.log('⚠️ No hay trip seleccionado, usando modo individual');
-    const userId = auth.currentUser.uid;
-    const checklistRef = doc(db, `users/${userId}/checklist`, 'activities');
-
-    unsubscribe = onSnapshot(checklistRef, (docSnapshot) => {
-      if (docSnapshot.exists()) {
-        checkedActivities = docSnapshot.data().checked || {};
-      } else {
-        checkedActivities = {};
-      }
-      
-      localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));
-      render();
-      
-      console.log('✅ Checklist (individual) sincronizado:', Object.keys(checkedActivities).length);
-    }, (error) => {
-      console.error('❌ Error en sync de checklist:', error);
-      checkedActivities = JSON.parse(localStorage.getItem('checkedActivities') || '{}');
-      render();
-    });
-    
+    console.log('⚠️ No hay trip seleccionado');
+    renderEmptyState();
     return;
   }
 
-  // 🔥 MODO COLABORATIVO: Usar el trip compartido
   console.log('🤝 Modo colaborativo activado para trip:', tripId);
   const checklistRef = doc(db, `trips/${tripId}/activities`, 'checklist');
 
@@ -76,16 +49,12 @@ async function initRealtimeSync() {
       checkedActivities = {};
     }
     
-    // También guardar en localStorage como backup
     localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));
-    
-    // Re-renderizar
     render();
     
-    console.log('✅ Checklist COMPARTIDO sincronizado:', Object.keys(checkedActivities).length, 'actividades');
+    console.log('✅ Checklist sincronizado:', Object.keys(checkedActivities).length, 'actividades');
   }, (error) => {
-    console.error('❌ Error en sync de checklist compartido:', error);
-    // Fallback a localStorage si falla
+    console.error('❌ Error en sync:', error);
     checkedActivities = JSON.parse(localStorage.getItem('checkedActivities') || '{}');
     render();
   });
@@ -101,7 +70,6 @@ async function toggleActivity(activityId) {
     
     try {
       if (!auth.currentUser) {
-        // Si no hay usuario, solo guardar localmente
         localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));
         render();
         return;
@@ -110,44 +78,117 @@ async function toggleActivity(activityId) {
       const tripId = getCurrentTripId();
 
       if (!tripId) {
-        // Modo individual (sin trip)
-        const userId = auth.currentUser.uid;
-        const checklistRef = doc(db, `users/${userId}/checklist`, 'activities');
-        
-        await setDoc(checklistRef, {
-          checked: checkedActivities,
-          lastUpdated: new Date().toISOString(),
-          updatedBy: auth.currentUser.email
-        });
-        
-        console.log('✅ Actividad sincronizada (individual)');
-      } else {
-        // 🔥 Modo colaborativo
-        const checklistRef = doc(db, `trips/${tripId}/activities`, 'checklist');
-        
-        await setDoc(checklistRef, {
-          checked: checkedActivities,
-          lastUpdated: new Date().toISOString(),
-          updatedBy: auth.currentUser.email // Registrar quién hizo el cambio
-        });
-        
-        console.log('✅ Actividad sincronizada (COMPARTIDO) por:', auth.currentUser.email);
+        alert('⚠️ Debes seleccionar un viaje primero');
+        return;
       }
+
+      const checklistRef = doc(db, `trips/${tripId}/activities`, 'checklist');
+      
+      await setDoc(checklistRef, {
+        checked: checkedActivities,
+        lastUpdated: new Date().toISOString(),
+        updatedBy: auth.currentUser.email
+      });
+      
+      console.log('✅ Actividad sincronizada por:', auth.currentUser.email);
     } catch (error) {
       console.error('❌ Error guardando actividad:', error);
-      // Revertir cambio si falla
       checkedActivities[activityId] = !checkedActivities[activityId];
       render();
       alert('Error al sincronizar. Intenta de nuevo.');
     }
 }
 
+// 🔥 NUEVO: Renderizar estado vacío cuando no hay trip
+function renderEmptyState() {
+  const container = document.getElementById('content-itinerary');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="max-w-4xl mx-auto p-8 text-center">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12">
+        <div class="text-6xl mb-4">🗺️</div>
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+          No hay viaje seleccionado
+        </h2>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">
+          Para ver y editar tu itinerario, primero debes crear o seleccionar un viaje.
+        </p>
+        <div class="flex gap-3 justify-center flex-wrap">
+          <button 
+            onclick="TripsManager.showCreateTripModal()"
+            class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+          >
+            ➕ Crear Viaje
+          </button>
+          <button 
+            onclick="TripsManager.showTripsListModal()"
+            class="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition font-semibold"
+          >
+            📂 Ver Mis Viajes
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function render() {
     const dayData = ITINERARY_DATA.find(d => d.day === currentDay);
     if (!dayData) return;
+    
+    renderTripSelector();
     renderDaySelector();
     renderDayOverview(dayData);
     renderActivities(dayData);
+}
+
+// 🔥 NUEVO: Renderizar selector de viaje en la parte superior
+function renderTripSelector() {
+    const container = document.getElementById('tripSelectorHeader');
+    if (!container) return;
+
+    const currentTrip = window.TripsManager?.currentTrip;
+    
+    if (!currentTrip) {
+      container.innerHTML = '';
+      return;
+    }
+
+    const userTrips = window.TripsManager?.userTrips || [];
+    
+    container.innerHTML = `
+      <div class="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4 rounded-lg mb-4">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <div class="flex items-center gap-3 flex-1">
+            <div class="text-2xl">🗺️</div>
+            <div>
+              <h3 class="font-bold text-lg">${currentTrip.info.name}</h3>
+              <p class="text-xs text-white/80">
+                ${new Date(currentTrip.info.dateStart).toLocaleDateString('es')} - 
+                ${new Date(currentTrip.info.dateEnd).toLocaleDateString('es')}
+              </p>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            ${userTrips.length > 1 ? `
+              <button 
+                onclick="TripsManager.showTripsListModal()"
+                class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm"
+              >
+                🔄 Cambiar Viaje
+              </button>
+            ` : ''}
+            <button 
+              onclick="TripsManager.showShareCode()"
+              class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm"
+            >
+              🔗 Compartir
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
 }
 
 function renderDaySelector() {
@@ -253,12 +294,28 @@ export const ItineraryHandler = {
         const container = document.getElementById('content-itinerary');
         if (!container) return;
         
+        // Verificar si hay trip seleccionado
+        const tripId = getCurrentTripId();
+        
+        if (!tripId) {
+          renderEmptyState();
+          return;
+        }
+
         container.innerHTML = `
+            <!-- Selector de Viaje -->
+            <div class="max-w-6xl mx-auto px-4 pt-4">
+                <div id="tripSelectorHeader"></div>
+            </div>
+
+            <!-- Selector de Días -->
             <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-[72px] z-30 shadow-sm">
                 <div class="max-w-6xl mx-auto p-4">
                     <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" id="daySelector"></div>
                 </div>
             </div>
+
+            <!-- Contenido del Itinerario -->
             <div class="max-w-6xl mx-auto p-4 md:p-6">
                 <div class="grid md:grid-cols-3 gap-6">
                     <div class="md:col-span-1">
@@ -293,7 +350,14 @@ export const ItineraryHandler = {
     
     // Re-inicializar cuando cambie el trip
     reinitialize() {
-        initRealtimeSync();
+      const tripId = getCurrentTripId();
+      
+      if (!tripId) {
+        renderEmptyState();
+        return;
+      }
+      
+      initRealtimeSync();
     }
 };
 
@@ -304,5 +368,4 @@ onAuthStateChanged(auth, (user) => {
   initRealtimeSync();
 });
 
-// Exponer globalmente para que TripsManager pueda re-inicializar
 window.ItineraryHandler = ItineraryHandler;
