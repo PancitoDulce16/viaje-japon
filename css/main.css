@@ -29,16 +29,113 @@ body {
 }
 
 .gradient-bg {
-  background: linear-gradient(135deg, #fef2f2 0%, #ffffff 50%, #fce7f3 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
 }
 
 .dark .gradient-bg {
-  background: linear-gradient(135deg, var(--bg-dark-main) 0%, #1a202c 100%);
+  background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
 }
 
 .gradient-header {
   background: linear-gradient(135deg, #dc2626 0%, #ec4899 100%);
+}
+
+/* Auth Tab Buttons - Mejor contraste */
+.auth-tab-btn {
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.auth-tab-btn.border-blue-500 {
+  border-bottom: 2px solid #3b82f6;
+  color: #1e40af;
+}
+
+.auth-tab-btn.border-green-500 {
+  border-bottom: 2px solid #10b981;
+  color: #047857;
+}
+
+.auth-tab-btn.border-transparent {
+  border-bottom: 2px solid transparent;
+  color: #6b7280;
+}
+
+.dark .auth-tab-btn.border-blue-500 {
+  color: #60a5fa;
+}
+
+.dark .auth-tab-btn.border-green-500 {
+  color: #34d399;
+}
+
+.dark .auth-tab-btn.border-transparent {
+  color: #9ca3af;
+}
+
+/* Inputs con mejor contraste */
+input[type="email"],
+input[type="password"],
+input[type="text"],
+input[type="date"],
+input[type="number"],
+textarea,
+select {
+  background-color: white;
+  border: 2px solid #d1d5db;
+  color: #1f2937;
+  transition: all 0.2s ease;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="text"]:focus,
+input[type="date"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="text"],
+.dark input[type="date"],
+.dark input[type="number"],
+.dark textarea,
+.dark select {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+.dark input[type="email"]:focus,
+.dark input[type="password"]:focus,
+.dark input[type="text"]:focus,
+.dark input[type="date"]:focus,
+.dark input[type="number"]:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+/* Placeholders con mejor contraste */
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #6b7280;
 }
 
 .train-info {
@@ -265,27 +362,6 @@ body {
 .hover-lift:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-}
-
-input[type="text"],
-input[type="number"],
-textarea {
-  transition: all 0.2s ease;
-}
-
-input[type="text"]:focus,
-input[type="number"]:focus,
-textarea:focus {
-  outline: none;
-  border-color: var(--primary-red);
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
-}
-
-.dark input[type="text"]:focus,
-.dark input[type="number"]:focus,
-.dark textarea:focus {
-  border-color: #f87171;
-  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.1);
 }
 
 .badge {

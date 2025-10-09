@@ -9,6 +9,10 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 export const PreparationHandler = {
+    init() {
+        this.renderPreparation();
+        this.initRealtimeSync();
+    },
     packingList: {
         documents: [],
         clothing: [],
@@ -132,6 +136,7 @@ export const PreparationHandler = {
         return packingList;
     },
 
+    
     renderPreparation() {
         const container = document.getElementById('content-preparation');
         if (!container) return;

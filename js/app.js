@@ -16,21 +16,27 @@ import './firebase-config.js'; // Inicializar Firebase primero
 function initApp() {
     console.log('🚀 Iniciando aplicación...');
     
-    // 🔥 NUEVO: Inicializar Firebase Auth primero
+    // 🔥 Inicializar Firebase Auth PRIMERO
     AuthHandler.init();
     
-    // Inicializar el resto de la app
-    ModalRenderer.renderModals();
-    ItineraryHandler.init();
-    MapHandler.renderMap();
-    TabsHandler.renderAllTabs();
-    AttractionsHandler.renderAttractions();
-    PreparationHandler.renderPreparation();
-    TransportHandler.renderTransport();
-    AppCore.init();
-    
-    console.log('✅ Aplicación iniciada correctamente');
-    console.log('🔥 Firebase listo');
+    // Esperar un momento para que el DOM esté listo
+    setTimeout(() => {
+        // Inicializar el resto de la app
+        ModalRenderer.renderModals();
+        
+        // Solo inicializar estos si el usuario está autenticado
+        // (se verificará dentro de cada módulo)
+        ItineraryHandler.init();
+        MapHandler.renderMap();
+        TabsHandler.renderAllTabs();
+        AttractionsHandler.renderAttractions();
+        PreparationHandler.init();
+        TransportHandler.renderTransport();
+        AppCore.init();
+        
+        console.log('✅ Aplicación iniciada correctamente');
+        console.log('🔥 Firebase listo');
+    }, 100);
 }
 
 if (document.readyState === 'loading') {
