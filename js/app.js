@@ -7,6 +7,7 @@ import { MapHandler } from './map.js';
 import { AttractionsHandler } from './attractions.js';
 import { PreparationHandler } from './preparation.js';
 import { TransportHandler } from './transport.js';
+import { Notifications } from './notifications.js';
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';
@@ -15,6 +16,9 @@ import './firebase-config.js'; // Inicializar Firebase primero
 
 function initApp() {
     console.log('🚀 Iniciando aplicación...');
+    
+    // 🔔 Inicializar sistema de notificaciones
+    Notifications.init();
     
     // 🔥 Inicializar Firebase Auth PRIMERO
     AuthHandler.init();

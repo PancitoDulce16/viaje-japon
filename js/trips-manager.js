@@ -1,6 +1,7 @@
 // js/trips-manager.js - Sistema de Gestión de Viajes con Invitación Mejorada
 
 import { db, auth } from './firebase-config.js';
+import { Notifications } from './notifications.js';
 import { 
   collection,
   doc,
@@ -104,9 +105,15 @@ export const TripsManager = {
       // 🔥 NUEVO: Solo copiar plantilla SI el usuario lo pidió
       if (tripData.useTemplate) {
         await this.copyItineraryTemplate(tripId);
-        alert(`✅ ¡Viaje creado exitosamente!\n\n📋 Se incluyó la plantilla de itinerario de 15 días.\n\n🔗 Código para compartir: ${shareCode}\n\nComparte este código con tu hermano para que se una al viaje.`);
+        Notifications.success(
+          `🎉 Viaje "${tripData.name}" creado con plantilla de itinerario!\n🔗 Código: ${shareCode}`,
+          6000
+        );
       } else {
-        alert(`✅ ¡Viaje creado exitosamente!\n\n🔗 Código para compartir: ${shareCode}\n\nComparte este código con tu hermano para que se una al viaje.`);
+        Notifications.success(
+          `🎉 Viaje "${tripData.name}" creado exitosamente!\n🔗 Código: ${shareCode}`,
+          6000
+        );
       }
       
       console.log('✅ Viaje creado:', tripId, 'Código:', shareCode);
@@ -116,7 +123,7 @@ export const TripsManager = {
       return tripId;
     } catch (error) {
       console.error('❌ Error creando viaje:', error);
-      alert('Error al crear viaje. Intenta de nuevo.');
+      Notifications.error('Error al crear el viaje. Inténtalo de nuevo.');
       throw error;
     }
   },
@@ -204,12 +211,15 @@ export const TripsManager = {
         pendingInvites: arrayUnion(email.trim().toLowerCase())
       });
 
-      alert(`✅ Invitación enviada a ${email}\n\n⚠️ Nota: Por ahora, comparte con ellos el código del viaje:\n\n🔗 ${this.currentTrip.info.shareCode}\n\nEllos pueden ingresar este código al hacer click en "Unirse a un Viaje"`);
+      Notifications.info(
+        `📧 Comparte el código con ${email}:\n${this.currentTrip.info.shareCode}`,
+        6000
+      );
       
       console.log('✅ Email agregado a invitaciones pendientes:', email);
     } catch (error) {
       console.error('❌ Error invitando por email:', error);
-      alert('Error al enviar invitación. Intenta de nuevo.');
+      Notifications.error('Error al enviar invitación. Inténtalo de nuevo.');
     }
   },
 
@@ -295,8 +305,21 @@ export const TripsManager = {
 
   // Copiar código al portapapeles
   copyShareCode(code) {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(code).then(() => {
+    // Método alternativo más compatible
+    const textArea = document.createElement('textarea');
+    textArea.value = code;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      const successful = document.execCommand('copy');
+      textArea.remove();
+      
+      if (successful) {
         const btn = event.target;
         const originalText = btn.textContent;
         btn.textContent = '✅ ¡Copiado!';
@@ -308,11 +331,12 @@ export const TripsManager = {
           btn.classList.remove('bg-green-600', 'hover:bg-green-700');
           btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
         }, 2000);
-      }).catch(() => {
-        alert('No se pudo copiar automáticamente. Copia manualmente: ' + code);
-      });
-    } else {
-      alert('Copia este código: ' + code);
+      } else {
+        alert('Copia este código manualmente: ' + code);
+      }
+    } catch (err) {
+      textArea.remove();
+      alert('Copia este código manualmente: ' + code);
     }
   },
 
@@ -340,7 +364,7 @@ export const TripsManager = {
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
-        alert('⚠️ No se encontró ningún viaje con ese código.\n\nVerifica que el código sea correcto (6 caracteres).');
+        Notifications.warning('No se encontró ningún viaje con ese código.');
         return;
       }
 
@@ -352,7 +376,7 @@ export const TripsManager = {
 
       // Verificar si ya es miembro
       if (tripData.members.includes(userId)) {
-        alert('✅ Ya eres miembro de este viaje. Seleccionándolo...');
+        Notifications.info('Ya eres miembro de este viaje.');
         this.selectTrip(tripId);
         return;
       }
@@ -364,12 +388,12 @@ export const TripsManager = {
         memberEmails: arrayUnion(userEmail)
       });
 
-      alert(`✅ ¡Te has unido al viaje exitosamente!\n\n📝 ${tripData.info.name}`);
+      Notifications.success(`🎉 Te uniste a "${tripData.info.name}"!`);
       this.selectTrip(tripId);
       console.log('✅ Usuario se unió al trip:', tripId);
     } catch (error) {
       console.error('❌ Error uniéndose al trip:', error);
-      alert('Error al unirse al viaje. Intenta de nuevo.');
+      Notifications.error('Error al unirse al viaje. Inténtalo de nuevo.');
     }
   },
 
