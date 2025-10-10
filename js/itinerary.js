@@ -1,6 +1,5 @@
 // js/itinerary.js - VERSIÓN MEJORADA con Creación Dinámica
 
-import { ITINERARY_DATA } from './itinerary-data.js';
 import { db, auth } from './firebase-config.js';
 import { Notifications } from './notifications.js';
 import { 
@@ -9,7 +8,7 @@ import {
   getDoc,
   onSnapshot
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
+  
 let checkedActivities = {};
 let currentDay = 1;
 let unsubscribe = null;
@@ -39,8 +38,16 @@ async function loadItinerary() {
       console.log('✅ Itinerario cargado desde Firebase');
       return currentItinerary;
     } else {
-      console.log('⚠️ No existe itinerario para este viaje');
-      return null;
+      console.log('⚠️ No existe itinerario para este viaje, cargando plantilla por defecto.');
+      try {
+        const response = await fetch('../data/attractions.json');
+        const data = await response.json();
+        currentItinerary = { days: data.suggestedItinerary };
+        return currentItinerary;
+      } catch (e) {
+        console.error('❌ Error cargando el itinerario por defecto:', e);
+        return null;
+      }
     }
   } catch (error) {
     console.error('❌ Error cargando itinerario:', error);
@@ -209,7 +216,11 @@ function renderEmptyState() {
 
 async function render() {
     // Si no hay itinerario personalizado, usar el hardcodeado como backup
-    const itinerary = currentItinerary || { days: ITINERARY_DATA };
+    const itinerary = currentItinerary;
+    if (!itinerary || !itinerary.days) {
+        renderNoItinerary();
+        return;
+    }
     const dayData = itinerary.days ? itinerary.days.find(d => d.day === currentDay) : null;
     
     if (!dayData) return;
@@ -280,7 +291,11 @@ function renderDaySelector() {
     const container = document.getElementById('daySelector');
     if (!container) return;
     
-    const itinerary = currentItinerary || { days: ITINERARY_DATA };
+    const itinerary = currentItinerary;
+    if (!itinerary || !itinerary.days) {
+        container.innerHTML = '';
+        return;
+    }
     const days = itinerary.days || [];
     
     container.innerHTML = days.map(day => `
@@ -335,15 +350,14 @@ function renderDayOverview(day) {
             ${day.hotel ? `<p class="dark:text-gray-300">🏨 ${day.hotel}</p>` : ''}
             ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-400">📍 ${day.location}</p>` : ''}
         </div>
-        
-        <!-- Botón para agregar actividades -->
-        <button 
-          onclick="ActivityBrowser.showActivityBrowser(${day.day})"
-          class="w-full mt-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-3 rounded-lg hover:from-blue-600 hover:to-purple-600 transition font-semibold shadow-lg flex items-center justify-center gap-2"
-        >
-          <span>➕</span>
-          <span>Agregar Actividad</span>
-        </button>
+        <div class="mt-6">
+            <button
+                onclick="ItineraryHandler.showActivityModal(null, ${day.day})"
+                class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition"
+            >
+                + Añadir Actividad
+            </button>
+        </div>
     `;
 }
 
@@ -366,11 +380,23 @@ function renderActivities(day) {
                     ${act.icon}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 mb-1 flex-wrap">
-                        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">${act.time}</span>
-                        ${act.cost > 0 ? `<span class="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded">¥${act.cost.toLocaleString()}</span>` : ''}
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">${act.time}</span>
+                                ${act.cost > 0 ? `<span class="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded">¥${act.cost.toLocaleString()}</span>` : ''}
+                            </div>
+                            <h3 class="text-lg font-bold dark:text-white mb-1">${act.title}</h3>
+                        </div>
+                        <div class="flex gap-2 flex-shrink-0">
+                            <button onclick="ItineraryHandler.showActivityModal('${act.id}', ${day.day})" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                                <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828zM5 12V7a2 2 0 012-2h4l-2 2H7v5l-2 2z"></path></svg>
+                            </button>
+                            <button onclick="ItineraryHandler.deleteActivity('${act.id}', ${day.day})" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                                <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
+                            </button>
+                        </div>
                     </div>
-                    <h3 class="text-lg font-bold dark:text-white mb-1">${act.title}</h3>
                     <p class="text-sm text-gray-600 dark:text-gray-400">${act.desc}</p>
                     ${act.station ? `<p class="text-xs text-gray-500 dark:text-gray-500 mt-2">🚉 ${act.station}</p>` : ''}
                     ${act.train ? `
@@ -480,6 +506,16 @@ export const ItineraryHandler = {
       
       // Re-render completo
       await this.init();
+    },
+
+    showActivityModal(activityId, day) {
+        console.log(`Modal para activity: ${activityId}, day: ${day}`);
+        // Lógica para mostrar el modal (se implementará después)
+    },
+
+    deleteActivity(activityId, day) {
+        console.log(`Eliminar activity: ${activityId}, day: ${day}`);
+        // Lógica para eliminar la actividad (se implementará después)
     }
 };
 
@@ -491,3 +527,4 @@ onAuthStateChanged(auth, (user) => {
 });
 
 window.ItineraryHandler = ItineraryHandler;
+

@@ -22,8 +22,11 @@
             }
         }
     </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     
     <link rel="stylesheet" href="./css/main.css">
+    <link rel="stylesheet" href="./css/sakura.css">
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/png" href="./images/icons/icon-192.png">
     <meta name="mobile-web-app-capable" content="yes">
@@ -32,13 +35,13 @@
     <link rel="apple-touch-icon" href="./images/icons/icon-192.png">
 </head>
 <body>
-    
+    <div id="sakura-container"></div>
     <!-- LANDING PAGE / LOGIN SCREEN -->
     <div id="landingPage" class="min-h-screen flex items-center justify-center p-4">
         <div class="max-w-6xl w-full">
             <!-- Hero Section -->
             <div class="text-center mb-12">
-                <h1 class="text-5xl md:text-7xl font-bold text-white mb-4">
+                <h1 class="text-5xl md:text-7xl font-bold text-white mb-4 animate__animated animate__fadeInDown">
                     🇯🇵 Japan Trip Planner
                 </h1>
                 <p class="text-xl md:text-2xl text-white/90 mb-2">
@@ -316,6 +319,30 @@
                     });
             });
         }
+    </script>
+    <script>
+        // Script para la animación de Sakura
+        function createSakura() {
+            const container = document.getElementById('sakura-container');
+            if (!container) return;
+
+            const petal = document.createElement('div');
+            petal.classList.add('petal');
+
+            petal.style.left = Math.random() * 100 + 'vw';
+            petal.style.animationDuration = Math.random() * 3 + 4 + 's'; // Duración entre 4s y 7s
+            petal.style.animationDelay = Math.random() * 5 + 's'; // Retraso hasta 5s
+
+            container.appendChild(petal);
+
+            // Eliminar el pétalo después de que caiga para no sobrecargar el DOM
+            setTimeout(() => {
+                petal.remove();
+            }, 7000); // Duración máxima de la animación
+        }
+
+        // Crear pétalos cada cierto tiempo
+        setInterval(createSakura, 400);
     </script>
 </body>
 </html>
