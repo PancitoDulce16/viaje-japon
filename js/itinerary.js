@@ -368,7 +368,7 @@ function renderActivities(day) {
     container.innerHTML = day.activities.map((act, i) => `
         <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md border-l-4 border-red-500 fade-in transition-all hover:shadow-lg ${
             checkedActivities[act.id] ? 'opacity-60' : ''
-        }" style="animation-delay: ${i * 0.05}s">
+        }" data-activity-index="${i}" style="animation-delay: ${i * 0.05}s">
             <div class="p-5 flex items-start gap-4">
                 <input 
                     type="checkbox" 
@@ -410,6 +410,11 @@ function renderActivities(day) {
             </div>
         </div>
     `).join('');
+    
+    // Hacer actividades draggable
+    if (window.DragDropManager) {
+      window.DragDropManager.makeActivitiesDraggable();
+    }
 }
 
 export const ItineraryHandler = {
