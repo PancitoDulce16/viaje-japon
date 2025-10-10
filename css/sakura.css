@@ -7,7 +7,7 @@
     height: 100%;
     pointer-events: none;
     overflow: hidden;
-    z-index: -1; /* Para que esté detrás del contenido */
+    z-index: 0; /* Ajustado para estar por encima del fondo */
 }
 
 .petal {
