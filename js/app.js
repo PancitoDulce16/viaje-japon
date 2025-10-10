@@ -16,6 +16,10 @@ import { AuthHandler } from './auth.js';
 import { TripsManager } from './trips-manager.js';
 import './firebase-config.js'; // Inicializar Firebase primero
 
+// 🔌 APIs imports
+import './apis-config.js'; // Configuración de APIs
+import { APIsIntegration } from './apis-integration.js'; // Integración de APIs
+
 function initApp() {
     console.log('🚀 Iniciando aplicación...');
     
@@ -44,6 +48,10 @@ function initApp() {
         console.log('✅ Aplicación iniciada correctamente');
         console.log('🔥 Firebase listo');
         console.log('✨ Itinerary Builder listo');
+        console.log('🔌 APIs Integration listo');
+        
+        // Exponer APIs globalmente para debugging
+        window.APIsIntegration = APIsIntegration;
     }, 100);
 }
 
