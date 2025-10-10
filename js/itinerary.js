@@ -1,7 +1,8 @@
-// js/itinerary.js - CON SELECTOR DE VIAJES
+// js/itinerary.js - VERSIÓN MEJORADA con Creación Dinámica
 
 import { ITINERARY_DATA } from './itinerary-data.js';
 import { db, auth } from './firebase-config.js';
+import { Notifications } from './notifications.js';
 import { 
   doc,
   setDoc,
@@ -12,12 +13,39 @@ import {
 let checkedActivities = {};
 let currentDay = 1;
 let unsubscribe = null;
+let currentItinerary = null;
 
 function getCurrentTripId() {
   if (window.TripsManager && window.TripsManager.currentTrip) {
     return window.TripsManager.currentTrip.id;
   }
   return localStorage.getItem('currentTripId');
+}
+
+async function loadItinerary() {
+  const tripId = getCurrentTripId();
+  
+  if (!tripId) {
+    console.log('⚠️ No hay trip seleccionado');
+    return null;
+  }
+  
+  try {
+    const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+    const itinerarySnap = await getDoc(itineraryRef);
+    
+    if (itinerarySnap.exists()) {
+      currentItinerary = itinerarySnap.data();
+      console.log('✅ Itinerario cargado desde Firebase');
+      return currentItinerary;
+    } else {
+      console.log('⚠️ No existe itinerario para este viaje');
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ Error cargando itinerario:', error);
+    return null;
+  }
 }
 
 async function initRealtimeSync() {
@@ -99,6 +127,52 @@ async function toggleActivity(activityId) {
     }
 }
 
+// 🔥 NUEVO: Renderizar cuando no hay itinerario creado
+function renderNoItinerary() {
+  const container = document.getElementById('content-itinerary');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="max-w-4xl mx-auto p-8 text-center">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12">
+        <div class="text-6xl mb-6">✈️</div>
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-4">
+          ¡Crea tu Itinerario!
+        </h2>
+        <p class="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+          Planifica tu viaje perfecto con nuestro sistema intuitivo.<br>
+          Elige entre plantillas o crea uno desde cero.
+        </p>
+        
+        <div class="grid md:grid-cols-3 gap-4 mb-8">
+          <div class="bg-purple-50 dark:bg-purple-900/20 p-6 rounded-lg">
+            <div class="text-4xl mb-3">🎯</div>
+            <h3 class="font-bold mb-2 dark:text-white">Personalizado</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Selecciona tus intereses y recibe sugerencias</p>
+          </div>
+          <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg">
+            <div class="text-4xl mb-3">📋</div>
+            <h3 class="font-bold mb-2 dark:text-white">Plantillas</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Elige entre varios estilos de viaje</p>
+          </div>
+          <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
+            <div class="text-4xl mb-3">🚀</div>
+            <h3 class="font-bold mb-2 dark:text-white">Drag & Drop</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Reorganiza tu itinerario fácilmente</p>
+          </div>
+        </div>
+        
+        <button 
+          onclick="ItineraryBuilder.showCreateItineraryWizard()"
+          class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition font-bold text-lg shadow-lg"
+        >
+          ✨ Crear Itinerario
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 // 🔥 NUEVO: Renderizar estado vacío cuando no hay trip
 function renderEmptyState() {
   const container = document.getElementById('content-itinerary');
@@ -112,7 +186,7 @@ function renderEmptyState() {
           No hay viaje seleccionado
         </h2>
         <p class="text-gray-600 dark:text-gray-400 mb-6">
-          Para ver y editar tu itinerario, primero debes crear o seleccionar un viaje.
+          Para crear un itinerario, primero debes crear o seleccionar un viaje.
         </p>
         <div class="flex gap-3 justify-center flex-wrap">
           <button 
@@ -133,8 +207,11 @@ function renderEmptyState() {
   `;
 }
 
-function render() {
-    const dayData = ITINERARY_DATA.find(d => d.day === currentDay);
+async function render() {
+    // Si no hay itinerario personalizado, usar el hardcodeado como backup
+    const itinerary = currentItinerary || { days: ITINERARY_DATA };
+    const dayData = itinerary.days ? itinerary.days.find(d => d.day === currentDay) : null;
+    
     if (!dayData) return;
     
     renderTripSelector();
@@ -185,6 +262,14 @@ function renderTripSelector() {
             >
               🔗 Compartir
             </button>
+            ${!currentItinerary ? `
+              <button 
+                onclick="ItineraryBuilder.showCreateItineraryWizard()"
+                class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition text-sm font-semibold shadow-md"
+              >
+                ✨ Crear Itinerario
+              </button>
+            ` : ''}
           </div>
         </div>
       </div>
@@ -195,7 +280,10 @@ function renderDaySelector() {
     const container = document.getElementById('daySelector');
     if (!container) return;
     
-    container.innerHTML = ITINERARY_DATA.map(day => `
+    const itinerary = currentItinerary || { days: ITINERARY_DATA };
+    const days = itinerary.days || [];
+    
+    container.innerHTML = days.map(day => `
         <button data-day="${day.day}" class="day-btn px-4 py-2 rounded-lg whitespace-nowrap font-medium transition-all ${
             currentDay === day.day 
                 ? 'bg-red-600 text-white shadow-md' 
@@ -244,8 +332,8 @@ function renderDayOverview(day) {
         <div class="space-y-3 text-sm">
             <p class="font-semibold text-base dark:text-gray-300">${day.date}</p>
             <p class="font-bold text-lg text-red-600 dark:text-red-400">${day.title}</p>
-            <p class="dark:text-gray-300">🏨 ${day.hotel}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">📍 ${day.location}</p>
+            ${day.hotel ? `<p class="dark:text-gray-300">🏨 ${day.hotel}</p>` : ''}
+            ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-400">📍 ${day.location}</p>` : ''}
         </div>
     `;
 }
@@ -290,7 +378,7 @@ function renderActivities(day) {
 }
 
 export const ItineraryHandler = {
-    init() {
+    async init() {
         const container = document.getElementById('content-itinerary');
         if (!container) return;
         
@@ -299,6 +387,15 @@ export const ItineraryHandler = {
         
         if (!tripId) {
           renderEmptyState();
+          return;
+        }
+        
+        // Cargar itinerario
+        await loadItinerary();
+        
+        // Si no hay itinerario creado, mostrar pantalla de creación
+        if (!currentItinerary) {
+          renderNoItinerary();
           return;
         }
 
@@ -329,7 +426,7 @@ export const ItineraryHandler = {
         `;
 
         // Inicializar sync en tiempo real
-        initRealtimeSync();
+        await initRealtimeSync();
 
         const daySelector = document.getElementById('daySelector');
         if (daySelector) {
@@ -349,7 +446,7 @@ export const ItineraryHandler = {
     },
     
     // Re-inicializar cuando cambie el trip
-    reinitialize() {
+    async reinitialize() {
       const tripId = getCurrentTripId();
       
       if (!tripId) {
@@ -357,7 +454,18 @@ export const ItineraryHandler = {
         return;
       }
       
-      initRealtimeSync();
+      // Recargar itinerario
+      await loadItinerary();
+      
+      if (!currentItinerary) {
+        renderNoItinerary();
+        return;
+      }
+      
+      await initRealtimeSync();
+      
+      // Re-render completo
+      await this.init();
     }
 };
 

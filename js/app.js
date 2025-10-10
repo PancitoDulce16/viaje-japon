@@ -8,6 +8,8 @@ import { AttractionsHandler } from './attractions.js';
 import { PreparationHandler } from './preparation.js';
 import { TransportHandler } from './transport.js';
 import { Notifications } from './notifications.js';
+import { ItineraryBuilder } from './itinerary-builder.js';
+import { ItineraryBuilderExtensions } from './itinerary-builder-part2.js';
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';
@@ -31,6 +33,7 @@ function initApp() {
         // Solo inicializar estos si el usuario está autenticado
         // (se verificará dentro de cada módulo)
         ItineraryHandler.init();
+        ItineraryBuilder.init();
         MapHandler.renderMap();
         TabsHandler.renderAllTabs();
         AttractionsHandler.renderAttractions();
@@ -40,6 +43,7 @@ function initApp() {
         
         console.log('✅ Aplicación iniciada correctamente');
         console.log('🔥 Firebase listo');
+        console.log('✨ Itinerary Builder listo');
     }, 100);
 }
 
