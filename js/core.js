@@ -172,6 +172,7 @@ export const AppCore = {
     switchTab(tabName) {
         document.querySelectorAll('.tab-content').forEach(tab => {
             tab.classList.add('hidden');
+            tab.classList.remove('animate__animated', 'animate__fadeIn');
         });
         
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -179,7 +180,10 @@ export const AppCore = {
         });
         
         const content = document.getElementById(`content-${tabName}`);
-        if (content) content.classList.remove('hidden');
+        if (content) {
+            content.classList.remove('hidden');
+            content.classList.add('animate__animated', 'animate__fadeIn');
+        }
         
         const btn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
         if (btn) btn.classList.add('active');
