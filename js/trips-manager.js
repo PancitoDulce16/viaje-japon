@@ -83,7 +83,8 @@ export const TripsManager = {
           dateEnd: tripData.dateEnd,
           createdBy: userId,
           createdAt: new Date().toISOString(),
-          shareCode: shareCode, // Código compartible
+          updatedAt: new Date().toISOString(),
+          shareCode: shareCode,
           creatorEmail: auth.currentUser.email
         },
         members: [userId],
@@ -160,6 +161,11 @@ export const TripsManager = {
         };
 
         localStorage.setItem('currentTripId', tripId);
+        
+        // Actualizar updatedAt
+        await updateDoc(tripRef, {
+          'info.updatedAt': new Date().toISOString()
+        });
 
         console.log('✅ Trip seleccionado:', this.currentTrip.info.name);
         
@@ -425,7 +431,16 @@ export const TripsManager = {
 
     container.innerHTML = `
       <div class="space-y-3">
-        ${this.userTrips.map(trip => `
+        ${this.userTrips.map(trip => {
+          const updatedDate = trip.info.updatedAt ? new Date(trip.info.updatedAt).toLocaleDateString('es', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          }) : '';
+          
+          return `
           <div 
             class="p-4 bg-white dark:bg-gray-700 rounded-lg border-2 ${
               this.currentTrip && this.currentTrip.id === trip.id 
@@ -445,11 +460,16 @@ export const TripsManager = {
                   👥 ${trip.members.length} miembro${trip.members.length > 1 ? 's' : ''}
                   ${trip.info.shareCode ? `• 🔗 ${trip.info.shareCode}` : ''}
                 </p>
+                ${updatedDate ? `
+                  <p class="text-xs text-gray-400 dark:text-gray-600 mt-1">
+                    📅 Última actualización: ${updatedDate}
+                  </p>
+                ` : ''}
               </div>
               ${this.currentTrip && this.currentTrip.id === trip.id ? '<span class="text-blue-500 text-2xl">✓</span>' : ''}
             </div>
           </div>
-        `).join('')}
+        `}).join('')}
         
         <button 
           onclick="TripsManager.showCreateTripModal()" 
@@ -470,6 +490,9 @@ export const TripsManager = {
 
   // Mostrar modal para crear viaje
   showCreateTripModal() {
+    // 🔥 ARREGLO: Cerrar el modal de lista de viajes si está abierto
+    this.closeTripsListModal();
+    
     const modal = document.getElementById('modal-create-trip');
     if (modal) {
       modal.classList.add('active');
@@ -493,27 +516,27 @@ export const TripsManager = {
   async handleCreateTripForm(e) {
     e.preventDefault();
 
-    const useTemplate = document.getElementById('useItineraryTemplate').checked;
+    const useTemplate = document.getElementById('useItineraryTemplate')?.checked || false;
 
     const formData = {
       name: document.getElementById('tripName').value,
       destination: document.getElementById('tripDestination').value || 'Japón',
       dateStart: document.getElementById('tripDateStart').value,
       dateEnd: document.getElementById('tripDateEnd').value,
-      useTemplate: useTemplate, // 🔥 NUEVO: Solo usar plantilla si está marcado
+      useTemplate: useTemplate,
       outboundFlight: {
-        flightNumber: document.getElementById('outboundFlightNumber').value,
-        airline: document.getElementById('outboundAirline').value,
-        date: document.getElementById('outboundDate').value,
-        from: document.getElementById('outboundFrom').value,
-        to: document.getElementById('outboundTo').value
+        flightNumber: document.getElementById('outboundFlightNumber')?.value || '',
+        airline: document.getElementById('outboundAirline')?.value || '',
+        date: document.getElementById('outboundDate')?.value || '',
+        from: document.getElementById('outboundFrom')?.value || '',
+        to: document.getElementById('outboundTo')?.value || ''
       },
       returnFlight: {
-        flightNumber: document.getElementById('returnFlightNumber').value,
-        airline: document.getElementById('returnAirline').value,
-        date: document.getElementById('returnDate').value,
-        from: document.getElementById('returnFrom').value,
-        to: document.getElementById('returnTo').value
+        flightNumber: document.getElementById('returnFlightNumber')?.value || '',
+        airline: document.getElementById('returnAirline')?.value || '',
+        date: document.getElementById('returnDate')?.value || '',
+        from: document.getElementById('returnFrom')?.value || '',
+        to: document.getElementById('returnTo')?.value || ''
       },
       accommodations: []
     };
