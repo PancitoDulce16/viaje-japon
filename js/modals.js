@@ -37,6 +37,16 @@ export const ModalRenderer = {
                     }
                 });
             }
+
+            // Setup del formulario de crear viaje
+            const createTripForm = document.getElementById('createTripForm');
+            if (createTripForm) {
+                createTripForm.addEventListener('submit', (e) => {
+                    if (window.TripsManager) {
+                        window.TripsManager.handleCreateTripForm(e);
+                    }
+                });
+            }
         }, 100);
     },
 
@@ -293,52 +303,236 @@ export const ModalRenderer = {
     getCreateTripModal() {
         return `
             <div id="modal-create-trip" class="modal">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                     <div class="p-6">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-2xl font-bold dark:text-white">✈️ Crear Nuevo Viaje</h2>
                             <button onclick="TripsManager.closeCreateTripModal()" class="text-3xl hover:text-red-600 transition" aria-label="Cerrar">&times;</button>
                         </div>
 
-                        <div class="text-center py-8">
-                            <div class="text-6xl mb-4">🎉</div>
-                            <h3 class="text-xl font-bold dark:text-white mb-4">¡Empecemos a planear tu viaje!</h3>
-                            <p class="text-gray-600 dark:text-gray-400 mb-6">
-                                Puedes crear un viaje simple o uno completo con itinerario detallado
-                            </p>
-                            
-                            <div class="grid md:grid-cols-2 gap-4">
-                                <!-- Viaje Simple -->
-                                <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg border-2 border-blue-300 dark:border-blue-600 hover:border-blue-500 transition">
-                                    <div class="text-4xl mb-3">📋</div>
-                                    <h4 class="font-bold text-lg dark:text-white mb-2">Viaje Simple</h4>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                        Solo fechas y vuelos básicos. Agrega itinerario después.
-                                    </p>
-                                    <button 
-                                        onclick="TripsManager.showSimpleTripForm()"
-                                        class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
-                                    >
-                                        Crear Simple
-                                    </button>
-                                </div>
-
-                                <!-- Viaje Completo con Itinerario -->
-                                <div class="bg-purple-50 dark:bg-purple-900/20 p-6 rounded-lg border-2 border-purple-300 dark:border-purple-600 hover:border-purple-500 transition">
-                                    <div class="text-4xl mb-3">✨</div>
-                                    <h4 class="font-bold text-lg dark:text-white mb-2">Con Itinerario</h4>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                        Wizard completo: ciudades, intereses, plantillas y más.
-                                    </p>
-                                    <button 
-                                        onclick="TripsManager.showFullTripWizard()"
-                                        class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-3 rounded-lg hover:from-purple-600 hover:to-pink-600 transition font-semibold"
-                                    >
-                                        ✨ Crear Completo
-                                    </button>
+                        <form id="createTripForm" class="space-y-6">
+                            <!-- Información Básica -->
+                            <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                                <h3 class="font-bold text-lg mb-4 dark:text-white">📋 Información Básica</h3>
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Nombre del Viaje *
+                                        </label>
+                                        <input
+                                            id="tripName"
+                                            type="text"
+                                            required
+                                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="Ej: Viaje a Japón 2025"
+                                        >
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Destino
+                                        </label>
+                                        <input
+                                            id="tripDestination"
+                                            type="text"
+                                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="Japón"
+                                            value="Japón"
+                                        >
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+
+                            <!-- Fechas -->
+                            <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                                <h3 class="font-bold text-lg mb-4 dark:text-white">📅 Fechas del Viaje</h3>
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Fecha de Inicio *
+                                        </label>
+                                        <input
+                                            id="tripDateStart"
+                                            type="date"
+                                            required
+                                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        >
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Fecha de Fin *
+                                        </label>
+                                        <input
+                                            id="tripDateEnd"
+                                            type="date"
+                                            required
+                                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Vuelo de Ida -->
+                            <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+                                <h3 class="font-bold text-lg mb-4 dark:text-white">🛫 Vuelo de Ida</h3>
+                                <div class="grid md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Número de Vuelo
+                                        </label>
+                                        <input
+                                            id="outboundFlightNumber"
+                                            type="text"
+                                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="AM58"
+                                        >
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Aerolínea
+                                        </label>
+                                        <input
+                                            id="outboundAirline"
+                                            type="text"
+                                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="Aeroméxico"
+                                        >
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Fecha
+                                        </label>
+                                        <input
+                                            id="outboundDate"
+                                            type="date"
+                                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        >
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Desde
+                                        </label>
+                                        <input
+                                            id="outboundFrom"
+                                            type="text"
+                                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="MTY"
+                                        >
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Hacia
+                                        </label>
+                                        <input
+                                            id="outboundTo"
+                                            type="text"
+                                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="NRT"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Plantilla de Itinerario -->
+                            <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
+                                <h3 class="font-bold text-lg mb-4 dark:text-white">📋 Itinerario</h3>
+                                <div class="p-4 bg-white dark:bg-gray-700 rounded-lg border-2 border-yellow-400 dark:border-yellow-600">
+                                    <label class="flex items-start gap-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            id="useItineraryTemplate"
+                                            class="mt-1 w-5 h-5 accent-yellow-500"
+                                        >
+                                        <div>
+                                            <p class="font-semibold text-gray-800 dark:text-white mb-1">
+                                                ¿Usar plantilla de itinerario de 15 días?
+                                            </p>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                                Incluye un itinerario pre-planeado con actividades, transporte y costos estimados para Japón.
+                                                Puedes personalizarlo después o empezar desde cero.
+                                            </p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Vuelo de Regreso -->
+                            <div class="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4">
+                                <h3 class="font-bold text-lg mb-4 dark:text-white">🛬 Vuelo de Regreso</h3>
+                                <div class="grid md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Número de Vuelo
+                                        </label>
+                                        <input
+                                            id="returnFlightNumber"
+                                            type="text"
+                                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="AM58"
+                                        >
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Aerolínea
+                                        </label>
+                                        <input
+                                            id="returnAirline"
+                                            type="text"
+                                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="Aeroméxico"
+                                        >
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Fecha
+                                        </label>
+                                        <input
+                                            id="returnDate"
+                                            type="date"
+                                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                        >
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Desde
+                                        </label>
+                                        <input
+                                            id="returnFrom"
+                                            type="text"
+                                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="NRT"
+                                        >
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Hacia
+                                        </label>
+                                        <input
+                                            id="returnTo"
+                                            type="text"
+                                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="MTY"
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Botones -->
+                            <div class="flex gap-3">
+                                <button
+                                    type="button"
+                                    onclick="TripsManager.closeCreateTripModal()"
+                                    class="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white py-3 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition font-semibold"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    type="submit"
+                                    class="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+                                >
+                                    ✨ Crear Viaje
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>

@@ -1,348 +1,449 @@
-# 🇯🇵 Japan Trip Planner - Sistema Completo de Itinerarios
+# 🇯🇵 Planificador de Viaje a Japón - Modo Colaborativo
 
-> Planificador colaborativo de viajes con itinerarios dinámicos, integración de APIs y sincronización en tiempo real
+Una aplicación web progresiva (PWA) para planificar tu viaje a Japón con **modo colaborativo en tiempo real** para compartir con familiares o amigos.
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue)
-![Status](https://img.shields.io/badge/status-production_ready-green)
-![Firebase](https://img.shields.io/badge/firebase-integrated-orange)
-![APIs](https://img.shields.io/badge/APIs-4_integrated-purple)
-
----
-
-## 🚀 NUEVO - Sistema de Itinerarios Dinámicos
-
-### ✨ Features Principales
-
-- 🧙‍♂️ **Wizard de 4 Pasos** - Creación guiada de itinerarios
-- ✈️ **25+ Aerolíneas** - Selección de aerolíneas reales
-- 🔗 **Conexiones Ilimitadas** - Agregar escalas y vuelos intermedios
-- 🎯 **10 Categorías** - Personaliza según tus intereses
-- 📋 **8 Plantillas** - Estilos de viaje predefinidos
-- 🗺️ **50+ Actividades** - Base de datos de lugares en Japón
-- 🔍 **Búsqueda Inteligente** - Encuentra actividades por ciudad/categoría
-- ✏️ **Actividades Personalizadas** - Crea tus propias actividades
-- 🌐 **4 APIs Integradas** - Vuelos, hoteles, mapas y lugares reales
-- 🔄 **Sincronización RT** - Firebase Realtime Database
-- 🤝 **Modo Colaborativo** - Edita con amigos/familia en tiempo real
-- 🌙 **Dark Mode** - Soporte completo
-- 📱 **Responsive** - Funciona en móvil, tablet y desktop
+![Status](https://img.shields.io/badge/Status-Producción-brightgreen)
+![Firebase](https://img.shields.io/badge/Firebase-Realtime-orange)
+![Colaborativo](https://img.shields.io/badge/Modo-Colaborativo-blue)
 
 ---
 
-## 📚 DOCUMENTACIÓN
+## ✨ Características Principales
 
-### 🚨 EMPEZAR AQUÍ
-**Si no ves las conexiones de vuelos o las nuevas features**, lee esto primero:
+### 🤝 Modo Colaborativo (NUEVO)
+- **Tiempo Real:** Todos los cambios se sincronizan instantáneamente
+- **Multi-usuario:** Comparte tu viaje con familiares o amigos
+- **Sincronización completa:** Budget, checklist, packing list, notas
+- **Indicadores visuales:** Sabe quién hizo cada cambio
 
-1. **[DONDE_ESTA_TODO.md](DONDE_ESTA_TODO.md)** ⭐⭐⭐
-   - Explica dónde está cada feature
-   - Soluciona el problema de "no veo las conexiones"
-   - Flujo completo paso a paso
+### 📅 Planificación Completa
+- **Itinerario detallado:** 15 días pre-planeados en Japón
+- **Actividades por día:** Templos, museos, restaurantes, transporte
+- **Checklist interactivo:** Marca actividades completadas
+- **Progreso visual:** Ve tu avance día a día
 
-2. **[SOLUCION_RAPIDA.md](SOLUCION_RAPIDA.md)** ⭐⭐
-   - Cómo usar el sistema AHORA
-   - Troubleshooting y debugging
-   - Comandos útiles
+### 💰 Control de Presupuesto
+- **Tracker de gastos:** Registra todos tus gastos en ¥ JPY
+- **Conversión automática:** Ver equivalente en USD
+- **Colaborativo:** Ambos pueden agregar gastos
+- **Total en tiempo real:** Suma automática compartida
 
-3. **[README_DOCUMENTACION.md](README_DOCUMENTACION.md)** 📚
-   - Índice completo de toda la documentación
-   - Lee en orden según tu necesidad
+### 📦 Packing List Inteligente
+- **6 categorías:** Documentos, Ropa, Electrónica, Salud, Dinero, Otros
+- **Items pre-cargados:** Basados en experiencias reales
+- **Progreso por categoría:** Sabe exactamente qué falta
+- **Sincronizado:** Ambos ven la misma lista
 
-### 📖 Documentación Completa
+### 📝 Notas Compartidas
+- **Editor colaborativo:** Ambos pueden editar notas
+- **Sync en tiempo real:** Los cambios aparecen instantáneamente
+- **Historial:** Sabe quién editó por última vez
 
-- **[SISTEMA_ITINERARIOS_README.md](SISTEMA_ITINERARIOS_README.md)** - Documentación técnica completa
-- **[GUIA_RAPIDA_USO.md](GUIA_RAPIDA_USO.md)** - Guía para usuarios finales
-- **[GUIA_APIS.md](GUIA_APIS.md)** - Cómo usar las APIs integradas
-- **[VISUALIZACION_SISTEMA.md](VISUALIZACION_SISTEMA.md)** - Diagramas y casos de uso
-- **[RESUMEN_FINAL.md](RESUMEN_FINAL.md)** - Checklist y estadísticas
-
----
-
-## 🎯 Quick Start
-
-### 1. Instalación
-```bash
-# Clona el repositorio
-git clone https://github.com/tu-usuario/viaje-japon.git
-
-# Abre index.html en tu navegador
-# O usa un servidor local:
-python -m http.server 8000
-# O con Node:
-npx serve
-```
-
-### 2. Configuración de Firebase
-```javascript
-// js/firebase-config.js
-const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_AUTH_DOMAIN",
-  projectId: "TU_PROJECT_ID",
-  // ...
-};
-```
-
-### 3. Uso Básico
-```
-1. Abre la app → Inicia sesión
-2. Crea un viaje básico (nombre + fechas)
-3. Ve al tab "📅 Itinerario"
-4. Click en "✨ Crear Itinerario"
-5. Sigue el wizard de 4 pasos
-6. ¡Listo! Empieza a agregar actividades
-```
+### 🗺️ Recursos Adicionales
+- **Mapa interactivo:** Ubicaciones de todas las actividades
+- **Guía de frases:** Japonés básico con romanización
+- **Info de emergencia:** Números importantes y embajadas
+- **Guía del JR Pass:** Todo lo que necesitas saber
 
 ---
 
-## 🏗️ Estructura del Proyecto
+## 🚀 Demo Rápida
+
+### Para un solo usuario:
+1. Abre la app
+2. (Opcional) Inicia sesión para sincronizar
+3. Crea tu viaje
+4. Empieza a planificar
+
+### Para modo colaborativo:
+1. **Usuario A:** Crea el viaje
+2. **Usuario A:** Click en "+ Invitar" y comparte el User ID o Trip ID
+3. **Usuario B:** Acepta la invitación
+4. **Ambos:** ¡Planifiquen juntos en tiempo real! 🎉
+
+---
+
+## 🛠️ Tecnologías
+
+- **Frontend:** HTML5, CSS3, JavaScript (Vanilla)
+- **Estilos:** Tailwind CSS
+- **Base de datos:** Firebase Firestore
+- **Autenticación:** Firebase Auth (Email + Google)
+- **Hosting:** Compatible con cualquier hosting estático
+- **PWA:** Funciona offline, instalable en móvil
+
+---
+
+## 📂 Estructura del Proyecto
 
 ```
 viaje-japon/
-├── data/
-│   ├── airlines-data.js          # 25+ aerolíneas
-│   ├── activities-database.js    # 50+ actividades
-│   ├── categories-data.js        # 10 categorías + 8 plantillas
-│   ├── attractions-data.js       # Atracciones adicionales
-│   └── restaurants.json          # Restaurantes
-│
-├── js/
-│   ├── app.js                    # Aplicación principal
-│   ├── auth.js                   # Autenticación
-│   ├── firebase-config.js        # Configuración Firebase
-│   ├── trips-manager.js          # Gestión de viajes
-│   ├── itinerary.js              # Vista de itinerario
-│   ├── itinerary-builder.js      # Wizard de creación
-│   ├── itinerary-builder-part2.js # Agregar/Editar actividades
-│   ├── apis-integration.js       # Integración de APIs
-│   ├── budget-tracker.js         # Control de gastos
-│   ├── preparation.js            # Checklist de preparación
-│   ├── map.js                    # Mapa interactivo
-│   ├── attractions.js            # Atracciones
-│   ├── transport.js              # Transporte
-│   ├── notifications.js          # Sistema de notificaciones
-│   ├── tabs.js                   # Navegación de tabs
-│   └── utils.js                  # Utilidades
-│
 ├── css/
-│   ├── main.css                  # Estilos personalizados
-│   └── tailwind.min.css          # Tailwind CSS
-│
-├── images/
-│   └── icons/                    # Iconos PWA
-│
-├── index.html                    # Página principal
-├── manifest.json                 # PWA manifest
-├── service-worker.js             # Service worker
-│
-└── docs/                         # Documentación completa
-    ├── DONDE_ESTA_TODO.md
-    ├── SOLUCION_RAPIDA.md
-    ├── GUIA_APIS.md
-    └── ...
+│   ├── main.css              # Estilos principales
+│   └── tailwind.min.css      # Tailwind CSS
+├── js/
+│   ├── app.js                # Punto de entrada
+│   ├── auth.js               # Sistema de autenticación
+│   ├── trips-manager.js      # Gestión de viajes
+│   ├── budget-tracker.js     # Control de presupuesto
+│   ├── itinerary.js          # Checklist de itinerario
+│   ├── preparation.js        # Packing list
+│   ├── core.js               # Notas y funcionalidad core
+│   ├── firebase-config.js    # Configuración de Firebase
+│   └── ...
+├── data/
+│   ├── attractions.json      # Base de datos de atracciones
+│   ├── restaurants.json      # Restaurantes recomendados
+│   └── phrases.json          # Frases en japonés
+├── index.html                # Página principal
+├── manifest.json             # PWA manifest
+├── service-worker.js         # Service worker para offline
+├── IMPLEMENTATION_STATUS.md  # Estado de implementación
+├── GUIA_RAPIDA.md           # Guía de uso rápido
+└── README.md                # Este archivo
 ```
 
 ---
 
-## 🔌 APIs Integradas
+## 🔧 Instalación y Configuración
 
-### 1. Aviation Stack
-```javascript
-// Búsqueda de vuelos reales
-await APIsIntegration.searchFlights('AM58');
+### 1. Clonar el Repositorio
+```bash
+git clone https://github.com/tu-usuario/viaje-japon.git
+cd viaje-japon
 ```
 
-### 2. Lite API
+### 2. Configurar Firebase
+
+#### a) Crear proyecto en Firebase:
+1. Ve a [Firebase Console](https://console.firebase.google.com/)
+2. Click "Agregar proyecto"
+3. Nombra tu proyecto: "Viaje Japón"
+4. Habilita Google Analytics (opcional)
+
+#### b) Habilitar servicios:
+1. **Authentication:**
+   - Ve a Authentication > Sign-in method
+   - Habilita "Email/Password"
+   - Habilita "Google" (opcional)
+
+2. **Firestore Database:**
+   - Ve a Firestore Database
+   - Click "Crear base de datos"
+   - Empieza en modo de prueba
+   - Ubicación: us-central1 (o la más cercana)
+
+#### c) Configurar en el código:
+1. Abre `js/firebase-config.js`
+2. Reemplaza las credenciales con las de tu proyecto:
+
 ```javascript
-// Búsqueda de hoteles
-await APIsIntegration.searchHotels('TYO', '2026-02-16', '2026-02-20', 2);
+const firebaseConfig = {
+  apiKey: "TU-API-KEY",
+  authDomain: "TU-PROJECT.firebaseapp.com",
+  projectId: "TU-PROJECT-ID",
+  storageBucket: "TU-PROJECT.appspot.com",
+  messagingSenderId: "TU-MESSAGING-ID",
+  appId: "TU-APP-ID"
+};
 ```
 
-### 3. Geoapify
+### 3. Configurar Reglas de Seguridad
+
+En Firestore Database > Reglas, pega esto:
+
 ```javascript
-// Búsqueda de lugares y rutas
-await APIsIntegration.searchPlaces('temple', { lat: 35.6762, lng: 139.6503 });
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Trips: Solo miembros pueden leer/escribir
+    match /trips/{tripId} {
+      allow read, write: if request.auth != null &&
+        request.auth.uid in resource.data.members;
+    }
+
+    // Subcollections de trips
+    match /trips/{tripId}/{document=**} {
+      allow read, write: if request.auth != null &&
+        request.auth.uid in get(/databases/$(database)/documents/trips/$(tripId)).data.members;
+    }
+
+    // Users: Solo el usuario puede leer/escribir sus datos
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null &&
+        request.auth.uid == userId;
+    }
+  }
+}
 ```
 
-### 4. Foursquare
-```javascript
-// Búsqueda de restaurantes
-await APIsIntegration.findNearbyRestaurants({ lat: 35.6762, lng: 139.6503 });
+### 4. Ejecutar Localmente
+
+Opción A - Live Server (VS Code):
+```bash
+# Instala la extensión "Live Server" en VS Code
+# Click derecho en index.html > "Open with Live Server"
 ```
 
-Ver [GUIA_APIS.md](GUIA_APIS.md) para más detalles.
+Opción B - Python:
+```bash
+python -m http.server 8000
+# Abre http://localhost:8000
+```
+
+Opción C - Node.js:
+```bash
+npx serve
+```
 
 ---
 
-## 📊 Estadísticas
+## 🎯 Cómo Usar el Modo Colaborativo
 
+### Método 1: Invitar con User ID
+
+**Usuario A (Creador):**
+1. Crea tu viaje
+2. Click en "**+ Invitar**" en el header
+3. Solicita el User ID a tu hermano/amigo
+
+**Usuario B (Invitado):**
+1. Abre la consola del navegador (F12)
+2. Escribe: `auth.currentUser.uid`
+3. Copia el User ID y envíalo por WhatsApp
+
+**Usuario A:**
+1. Ingresa el User ID en el prompt
+2. ✅ ¡Listo! Ahora ambos ven el mismo viaje
+
+### Método 2: Unirse con Trip ID
+
+**Usuario A (Creador):**
+1. Crea tu viaje
+2. Copia el Trip ID (visible en consola)
+3. Comparte el Trip ID por mensaje
+
+**Usuario B (Invitado):**
+1. Click en "**🔗 Unirse a un Viaje**"
+2. Ingresa el Trip ID
+3. ✅ ¡Listo! Ya eres miembro del viaje
+
+### Sincronización en Tiempo Real
+Una vez que ambos son miembros:
+- ✅ Marcar actividades → Se ve instantáneamente
+- 💰 Agregar gastos → Aparecen al momento
+- 📦 Editar packing list → Cambios en tiempo real
+- 📝 Escribir notas → Sincronización automática
+
+---
+
+## 📊 Arquitectura de Datos
+
+### Firestore Database Structure:
 ```
-📝 Líneas de código:        ~3,000
-📁 Archivos JavaScript:     15
-🗃️ Archivos de datos:       4
-✈️ Aerolíneas:              25+
-🌍 Aeropuertos:             40+
-🏙️ Ciudades:                8
-🎯 Actividades:             50+
-🎨 Categorías:              10
-📋 Plantillas:              8
-🔌 APIs integradas:         4
-📚 Documentos:              8
+trips/
+  {tripId}/
+    info: {name, destination, dates, ...}
+    members: [userId1, userId2, ...]
+    flights: {outbound, return}
+    expenses/ (subcollection)
+    data/ (subcollection)
+      checklist: {checked: {...}, updatedBy: email}
+      packing: {items: {...}, updatedBy: email}
+      notes: {content: "...", updatedBy: email}
+```
+
+### Modelo Híbrido:
+- **Sin login:** localStorage (solo tu dispositivo)
+- **Con login sin trip:** Firestore por usuario
+- **Con login + trip:** Firestore por trip (colaborativo)
+
+---
+
+## 🎨 Indicadores Visuales
+
+En cada módulo verás:
+
+- 🤝 **Modo Colaborativo** (verde) → Viaje compartido, cambios en tiempo real
+- 👤 **Modo Individual** (azul) → Solo tú en el trip
+- ☁️ **Sincronizado** (azul) → Guardado en tu cuenta
+- 📱 **Solo Local** (amarillo) → Sin internet, solo en este dispositivo
+
+---
+
+## 🧪 Testing
+
+### Test Básico (Local):
+```bash
+# 1. Inicia la app
+# 2. Crea una cuenta y un viaje
+# 3. Agrega gastos, marca actividades
+# 4. Todo debe guardarse y persistir al recargar
+```
+
+### Test Colaborativo:
+```bash
+# 1. Abre en dos navegadores (Chrome + Firefox)
+# 2. Inicia sesión con dos cuentas diferentes
+# 3. Cuenta A crea viaje e invita a Cuenta B
+# 4. Ambos deben ver los mismos datos en tiempo real
 ```
 
 ---
 
-## ✅ Features Implementados
+## 🚀 Deployment
 
-### Sistema de Viajes
-- ✅ Crear viajes colaborativos
-- ✅ Compartir con código de 6 dígitos
-- ✅ Múltiples viajes por usuario
-- ✅ Cambiar entre viajes
-- ✅ Sincronización en tiempo real
-
-### Sistema de Itinerarios
-- ✅ Wizard guiado de 4 pasos
-- ✅ Selección de aerolíneas
-- ✅ Vuelos con conexiones ilimitadas
-- ✅ Categorías de intereses
-- ✅ Plantillas predefinidas
-- ✅ Generación automática de días
-- ✅ Agregar actividades (búsqueda o personalizada)
-- ✅ Editar actividades
-- ✅ Checklist por actividad
-
-### Integraciones
-- ✅ Firebase Authentication
-- ✅ Firebase Firestore
-- ✅ Aviation Stack API
-- ✅ Lite API (Hoteles)
-- ✅ Geoapify (Mapas)
-- ✅ Foursquare (Lugares)
-
-### Otros
-- ✅ Budget tracker compartido
-- ✅ Mapa interactivo
-- ✅ Checklist de preparación
-- ✅ Información de transporte
-- ✅ Dark mode
-- ✅ PWA (Progressive Web App)
-- ✅ Modo offline
-
----
-
-## 🔄 Pendiente (Opcional)
-
-- 🔲 Drag & Drop visual (requiere SortableJS)
-- 🔲 Optimización de rutas con Google Maps API
-- 🔲 Exportar a PDF
-- 🔲 Compartir en redes sociales
-- 🔲 Notificaciones push
-- 🔲 Integración con calendarios
-
----
-
-## 🤝 Modo Colaborativo
-
-1. Crea un viaje
-2. Obtén el código de 6 dígitos
-3. Comparte con amigos/familia
-4. Todos pueden editar en tiempo real
-5. Cambios se sincronizan automáticamente
-
----
-
-## 🐛 Debugging
-
-### Verificar que todo está cargado
-```javascript
-// Abre consola (F12)
-console.log('Trips:', TripsManager);
-console.log('Builder:', ItineraryBuilder);
-console.log('APIs:', APIsIntegration);
+### GitHub Pages:
+```bash
+# En Settings > Pages
+# Source: Deploy from a branch
+# Branch: main / root
+# URL: https://tu-usuario.github.io/viaje-japon
 ```
 
-### Forzar abrir wizard
-```javascript
-ItineraryBuilder.showCreateItineraryWizard();
+### Netlify:
+```bash
+# Conecta tu repo de GitHub
+# Build command: (vacío)
+# Publish directory: /
+# Deploy!
 ```
 
-### Ver viaje actual
-```javascript
-console.log(TripsManager.currentTrip);
+### Vercel:
+```bash
+# Importa proyecto desde GitHub
+# Framework Preset: Other
+# Deploy!
 ```
-
-Ver [SOLUCION_RAPIDA.md](SOLUCION_RAPIDA.md) para más comandos.
 
 ---
 
-## 📱 Soporte
+## 📱 PWA (Progressive Web App)
 
-### Navegadores Soportados
-- ✅ Chrome 90+
-- ✅ Firefox 88+
-- ✅ Safari 14+
-- ✅ Edge 90+
+La app es instalable en móvil:
 
-### Dispositivos
-- ✅ Desktop (Windows, Mac, Linux)
-- ✅ Tablet (iPad, Android)
-- ✅ Móvil (iOS, Android)
+**iOS:**
+1. Safari > Compartir > Añadir a pantalla de inicio
+
+**Android:**
+1. Chrome > Menú > Instalar app
+
+**Características PWA:**
+- ✅ Funciona offline
+- ✅ Instalable como app nativa
+- ✅ Notificaciones (próximamente)
+- ✅ Sincronización en segundo plano
+
+---
+
+## 🔒 Seguridad
+
+### Buenas Prácticas Implementadas:
+- ✅ Autenticación obligatoria para colaboración
+- ✅ Reglas de seguridad en Firestore
+- ✅ Solo miembros pueden acceder a trips
+- ✅ Validación de inputs en formularios
+- ✅ Escape de HTML para prevenir XSS
+
+### Recomendaciones:
+- Usa contraseñas seguras (8+ caracteres)
+- No compartas credenciales de Firebase
+- Habilita 2FA en tu cuenta de Firebase
+- Revisa periódicamente los miembros de tus trips
+
+---
+
+## 🐛 Troubleshooting
+
+### "No veo los cambios del otro usuario"
+- Verifica que ambos estén en el mismo trip
+- Refresca la página (F5)
+- Revisa la consola para errores
+
+### "Error al invitar"
+- Verifica que el User ID sea correcto
+- Asegúrate de que ambos tengan sesión iniciada
+- Verifica conexión a internet
+
+### "Los datos no se sincronizan"
+- Revisa tu conexión a internet
+- Verifica la configuración de Firebase
+- Los datos se guardan en localStorage como backup
+
+---
+
+## 📝 Roadmap
+
+### Fase 1 - MVP ✅ (COMPLETADO)
+- ✅ Sistema de autenticación
+- ✅ Gestión de viajes
+- ✅ Modo colaborativo
+- ✅ Sync en tiempo real de todos los módulos
+
+### Fase 2 - Mejoras de UX (En progreso)
+- 🔄 Sistema de invitación por email
+- 🔄 Notificaciones push
+- 🔄 Sistema de permisos (admin/editor/viewer)
+- 🔄 Chat integrado
+
+### Fase 3 - Features Avanzadas
+- 📋 Hospedajes y reservas
+- 🗺️ Timeline visual del viaje
+- 📊 Análisis de gastos por categoría
+- 📸 Galería de fotos compartida
+- 📱 App móvil nativa
+
+---
+
+## 🤝 Contribuir
+
+¿Quieres mejorar la app? ¡Contribuciones bienvenidas!
+
+1. Fork el proyecto
+2. Crea tu rama: `git checkout -b feature/nueva-funcionalidad`
+3. Commit tus cambios: `git commit -m 'Agrega nueva funcionalidad'`
+4. Push a la rama: `git push origin feature/nueva-funcionalidad`
+5. Abre un Pull Request
 
 ---
 
 ## 📄 Licencia
 
-MIT License - Puedes usar, modificar y distribuir libremente.
+Este proyecto está bajo la Licencia MIT - ve el archivo [LICENSE](LICENSE) para más detalles.
 
 ---
 
-## 👥 Contribuir
+## 👏 Créditos
 
-¿Quieres contribuir? ¡Genial!
+### Datos y Referencias:
+- Japan National Tourism Organization (JNTO)
+- Google Maps Platform
+- JR Pass Official Guide
 
-1. Fork el proyecto
-2. Crea una rama (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
----
-
-## 🙏 Agradecimientos
-
-- **Firebase** - Backend y sincronización
-- **Tailwind CSS** - Framework CSS
-- **Aviation Stack** - API de vuelos
-- **Lite API** - API de hoteles
-- **Geoapify** - API de mapas
-- **Foursquare** - API de lugares
+### Tecnologías:
+- Firebase (Google)
+- Tailwind CSS
+- Font Awesome Icons
 
 ---
 
-## 📞 Contacto
+## 📞 Contacto y Soporte
 
-¿Preguntas? ¿Problemas? ¿Sugerencias?
-
-1. Lee la [documentación](README_DOCUMENTACION.md)
-2. Revisa [DONDE_ESTA_TODO.md](DONDE_ESTA_TODO.md)
-3. Consulta [SOLUCION_RAPIDA.md](SOLUCION_RAPIDA.md)
-
----
-
-## 🎉 ¡A Viajar!
-
-```
- ██╗ █████╗ ██████╗  █████╗ ███╗   ██╗    ████████╗██████╗ ██╗██████╗ 
- ██║██╔══██╗██╔══██╗██╔══██╗████╗  ██║    ╚══██╔══╝██╔══██╗██║██╔══██╗
- ██║███████║██████╔╝███████║██╔██╗ ██║       ██║   ██████╔╝██║██████╔╝
-██╔╝██╔══██║██╔═══╝ ██╔══██║██║╚██╗██║       ██║   ██╔══██╗██║██╔═══╝ 
-███████║  ██║██║     ██║  ██║██║ ╚████║       ██║   ██║  ██║██║██║     
-╚══════╝  ╚═╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═══╝       ╚═╝   ╚═╝  ╚═╝╚═╝╚═╝     
-```
-
-**¡Planifica tu viaje perfecto a Japón! 🇯🇵✨**
+- 📧 Email: tu@email.com
+- 💬 Issues: [GitHub Issues](https://github.com/tu-usuario/viaje-japon/issues)
+- 📚 Docs: [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)
+- 🚀 Guía Rápida: [GUIA_RAPIDA.md](GUIA_RAPIDA.md)
 
 ---
 
-**Made with ❤️ for travelers**
+## ⭐ Agradecimientos
+
+Gracias por usar este planificador. ¡Que tengas un viaje increíble a Japón! 🇯🇵✈️
+
+**¡Buen viaje! いってらっしゃい (Itterasshai)** 🌸
+
+---
+
+<div align="center">
+  Made with ❤️ for travelers to Japan
+</div>

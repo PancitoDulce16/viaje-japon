@@ -10,9 +10,6 @@ import { TransportHandler } from './transport.js';
 import { Notifications } from './notifications.js';
 import { ItineraryBuilder } from './itinerary-builder.js';
 import { ItineraryBuilderExtensions } from './itinerary-builder-part2.js';
-import { APIsIntegration } from './apis-integration.js';
-import { DragDropManager } from './itinerary-drag-drop.js';
-import { ActivityBrowser } from './activity-browser.js';
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';
@@ -37,7 +34,6 @@ function initApp() {
         // (se verificará dentro de cada módulo)
         ItineraryHandler.init();
         ItineraryBuilder.init();
-        DragDropManager.init();
         MapHandler.renderMap();
         TabsHandler.renderAllTabs();
         AttractionsHandler.renderAttractions();
