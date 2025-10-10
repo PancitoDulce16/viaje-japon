@@ -486,7 +486,64 @@ export const TripsManager = {
     if (modal) {
       modal.classList.add('active');
       document.body.style.overflow = 'hidden';
+      
+      // Mostrar selección de tipo por defecto
+      document.getElementById('tripTypeSelection').classList.remove('hidden');
+      document.getElementById('simpleTripForm').classList.add('hidden');
     }
+  },
+
+  // Mostrar formulario simple
+  showSimpleTripForm() {
+    document.getElementById('tripTypeSelection').classList.add('hidden');
+    document.getElementById('simpleTripForm').classList.remove('hidden');
+    
+    // Setup del formulario simple
+    setTimeout(() => {
+      const simpleForm = document.getElementById('createTripFormSimple');
+      if (simpleForm) {
+        simpleForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const formData = {
+            name: document.getElementById('simpleTripName').value,
+            destination: 'Japón',
+            dateStart: document.getElementById('simpleTripDateStart').value,
+            dateEnd: document.getElementById('simpleTripDateEnd').value,
+            useTemplate: false // Viaje simple NO usa plantilla
+          };
+
+          if (!formData.name || !formData.dateStart || !formData.dateEnd) {
+            alert('⚠️ Por favor completa todos los campos');
+            return;
+          }
+
+          if (new Date(formData.dateEnd) <= new Date(formData.dateStart)) {
+            alert('⚠️ La fecha de fin debe ser posterior a la fecha de inicio');
+            return;
+          }
+
+          await this.createTrip(formData);
+          this.closeCreateTripModal();
+        });
+      }
+    }, 100);
+  },
+
+  // Mostrar wizard completo (llama al ItineraryBuilder)
+  showFullTripWizard() {
+    // Cerrar modal de crear viaje
+    this.closeCreateTripModal();
+    
+    // Esperar un momento y abrir el wizard completo
+    setTimeout(() => {
+      if (window.ItineraryBuilder && window.ItineraryBuilder.showCreateItineraryWizard) {
+        window.ItineraryBuilder.showCreateItineraryWizard();
+      } else {
+        console.error('ItineraryBuilder no está disponible');
+        Notifications.error('Error: El wizard de itinerario no está disponible');
+      }
+    }, 300);
   },
 
   // Cerrar modal de crear viaje
