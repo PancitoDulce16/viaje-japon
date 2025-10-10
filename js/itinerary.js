@@ -8,7 +8,7 @@ import {
   getDoc,
   onSnapshot
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
+  
 let checkedActivities = {};
 let currentDay = 1;
 let unsubscribe = null;
@@ -522,3 +522,4 @@ onAuthStateChanged(auth, (user) => {
 });
 
 window.ItineraryHandler = ItineraryHandler;
+
