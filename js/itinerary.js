@@ -335,6 +335,15 @@ function renderDayOverview(day) {
             ${day.hotel ? `<p class="dark:text-gray-300">🏨 ${day.hotel}</p>` : ''}
             ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-400">📍 ${day.location}</p>` : ''}
         </div>
+        
+        <!-- Botón para agregar actividades -->
+        <button 
+          onclick="ActivityBrowser.showActivityBrowser(${day.day})"
+          class="w-full mt-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-3 rounded-lg hover:from-blue-600 hover:to-purple-600 transition font-semibold shadow-lg flex items-center justify-center gap-2"
+        >
+          <span>➕</span>
+          <span>Agregar Actividad</span>
+        </button>
     `;
 }
 
@@ -345,7 +354,7 @@ function renderActivities(day) {
     container.innerHTML = day.activities.map((act, i) => `
         <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md border-l-4 border-red-500 fade-in transition-all hover:shadow-lg ${
             checkedActivities[act.id] ? 'opacity-60' : ''
-        }" style="animation-delay: ${i * 0.05}s">
+        }" data-activity-index="${i}" style="animation-delay: ${i * 0.05}s">
             <div class="p-5 flex items-start gap-4">
                 <input 
                     type="checkbox" 
@@ -375,6 +384,11 @@ function renderActivities(day) {
             </div>
         </div>
     `).join('');
+    
+    // Hacer actividades draggable
+    if (window.DragDropManager) {
+      window.DragDropManager.makeActivitiesDraggable();
+    }
 }
 
 export const ItineraryHandler = {
