@@ -8,7 +8,7 @@ import {
   getDoc,
   onSnapshot
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-  
+
 let checkedActivities = {};
 let currentDay = 1;
 let unsubscribe = null;
@@ -25,8 +25,16 @@ async function loadItinerary() {
   const tripId = getCurrentTripId();
   
   if (!tripId) {
-    console.log('⚠️ No hay trip seleccionado');
-    return null;
+    console.log('⚠️ No hay trip seleccionado, cargando plantilla por defecto.');
+    try {
+        const response = await fetch('/data/attractions.json');
+        const data = await response.json();
+        currentItinerary = { days: data.suggestedItinerary };
+        return currentItinerary;
+    } catch (e) {
+        console.error('❌ Error cargando el itinerario por defecto:', e);
+        return null;
+    }
   }
   
   try {
@@ -40,7 +48,7 @@ async function loadItinerary() {
     } else {
       console.log('⚠️ No existe itinerario para este viaje, cargando plantilla por defecto.');
       try {
-        const response = await fetch('../data/attractions.json');
+        const response = await fetch('/data/attractions.json');
         const data = await response.json();
         currentItinerary = { days: data.suggestedItinerary };
         return currentItinerary;
@@ -368,7 +376,7 @@ function renderActivities(day) {
     container.innerHTML = day.activities.map((act, i) => `
         <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md border-l-4 border-red-500 fade-in transition-all hover:shadow-lg ${
             checkedActivities[act.id] ? 'opacity-60' : ''
-        }" data-activity-index="${i}" style="animation-delay: ${i * 0.05}s">
+        }" style="animation-delay: ${i * 0.05}s">
             <div class="p-5 flex items-start gap-4">
                 <input 
                     type="checkbox" 
@@ -410,11 +418,6 @@ function renderActivities(day) {
             </div>
         </div>
     `).join('');
-    
-    // Hacer actividades draggable
-    if (window.DragDropManager) {
-      window.DragDropManager.makeActivitiesDraggable();
-    }
 }
 
 export const ItineraryHandler = {
@@ -483,6 +486,14 @@ export const ItineraryHandler = {
                 if (checkbox) toggleActivity(checkbox.dataset.id);
             });
         }
+
+        const activityForm = document.getElementById('activityForm');
+        if (activityForm) {
+            activityForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                ItineraryHandler.saveActivity();
+            });
+        }
     },
     
     // Re-inicializar cuando cambie el trip
@@ -509,13 +520,127 @@ export const ItineraryHandler = {
     },
 
     showActivityModal(activityId, day) {
-        console.log(`Modal para activity: ${activityId}, day: ${day}`);
-        // Lógica para mostrar el modal (se implementará después)
+        const modal = document.getElementById('activityModal');
+        const form = document.getElementById('activityForm');
+        const modalTitle = document.getElementById('activityModalTitle');
+
+        form.reset();
+        document.getElementById('activityDay').value = day;
+
+        if (activityId) {
+            // Modo Editar
+            modalTitle.textContent = 'Editar Actividad';
+            const dayData = currentItinerary.days.find(d => d.day === day);
+            const activity = dayData.activities.find(a => a.id === activityId);
+
+            if (activity) {
+                document.getElementById('activityId').value = activity.id;
+                document.getElementById('activityIcon').value = activity.icon || '';
+                document.getElementById('activityTime').value = activity.time || '';
+                document.getElementById('activityTitle').value = activity.title || '';
+                document.getElementById('activityDesc').value = activity.desc || '';
+                document.getElementById('activityCost').value = activity.cost || 0;
+                document.getElementById('activityStation').value = activity.station || '';
+            }
+        } else {
+            // Modo Crear
+            modalTitle.textContent = 'Añadir Actividad';
+            document.getElementById('activityId').value = '';
+        }
+
+        modal.classList.remove('hidden');
     },
 
-    deleteActivity(activityId, day) {
-        console.log(`Eliminar activity: ${activityId}, day: ${day}`);
-        // Lógica para eliminar la actividad (se implementará después)
+    closeActivityModal() {
+        const modal = document.getElementById('activityModal');
+        modal.classList.add('hidden');
+    },
+
+    async deleteActivity(activityId, day) {
+        if (!confirm('¿Estás seguro de que quieres eliminar esta actividad?')) {
+            return;
+        }
+
+        const tripId = getCurrentTripId();
+        if (!tripId) {
+            Notifications.show('No hay un viaje seleccionado.', 'error');
+            return;
+        }
+
+        const dayData = currentItinerary.days.find(d => d.day === day);
+        if (!dayData) {
+            Notifications.show('El día del itinerario no es válido.', 'error');
+            return;
+        }
+
+        const activityIndex = dayData.activities.findIndex(a => a.id === activityId);
+        if (activityIndex > -1) {
+            dayData.activities.splice(activityIndex, 1);
+
+            try {
+                const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+                await setDoc(itineraryRef, currentItinerary);
+                Notifications.show('Actividad eliminada con éxito.', 'success');
+            } catch (error) {
+                console.error("Error al eliminar la actividad:", error);
+                Notifications.show('Error al eliminar la actividad.', 'error');
+                // Revertir el cambio en caso de error
+                dayData.activities.splice(activityIndex, 0, currentItinerary.days.find(d => d.day === day).activities[activityIndex]);
+            }
+        }
+    },
+
+    async saveActivity() {
+        const tripId = getCurrentTripId();
+        if (!tripId) {
+            Notifications.show('No hay un viaje seleccionado.', 'error');
+            return;
+        }
+
+        const activityId = document.getElementById('activityId').value;
+        const day = parseInt(document.getElementById('activityDay').value);
+
+        const newActivityData = {
+            id: activityId || `${Date.now()}`,
+            icon: document.getElementById('activityIcon').value || '📍',
+            time: document.getElementById('activityTime').value || 'Sin hora',
+            title: document.getElementById('activityTitle').value,
+            desc: document.getElementById('activityDesc').value,
+            cost: parseInt(document.getElementById('activityCost').value) || 0,
+            station: document.getElementById('activityStation').value
+        };
+
+        if (!newActivityData.title) {
+            Notifications.show('El título es obligatorio.', 'error');
+            return;
+        }
+
+        const dayData = currentItinerary.days.find(d => d.day === day);
+        if (!dayData) {
+            Notifications.show('El día del itinerario no es válido.', 'error');
+            return;
+        }
+
+        if (activityId) {
+            // Editar
+            const activityIndex = dayData.activities.findIndex(a => a.id === activityId);
+            if (activityIndex > -1) {
+                dayData.activities[activityIndex] = { ...dayData.activities[activityIndex], ...newActivityData };
+            }
+        } else {
+            // Crear
+            dayData.activities.push(newActivityData);
+        }
+
+        try {
+            const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+            await setDoc(itineraryRef, currentItinerary);
+            Notifications.show('Actividad guardada con éxito.', 'success');
+            this.closeActivityModal();
+        } catch (error) {
+            console.error("Error al guardar la actividad:", error);
+            Notifications.show('Error al guardar la actividad.', 'error');
+        }
     }
 };
 
@@ -527,4 +652,3 @@ onAuthStateChanged(auth, (user) => {
 });
 
 window.ItineraryHandler = ItineraryHandler;
-

@@ -83,8 +83,7 @@ export const TripsManager = {
           dateEnd: tripData.dateEnd,
           createdBy: userId,
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          shareCode: shareCode,
+          shareCode: shareCode, // Código compartible
           creatorEmail: auth.currentUser.email
         },
         members: [userId],
@@ -161,11 +160,6 @@ export const TripsManager = {
         };
 
         localStorage.setItem('currentTripId', tripId);
-        
-        // Actualizar updatedAt
-        await updateDoc(tripRef, {
-          'info.updatedAt': new Date().toISOString()
-        });
 
         console.log('✅ Trip seleccionado:', this.currentTrip.info.name);
         
@@ -431,16 +425,7 @@ export const TripsManager = {
 
     container.innerHTML = `
       <div class="space-y-3">
-        ${this.userTrips.map(trip => {
-          const updatedDate = trip.info.updatedAt ? new Date(trip.info.updatedAt).toLocaleDateString('es', { 
-            year: 'numeric', 
-            month: 'short', 
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          }) : '';
-          
-          return `
+        ${this.userTrips.map(trip => `
           <div 
             class="p-4 bg-white dark:bg-gray-700 rounded-lg border-2 ${
               this.currentTrip && this.currentTrip.id === trip.id 
@@ -460,16 +445,11 @@ export const TripsManager = {
                   👥 ${trip.members.length} miembro${trip.members.length > 1 ? 's' : ''}
                   ${trip.info.shareCode ? `• 🔗 ${trip.info.shareCode}` : ''}
                 </p>
-                ${updatedDate ? `
-                  <p class="text-xs text-gray-400 dark:text-gray-600 mt-1">
-                    📅 Última actualización: ${updatedDate}
-                  </p>
-                ` : ''}
               </div>
               ${this.currentTrip && this.currentTrip.id === trip.id ? '<span class="text-blue-500 text-2xl">✓</span>' : ''}
             </div>
           </div>
-        `}).join('')}
+        `).join('')}
         
         <button 
           onclick="TripsManager.showCreateTripModal()" 
@@ -490,136 +470,10 @@ export const TripsManager = {
 
   // Mostrar modal para crear viaje
   showCreateTripModal() {
-    // 🔥 ARREGLO: Cerrar el modal de lista de viajes si está abierto
-    this.closeTripsListModal();
-    
     const modal = document.getElementById('modal-create-trip');
     if (modal) {
       modal.classList.add('active');
       document.body.style.overflow = 'hidden';
-    }
-  },
-
-  // 🆕 NUEVO: Mostrar formulario simple
-  showSimpleTripForm() {
-    // Cerrar modal actual
-    this.closeCreateTripModal();
-    
-    // Crear formulario simple
-    const formHtml = `
-      <div id="simpleTripFormModal" class="modal active" style="z-index: 10000;">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          <div class="p-6">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-2xl font-bold dark:text-white">📋 Crear Viaje Simple</h2>
-              <button onclick="TripsManager.closeSimpleTripForm()" class="text-3xl hover:text-red-600 transition">&times;</button>
-            </div>
-
-            <form id="simpleTripForm" class="space-y-4">
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nombre del Viaje *</label>
-                <input 
-                  id="simpleTripName" 
-                  type="text" 
-                  required
-                  class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  placeholder="Ej: Viaje a Japón 2025"
-                >
-              </div>
-
-              <div class="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Fecha Inicio *</label>
-                  <input 
-                    id="simpleTripDateStart" 
-                    type="date" 
-                    required
-                    class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  >
-                </div>
-                <div>
-                  <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Fecha Fin *</label>
-                  <input 
-                    id="simpleTripDateEnd" 
-                    type="date" 
-                    required
-                    class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  >
-                </div>
-              </div>
-
-              <div class="flex gap-3 mt-6">
-                <button 
-                  type="button"
-                  onclick="TripsManager.closeSimpleTripForm()"
-                  class="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white py-3 rounded-lg hover:bg-gray-400 transition font-semibold"
-                >
-                  Cancelar
-                </button>
-                <button 
-                  type="submit"
-                  class="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
-                >
-                  ✨ Crear Viaje
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', formHtml);
-    
-    // Setup form handler
-    document.getElementById('simpleTripForm').addEventListener('submit', (e) => {
-      this.handleSimpleTripForm(e);
-    });
-  },
-
-  closeSimpleTripForm() {
-    const modal = document.getElementById('simpleTripFormModal');
-    if (modal) {
-      modal.remove();
-      document.body.style.overflow = '';
-    }
-  },
-
-  async handleSimpleTripForm(e) {
-    e.preventDefault();
-
-    const formData = {
-      name: document.getElementById('simpleTripName').value,
-      destination: 'Japón',
-      dateStart: document.getElementById('simpleTripDateStart').value,
-      dateEnd: document.getElementById('simpleTripDateEnd').value,
-      useTemplate: false
-    };
-
-    if (!formData.name || !formData.dateStart || !formData.dateEnd) {
-      alert('⚠️ Por favor completa todos los campos');
-      return;
-    }
-
-    if (new Date(formData.dateEnd) <= new Date(formData.dateStart)) {
-      alert('⚠️ La fecha de fin debe ser posterior a la fecha de inicio');
-      return;
-    }
-
-    await this.createTrip(formData);
-    this.closeSimpleTripForm();
-  },
-
-  // 🆕 NUEVO: Mostrar wizard completo
-  showFullTripWizard() {
-    // Cerrar modal actual
-    this.closeCreateTripModal();
-    
-    // Llamar al wizard del ItineraryBuilder
-    if (window.ItineraryBuilder) {
-      window.ItineraryBuilder.showCreateItineraryWizard();
-    } else {
-      Notifications.error('El sistema de itinerarios no está disponible');
     }
   },
 
@@ -629,7 +483,53 @@ export const TripsManager = {
     if (modal) {
       modal.classList.remove('active');
       document.body.style.overflow = '';
+
+      const form = document.getElementById('createTripForm');
+      if (form) form.reset();
     }
+  },
+
+  // Manejar formulario de crear viaje
+  async handleCreateTripForm(e) {
+    e.preventDefault();
+
+    const useTemplate = document.getElementById('useItineraryTemplate').checked;
+
+    const formData = {
+      name: document.getElementById('tripName').value,
+      destination: document.getElementById('tripDestination').value || 'Japón',
+      dateStart: document.getElementById('tripDateStart').value,
+      dateEnd: document.getElementById('tripDateEnd').value,
+      useTemplate: useTemplate, // 🔥 NUEVO: Solo usar plantilla si está marcado
+      outboundFlight: {
+        flightNumber: document.getElementById('outboundFlightNumber').value,
+        airline: document.getElementById('outboundAirline').value,
+        date: document.getElementById('outboundDate').value,
+        from: document.getElementById('outboundFrom').value,
+        to: document.getElementById('outboundTo').value
+      },
+      returnFlight: {
+        flightNumber: document.getElementById('returnFlightNumber').value,
+        airline: document.getElementById('returnAirline').value,
+        date: document.getElementById('returnDate').value,
+        from: document.getElementById('returnFrom').value,
+        to: document.getElementById('returnTo').value
+      },
+      accommodations: []
+    };
+
+    if (!formData.name || !formData.dateStart || !formData.dateEnd) {
+      alert('⚠️ Por favor completa los campos obligatorios (Nombre y Fechas)');
+      return;
+    }
+
+    if (new Date(formData.dateEnd) <= new Date(formData.dateStart)) {
+      alert('⚠️ La fecha de fin debe ser posterior a la fecha de inicio');
+      return;
+    }
+
+    await this.createTrip(formData);
+    this.closeCreateTripModal();
   },
 
   // Actualizar header con info del trip actual
