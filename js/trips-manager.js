@@ -12,7 +12,8 @@ import {
   where,
   onSnapshot,
   updateDoc,
-  arrayUnion
+  arrayUnion,
+  deleteDoc
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 export const TripsManager = {
@@ -446,7 +447,12 @@ export const TripsManager = {
                   ${trip.info.shareCode ? `• 🔗 ${trip.info.shareCode}` : ''}
                 </p>
               </div>
-              ${this.currentTrip && this.currentTrip.id === trip.id ? '<span class="text-blue-500 text-2xl">✓</span>' : ''}
+              <div class="flex items-center gap-2">
+                ${this.currentTrip && this.currentTrip.id === trip.id ? '<span class="text-blue-500 text-2xl">✓</span>' : ''}
+                <button onclick="event.stopPropagation(); TripsManager.deleteTrip('${trip.id}')" class="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition" title="Eliminar Viaje">
+                    <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
+                </button>
+              </div>
             </div>
           </div>
         `).join('')}
@@ -532,7 +538,7 @@ export const TripsManager = {
     this.closeCreateTripModal();
   },
 
-  // Actualizar header con info del trip actual
+  // Actualizar header con info del trip actual (NUEVO DISEÑO)
   updateTripHeader() {
     const headerContainer = document.getElementById('currentTripHeader');
     if (!headerContainer || !this.currentTrip) return;
@@ -541,44 +547,57 @@ export const TripsManager = {
     const endDate = new Date(this.currentTrip.info.dateEnd);
     const daysUntil = Math.ceil((startDate - new Date()) / (1000 * 60 * 60 * 24));
 
+    const collaborationStatus = this.currentTrip.members.length > 1
+        ? `🤝 Viaje colaborativo • 🔗 ${this.currentTrip.info.shareCode}`
+        : '👤 Viaje individual';
+
     headerContainer.innerHTML = `
-      <div class="flex items-center gap-3 flex-wrap">
-        <div class="flex-1 min-w-[250px]">
-          <h2 class="text-xl font-bold text-white">${this.currentTrip.info.name}</h2>
-          <p class="text-sm text-white/80">
-            ${startDate.toLocaleDateString('es')} - ${endDate.toLocaleDateString('es')}
-          </p>
-          <p class="text-xs text-white/60">
-            ${this.currentTrip.members.length > 1 ? '🤝 Viaje colaborativo' : '👤 Viaje individual'}
-            ${this.currentTrip.info.shareCode ? ` • 🔗 ${this.currentTrip.info.shareCode}` : ''}
-          </p>
+      <div class="flex justify-between items-center w-full flex-wrap gap-4">
+        <!-- Título principal y detalles del viaje -->
+        <div class="flex-1">
+            <h2 class="text-2xl md:text-3xl font-bold text-white animate__animated animate__fadeInDown">${this.currentTrip.info.name}</h2>
+            <div class="flex items-center gap-4 text-white/80 text-xs mt-2 flex-wrap">
+                <span>📅 ${startDate.toLocaleDateString('es', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                <span class="hidden md:inline">|</span>
+                <span>${collaborationStatus}</span>
+            </div>
         </div>
-        <div class="text-right">
-          <p class="text-sm text-white/80">
-            ${daysUntil > 0 ? `Faltan ${daysUntil} días` : daysUntil === 0 ? '¡HOY!' : 'En curso'}
-          </p>
-          <div class="flex gap-2 mt-2 flex-wrap">
+
+        <!-- Acciones y Countdown -->
+        <div class="flex items-center gap-3">
+            <div class="text-right hidden sm:block">
+                <div class="text-lg font-bold text-white">${daysUntil > 0 ? `${daysUntil}` : '🎉'}</div>
+                <div class="text-xs text-white/70">${daysUntil > 0 ? `días restantes` : '¡A viajar!'}</div>
+            </div>
             <button 
               onclick="TripsManager.showTripsListModal()"
-              class="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition"
+              class="bg-white/10 hover:bg-white/20 text-white font-semibold py-2 px-4 rounded-lg transition backdrop-blur-sm"
             >
-              Cambiar viaje
+              Mis Viajes
             </button>
             <button 
+              onclick="TripsManager.showCreateTripModal()"
+              class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition backdrop-blur-sm flex items-center gap-2 animate__animated animate__pulse animate__infinite--hover"
+            >
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
+                <span>Agregar Viaje</span>
+            </button>
+             <button
               onclick="TripsManager.showShareCode()"
-              class="text-xs bg-green-500/80 hover:bg-green-500 px-3 py-1 rounded transition"
+              class="bg-green-500/90 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg transition backdrop-blur-sm flex items-center gap-2"
               title="Compartir código del viaje"
             >
-              🔗 Compartir
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 4a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V4z"></path></svg>
+              <span>Compartir</span>
             </button>
             <button 
               onclick="TripsManager.inviteMemberByEmail()"
-              class="text-xs bg-blue-500/80 hover:bg-blue-500 px-3 py-1 rounded transition"
+              class="bg-purple-500/90 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg transition backdrop-blur-sm flex items-center gap-2"
               title="Invitar por email"
             >
-              📧 Invitar
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg>
+                <span>Invitar</span>
             </button>
-          </div>
         </div>
       </div>
     `;
@@ -631,6 +650,51 @@ export const TripsManager = {
     if (modal) {
       modal.classList.remove('active');
       document.body.style.overflow = '';
+    }
+  },
+
+  // NUEVO: Eliminar un viaje
+  async deleteTrip(tripId) {
+    const tripToDelete = this.userTrips.find(t => t.id === tripId);
+    if (!tripToDelete) {
+      Notifications.error('No se encontró el viaje a eliminar.');
+      return;
+    }
+
+    // Doble confirmación
+    if (!confirm(`¿Estás seguro de que quieres eliminar el viaje "${tripToDelete.info.name}"?`)) {
+      return;
+    }
+    if (!confirm(`Esta acción es PERMANENTE y no se puede deshacer. Se borrarán todos los datos asociados (itinerario, gastos, etc.).\n\n¿REALMENTE quieres continuar?`)) {
+      return;
+    }
+
+    try {
+      // Eliminar sub-colecciones (importante para una limpieza completa)
+      await deleteDoc(doc(db, `trips/${tripId}/data`, 'itinerary'));
+      await deleteDoc(doc(db, `trips/${tripId}/data`, 'notes'));
+      await deleteDoc(doc(db, `trips/${tripId}/activities`, 'checklist'));
+
+      // Eliminar el documento principal del viaje
+      await deleteDoc(doc(db, 'trips', tripId));
+
+      Notifications.success(`Viaje "${tripToDelete.info.name}" eliminado.`);
+
+      // Si el viaje eliminado era el actual, limpiar el estado
+      if (this.currentTrip && this.currentTrip.id === tripId) {
+        this.currentTrip = null;
+        localStorage.removeItem('currentTripId');
+
+        // Si quedan más viajes, selecciona el primero. Si no, muestra el estado vacío.
+        if (this.userTrips.length > 0) {
+          this.selectTrip(this.userTrips[0].id);
+        } else {
+          this.updateTripHeaderEmpty();
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error eliminando el viaje:', error);
+      Notifications.error('Ocurrió un error al eliminar el viaje.');
     }
   },
 
