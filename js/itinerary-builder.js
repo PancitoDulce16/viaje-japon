@@ -501,7 +501,14 @@ export const ItineraryBuilder = {
     
     console.log('📋 Datos del Itinerario:', data);
     
-    await this.createItinerario(data);
+    // 🔥 NUEVO: Si no hay trip, crear primero el trip
+    if (!window.TripsManager || !window.TripsManager.currentTrip) {
+      console.log('⚠️ No hay trip, creando trip primero...');
+      await this.createTripWithItinerary(data);
+    } else {
+      // Si ya hay trip, solo crear el itinerario
+      await this.createItinerario(data);
+    }
     
     this.closeCreateItineraryWizard();
   },
@@ -530,6 +537,84 @@ export const ItineraryBuilder = {
       document.body.style.overflow = '';
     }
     this.currentStep = 1;
+  },
+
+  // 🔥 NUEVO: Crear trip + itinerario juntos
+  async createTripWithItinerary(data) {
+    if (!auth.currentUser) {
+      Notifications.warning('Debes iniciar sesión');
+      return;
+    }
+
+    try {
+      // Crear el trip primero
+      const userId = auth.currentUser.uid;
+      const tripId = `trip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const shareCode = window.TripsManager.generateTripCode();
+
+      const newTrip = {
+        info: {
+          name: data.name,
+          destination: 'Japón',
+          dateStart: data.startDate,
+          dateEnd: data.endDate,
+          createdBy: userId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          shareCode: shareCode,
+          creatorEmail: auth.currentUser.email
+        },
+        members: [userId],
+        memberEmails: [auth.currentUser.email],
+        flights: {
+          outbound: data.outboundFlight,
+          return: data.returnFlight
+        },
+        accommodations: [],
+        cities: data.cities,
+        activities: {
+          checklist: {}
+        },
+        expenses: []
+      };
+
+      await setDoc(doc(db, 'trips', tripId), newTrip);
+      console.log('✅ Trip creado:', tripId);
+
+      // Seleccionar el trip recién creado
+      await window.TripsManager.selectTrip(tripId);
+
+      // Ahora crear el itinerario
+      const days = this.generateDays(data.startDate, data.endDate, data.template);
+      
+      const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+      await setDoc(itineraryRef, {
+        name: data.name,
+        startDate: data.startDate,
+        endDate: data.endDate,
+        cities: data.cities,
+        categories: data.categories,
+        template: data.template,
+        days: days,
+        flights: {
+          outbound: data.outboundFlight,
+          return: data.returnFlight
+        },
+        createdAt: new Date().toISOString(),
+        createdBy: auth.currentUser.email
+      });
+
+      Notifications.success(`✨ Viaje "${data.name}" creado con itinerario completo! 🔗 ${shareCode}`, 6000);
+      
+      if (window.ItineraryHandler && window.ItineraryHandler.reinitialize) {
+        window.ItineraryHandler.reinitialize();
+      }
+      
+      console.log('✅ Trip + Itinerario creado exitosamente');
+    } catch (error) {
+      console.error('❌ Error:', error);
+      Notifications.error('Error al crear el viaje con itinerario');
+    }
   },
 
   async createItinerario(data) {
