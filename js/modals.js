@@ -434,24 +434,58 @@ export const ModalRenderer = {
 
                             <!-- Plantilla de Itinerario -->
                             <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
-                                <h3 class="font-bold text-lg mb-4 dark:text-white">📋 Itinerario</h3>
-                                <div class="p-4 bg-white dark:bg-gray-700 rounded-lg border-2 border-yellow-400 dark:border-yellow-600">
-                                    <label class="flex items-start gap-3 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            id="useItineraryTemplate"
-                                            class="mt-1 w-5 h-5 accent-yellow-500"
+                                <h3 class="font-bold text-lg mb-4 dark:text-white">📋 Itinerario Inicial</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                    ¿Quieres comenzar con un itinerario pre-planeado o crear el tuyo desde cero?
+                                </p>
+                                
+                                <div class="grid md:grid-cols-2 gap-3">
+                                    <!-- Opción 1: Desde Cero -->
+                                    <label class="cursor-pointer">
+                                        <input 
+                                            type="radio" 
+                                            name="templateOption" 
+                                            value="blank"
+                                            id="templateBlank"
+                                            class="hidden peer"
+                                            checked
                                         >
-                                        <div>
-                                            <p class="font-semibold text-gray-800 dark:text-white mb-1">
-                                                ¿Usar plantilla de itinerario de 15 días?
-                                            </p>
-                                            <p class="text-sm text-gray-600 dark:text-gray-400">
-                                                Incluye un itinerario pre-planeado con actividades, transporte y costos estimados para Japón.
-                                                Puedes personalizarlo después o empezar desde cero.
+                                        <div class="p-4 bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-300 dark:border-gray-600 peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/30 transition hover:shadow-md">
+                                            <div class="text-3xl mb-2">🏛️</div>
+                                            <p class="font-bold dark:text-white mb-1">Desde Cero</p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400">
+                                                Crea tu itinerario personalizado. Empieza con un viaje vacío.
                                             </p>
                                         </div>
                                     </label>
+
+                                    <!-- Opción 2: Plantilla de 15 días -->
+                                    <label class="cursor-pointer">
+                                        <input 
+                                            type="radio" 
+                                            name="templateOption" 
+                                            value="template15"
+                                            id="template15Days"
+                                            class="hidden peer"
+                                        >
+                                        <div class="p-4 bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-300 dark:border-gray-600 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 dark:peer-checked:bg-yellow-900/30 transition hover:shadow-md">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <span class="text-3xl">✨</span>
+                                                <span class="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full font-bold">POPULAR</span>
+                                            </div>
+                                            <p class="font-bold dark:text-white mb-1">Plantilla 15 Días</p>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400">
+                                                Itinerario completo con actividades, transporte y costos para Japón.
+                                            </p>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <!-- Info adicional -->
+                                <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                    <p class="text-xs text-gray-700 dark:text-gray-300">
+                                        💡 <strong>Tip:</strong> Si eliges la plantilla, puedes modificar, agregar o eliminar actividades después.
+                                    </p>
                                 </div>
                             </div>
 

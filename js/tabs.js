@@ -5,12 +5,12 @@ import { AppUtils } from './utils.js';
 
 export const TabsHandler = {
     renderAllTabs() {
-        this.renderFlightsTab();
         this.renderUtilsTab();
         MapHandler.renderMap();
     },
 
-    renderFlightsTab() {
+    renderFlightsTab_OLD() {
+        // Este método ya no se usa - ahora FlightsHandler.init() maneja todo
         const container = document.getElementById('content-flights');
         if (!container) return;
         

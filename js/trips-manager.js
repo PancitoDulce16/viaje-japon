@@ -176,6 +176,12 @@ export const TripsManager = {
         if (window.PreparationHandler && window.PreparationHandler.reinitialize) {
           window.PreparationHandler.reinitialize();
         }
+        if (window.FlightsHandler && window.FlightsHandler.init) {
+          window.FlightsHandler.init(tripId);
+        }
+        if (window.HotelsHandler && window.HotelsHandler.init) {
+          window.HotelsHandler.init(tripId);
+        }
         if (window.AppCore && window.AppCore.reinitialize) {
           window.AppCore.reinitialize();
         }
@@ -499,7 +505,9 @@ export const TripsManager = {
   async handleCreateTripForm(e) {
     e.preventDefault();
 
-    const useTemplate = document.getElementById('useItineraryTemplate').checked;
+    // Leer el radio button seleccionado
+    const templateOption = document.querySelector('input[name="templateOption"]:checked')?.value;
+    const useTemplate = templateOption === 'template15'; // Solo usar plantilla si seleccionaron template15
 
     const formData = {
       name: document.getElementById('tripName').value,

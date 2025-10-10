@@ -7,6 +7,8 @@ import { MapHandler } from './map.js';
 import { AttractionsHandler } from './attractions.js';
 import { PreparationHandler } from './preparation.js';
 import { TransportHandler } from './transport.js';
+import { FlightsHandler } from './flights.js';
+import { HotelsHandler } from './hotels.js';
 import { Notifications } from './notifications.js';
 import { ItineraryBuilder } from './itinerary-builder.js';
 import { ItineraryBuilderExtensions } from './itinerary-builder-part2.js';
@@ -34,6 +36,9 @@ function initApp() {
         // Inicializar el resto de la app
         ModalRenderer.renderModals();
         
+        // Obtener tripId actual (si existe)
+        const currentTripId = localStorage.getItem('currentTripId');
+        
         // Solo inicializar estos si el usuario está autenticado
         // (se verificará dentro de cada módulo)
         ItineraryHandler.init();
@@ -42,6 +47,8 @@ function initApp() {
         TabsHandler.renderAllTabs();
         AttractionsHandler.renderAttractions();
         PreparationHandler.init();
+        FlightsHandler.init(currentTripId);
+        HotelsHandler.init(currentTripId);
         TransportHandler.renderTransport();
         AppCore.init();
         
