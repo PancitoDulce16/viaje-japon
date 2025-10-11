@@ -505,21 +505,34 @@ async function saveReorderedActivities() {
 }
 
 export const ItineraryHandler = {
+    // 🔥 Exponer currentItinerary para que otros módulos puedan accederlo
+    get currentItinerary() {
+        return currentItinerary;
+    },
+
+    // 🔥 Asegurar que el itinerario esté cargado (útil para otros módulos)
+    async ensureLoaded() {
+        if (!currentItinerary) {
+            await loadItinerary();
+        }
+        return currentItinerary;
+    },
+
     async init() {
         const container = document.getElementById('content-itinerary');
         if (!container) return;
-        
+
         // Verificar si hay trip seleccionado
         const tripId = getCurrentTripId();
-        
+
         if (!tripId) {
           renderEmptyState();
           return;
         }
-        
+
         // Cargar itinerario
         await loadItinerary();
-        
+
         // Si no hay itinerario creado, mostrar pantalla de creación
         if (!currentItinerary) {
           renderNoItinerary();

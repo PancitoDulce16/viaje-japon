@@ -286,13 +286,17 @@ export const AttractionsHandler = {
     },
 
     // 🔥 Modal para seleccionar día
-    showDaySelectionModal(attraction) {
+    async showDaySelectionModal(attraction) {
+        // 🔥 Asegurar que el itinerario esté cargado
+        if (window.ItineraryHandler && typeof window.ItineraryHandler.ensureLoaded === 'function') {
+            await window.ItineraryHandler.ensureLoaded();
+        }
+
         // Obtener días del itinerario actual
-        const currentItinerary = window.ItineraryHandler?.currentItinerary || 
-                                 JSON.parse(localStorage.getItem('currentItinerary') || 'null');
-        
-        if (!currentItinerary || !currentItinerary.days) {
-            alert('⚠️ Primero debes crear un itinerario');
+        const currentItinerary = window.ItineraryHandler?.currentItinerary;
+
+        if (!currentItinerary || !currentItinerary.days || !currentItinerary.days.length) {
+            alert('⚠️ Primero debes crear un itinerario en la sección de Itinerario');
             return;
         }
 
