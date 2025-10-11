@@ -312,23 +312,57 @@ function renderTripSelector() {
 function renderDaySelector() {
     const container = document.getElementById('daySelector');
     if (!container) return;
-    
+
     const itinerary = currentItinerary;
     if (!itinerary || !itinerary.days) {
         container.innerHTML = '';
         return;
     }
     const days = itinerary.days || [];
-    
+
     container.innerHTML = days.map(day => `
-        <button data-day="${day.day}" class="day-btn px-4 py-2 rounded-lg whitespace-nowrap font-medium transition-all ${
-            currentDay === day.day 
-                ? 'bg-red-600 text-white shadow-md' 
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+        <button data-day="${day.day}" class="day-btn-japan ${
+            currentDay === day.day ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
         }">
-            Día ${day.day}
+            <i class="far fa-calendar-day"></i> Día ${day.day}
         </button>
     `).join('');
+}
+
+/**
+ * Detectar tipo de actividad basado en palabras clave
+ * @param {Object} activity - Actividad
+ * @returns {string} Tipo de actividad
+ */
+function detectActivityType(activity) {
+    const title = (activity.title || '').toLowerCase();
+    const desc = (activity.desc || '').toLowerCase();
+    const combined = `${title} ${desc}`;
+
+    if (combined.match(/templo|santuario|shrine|temple|pagoda|torii/i)) return 'temple';
+    if (combined.match(/comer|comida|desayuno|almuerzo|cena|restaurante|ramen|sushi|food|lunch|dinner|breakfast/i)) return 'food';
+    if (combined.match(/tren|metro|bus|taxi|transporte|train|subway|transport|transfer/i)) return 'transport';
+    if (combined.match(/comprar|shopping|tienda|mercado|souvenir|shop/i)) return 'shopping';
+    if (combined.match(/parque|jardín|naturaleza|monte|montaña|park|garden|nature|mountain|fuji/i)) return 'nature';
+
+    return 'default';
+}
+
+/**
+ * Obtener icono FontAwesome según tipo de actividad
+ * @param {string} type - Tipo de actividad
+ * @returns {string} Clase de icono
+ */
+function getActivityIcon(type) {
+    const icons = {
+        temple: 'fas fa-torii-gate',
+        food: 'fas fa-utensils',
+        transport: 'fas fa-train',
+        shopping: 'fas fa-shopping-bag',
+        nature: 'fas fa-tree',
+        default: 'fas fa-map-marker-alt'
+    };
+    return icons[type] || icons.default;
 }
 
 /**
@@ -379,124 +413,178 @@ function renderDayOverview(day) {
     let syncStatus;
 
     if (!auth.currentUser) {
-      syncStatus = '<span class="text-xs text-yellow-600 dark:text-yellow-400">📱 Solo local</span>';
+      syncStatus = '<span class="text-xs text-yellow-600 dark:text-yellow-400"><i class="fas fa-mobile-alt"></i> Solo local</span>';
     } else if (tripId) {
-      syncStatus = '<span class="text-xs text-green-600 dark:text-green-400">🤝 Modo Colaborativo</span>';
+      syncStatus = '<span class="text-xs text-green-600 dark:text-green-400"><i class="fas fa-users"></i> Modo Colaborativo</span>';
     } else {
-      syncStatus = '<span class="text-xs text-blue-600 dark:text-blue-400">☁️ Sincronizado</span>';
+      syncStatus = '<span class="text-xs text-blue-600 dark:text-blue-400"><i class="fas fa-cloud"></i> Sincronizado</span>';
     }
-    
+
     container.innerHTML = `
-        <div class="flex items-center gap-2 mb-4">
-            <span class="text-2xl">📅</span>
-            <h2 class="text-2xl font-bold dark:text-white">Día ${day.day}</h2>
-        </div>
-        <div class="mb-4">
-            <div class="flex justify-between text-sm mb-1 dark:text-gray-300">
-                <span>Progreso</span>
-                <span>${completed}/${day.activities.length}</span>
-            </div>
-            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div class="bg-red-600 h-2 rounded-full transition-all duration-500" style="width: ${progress}%"></div>
-            </div>
-            <div class="mt-2 text-right">
-                ${syncStatus}
-            </div>
-        </div>
-
-        <!-- ⏱️ Estadísticas del día -->
-        <div class="mb-4 space-y-2">
-            <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div class="flex items-center gap-2">
-                    <span class="text-lg">⏱️</span>
-                    <span class="text-sm font-semibold dark:text-white">Tiempo total</span>
+        <div class="day-overview-japan">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 bg-gradient-sakura rounded-full flex items-center justify-center text-white text-xl font-bold">
+                    ${day.day}
                 </div>
-                <span class="text-sm font-bold text-blue-600 dark:text-blue-400">${totalTime}</span>
-            </div>
-            <div class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <div class="flex items-center gap-2">
-                    <span class="text-lg">💰</span>
-                    <span class="text-sm font-semibold dark:text-white">Presupuesto</span>
+                <div>
+                    <h2 class="text-xl font-bold dark:text-white font-japanese">Día ${day.day}</h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">${day.date}</p>
                 </div>
-                <span class="text-sm font-bold text-green-600 dark:text-green-400">¥${totalBudget.toLocaleString()}</span>
             </div>
-        </div>
 
-        <div class="space-y-3 text-sm">
-            <p class="font-semibold text-base dark:text-gray-300">${day.date}</p>
-            <p class="font-bold text-lg text-red-600 dark:text-red-400">${day.title}</p>
-            ${day.hotel ? `<p class="dark:text-gray-300">🏨 ${day.hotel}</p>` : ''}
-            ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-400">📍 ${day.location}</p>` : ''}
-        </div>
-        <div class="mt-6">
-            <button
-                type="button"
-                id="addActivityBtn_${day.day}"
-                class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition"
-            >
-                + Añadir Actividad
-            </button>
+            <div class="mb-6">
+                <div class="flex justify-between text-sm mb-2 dark:text-gray-300 font-japanese">
+                    <span>Progreso del día</span>
+                    <span class="font-bold">${completed}/${day.activities.length}</span>
+                </div>
+                <div class="progress-japan-itinerary">
+                    <div class="progress-bar-japan-itinerary" style="width: ${progress}%"></div>
+                </div>
+                <div class="mt-2 text-right">
+                    ${syncStatus}
+                </div>
+            </div>
+
+            <!-- Estadísticas del día -->
+            <div class="mb-6 space-y-3">
+                <div class="stat-card-japan time">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-clock text-xl text-blue-600 dark:text-blue-400"></i>
+                        <span class="text-sm font-semibold dark:text-white">Tiempo total</span>
+                    </div>
+                    <span class="text-sm font-bold text-blue-600 dark:text-blue-400">${totalTime}</span>
+                </div>
+                <div class="stat-card-japan budget">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-yen-sign text-xl text-green-600 dark:text-green-400"></i>
+                        <span class="text-sm font-semibold dark:text-white">Presupuesto</span>
+                    </div>
+                    <span class="text-sm font-bold text-green-600 dark:text-green-400">¥${totalBudget.toLocaleString()}</span>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-sm border-t border-gray-200 dark:border-gray-700 pt-4">
+                <div class="bg-gradient-sakura/10 dark:bg-sakura-pink/20 p-3 rounded-lg">
+                    <p class="font-bold text-base text-japan-red dark:text-sakura-pink mb-1">${day.title}</p>
+                    ${day.hotel ? `<p class="text-gray-700 dark:text-gray-300 flex items-center gap-2 mt-2"><i class="fas fa-hotel text-japan-red dark:text-sakura-pink"></i> ${day.hotel}</p>` : ''}
+                    ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-1"><i class="fas fa-map-marker-alt"></i> ${day.location}</p>` : ''}
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <button
+                    type="button"
+                    id="addActivityBtn_${day.day}"
+                    class="btn-japan w-full flex items-center justify-center gap-2"
+                >
+                    <i class="fas fa-plus-circle"></i> Añadir Actividad
+                </button>
+            </div>
         </div>
     `;
-     
 }
 
 function renderActivities(day) {
     const container = document.getElementById('activitiesTimeline');
     if (!container) return;
-    
+
     // 🔥 Limpiar Sortable anterior si existe
     if (sortableInstance) {
         sortableInstance.destroy();
         sortableInstance = null;
     }
-    
-    container.innerHTML = day.activities.map((act, i) => `
-        <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md border-l-4 border-red-500 fade-in transition-all hover:shadow-lg ${
-            checkedActivities[act.id] ? 'opacity-60' : ''
-        }" style="animation-delay: ${i * 0.05}s">
-            <div class="p-5 flex items-start gap-4">
-                <input 
-                    type="checkbox" 
-                    data-id="${act.id}" 
-                    ${checkedActivities[act.id] ? 'checked' : ''} 
-                    class="activity-checkbox mt-1 w-5 h-5 cursor-pointer accent-red-600 flex-shrink-0"
-                >
-                <div class="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-lg text-2xl flex-shrink-0">
-                    ${act.icon}
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">${act.time}</span>
-                                ${act.cost > 0 ? `<span class="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded">¥${act.cost.toLocaleString()}</span>` : ''}
+
+    container.innerHTML = `
+        <div class="itinerary-timeline">
+            ${day.activities.map((act, i) => {
+                const activityType = detectActivityType(act);
+                const iconClass = getActivityIcon(activityType);
+                const isCompleted = checkedActivities[act.id];
+
+                return `
+                    <div class="activity-card-japan fade-in-up ${isCompleted ? 'completed' : ''}" style="animation-delay: ${i * 0.05}s; margin-bottom: 1.5rem;">
+                        <div class="flex items-start gap-4">
+                            <input
+                                type="checkbox"
+                                data-id="${act.id}"
+                                ${isCompleted ? 'checked' : ''}
+                                class="activity-checkbox mt-1 w-5 h-5 cursor-pointer accent-red-600 flex-shrink-0"
+                            >
+                            <div class="activity-icon-japan ${activityType}">
+                                <i class="${iconClass} text-white"></i>
                             </div>
-                            <h3 class="text-lg font-bold dark:text-white mb-1">${act.title}</h3>
-                        </div>
-                        <div class="flex gap-2 flex-shrink-0">
-                            <button type="button" data-action="edit" data-activity-id="${act.id}" data-day="${day.day}" class="activity-edit-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-                                <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828zM5 12V7a2 2 0 012-2h4l-2 2H7v5l-2 2z"></path></svg>
-                            </button>
-                            <button type="button" data-action="delete" data-activity-id="${act.id}" data-day="${day.day}" class="activity-delete-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-                                <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
-                            </button>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2 flex-wrap">
+                                            <span class="activity-type-badge ${activityType}">
+                                                <i class="${iconClass}"></i>
+                                                ${activityType === 'temple' ? 'Templo' :
+                                                  activityType === 'food' ? 'Comida' :
+                                                  activityType === 'transport' ? 'Transporte' :
+                                                  activityType === 'shopping' ? 'Compras' :
+                                                  activityType === 'nature' ? 'Naturaleza' : 'Actividad'}
+                                            </span>
+                                            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                                                <i class="far fa-clock"></i> ${act.time}
+                                            </span>
+                                            ${act.cost > 0 ? `
+                                                <span class="badge-japan badge-matcha">
+                                                    <i class="fas fa-yen-sign"></i> ${act.cost.toLocaleString()}
+                                                </span>
+                                            ` : ''}
+                                        </div>
+                                        <h3 class="text-lg font-bold dark:text-white mb-1 font-japanese ${isCompleted ? 'line-through' : ''}">${act.title}</h3>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">${act.desc}</p>
+                                        ${act.station ? `
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-1">
+                                                <i class="fas fa-subway"></i> ${act.station}
+                                            </p>
+                                        ` : ''}
+                                    </div>
+                                    <div class="flex gap-1 flex-shrink-0 ml-2">
+                                        <button
+                                            type="button"
+                                            data-action="edit"
+                                            data-activity-id="${act.id}"
+                                            data-day="${day.day}"
+                                            class="activity-edit-btn p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                                            title="Editar"
+                                        >
+                                            <i class="fas fa-edit text-gray-600 dark:text-gray-400"></i>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            data-action="delete"
+                                            data-activity-id="${act.id}"
+                                            data-day="${day.day}"
+                                            class="activity-delete-btn p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+                                            title="Eliminar"
+                                        >
+                                            <i class="fas fa-trash-alt text-red-600 dark:text-red-400"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                ${act.train ? `
+                                    <div class="train-info-japan">
+                                        <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1 flex items-center gap-1">
+                                            <i class="fas fa-train"></i> ${act.train.line}
+                                        </p>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                                            <i class="fas fa-arrow-right"></i> ${act.train.from} → ${act.train.to}
+                                        </p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+                                            <i class="far fa-clock"></i> ${act.train.duration}
+                                        </p>
+                                    </div>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">${act.desc}</p>
-                    ${act.station ? `<p class="text-xs text-gray-500 dark:text-gray-500 mt-2">🚉 ${act.station}</p>` : ''}
-                    ${act.train ? `
-                        <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-2 border-blue-500">
-                            <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">🚄 ${act.train.line}</p>
-                            <p class="text-xs text-gray-600 dark:text-gray-400">${act.train.from} → ${act.train.to}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-500">⏱️ ${act.train.duration}</p>
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
+                `;
+            }).join('')}
         </div>
-    `).join('');
-    
+    `;
 }
 
 // 🔥 NUEVO: Inicializar drag & drop con SortableJS
@@ -506,34 +594,45 @@ function initializeDragAndDrop(container) {
         return;
     }
 
-    sortableInstance = new Sortable(container, {
-        animation: 200,
-        handle: '.activity-card', // Toda la card es draggable
+    // Buscar el contenedor del timeline dentro del container
+    const timelineContainer = container.querySelector('.itinerary-timeline');
+    if (!timelineContainer) {
+        console.warn('Timeline container no encontrado');
+        return;
+    }
+
+    sortableInstance = new Sortable(timelineContainer, {
+        animation: 300,
+        handle: '.activity-card-japan', // Toda la card es draggable
         ghostClass: 'sortable-ghost',
         chosenClass: 'sortable-chosen',
         dragClass: 'sortable-drag',
         easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-        
+        forceFallback: true,
+        fallbackTolerance: 3,
+
         onStart: function(evt) {
-            evt.item.style.opacity = '0.5';
+            evt.item.style.opacity = '0.6';
+            evt.item.style.transform = 'scale(1.02)';
         },
-        
+
         onEnd: function(evt) {
             evt.item.style.opacity = '1';
-            
+            evt.item.style.transform = 'scale(1)';
+
             const oldIndex = evt.oldIndex;
             const newIndex = evt.newIndex;
-            
+
             if (oldIndex === newIndex) return;
-            
+
             // Actualizar el orden en el itinerario
             const dayData = currentItinerary.days.find(d => d.day === currentDay);
             if (!dayData) return;
-            
+
             // Reorganizar array
             const [movedItem] = dayData.activities.splice(oldIndex, 1);
             dayData.activities.splice(newIndex, 0, movedItem);
-            
+
             // 🔥 Guardar cambios en Firebase automáticamente
             saveReorderedActivities();
         }

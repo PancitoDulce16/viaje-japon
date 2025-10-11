@@ -1196,3 +1196,392 @@ h1, h2, h3, h4, h5, h6 {
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+/* ========================================
+   ITINERARY JAPONÉS
+   ======================================== */
+
+/* Timeline visual con línea conectora */
+.itinerary-timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.itinerary-timeline::before {
+  content: '';
+  position: absolute;
+  left: 0.75rem;
+  top: 2rem;
+  bottom: 2rem;
+  width: 3px;
+  background: linear-gradient(to bottom,
+    var(--sakura-pink) 0%,
+    var(--japan-red) 50%,
+    var(--sakura-pink) 100%);
+  border-radius: 2px;
+  opacity: 0.3;
+}
+
+/* Activity card con tema japonés */
+.activity-card-japan {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  border-left: 4px solid var(--japan-red);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: grab;
+}
+
+.activity-card-japan:active {
+  cursor: grabbing;
+}
+
+.activity-card-japan:hover {
+  transform: translateX(4px);
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(196, 30, 58, 0.1);
+  border-left-width: 6px;
+}
+
+.activity-card-japan::before {
+  content: '';
+  position: absolute;
+  left: -2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background: var(--japan-red);
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--japan-red);
+  z-index: 2;
+}
+
+.activity-card-japan.completed {
+  opacity: 0.7;
+  background: var(--paper-beige);
+  border-left-color: var(--matcha-green);
+}
+
+.activity-card-japan.completed::before {
+  background: var(--matcha-green);
+  box-shadow: 0 0 0 2px var(--matcha-green);
+}
+
+.dark .activity-card-japan {
+  background: #1f2937;
+  border-left-color: var(--sakura-pink);
+}
+
+.dark .activity-card-japan::before {
+  background: var(--sakura-pink);
+  border-color: #1f2937;
+  box-shadow: 0 0 0 2px var(--sakura-pink);
+}
+
+.dark .activity-card-japan.completed {
+  background: #374151;
+  border-left-color: var(--matcha-green);
+}
+
+/* Activity icon con tema japonés */
+.activity-icon-japan {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  font-size: 1.75rem;
+  flex-shrink: 0;
+  transition: all 0.3s;
+  box-shadow: var(--shadow-sm);
+}
+
+.activity-icon-japan.temple {
+  background: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 100%);
+}
+
+.activity-icon-japan.food {
+  background: linear-gradient(135deg, #88B04B 0%, #4A7C59 100%);
+}
+
+.activity-icon-japan.transport {
+  background: linear-gradient(135deg, #1E4D8B 0%, #4A90E2 100%);
+}
+
+.activity-icon-japan.shopping {
+  background: linear-gradient(135deg, #FFB7C5 0%, #FF69B4 100%);
+}
+
+.activity-icon-japan.nature {
+  background: linear-gradient(135deg, #4A7C59 0%, #88B04B 100%);
+}
+
+.activity-icon-japan.default {
+  background: linear-gradient(135deg, #C41E3A 0%, #A01729 100%);
+}
+
+.activity-card-japan:hover .activity-icon-japan {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Badge de tipo de actividad */
+.activity-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-japanese);
+}
+
+.activity-type-badge.temple {
+  background: #FFF9E6;
+  color: #FF6B6B;
+  border: 1px solid #FFE66D;
+}
+
+.activity-type-badge.food {
+  background: #E8F5E9;
+  color: #4A7C59;
+  border: 1px solid var(--matcha-green);
+}
+
+.activity-type-badge.transport {
+  background: #E3F2FD;
+  color: #1E4D8B;
+  border: 1px solid #4A90E2;
+}
+
+.activity-type-badge.shopping {
+  background: var(--sakura-light);
+  color: var(--japan-red);
+  border: 1px solid var(--sakura-pink);
+}
+
+.activity-type-badge.nature {
+  background: #E8F5E9;
+  color: var(--bamboo-green);
+  border: 1px solid var(--matcha-green);
+}
+
+.dark .activity-type-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Day selector con tema japonés */
+.day-btn-japan {
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-family: var(--font-japanese);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.day-btn-japan::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-sakura);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.day-btn-japan:hover::before {
+  opacity: 0.1;
+}
+
+.day-btn-japan.active {
+  background: var(--japan-red);
+  color: white;
+  box-shadow: var(--shadow-md);
+  border-color: var(--japan-red);
+}
+
+.day-btn-japan.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 3px;
+  background: var(--gradient-sakura);
+  border-radius: 2px;
+}
+
+.dark .day-btn-japan.active {
+  background: var(--sakura-pink);
+  color: var(--ink-black);
+  border-color: var(--sakura-pink);
+}
+
+/* Day overview panel */
+.day-overview-japan {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: var(--shadow-lg);
+  border-top: 4px solid var(--japan-red);
+  position: sticky;
+  top: 9rem;
+}
+
+.dark .day-overview-japan {
+  background: #1f2937;
+  border-top-color: var(--sakura-pink);
+}
+
+/* Progress bar japonés */
+.progress-japan-itinerary {
+  height: 10px;
+  background: var(--mist-gray);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-japan-itinerary {
+  height: 100%;
+  background: var(--gradient-sakura);
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 0 2px 4px rgba(196, 30, 58, 0.3);
+}
+
+.progress-bar-japan-itinerary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: shimmer 2s infinite;
+}
+
+/* Stats card en el overview */
+.stat-card-japan {
+  padding: 1rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.3s;
+  border: 1px solid transparent;
+}
+
+.stat-card-japan:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-card-japan.time {
+  background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+  border-color: #4A90E2;
+}
+
+.stat-card-japan.budget {
+  background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+  border-color: var(--matcha-green);
+}
+
+.dark .stat-card-japan.time {
+  background: rgba(30, 77, 139, 0.2);
+}
+
+.dark .stat-card-japan.budget {
+  background: rgba(136, 176, 75, 0.2);
+}
+
+/* Animación para cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Train info card */
+.train-info-japan {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+  border-radius: 12px;
+  border-left: 3px solid #1E4D8B;
+}
+
+.dark .train-info-japan {
+  background: rgba(30, 77, 139, 0.2);
+  border-left-color: #4A90E2;
+}
+
+/* Sortable states */
+.sortable-ghost {
+  opacity: 0.4;
+  background: var(--sakura-light);
+}
+
+.sortable-chosen {
+  box-shadow: 0 0 0 2px var(--japan-red), var(--shadow-xl);
+}
+
+.sortable-drag {
+  opacity: 0.8;
+  transform: rotate(2deg);
+}
+
+/* Responsive para itinerario */
+@media (max-width: 768px) {
+  .itinerary-timeline {
+    padding-left: 1.5rem;
+  }
+
+  .itinerary-timeline::before {
+    left: 0.5rem;
+  }
+
+  .activity-card-japan::before {
+    left: -1.5rem;
+    width: 12px;
+    height: 12px;
+  }
+
+  .activity-card-japan {
+    padding: 1rem;
+  }
+
+  .activity-icon-japan {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+  }
+
+  .day-overview-japan {
+    position: relative;
+    top: 0;
+    padding: 1.5rem;
+  }
+
+  .day-btn-japan {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+}
