@@ -1,9 +1,17 @@
-// js/attractions.js - Módulo de atracciones
+// js/attractions.js - Módulo de atracciones optimizado
 
 import { ATTRACTIONS_DATA } from '../data/attractions-data.js';
+import { Logger, debounce, AppError } from './helpers.js';
+import { STORAGE_KEYS, ERROR_CODES, TIMEOUTS, Z_INDEX, COLOR_SCHEMES, ACTIVITY_ICONS } from './constants.js';
 
+/**
+ * Handler para la gestión de atracciones
+ * @namespace AttractionsHandler
+ */
 export const AttractionsHandler = {
-    savedAttractions: JSON.parse(localStorage.getItem('savedAttractions') || '[]'),
+    savedAttractions: JSON.parse(localStorage.getItem(STORAGE_KEYS.SAVED_ATTRACTIONS) || '[]'),
+    currentFilter: 'all',
+    searchTerm: '',
     
     renderAttractions() {
         const container = document.getElementById('content-attractions');
@@ -204,17 +212,6 @@ export const AttractionsHandler = {
                 </div>
             </div>
         `;
-    },
-
-    toggleSave(attractionName) {
-        const index = this.savedAttractions.indexOf(attractionName);
-        if (index > -1) {
-            this.savedAttractions.splice(index, 1);
-        } else {
-            this.savedAttractions.push(attractionName);
-        }
-        localStorage.setItem('savedAttractions', JSON.stringify(this.savedAttractions));
-        this.renderAttractions();
     },
 
     filterCategory(filter) {
@@ -457,34 +454,80 @@ export const AttractionsHandler = {
         return '🎯';
     },
 
-    // 🔍 Búsqueda de atracciones
-    searchAttractions(query) {
-        const searchTerm = query.toLowerCase().trim();
-        const cards = document.querySelectorAll('.attraction-card');
-        const sections = document.querySelectorAll('.category-section');
+    /**
+     * Búsqueda de atracciones con debounce
+     * @param {string} query - Término de búsqueda
+     */
+    searchAttractions: debounce(function(query) {
+        try {
+            const searchTerm = query.toLowerCase().trim();
+            this.searchTerm = searchTerm;
 
-        if (!searchTerm) {
-            // Si no hay búsqueda, mostrar todas
-            cards.forEach(card => card.style.display = 'block');
-            sections.forEach(section => section.style.display = 'block');
-            return;
-        }
+            const cards = document.querySelectorAll('.attraction-card');
+            const sections = document.querySelectorAll('.category-section');
 
-        // Filtrar por nombre o ciudad
-        sections.forEach(section => {
-            const visibleCards = Array.from(section.querySelectorAll('.attraction-card')).filter(card => {
-                const name = card.dataset.attraction.toLowerCase();
-                const city = card.querySelector('p.text-xs').textContent.toLowerCase();
-                const matches = name.includes(searchTerm) || city.includes(searchTerm);
-                card.style.display = matches ? 'block' : 'none';
-                return matches;
+            if (!searchTerm) {
+                // Si no hay búsqueda, mostrar todas
+                cards.forEach(card => card.style.display = 'block');
+                sections.forEach(section => section.style.display = 'block');
+                Logger.info('Búsqueda limpiada, mostrando todas las atracciones');
+                return;
+            }
+
+            let totalResults = 0;
+
+            // Filtrar por nombre o ciudad
+            sections.forEach(section => {
+                const visibleCards = Array.from(section.querySelectorAll('.attraction-card')).filter(card => {
+                    const name = card.dataset.attraction?.toLowerCase() || '';
+                    const cityElement = card.querySelector('p.text-xs');
+                    const city = cityElement ? cityElement.textContent.toLowerCase() : '';
+                    const matches = name.includes(searchTerm) || city.includes(searchTerm);
+                    card.style.display = matches ? 'block' : 'none';
+                    return matches;
+                });
+
+                totalResults += visibleCards.length;
+                section.style.display = visibleCards.length > 0 ? 'block' : 'none';
             });
-            section.style.display = visibleCards.length > 0 ? 'block' : 'none';
-        });
 
-        // Resetear filtro activo
-        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelector('.filter-btn').classList.add('active');
+            Logger.info(`Búsqueda completada: "${searchTerm}" - ${totalResults} resultados`);
+
+            // Resetear filtro activo
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            const firstFilterBtn = document.querySelector('.filter-btn');
+            if (firstFilterBtn) {
+                firstFilterBtn.classList.add('active');
+            }
+        } catch (error) {
+            Logger.error('Error en búsqueda de atracciones', error);
+        }
+    }, TIMEOUTS.DEBOUNCE_SEARCH),
+
+    /**
+     * Guardar o quitar de favoritos una atracción
+     * @param {string} attractionName - Nombre de la atracción
+     */
+    toggleSave(attractionName) {
+        try {
+            const index = this.savedAttractions.indexOf(attractionName);
+
+            if (index > -1) {
+                this.savedAttractions.splice(index, 1);
+                Logger.info(`Atracción removida de favoritos: ${attractionName}`);
+            } else {
+                this.savedAttractions.push(attractionName);
+                Logger.success(`Atracción agregada a favoritos: ${attractionName}`);
+            }
+
+            localStorage.setItem(STORAGE_KEYS.SAVED_ATTRACTIONS, JSON.stringify(this.savedAttractions));
+            this.renderAttractions();
+        } catch (error) {
+            Logger.error('Error al guardar atracción', error);
+            if (window.Notifications) {
+                window.Notifications.error('Error al guardar la atracción');
+            }
+        }
     }
 };
 
