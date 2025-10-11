@@ -532,7 +532,7 @@ export const ItineraryHandler = {
             </div>
 
             <!-- Selector de Días -->
-            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-[72px] z-30 shadow-sm">
+            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-[72px] z-10 shadow-sm">
                 <div class="max-w-6xl mx-auto p-4">
                     <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" id="daySelector"></div>
                 </div>
