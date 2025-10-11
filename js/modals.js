@@ -57,7 +57,7 @@ export const ModalRenderer = {
 
     getActivityModal() {
         return `
-            <div id="activityModal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 hidden animate__animated animate__fadeIn">
+            <div id="activityModal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 hidden animate__animated animate__fadeIn" style="z-index: 10001;">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg p-6 animate__animated animate__slideInUp">
                     <div class="flex justify-between items-center mb-4">
                         <h2 id="activityModalTitle" class="text-2xl font-bold dark:text-white">Añadir Actividad</h2>
