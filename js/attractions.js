@@ -38,6 +38,22 @@ export const AttractionsHandler = {
                         </div>
                     </div>
 
+                    <!-- 🔍 Barra de Búsqueda -->
+                    <div class="mb-4">
+                        <div class="relative">
+                            <input
+                                type="text"
+                                id="attractionSearch"
+                                placeholder="🔍 Buscar por nombre o ciudad..."
+                                class="w-full p-3 pl-10 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
+                                oninput="AttractionsHandler.searchAttractions(this.value)"
+                            >
+                            <svg class="absolute left-3 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+
                     <!-- Filter Buttons -->
                     <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mb-6">
                         <button onclick="AttractionsHandler.filterCategory('all')" class="filter-btn active px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-semibold text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-600 transition">
@@ -416,14 +432,14 @@ export const AttractionsHandler = {
     getCategoryIcon(attraction) {
         const name = attraction.name.toLowerCase();
         const desc = attraction.description.toLowerCase();
-        
+
         // Comida
         if (name.includes('ramen') || desc.includes('ramen')) return '🍜';
         if (name.includes('sushi') || desc.includes('sushi')) return '🍣';
         if (name.includes('cafe') || desc.includes('café')) return '☕';
         if (name.includes('restaurant') || desc.includes('restaurant')) return '🍴';
         if (name.includes('izakaya') || desc.includes('izakaya')) return '🍻';
-        
+
         // Lugares
         if (name.includes('temple') || name.includes('shrine') || desc.includes('temple')) return '⛩️';
         if (name.includes('castle') || desc.includes('castle')) return '🏯';
@@ -431,14 +447,44 @@ export const AttractionsHandler = {
         if (name.includes('park') || name.includes('garden')) return '🌳';
         if (name.includes('tower') || name.includes('sky')) return '🌆';
         if (name.includes('market') || desc.includes('market')) return '🏪';
-        
+
         // Entretenimiento
         if (name.includes('disney') || name.includes('universal')) return '🎢';
         if (name.includes('aquarium') || desc.includes('aquarium')) return '🐋';
         if (name.includes('arcade') || desc.includes('arcade')) return '🎮';
-        
+
         // Default
         return '🎯';
+    },
+
+    // 🔍 Búsqueda de atracciones
+    searchAttractions(query) {
+        const searchTerm = query.toLowerCase().trim();
+        const cards = document.querySelectorAll('.attraction-card');
+        const sections = document.querySelectorAll('.category-section');
+
+        if (!searchTerm) {
+            // Si no hay búsqueda, mostrar todas
+            cards.forEach(card => card.style.display = 'block');
+            sections.forEach(section => section.style.display = 'block');
+            return;
+        }
+
+        // Filtrar por nombre o ciudad
+        sections.forEach(section => {
+            const visibleCards = Array.from(section.querySelectorAll('.attraction-card')).filter(card => {
+                const name = card.dataset.attraction.toLowerCase();
+                const city = card.querySelector('p.text-xs').textContent.toLowerCase();
+                const matches = name.includes(searchTerm) || city.includes(searchTerm);
+                card.style.display = matches ? 'block' : 'none';
+                return matches;
+            });
+            section.style.display = visibleCards.length > 0 ? 'block' : 'none';
+        });
+
+        // Resetear filtro activo
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector('.filter-btn').classList.add('active');
     }
 };
 

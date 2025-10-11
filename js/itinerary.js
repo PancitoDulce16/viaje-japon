@@ -328,16 +328,49 @@ function renderDaySelector() {
     `).join('');
 }
 
+// ⏱️ Calcular tiempo total del día
+function calculateDayTime(activities) {
+    let totalMinutes = 0;
+    activities.forEach(act => {
+        if (act.duration) {
+            const match = act.duration.match(/(\d+)\s*(h|hora|horas|min|minuto|minutos)/gi);
+            if (match) {
+                match.forEach(m => {
+                    const num = parseInt(m);
+                    if (m.toLowerCase().includes('h') || m.toLowerCase().includes('hora')) {
+                        totalMinutes += num * 60;
+                    } else {
+                        totalMinutes += num;
+                    }
+                });
+            }
+        }
+    });
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours > 0 && minutes > 0) return `${hours}h ${minutes}min`;
+    if (hours > 0) return `${hours}h`;
+    if (minutes > 0) return `${minutes}min`;
+    return 'No definido';
+}
+
+// 💰 Calcular costo total del día
+function calculateDayBudget(activities) {
+    return activities.reduce((total, act) => total + (act.cost || 0), 0);
+}
+
 function renderDayOverview(day) {
     const container = document.getElementById('dayOverview');
     if (!container) return;
 
     const completed = day.activities.filter(a => checkedActivities[a.id]).length;
     const progress = day.activities.length > 0 ? (completed / day.activities.length) * 100 : 0;
-    
+    const totalTime = calculateDayTime(day.activities);
+    const totalBudget = calculateDayBudget(day.activities);
+
     const tripId = getCurrentTripId();
     let syncStatus;
-    
+
     if (!auth.currentUser) {
       syncStatus = '<span class="text-xs text-yellow-600 dark:text-yellow-400">📱 Solo local</span>';
     } else if (tripId) {
@@ -363,6 +396,25 @@ function renderDayOverview(day) {
                 ${syncStatus}
             </div>
         </div>
+
+        <!-- ⏱️ Estadísticas del día -->
+        <div class="mb-4 space-y-2">
+            <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">⏱️</span>
+                    <span class="text-sm font-semibold dark:text-white">Tiempo total</span>
+                </div>
+                <span class="text-sm font-bold text-blue-600 dark:text-blue-400">${totalTime}</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">💰</span>
+                    <span class="text-sm font-semibold dark:text-white">Presupuesto</span>
+                </div>
+                <span class="text-sm font-bold text-green-600 dark:text-green-400">¥${totalBudget.toLocaleString()}</span>
+            </div>
+        </div>
+
         <div class="space-y-3 text-sm">
             <p class="font-semibold text-base dark:text-gray-300">${day.date}</p>
             <p class="font-bold text-lg text-red-600 dark:text-red-400">${day.title}</p>
