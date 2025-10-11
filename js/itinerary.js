@@ -14,6 +14,7 @@ let currentDay = 1;
 let unsubscribe = null;
 let currentItinerary = null;
 let sortableInstance = null; // 🔥 Para drag & drop
+let isListenerAttached = false;
 
 function getCurrentTripId() {
   if (window.TripsManager && window.TripsManager.currentTrip) {
@@ -60,7 +61,15 @@ async function loadItinerary() {
     }
   } catch (error) {
     console.error('❌ Error cargando itinerario:', error);
-    return null;
+    try {
+        const response = await fetch('/data/attractions.json');
+        const data = await response.json();
+        currentItinerary = { days: data.suggestedItinerary };
+        return currentItinerary;
+    } catch (e) {
+        console.error('❌ Error cargando el itinerario por defecto:', e);
+        return null;
+    }
   }
 }
 
@@ -376,15 +385,6 @@ function renderDayOverview(day) {
         </div>
     `;
     
-    // 🔥 Agregar event listener al botón después de renderizar
-    setTimeout(() => {
-        const addBtn = document.getElementById(`addActivityBtn_${day.day}`);
-        if (addBtn) {
-            addBtn.addEventListener('click', () => {
-                ItineraryHandler.showActivityModal(null, day.day);
-            });
-        }
-    }, 100);
 }
 
 function renderActivities(day) {
@@ -443,26 +443,6 @@ function renderActivities(day) {
         </div>
     `).join('');
     
-    // 🔥 Agregar event listeners a botones de editar/eliminar
-    setTimeout(() => {
-        // Botones de editar
-        document.querySelectorAll('.activity-edit-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const activityId = btn.dataset.activityId;
-                const dayNum = parseInt(btn.dataset.day);
-                ItineraryHandler.showActivityModal(activityId, dayNum);
-            });
-        });
-        
-        // Botones de eliminar
-        document.querySelectorAll('.activity-delete-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const activityId = btn.dataset.activityId;
-                const dayNum = parseInt(btn.dataset.day);
-                ItineraryHandler.deleteActivity(activityId, dayNum);
-            });
-        });
-    }, 100);
 }
 
 // 🔥 NUEVO: Inicializar drag & drop con SortableJS
@@ -580,22 +560,40 @@ export const ItineraryHandler = {
         // Inicializar sync en tiempo real
         await initRealtimeSync();
 
-        const daySelector = document.getElementById('daySelector');
-        if (daySelector) {
-            daySelector.addEventListener('click', (e) => {
-                const btn = e.target.closest('.day-btn');
-                if (btn) selectDay(parseInt(btn.dataset.day));
+        if (!isListenerAttached) {
+            container.addEventListener('click', (e) => {
+                const addBtn = e.target.closest('[id^="addActivityBtn_"]');
+                const editBtn = e.target.closest('.activity-edit-btn');
+                const deleteBtn = e.target.closest('.activity-delete-btn');
+                const dayBtn = e.target.closest('.day-btn');
+
+                if (addBtn) {
+                    const day = parseInt(addBtn.id.split('_')[1]);
+                    ItineraryHandler.showActivityModal(null, day);
+                } else if (editBtn) {
+                    const activityId = editBtn.dataset.activityId;
+                    const dayNum = parseInt(editBtn.dataset.day);
+                    ItineraryHandler.showActivityModal(activityId, dayNum);
+                } else if (deleteBtn) {
+                    const activityId = deleteBtn.dataset.activityId;
+                    const dayNum = parseInt(deleteBtn.dataset.day);
+                    ItineraryHandler.deleteActivity(activityId, dayNum);
+                } else if (dayBtn) {
+                    selectDay(parseInt(dayBtn.dataset.day));
+                }
             });
+
+            container.addEventListener('change', (e) => {
+                const checkbox = e.target.closest('.activity-checkbox');
+                if (checkbox) {
+                    toggleActivity(checkbox.dataset.id);
+                }
+            });
+            isListenerAttached = true;
         }
 
         const timeline = document.getElementById('activitiesTimeline');
         if (timeline) {
-            timeline.addEventListener('change', (e) => {
-                const checkbox = e.target.closest('.activity-checkbox');
-                if (checkbox) toggleActivity(checkbox.dataset.id);
-            });
-            
-            // 🔥 Inicializar drag & drop
             initializeDragAndDrop(timeline);
         }
 
