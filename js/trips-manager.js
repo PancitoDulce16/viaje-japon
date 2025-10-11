@@ -119,7 +119,10 @@ export const TripsManager = {
       
       console.log('✅ Viaje creado:', tripId, 'Código:', shareCode);
       
-      this.selectTrip(tripId);
+      // 🔥 IMPORTANTE: Esperar un poco para que Firebase propague
+      setTimeout(() => {
+        this.selectTrip(tripId);
+      }, 500);
       
       return tripId;
     } catch (error) {

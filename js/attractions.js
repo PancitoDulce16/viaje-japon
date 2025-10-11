@@ -170,15 +170,18 @@ export const AttractionsHandler = {
 
                 <!-- Actions -->
                 <div class="flex gap-2">
+                    <button 
+                        onclick="AttractionsHandler.addToItinerary('${item.name.replace(/'/g, "\\'")}')"
+                        class="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-center py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition text-sm font-semibold"
+                        title="Añadir al itinerario"
+                    >
+                        ➕ Itinerario
+                    </button>
                     ${item.reservationUrl ? `
                         <a href="${item.reservationUrl}" target="_blank" class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-center py-2 px-4 rounded-lg hover:from-blue-600 hover:to-blue-700 transition text-sm font-semibold">
                             📅 Reservar
                         </a>
-                    ` : `
-                        <div class="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-400 text-center py-2 px-4 rounded-lg text-sm font-semibold">
-                            Sin reserva
-                        </div>
-                    `}
+                    ` : ''}
                     <a href="https://www.google.com/maps/search/${encodeURIComponent(item.name + ' ' + item.city)}" target="_blank" class="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition text-sm font-semibold">
                         🗺️
                     </a>
@@ -256,6 +259,182 @@ export const AttractionsHandler = {
         return Object.values(ATTRACTIONS_DATA).reduce((total, category) => 
             total + category.items.filter(item => item.price === 0).length, 0
         );
+    },
+
+    // 🔥 NUEVO: Añadir atracción al itinerario
+    async addToItinerary(attractionName) {
+        // Buscar la atracción completa
+        let attraction = null;
+        for (const category of Object.values(ATTRACTIONS_DATA)) {
+            attraction = category.items.find(item => item.name === attractionName);
+            if (attraction) break;
+        }
+
+        if (!attraction) {
+            alert('⚠️ No se encontró la atracción');
+            return;
+        }
+
+        // Verificar que hay itinerario
+        if (!window.ItineraryHandler) {
+            alert('⚠️ El módulo de itinerario no está disponible');
+            return;
+        }
+
+        // Mostrar modal para seleccionar día
+        this.showDaySelectionModal(attraction);
+    },
+
+    // 🔥 Modal para seleccionar día
+    showDaySelectionModal(attraction) {
+        // Obtener días del itinerario actual
+        const currentItinerary = window.ItineraryHandler?.currentItinerary || 
+                                 JSON.parse(localStorage.getItem('currentItinerary') || 'null');
+        
+        if (!currentItinerary || !currentItinerary.days) {
+            alert('⚠️ Primero debes crear un itinerario');
+            return;
+        }
+
+        const modalHtml = `
+            <div id="daySelectionModal" class="modal active" style="z-index: 10000;">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+                    <div class="mb-4">
+                        <h2 class="text-2xl font-bold dark:text-white mb-2">➕ Añadir al Itinerario</h2>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            <strong>${attraction.name}</strong><br>
+                            ${attraction.city} • ${attraction.price === 0 ? 'GRATIS' : '¥' + attraction.price.toLocaleString()}
+                        </p>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                            Selecciona el día:
+                        </label>
+                        <div class="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto">
+                            ${currentItinerary.days.map(day => `
+                                <button 
+                                    onclick="AttractionsHandler.addAttractionToDay(${day.day}, '${attraction.name.replace(/'/g, "\\'")}')"
+                                    class="p-3 bg-gray-100 dark:bg-gray-700 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition text-center"
+                                >
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Día</div>
+                                    <div class="text-xl font-bold dark:text-white">${day.day}</div>
+                                    <div class="text-xs text-gray-600 dark:text-gray-400">${day.title}</div>
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <button 
+                        onclick="AttractionsHandler.closeDaySelectionModal()"
+                        class="w-full bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white py-2 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition font-semibold"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Remover modal existente si hay
+        const existing = document.getElementById('daySelectionModal');
+        if (existing) existing.remove();
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.body.style.overflow = 'hidden';
+    },
+
+    // 🔥 Añadir atracción a un día específico
+    async addAttractionToDay(dayNumber, attractionName) {
+        // Buscar la atracción completa
+        let attraction = null;
+        for (const category of Object.values(ATTRACTIONS_DATA)) {
+            attraction = category.items.find(item => item.name === attractionName);
+            if (attraction) break;
+        }
+
+        if (!attraction) return;
+
+        // Crear objeto de actividad
+        const activity = {
+            id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            icon: this.getCategoryIcon(attraction),
+            time: 'Por definir',
+            title: attraction.name,
+            desc: attraction.description,
+            cost: attraction.price,
+            station: attraction.city,
+            rating: attraction.rating,
+            duration: attraction.duration
+        };
+
+        // Usar el ItineraryHandler para agregar la actividad
+        if (window.ItineraryHandler) {
+            // Simular que llenamos el formulario
+            const modal = document.getElementById('activityModal');
+            if (modal) {
+                // Llenar campos
+                document.getElementById('activityDay').value = dayNumber;
+                document.getElementById('activityIcon').value = activity.icon;
+                document.getElementById('activityTime').value = activity.time;
+                document.getElementById('activityTitle').value = activity.title;
+                document.getElementById('activityDesc').value = activity.desc;
+                document.getElementById('activityCost').value = activity.cost;
+                document.getElementById('activityStation').value = activity.station;
+
+                // Llamar directamente a saveActivity
+                await window.ItineraryHandler.saveActivity();
+
+                this.closeDaySelectionModal();
+                
+                if (window.Notifications) {
+                    window.Notifications.success(`✅ "${attraction.name}" añadido al día ${dayNumber}!`);
+                }
+
+                // Cambiar al tab de itinerario
+                setTimeout(() => {
+                    const itineraryTab = document.querySelector('[data-tab="itinerary"]');
+                    if (itineraryTab) itineraryTab.click();
+                }, 500);
+            }
+        }
+    },
+
+    // Cerrar modal de selección de día
+    closeDaySelectionModal() {
+        const modal = document.getElementById('daySelectionModal');
+        if (modal) {
+            modal.remove();
+            document.body.style.overflow = '';
+        }
+    },
+
+    // Obtener icono basado en categoría
+    getCategoryIcon(attraction) {
+        const name = attraction.name.toLowerCase();
+        const desc = attraction.description.toLowerCase();
+        
+        // Comida
+        if (name.includes('ramen') || desc.includes('ramen')) return '🍜';
+        if (name.includes('sushi') || desc.includes('sushi')) return '🍣';
+        if (name.includes('cafe') || desc.includes('café')) return '☕';
+        if (name.includes('restaurant') || desc.includes('restaurant')) return '🍴';
+        if (name.includes('izakaya') || desc.includes('izakaya')) return '🍻';
+        
+        // Lugares
+        if (name.includes('temple') || name.includes('shrine') || desc.includes('temple')) return '⛩️';
+        if (name.includes('castle') || desc.includes('castle')) return '🏯';
+        if (name.includes('museum') || desc.includes('museum')) return '🏛️';
+        if (name.includes('park') || name.includes('garden')) return '🌳';
+        if (name.includes('tower') || name.includes('sky')) return '🌆';
+        if (name.includes('market') || desc.includes('market')) return '🏪';
+        
+        // Entretenimiento
+        if (name.includes('disney') || name.includes('universal')) return '🎢';
+        if (name.includes('aquarium') || desc.includes('aquarium')) return '🐋';
+        if (name.includes('arcade') || desc.includes('arcade')) return '🎮';
+        
+        // Default
+        return '🎯';
     }
 };
 

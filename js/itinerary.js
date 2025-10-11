@@ -322,6 +322,12 @@ function renderDayOverview(day) {
     const container = document.getElementById('dayOverview');
     if (!container) return;
     
+    // 🔥 Limpiar listener anterior si existe
+    const oldBtn = document.getElementById(`addActivityBtn_${day.day}`);
+    if (oldBtn) {
+        oldBtn.replaceWith(oldBtn.cloneNode(true));
+    }
+    
     const completed = day.activities.filter(a => checkedActivities[a.id]).length;
     const progress = day.activities.length > 0 ? (completed / day.activities.length) * 100 : 0;
     
@@ -361,13 +367,24 @@ function renderDayOverview(day) {
         </div>
         <div class="mt-6">
             <button
-                onclick="ItineraryHandler.showActivityModal(null, ${day.day})"
+                type="button"
+                id="addActivityBtn_${day.day}"
                 class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition"
             >
                 + Añadir Actividad
             </button>
         </div>
     `;
+    
+    // 🔥 Agregar event listener al botón después de renderizar
+    setTimeout(() => {
+        const addBtn = document.getElementById(`addActivityBtn_${day.day}`);
+        if (addBtn) {
+            addBtn.addEventListener('click', () => {
+                ItineraryHandler.showActivityModal(null, day.day);
+            });
+        }
+    }, 100);
 }
 
 function renderActivities(day) {
@@ -404,10 +421,10 @@ function renderActivities(day) {
                             <h3 class="text-lg font-bold dark:text-white mb-1">${act.title}</h3>
                         </div>
                         <div class="flex gap-2 flex-shrink-0">
-                            <button onclick="ItineraryHandler.showActivityModal('${act.id}', ${day.day})" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                            <button type="button" data-action="edit" data-activity-id="${act.id}" data-day="${day.day}" class="activity-edit-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
                                 <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828zM5 12V7a2 2 0 012-2h4l-2 2H7v5l-2 2z"></path></svg>
                             </button>
-                            <button onclick="ItineraryHandler.deleteActivity('${act.id}', ${day.day})" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                            <button type="button" data-action="delete" data-activity-id="${act.id}" data-day="${day.day}" class="activity-delete-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
                                 <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
                             </button>
                         </div>
@@ -425,6 +442,27 @@ function renderActivities(day) {
             </div>
         </div>
     `).join('');
+    
+    // 🔥 Agregar event listeners a botones de editar/eliminar
+    setTimeout(() => {
+        // Botones de editar
+        document.querySelectorAll('.activity-edit-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const activityId = btn.dataset.activityId;
+                const dayNum = parseInt(btn.dataset.day);
+                ItineraryHandler.showActivityModal(activityId, dayNum);
+            });
+        });
+        
+        // Botones de eliminar
+        document.querySelectorAll('.activity-delete-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const activityId = btn.dataset.activityId;
+                const dayNum = parseInt(btn.dataset.day);
+                ItineraryHandler.deleteActivity(activityId, dayNum);
+            });
+        });
+    }, 100);
 }
 
 // 🔥 NUEVO: Inicializar drag & drop con SortableJS
@@ -595,11 +633,18 @@ export const ItineraryHandler = {
 
     showActivityModal(activityId, day) {
         const modal = document.getElementById('activityModal');
+        if (!modal) {
+            console.error('❌ Modal de actividad no encontrado');
+            return;
+        }
+        
         const form = document.getElementById('activityForm');
         const modalTitle = document.getElementById('activityModalTitle');
 
-        form.reset();
-        document.getElementById('activityDay').value = day;
+        if (form) form.reset();
+        
+        const dayInput = document.getElementById('activityDay');
+        if (dayInput) dayInput.value = day;
 
         if (activityId) {
             // Modo Editar
@@ -623,11 +668,25 @@ export const ItineraryHandler = {
         }
 
         modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        console.log('✅ Modal de actividad abierto', { activityId, day });
     },
 
     closeActivityModal() {
         const modal = document.getElementById('activityModal');
-        modal.classList.add('hidden');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        
+        // Limpiar formulario
+        const form = document.getElementById('activityForm');
+        if (form) form.reset();
+        
+        console.log('✅ Modal de actividad cerrado');
     },
 
     async deleteActivity(activityId, day) {
