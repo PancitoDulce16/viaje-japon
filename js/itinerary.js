@@ -626,80 +626,79 @@ export const ItineraryHandler = {
     },
 
     showActivityModal(activityId, day) {
-        console.log('🔔 showActivityModal llamado con:', { activityId, day });
-        const modal = document.getElementById('activityModal');
-        if (!modal) {
-            console.error('❌ Modal de actividad no encontrado');
-            return;
-        }
-        console.log('✅ Modal encontrado:', modal);
-        console.log('📋 Clases del modal ANTES:', modal.className);
-
-        const form = document.getElementById('activityForm');
-        const modalTitle = document.getElementById('activityModalTitle');
-
-        console.log('📝 Form encontrado:', form);
-        console.log('📝 Modal title encontrado:', modalTitle);
-
-        if (form) form.reset();
-
-        const dayInput = document.getElementById('activityDay');
-        if (dayInput) {
-            dayInput.value = day;
-            console.log('📅 Día asignado al input:', day);
-        } else {
-            console.error('❌ Input activityDay no encontrado');
-        }
-
-        if (activityId) {
-            // Modo Editar
-            console.log('✏️ Modo Editar');
-            if (modalTitle) modalTitle.textContent = 'Editar Actividad';
-            const dayData = currentItinerary.days.find(d => d.day === day);
-            const activity = dayData?.activities.find(a => a.id === activityId);
-
-            if (activity) {
-                document.getElementById('activityId').value = activity.id;
-                document.getElementById('activityIcon').value = activity.icon || '';
-                document.getElementById('activityTime').value = activity.time || '';
-                document.getElementById('activityTitle').value = activity.title || '';
-                document.getElementById('activityDesc').value = activity.desc || '';
-                document.getElementById('activityCost').value = activity.cost || 0;
-                document.getElementById('activityStation').value = activity.station || '';
+        try {
+            console.log('🔔 showActivityModal llamado con:', { activityId, day });
+            const modal = document.getElementById('activityModal');
+            if (!modal) {
+                console.error('❌ Modal de actividad no encontrado');
+                return;
             }
-        } else {
-            // Modo Crear
-            console.log('➕ Modo Crear');
-            if (modalTitle) modalTitle.textContent = 'Añadir Actividad';
-            const activityIdInput = document.getElementById('activityId');
-            if (activityIdInput) activityIdInput.value = '';
+            console.log('✅ Modal encontrado:', modal);
+
+            const form = document.getElementById('activityForm');
+            const modalTitle = document.getElementById('activityModalTitle');
+
+            if (form) form.reset();
+
+            const dayInput = document.getElementById('activityDay');
+            if (dayInput) {
+                dayInput.value = day;
+            } else {
+                console.error('❌ Input activityDay no encontrado');
+            }
+
+            if (activityId) {
+                // Modo Editar
+                if (modalTitle) modalTitle.textContent = 'Editar Actividad';
+                const dayData = currentItinerary.days.find(d => d.day === day);
+                const activity = dayData?.activities.find(a => a.id === activityId);
+
+                if (activity) {
+                    document.getElementById('activityId').value = activity.id;
+                    document.getElementById('activityIcon').value = activity.icon || '';
+                    document.getElementById('activityTime').value = activity.time || '';
+                    document.getElementById('activityTitle').value = activity.title || '';
+                    document.getElementById('activityDesc').value = activity.desc || '';
+                    document.getElementById('activityCost').value = activity.cost || 0;
+                    document.getElementById('activityStation').value = activity.station || '';
+                }
+            } else {
+                // Modo Crear
+                if (modalTitle) modalTitle.textContent = 'Añadir Actividad';
+                const activityIdInput = document.getElementById('activityId');
+                if (activityIdInput) activityIdInput.value = '';
+            }
+
+            // 🔥 Usar clases de Tailwind en lugar de estilos inline
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+
+            console.log('✅ Modal de actividad abierto', { activityId, day });
+        } catch (error) {
+            console.error('❌ Error en showActivityModal:', error);
+            alert('Error al abrir el modal. Por favor, revisa la consola.');
         }
-
-        console.log('🔓 Removiendo clase hidden...');
-        modal.classList.remove('hidden');
-        console.log('🎨 Estableciendo display flex...');
-        modal.style.display = 'flex';
-        console.log('🔒 Bloqueando scroll del body...');
-        document.body.style.overflow = 'hidden';
-
-        console.log('📋 Clases del modal DESPUÉS:', modal.className);
-        console.log('🎨 Display del modal:', window.getComputedStyle(modal).display);
-        console.log('✅ Modal de actividad abierto', { activityId, day });
     },
 
     closeActivityModal() {
-        const modal = document.getElementById('activityModal');
-        if (modal) {
-            modal.classList.add('hidden');
-            modal.style.display = 'none';
-            document.body.style.overflow = '';
+        try {
+            const modal = document.getElementById('activityModal');
+            if (modal) {
+                // 🔥 Usar clases de Tailwind en lugar de estilos inline
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+            }
+
+            // Limpiar formulario
+            const form = document.getElementById('activityForm');
+            if (form) form.reset();
+
+            console.log('✅ Modal de actividad cerrado');
+        } catch (error) {
+            console.error('❌ Error en closeActivityModal:', error);
         }
-        
-        // Limpiar formulario
-        const form = document.getElementById('activityForm');
-        if (form) form.reset();
-        
-        console.log('✅ Modal de actividad cerrado');
     },
 
     async deleteActivity(activityId, day) {
