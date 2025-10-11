@@ -137,7 +137,7 @@ export const APIsIntegration = {
             children: []
           }
         ],
-        cityCode: cityCode
+        iataCode: cityCode
       };
       
       const url = API_ENDPOINTS.hotels.search();
