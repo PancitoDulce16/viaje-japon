@@ -324,7 +324,7 @@ function renderDaySelector() {
         <button data-day="${day.day}" class="day-btn-japan ${
             currentDay === day.day ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
         }">
-            <i class="far fa-calendar-day"></i> Día ${day.day}
+            <i class="fas fa-calendar-day"></i> Día ${day.day}
         </button>
     `).join('');
 }
@@ -603,22 +603,25 @@ function initializeDragAndDrop(container) {
 
     sortableInstance = new Sortable(timelineContainer, {
         animation: 300,
-        handle: '.activity-card-japan', // Toda la card es draggable
+        filter: '.activity-edit-btn, .activity-delete-btn, .activity-checkbox', // Excluir botones de acción
+        preventOnFilter: true,
         ghostClass: 'sortable-ghost',
         chosenClass: 'sortable-chosen',
         dragClass: 'sortable-drag',
         easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-        forceFallback: true,
-        fallbackTolerance: 3,
+        forceFallback: false,
+        fallbackTolerance: 5,
+        delay: 100,
+        delayOnTouchOnly: true,
 
         onStart: function(evt) {
             evt.item.style.opacity = '0.6';
-            evt.item.style.transform = 'scale(1.02)';
+            evt.item.style.cursor = 'grabbing';
         },
 
         onEnd: function(evt) {
             evt.item.style.opacity = '1';
-            evt.item.style.transform = 'scale(1)';
+            evt.item.style.cursor = 'grab';
 
             const oldIndex = evt.oldIndex;
             const newIndex = evt.newIndex;
@@ -637,6 +640,8 @@ function initializeDragAndDrop(container) {
             saveReorderedActivities();
         }
     });
+
+    console.log('✅ Drag & Drop inicializado correctamente');
 }
 
 /**
