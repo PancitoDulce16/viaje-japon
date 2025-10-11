@@ -633,20 +633,30 @@ export const ItineraryHandler = {
             return;
         }
         console.log('✅ Modal encontrado:', modal);
+        console.log('📋 Clases del modal ANTES:', modal.className);
 
         const form = document.getElementById('activityForm');
         const modalTitle = document.getElementById('activityModalTitle');
 
+        console.log('📝 Form encontrado:', form);
+        console.log('📝 Modal title encontrado:', modalTitle);
+
         if (form) form.reset();
-        
+
         const dayInput = document.getElementById('activityDay');
-        if (dayInput) dayInput.value = day;
+        if (dayInput) {
+            dayInput.value = day;
+            console.log('📅 Día asignado al input:', day);
+        } else {
+            console.error('❌ Input activityDay no encontrado');
+        }
 
         if (activityId) {
             // Modo Editar
-            modalTitle.textContent = 'Editar Actividad';
+            console.log('✏️ Modo Editar');
+            if (modalTitle) modalTitle.textContent = 'Editar Actividad';
             const dayData = currentItinerary.days.find(d => d.day === day);
-            const activity = dayData.activities.find(a => a.id === activityId);
+            const activity = dayData?.activities.find(a => a.id === activityId);
 
             if (activity) {
                 document.getElementById('activityId').value = activity.id;
@@ -659,14 +669,21 @@ export const ItineraryHandler = {
             }
         } else {
             // Modo Crear
-            modalTitle.textContent = 'Añadir Actividad';
-            document.getElementById('activityId').value = '';
+            console.log('➕ Modo Crear');
+            if (modalTitle) modalTitle.textContent = 'Añadir Actividad';
+            const activityIdInput = document.getElementById('activityId');
+            if (activityIdInput) activityIdInput.value = '';
         }
 
+        console.log('🔓 Removiendo clase hidden...');
         modal.classList.remove('hidden');
+        console.log('🎨 Estableciendo display flex...');
         modal.style.display = 'flex';
+        console.log('🔒 Bloqueando scroll del body...');
         document.body.style.overflow = 'hidden';
-        
+
+        console.log('📋 Clases del modal DESPUÉS:', modal.className);
+        console.log('🎨 Display del modal:', window.getComputedStyle(modal).display);
         console.log('✅ Modal de actividad abierto', { activityId, day });
     },
 
