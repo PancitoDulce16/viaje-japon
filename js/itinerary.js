@@ -13,6 +13,7 @@ let checkedActivities = {};
 let currentDay = 1;
 let unsubscribe = null;
 let currentItinerary = null;
+let sortableInstance = null; // 🔥 Para drag & drop
 
 function getCurrentTripId() {
   if (window.TripsManager && window.TripsManager.currentTrip) {
@@ -373,6 +374,12 @@ function renderActivities(day) {
     const container = document.getElementById('activitiesTimeline');
     if (!container) return;
     
+    // 🔥 Limpiar Sortable anterior si existe
+    if (sortableInstance) {
+        sortableInstance.destroy();
+        sortableInstance = null;
+    }
+    
     container.innerHTML = day.activities.map((act, i) => `
         <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md border-l-4 border-red-500 fade-in transition-all hover:shadow-lg ${
             checkedActivities[act.id] ? 'opacity-60' : ''
@@ -418,6 +425,70 @@ function renderActivities(day) {
             </div>
         </div>
     `).join('');
+}
+
+// 🔥 NUEVO: Inicializar drag & drop con SortableJS
+function initializeDragAndDrop(container) {
+    if (!container || typeof Sortable === 'undefined') {
+        console.warn('Sortable no está disponible');
+        return;
+    }
+
+    sortableInstance = new Sortable(container, {
+        animation: 200,
+        handle: '.activity-card', // Toda la card es draggable
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        dragClass: 'sortable-drag',
+        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        
+        onStart: function(evt) {
+            evt.item.style.opacity = '0.5';
+        },
+        
+        onEnd: function(evt) {
+            evt.item.style.opacity = '1';
+            
+            const oldIndex = evt.oldIndex;
+            const newIndex = evt.newIndex;
+            
+            if (oldIndex === newIndex) return;
+            
+            // Actualizar el orden en el itinerario
+            const dayData = currentItinerary.days.find(d => d.day === currentDay);
+            if (!dayData) return;
+            
+            // Reorganizar array
+            const [movedItem] = dayData.activities.splice(oldIndex, 1);
+            dayData.activities.splice(newIndex, 0, movedItem);
+            
+            // 🔥 Guardar cambios en Firebase automáticamente
+            saveReorderedActivities();
+        }
+    });
+}
+
+// 🔥 NUEVO: Guardar actividades reordenadas en Firebase
+async function saveReorderedActivities() {
+    const tripId = getCurrentTripId();
+    if (!tripId || !currentItinerary) return;
+    
+    try {
+        const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+        await setDoc(itineraryRef, currentItinerary);
+        
+        // Mostrar notificación de éxito
+        if (window.Notifications) {
+            window.Notifications.success('✅ Orden actualizado');
+        }
+        
+        console.log('✅ Actividades reordenadas guardadas');
+    } catch (error) {
+        console.error('❌ Error guardando orden:', error);
+        if (window.Notifications) {
+            window.Notifications.error('❌ Error al guardar orden');
+        }
+    }
 }
 
 export const ItineraryHandler = {
@@ -485,6 +556,9 @@ export const ItineraryHandler = {
                 const checkbox = e.target.closest('.activity-checkbox');
                 if (checkbox) toggleActivity(checkbox.dataset.id);
             });
+            
+            // 🔥 Inicializar drag & drop
+            initializeDragAndDrop(timeline);
         }
 
         const activityForm = document.getElementById('activityForm');

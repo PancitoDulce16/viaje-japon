@@ -598,24 +598,391 @@ html {
   scroll-padding-top: 80px;
 }
 
+/* ========================================
+   RESPONSIVE - MOBILE FIRST
+   ======================================== */
+
+/* Tablets y móviles grandes */
+@media (max-width: 1024px) {
+  /* Reducir padding en contenedores */
+  .p-6 {
+    padding: 1rem !important;
+  }
+
+  .p-8 {
+    padding: 1.5rem !important;
+  }
+
+  /* Ajustar grids a 1 columna en tablets */
+  .grid.md\:grid-cols-2,
+  .grid.md\:grid-cols-3,
+  .grid.lg\:grid-cols-2,
+  .grid.lg\:grid-cols-3 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+
+  /* Headers más compactos */
+  h1, .text-4xl {
+    font-size: 2rem !important;
+  }
+
+  h2, .text-3xl {
+    font-size: 1.75rem !important;
+  }
+
+  h3, .text-2xl {
+    font-size: 1.5rem !important;
+  }
+}
+
+/* Móviles */
 @media (max-width: 768px) {
+  /* Botón flotante más pequeño */
   .floating-btn {
     width: 48px;
     height: 48px;
     font-size: 1.25rem;
+    bottom: 80px !important; /* Evitar conflicto con navegación móvil */
   }
 
+  /* Tabs más compactos */
   .tab-btn {
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
   }
 
+  /* Modales ocupan casi toda la pantalla */
   .modal > div {
     max-width: 95vw;
-    max-height: 95vh;
+    max-height: 90vh;
+    margin: 1rem;
+  }
+
+  /* Padding reducido en móvil */
+  .p-4 {
+    padding: 0.75rem !important;
+  }
+
+  .px-4 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .py-4 {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  /* Headers responsive */
+  h1, .text-4xl {
+    font-size: 1.75rem !important;
+    line-height: 2rem;
+  }
+
+  h2, .text-3xl {
+    font-size: 1.5rem !important;
+    line-height: 1.75rem;
+  }
+
+  h3, .text-2xl {
+    font-size: 1.25rem !important;
+    line-height: 1.5rem;
+  }
+
+  /* Botones más grandes para touch */
+  button {
+    min-height: 44px; /* Apple HIG recomendado */
+    touch-action: manipulation;
+  }
+
+  /* Cards más compactas */
+  .activity-card {
+    padding: 0.75rem;
+  }
+
+  /* Grids a 1 columna */
+  .grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Flex column en móvil */
+  .flex.flex-wrap {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  /* Inputs más grandes */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important; /* Evita zoom en iOS */
+    padding: 0.75rem !important;
+  }
+
+  /* Navegación sticky más compacta */
+  nav {
+    padding: 0.5rem !important;
+  }
+
+  /* Ocultar texto en algunos botones, solo iconos */
+  .mobile-icon-only {
+    font-size: 0;
+  }
+
+  .mobile-icon-only::before {
+    font-size: 1.25rem;
+  }
+
+  /* Mejor spacing para listas */
+  .space-y-4 > * + * {
+    margin-top: 0.75rem !important;
+  }
+
+  .space-y-6 > * + * {
+    margin-top: 1rem !important;
+  }
+
+  /* Max width para contenido */
+  .max-w-6xl,
+  .max-w-7xl {
+    max-width: 100% !important;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* Overflow scroll horizontal para tabs */
+  #tabSelector {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  #tabSelector::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Fix para sticky header en móvil */
+  .sticky {
+    position: -webkit-sticky;
+    position: sticky;
+  }
+
+  /* Cards de atracción más compactas */
+  .attraction-card {
+    padding: 0.75rem !important;
+  }
+
+  /* Stats boxes más pequeñas */
+  .grid.grid-cols-2 {
+    gap: 0.5rem !important;
+  }
+
+  /* Imágenes responsive */
+  img {
+    max-width: 100%;
+    height: auto;
   }
 }
 
+/* Móviles muy pequeños */
+@media (max-width: 380px) {
+  /* Reducir aún más el padding */
+  .p-4, .px-4, .py-4 {
+    padding: 0.5rem !important;
+  }
+
+  /* Headers aún más pequeños */
+  h1, .text-4xl {
+    font-size: 1.5rem !important;
+  }
+
+  h2, .text-3xl {
+    font-size: 1.25rem !important;
+  }
+
+  /* Tabs extremadamente compactos */
+  .tab-btn {
+    padding: 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  /* Botón flotante en esquina para no estorbar */
+  .floating-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.1rem;
+  }
+
+  /* Stats grid más compacto */
+  .grid.grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .grid.grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Landscape móvil */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Reducir altura de header */
+  nav {
+    padding: 0.25rem !important;
+  }
+
+  /* Tabs inline */
+  .tab-btn {
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Modales ocupan todo */
+  .modal > div {
+    max-height: 95vh;
+  }
+
+  /* Headers más pequeños en landscape */
+  h1, h2 {
+    margin-bottom: 0.5rem !important;
+  }
+}
+
+/* Tablets en landscape */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  /* Aprovechar espacio horizontal */
+  .grid.md\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .grid.md\:grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Sidebar layout cuando sea apropiado */
+  .md\:grid-cols-3 {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
+/* ========================================
+   UTILIDADES ADICIONALES PARA MOBILE
+   ======================================== */
+
+/* Touch-friendly */
+@media (hover: none) and (pointer: coarse) {
+  /* Aumentar área de toque */
+  button,
+  a,
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Deshabilitar hover effects en touch */
+  .hover-lift:hover {
+    transform: none;
+  }
+
+  /* Feedback táctil */
+  button:active,
+  a:active {
+    transform: scale(0.97);
+    opacity: 0.8;
+  }
+}
+
+/* Ocultar scrollbars en móvil pero mantener scroll */
+@media (max-width: 768px) {
+  *::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+  }
+}
+
+/* Safe areas para iOS */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+
+  nav {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
+
+/* ========================================
+   DRAG & DROP STYLES (SortableJS)
+   ======================================== */
+
+.sortable-ghost {
+  opacity: 0.4;
+  background: linear-gradient(135deg, #ec4899 0%, #dc2626 100%);
+  transform: rotate(2deg);
+}
+
+.sortable-chosen {
+  cursor: grabbing !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
+  z-index: 1000;
+}
+
+.sortable-drag {
+  opacity: 0;
+}
+
+/* Cursor visual para drag */
+.activity-card {
+  cursor: grab;
+  user-select: none;
+}
+
+.activity-card:active {
+  cursor: grabbing;
+}
+
+/* Animación de drop */
+@keyframes dropAnimation {
+  0% {
+    transform: scale(1.05);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.activity-card.dropped {
+  animation: dropAnimation 0.3s ease-out;
+}
+
+/* Indicador visual de drag en móvil */
+@media (max-width: 768px) {
+  .activity-card::before {
+    content: '⋮';
+    position: absolute;
+    left: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    color: #9ca3af;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .activity-card:active::before {
+    opacity: 1;
+  }
+}
+
+/* Print styles */
 @media print {
   .floating-btn,
   .modal,
@@ -631,5 +998,15 @@ html {
 
   .activity-card {
     page-break-inside: avoid;
+  }
+
+  .dark body {
+    background: white;
+    color: black;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

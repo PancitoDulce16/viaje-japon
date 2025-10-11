@@ -1,4 +1,4 @@
-// js/flights.js - Gestión completa de vuelos
+// js/flights.js - Gestión completa de vuelos CON CARGA AUTOMÁTICA DEL WIZARD
 import { db, auth } from './firebase-config.js';
 import { collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 import { APIsIntegration } from './apis-integration.js';
@@ -54,12 +54,103 @@ export const FlightsHandler = {
     }
   },
 
-  init(tripId) {
+  async init(tripId) {
     this.currentTripId = tripId;
     this.render();
     
     if (auth.currentUser && tripId) {
-      this.listenToFlights();
+      // 🔥 NUEVO: Cargar vuelos del wizard primero
+      await this.loadWizardFlights();
+      await this.listenToFlights();
+    }
+  },
+
+  // 🔥 NUEVO: Cargar vuelos del wizard automáticamente
+  async loadWizardFlights() {
+    try {
+      const tripRef = doc(db, 'trips', this.currentTripId);
+      const tripSnap = await getDoc(tripRef);
+      
+      if (!tripSnap.exists()) return;
+      
+      const tripData = tripSnap.data();
+      const wizardFlights = tripData.flights || {};
+      
+      // Verificar si ya tenemos los vuelos del wizard en módulos/flights
+      const flightsModuleRef = doc(db, 'trips', this.currentTripId, 'modules', 'flights');
+      const flightsModuleSnap = await getDoc(flightsModuleRef);
+      
+      let existingFlights = [];
+      if (flightsModuleSnap.exists()) {
+        existingFlights = flightsModuleSnap.data().flights || [];
+      }
+      
+      // Crear array de vuelos del wizard si existen
+      const wizardFlightsArray = [];
+      
+      if (wizardFlights.outbound && wizardFlights.outbound.flightNumber) {
+        // Verificar que no exista ya
+        const alreadyExists = existingFlights.some(f => 
+          f.flightNumber === wizardFlights.outbound.flightNumber && 
+          f.type === 'outbound'
+        );
+        
+        if (!alreadyExists) {
+          wizardFlightsArray.push({
+            type: 'outbound',
+            date: wizardFlights.outbound.date || '',
+            airline: wizardFlights.outbound.airline || '',
+            flightNumber: wizardFlights.outbound.flightNumber || '',
+            from: wizardFlights.outbound.from || '',
+            to: wizardFlights.outbound.to || '',
+            departureTime: '',
+            arrivalTime: '',
+            duration: '',
+            notes: '🎯 Añadido desde el wizard de viaje',
+            addedAt: new Date().toISOString(),
+            fromWizard: true
+          });
+        }
+      }
+      
+      if (wizardFlights.return && wizardFlights.return.flightNumber) {
+        // Verificar que no exista ya
+        const alreadyExists = existingFlights.some(f => 
+          f.flightNumber === wizardFlights.return.flightNumber && 
+          f.type === 'return'
+        );
+        
+        if (!alreadyExists) {
+          wizardFlightsArray.push({
+            type: 'return',
+            date: wizardFlights.return.date || '',
+            airline: wizardFlights.return.airline || '',
+            flightNumber: wizardFlights.return.flightNumber || '',
+            from: wizardFlights.return.from || '',
+            to: wizardFlights.return.to || '',
+            departureTime: '',
+            arrivalTime: '',
+            duration: '',
+            notes: '🎯 Añadido desde el wizard de viaje',
+            addedAt: new Date().toISOString(),
+            fromWizard: true
+          });
+        }
+      }
+      
+      // Si hay vuelos del wizard que no existen, agregarlos
+      if (wizardFlightsArray.length > 0) {
+        const combinedFlights = [...existingFlights, ...wizardFlightsArray];
+        
+        await setDoc(flightsModuleRef, {
+          flights: combinedFlights,
+          updatedAt: new Date().toISOString()
+        });
+        
+        console.log('✅ Vuelos del wizard cargados automáticamente:', wizardFlightsArray.length);
+      }
+    } catch (error) {
+      console.error('❌ Error cargando vuelos del wizard:', error);
     }
   },
 
@@ -70,6 +161,7 @@ export const FlightsHandler = {
       if (docSnap.exists()) {
         this.myFlights = docSnap.data().flights || [];
         this.renderMyFlights();
+        this.renderBaggageInfoDynamic(); // 🔥 Actualizar equipaje dinámicamente
       }
     });
   },
@@ -84,7 +176,7 @@ export const FlightsHandler = {
 
         <!-- Mis Vuelos Registrados -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-          <div class="flex justify-between items-center mb-4">
+          <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
             <h3 class="text-2xl font-bold dark:text-white flex items-center gap-2">
               🎫 Mis Vuelos
             </h3>
@@ -185,7 +277,15 @@ export const FlightsHandler = {
 
   renderMyFlights() {
     const container = document.getElementById('flightsListContainer');
-    if (!container) return;
+    if (!container) {
+      // Si el container no existe, actualizar todo el contenido
+      const listContainer = document.getElementById('myFlightsList');
+      if (listContainer && this.myFlights.length > 0) {
+        listContainer.innerHTML = '<div id="flightsListContainer"></div>';
+        this.renderMyFlights(); // Llamar recursivamente
+      }
+      return;
+    }
 
     if (this.myFlights.length === 0) {
       document.getElementById('myFlightsList').innerHTML = this.renderMyFlightsInitial();
@@ -194,43 +294,49 @@ export const FlightsHandler = {
 
     container.innerHTML = this.myFlights.map((flight, index) => `
       <div class="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg mb-4 border-l-4 border-blue-500">
-        <div class="flex justify-between items-start mb-3">
+        <div class="flex justify-between items-start mb-3 flex-wrap gap-2">
           <div class="flex-1">
             <span class="text-xs font-bold text-blue-600 dark:text-blue-400">${flight.type === 'outbound' ? '🛫 IDA' : '🛬 VUELTA'}</span>
             <h4 class="text-lg font-bold dark:text-white">${flight.airline} ${flight.flightNumber}</h4>
+            ${flight.date ? `<p class="text-xs text-gray-500 dark:text-gray-400">📅 ${new Date(flight.date).toLocaleDateString('es')}</p>` : ''}
           </div>
           <div class="flex gap-2">
-            <button 
-              onclick="FlightsHandler.trackFlight('${flight.flightNumber}', '${flight.date}')"
-              class="text-xs bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-            >
-              📡 Track
-            </button>
+            ${flight.flightNumber ? `
+              <button 
+                onclick="FlightsHandler.trackFlight('${flight.flightNumber}', '${flight.date || ''}')"
+                class="text-xs bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+              >
+                📡 Track
+              </button>
+            ` : ''}
             <button 
               onclick="FlightsHandler.deleteFlight(${index})"
-              class="text-red-500 hover:text-red-700"
+              class="text-red-500 hover:text-red-700 p-2"
+              title="Eliminar vuelo"
             >
               🗑️
             </button>
           </div>
         </div>
         
-        <div class="grid grid-cols-3 gap-2 items-center mb-3">
-          <div>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Salida</p>
-            <p class="font-bold dark:text-white">${flight.from}</p>
-            <p class="text-sm text-gray-600 dark:text-gray-300">${flight.departureTime}</p>
+        ${flight.from && flight.to ? `
+          <div class="grid grid-cols-3 gap-2 items-center mb-3">
+            <div>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Salida</p>
+              <p class="font-bold dark:text-white">${flight.from}</p>
+              ${flight.departureTime ? `<p class="text-sm text-gray-600 dark:text-gray-300">${flight.departureTime}</p>` : ''}
+            </div>
+            <div class="text-center">
+              <p class="text-2xl text-gray-400">→</p>
+              ${flight.duration ? `<p class="text-xs text-gray-500 dark:text-gray-400">${flight.duration}</p>` : ''}
+            </div>
+            <div class="text-right">
+              <p class="text-xs text-gray-500 dark:text-gray-400">Llegada</p>
+              <p class="font-bold dark:text-white">${flight.to}</p>
+              ${flight.arrivalTime ? `<p class="text-sm text-gray-600 dark:text-gray-300">${flight.arrivalTime}</p>` : ''}
+            </div>
           </div>
-          <div class="text-center">
-            <p class="text-2xl text-gray-400">→</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">${flight.duration || 'N/A'}</p>
-          </div>
-          <div class="text-right">
-            <p class="text-xs text-gray-500 dark:text-gray-400">Llegada</p>
-            <p class="font-bold dark:text-white">${flight.to}</p>
-            <p class="text-sm text-gray-600 dark:text-gray-300">${flight.arrivalTime}</p>
-          </div>
-        </div>
+        ` : ''}
 
         ${flight.notes ? `
           <div class="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-xs">
@@ -343,7 +449,6 @@ export const FlightsHandler = {
               type="time"
               id="flightDepartureTime"
               class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              required
             >
           </div>
 
@@ -355,7 +460,6 @@ export const FlightsHandler = {
               type="time"
               id="flightArrivalTime"
               class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              required
             >
           </div>
 
@@ -499,6 +603,14 @@ export const FlightsHandler = {
     `;
   },
 
+  // 🔥 NUEVO: Renderizar equipaje dinámicamente cuando cambian los vuelos
+  renderBaggageInfoDynamic() {
+    const container = document.getElementById('baggageInfo');
+    if (container) {
+      container.innerHTML = this.renderBaggageInfo();
+    }
+  },
+
   renderFlightTips() {
     return `
       <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl shadow-lg p-6 mt-6">
@@ -590,8 +702,8 @@ export const FlightsHandler = {
       flightNumber: document.getElementById('flightNumber').value.toUpperCase(),
       from: document.getElementById('flightFrom').value.toUpperCase(),
       to: document.getElementById('flightTo').value.toUpperCase(),
-      departureTime: document.getElementById('flightDepartureTime').value,
-      arrivalTime: document.getElementById('flightArrivalTime').value,
+      departureTime: document.getElementById('flightDepartureTime').value || '',
+      arrivalTime: document.getElementById('flightArrivalTime').value || '',
       duration: document.getElementById('flightDuration').value || '',
       notes: document.getElementById('flightNotes').value || '',
       addedAt: new Date().toISOString()

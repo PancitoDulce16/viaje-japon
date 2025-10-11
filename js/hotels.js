@@ -369,11 +369,11 @@ export const HotelsHandler = {
           </label>
           <select 
             id="searchCity"
-            class="w-full p-3 border-2 border-white/30 rounded-lg bg-white/20 text-white font-semibold backdrop-blur-sm"
+            class="w-full p-3 border-2 border-white/30 rounded-lg bg-white/20 font-semibold backdrop-blur-sm text-gray-900"
           >
-            <option value="">Selecciona ciudad</option>
+            <option value="" class="text-gray-900 bg-white">Selecciona ciudad</option>
             ${Object.entries(this.japanCities).map(([code, city]) => `
-              <option value="${code}">${city.name}</option>
+              <option value="${code}" class="text-gray-900 bg-white">${city.name}</option>
             `).join('')}
           </select>
         </div>
@@ -388,7 +388,7 @@ export const HotelsHandler = {
             value="2"
             min="1"
             max="10"
-            class="w-full p-3 border-2 border-white/30 rounded-lg bg-white/20 text-white font-semibold backdrop-blur-sm"
+            class="w-full p-3 border-2 border-white/30 rounded-lg bg-white/20 font-semibold backdrop-blur-sm text-gray-900"
           >
         </div>
 
@@ -399,7 +399,7 @@ export const HotelsHandler = {
           <input 
             type="date"
             id="searchCheckIn"
-            class="w-full p-3 border-2 border-white/30 rounded-lg bg-white/20 text-white font-semibold backdrop-blur-sm"
+            class="w-full p-3 border-2 border-white/30 rounded-lg bg-white/20 font-semibold backdrop-blur-sm text-gray-900"
           >
         </div>
 
@@ -410,7 +410,7 @@ export const HotelsHandler = {
           <input 
             type="date"
             id="searchCheckOut"
-            class="w-full p-3 border-2 border-white/30 rounded-lg bg-white/20 text-white font-semibold backdrop-blur-sm"
+            class="w-full p-3 border-2 border-white/30 rounded-lg bg-white/20 font-semibold backdrop-blur-sm text-gray-900"
           >
         </div>
 
