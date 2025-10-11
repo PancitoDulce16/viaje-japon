@@ -37,9 +37,9 @@
     <link rel="apple-touch-icon" href="./images/icons/icon-192.png">
 </head>
 <body>
-    <div id="sakura-container"></div>
     <!-- LANDING PAGE / LOGIN SCREEN -->
     <div id="landingPage" class="min-h-screen flex items-center justify-center p-4">
+        <div id="sakura-container"></div>
         <div class="max-w-6xl w-full">
             <!-- Hero Section -->
             <div class="text-center mb-12">
@@ -356,10 +356,17 @@
         }
     </script>
     <script>
-        // Script para la animación de Sakura
+        // Script para la animación de Sakura - Solo en landing page
+        let sakuraInterval = null;
+
         function createSakura() {
+            const landingPage = document.getElementById('landingPage');
             const container = document.getElementById('sakura-container');
-            if (!container) return;
+
+            // Solo crear pétalos si el landing page está visible
+            if (!container || !landingPage || landingPage.classList.contains('hidden')) {
+                return;
+            }
 
             const petal = document.createElement('div');
             petal.classList.add('petal');
@@ -376,8 +383,47 @@
             }, 7000); // Duración máxima de la animación
         }
 
-        // Crear pétalos cada cierto tiempo
-        setInterval(createSakura, 400);
+        // Iniciar animación solo si landing page está visible
+        function startSakuraAnimation() {
+            if (!sakuraInterval) {
+                sakuraInterval = setInterval(createSakura, 400);
+            }
+        }
+
+        // Detener animación
+        function stopSakuraAnimation() {
+            if (sakuraInterval) {
+                clearInterval(sakuraInterval);
+                sakuraInterval = null;
+            }
+            // Limpiar pétalos existentes
+            const container = document.getElementById('sakura-container');
+            if (container) {
+                container.innerHTML = '';
+            }
+        }
+
+        // Iniciar animación cuando carga la página
+        startSakuraAnimation();
+
+        // Observar cambios en el landing page para detener/iniciar animación
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    const landingPage = document.getElementById('landingPage');
+                    if (landingPage.classList.contains('hidden')) {
+                        stopSakuraAnimation();
+                    } else {
+                        startSakuraAnimation();
+                    }
+                }
+            });
+        });
+
+        const landingPage = document.getElementById('landingPage');
+        if (landingPage) {
+            observer.observe(landingPage, { attributes: true });
+        }
     </script>
 </body>
 </html>

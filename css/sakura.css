@@ -7,7 +7,12 @@
     height: 100%;
     pointer-events: none;
     overflow: hidden;
-    z-index: 0; /* Ajustado para estar por encima del fondo */
+    z-index: 1; /* Por encima del fondo pero debajo del contenido */
+}
+
+/* Ocultar sakura cuando el landing page está oculto */
+#landingPage.hidden #sakura-container {
+    display: none;
 }
 
 .petal {
