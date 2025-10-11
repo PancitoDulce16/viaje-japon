@@ -1,21 +1,24 @@
-// js/itinerary.js - VERSIÓN MEJORADA con Creación Dinámica
+// js/itinerary.js - VERSIÓN OPTIMIZADA Y ESCALABLE
 
 import { db, auth } from './firebase-config.js';
 import { Notifications } from './notifications.js';
-import { 
+import { Logger, retry, formatDuration, parseDuration, AppError, handleError } from './helpers.js';
+import { FIREBASE_PATHS, STORAGE_KEYS, ERROR_CODES, TIMEOUTS } from './constants.js';
+import {
   doc,
   setDoc,
   getDoc,
   onSnapshot
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
+// 📊 Estado de la aplicación
 let checkedActivities = {};
 let currentDay = 1;
 let unsubscribe = null;
 let currentItinerary = null;
-let sortableInstance = null; // 🔥 Para drag & drop
+let sortableInstance = null;
 let isListenerAttached = false;
-let isFormListenerAttached = false; // 🔥 Para evitar listeners duplicados en el formulario
+let isFormListenerAttached = false;
 
 function getCurrentTripId() {
   if (window.TripsManager && window.TripsManager.currentTrip) {
@@ -328,35 +331,39 @@ function renderDaySelector() {
     `).join('');
 }
 
-// ⏱️ Calcular tiempo total del día
+/**
+ * Calcular tiempo total del día
+ * @param {Array} activities - Lista de actividades
+ * @returns {string} Tiempo total formateado
+ */
 function calculateDayTime(activities) {
-    let totalMinutes = 0;
-    activities.forEach(act => {
-        if (act.duration) {
-            const match = act.duration.match(/(\d+)\s*(h|hora|horas|min|minuto|minutos)/gi);
-            if (match) {
-                match.forEach(m => {
-                    const num = parseInt(m);
-                    if (m.toLowerCase().includes('h') || m.toLowerCase().includes('hora')) {
-                        totalMinutes += num * 60;
-                    } else {
-                        totalMinutes += num;
-                    }
-                });
-            }
-        }
-    });
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    if (hours > 0 && minutes > 0) return `${hours}h ${minutes}min`;
-    if (hours > 0) return `${hours}h`;
-    if (minutes > 0) return `${minutes}min`;
-    return 'No definido';
+    try {
+        const totalMinutes = activities.reduce((total, act) => {
+            return total + (act.duration ? parseDuration(act.duration) : 0);
+        }, 0);
+
+        return formatDuration(totalMinutes);
+    } catch (error) {
+        Logger.error('Error calculando tiempo del día', error);
+        return 'No definido';
+    }
 }
 
-// 💰 Calcular costo total del día
+/**
+ * Calcular costo total del día
+ * @param {Array} activities - Lista de actividades
+ * @returns {number} Costo total
+ */
 function calculateDayBudget(activities) {
-    return activities.reduce((total, act) => total + (act.cost || 0), 0);
+    try {
+        return activities.reduce((total, act) => {
+            const cost = typeof act.cost === 'number' ? act.cost : 0;
+            return total + cost;
+        }, 0);
+    } catch (error) {
+        Logger.error('Error calculando presupuesto del día', error);
+        return 0;
+    }
 }
 
 function renderDayOverview(day) {
@@ -533,25 +540,38 @@ function initializeDragAndDrop(container) {
     });
 }
 
-// 🔥 NUEVO: Guardar actividades reordenadas en Firebase
+/**
+ * Guardar actividades reordenadas en Firebase con retry logic
+ */
 async function saveReorderedActivities() {
     const tripId = getCurrentTripId();
-    if (!tripId || !currentItinerary) return;
-    
+    if (!tripId || !currentItinerary) {
+        Logger.warn('No se puede guardar: falta tripId o itinerario');
+        return;
+    }
+
     try {
-        const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
-        await setDoc(itineraryRef, currentItinerary);
-        
-        // Mostrar notificación de éxito
+        await retry(async () => {
+            const itineraryRef = doc(db, FIREBASE_PATHS.ITINERARY(tripId));
+            await setDoc(itineraryRef, currentItinerary);
+        }, {
+            maxAttempts: 3,
+            delay: 1000,
+            onRetry: (attempt) => {
+                Logger.warn(`Reintentando guardar orden (intento ${attempt})...`);
+            }
+        });
+
         if (window.Notifications) {
             window.Notifications.success('✅ Orden actualizado');
         }
-        
-        console.log('✅ Actividades reordenadas guardadas');
+
+        Logger.success('Actividades reordenadas guardadas');
     } catch (error) {
-        console.error('❌ Error guardando orden:', error);
+        Logger.error('Error guardando orden después de reintentos', error);
+
         if (window.Notifications) {
-            window.Notifications.error('❌ Error al guardar orden');
+            window.Notifications.error('❌ Error al guardar orden. Intenta de nuevo.');
         }
     }
 }
