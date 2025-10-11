@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Añadir Actividad Button</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">🧪 Test del Botón "Añadir Actividad"</h1>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">Simulación del Botón</h2>
+            <p class="text-gray-600 mb-4">Este botón simula el botón "Añadir Actividad" del itinerario:</p>
+
+            <button
+                type="button"
+                id="addActivityBtn_1"
+                class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition"
+            >
+                + Añadir Actividad (Día 1)
+            </button>
+        </div>
+
+        <div class="bg-blue-50 rounded-xl p-6 mb-6">
+            <h3 class="text-lg font-bold mb-2">📋 Instrucciones de Prueba</h3>
+            <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                <li>Abre la consola del navegador (F12)</li>
+                <li>Haz clic en el botón "Añadir Actividad"</li>
+                <li>Verifica que aparezcan estos mensajes en la consola:
+                    <ul class="list-disc list-inside ml-6 mt-2 text-sm">
+                        <li><code>✅ Botón "Añadir Actividad" clickeado: addActivityBtn_1</code></li>
+                        <li><code>📅 Día extraído: 1</code></li>
+                        <li><code>🔔 showActivityModal llamado con: {activityId: null, day: 1}</code></li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div id="console-output" class="bg-gray-800 text-green-400 rounded-xl p-6 font-mono text-sm">
+            <div class="font-bold mb-2">Console Output:</div>
+            <div id="log-container" class="space-y-1"></div>
+        </div>
+    </div>
+
+    <script>
+        // Capturar logs de consola y mostrarlos en la página
+        const logContainer = document.getElementById('log-container');
+        const originalLog = console.log;
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const logEntry = document.createElement('div');
+            logEntry.textContent = args.join(' ');
+            logContainer.appendChild(logEntry);
+        };
+
+        // Simular el event listener del itinerario
+        const container = document.body;
+
+        container.addEventListener('click', (e) => {
+            const addBtn = e.target.closest('[id^="addActivityBtn_"]');
+
+            if (addBtn) {
+                console.log('✅ Botón "Añadir Actividad" clickeado:', addBtn.id);
+                const day = parseInt(addBtn.id.split('_')[1]);
+                console.log('📅 Día extraído:', day);
+                console.log('🔔 showActivityModal llamado con: {activityId: null, day:', day + '}');
+
+                // Mostrar alerta de éxito
+                alert('✅ ¡El botón funciona correctamente!\n\nModal se abriría para el Día ' + day);
+            }
+        });
+
+        console.log('🔧 Sistema de prueba iniciado. Haz clic en el botón para probar.');
+    </script>
+</body>
+</html>

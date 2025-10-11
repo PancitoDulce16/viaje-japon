@@ -384,7 +384,7 @@ function renderDayOverview(day) {
             </button>
         </div>
     `;
-    
+     
 }
 
 function renderActivities(day) {
@@ -568,7 +568,9 @@ export const ItineraryHandler = {
                 const dayBtn = e.target.closest('.day-btn');
 
                 if (addBtn) {
+                    console.log('✅ Botón "Añadir Actividad" clickeado:', addBtn.id);
                     const day = parseInt(addBtn.id.split('_')[1]);
+                    console.log('📅 Día extraído:', day);
                     ItineraryHandler.showActivityModal(null, day);
                 } else if (editBtn) {
                     const activityId = editBtn.dataset.activityId;
@@ -630,12 +632,14 @@ export const ItineraryHandler = {
     },
 
     showActivityModal(activityId, day) {
+        console.log('🔔 showActivityModal llamado con:', { activityId, day });
         const modal = document.getElementById('activityModal');
         if (!modal) {
             console.error('❌ Modal de actividad no encontrado');
             return;
         }
-        
+        console.log('✅ Modal encontrado:', modal);
+
         const form = document.getElementById('activityForm');
         const modalTitle = document.getElementById('activityModalTitle');
 
