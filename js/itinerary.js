@@ -15,6 +15,7 @@ let unsubscribe = null;
 let currentItinerary = null;
 let sortableInstance = null; // 🔥 Para drag & drop
 let isListenerAttached = false;
+let isFormListenerAttached = false; // 🔥 Para evitar listeners duplicados en el formulario
 
 function getCurrentTripId() {
   if (window.TripsManager && window.TripsManager.currentTrip) {
@@ -593,12 +594,17 @@ export const ItineraryHandler = {
             initializeDragAndDrop(timeline);
         }
 
-        const activityForm = document.getElementById('activityForm');
-        if (activityForm) {
-            activityForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                ItineraryHandler.saveActivity();
-            });
+        // 🔥 Solo agregar listener al formulario una vez
+        if (!isFormListenerAttached) {
+            const activityForm = document.getElementById('activityForm');
+            if (activityForm) {
+                activityForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    ItineraryHandler.saveActivity();
+                });
+                isFormListenerAttached = true;
+                console.log('✅ Form listener attached');
+            }
         }
     },
     
@@ -737,6 +743,10 @@ export const ItineraryHandler = {
                 const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
                 await setDoc(itineraryRef, currentItinerary);
                 Notifications.show('Actividad eliminada con éxito.', 'success');
+
+                // 🔥 Recargar y renderizar el itinerario para actualizar la vista
+                await loadItinerary();
+                render();
             } catch (error) {
                 console.error("Error al eliminar la actividad:", error);
                 Notifications.show('Error al eliminar la actividad.', 'error');
@@ -793,6 +803,10 @@ export const ItineraryHandler = {
             await setDoc(itineraryRef, currentItinerary);
             Notifications.show('Actividad guardada con éxito.', 'success');
             this.closeActivityModal();
+
+            // 🔥 Recargar y renderizar el itinerario para actualizar la vista
+            await loadItinerary();
+            render();
         } catch (error) {
             console.error("Error al guardar la actividad:", error);
             Notifications.show('Error al guardar la actividad.', 'error');

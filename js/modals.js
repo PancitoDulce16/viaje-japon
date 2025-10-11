@@ -42,16 +42,8 @@ export const ModalRenderer = {
             // El formulario de crear viaje ahora se maneja en trips-manager.js
             // Ya no hay un solo formulario, sino dos opciones
 
-            // Setup Activity Form
-            const activityForm = document.getElementById('activityForm');
-            if (activityForm) {
-                activityForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    if (window.ItineraryHandler) {
-                        window.ItineraryHandler.saveActivity();
-                    }
-                });
-            }
+            // Setup Activity Form - YA NO SE NECESITA AQUÍ
+            // El event listener se maneja en itinerary.js para evitar duplicados
         }, 100);
     },
 
