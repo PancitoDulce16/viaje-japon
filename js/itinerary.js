@@ -628,9 +628,20 @@ export const ItineraryHandler = {
     showActivityModal(activityId, day) {
         try {
             console.log('🔔 showActivityModal llamado con:', { activityId, day });
+
+            // Esperar a que el DOM esté completamente cargado
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    this.showActivityModal(activityId, day);
+                });
+                return;
+            }
+
             const modal = document.getElementById('activityModal');
             if (!modal) {
-                console.error('❌ Modal de actividad no encontrado');
+                console.error('❌ Modal de actividad no encontrado en el DOM');
+                console.log('📋 Elementos en el body:', document.body.children.length);
+                console.log('📋 modalsContainer existe:', !!document.getElementById('modalsContainer'));
                 return;
             }
             console.log('✅ Modal encontrado:', modal);
