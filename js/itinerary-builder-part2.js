@@ -25,7 +25,7 @@ export const ItineraryBuilderExtensions = {
     const selectedCategories = window.ItineraryBuilder.selectedCategories || [];
     
     const modalHtml = `
-      <div id="addActivityModal" class="modal active" style="z-index: 9999;">
+      <div id="addActivityModal" class="modal active" style="z-index: 10001;">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           <!-- Header -->
           <div class="sticky top-0 bg-gradient-to-r from-green-500 to-blue-500 text-white p-6 rounded-t-xl z-10">

@@ -69,7 +69,7 @@ export const ItineraryBuilder = {
 
   async showCreateItineraryWizard() {
     const modalHtml = `
-      <div id="createItineraryWizard" class="modal active" style="z-index: 9999;">
+      <div id="createItineraryWizard" class="modal active" style="z-index: 10001;">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           <!-- Header -->
           <div class="sticky top-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 rounded-t-xl z-10">
