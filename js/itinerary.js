@@ -744,7 +744,7 @@ export const ItineraryHandler = {
                 const addBtn = e.target.closest('[id^="addActivityBtn_"]');
                 const editBtn = e.target.closest('.activity-edit-btn');
                 const deleteBtn = e.target.closest('.activity-delete-btn');
-                const dayBtn = e.target.closest('.day-btn');
+                const dayBtn = e.target.closest('.day-btn-japan');
 
                 if (addBtn) {
                     console.log('✅ Botón "Añadir Actividad" clickeado:', addBtn.id);
