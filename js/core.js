@@ -19,13 +19,16 @@ export const AppCore = {
         if (localStorage.getItem('darkMode') === 'true') {
             document.documentElement.classList.add('dark');
             const icon = document.getElementById('darkModeIcon');
-            if (icon) icon.textContent = '☀️';
+            if (icon) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            }
         }
-        
+
         this.setupEventListeners();
         this.updateCountdown();
         setInterval(() => this.updateCountdown(), 60000);
-        
+
         // Inicializar sync de notas
         this.initNotesSync();
     },
@@ -166,7 +169,15 @@ export const AppCore = {
         const isDark = document.documentElement.classList.contains('dark');
         localStorage.setItem('darkMode', isDark);
         const icon = document.getElementById('darkModeIcon');
-        if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+        if (icon) {
+            if (isDark) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
     },
 
     switchTab(tabName) {

@@ -1,0 +1,951 @@
+/* ========================================
+   JAPAN THEME - Paleta y Diseño Japonés
+   ======================================== */
+
+:root {
+  /* 🎌 Paleta Principal Inspirada en Japón */
+  --japan-red: #C41E3A;           /* Rojo de la bandera japonesa */
+  --japan-white: #FFFFFF;         /* Blanco puro */
+  --sakura-pink: #FFB7C5;         /* Rosa de cerezo */
+  --sakura-light: #FFF0F5;        /* Rosa muy claro */
+  --matcha-green: #88B04B;        /* Verde matcha */
+  --bamboo-green: #4A7C59;        /* Verde bambú */
+  --wood-brown: #8B7355;          /* Madera natural */
+  --gold-accent: #D4AF37;         /* Dorado elegante */
+  --ink-black: #2C2C2C;           /* Negro tinta */
+  --paper-beige: #F5E6D3;         /* Beige papel washi */
+  --mist-gray: #E8E8E8;           /* Gris neblina */
+  --ocean-blue: #1E4D8B;          /* Azul océano */
+
+  /* 🌸 Gradientes Japoneses */
+  --gradient-sakura: linear-gradient(135deg, #FFB7C5 0%, #FF69B4 100%);
+  --gradient-sunset: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 100%);
+  --gradient-ocean: linear-gradient(135deg, #1E4D8B 0%, #4A90E2 100%);
+  --gradient-bamboo: linear-gradient(135deg, #88B04B 0%, #4A7C59 100%);
+  --gradient-gold: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+
+  /* 📐 Espaciado Armónico */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-3xl: 4rem;
+
+  /* 🔤 Tipografía */
+  --font-japanese: 'Noto Sans JP', 'Yu Gothic', 'Meiryo', sans-serif;
+  --font-modern: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* 🎨 Sombras Elegantes */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+  --shadow-japanese: 0 8px 16px rgba(196, 30, 58, 0.15);
+
+  /* 🌊 Efectos de Profundidad */
+  --blur-sm: blur(4px);
+  --blur-md: blur(8px);
+  --blur-lg: blur(16px);
+}
+
+/* ========================================
+   TIPOGRAFÍA JAPONESA
+   ======================================== */
+
+/* Importar Noto Sans JP de Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+  font-family: var(--font-modern);
+  letter-spacing: 0.01em;
+  line-height: 1.6;
+}
+
+/* Encabezados con toque japonés */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-japanese);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* Énfasis japonés */
+.japanese-text {
+  font-family: var(--font-japanese);
+  font-weight: 500;
+}
+
+/* Títulos grandes con efecto sutil */
+.hero-title {
+  font-family: var(--font-japanese);
+  font-weight: 900;
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  background: var(--gradient-sakura);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+  font-size: clamp(1.25rem, 4vw, 1.75rem);
+  color: white;
+  opacity: 0.95;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.hero-description {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  color: white;
+  opacity: 0.85;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.font-japanese {
+  font-family: var(--font-japanese);
+}
+
+/* ========================================
+   LANDING PAGE JAPONESA
+   ======================================== */
+
+#landingPage {
+  background:
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23FFB7C5;stop-opacity:0.1"/><stop offset="100%" style="stop-color:%23FF69B4;stop-opacity:0.05"/></linearGradient></defs><path fill="url(%23grad)" d="M0,160 Q300,80 600,160 T1200,160 L1200,400 L0,400 Z"/></svg>'),
+    linear-gradient(135deg, #FFF5F7 0%, #FFE5EC 50%, #FFF0F3 100%);
+  background-size: cover, 100%;
+  background-position: bottom, center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Patrón japonés sutil en el fondo */
+#landingPage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(196, 30, 58, 0.02) 35px, rgba(196, 30, 58, 0.02) 70px);
+  pointer-events: none;
+}
+
+.dark #landingPage {
+  background:
+    linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+
+.dark #landingPage::before {
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 183, 197, 0.03) 35px, rgba(255, 183, 197, 0.03) 70px);
+}
+
+/* Feature Cards del Landing */
+.feature-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  color: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  background: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.feature-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 1.5rem;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: white;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s;
+}
+
+.feature-card:hover .feature-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+/* Gradientes de fondo */
+.bg-gradient-sakura {
+  background: var(--gradient-sakura);
+}
+
+.bg-gradient-bamboo {
+  background: var(--gradient-bamboo);
+}
+
+.bg-gradient-sunset {
+  background: var(--gradient-sunset);
+}
+
+.bg-gradient-ocean {
+  background: var(--gradient-ocean);
+}
+
+.bg-gradient-gold {
+  background: var(--gradient-gold);
+}
+
+.bg-gradient-japan {
+  background: linear-gradient(135deg, var(--japan-red) 0%, #A01729 100%);
+}
+
+.dark .feature-card {
+  background: rgba(30, 30, 50, 0.5);
+  border-color: rgba(255, 183, 197, 0.2);
+}
+
+.dark .feature-card:hover {
+  background: rgba(30, 30, 50, 0.7);
+}
+
+/* ========================================
+   CARDS CON ESTILO JAPONÉS
+   ======================================== */
+
+.japan-card {
+  background: white;
+  border-radius: 12px;
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+  border-top: 4px solid var(--japan-red);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.japan-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 183, 197, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.japan-card:hover::before {
+  left: 100%;
+}
+
+.japan-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl), var(--shadow-japanese);
+}
+
+.dark .japan-card {
+  background: var(--bg-dark-card);
+  border-top-color: var(--sakura-pink);
+}
+
+/* Variantes de color para cards */
+.japan-card-sakura {
+  border-top-color: var(--sakura-pink);
+}
+
+.japan-card-matcha {
+  border-top-color: var(--matcha-green);
+}
+
+.japan-card-ocean {
+  border-top-color: var(--ocean-blue);
+}
+
+.japan-card-gold {
+  border-top-color: var(--gold-accent);
+}
+
+/* ========================================
+   BOTONES CON ESTILO JAPONÉS
+   ======================================== */
+
+.btn-japan {
+  background: var(--japan-red);
+  color: white;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-family: var(--font-japanese);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-japan::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.2));
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+
+.btn-japan:hover::before {
+  transform: translateX(100%);
+}
+
+.btn-japan:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg), 0 8px 16px rgba(196, 30, 58, 0.3);
+  background: #A01729;
+}
+
+.btn-japan:active {
+  transform: translateY(0);
+}
+
+/* Variantes de botones */
+.btn-sakura {
+  background: var(--gradient-sakura);
+}
+
+.btn-sakura:hover {
+  filter: brightness(1.1);
+}
+
+.btn-matcha {
+  background: var(--gradient-bamboo);
+}
+
+.btn-gold {
+  background: var(--gradient-gold);
+  color: var(--ink-black);
+}
+
+/* Botón secundario */
+.btn-secondary {
+  background: white;
+  color: var(--ink-black);
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-family: var(--font-japanese);
+  border: 2px solid var(--mist-gray);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--japan-red);
+}
+
+.dark .btn-secondary {
+  background: #2a2a3e;
+  color: white;
+  border-color: #3a3a4e;
+}
+
+.dark .btn-secondary:hover {
+  border-color: var(--sakura-pink);
+}
+
+/* Botón outline japonés */
+.btn-japan-outline {
+  background: transparent;
+  color: var(--japan-red);
+  border: 2px solid var(--japan-red);
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-family: var(--font-japanese);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-japan-outline:hover {
+  background: var(--japan-red);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ========================================
+   BADGES Y TAGS JAPONESES
+   ======================================== */
+
+.badge-japan {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: var(--font-japanese);
+  box-shadow: var(--shadow-sm);
+}
+
+.badge-sakura {
+  background: var(--sakura-light);
+  color: #C41E3A;
+  border: 1px solid var(--sakura-pink);
+}
+
+.badge-matcha {
+  background: #E8F5E9;
+  color: var(--bamboo-green);
+  border: 1px solid var(--matcha-green);
+}
+
+.badge-gold {
+  background: #FFF9E6;
+  color: #8B7355;
+  border: 1px solid var(--gold-accent);
+}
+
+/* ========================================
+   HEADER JAPONÉS MEJORADO
+   ======================================== */
+
+.gradient-header {
+  background: var(--japan-red);
+  background-image:
+    linear-gradient(135deg,
+      var(--japan-red) 0%,
+      #A01729 50%,
+      var(--japan-red) 100%);
+  box-shadow: 0 4px 12px rgba(196, 30, 58, 0.2);
+  position: relative;
+}
+
+.gradient-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-sakura);
+}
+
+.dark .gradient-header {
+  background-image:
+    linear-gradient(135deg,
+      #16213e 0%,
+      #0f3460 50%,
+      #16213e 100%);
+}
+
+/* Header alternativo */
+.japan-header {
+  background: var(--japan-red);
+  background-image: var(--gradient-japan);
+  box-shadow: 0 4px 12px rgba(196, 30, 58, 0.2);
+  position: relative;
+}
+
+.japan-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-sakura);
+}
+
+/* Navigation */
+.japan-nav {
+  border-bottom: 2px solid transparent;
+  border-image: var(--gradient-sakura) 1;
+}
+
+/* ========================================
+   ICONOS JAPONESES MEJORADOS
+   ======================================== */
+
+.icon-japan {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--gradient-sakura);
+  color: white;
+  font-size: 1.5rem;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s;
+}
+
+.icon-japan:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Variantes de iconos */
+.icon-sakura {
+  background: var(--gradient-sakura);
+}
+
+.icon-matcha {
+  background: var(--gradient-bamboo);
+}
+
+.icon-ocean {
+  background: var(--gradient-ocean);
+}
+
+.icon-gold {
+  background: var(--gradient-gold);
+}
+
+/* ========================================
+   MODAL JAPONÉS
+   ======================================== */
+
+.modal-japan {
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.modal-japan > div {
+  border-radius: 16px;
+  box-shadow: var(--shadow-xl), 0 0 0 1px rgba(196, 30, 58, 0.1);
+  border-top: 4px solid var(--japan-red);
+  animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========================================
+   PROGRESS BAR JAPONÉS
+   ======================================== */
+
+.progress-japan {
+  height: 8px;
+  background: var(--mist-gray);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-japan::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 255, 255, 0.05) 10px,
+    rgba(255, 255, 255, 0.05) 20px
+  );
+}
+
+.progress-bar-japan {
+  height: 100%;
+  background: var(--gradient-sakura);
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar-japan::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ========================================
+   DIVISORES JAPONESES
+   ======================================== */
+
+.divider-japan {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--japan-red),
+    transparent
+  );
+  margin: var(--spacing-xl) 0;
+  position: relative;
+}
+
+.divider-japan::before {
+  content: '🌸';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 0 1rem;
+  font-size: 1.25rem;
+}
+
+.dark .divider-japan::before {
+  background: var(--bg-dark-main);
+}
+
+/* Variante simple del divider con texto */
+.japan-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.japan-divider::before,
+.japan-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--mist-gray),
+    transparent
+  );
+}
+
+.japan-divider span {
+  font-family: var(--font-japanese);
+  font-size: 0.875rem;
+  color: var(--ink-black);
+  opacity: 0.7;
+}
+
+.dark .japan-divider span {
+  color: white;
+}
+
+.dark .japan-divider::before,
+.dark .japan-divider::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+}
+
+/* ========================================
+   ANIMACIONES JAPONESAS
+   ======================================== */
+
+@keyframes fadeInSakura {
+  from {
+    opacity: 0;
+    transform: translateY(20px) rotate(-5deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(0);
+  }
+}
+
+.fade-in-sakura {
+  animation: fadeInSakura 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Efecto de ondas japonesas */
+@keyframes waves {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.japanese-waves {
+  position: relative;
+  overflow: hidden;
+}
+
+.japanese-waves::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100px;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"><path fill="%23FFB7C5" fill-opacity="0.2" d="M0,60 Q150,0 300,60 T600,60 T900,60 T1200,60 L1200,120 L0,120 Z"/></svg>');
+  background-repeat: repeat-x;
+  animation: waves 10s linear infinite;
+}
+
+/* ========================================
+   STATS JAPONESES
+   ======================================== */
+
+.stat-japan {
+  text-align: center;
+  padding: var(--spacing-lg);
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  border-left: 4px solid var(--japan-red);
+  transition: all 0.3s;
+}
+
+.stat-japan:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-japan-value {
+  font-size: 2.5rem;
+  font-weight: 900;
+  font-family: var(--font-japanese);
+  background: var(--gradient-sakura);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.stat-japan-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary-light);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dark .stat-japan {
+  background: var(--bg-dark-card);
+}
+
+.dark .stat-japan-label {
+  color: var(--text-secondary-dark);
+}
+
+/* ========================================
+   TOOLTIP JAPONÉS
+   ======================================== */
+
+.tooltip-japan {
+  position: relative;
+  cursor: help;
+}
+
+.tooltip-japan::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  padding: 0.5rem 1rem;
+  background: var(--ink-black);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  box-shadow: var(--shadow-lg);
+}
+
+.tooltip-japan::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--ink-black);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.tooltip-japan:hover::after,
+.tooltip-japan:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+/* ========================================
+   SCROLL TO TOP BUTTON JAPONÉS
+   ======================================== */
+
+.scroll-top-japan {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 56px;
+  height: 56px;
+  background: var(--gradient-sakura);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+}
+
+.scroll-top-japan.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.scroll-top-japan:hover {
+  transform: translateY(-4px) scale(1.1);
+  box-shadow: var(--shadow-xl);
+}
+
+.scroll-top-japan:active {
+  transform: translateY(-2px) scale(1.05);
+}
+
+/* ========================================
+   UTILIDADES JAPONESAS
+   ======================================== */
+
+.text-japan-red {
+  color: var(--japan-red);
+}
+
+.text-sakura {
+  color: var(--sakura-pink);
+}
+
+.text-matcha {
+  color: var(--matcha-green);
+}
+
+.bg-japan-red {
+  background-color: var(--japan-red);
+}
+
+.bg-sakura-light {
+  background-color: var(--sakura-light);
+}
+
+.bg-paper-beige {
+  background-color: var(--paper-beige);
+}
+
+.border-japan-red {
+  border-color: var(--japan-red);
+}
+
+.shadow-japanese {
+  box-shadow: var(--shadow-japanese);
+}
+
+/* Gradiente de texto */
+.gradient-text-sakura {
+  background: var(--gradient-sakura);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-sunset {
+  background: var(--gradient-sunset);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ========================================
+   RESPONSIVE JAPONÉS
+   ======================================== */
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: clamp(2rem, 8vw, 3rem);
+  }
+
+  .japan-card {
+    padding: var(--spacing-md);
+  }
+
+  .btn-japan,
+  .btn-japan-outline {
+    padding: 0.625rem 1.5rem;
+    font-size: 0.875rem;
+  }
+
+  .stat-japan-value {
+    font-size: 2rem;
+  }
+
+  .scroll-top-japan {
+    width: 48px;
+    height: 48px;
+    bottom: 5rem; /* Evitar conflicto con nav móvil */
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

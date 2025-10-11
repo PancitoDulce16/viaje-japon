@@ -24,8 +24,10 @@
     </script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
     <link rel="stylesheet" href="./css/main.css">
+    <link rel="stylesheet" href="./css/japan-theme.css">
     <link rel="stylesheet" href="./css/sakura.css">
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/png" href="./images/icons/icon-192.png">
@@ -41,22 +43,24 @@
         <div class="max-w-6xl w-full">
             <!-- Hero Section -->
             <div class="text-center mb-12">
-                <h1 class="text-5xl md:text-7xl font-bold text-white mb-4 animate__animated animate__fadeInDown">
-                    🇯🇵 Japan Trip Planner
+                <h1 class="hero-title animate__animated animate__fadeInDown">
+                    <i class="fas fa-torii-gate"></i> Japan Trip Planner
                 </h1>
-                <p class="text-xl md:text-2xl text-white/90 mb-2">
+                <p class="hero-subtitle">
                     Planifica tu viaje a Japón de manera colaborativa
                 </p>
-                <p class="text-lg text-white/70">
-                    ✨ Crea itinerarios • 💰 Controla gastos • 🤝 Colabora en tiempo real
+                <p class="hero-description">
+                    <i class="fas fa-sparkles"></i> Crea itinerarios •
+                    <i class="fas fa-yen-sign"></i> Controla gastos •
+                    <i class="fas fa-users"></i> Colabora en tiempo real
                 </p>
             </div>
 
             <!-- Login Card -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md mx-auto">
+            <div class="japan-card animate__animated animate__fadeInUp max-w-md mx-auto">
                 <div class="text-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-                        Bienvenido
+                    <h2 class="text-2xl font-bold text-ink-black dark:text-white mb-2 font-japanese">
+                        ようこそ Bienvenido
                     </h2>
                     <p class="text-gray-600 dark:text-gray-400">
                         Inicia sesión para comenzar a planificar
@@ -107,11 +111,11 @@
                             placeholder="••••••••"
                         >
                     </div>
-                    <button 
-                        type="submit" 
-                        class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+                    <button
+                        type="submit"
+                        class="btn-japan w-full"
                     >
-                        Iniciar Sesión
+                        <i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión
                     </button>
                 </form>
 
@@ -155,26 +159,24 @@
                             placeholder="••••••••"
                         >
                     </div>
-                    <button 
-                        type="submit" 
-                        class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-semibold"
+                    <button
+                        type="submit"
+                        class="btn-matcha w-full"
                     >
-                        Crear Cuenta
+                        <i class="fas fa-user-plus mr-2"></i> Crear Cuenta
                     </button>
                 </form>
 
                 <!-- Divider -->
-                <div class="flex items-center gap-4 my-6">
-                    <div class="flex-1 h-px bg-gray-300 dark:bg-gray-600"></div>
-                    <span class="text-sm text-gray-500 dark:text-gray-400">o</span>
-                    <div class="flex-1 h-px bg-gray-300 dark:bg-gray-600"></div>
+                <div class="japan-divider my-6">
+                    <span>または</span>
                 </div>
 
                 <!-- Google Login -->
-                <button 
+                <button
                     id="landingGoogleLogin"
                     type="button"
-                    class="w-full flex items-center justify-center gap-3 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition font-semibold"
+                    class="btn-secondary w-full flex items-center justify-center gap-3"
                 >
                     <svg width="20" height="20" viewBox="0 0 20 20">
                         <path fill="#4285F4" d="M19.6 10.23c0-.82-.1-1.42-.25-2.05H10v3.72h5.5c-.15.96-.74 2.31-2.04 3.22v2.45h3.16c1.89-1.73 2.98-4.3 2.98-7.34z"/>
@@ -187,21 +189,27 @@
             </div>
 
             <!-- Features -->
-            <div class="mt-12 grid md:grid-cols-3 gap-6 text-white">
-                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
-                    <div class="text-4xl mb-3">🗺️</div>
-                    <h3 class="font-bold text-lg mb-2">Itinerarios Personalizados</h3>
-                    <p class="text-sm text-white/80">Crea tu propio itinerario día a día o usa nuestras plantillas</p>
+            <div class="mt-12 grid md:grid-cols-3 gap-6">
+                <div class="feature-card animate__animated animate__fadeInUp" style="animation-delay: 0.1s">
+                    <div class="feature-icon bg-gradient-sakura">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2 font-japanese">Itinerarios Personalizados</h3>
+                    <p class="text-sm text-white/90">Crea tu propio itinerario día a día o usa nuestras plantillas</p>
                 </div>
-                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
-                    <div class="text-4xl mb-3">🤝</div>
-                    <h3 class="font-bold text-lg mb-2">Modo Colaborativo</h3>
-                    <p class="text-sm text-white/80">Planifica con amigos o familia en tiempo real</p>
+                <div class="feature-card animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
+                    <div class="feature-icon bg-gradient-bamboo">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2 font-japanese">Modo Colaborativo</h3>
+                    <p class="text-sm text-white/90">Planifica con amigos o familia en tiempo real</p>
                 </div>
-                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
-                    <div class="text-4xl mb-3">💰</div>
-                    <h3 class="font-bold text-lg mb-2">Control de Gastos</h3>
-                    <p class="text-sm text-white/80">Lleva el control de tu presupuesto compartido</p>
+                <div class="feature-card animate__animated animate__fadeInUp" style="animation-delay: 0.3s">
+                    <div class="feature-icon bg-gradient-sunset">
+                        <i class="fas fa-yen-sign"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2 font-japanese">Control de Gastos</h3>
+                    <p class="text-sm text-white/90">Lleva el control de tu presupuesto compartido</p>
                 </div>
             </div>
         </div>
@@ -212,22 +220,24 @@
         <!-- Botones Flotantes -->
         <div class="z-50 fixed bottom-8 right-8 flex flex-col gap-4">
             <button data-modal="budget" class="floating-btn" title="Budget Tracker" aria-label="Abrir Budget">
-                💰
+                <i class="fas fa-yen-sign"></i>
             </button>
             <button data-modal="phrases" class="floating-btn" title="Frases Útiles" aria-label="Abrir Frases">
-                🗣️
+                <i class="fas fa-language"></i>
             </button>
             <button data-modal="notes" class="floating-btn" title="Mis Notas" aria-label="Abrir Notas">
-                📝
+                <i class="fas fa-sticky-note"></i>
             </button>
         </div>
 
         <!-- Header -->
-        <header class="gradient-header text-white p-6 shadow-lg">
+        <header class="japan-header text-white p-6 shadow-lg">
             <div class="max-w-6xl mx-auto">
                 <div class="flex justify-between items-center flex-wrap gap-4 mb-4">
                     <div class="flex-1 min-w-[250px]">
-                        <h1 class="text-2xl md:text-3xl font-bold">🇯🇵 Japan Trip Planner</h1>
+                        <h1 class="text-2xl md:text-3xl font-bold font-japanese">
+                            <i class="fas fa-torii-gate"></i> Japan Trip Planner
+                        </h1>
                     </div>
                     <div class="flex gap-2 items-center flex-wrap">
                         <!-- User info -->
@@ -242,21 +252,21 @@
                             Cerrar Sesión
                         </button>
                         
-                        <button 
-                            id="themeToggle" 
+                        <button
+                            id="themeToggle"
                             class="bg-white/20 hover:bg-white/30 rounded-lg p-3 transition backdrop-blur-sm"
                             aria-label="Cambiar tema"
                             title="Cambiar tema"
                         >
-                            <span id="darkModeIcon" class="text-2xl">🌙</span>
+                            <i id="darkModeIcon" class="fas fa-moon text-xl"></i>
                         </button>
-                        <button 
-                            data-modal="emergency" 
-                            class="bg-red-500/80 hover:bg-red-600 rounded-lg px-4 py-2 transition text-lg font-semibold backdrop-blur-sm"
+                        <button
+                            data-modal="emergency"
+                            class="bg-red-500/80 hover:bg-red-600 rounded-lg px-4 py-2 transition font-semibold backdrop-blur-sm"
                             aria-label="Emergencias"
                             title="Números de emergencia"
                         >
-                            🚨 SOS
+                            <i class="fas fa-exclamation-triangle"></i> SOS
                         </button>
                     </div>
                 </div>
@@ -267,16 +277,32 @@
         </header>
         
         <!-- Navegación de Tabs -->
-        <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20 shadow-sm">
+        <nav class="japan-nav bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20 shadow-sm">
             <div id="tabSelector" class="max-w-6xl mx-auto px-4 flex gap-1 overflow-x-auto scrollbar-hide">
-                <button data-tab="itinerary" class="tab-btn active">📅 Itinerario</button>
-                <button data-tab="preparation" class="tab-btn">📦 Preparación</button>
-                <button data-tab="flights" class="tab-btn">✈️ Vuelos</button>
-                <button data-tab="hotels" class="tab-btn">🏨 Hoteles</button>
-                <button data-tab="transport" class="tab-btn">🚆 Transporte</button>
-                <button data-tab="map" class="tab-btn">🗺️ Mapa</button>
-                <button data-tab="attractions" class="tab-btn">🎯 Atracciones</button>
-                <button data-tab="utils" class="tab-btn">🛠️ Utilidades</button>
+                <button data-tab="itinerary" class="tab-btn active">
+                    <i class="far fa-calendar-alt"></i> Itinerario
+                </button>
+                <button data-tab="preparation" class="tab-btn">
+                    <i class="fas fa-tasks"></i> Preparación
+                </button>
+                <button data-tab="flights" class="tab-btn">
+                    <i class="fas fa-plane"></i> Vuelos
+                </button>
+                <button data-tab="hotels" class="tab-btn">
+                    <i class="fas fa-hotel"></i> Hoteles
+                </button>
+                <button data-tab="transport" class="tab-btn">
+                    <i class="fas fa-train"></i> Transporte
+                </button>
+                <button data-tab="map" class="tab-btn">
+                    <i class="fas fa-map-marked-alt"></i> Mapa
+                </button>
+                <button data-tab="attractions" class="tab-btn">
+                    <i class="fas fa-landmark"></i> Atracciones
+                </button>
+                <button data-tab="utils" class="tab-btn">
+                    <i class="fas fa-tools"></i> Utilidades
+                </button>
             </div>
         </nav>
 
@@ -293,11 +319,13 @@
         </main>
 
         <!-- Footer -->
-        <footer class="bg-gray-800 dark:bg-gray-900 text-white p-8 mt-12 text-center">
+        <footer class="japan-footer bg-gradient-japan text-white p-8 mt-12 text-center">
             <div class="max-w-6xl mx-auto">
-                <p class="text-lg mb-2">¡Que tengas un viaje increíble! 🎌</p>
-                <p class="text-sm text-gray-400">
-                    <strong>いってらっしゃい！</strong> (Itterasshai - ¡Buen viaje!)
+                <p class="text-lg mb-2 font-japanese">
+                    <i class="fas fa-heart text-sakura-pink"></i> ¡Que tengas un viaje increíble!
+                </p>
+                <p class="text-sm text-white/80">
+                    <strong class="font-japanese">いってらっしゃい！</strong> (Itterasshai - ¡Buen viaje!)
                 </p>
             </div>
         </footer>
