@@ -81,32 +81,38 @@ h1, h2, h3, h4, h5, h6 {
 .hero-title {
   font-family: var(--font-japanese);
   font-weight: 900;
-  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
   background: var(--gradient-sakura);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   line-height: 1.1;
-  margin-bottom: 1rem;
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
+  letter-spacing: -0.02em;
+  text-shadow: 2px 2px 4px rgba(255, 183, 197, 0.1);
 }
 
 .hero-subtitle {
-  font-size: clamp(1.25rem, 4vw, 1.75rem);
+  font-size: clamp(1.25rem, 4vw, 2rem);
   color: white;
   opacity: 0.95;
-  margin-bottom: 0.75rem;
+  margin-bottom: clamp(0.75rem, 2vw, 1rem);
   font-weight: 500;
+  letter-spacing: -0.01em;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .hero-description {
   font-size: clamp(1rem, 2.5vw, 1.25rem);
   color: white;
-  opacity: 0.85;
+  opacity: 0.9;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
   flex-wrap: wrap;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .font-japanese {
@@ -119,70 +125,122 @@ h1, h2, h3, h4, h5, h6 {
 
 #landingPage {
   background:
-    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23FFB7C5;stop-opacity:0.1"/><stop offset="100%" style="stop-color:%23FF69B4;stop-opacity:0.05"/></linearGradient></defs><path fill="url(%23grad)" d="M0,160 Q300,80 600,160 T1200,160 L1200,400 L0,400 Z"/></svg>'),
+    /* Monte Fuji estilizado en el fondo */
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><defs><linearGradient id="mountain" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%23E8E8E8;stop-opacity:0.3"/><stop offset="100%" style="stop-color:%23FFFFFF;stop-opacity:0.1"/></linearGradient><linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%23FFB7C5;stop-opacity:0.15"/><stop offset="50%" style="stop-color:%23FFE5EC;stop-opacity:0.1"/><stop offset="100%" style="stop-color:%23FFFFFF;stop-opacity:0.05"/></linearGradient></defs><rect fill="url(%23sky)" width="1200" height="600"/><path fill="url(%23mountain)" d="M0,400 L300,350 L600,250 L900,350 L1200,400 L1200,600 L0,600 Z"/><circle fill="%23FFB7C5" fill-opacity="0.15" cx="150" cy="150" r="80"/></svg>'),
+    /* Ondas japonesas sutiles */
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"><path fill="%23FFB7C5" fill-opacity="0.08" d="M0,60 Q150,20 300,60 T600,60 T900,60 T1200,60 L1200,120 L0,120 Z"/></svg>'),
+    /* Gradiente de fondo principal */
     linear-gradient(135deg, #FFF5F7 0%, #FFE5EC 50%, #FFF0F3 100%);
-  background-size: cover, 100%;
-  background-position: bottom, center;
+  background-size: 100% 100%, 100% 150px, 100%;
+  background-position: center center, bottom, center;
+  background-repeat: no-repeat, repeat-x, no-repeat;
   position: relative;
   overflow: hidden;
 }
 
-/* Patrón japonés sutil en el fondo */
+/* Patrón japonés sutil (asanoha) */
 #landingPage::before {
   content: '';
   position: absolute;
   inset: 0;
   background-image:
-    repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(196, 30, 58, 0.02) 35px, rgba(196, 30, 58, 0.02) 70px);
+    repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(196, 30, 58, 0.015) 35px, rgba(196, 30, 58, 0.015) 70px),
+    repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(196, 30, 58, 0.015) 35px, rgba(196, 30, 58, 0.015) 70px);
   pointer-events: none;
+}
+
+/* Elementos decorativos flotantes */
+#landingPage::after {
+  content: '';
+  position: absolute;
+  top: 10%;
+  right: 5%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255, 183, 197, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: float 6s ease-in-out infinite;
 }
 
 .dark #landingPage {
   background:
+    /* Monte Fuji para dark mode */
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><defs><linearGradient id="mountainDark" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%233a3a4e;stop-opacity:0.4"/><stop offset="100%" style="stop-color:%231a1a2e;stop-opacity:0.2"/></linearGradient><linearGradient id="skyDark" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:%23FFB7C5;stop-opacity:0.05"/><stop offset="100%" style="stop-color:%231a1a2e;stop-opacity:0.1"/></linearGradient></defs><rect fill="url(%23skyDark)" width="1200" height="600"/><path fill="url(%23mountainDark)" d="M0,400 L300,350 L600,250 L900,350 L1200,400 L1200,600 L0,600 Z"/><circle fill="%23FFB7C5" fill-opacity="0.08" cx="150" cy="150" r="80"/></svg>'),
+    /* Ondas para dark mode */
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120"><path fill="%23FFB7C5" fill-opacity="0.05" d="M0,60 Q150,20 300,60 T600,60 T900,60 T1200,60 L1200,120 L0,120 Z"/></svg>'),
     linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background-size: 100% 100%, 100% 150px, 100%;
+  background-position: center center, bottom, center;
+  background-repeat: no-repeat, repeat-x, no-repeat;
 }
 
 .dark #landingPage::before {
   background-image:
-    repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 183, 197, 0.03) 35px, rgba(255, 183, 197, 0.03) 70px);
+    repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 183, 197, 0.02) 35px, rgba(255, 183, 197, 0.02) 70px),
+    repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255, 183, 197, 0.02) 35px, rgba(255, 183, 197, 0.02) 70px);
 }
 
-/* Feature Cards del Landing */
+.dark #landingPage::after {
+  background: radial-gradient(circle, rgba(255, 183, 197, 0.05) 0%, transparent 70%);
+}
+
+/* Feature Cards del Landing - Espaciado mejorado */
 .feature-card {
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 2rem;
+  border-radius: 20px;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
   text-align: center;
   color: white;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
 }
 
 .feature-card:hover {
   transform: translateY(-8px);
   background: rgba(255, 255, 255, 0.25);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .feature-icon {
-  width: 72px;
-  height: 72px;
-  margin: 0 auto 1.5rem;
-  border-radius: 16px;
+  width: clamp(64px, 10vw, 80px);
+  height: clamp(64px, 10vw, 80px);
+  margin-bottom: 0.5rem;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
   color: white;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
   transition: all 0.3s;
+  flex-shrink: 0;
 }
 
 .feature-card:hover .feature-icon {
   transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
+
+.feature-card h3 {
+  margin: 0.75rem 0 0.5rem;
+  line-height: 1.3;
+}
+
+.feature-card p {
+  margin: 0;
+  line-height: 1.5;
+  opacity: 0.95;
 }
 
 /* Gradientes de fondo */
@@ -225,13 +283,15 @@ h1, h2, h3, h4, h5, h6 {
 
 .japan-card {
   background: white;
-  border-radius: 12px;
-  padding: var(--spacing-lg);
-  box-shadow: var(--shadow-md);
+  border-radius: 16px;
+  padding: clamp(2rem, 5vw, 3rem);
+  box-shadow: var(--shadow-lg);
   border-top: 4px solid var(--japan-red);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  max-width: 480px;
+  margin: 0 auto;
 }
 
 .japan-card::before {
@@ -255,8 +315,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .dark .japan-card {
-  background: var(--bg-dark-card);
+  background: #1f2937;
   border-top-color: var(--sakura-pink);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
 /* Variantes de color para cards */
@@ -914,19 +975,82 @@ h1, h2, h3, h4, h5, h6 {
    RESPONSIVE JAPONÉS
    ======================================== */
 
+/* Tablet y móviles grandes */
+@media (max-width: 1024px) {
+  .feature-card {
+    min-height: 240px;
+    padding: 1.75rem;
+  }
+
+  .feature-icon {
+    width: 68px;
+    height: 68px;
+    font-size: 2rem;
+  }
+}
+
+/* Móviles */
 @media (max-width: 768px) {
+  :root {
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 0.75rem;
+    --spacing-lg: 1rem;
+    --spacing-xl: 1.5rem;
+    --spacing-2xl: 2rem;
+  }
+
   .hero-title {
-    font-size: clamp(2rem, 8vw, 3rem);
+    font-size: clamp(2rem, 10vw, 3rem);
+    margin-bottom: 1rem;
+  }
+
+  .hero-subtitle {
+    font-size: clamp(1.1rem, 5vw, 1.5rem);
+    margin-bottom: 0.75rem;
+  }
+
+  .hero-description {
+    font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+    gap: 0.5rem;
+    margin-bottom: 2rem;
   }
 
   .japan-card {
-    padding: var(--spacing-md);
+    padding: 1.5rem;
+    border-radius: 12px;
+    max-width: 100%;
   }
 
   .btn-japan,
-  .btn-japan-outline {
-    padding: 0.625rem 1.5rem;
+  .btn-matcha,
+  .btn-secondary {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9375rem;
+  }
+
+  .feature-card {
+    min-height: 220px;
+    padding: 1.5rem;
+    border-radius: 16px;
+    gap: 0.75rem;
+  }
+
+  .feature-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .feature-card h3 {
+    font-size: 1rem;
+    margin: 0.5rem 0;
+  }
+
+  .feature-card p {
     font-size: 0.875rem;
+    line-height: 1.4;
   }
 
   .stat-japan-value {
@@ -936,10 +1060,124 @@ h1, h2, h3, h4, h5, h6 {
   .scroll-top-japan {
     width: 48px;
     height: 48px;
-    bottom: 5rem; /* Evitar conflicto con nav móvil */
+    bottom: 5rem;
+    right: 1rem;
+  }
+
+  /* Ajustar spacing del landing page en móvil */
+  #landingPage {
+    padding: 1rem;
+    background-size: 100% 100%, 100% 100px, 100%;
+  }
+
+  #landingPage::after {
+    width: 150px;
+    height: 150px;
+    top: 5%;
+    right: 0;
+  }
+
+  /* Mejorar tabs en móvil */
+  .tab-btn {
+    font-size: 0.875rem;
+    padding: 0.625rem 1rem;
+    white-space: nowrap;
+  }
+
+  /* Header móvil */
+  .japan-header {
+    padding: 1rem;
+  }
+
+  .japan-header h1 {
+    font-size: 1.5rem;
+  }
+
+  /* Botones flotantes en móvil */
+  .floating-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
   }
 }
 
+/* Móviles pequeños */
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 2rem;
+    line-height: 1.15;
+  }
+
+  .hero-subtitle {
+    font-size: 1.1rem;
+  }
+
+  .hero-description {
+    font-size: 0.9rem;
+  }
+
+  .japan-card {
+    padding: 1.25rem;
+  }
+
+  .feature-card {
+    min-height: 200px;
+    padding: 1.25rem;
+  }
+
+  .feature-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 1.5rem;
+  }
+
+  .btn-japan,
+  .btn-matcha,
+  .btn-secondary {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  /* Grid de features en una columna */
+  #landingPage .max-w-6xl > div:last-child {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+  }
+}
+
+/* Landscape en móviles */
+@media (max-height: 600px) and (orientation: landscape) {
+  #landingPage {
+    padding: 1rem;
+    min-height: auto;
+  }
+
+  .hero-title {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .hero-description {
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+
+  .japan-card {
+    padding: 1rem;
+  }
+
+  .feature-card {
+    min-height: auto;
+    padding: 1rem;
+  }
+}
+
+/* Reducir movimiento para accesibilidad */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -947,5 +1185,14 @@ h1, h2, h3, h4, h5, h6 {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Optimizaciones para pantallas de alta densidad */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .japan-card,
+  .feature-card {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
