@@ -330,13 +330,7 @@ function renderDaySelector() {
 function renderDayOverview(day) {
     const container = document.getElementById('dayOverview');
     if (!container) return;
-    
-    // 🔥 Limpiar listener anterior si existe
-    const oldBtn = document.getElementById(`addActivityBtn_${day.day}`);
-    if (oldBtn) {
-        oldBtn.replaceWith(oldBtn.cloneNode(true));
-    }
-    
+
     const completed = day.activities.filter(a => checkedActivities[a.id]).length;
     const progress = day.activities.length > 0 ? (completed / day.activities.length) * 100 : 0;
     
