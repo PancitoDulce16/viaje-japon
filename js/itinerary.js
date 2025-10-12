@@ -495,7 +495,7 @@ function renderActivities(day) {
     }
 
     container.innerHTML = `
-        <div class="itinerary-timeline">
+        <div class="itinerary-timeline" id="sortable-timeline">
             ${day.activities.map((act, i) => {
                 const activityType = detectActivityType(act);
                 const iconClass = getActivityIcon(activityType);
@@ -585,63 +585,82 @@ function renderActivities(day) {
             }).join('')}
         </div>
     `;
+
+    // 🔥 Inicializar drag & drop DESPUÉS de renderizar
+    setTimeout(() => {
+        const timelineContainer = document.getElementById('sortable-timeline');
+        if (timelineContainer) {
+            initializeDragAndDrop(timelineContainer);
+        }
+    }, 100);
 }
 
 // 🔥 NUEVO: Inicializar drag & drop con SortableJS
-function initializeDragAndDrop(container) {
-    if (!container || typeof Sortable === 'undefined') {
-        console.warn('Sortable no está disponible');
-        return;
-    }
-
-    // Buscar el contenedor del timeline dentro del container
-    const timelineContainer = container.querySelector('.itinerary-timeline');
+function initializeDragAndDrop(timelineContainer) {
     if (!timelineContainer) {
-        console.warn('Timeline container no encontrado');
+        console.warn('⚠️ Timeline container no proporcionado');
         return;
     }
 
-    sortableInstance = new Sortable(timelineContainer, {
-        animation: 300,
-        filter: '.activity-edit-btn, .activity-delete-btn, .activity-checkbox', // Excluir botones de acción
-        preventOnFilter: true,
-        ghostClass: 'sortable-ghost',
-        chosenClass: 'sortable-chosen',
-        dragClass: 'sortable-drag',
-        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-        forceFallback: false,
-        fallbackTolerance: 5,
-        delay: 100,
-        delayOnTouchOnly: true,
+    if (typeof Sortable === 'undefined') {
+        console.warn('⚠️ SortableJS no está cargado');
+        return;
+    }
 
-        onStart: function(evt) {
-            evt.item.style.opacity = '0.6';
-            evt.item.style.cursor = 'grabbing';
-        },
+    try {
+        sortableInstance = new Sortable(timelineContainer, {
+            animation: 300,
+            handle: '.activity-card-japan',
+            filter: '.activity-edit-btn, .activity-delete-btn, .activity-checkbox',
+            preventOnFilter: true,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+            forceFallback: false,
+            swapThreshold: 0.65,
+            delay: 100,
+            delayOnTouchOnly: true,
 
-        onEnd: function(evt) {
-            evt.item.style.opacity = '1';
-            evt.item.style.cursor = 'grab';
+            onStart: function(evt) {
+                evt.item.style.opacity = '0.6';
+                evt.item.style.cursor = 'grabbing';
+                console.log('🎯 Drag iniciado');
+            },
 
-            const oldIndex = evt.oldIndex;
-            const newIndex = evt.newIndex;
+            onEnd: function(evt) {
+                evt.item.style.opacity = '1';
+                evt.item.style.cursor = 'grab';
 
-            if (oldIndex === newIndex) return;
+                const oldIndex = evt.oldIndex;
+                const newIndex = evt.newIndex;
 
-            // Actualizar el orden en el itinerario
-            const dayData = currentItinerary.days.find(d => d.day === currentDay);
-            if (!dayData) return;
+                console.log('📍 Drag finalizado:', { oldIndex, newIndex });
 
-            // Reorganizar array
-            const [movedItem] = dayData.activities.splice(oldIndex, 1);
-            dayData.activities.splice(newIndex, 0, movedItem);
+                if (oldIndex === newIndex) return;
 
-            // 🔥 Guardar cambios en Firebase automáticamente
-            saveReorderedActivities();
-        }
-    });
+                // Actualizar el orden en el itinerario
+                const dayData = currentItinerary.days.find(d => d.day === currentDay);
+                if (!dayData) {
+                    console.error('❌ No se encontró el día actual');
+                    return;
+                }
 
-    console.log('✅ Drag & Drop inicializado correctamente');
+                // Reorganizar array
+                const [movedItem] = dayData.activities.splice(oldIndex, 1);
+                dayData.activities.splice(newIndex, 0, movedItem);
+
+                console.log('✅ Orden actualizado en memoria');
+
+                // 🔥 Guardar cambios en Firebase automáticamente
+                saveReorderedActivities();
+            }
+        });
+
+        console.log('✅ Drag & Drop inicializado correctamente');
+    } catch (error) {
+        console.error('❌ Error inicializando Sortable:', error);
+    }
 }
 
 /**
@@ -778,10 +797,7 @@ export const ItineraryHandler = {
             isListenerAttached = true;
         }
 
-        const timeline = document.getElementById('activitiesTimeline');
-        if (timeline) {
-            initializeDragAndDrop(timeline);
-        }
+        // 🔥 Drag & drop se inicializa automáticamente en renderActivities()
 
         // 🔥 Solo agregar listener al formulario una vez
         if (!isFormListenerAttached) {
