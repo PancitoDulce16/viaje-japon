@@ -862,27 +862,44 @@ export const ItineraryBuilder = {
 
     try {
       const tripId = window.TripsManager.currentTrip.id;
-      
+
       // Generar días basados en fechas
       const days = this.generateDays(data.startDate, data.endDate);
 
-      // Si eligió una plantilla, generar actividades sugeridas
+      // Si eligió una plantilla, generar actividades sugeridas inteligentemente
       let activities = [];
-      if (data.template !== 'blank') {
-        activities = await this.generateActivitiesFromTemplate(data.template, data.cities, data.categories, days.length);
+      if (data.template !== 'blank' && data.cityDayAssignments && data.cityDayAssignments.length > 0) {
+        activities = await this.generateActivitiesFromTemplate(
+          data.template,
+          data.cityDayAssignments,
+          data.categories,
+          days.length
+        );
       }
-      
+
+      // Integrate generated activities into days structure
+      const daysWithActivities = days.map(day => {
+        const dayActivities = activities.filter(act => act.day === day.day);
+        return {
+          ...day,
+          activities: dayActivities
+        };
+      });
+
+      // Extract city list from assignments
+      const cityList = data.cityDayAssignments.map(a => a.cityId);
+
       // Guardar en Firebase
       const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
       await setDoc(itineraryRef, {
         name: data.name,
         startDate: data.startDate,
         endDate: data.endDate,
-        cities: data.cities,
+        cities: cityList,
+        cityDayAssignments: data.cityDayAssignments,
         categories: data.categories,
         template: data.template,
-        days: days,
-        activities: activities,
+        days: daysWithActivities,
         flights: {
           outbound: data.outboundFlight,
           return: data.returnFlight
@@ -890,15 +907,15 @@ export const ItineraryBuilder = {
         createdAt: new Date().toISOString(),
         createdBy: auth.currentUser.email
       });
-      
-      Notifications.success(`✨ Itinerario "${data.name}" creado exitosamente!`);
-      
+
+      Notifications.success(`✨ Itinerario "${data.name}" creado exitosamente con ${activities.length} actividades!`);
+
       // Recargar vista
       if (window.ItineraryHandler && window.ItineraryHandler.reinitialize) {
         window.ItineraryHandler.reinitialize();
       }
-      
-      console.log('✅ Itinerario creado:', tripId);
+
+      console.log('✅ Itinerario creado:', tripId, `con ${activities.length} actividades`);
     } catch (error) {
       console.error('❌ Error creando itinerario:', error);
       Notifications.error('Error al crear itinerario. Inténtalo de nuevo.');
@@ -927,10 +944,118 @@ export const ItineraryBuilder = {
     return days;
   },
 
-  async generateActivitiesFromTemplate(templateId, cities, selectedCategories, totalDays) {
-    // Esto generaría actividades sugeridas basadas en la plantilla
-    // Por ahora retornamos un array vacío, pero puedes implementar lógica más compleja
-    return [];
+  async generateActivitiesFromTemplate(templateId, cityDayAssignments, selectedCategories, totalDays) {
+    console.log('🎯 Generating smart itinerary:', { templateId, cityDayAssignments, selectedCategories, totalDays });
+
+    // Get template configuration
+    const template = TEMPLATES.find(t => t.id === templateId);
+    if (!template) {
+      console.warn('Template not found, returning empty activities');
+      return [];
+    }
+
+    // Determine activities per day based on pace
+    const activitiesPerDay = {
+      relaxed: { min: 2, max: 3 },
+      moderate: { min: 3, max: 4 },
+      intense: { min: 4, max: 6 }
+    }[template.pace] || { min: 3, max: 4 };
+
+    // Merge template categories with user-selected categories
+    const allCategories = [...new Set([...template.categories, ...selectedCategories])];
+
+    const generatedActivities = [];
+    let activityIdCounter = 1;
+
+    // For each city assignment
+    cityDayAssignments.forEach(assignment => {
+      const cityId = assignment.cityId;
+      const cityData = ACTIVITIES_DATABASE[cityId];
+
+      if (!cityData || !cityData.activities) {
+        console.warn(`No activities found for city: ${cityId}`);
+        return;
+      }
+
+      // Filter activities by selected categories
+      let availableActivities = cityData.activities.filter(activity =>
+        allCategories.includes(activity.category)
+      );
+
+      // If no activities match categories, use all activities from the city
+      if (availableActivities.length === 0) {
+        availableActivities = cityData.activities;
+      }
+
+      // Shuffle activities for variety
+      availableActivities = this.shuffleArray([...availableActivities]);
+
+      if (assignment.type === 'single-day') {
+        // Single day visit: assign 2-4 activities
+        const activityCount = Math.min(
+          Math.floor((activitiesPerDay.min + activitiesPerDay.max) / 2),
+          availableActivities.length
+        );
+
+        for (let i = 0; i < activityCount; i++) {
+          if (i < availableActivities.length) {
+            const activity = availableActivities[i];
+            generatedActivities.push({
+              id: `activity-${activityIdCounter++}`,
+              day: assignment.day,
+              city: cityId,
+              cityName: assignment.cityName,
+              ...activity,
+              order: i + 1,
+              isGenerated: true
+            });
+          }
+        }
+      } else {
+        // Multi-day stay: distribute activities across days
+        const daysInCity = assignment.daysCount;
+        let activityIndex = 0;
+
+        for (let dayOffset = 0; dayOffset < daysInCity; dayOffset++) {
+          const currentDay = assignment.dayStart + dayOffset;
+          const dailyActivityCount = Math.min(
+            activitiesPerDay.min + Math.floor(Math.random() * (activitiesPerDay.max - activitiesPerDay.min + 1)),
+            availableActivities.length - activityIndex
+          );
+
+          for (let i = 0; i < dailyActivityCount && activityIndex < availableActivities.length; i++) {
+            const activity = availableActivities[activityIndex++];
+            generatedActivities.push({
+              id: `activity-${activityIdCounter++}`,
+              day: currentDay,
+              city: cityId,
+              cityName: assignment.cityName,
+              ...activity,
+              order: i + 1,
+              isGenerated: true
+            });
+          }
+        }
+      }
+    });
+
+    // Sort by day and order
+    generatedActivities.sort((a, b) => {
+      if (a.day !== b.day) return a.day - b.day;
+      return a.order - b.order;
+    });
+
+    console.log(`✅ Generated ${generatedActivities.length} activities`);
+    return generatedActivities;
+  },
+
+  shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
   },
 
   // === MÁS FUNCIONES CONTINÚAN... ===
