@@ -793,9 +793,11 @@ export const ItineraryBuilder = {
           name: data.name,
           destination: 'Japón',
           dateStart: data.startDate,
-          dateEnd: data.dateEnd,
+          dateEnd: data.endDate, // ✅ Fixed: usando data.endDate
           useTemplate: true
         };
+
+        console.log('🔍 Trip data being sent:', tripData);
 
         const tripId = await window.TripsManager.createTrip(tripData);
 
