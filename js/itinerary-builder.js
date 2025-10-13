@@ -529,7 +529,7 @@ export const ItineraryBuilder = {
       const dayNumber = index + 1;
 
       return `
-        <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 hover:shadow-md transition">
+        <div class="flex items-center gap-2 p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 hover:shadow-md transition">
           <div class="flex-shrink-0 text-center w-20">
             <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">${dayOfWeek}</div>
             <div class="text-lg font-bold dark:text-white">Día ${dayNumber}</div>
@@ -546,11 +546,38 @@ export const ItineraryBuilder = {
               ${cityOptions}
             </select>
           </div>
+          ${dayNumber > 1 ? `
+          <button
+            type="button"
+            onclick="ItineraryBuilder.copyPreviousDay(${dayNumber})"
+            class="flex-shrink-0 p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+            title="Copiar ciudad del día anterior"
+          >
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path>
+              <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"></path>
+            </svg>
+          </button>
+          ` : ''}
         </div>
       `;
     }).join('');
 
     console.log(`✅ Generated ${dates.length} date selectors`);
+  },
+
+  copyPreviousDay(dayNumber) {
+    const previousSelect = document.getElementById(`city-date-${dayNumber - 1}`);
+    const currentSelect = document.getElementById(`city-date-${dayNumber}`);
+
+    if (previousSelect && currentSelect && previousSelect.value) {
+      currentSelect.value = previousSelect.value;
+      // Visual feedback
+      currentSelect.classList.add('bg-blue-50', 'dark:bg-blue-900/30');
+      setTimeout(() => {
+        currentSelect.classList.remove('bg-blue-50', 'dark:bg-blue-900/30');
+      }, 500);
+    }
   },
 
   // === CITY/DAY ASSIGNMENT HELPERS (OLD SYSTEM - DEPRECATED) === //
