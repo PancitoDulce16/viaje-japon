@@ -88,19 +88,24 @@ export const ItineraryBuilder = {
                   <div class="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold">1</div>
                   <span class="text-xs mt-1">Básico</span>
                 </div>
-                <div class="w-12 h-1 bg-gray-300"></div>
+                <div class="w-8 h-1 bg-gray-300"></div>
                 <div class="wizard-step" data-step="2">
                   <div class="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center font-bold">2</div>
-                  <span class="text-xs mt-1">Vuelos</span>
+                  <span class="text-xs mt-1">Ciudades</span>
                 </div>
-                <div class="w-12 h-1 bg-gray-300"></div>
+                <div class="w-8 h-1 bg-gray-300"></div>
                 <div class="wizard-step" data-step="3">
                   <div class="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center font-bold">3</div>
-                  <span class="text-xs mt-1">Intereses</span>
+                  <span class="text-xs mt-1">Vuelos</span>
                 </div>
-                <div class="w-12 h-1 bg-gray-300"></div>
+                <div class="w-8 h-1 bg-gray-300"></div>
                 <div class="wizard-step" data-step="4">
                   <div class="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center font-bold">4</div>
+                  <span class="text-xs mt-1">Intereses</span>
+                </div>
+                <div class="w-8 h-1 bg-gray-300"></div>
+                <div class="wizard-step" data-step="5">
+                  <div class="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center font-bold">5</div>
                   <span class="text-xs mt-1">Plantilla</span>
                 </div>
               </div>
@@ -109,23 +114,26 @@ export const ItineraryBuilder = {
             <!-- Step 1: Información Básica -->
             <div id="wizardStep1" class="wizard-content">
               <h3 class="text-xl font-bold mb-4 dark:text-white">📋 Información Básica</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Comienza con la información fundamental de tu viaje
+              </p>
               <div class="space-y-4">
                 <div>
                   <label class="block text-sm font-semibold mb-2 dark:text-gray-300">Nombre del Viaje *</label>
-                  <input 
-                    type="text" 
-                    id="itineraryName" 
+                  <input
+                    type="text"
+                    id="itineraryName"
                     placeholder="ej: Viaje a Japón 2026"
                     class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                     required
                   />
                 </div>
-                
+
                 <div class="grid grid-cols-2 gap-4">
                   <div>
                     <label class="block text-sm font-semibold mb-2 dark:text-gray-300">Fecha Inicio *</label>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       id="itineraryStartDate"
                       class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                       required
@@ -133,8 +141,8 @@ export const ItineraryBuilder = {
                   </div>
                   <div>
                     <label class="block text-sm font-semibold mb-2 dark:text-gray-300">Fecha Fin *</label>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       id="itineraryEndDate"
                       class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                       required
@@ -142,23 +150,117 @@ export const ItineraryBuilder = {
                   </div>
                 </div>
 
-                <div>
-                  <label class="block text-sm font-semibold mb-2 dark:text-gray-300">Ciudades que visitarás *</label>
-                  <div class="grid grid-cols-2 gap-2 mb-2">
-                    ${Object.keys(ACTIVITIES_DATABASE).map(cityId => `
-                      <label class="flex items-center gap-2 p-3 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <input type="checkbox" name="cities" value="${cityId}" class="w-4 h-4">
-                        <span class="dark:text-white">${ACTIVITIES_DATABASE[cityId].city}</span>
-                      </label>
-                    `).join('')}
-                  </div>
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <p class="text-sm text-blue-800 dark:text-blue-300">
+                    💡 <strong>Siguiente paso:</strong> Seleccionarás las ciudades que visitarás y asignarás cuántos días pasarás en cada una
+                  </p>
                 </div>
               </div>
             </div>
 
-            <!-- Step 2: Vuelos -->
+            <!-- Step 2: Ciudades y Días -->
             <div id="wizardStep2" class="wizard-content hidden">
-              <h3 class="text-xl font-bold mb-4 dark:text-white">✈️ Información de Vuelos</h3>
+              <h3 class="text-xl font-bold mb-4 dark:text-white">🏙️ Ciudades y Días</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Selecciona las ciudades que visitarás y asigna cuántos días pasarás en cada una
+              </p>
+
+              <div id="cityDaysContainer" class="space-y-3 max-h-[500px] overflow-y-auto">
+                ${Object.keys(ACTIVITIES_DATABASE).map(cityId => {
+                  const cityData = ACTIVITIES_DATABASE[cityId];
+                  return `
+                    <div class="city-item border border-gray-300 dark:border-gray-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                      <div class="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          id="city-${cityId}"
+                          value="${cityId}"
+                          class="city-checkbox w-5 h-5 mt-1 cursor-pointer"
+                          onchange="ItineraryBuilder.toggleCityDayAssignment('${cityId}')"
+                        />
+                        <div class="flex-1">
+                          <label for="city-${cityId}" class="font-bold text-lg dark:text-white cursor-pointer">${cityData.city}</label>
+
+                          <!-- Day Assignment Section (hidden by default) -->
+                          <div id="days-${cityId}" class="mt-3 space-y-3 hidden">
+                            <!-- One Day Visit Option -->
+                            <label class="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                class="one-day-checkbox w-4 h-4"
+                                onchange="ItineraryBuilder.toggleOneDayVisit('${cityId}')"
+                              />
+                              <span class="text-sm font-semibold dark:text-gray-300">¿Visita de un solo día?</span>
+                            </label>
+
+                            <!-- Multi-Day Stay (shown by default) -->
+                            <div id="multiday-${cityId}" class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg space-y-2">
+                              <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                  <label class="block text-xs font-semibold mb-1 dark:text-gray-300">¿Cuántos días?</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    placeholder="ej: 3"
+                                    class="city-days-count w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white text-sm"
+                                    onchange="ItineraryBuilder.updateDayRange('${cityId}')"
+                                  />
+                                </div>
+                                <div>
+                                  <label class="block text-xs font-semibold mb-1 dark:text-gray-300">Día inicio</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    placeholder="ej: 1"
+                                    class="city-day-start w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white text-sm"
+                                    onchange="ItineraryBuilder.validateDayAssignment('${cityId}')"
+                                  />
+                                </div>
+                                <div>
+                                  <label class="block text-xs font-semibold mb-1 dark:text-gray-300">Día fin</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    placeholder="ej: 3"
+                                    class="city-day-end w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white text-sm"
+                                    onchange="ItineraryBuilder.validateDayAssignment('${cityId}')"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Single Day Visit (hidden by default) -->
+                            <div id="oneday-${cityId}" class="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg hidden">
+                              <label class="block text-xs font-semibold mb-1 dark:text-gray-300">¿En qué día visitarás ${cityData.city}?</label>
+                              <input
+                                type="number"
+                                min="1"
+                                placeholder="ej: 2"
+                                class="city-single-day w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white text-sm"
+                                onchange="ItineraryBuilder.validateDayAssignment('${cityId}')"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <div class="mt-4 bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                <p class="text-sm text-yellow-800 dark:text-yellow-300">
+                  💡 <strong>Tip:</strong> La suma de días asignados no debe exceder la duración total de tu viaje
+                </p>
+              </div>
+            </div>
+
+            <!-- Step 3: Vuelos -->
+            <div id="wizardStep3" class="wizard-content hidden">
+              <h3 class="text-xl font-bold mb-4 dark:text-white">✈️ Información de Vuelos (Opcional)</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Puedes agregar tus vuelos ahora o hacerlo más tarde desde la sección de vuelos
+              </p>
               <div class="space-y-6">
                 <!-- Vuelo de Ida -->
                 <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
@@ -256,8 +358,8 @@ export const ItineraryBuilder = {
               </div>
             </div>
 
-            <!-- Step 3: Categorías de Interés -->
-            <div id="wizardStep3" class="wizard-content hidden">
+            <!-- Step 4: Categorías de Interés -->
+            <div id="wizardStep4" class="wizard-content hidden">
               <h3 class="text-xl font-bold mb-4 dark:text-white">🎯 ¿Qué te interesa hacer?</h3>
               <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 Selecciona tus intereses para recibir sugerencias personalizadas
@@ -276,8 +378,8 @@ export const ItineraryBuilder = {
               </div>
             </div>
 
-            <!-- Step 4: Plantillas -->
-            <div id="wizardStep4" class="wizard-content hidden">
+            <!-- Step 5: Plantillas -->
+            <div id="wizardStep5" class="wizard-content hidden">
               <h3 class="text-xl font-bold mb-4 dark:text-white">📋 Elige una Plantilla</h3>
               <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 O comienza desde cero y agrega actividades manualmente
@@ -329,14 +431,22 @@ export const ItineraryBuilder = {
                 ← Anterior
               </button>
               <div class="flex gap-3 ml-auto">
-                <button 
+                <button
                   type="button"
                   onclick="ItineraryBuilder.closeCreateItineraryWizard()"
                   class="px-6 py-3 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition font-semibold"
                 >
                   Cancelar
                 </button>
-                <button 
+                <button
+                  type="button"
+                  id="skipFlightsBtn"
+                  onclick="ItineraryBuilder.nextWizardStep()"
+                  class="px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition font-semibold hidden"
+                >
+                  Omitir (agregar después) →
+                </button>
+                <button
                   type="button"
                   id="wizardNextBtn"
                   onclick="ItineraryBuilder.nextWizardStep()"
@@ -344,7 +454,7 @@ export const ItineraryBuilder = {
                 >
                   Siguiente →
                 </button>
-                <button 
+                <button
                   type="button"
                   id="wizardFinishBtn"
                   onclick="ItineraryBuilder.finishWizard()"
@@ -409,7 +519,7 @@ export const ItineraryBuilder = {
   addConnectionFlight(type) {
     const container = document.getElementById(`${type}Connections`);
     const connectionId = `${type}-connection-${Date.now()}`;
-    
+
     const html = `
       <div id="${connectionId}" class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg space-y-2">
         <div class="flex items-center justify-between mb-2">
@@ -449,8 +559,67 @@ export const ItineraryBuilder = {
         </div>
       </div>
     `;
-    
+
     container.insertAdjacentHTML('beforeend', html);
+  },
+
+  // === CITY/DAY ASSIGNMENT HELPERS === //
+
+  toggleCityDayAssignment(cityId) {
+    const checkbox = document.getElementById(`city-${cityId}`);
+    const daysSection = document.getElementById(`days-${cityId}`);
+
+    if (checkbox.checked) {
+      daysSection.classList.remove('hidden');
+    } else {
+      daysSection.classList.add('hidden');
+      // Reset inputs when unchecked
+      const oneDayCheckbox = daysSection.querySelector('.one-day-checkbox');
+      if (oneDayCheckbox) oneDayCheckbox.checked = false;
+      daysSection.querySelectorAll('input[type="number"]').forEach(input => input.value = '');
+      document.getElementById(`multiday-${cityId}`).classList.remove('hidden');
+      document.getElementById(`oneday-${cityId}`).classList.add('hidden');
+    }
+  },
+
+  toggleOneDayVisit(cityId) {
+    const oneDayCheckbox = document.querySelector(`#days-${cityId} .one-day-checkbox`);
+    const multiDaySection = document.getElementById(`multiday-${cityId}`);
+    const oneDaySection = document.getElementById(`oneday-${cityId}`);
+
+    if (oneDayCheckbox.checked) {
+      // Show single day, hide multi-day
+      multiDaySection.classList.add('hidden');
+      oneDaySection.classList.remove('hidden');
+      // Clear multi-day inputs
+      multiDaySection.querySelectorAll('input').forEach(input => input.value = '');
+    } else {
+      // Show multi-day, hide single day
+      multiDaySection.classList.remove('hidden');
+      oneDaySection.classList.add('hidden');
+      // Clear single day input
+      oneDaySection.querySelector('input').value = '';
+    }
+  },
+
+  updateDayRange(cityId) {
+    const daysCount = document.querySelector(`#multiday-${cityId} .city-days-count`).value;
+    const dayStart = document.querySelector(`#multiday-${cityId} .city-day-start`);
+
+    if (daysCount && dayStart.value) {
+      const start = parseInt(dayStart.value);
+      const count = parseInt(daysCount);
+      const end = start + count - 1;
+
+      const dayEnd = document.querySelector(`#multiday-${cityId} .city-day-end`);
+      dayEnd.value = end;
+    }
+  },
+
+  validateDayAssignment(cityId) {
+    // Basic validation for day assignments
+    // Can be extended with more complex logic
+    console.log(`Validating day assignment for ${cityId}`);
   },
 
   // Navegación del Wizard
@@ -461,8 +630,8 @@ export const ItineraryBuilder = {
     if (!this.validateCurrentStep()) {
       return;
     }
-    
-    if (this.currentStep < 4) {
+
+    if (this.currentStep < 5) {
       this.currentStep++;
       this.updateWizardView();
     }
@@ -480,24 +649,32 @@ export const ItineraryBuilder = {
       const name = document.getElementById('itineraryName').value;
       const startDate = document.getElementById('itineraryStartDate').value;
       const endDate = document.getElementById('itineraryEndDate').value;
-      const cities = document.querySelectorAll('input[name="cities"]:checked');
-      
+
       if (!name || !startDate || !endDate) {
         Notifications.warning('Por favor completa todos los campos obligatorios');
         return false;
       }
-      
+
       if (new Date(endDate) <= new Date(startDate)) {
         Notifications.warning('La fecha de fin debe ser posterior a la fecha de inicio');
         return false;
       }
-      
-      if (cities.length === 0) {
+    }
+
+    if (this.currentStep === 2) {
+      const selectedCities = document.querySelectorAll('.city-checkbox:checked');
+
+      if (selectedCities.length === 0) {
         Notifications.warning('Selecciona al menos una ciudad');
         return false;
       }
+
+      // Validate day assignments for selected cities
+      // (Optional: add more complex validation here)
     }
-    
+
+    // Step 3 (flights) is optional, no validation required
+
     return true;
   },
 
@@ -541,12 +718,22 @@ export const ItineraryBuilder = {
       prevBtn.classList.remove('hidden');
     }
 
-    if (this.currentStep === 4) {
+    if (this.currentStep === 5) {
       nextBtn.classList.add('hidden');
       finishBtn.classList.remove('hidden');
     } else {
       nextBtn.classList.remove('hidden');
       finishBtn.classList.add('hidden');
+    }
+
+    // Special handling for Step 3 (flights) - show skip button
+    const skipFlightsBtn = document.getElementById('skipFlightsBtn');
+    if (skipFlightsBtn) {
+      if (this.currentStep === 3) {
+        skipFlightsBtn.classList.remove('hidden');
+      } else {
+        skipFlightsBtn.classList.add('hidden');
+      }
     }
   },
 
@@ -556,37 +743,82 @@ export const ItineraryBuilder = {
       name: document.getElementById('itineraryName').value,
       startDate: document.getElementById('itineraryStartDate').value,
       endDate: document.getElementById('itineraryEndDate').value,
-      cities: Array.from(document.querySelectorAll('input[name="cities"]:checked')).map(cb => cb.value),
+
+      // Collect cities with day assignments
+      cityDayAssignments: this.getCityDayAssignments(),
+
       categories: Array.from(document.querySelectorAll('input[name="categories"]:checked')).map(cb => cb.value),
       template: document.querySelector('input[name="template"]:checked')?.value || 'blank',
-      
+
       // Vuelo de Ida
       outboundFlight: {
-        airline: document.getElementById('outboundAirline').value,
-        flightNumber: document.getElementById('outboundFlightNumber').value,
-        origin: document.getElementById('outboundOrigin').value,
-        destination: document.getElementById('outboundDestination').value,
-        datetime: document.getElementById('outboundDateTime').value,
+        airline: document.getElementById('outboundAirline')?.value || '',
+        flightNumber: document.getElementById('outboundFlightNumber')?.value || '',
+        origin: document.getElementById('outboundOrigin')?.value || '',
+        destination: document.getElementById('outboundDestination')?.value || '',
+        datetime: document.getElementById('outboundDateTime')?.value || '',
         connections: this.getConnectionFlights('outbound')
       },
-      
+
       // Vuelo de Regreso
       returnFlight: {
-        airline: document.getElementById('returnAirline').value,
-        flightNumber: document.getElementById('returnFlightNumber').value,
-        origin: document.getElementById('returnOrigin').value,
-        destination: document.getElementById('returnDestination').value,
-        datetime: document.getElementById('returnDateTime').value,
+        airline: document.getElementById('returnAirline')?.value || '',
+        flightNumber: document.getElementById('returnFlightNumber')?.value || '',
+        origin: document.getElementById('returnOrigin')?.value || '',
+        destination: document.getElementById('returnDestination')?.value || '',
+        datetime: document.getElementById('returnDateTime')?.value || '',
         connections: this.getConnectionFlights('return')
       }
     };
-    
+
     console.log('📋 Datos del Itinerario:', data);
-    
+
     // Crear itinerario
     await this.createItinerary(data);
-    
+
     this.closeCreateItineraryWizard();
+  },
+
+  getCityDayAssignments() {
+    const assignments = [];
+    const selectedCities = document.querySelectorAll('.city-checkbox:checked');
+
+    selectedCities.forEach(checkbox => {
+      const cityId = checkbox.value;
+      const daysSection = document.getElementById(`days-${cityId}`);
+      const oneDayCheckbox = daysSection.querySelector('.one-day-checkbox');
+
+      if (oneDayCheckbox && oneDayCheckbox.checked) {
+        // Single day visit
+        const singleDay = document.querySelector(`#oneday-${cityId} .city-single-day`).value;
+        if (singleDay) {
+          assignments.push({
+            cityId: cityId,
+            cityName: ACTIVITIES_DATABASE[cityId].city,
+            type: 'single-day',
+            day: parseInt(singleDay)
+          });
+        }
+      } else {
+        // Multi-day stay
+        const daysCount = document.querySelector(`#multiday-${cityId} .city-days-count`).value;
+        const dayStart = document.querySelector(`#multiday-${cityId} .city-day-start`).value;
+        const dayEnd = document.querySelector(`#multiday-${cityId} .city-day-end`).value;
+
+        if (daysCount && dayStart && dayEnd) {
+          assignments.push({
+            cityId: cityId,
+            cityName: ACTIVITIES_DATABASE[cityId].city,
+            type: 'multi-day',
+            daysCount: parseInt(daysCount),
+            dayStart: parseInt(dayStart),
+            dayEnd: parseInt(dayEnd)
+          });
+        }
+      }
+    });
+
+    return assignments;
   },
 
   getConnectionFlights(type) {
