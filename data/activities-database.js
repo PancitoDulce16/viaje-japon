@@ -530,6 +530,470 @@ export const ACTIVITIES_DATABASE = {
         bestSeason: 'all'
       }
     ]
+  },
+
+  hiroshima: {
+    city: 'Hiroshima',
+    activities: [
+      {
+        id: 'hiroshima-peace-park',
+        name: 'Parque Memorial de la Paz',
+        category: 'culture',
+        duration: 180,
+        cost: 0,
+        description: 'Parque conmemorativo con el Domo de la Bomba Atómica',
+        location: { lat: 34.3953, lng: 132.4536 },
+        station: 'Genbaku Dome-mae Station',
+        rating: 4.7,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'hiroshima-museum',
+        name: 'Museo Memorial de la Paz',
+        category: 'culture',
+        duration: 120,
+        cost: 200,
+        description: 'Museo sobre la historia de Hiroshima',
+        location: { lat: 34.3916, lng: 132.4530 },
+        station: 'Genbaku Dome-mae Station',
+        rating: 4.8,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'hiroshima-miyajima',
+        name: 'Isla Miyajima (Itsukushima)',
+        category: 'nature',
+        duration: 300,
+        cost: 360,
+        description: 'Isla sagrada con torii flotante icónico',
+        location: { lat: 34.2959, lng: 132.3197 },
+        station: 'Miyajima-guchi Station + Ferry',
+        rating: 4.9,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'hiroshima-okonomiyaki',
+        name: 'Okonomimura (Torre de Okonomiyaki)',
+        category: 'food',
+        duration: 90,
+        cost: 1200,
+        description: 'Edificio dedicado al okonomiyaki estilo Hiroshima',
+        location: { lat: 34.3925, lng: 132.4587 },
+        station: 'Hatchobori Station',
+        rating: 4.5,
+        timeOfDay: ['lunch', 'dinner'],
+        bestSeason: 'all'
+      }
+    ]
+  },
+
+  takayama: {
+    city: 'Takayama',
+    activities: [
+      {
+        id: 'takayama-old-town',
+        name: 'San-machi (Ciudad Antigua)',
+        category: 'culture',
+        duration: 180,
+        cost: 0,
+        description: 'Barrio histórico con casas tradicionales de madera',
+        location: { lat: 36.1456, lng: 137.2518 },
+        station: 'Takayama Station',
+        rating: 4.7,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'takayama-morning-market',
+        name: 'Mercado Matutino Miyagawa',
+        category: 'shopping',
+        duration: 90,
+        cost: 1000,
+        description: 'Mercado tradicional con artesanías y comida local',
+        location: { lat: 36.1463, lng: 137.2513 },
+        station: 'Takayama Station',
+        rating: 4.6,
+        timeOfDay: ['morning'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'takayama-hida-beef',
+        name: 'Hida Beef',
+        category: 'food',
+        duration: 60,
+        cost: 3000,
+        description: 'Carne de Hida famosa, similar al Wagyu de Kobe',
+        location: { lat: 36.1462, lng: 137.2521 },
+        station: 'Takayama Station',
+        rating: 4.8,
+        timeOfDay: ['lunch', 'dinner'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'takayama-festival-floats',
+        name: 'Yatai Kaikan (Museo de Carrozas)',
+        category: 'culture',
+        duration: 60,
+        cost: 1000,
+        description: 'Museo con las carrozas del festival de Takayama',
+        location: { lat: 36.1472, lng: 137.2535 },
+        station: 'Takayama Station',
+        rating: 4.5,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'all'
+      }
+    ]
+  },
+
+  kanazawa: {
+    city: 'Kanazawa',
+    activities: [
+      {
+        id: 'kanazawa-kenrokuen',
+        name: 'Jardín Kenrokuen',
+        category: 'nature',
+        duration: 120,
+        cost: 320,
+        description: 'Uno de los 3 jardines más hermosos de Japón',
+        location: { lat: 36.5616, lng: 136.6623 },
+        station: 'Kanazawa Station',
+        rating: 4.8,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'kanazawa-castle',
+        name: 'Castillo de Kanazawa',
+        category: 'culture',
+        duration: 90,
+        cost: 320,
+        description: 'Castillo histórico con arquitectura única',
+        location: { lat: 36.5652, lng: 136.6589 },
+        station: 'Kanazawa Station',
+        rating: 4.5,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'kanazawa-geisha-district',
+        name: 'Distrito Higashi Chaya',
+        category: 'culture',
+        duration: 120,
+        cost: 0,
+        description: 'Barrio de casas de té tradicionales y geishas',
+        location: { lat: 36.5698, lng: 136.6612 },
+        station: 'Kanazawa Station',
+        rating: 4.7,
+        timeOfDay: ['afternoon', 'evening'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'kanazawa-gold-leaf',
+        name: 'Taller de Hoja de Oro',
+        category: 'shopping',
+        duration: 60,
+        cost: 1000,
+        description: 'Kanazawa produce el 99% de la hoja de oro de Japón',
+        location: { lat: 36.5694, lng: 136.6616 },
+        station: 'Kanazawa Station',
+        rating: 4.6,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'kanazawa-omicho-market',
+        name: 'Mercado Omicho',
+        category: 'food',
+        duration: 90,
+        cost: 2500,
+        description: 'Mercado de mariscos frescos y street food',
+        location: { lat: 36.5693, lng: 136.6576 },
+        station: 'Kanazawa Station',
+        rating: 4.7,
+        timeOfDay: ['morning', 'lunch'],
+        bestSeason: 'all'
+      }
+    ]
+  },
+
+  nagoya: {
+    city: 'Nagoya',
+    activities: [
+      {
+        id: 'nagoya-castle',
+        name: 'Castillo de Nagoya',
+        category: 'culture',
+        duration: 120,
+        cost: 500,
+        description: 'Castillo histórico con delfines dorados en el techo',
+        location: { lat: 35.1854, lng: 136.8991 },
+        station: 'Shiyakusho Station',
+        rating: 4.5,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'spring'
+      },
+      {
+        id: 'nagoya-atsuta-shrine',
+        name: 'Santuario Atsuta',
+        category: 'culture',
+        duration: 90,
+        cost: 0,
+        description: 'Santuario sintoísta con la espada sagrada de Japón',
+        location: { lat: 35.1277, lng: 136.9086 },
+        station: 'Jingu-Mae Station',
+        rating: 4.6,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'nagoya-miso-katsu',
+        name: 'Miso Katsu',
+        category: 'food',
+        duration: 60,
+        cost: 1000,
+        description: 'Especialidad de Nagoya: tonkatsu con salsa miso',
+        location: { lat: 35.1709, lng: 136.8816 },
+        station: 'Nagoya Station',
+        rating: 4.5,
+        timeOfDay: ['lunch', 'dinner'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'nagoya-osu',
+        name: 'Osu Shopping District',
+        category: 'shopping',
+        duration: 120,
+        cost: 3000,
+        description: 'Distrito de compras con cultura otaku',
+        location: { lat: 35.1598, lng: 136.9023 },
+        station: 'Osu Kannon Station',
+        rating: 4.4,
+        timeOfDay: ['afternoon'],
+        bestSeason: 'all'
+      }
+    ]
+  },
+
+  yokohama: {
+    city: 'Yokohama',
+    activities: [
+      {
+        id: 'yokohama-chinatown',
+        name: 'Yokohama Chinatown',
+        category: 'food',
+        duration: 180,
+        cost: 2500,
+        description: 'El barrio chino más grande de Japón',
+        location: { lat: 35.4434, lng: 139.6452 },
+        station: 'Motomachi-Chukagai Station',
+        rating: 4.6,
+        timeOfDay: ['lunch', 'afternoon'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'yokohama-minato-mirai',
+        name: 'Minato Mirai 21',
+        category: 'photography',
+        duration: 120,
+        cost: 0,
+        description: 'Distrito moderno con rascacielos y vistas al mar',
+        location: { lat: 35.4556, lng: 139.6347 },
+        station: 'Minatomirai Station',
+        rating: 4.7,
+        timeOfDay: ['afternoon', 'evening'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'yokohama-ramen-museum',
+        name: 'Shin-Yokohama Ramen Museum',
+        category: 'food',
+        duration: 120,
+        cost: 800,
+        description: 'Museo con 9 tiendas de ramen de diferentes regiones',
+        location: { lat: 35.5085, lng: 139.6175 },
+        station: 'Shin-Yokohama Station',
+        rating: 4.5,
+        timeOfDay: ['lunch', 'dinner'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'yokohama-cup-noodle-museum',
+        name: 'Cup Noodles Museum',
+        category: 'family',
+        duration: 120,
+        cost: 500,
+        description: 'Museo interactivo sobre la historia del ramen instantáneo',
+        location: { lat: 35.4556, lng: 139.6349 },
+        station: 'Minatomirai Station',
+        rating: 4.7,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'all'
+      }
+    ]
+  },
+
+  nikko: {
+    city: 'Nikko',
+    activities: [
+      {
+        id: 'nikko-toshogu',
+        name: 'Santuario Toshogu',
+        category: 'culture',
+        duration: 180,
+        cost: 1300,
+        description: 'Santuario lujoso y patrimonio de la humanidad',
+        location: { lat: 36.7580, lng: 139.5994 },
+        station: 'Nikko Station',
+        rating: 4.8,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'nikko-lake-chuzenji',
+        name: 'Lago Chuzenji',
+        category: 'nature',
+        duration: 150,
+        cost: 0,
+        description: 'Lago de montaña con cascadas espectaculares',
+        location: { lat: 36.7388, lng: 139.4837 },
+        station: 'Nikko Station + Bus',
+        rating: 4.7,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'autumn'
+      },
+      {
+        id: 'nikko-kegon-falls',
+        name: 'Cascada Kegon',
+        category: 'nature',
+        duration: 60,
+        cost: 570,
+        description: 'Cascada de 97 metros, una de las más hermosas de Japón',
+        location: { lat: 36.7385, lng: 139.4956 },
+        station: 'Nikko Station + Bus',
+        rating: 4.6,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'all'
+      }
+    ]
+  },
+
+  sapporo: {
+    city: 'Sapporo',
+    activities: [
+      {
+        id: 'sapporo-beer-museum',
+        name: 'Museo de la Cerveza Sapporo',
+        category: 'food',
+        duration: 90,
+        cost: 500,
+        description: 'Historia de la cerveza con degustación gratuita',
+        location: { lat: 43.0784, lng: 141.3639 },
+        station: 'Sapporo Station',
+        rating: 4.5,
+        timeOfDay: ['afternoon'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'sapporo-ramen-yokocho',
+        name: 'Ramen Yokocho',
+        category: 'food',
+        duration: 60,
+        cost: 1000,
+        description: 'Callejón con 17 tiendas de ramen de Sapporo',
+        location: { lat: 43.0552, lng: 141.3497 },
+        station: 'Susukino Station',
+        rating: 4.6,
+        timeOfDay: ['lunch', 'dinner'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'sapporo-odori-park',
+        name: 'Parque Odori',
+        category: 'nature',
+        duration: 120,
+        cost: 0,
+        description: 'Parque central donde se celebra el Festival de Nieve',
+        location: { lat: 43.0596, lng: 141.3478 },
+        station: 'Odori Station',
+        rating: 4.5,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'winter'
+      },
+      {
+        id: 'sapporo-clock-tower',
+        name: 'Torre del Reloj',
+        category: 'photography',
+        duration: 30,
+        cost: 200,
+        description: 'Edificio histórico símbolo de Sapporo',
+        location: { lat: 43.0633, lng: 141.3537 },
+        station: 'Sapporo Station',
+        rating: 4.0,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'all'
+      }
+    ]
+  },
+
+  fukuoka: {
+    city: 'Fukuoka',
+    activities: [
+      {
+        id: 'fukuoka-yatai',
+        name: 'Yatai (Puestos Callejeros)',
+        category: 'food',
+        duration: 120,
+        cost: 2000,
+        description: 'Famosos puestos de comida callejera',
+        location: { lat: 33.5927, lng: 130.4017 },
+        station: 'Nakasu-Kawabata Station',
+        rating: 4.7,
+        timeOfDay: ['evening'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'fukuoka-hakata-ramen',
+        name: 'Ichiran Ramen Original',
+        category: 'food',
+        duration: 60,
+        cost: 980,
+        description: 'Tonkotsu ramen original de Fukuoka',
+        location: { lat: 33.5902, lng: 130.4012 },
+        station: 'Tenjin Station',
+        rating: 4.6,
+        timeOfDay: ['lunch', 'dinner'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'fukuoka-canal-city',
+        name: 'Canal City Hakata',
+        category: 'shopping',
+        duration: 180,
+        cost: 3000,
+        description: 'Centro comercial con canal y espectáculos',
+        location: { lat: 33.5899, lng: 130.4069 },
+        station: 'Nakasu-Kawabata Station',
+        rating: 4.5,
+        timeOfDay: ['afternoon', 'evening'],
+        bestSeason: 'all'
+      },
+      {
+        id: 'fukuoka-dazaifu',
+        name: 'Santuario Dazaifu Tenmangu',
+        category: 'culture',
+        duration: 150,
+        cost: 0,
+        description: 'Santuario dedicado al dios del aprendizaje',
+        location: { lat: 33.5204, lng: 130.5339 },
+        station: 'Dazaifu Station',
+        rating: 4.7,
+        timeOfDay: ['morning', 'afternoon'],
+        bestSeason: 'all'
+      }
+    ]
   }
 };
 
