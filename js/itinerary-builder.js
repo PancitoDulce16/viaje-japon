@@ -67,7 +67,12 @@ export const ItineraryBuilder = {
 
   // === CREACIÓN DE ITINERARIO === //
 
-  async showCreateItineraryWizard() {
+  shouldCreateTrip: false, // Flag to indicate if wizard should create trip
+
+  async showCreateItineraryWizard(createTripFlag = false) {
+    this.shouldCreateTrip = createTripFlag;
+    console.log('🎨 Opening wizard with createTripFlag:', createTripFlag);
+
     const modalHtml = `
       <div id="createItineraryWizard" class="modal active" style="z-index: 10001;">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -772,6 +777,41 @@ export const ItineraryBuilder = {
     };
 
     console.log('📋 Datos del Itinerario:', data);
+
+    // 🔥 NUEVO: Si shouldCreateTrip es true, crear el trip PRIMERO
+    if (this.shouldCreateTrip) {
+      console.log('🎯 Creating trip first...');
+
+      if (!window.TripsManager) {
+        Notifications.error('Error: TripsManager no está disponible');
+        return;
+      }
+
+      try {
+        // Create trip with basic data
+        const tripData = {
+          name: data.name,
+          destination: 'Japón',
+          dateStart: data.startDate,
+          dateEnd: data.dateEnd,
+          useTemplate: true
+        };
+
+        const tripId = await window.TripsManager.createTrip(tripData);
+
+        if (tripId) {
+          console.log('✅ Trip created successfully:', tripId);
+          // Wait a moment for Firebase to propagate
+          await new Promise(resolve => setTimeout(resolve, 800));
+        } else {
+          throw new Error('Trip creation did not return tripId');
+        }
+      } catch (error) {
+        console.error('❌ Error creating trip:', error);
+        Notifications.error('Error al crear el viaje. Inténtalo de nuevo.');
+        return;
+      }
+    }
 
     // Crear itinerario
     await this.createItinerary(data);
