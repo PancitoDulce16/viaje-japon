@@ -1423,7 +1423,157 @@ img, svg, video, canvas, iframe {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Day selector con tema japonés */
+/* ========================================
+   DAY CAROUSEL CON SWIPER
+   ======================================== */
+
+/* Container del carrusel */
+.days-carousel-container {
+  position: relative;
+  padding: 1rem 0;
+}
+
+/* Indicador de progreso (9 / 16) */
+.days-progress-indicator {
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--japan-red);
+  font-family: var(--font-japanese);
+  margin-bottom: 0.75rem;
+}
+
+.dark .days-progress-indicator {
+  color: var(--sakura-pink);
+}
+
+/* Swiper personalizado */
+.days-swiper {
+  overflow: visible !important;
+  padding: 0 1rem;
+}
+
+.days-swiper .swiper-wrapper {
+  align-items: center;
+}
+
+/* Mini calendario card */
+.day-calendar-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  border: 3px solid transparent;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.day-calendar-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-sakura);
+  transform: scaleX(0);
+  transition: transform 0.4s;
+}
+
+.day-calendar-card:hover::before {
+  transform: scaleX(1);
+}
+
+/* Día de la semana */
+.day-calendar-weekday {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--japan-red);
+  font-family: var(--font-japanese);
+}
+
+/* Número del día */
+.day-calendar-number {
+  font-size: 3rem;
+  font-weight: 900;
+  font-family: var(--font-japanese);
+  background: var(--gradient-sakura);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+/* Mes */
+.day-calendar-month {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--ink-black);
+  font-family: var(--font-japanese);
+  letter-spacing: 0.05em;
+}
+
+/* Estado activo */
+.day-calendar-card.active {
+  border-color: var(--japan-red);
+  box-shadow: var(--shadow-xl), 0 0 0 4px rgba(196, 30, 58, 0.1);
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #FFF5F7 0%, #FFFFFF 100%);
+}
+
+.day-calendar-card.active::before {
+  transform: scaleX(1);
+  height: 6px;
+}
+
+.day-calendar-card.active .day-calendar-number {
+  font-size: 3.5rem;
+}
+
+/* Slides no activos (opacidad reducida) */
+.days-swiper .swiper-slide:not(.swiper-slide-active) .day-calendar-card {
+  opacity: 0.5;
+  transform: scale(0.9);
+}
+
+.days-swiper .swiper-slide:not(.swiper-slide-active) .day-calendar-card:hover {
+  opacity: 0.8;
+  transform: scale(0.95);
+}
+
+/* Dark mode */
+.dark .day-calendar-card {
+  background: #1f2937;
+  border-color: transparent;
+}
+
+.dark .day-calendar-card.active {
+  background: linear-gradient(135deg, #2a2a3e 0%, #1f2937 100%);
+  border-color: var(--sakura-pink);
+  box-shadow: var(--shadow-xl), 0 0 0 4px rgba(255, 183, 197, 0.1);
+}
+
+.dark .day-calendar-weekday {
+  color: var(--sakura-pink);
+}
+
+.dark .day-calendar-month {
+  color: white;
+}
+
+/* Day selector con tema japonés (fallback para escritorio) */
 .day-btn-japan {
   padding: 0.75rem 1.5rem;
   border-radius: 12px;
@@ -1594,6 +1744,76 @@ img, svg, video, canvas, iframe {
 .sortable-drag {
   opacity: 0.8;
   transform: rotate(2deg);
+}
+
+/* ========================================
+   BOTONES DE REORDENAMIENTO (MÓVIL)
+   ======================================== */
+
+/* Contenedor de botones de reorden */
+.reorder-buttons {
+  display: none; /* Oculto en escritorio */
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-right: 0.5rem;
+}
+
+/* Botón individual */
+.reorder-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 2px solid var(--japan-red);
+  border-radius: 8px;
+  color: var(--japan-red);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.reorder-btn:active {
+  transform: scale(0.9);
+  box-shadow: var(--shadow-md);
+}
+
+.reorder-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.reorder-btn:not(:disabled):hover {
+  background: var(--japan-red);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.dark .reorder-btn {
+  background: #1f2937;
+  border-color: var(--sakura-pink);
+  color: var(--sakura-pink);
+}
+
+.dark .reorder-btn:not(:disabled):hover {
+  background: var(--sakura-pink);
+  color: var(--ink-black);
+}
+
+/* Mostrar botones solo en móvil */
+@media (max-width: 768px) {
+  .reorder-buttons {
+    display: flex;
+  }
+
+  /* Ocultar cursor grab en móvil ya que usamos botones */
+  .activity-card-japan {
+    cursor: default;
+  }
 }
 
 /* Responsive para itinerario */

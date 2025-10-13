@@ -320,13 +320,101 @@ function renderDaySelector() {
     }
     const days = itinerary.days || [];
 
-    container.innerHTML = days.map(day => `
-        <button data-day="${day.day}" class="day-btn-japan ${
-            currentDay === day.day ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-        }">
-            <i class="fas fa-calendar-day"></i> Día ${day.day}
-        </button>
-    `).join('');
+    // 📱 DETECCIÓN: Usar carrusel en móvil, botones en escritorio
+    const isMobile = window.innerWidth <= 768;
+
+    if (isMobile) {
+        // 🎠 CARRUSEL DE DÍAS CON SWIPER
+        renderDaysCarousel(days, container);
+    } else {
+        // 💻 BOTONES TRADICIONALES EN ESCRITORIO
+        container.innerHTML = days.map(day => `
+            <button data-day="${day.day}" class="day-btn-japan ${
+                currentDay === day.day ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+            }">
+                <i class="fas fa-calendar-day"></i> Día ${day.day}
+            </button>
+        `).join('');
+    }
+}
+
+// 🎠 Renderizar carrusel de días con Swiper
+function renderDaysCarousel(days, container) {
+    const totalDays = days.length;
+
+    container.innerHTML = `
+        <div class="days-carousel-container">
+            <!-- Indicador de progreso -->
+            <div class="days-progress-indicator">
+                Día <span id="current-day-number">${currentDay}</span> / ${totalDays}
+            </div>
+
+            <!-- Swiper Container -->
+            <div class="swiper days-swiper">
+                <div class="swiper-wrapper">
+                    ${days.map(day => {
+                        // Calcular fecha (ejemplo: 16 de Febrero 2026)
+                        const tripStart = new Date('2026-02-16');
+                        const dayDate = new Date(tripStart);
+                        dayDate.setDate(tripStart.getDate() + (day.day - 1));
+
+                        const weekday = dayDate.toLocaleDateString('es-ES', { weekday: 'short' }).toUpperCase();
+                        const dayNumber = dayDate.getDate();
+                        const month = dayDate.toLocaleDateString('es-ES', { month: 'short' }).toUpperCase();
+
+                        return `
+                            <div class="swiper-slide">
+                                <div class="day-calendar-card ${currentDay === day.day ? 'active' : ''}"
+                                     data-day="${day.day}">
+                                    <div class="day-calendar-weekday">${weekday}</div>
+                                    <div class="day-calendar-number">${dayNumber}</div>
+                                    <div class="day-calendar-month">${month}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+
+    // 🔥 Inicializar Swiper
+    setTimeout(() => {
+        if (typeof Swiper !== 'undefined') {
+            const swiper = new Swiper('.days-swiper', {
+                slidesPerView: 3,
+                centeredSlides: true,
+                spaceBetween: 16,
+                initialSlide: currentDay - 1,
+                slideToClickedSlide: true,
+
+                on: {
+                    slideChange: function() {
+                        const newDay = this.activeIndex + 1;
+                        if (newDay !== currentDay) {
+                            selectDay(newDay);
+                        }
+                    },
+                    init: function() {
+                        console.log('✅ Swiper inicializado');
+                    }
+                }
+            });
+
+            // Event listener para clicks en las cards
+            container.querySelectorAll('.day-calendar-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const day = parseInt(card.dataset.day);
+                    if (day !== currentDay) {
+                        selectDay(day);
+                        swiper.slideTo(day - 1);
+                    }
+                });
+            });
+        } else {
+            console.warn('⚠️ Swiper no está disponible');
+        }
+    }, 100);
 }
 
 /**
@@ -502,7 +590,7 @@ function renderActivities(day) {
                 const isCompleted = checkedActivities[act.id];
 
                 return `
-                    <div class="activity-card-japan fade-in-up ${isCompleted ? 'completed' : ''}" style="animation-delay: ${i * 0.05}s; margin-bottom: 1.5rem;">
+                    <div class="activity-card-japan fade-in-up ${isCompleted ? 'completed' : ''}" style="animation-delay: ${i * 0.05}s; margin-bottom: 1.5rem;" data-activity-index="${i}">
                         <div class="flex items-start gap-4">
                             <input
                                 type="checkbox"
@@ -510,6 +598,29 @@ function renderActivities(day) {
                                 ${isCompleted ? 'checked' : ''}
                                 class="activity-checkbox mt-1 w-5 h-5 cursor-pointer accent-red-600 flex-shrink-0"
                             >
+                            <!-- 📱 Botones de reordenamiento (solo móvil) -->
+                            <div class="reorder-buttons">
+                                <button
+                                    type="button"
+                                    class="reorder-btn reorder-up"
+                                    data-index="${i}"
+                                    data-day="${day.day}"
+                                    ${i === 0 ? 'disabled' : ''}
+                                    title="Mover arriba"
+                                >
+                                    <i class="fas fa-chevron-up"></i>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="reorder-btn reorder-down"
+                                    data-index="${i}"
+                                    data-day="${day.day}"
+                                    ${i === day.activities.length - 1 ? 'disabled' : ''}
+                                    title="Mover abajo"
+                                >
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
                             <div class="activity-icon-japan ${activityType}">
                                 <i class="${iconClass} text-white"></i>
                             </div>
@@ -664,6 +775,40 @@ function initializeDragAndDrop(timelineContainer) {
 }
 
 /**
+ * Reordenar actividad hacia arriba o abajo
+ * @param {number} index - Índice de la actividad
+ * @param {number} direction - Dirección: -1 para arriba, 1 para abajo
+ * @param {number} dayNumber - Número del día
+ */
+async function reorderActivity(index, direction, dayNumber) {
+    const dayData = currentItinerary.days.find(d => d.day === dayNumber);
+    if (!dayData || !dayData.activities) {
+        console.error('❌ No se encontró el día o las actividades');
+        return;
+    }
+
+    const newIndex = index + direction;
+
+    // Validar límites
+    if (newIndex < 0 || newIndex >= dayData.activities.length) {
+        console.warn('⚠️ No se puede mover fuera de los límites');
+        return;
+    }
+
+    // Intercambiar posiciones
+    const [movedItem] = dayData.activities.splice(index, 1);
+    dayData.activities.splice(newIndex, 0, movedItem);
+
+    console.log('✅ Actividad reordenada:', { from: index, to: newIndex });
+
+    // Guardar cambios en Firebase
+    await saveReorderedActivities();
+
+    // Re-renderizar la vista
+    render();
+}
+
+/**
  * Guardar actividades reordenadas en Firebase con retry logic
  */
 async function saveReorderedActivities() {
@@ -769,6 +914,8 @@ export const ItineraryHandler = {
                 const editBtn = e.target.closest('.activity-edit-btn');
                 const deleteBtn = e.target.closest('.activity-delete-btn');
                 const dayBtn = e.target.closest('.day-btn-japan');
+                const reorderUpBtn = e.target.closest('.reorder-up');
+                const reorderDownBtn = e.target.closest('.reorder-down');
 
                 if (addBtn) {
                     console.log('✅ Botón "Añadir Actividad" clickeado:', addBtn.id);
@@ -785,6 +932,14 @@ export const ItineraryHandler = {
                     ItineraryHandler.deleteActivity(activityId, dayNum);
                 } else if (dayBtn) {
                     selectDay(parseInt(dayBtn.dataset.day));
+                } else if (reorderUpBtn) {
+                    const index = parseInt(reorderUpBtn.dataset.index);
+                    const day = parseInt(reorderUpBtn.dataset.day);
+                    reorderActivity(index, -1, day);
+                } else if (reorderDownBtn) {
+                    const index = parseInt(reorderDownBtn.dataset.index);
+                    const day = parseInt(reorderDownBtn.dataset.day);
+                    reorderActivity(index, 1, day);
                 }
             });
 
