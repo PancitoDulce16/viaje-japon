@@ -163,99 +163,23 @@ export const ItineraryBuilder = {
               </div>
             </div>
 
-            <!-- Step 2: Ciudades y Días -->
+            <!-- Step 2: Itinerario por Fechas -->
             <div id="wizardStep2" class="wizard-content hidden">
-              <h3 class="text-xl font-bold mb-4 dark:text-white">🏙️ Ciudades y Días</h3>
+              <h3 class="text-xl font-bold mb-4 dark:text-white">📅 Itinerario por Fechas</h3>
               <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Selecciona las ciudades que visitarás y asigna cuántos días pasarás en cada una
+                Selecciona qué ciudad visitarás cada día de tu viaje. Puedes repetir ciudades cuantas veces quieras.
               </p>
 
-              <div id="cityDaysContainer" class="space-y-3 max-h-[500px] overflow-y-auto">
-                ${Object.keys(ACTIVITIES_DATABASE).map(cityId => {
-                  const cityData = ACTIVITIES_DATABASE[cityId];
-                  return `
-                    <div class="city-item border border-gray-300 dark:border-gray-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                      <div class="flex items-start gap-3">
-                        <input
-                          type="checkbox"
-                          id="city-${cityId}"
-                          value="${cityId}"
-                          class="city-checkbox w-5 h-5 mt-1 cursor-pointer"
-                          onchange="ItineraryBuilder.toggleCityDayAssignment('${cityId}')"
-                        />
-                        <div class="flex-1">
-                          <label for="city-${cityId}" class="font-bold text-lg dark:text-white cursor-pointer">${cityData.city}</label>
-
-                          <!-- Day Assignment Section (hidden by default) -->
-                          <div id="days-${cityId}" class="mt-3 space-y-3 hidden">
-                            <!-- One Day Visit Option -->
-                            <label class="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                class="one-day-checkbox w-4 h-4"
-                                onchange="ItineraryBuilder.toggleOneDayVisit('${cityId}')"
-                              />
-                              <span class="text-sm font-semibold dark:text-gray-300">¿Visita de un solo día?</span>
-                            </label>
-
-                            <!-- Multi-Day Stay (shown by default) -->
-                            <div id="multiday-${cityId}" class="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg space-y-2">
-                              <div class="grid grid-cols-3 gap-3">
-                                <div>
-                                  <label class="block text-xs font-semibold mb-1 dark:text-gray-300">¿Cuántos días?</label>
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    placeholder="ej: 3"
-                                    class="city-days-count w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white text-sm"
-                                    onchange="ItineraryBuilder.updateDayRange('${cityId}')"
-                                  />
-                                </div>
-                                <div>
-                                  <label class="block text-xs font-semibold mb-1 dark:text-gray-300">Día inicio</label>
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    placeholder="ej: 1"
-                                    class="city-day-start w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white text-sm"
-                                    onchange="ItineraryBuilder.validateDayAssignment('${cityId}')"
-                                  />
-                                </div>
-                                <div>
-                                  <label class="block text-xs font-semibold mb-1 dark:text-gray-300">Día fin</label>
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    placeholder="ej: 3"
-                                    class="city-day-end w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white text-sm"
-                                    onchange="ItineraryBuilder.validateDayAssignment('${cityId}')"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-
-                            <!-- Single Day Visit (hidden by default) -->
-                            <div id="oneday-${cityId}" class="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg hidden">
-                              <label class="block text-xs font-semibold mb-1 dark:text-gray-300">¿En qué día visitarás ${cityData.city}?</label>
-                              <input
-                                type="number"
-                                min="1"
-                                placeholder="ej: 2"
-                                class="city-single-day w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white text-sm"
-                                onchange="ItineraryBuilder.validateDayAssignment('${cityId}')"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  `;
-                }).join('')}
+              <div id="cityByDateContainer" class="space-y-2 max-h-[500px] overflow-y-auto">
+                <!-- Este contenedor se llenará dinámicamente cuando el usuario avance desde el Paso 1 -->
+                <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <p>Las fechas aparecerán aquí automáticamente...</p>
+                </div>
               </div>
 
-              <div class="mt-4 bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
-                <p class="text-sm text-yellow-800 dark:text-yellow-300">
-                  💡 <strong>Tip:</strong> La suma de días asignados no debe exceder la duración total de tu viaje
+              <div class="mt-4 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <p class="text-sm text-blue-800 dark:text-blue-300">
+                  💡 <strong>Tip:</strong> Puedes visitar una ciudad múltiples veces. Por ejemplo: Tokyo → Kyoto → Osaka → Tokyo
                 </p>
               </div>
             </div>
@@ -568,7 +492,68 @@ export const ItineraryBuilder = {
     container.insertAdjacentHTML('beforeend', html);
   },
 
-  // === CITY/DAY ASSIGNMENT HELPERS === //
+  // === DATE-CITY ASSIGNMENT (NEW SYSTEM) === //
+
+  generateDateCitySelector() {
+    const startDate = document.getElementById('itineraryStartDate').value;
+    const endDate = document.getElementById('itineraryEndDate').value;
+
+    if (!startDate || !endDate) {
+      console.error('Start or end date missing');
+      return;
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const dates = [];
+    let current = new Date(start);
+
+    // Generate all dates
+    while (current <= end) {
+      dates.push(new Date(current));
+      current.setDate(current.getDate() + 1);
+    }
+
+    // Build city options HTML
+    const cityOptions = Object.keys(ACTIVITIES_DATABASE).map(cityId => {
+      const cityData = ACTIVITIES_DATABASE[cityId];
+      return `<option value="${cityId}">${cityData.city}</option>`;
+    }).join('');
+
+    // Generate HTML for each date
+    const container = document.getElementById('cityByDateContainer');
+    container.innerHTML = dates.map((date, index) => {
+      const dateStr = date.toISOString().split('T')[0];
+      const dayOfWeek = date.toLocaleDateString('es-ES', { weekday: 'short' });
+      const dayMonth = date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+      const dayNumber = index + 1;
+
+      return `
+        <div class="flex items-center gap-3 p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 hover:shadow-md transition">
+          <div class="flex-shrink-0 text-center w-20">
+            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">${dayOfWeek}</div>
+            <div class="text-lg font-bold dark:text-white">Día ${dayNumber}</div>
+            <div class="text-xs text-gray-600 dark:text-gray-400">${dayMonth}</div>
+          </div>
+          <div class="flex-1">
+            <select
+              id="city-date-${dayNumber}"
+              data-date="${dateStr}"
+              data-day="${dayNumber}"
+              class="city-date-selector w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white font-semibold"
+            >
+              <option value="">-- Selecciona una ciudad --</option>
+              ${cityOptions}
+            </select>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    console.log(`✅ Generated ${dates.length} date selectors`);
+  },
+
+  // === CITY/DAY ASSIGNMENT HELPERS (OLD SYSTEM - DEPRECATED) === //
 
   toggleCityDayAssignment(cityId) {
     const checkbox = document.getElementById(`city-${cityId}`);
@@ -638,6 +623,12 @@ export const ItineraryBuilder = {
 
     if (this.currentStep < 5) {
       this.currentStep++;
+
+      // 🔥 NUEVO: Si avanzamos al Paso 2, generar el selector de fechas
+      if (this.currentStep === 2) {
+        this.generateDateCitySelector();
+      }
+
       this.updateWizardView();
     }
   },
@@ -667,15 +658,20 @@ export const ItineraryBuilder = {
     }
 
     if (this.currentStep === 2) {
-      const selectedCities = document.querySelectorAll('.city-checkbox:checked');
+      // 🔥 NUEVO: Validar que todas las fechas tengan ciudad asignada
+      const dateSelectors = document.querySelectorAll('.city-date-selector');
+      const unassignedDates = [];
 
-      if (selectedCities.length === 0) {
-        Notifications.warning('Selecciona al menos una ciudad');
+      dateSelectors.forEach(selector => {
+        if (!selector.value || selector.value === '') {
+          unassignedDates.push(selector.dataset.day);
+        }
+      });
+
+      if (unassignedDates.length > 0) {
+        Notifications.warning(`Por favor selecciona una ciudad para todos los días. Días sin asignar: ${unassignedDates.join(', ')}`);
         return false;
       }
-
-      // Validate day assignments for selected cities
-      // (Optional: add more complex validation here)
     }
 
     // Step 3 (flights) is optional, no validation required
@@ -822,44 +818,62 @@ export const ItineraryBuilder = {
   },
 
   getCityDayAssignments() {
-    const assignments = [];
-    const selectedCities = document.querySelectorAll('.city-checkbox:checked');
+    // 🔥 NUEVO SISTEMA: Leer de los dropdowns por fecha
+    const dateSelectors = document.querySelectorAll('.city-date-selector');
+    const dayByDayAssignments = [];
 
-    selectedCities.forEach(checkbox => {
-      const cityId = checkbox.value;
-      const daysSection = document.getElementById(`days-${cityId}`);
-      const oneDayCheckbox = daysSection.querySelector('.one-day-checkbox');
+    // Collect day-by-day assignments
+    dateSelectors.forEach(selector => {
+      const cityId = selector.value;
+      const day = parseInt(selector.dataset.day);
+      const date = selector.dataset.date;
 
-      if (oneDayCheckbox && oneDayCheckbox.checked) {
-        // Single day visit
-        const singleDay = document.querySelector(`#oneday-${cityId} .city-single-day`).value;
-        if (singleDay) {
-          assignments.push({
-            cityId: cityId,
-            cityName: ACTIVITIES_DATABASE[cityId].city,
-            type: 'single-day',
-            day: parseInt(singleDay)
-          });
-        }
-      } else {
-        // Multi-day stay
-        const daysCount = document.querySelector(`#multiday-${cityId} .city-days-count`).value;
-        const dayStart = document.querySelector(`#multiday-${cityId} .city-day-start`).value;
-        const dayEnd = document.querySelector(`#multiday-${cityId} .city-day-end`).value;
-
-        if (daysCount && dayStart && dayEnd) {
-          assignments.push({
-            cityId: cityId,
-            cityName: ACTIVITIES_DATABASE[cityId].city,
-            type: 'multi-day',
-            daysCount: parseInt(daysCount),
-            dayStart: parseInt(dayStart),
-            dayEnd: parseInt(dayEnd)
-          });
-        }
+      if (cityId) {
+        dayByDayAssignments.push({
+          day: day,
+          date: date,
+          cityId: cityId,
+          cityName: ACTIVITIES_DATABASE[cityId].city
+        });
       }
     });
 
+    // Group consecutive days in the same city
+    const assignments = [];
+    let currentGroup = null;
+
+    dayByDayAssignments.forEach(assignment => {
+      if (!currentGroup || currentGroup.cityId !== assignment.cityId) {
+        // Start new group
+        if (currentGroup) {
+          assignments.push(currentGroup);
+        }
+        currentGroup = {
+          cityId: assignment.cityId,
+          cityName: assignment.cityName,
+          dayStart: assignment.day,
+          dayEnd: assignment.day,
+          daysCount: 1,
+          type: 'multi-day'
+        };
+      } else {
+        // Extend current group
+        currentGroup.dayEnd = assignment.day;
+        currentGroup.daysCount++;
+      }
+    });
+
+    // Push last group
+    if (currentGroup) {
+      // Mark single-day visits
+      if (currentGroup.daysCount === 1) {
+        currentGroup.type = 'single-day';
+        currentGroup.day = currentGroup.dayStart;
+      }
+      assignments.push(currentGroup);
+    }
+
+    console.log('📋 City day assignments:', assignments);
     return assignments;
   },
 
