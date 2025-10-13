@@ -102,20 +102,13 @@ export const TripsManager = {
       };
 
       await setDoc(doc(db, 'trips', tripId), newTrip);
-      
-      // 🔥 NUEVO: Solo copiar plantilla SI el usuario lo pidió
-      if (tripData.useTemplate) {
-        await this.copyItineraryTemplate(tripId);
-        Notifications.success(
-          `🎉 Viaje "${tripData.name}" creado con plantilla de itinerario!\n🔗 Código: ${shareCode}`,
-          6000
-        );
-      } else {
-        Notifications.success(
-          `🎉 Viaje "${tripData.name}" creado exitosamente!\n🔗 Código: ${shareCode}`,
-          6000
-        );
-      }
+
+      // 🔥 CAMBIO: Ya NO copiamos plantillas genéricas
+      // El itinerario se creará con el wizard inteligente
+      Notifications.success(
+        `🎉 Viaje "${tripData.name}" creado exitosamente!\n🔗 Código: ${shareCode}`,
+        6000
+      );
       
       console.log('✅ Viaje creado:', tripId, 'Código:', shareCode);
       
@@ -537,11 +530,12 @@ export const TripsManager = {
   showFullTripWizard() {
     // Cerrar modal de crear viaje
     this.closeCreateTripModal();
-    
+
     // Esperar un momento y abrir el wizard completo
     setTimeout(() => {
       if (window.ItineraryBuilder && window.ItineraryBuilder.showCreateItineraryWizard) {
-        window.ItineraryBuilder.showCreateItineraryWizard();
+        // 🔥 NUEVO: Pasar flag para que el wizard sepa que debe crear el trip
+        window.ItineraryBuilder.showCreateItineraryWizard(true);
       } else {
         console.error('ItineraryBuilder no está disponible');
         Notifications.error('Error: El wizard de itinerario no está disponible');
