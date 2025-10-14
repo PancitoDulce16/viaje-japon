@@ -91,3 +91,478 @@ Use official/place images when available (Google Places, Wikimedia Commons).
 If not available, fetch stock images (Unsplash, Pexels, Pixabay).
 Fallback: local category-based image.
 Add imageSource metadata for transparency.
+
+
+Technical Specification — Preparation & Flights Tabs
+Owner: Ivankovich, Noelia
+Module(s): Preparation, Flights (new), plus small shared utilities
+Primary goals:
+
+Give travelers a clear, country‑specific entry checklist and a step‑by‑step airport flow for Japan.
+Provide airline‑specific baggage rules (dimensions, weight, allowances) for the user’s selected carrier.
+
+
+Authoritative sources used in this spec:
+
+MOFA Japan – Visa (official, canonical for entry/visa) mofa.go.jp
+Japan‑Guide (overview of entry process + Visit Japan Web mention) japan-guide.com
+LIVE JAPAN (airport arrival sequence & Visit Japan Web guidance) livejapan.com
+U.S. Embassy in Japan (advisories, prohibited meds, e-gates) jp.usembassy.gov
+Haneda Airport (official) (arrival steps) tokyo-haneda.com
+ANA baggage (official) ana.co.jp
+JAL baggage (official) jal.co.jp
+General checked-size baseline (62 linear inches) U.S. News, Upgraded Points
+
+
+
+1) Scope
+
+
+Preparation tab
+
+Airport Arrival Guide (Japan): process order, what to expect, official links.
+Pre‑departure Checklist: documents, Visit Japan Web registration, prohibited substances notice.
+Country‑specific Requirements: user selects nationality → visa exemption/notes + official links.
+
+
+
+Flights tab
+
+Airline selector → dynamic baggage rules: checked allowance by cabin, carry‑on size/weight, linear dimension rule, special items caveats.
+Visual sizing aide and fees disclaimer + direct link to airline’s official baggage page.
+
+
+
+
+Notes on currency & weather: You’ve already implemented these; we will reuse your currency utils for fee estimates if you decide to show fees later.
+
+
+2) User Stories & Acceptance Criteria
+2.1 Preparation – Country Requirements
+
+US-1: As a traveler, I select my citizenship and see if I’m visa‑exempt, my max stay, and links to official sources.
+
+AC: For countries with visa exemption, show “Visa‑exempt (short stay)” w/ typical 90 days where applicable, plus a note that rules vary by nationality and may change; include MOFA link (official) and local embassy link when available.
+(Refs: MOFA visa page + embassy pages)
+
+
+
+2.2 Preparation – Airport Arrival Guide
+
+US-2: I see an ordered checklist of arrival steps in Japan and how to pre‑register with Visit Japan Web.
+
+AC: Display sequence: Quarantine → Immigration → Baggage Claim → Customs → Arrival Lobby, with short tips and links (Haneda official; LIVE JAPAN).
+AC: Include message that fingerprints & photo are captured for foreign visitors (Japan‑Guide), and that Visit Japan Web expedites procedures (LIVE JAPAN).
+
+
+
+2.3 Flights – Baggage Rules
+
+US-3: I choose my airline, and the app shows cabin‑level checked and carry‑on allowances.
+
+AC: Minimum fields: # of bags, weight per bag, linear dimensions (checked), carry‑on size/weight, personal item, exceptions, source link.
+AC: For ANA & JAL, values must match official pages (ANA/JAL). For other airlines, use curated dataset & link to official pages (or show a disclaimer to “verify on airline site”).
+AC: Show 62 linear inches / 158 cm as the most common checked size (with a “check your airline” disclaimer) and link to general references in absence of official data.
+
+
+
+
+3) Data Strategy
+3.1 Country Requirements (static + curated; periodically reviewed)
+
+Primary source: MOFA country lists & rules. Always provide link-outs to MOFA and relevant embassies for the user’s country. (MOFA is canonical and changes periodically.)
+Secondary context: Japan‑Guide for plain-language explanations & updates (e.g., Visit Japan Web), U.S. Embassy for prohibited medications and e-gates.
+Storage: Maintain a repo file data/country-requirements.json with normalized fields and embedded sources.
+
+3.2 Airline Baggage (static + curated; per airline official page)
+
+Primary sources: Official airline baggage pages (e.g., ANA/JAL).
+Fallback/general: 62” rule + 50 lb / 23 kg common economy weight baseline with disclaimer (U.S. News; Upgraded Points).
+Storage: data/airlines.json with sources per airline & lastReviewedAt.
+
+
+Update workflow: Schedule a quarterly review or when airline changes are detected. Include lastReviewedAt and show it in UI for transparency.
+
+4) Data Models
+4.1 Country Requirements
+// data/country-requirements.json (array of CountryRequirement){
+  "iso2": "US",
+  "name": "United States",
+  "visaPolicy": "exempt",
+  "typicalMaxStayDays": 90,
+  "notes": "Short-term tourism/business visa-exempt for up to 90 days. Carry passport at all times. Confirm prohibited medications before travel.",
+  "links": {
+    "mofaVisa": "https://www.mofa.go.jp/j_info/visit/visa/index.html",
+    "embassyOrConsulate": "https://jp.usembassy.gov/services/welcomebacktojapan/",
+    "visitJapanWeb": "https://www.vjw.digital.go.jp/"
+  },
+  "lastReviewedAt": "2025-10-01",
+  "sources": [
+    "https://www.mofa.go.jp/j_info/visit/visa/index.html",
+    "https://jp.usembassy.gov/services/welcomebacktojapan/",
+    "https://www.japan-guide.com/e/e2221.html"
+  ]
+}
+interface CountryRequirement {
+  iso2: string;             // "US", "CR", "ES"
+  name: string;             // "United States"
+  visaPolicy: "exempt" | "visa-required" | "evisa" | "conditional";
+  typicalMaxStayDays?: number;  // e.g., 90 (varies by nationality; only if known)
+  notes?: string;           // short human-readable note
+  links: {
+    mofaVisa: string;       // canonical MOFA page for visas
+    embassyOrConsulate?: string; // nearest embassy/consulate general info
+    visitJapanWeb?: string; // link to Visit Japan Web
+  };
+  lastReviewedAt: string;   // ISO date
+  sources: string[];        // list of URLs used to verify (MOFA + embassy)
+}
+
+
+Example (United States):
+
+{
+  "iso2": "US",
+  "name": "United States",
+  "visaPolicy": "exempt",
+  "typicalMaxStayDays": 90,
+  "notes": "Short-term tourism/business visa-exempt for up to 90 days. Carry passport at all times. Confirm prohibited medications before travel.",
+  "links": {
+    "mofaVisa": "https://www.mofa.go.jp/j_info/visit/visa/index.html",
+    "embassyOrConsulate": "https://jp.usembassy.gov/services/welcomebacktojapan/",
+    "visitJapanWeb": "https://www.vjw.digital.go.jp/"
+  },
+  "lastReviewedAt": "2025-10-01",
+  "sources": [
+    "https://www.mofa.go.jp/j_info/visit/visa/index.html",
+    "https://jp.usembassy.gov/services/welcomebacktojapan/",
+    "https://www.japan-guide.com/e/e2221.html"
+  ]
+}
+
+Why MOFA & Embassies? MOFA is the official rule-maker; embassies add local instructions and cautions (e.g., prohibited medications, e-gates). (Refs: MOFA visa page; U.S. Embassy advisory)
+
+4.2 Airline Baggage
+
+// data/airlines.json (array of AirlineBaggage)
+type Cabin = "economy" | "premiumEconomy" | "business" | "first";
+
+interface Dimension {
+  lengthCm?: number;
+  widthCm?: number;
+  heightCm?: number;
+  linearCm?: number;   // often 158cm for checked
+}
+
+interface AllowancePiece {
+  pieces: number;
+  weightKgPerPiece: number; // e.g., 23 or 32
+  maxDimensions: Dimension; // linearCm or L/W/H
+}
+
+interface CarryOnPolicy {
+  bag: Dimension & { weightKg?: number };
+  personalItem?: Dimension & { weightKg?: number };
+  combinedWeightKg?: number; // some airlines cap combined carry-on+personal
+}
+
+interface AirlineBaggage {
+  code: string;             // "NH" ANA, "JL" JAL, "UA" United...
+  name: string;
+  cabins: Partial<Record<Cabin, AllowancePiece>>;
+  carryOn: CarryOnPolicy;
+  notes?: string;           // e.g., codeshare exceptions
+  sources: string[];        // official baggage page (REQUIRED)
+  lastReviewedAt: string;   // ISO date
+}
+
+Example (ANA, simplified):
+{
+  "code": "NH",
+  "name": "ANA",
+  "cabins": {
+    "economy": {
+      "pieces": 2,
+      "weightKgPerPiece": 23,
+      "maxDimensions": { "linearCm": 158 }
+    },
+    "business": {
+      "pieces": 2,
+      "weightKgPerPiece": 32,
+      "maxDimensions": { "linearCm": 158 }
+    },
+    "first": {
+      "pieces": 3,
+      "weightKgPerPiece": 32,
+      "maxDimensions": { "linearCm": 158 }
+    }
+  },
+  "carryOn": {
+    "bag": { "lengthCm": 55, "widthCm": 40, "heightCm": 25, "weightKg": 10 }
+  },
+  "notes": "Codeshare segments may follow the marketing or operating carrier’s rules. Verify your e-ticket ‘baggage provisions’.",
+  "sources": [
+    "https://www.ana.co.jp/en/us/travel-information/baggage-information/checked-baggage/"
+  ],
+  "lastReviewedAt": "2025-10-01"
+}
+
+(Refs: ANA official baggage page)
+Example (JAL, simplified):
+
+{
+  "code": "JL",
+  "name": "JAL",
+  "cabins": {
+    "economy": { "pieces": 2, "weightKgPerPiece": 23, "maxDimensions": { "linearCm": 158 } },
+    "business": { "pieces": 2, "weightKgPerPiece": 32, "maxDimensions": { "linearCm": 158 } },
+    "first": { "pieces": 3, "weightKgPerPiece": 32, "maxDimensions": { "linearCm": 158 } }
+  },
+  "carryOn": {
+    "bag": { "lengthCm": 55, "widthCm": 40, "heightCm": 25, "weightKg": 10 }
+  },
+  "notes": "US/Canada itineraries may apply single ‘Most Significant Carrier’ provisions per DOT/CTA; verify on ticket.",
+  "sources": [
+    "https://www.jal.co.jp/jp/en/inter/baggage/checked/"
+  ],
+  "lastReviewedAt": "2025-10-01"
+}
+(Refs: JAL official baggage page; DOT/CTA rules often change per itinerary)
+
+For airlines lacking official data, include baseline: 158 cm linear & 23 kg economy per piece with a bold disclaimer and source links to general references (U.S. News; Upgraded Points). Always prefer official airline pages when possible.
+
+
+5) UI/UX Specification
+5.1 Preparation Tab
+
+Header: “Preparation for Japan”
+Panels:
+
+Country Requirements
+
+Country selector (searchable dropdown by country name; stores ISO2).
+Result card: visa policy, typical max stay (if applicable), key notes, and 3 official links (MOFA, Embassy/Consulate, Visit Japan Web).
+“Policies change” disclaimer + last reviewed date.
+
+
+Airport Arrival Guide
+
+Steps (icon list): Quarantine → Immigration → Baggage Claim → Customs → Arrival Lobby (Haneda official flow).
+Include Visit Japan Web pre‑registration tip & link; add note re: fingerprint & photo for foreign visitors.
+(Refs: Haneda official; LIVE JAPAN; Japan‑Guide)
+
+
+Pre‑departure Checklist
+
+Passport validity guidance, visa as needed, Visit Japan Web registration, return ticket, accommodation address, prohibited substances note with MHLW/email reference via Embassy page.
+(Refs: U.S. Embassy advisory; Japan‑Guide/MOFA)
+
+
+
+
+
+5.2 Flights Tab
+
+Header: “Baggage by Airline”
+Controls:
+
+Airline selector (autocomplete by name/code).
+Optional Cabin selector (defaults from ticket if you have it later).
+
+
+Result card:
+
+Checked baggage table (pieces × weight per piece × max dimension).
+Carry‑on card (size & weight limits; whether combined weight applies).
+Notes (codeshare, route exceptions).
+Official link (always displayed) + last reviewed date.
+General baseline line: “Most airlines use 62 linear inches / 158 cm for checked bag size; verify on your ticket.”
+(Refs: U.S. News; Upgraded Points)
+
+
+Visual:
+
+Simple L×W×H diagram showing 55×40×25 cm for carry‑on & 158 cm linear for checked.
+
+
+
+5.3 Accessibility & i18
+
+All inputs have <label>/aria-describedby.
+Keyboard navigation for selectors.
+Strings externalized for EN/ES; date formatting localized.
+Links open in new tab with rel="noopener".
+
+
+6) Core Logic (Pseudocode)
+6.1 Country rules lookup
+
+import countryData from '/data/country-requirements.json';
+
+function getCountryRequirement(iso2) {
+  return countryData.find(c => c.iso2 === iso2) || null;
+}
+
+6.2 Airline baggage lookup
+import airlines from '/data/airlines.json';
+
+function getAirline(codeOrName) {
+  const q = codeOrName.toLowerCase();
+  return airlines.find(a => a.code.toLowerCase() === q || a.name.toLowerCase() === q) || null;
+}
+
+6.3 Dimension helpers
+
+const toLinear = (d) => (d.lengthCm||0) + (d.widthCm||0) + (d.heightCm||0);
+const cmToIn = (cm) => Math.round((cm / 2.54) * 10) / 10;
+
+7) Content Governance & Updates
+
+Sources of truth:
+
+Country requirements: MOFA + Embassy/Consulate pages.
+Airline baggage: Airline official baggage page.
+
+
+Review cadence: Quarterly, or on known policy change.
+Fields: Always update lastReviewedAt + include the URL in sources[].
+UI: Render lastReviewedAt visibly under each card.
+
+
+8) Error Handling & Edge Cases
+
+Unknown country: show generic guidance + MOFA link.
+Unknown airline: show generic 158 cm/23 kg baseline with strong disclaimer and prompt user to check their e‑ticket & airline site.
+Offline: dataset is static & shipped with app; render last known values.
+Conflicts (e.g., codeshare): show note: “Ticket’s ‘Baggage Provisions’ field governs the whole itinerary; rules may follow marketing or operating carrier.” (ANA/JAL note this; DOT/CTA rules apply on US/CA itineraries.)
+
+
+9) Security & Privacy
+
+Country selection is local UI state only; do not persist sensitive PII.
+No tokens/keys required for these two tabs.
+For future API usage (e.g., Visit Japan Web deep links), keep all secrets in environment variables and never commit them.
+
+
+10) Telemetry (optional)
+
+Track anonymized events: prep_country_selected, flights_airline_selected, with country ISO2/airline code only.
+Add source_click when user opens official links (helps you see which airlines or countries are popular).
+
+11) Testing
+Unit
+
+Country lookup returns the exact record for ISO2.
+Airline lookup handles code and name matches, case-insensitive.
+Dimension helpers compute linear sum and inch conversions correctly.
+
+Integration
+
+Selecting US renders: visa‑exempt + 90 days (note) + MOFA + embassy + VJW links.
+(Refs: MOFA; U.S. Embassy; Japan‑Guide)
+Selecting ANA shows economy 2×23 kg & 158 cm; carry‑on 55×40×25 cm & 10 kg; links to ANA page.
+(Ref: ANA)
+Selecting JAL shows economy 2×23 kg & 158 cm; carry‑on same dims; link to JAL page.
+(Ref: JAL)
+Unknown airline → baseline + disclaimer + general references.
+
+Accessibility
+
+Tab/arrow key navigation for selectors.
+Screen reader announces help text and external link destinations.
+
+
+12) Deliverables (for Claude)
+
+
+Data files
+
+data/country-requirements.json (seed top 30 source countries for your users; expandable)
+data/airlines.json (seed with ANA, JAL, United, Delta, AA, BA, Air Canada, Singapore, Qantas, etc.)
+
+
+
+UI Components
+
+Preparation/CountrySelector + CountryResultCard
+Preparation/AirportGuide (static content + links)
+Preparation/Checklist (static w/ references)
+Flights/AirlineSelector
+Flights/BaggageRulesCard + BaggageDiagram
+
+
+
+Shared
+
+utils/dimensions.ts (cm↔in; linear sum)
+utils/i18n.ts (strings for EN/ES)
+styles/cards.css (reuse existing tokens)
+
+
+
+Docs
+
+README-PREPARATION-FLIGHTS.md with:
+
+Data governance, update cadence
+How to add a country/airline
+Source links policy and last reviewed dates
+
+
+
+
+
+
+13) Acceptance Criteria (Sign‑off)
+
+✅ Preparation tab:
+
+Country selector works; US example shows visa‑exempt 90 days note + MOFA + Embassy + VJW links.
+Airport guide displays Haneda flow with Visit Japan Web and biometrics notes, each with official citations.
+
+
+✅ Flights tab:
+
+ANA & JAL render with correct allowances per official pages.
+Unknown airline shows baseline + disclaimer + general references.
+“Last reviewed” date visible; source link always present.
+
+
+✅ A11y:
+
+Keyboard accessible; labels present; visible focus states.
+
+
+✅ Localization:
+
+Strings externalized; dates/numbers localized.
+
+
+✅ Governance:
+
+data/* entries include lastReviewedAt and at least 1 official source URL.
+
+
+
+
+14) Source Mapping (for engineers)
+
+MOFA (visa policy): <https://www.mofa.go.jp/j_info/visit/visa/index.html>
+Arrival guidance + Visit Japan Web:
+
+LIVE JAPAN guide: <https://livejapan.com/en/article-a0005199/>
+Haneda (official steps): <https://tokyo-haneda.com/en/flight/int/arr_step.html>
+Japan‑Guide (entry + Visit Japan Web): <https://www.japan-guide.com/e/e2221.html>
+
+
+Advisories (prohibited meds, e-gates): U.S. Embassy: <https://jp.usembassy.gov/services/welcomebacktojapan/>
+Airlines (official baggage):
+
+ANA: <https://www.ana.co.jp/en/us/travel-information/baggage-information/checked-baggage/>
+JAL: <https://www.jal.co.jp/jp/en/inter/baggage/checked/>
+
+
+General checked size baseline:
+
+U.S. News: <https://travel.usnews.com/features/checked-luggage-sizes-by-airline>
+Upgraded Points: <https://upgradedpoints.com/travel/airlines/checked-luggage-size-chart-allowances/>
