@@ -1,0 +1,226 @@
+✅ 1. Smart Itinerary Enhancements
+
+AI Activity Suggestions:
+Suggest attractions or restaurants near each city/date in the itinerary based on user interests (culture, food, anime, nature).
+Travel Time Calculator:
+Show estimated travel time between itinerary cities (train vs bus vs flight).
+Budget Estimator:
+Auto-calculate approximate cost for the itinerary (transport + attractions + meals).
+Export Options:
+Export itinerary to PDF, Google Calendar, or .ics file.
+
+
+✅ 2. Attractions Upgrade
+
+Favorites & Shortlist:
+Let users “heart” attractions and add them to a personal list.
+Map View:
+Show attractions on an interactive map with clustering.
+Dynamic Filters:
+Add “Open Now” and “Kid-Friendly” filters.
+Photo Gallery:
+Multiple images per attraction (official + stock + user-uploaded).
+
+
+✅ 3. Preparation Tab Add-ons
+
+Packing Checklist Generator:
+Based on season, activities, and airline baggage rules.
+Medication & Customs Checker:
+Warn about prohibited medicines and items in Japan.
+SIM/eSIM & Wi-Fi Guide:
+Show best connectivity options for Japan.
+
+
+✅ 4. Flights Tab Enhancements
+
+Compare Airlines:
+Show baggage rules side-by-side for multiple airlines.
+Cabin Upgrade Tips:
+Highlight perks for premium economy/business.
+Fee Calculator:
+Estimate overweight/extra bag fees in JPY and user’s currency.
+
+
+✅ 5. Food & Dining
+
+Menu Translator:
+OCR + translation for Japanese menus.
+Dietary Filters:
+Vegan, halal, gluten-free options in restaurants.
+Restaurant Reservation Integration:
+Deep link to platforms like TableCheck or Gurunavi.
+
+
+✅ 6. Utilities
+
+JR Pass Calculator:
+Compare cost of JR Pass vs individual tickets.
+Currency Converter Widget:
+Already have exchange rates—make it interactive.
+Weather Alerts:
+Show typhoon or seasonal warnings for selected dates.
+
+
+✅ 7. Social & Sharing
+
+Share Itinerary:
+Generate a shareable link or QR code for friends.
+Group Planning Mode:
+Invite friends to collaborate on the itinerary.
+
+
+✅ 8. Immersive Extras
+
+AR Landmark Guide:
+Point your phone at a landmark → show info overlay.
+Festival & Event Calendar:
+Suggest local events during the trip dates.
+
+✅ 1. AI-Powered Personalization
+
+Smart Recommendations:
+
+Suggest attractions, restaurants, and activities based on user interests (anime, history, food, nature).
+Adapt suggestions to season, weather, and crowd levels.
+
+
+Dynamic Itinerary Optimization:
+
+Auto-adjust itinerary if a user adds/removes a city or if weather changes.
+Suggest best time slots for attractions (avoid peak hours).
+
+
+
+
+✅ 2. Deep Cultural Integration
+
+Etiquette & Cultural Tips:
+
+Contextual tips for each activity (e.g., temple etiquette, tipping rules).
+
+
+Festival & Event Calendar:
+
+Show local events during trip dates and allow adding them to itinerary.
+
+
+
+
+✅ 3. Advanced Transportation Tools
+
+JR Pass Calculator:
+
+Compare cost of JR Pass vs individual tickets.
+
+
+Route Optimizer:
+
+Suggest fastest routes between cities (train vs flight) with cost and time.
+
+
+Live Transit Updates:
+
+Real-time train delays and platform info.
+
+
+
+
+✅ 4. Visual & Immersive Features
+
+Map Layers:
+
+Attractions, restaurants, Wi-Fi spots, and photo spots on one map.
+
+
+AR Landmark Guide:
+
+Point your phone at a landmark → get info overlay.
+
+
+Photo Planner:
+
+Suggest best photo spots and golden hour times.
+
+
+
+
+✅ 5. Social & Collaboration
+
+Group Planning Mode:
+
+Invite friends to edit itinerary in real time.
+
+
+Polls for Decisions:
+
+Let group vote on activities or restaurants.
+
+
+Shareable Trip Link:
+
+Generate a public or private link for the itinerary.
+
+
+
+
+✅ 6. Smart Utilities
+
+Packing Checklist Generator:
+
+Based on season, airline baggage rules, and activities.
+
+
+Expense Tracker:
+
+Log daily spend and auto-convert to home currency.
+
+
+Menu Translator:
+
+OCR + translation for Japanese menus.
+
+
+
+
+✅ 7. Premium Differentiators
+
+Offline Mode:
+
+Access itinerary, maps, and translations without internet.
+
+
+AI Concierge:
+
+Chatbot for quick answers: “Where can I find a vegan café near Shinjuku?”
+
+
+Safety Alerts:
+
+Typhoon warnings, earthquake alerts, and emergency numbers.
+
+
+
+
+✅ 8. Gamification
+
+Achievement Badges:
+
+“Visited 3 cities”, “Tried 5 sushi spots”.
+
+
+Photo Challenges:
+
+Encourage users to capture iconic spots.
+
+
+
+
+🔍 What Wanderlog doesn’t do well (and you can beat them on):
+
+Personalization: Wanderlog is generic; you can make it context-aware (weather, season, interests).
+Cultural depth: Add etiquette, language tips, and festival integration.
+AI-driven optimization: Real-time itinerary adjustments and smart suggestions.
+Offline usability: Wanderlog relies heavily on connectivity.
+
+
