@@ -1,0 +1,93 @@
+✅ Preparation Tab
+Goal: Help users feel ready before departure and upon arrival in Japan.
+Sections
+
+
+Airport Arrival Guide
+
+Step-by-step flow:
+
+Quarantine screening → Immigration → Baggage claim → Customs → Arrival lobby.
+Show estimated times for each step (e.g., Immigration ~10 min, Customs ~10 min). [japan-suki.com]
+
+
+Tips:
+
+Register on Visit Japan Web before arrival for faster immigration/customs (QR code required). [livejapan.com]
+Carry passport at all times; fingerprint and photo required at immigration for foreign visitors. [japan-guide.com]
+Avoid prohibited items (some medications are illegal in Japan). [jp.usembassy.gov]
+
+
+
+
+
+What to Prepare Before Flying
+
+Valid passport (recommended 6 months validity).
+Visa (if required by nationality).
+Customs declaration & disembarkation card (can be done online via Visit Japan Web).
+Return/onward ticket and proof of accommodation. [japancd-travel.com]
+
+
+
+Country-Specific Requirements
+
+Interactive dropdown: User selects their country → Show:
+
+Visa exemption status (e.g., U.S., EU, Australia = 90 days visa-free; Thailand = 15 days). [japan-trails.com]
+Special conditions (e.g., eVisa for UAE, UK, Singapore).
+Link to official MOFA page for latest updates. [mofa.go.jp]
+
+
+
+
+
+
+✅ Flights Tab
+Goal: Provide airline-specific baggage rules and packing guidance.
+Features
+
+
+Airline Selector
+
+Dropdown with major airlines (JAL, ANA, United, Delta, etc.).
+On selection → Display:
+
+Checked baggage allowance:
+
+Economy: 2 bags, 23 kg (50 lbs) each.
+Business/First: 2–3 bags, 32 kg (70 lbs) each. [ana.co.jp], [luggagetoship.com]
+
+
+Size limit: 62 linear inches (158 cm) for most airlines. [travel.usnews.com]
+Carry-on: 1 bag (max 10 kg) + personal item. [luggagetoship.com]
+Excess baggage fees warning.
+
+
+
+
+
+Visual Guide
+
+Show diagrams for allowed dimensions (carry-on vs checked).
+Include tips for packing efficiently and avoiding overweight fees.
+
+
+
+Special Notes
+
+Oversized items (sports gear, instruments) require extra fees.
+Domestic vs international differences (e.g., ANA domestic = 20 kg limit). [luggagetoship.com]
+
+
+
+
+✅ Image Requirement
+
+Mandatory for Claude:
+
+Each attraction card must include a photo.
+Use official/place images when available (Google Places, Wikimedia Commons).
+If not available, fetch stock images (Unsplash, Pexels, Pixabay).
+Fallback: local category-based image.
+Add imageSource metadata for transparency.
