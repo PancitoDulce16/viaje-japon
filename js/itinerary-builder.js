@@ -654,6 +654,7 @@ export const ItineraryBuilder = {
       // 🔥 NUEVO: Si avanzamos al Paso 2, generar el selector de fechas
       if (this.currentStep === 2) {
         this.generateDateCitySelector();
+        this.renderQuickCityBlocksUI && this.renderQuickCityBlocksUI();
       }
 
       this.updateWizardView();
