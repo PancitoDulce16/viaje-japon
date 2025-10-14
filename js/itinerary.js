@@ -553,9 +553,37 @@ function renderDayOverview(day) {
 
             <div class="space-y-3 text-sm border-t border-gray-200 dark:border-gray-700 pt-4">
                 <div class="bg-gradient-sakura/10 dark:bg-sakura-pink/20 p-3 rounded-lg">
-                    <p class="font-bold text-base text-japan-red dark:text-sakura-pink mb-1">${day.title}</p>
+                    <p class="font-bold text-base text-japan-red dark:text-sakura-pink mb-1">${day.title || 'Día ' + day.day}</p>
                     ${day.hotel ? `<p class="text-gray-700 dark:text-gray-300 flex items-center gap-2 mt-2"><i class="fas fa-hotel text-japan-red dark:text-sakura-pink"></i> ${day.hotel}</p>` : ''}
-                    ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-1"><i class="fas fa-map-marker-alt"></i> ${day.location}</p>` : ''}
+                    
+                    ${day.cities && day.cities.length > 0 ? `
+                        <div class="mt-3 space-y-2">
+                            <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                                <i class="fas fa-map-marked-alt"></i> 
+                                ${day.isMultiCity ? 'Ciudades del día' : 'Ciudad'}:
+                            </p>
+                            ${day.cities.map(city => `
+                                <div class="bg-white/50 dark:bg-gray-700/50 p-2 rounded flex items-center justify-between">
+                                    <div>
+                                        <span class="font-semibold text-gray-800 dark:text-white">${city.cityName}</span>
+                                        ${city.timeStart && city.timeEnd ? `
+                                            <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                                                <i class="far fa-clock"></i> ${city.timeStart} - ${city.timeEnd}
+                                            </span>
+                                        ` : city.isFullDay ? `
+                                            <span class="text-xs text-green-600 dark:text-green-400 ml-2">
+                                                <i class="fas fa-check-circle"></i> Todo el día
+                                            </span>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : day.location ? `
+                        <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-1">
+                            <i class="fas fa-map-marker-alt"></i> ${day.location}
+                        </p>
+                    ` : ''}
                 </div>
             </div>
 
