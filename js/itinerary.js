@@ -595,6 +595,16 @@ function renderDayOverview(day) {
                 >
                     <i class="fas fa-plus-circle"></i> Añadir Actividad
                 </button>
+                
+                <!-- AI Recommendations Button -->
+                <button
+                    type="button"
+                    onclick="ItineraryBuilder.showAIRecommendationsForCurrent()"
+                    class="w-full mt-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 rounded-lg hover:from-purple-600 hover:to-pink-600 transition font-semibold flex items-center justify-center gap-2"
+                >
+                    <i class="fas fa-magic"></i> 🤖 Sugerencias AI
+                </button>
+                
                 <div class="mt-4 flex gap-2">
                     <button type="button" id="viewToggleList"
                         class="px-3 py-2 text-sm rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">

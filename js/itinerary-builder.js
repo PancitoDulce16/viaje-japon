@@ -1161,6 +1161,11 @@ export const ItineraryBuilder = {
 
       Notifications.success(`✨ Itinerario "${data.name}" creado exitosamente con ${activities.length} actividades!`);
 
+      // Show AI insights if available
+      if (this.aiTips && this.aiTips.length > 0) {
+        this.showAIInsightsModal();
+      }
+
       // Recargar vista
       if (window.ItineraryHandler && window.ItineraryHandler.reinitialize) {
         window.ItineraryHandler.reinitialize();
@@ -1204,6 +1209,81 @@ export const ItineraryBuilder = {
       console.warn('Template not found, returning empty activities');
       return [];
     }
+
+    // 🤖 TRY AI GENERATION FIRST
+    if (window.AIIntegration && template.id !== 'blank') {
+      try {
+        console.log('🤖 Attempting AI-powered itinerary generation...');
+        
+        const cities = cityDayAssignments.map(d => d.cities.map(c => c.cityId)).flat();
+        const uniqueCities = [...new Set(cities)];
+        
+        const aiResult = await window.AIIntegration.generateItineraryRecommendations({
+          cities: uniqueCities,
+          interests: [...template.categories, ...selectedCategories],
+          days: totalDays,
+          travelStyle: template.pace,
+          userPreferences: {
+            budgetLevel: 'moderate'
+          }
+        });
+
+        if (aiResult.success && aiResult.recommendations && aiResult.recommendations.days) {
+          console.log('✅ AI generation successful! Using AI recommendations');
+          
+          // Convert AI recommendations to our format
+          const aiActivities = [];
+          let activityIdCounter = 1;
+          
+          aiResult.recommendations.days.forEach((aiDay, index) => {
+            const dayAssignment = cityDayAssignments[index];
+            if (!dayAssignment) return;
+            
+            aiDay.activities.forEach((activity, actIndex) => {
+              const cityVisit = dayAssignment.cities[0] || {};
+              
+              aiActivities.push({
+                id: `ai-activity-${activityIdCounter++}`,
+                day: aiDay.day,
+                city: cityVisit.cityId || uniqueCities[0],
+                cityName: cityVisit.cityName || 'Japan',
+                title: activity.title,
+                name: activity.title,
+                desc: activity.desc || activity.description,
+                description: activity.desc || activity.description,
+                time: activity.time,
+                duration: activity.duration || '1-2 hours',
+                cost: activity.cost || 0,
+                station: activity.station,
+                location: activity.location,
+                category: activity.category,
+                aiGenerated: true,
+                aiReasoning: activity.aiReasoning,
+                order: actIndex + 1
+              });
+            });
+          });
+          
+          // Store AI tips and summary for later display
+          if (window.ItineraryBuilder) {
+            window.ItineraryBuilder.aiTips = aiResult.recommendations.tips || [];
+            window.ItineraryBuilder.aiSummary = aiResult.recommendations.summary || '';
+            window.ItineraryBuilder.aiTransportationTips = aiResult.recommendations.transportationTips || '';
+            window.ItineraryBuilder.aiBudgetSummary = aiResult.recommendations.budgetSummary || '';
+          }
+          
+          console.log(`✅ Generated ${aiActivities.length} AI-powered activities`);
+          return aiActivities;
+        } else {
+          console.warn('⚠️ AI generation failed, falling back to template-based generation');
+        }
+      } catch (error) {
+        console.error('❌ Error in AI generation, falling back to template:', error);
+      }
+    }
+
+    // FALLBACK: Template-based generation
+    console.log('📋 Using template-based generation');
 
     // Determine activities per day based on pace
     const activitiesPerDay = {
@@ -1319,6 +1399,293 @@ export const ItineraryBuilder = {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return shuffled;
+  },
+
+  // === AI INSIGHTS MODAL === //
+
+  showAIInsightsModal() {
+    const modalHtml = `
+      <div id="aiInsightsModal" class="modal active" style="z-index: 10002;">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <!-- Header -->
+          <div class="sticky top-0 bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white p-6 rounded-t-xl z-10">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="text-4xl">🤖</div>
+                <div>
+                  <h2 class="text-2xl font-bold">AI Travel Insights</h2>
+                  <p class="text-sm text-white/80 mt-1">Recomendaciones personalizadas para tu viaje</p>
+                </div>
+              </div>
+              <button 
+                onclick="ItineraryBuilder.closeAIInsightsModal()"
+                class="text-white/80 hover:text-white text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <div class="p-6 space-y-6">
+            <!-- Summary -->
+            ${this.aiSummary ? `
+              <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-5 rounded-lg border border-purple-200 dark:border-purple-800">
+                <h3 class="text-lg font-bold text-purple-900 dark:text-purple-300 mb-2 flex items-center gap-2">
+                  <span>✨</span> Resumen del Itinerario
+                </h3>
+                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">${this.aiSummary}</p>
+              </div>
+            ` : ''}
+
+            <!-- Tips -->
+            ${this.aiTips && this.aiTips.length > 0 ? `
+              <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-5 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h3 class="text-lg font-bold text-blue-900 dark:text-blue-300 mb-3 flex items-center gap-2">
+                  <span>💡</span> Consejos Inteligentes
+                </h3>
+                <ul class="space-y-2">
+                  ${this.aiTips.map(tip => `
+                    <li class="flex items-start gap-2 text-gray-700 dark:text-gray-300">
+                      <span class="text-blue-500 mt-0.5">•</span>
+                      <span>${tip}</span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            ` : ''}
+
+            <!-- Transportation Tips -->
+            ${this.aiTransportationTips ? `
+              <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-5 rounded-lg border border-green-200 dark:border-green-800">
+                <h3 class="text-lg font-bold text-green-900 dark:text-green-300 mb-2 flex items-center gap-2">
+                  <span>🚄</span> Transporte
+                </h3>
+                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">${this.aiTransportationTips}</p>
+              </div>
+            ` : ''}
+
+            <!-- Budget Summary -->
+            ${this.aiBudgetSummary ? `
+              <div class="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-5 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <h3 class="text-lg font-bold text-yellow-900 dark:text-yellow-300 mb-2 flex items-center gap-2">
+                  <span>💰</span> Presupuesto
+                </h3>
+                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">${this.aiBudgetSummary}</p>
+              </div>
+            ` : ''}
+
+            <!-- AI Badge -->
+            <div class="text-center text-sm text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div class="flex items-center justify-center gap-2">
+                <span class="text-2xl">🤖</span>
+                <span>Generado por AI • Powered by OpenAI GPT-4</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6">
+            <button 
+              onclick="ItineraryBuilder.closeAIInsightsModal()"
+              class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg hover:from-purple-600 hover:to-pink-600 transition font-semibold"
+            >
+              ¡Entendido! 🎉
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.body.style.overflow = 'hidden';
+  },
+
+  closeAIInsightsModal() {
+    const modal = document.getElementById('aiInsightsModal');
+    if (modal) {
+      modal.remove();
+      document.body.style.overflow = '';
+    }
+  },
+
+  // === GET AI RECOMMENDATIONS FOR EXISTING ITINERARY === //
+
+  async showAIRecommendationsForCurrent() {
+    if (!window.AIIntegration) {
+      Notifications.error('AI Integration no está disponible');
+      return;
+    }
+
+    if (!window.ItineraryHandler || !window.ItineraryHandler.currentItinerary) {
+      Notifications.warning('No hay itinerario para analizar');
+      return;
+    }
+
+    Notifications.info('🤖 Analizando tu itinerario con AI...');
+
+    try {
+      const currentItinerary = window.ItineraryHandler.currentItinerary;
+      const userTrip = window.TripsManager?.currentTrip;
+      
+      // Get user interests from categories if available
+      const userInterests = userTrip?.categories || [];
+
+      const result = await window.AIIntegration.getPersonalizedSuggestions(
+        currentItinerary,
+        userInterests
+      );
+
+      if (result.success && result.analysis) {
+        this.displayAIAnalysis(result.analysis);
+      } else {
+        Notifications.error('No se pudo generar análisis AI');
+      }
+    } catch (error) {
+      console.error('Error getting AI recommendations:', error);
+      Notifications.error('Error al obtener recomendaciones AI');
+    }
+  },
+
+  displayAIAnalysis(analysis) {
+    const modalHtml = `
+      <div id="aiAnalysisModal" class="modal active" style="z-index: 10002;">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <!-- Header -->
+          <div class="sticky top-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-6 rounded-t-xl z-10">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="text-4xl">🔍</div>
+                <div>
+                  <h2 class="text-2xl font-bold">Análisis AI de tu Itinerario</h2>
+                  <p class="text-sm text-white/80 mt-1">Mejora tu viaje con sugerencias personalizadas</p>
+                </div>
+              </div>
+              <button 
+                onclick="ItineraryBuilder.closeAIAnalysisModal()"
+                class="text-white/80 hover:text-white text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <div class="p-6 space-y-6">
+            <!-- Overall Analysis -->
+            ${analysis.overallAnalysis ? `
+              <div class="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-5 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                <h3 class="text-lg font-bold text-indigo-900 dark:text-indigo-300 mb-2 flex items-center gap-2">
+                  <span>📊</span> Análisis General
+                </h3>
+                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">${analysis.overallAnalysis}</p>
+              </div>
+            ` : ''}
+
+            <!-- Strengths -->
+            ${analysis.strengths && analysis.strengths.length > 0 ? `
+              <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-5 rounded-lg border border-green-200 dark:border-green-800">
+                <h3 class="text-lg font-bold text-green-900 dark:text-green-300 mb-3 flex items-center gap-2">
+                  <span>✅</span> Puntos Fuertes
+                </h3>
+                <ul class="space-y-2">
+                  ${analysis.strengths.map(strength => `
+                    <li class="flex items-start gap-2 text-gray-700 dark:text-gray-300">
+                      <span class="text-green-500 mt-0.5">✓</span>
+                      <span>${strength}</span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            ` : ''}
+
+            <!-- Improvements -->
+            ${analysis.improvements && analysis.improvements.length > 0 ? `
+              <div class="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-5 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <h3 class="text-lg font-bold text-yellow-900 dark:text-yellow-300 mb-3 flex items-center gap-2">
+                  <span>💡</span> Sugerencias de Mejora
+                </h3>
+                <div class="space-y-4">
+                  ${analysis.improvements.map(improvement => `
+                    <div class="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
+                      <div class="font-semibold text-gray-900 dark:text-white mb-1">
+                        Día ${improvement.day}
+                      </div>
+                      <div class="text-gray-700 dark:text-gray-300 text-sm mb-1">
+                        ${improvement.suggestion}
+                      </div>
+                      <div class="text-xs text-gray-600 dark:text-gray-400 italic">
+                        ${improvement.reasoning}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Hidden Gems -->
+            ${analysis.hiddenGems && analysis.hiddenGems.length > 0 ? `
+              <div class="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 p-5 rounded-lg border border-pink-200 dark:border-pink-800">
+                <h3 class="text-lg font-bold text-pink-900 dark:text-pink-300 mb-3 flex items-center gap-2">
+                  <span>💎</span> Joyas Escondidas
+                </h3>
+                <div class="space-y-3">
+                  ${analysis.hiddenGems.map(gem => `
+                    <div class="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
+                      <div class="font-bold text-gray-900 dark:text-white mb-1">
+                        ${gem.title}
+                      </div>
+                      <div class="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                        ${gem.description}
+                      </div>
+                      <div class="text-xs text-pink-600 dark:text-pink-400 italic">
+                        ✨ ${gem.whySpecial}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Optimization Tips -->
+            ${analysis.optimizationTips && analysis.optimizationTips.length > 0 ? `
+              <div class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-5 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h3 class="text-lg font-bold text-blue-900 dark:text-blue-300 mb-3 flex items-center gap-2">
+                  <span>🎯</span> Consejos de Optimización
+                </h3>
+                <ul class="space-y-2">
+                  ${analysis.optimizationTips.map(tip => `
+                    <li class="flex items-start gap-2 text-gray-700 dark:text-gray-300">
+                      <span class="text-blue-500 mt-0.5">→</span>
+                      <span>${tip}</span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Footer -->
+          <div class="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6">
+            <button 
+              onclick="ItineraryBuilder.closeAIAnalysisModal()"
+              class="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-3 rounded-lg hover:from-indigo-600 hover:to-purple-600 transition font-semibold"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.body.style.overflow = 'hidden';
+  },
+
+  closeAIAnalysisModal() {
+    const modal = document.getElementById('aiAnalysisModal');
+    if (modal) {
+      modal.remove();
+      document.body.style.overflow = '';
+    }
   },
 
   // === MÁS FUNCIONES CONTINÚAN... ===

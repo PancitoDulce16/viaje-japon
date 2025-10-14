@@ -22,6 +22,9 @@ import './firebase-config.js'; // Inicializar Firebase primero
 import './apis-config.js'; // Configuración de APIs
 import { APIsIntegration } from './apis-integration.js'; // Integración de APIs
 
+// 🤖 AI Integration imports
+import { AIIntegration } from './ai-integration.js'; // OpenAI Integration
+
 function initApp() {
     console.log('🚀 Iniciando aplicación...');
     
@@ -56,6 +59,7 @@ function initApp() {
         console.log('🔥 Firebase listo');
         console.log('✨ Itinerary Builder listo');
         console.log('🔌 APIs Integration listo');
+        console.log('🤖 AI Integration listo');
         
         // Interceptar fetch para endpoints locales /api/* (mock backend)
         const originalFetch = window.fetch.bind(window);
@@ -70,6 +74,7 @@ function initApp() {
 
         // Exponer APIs globalmente para debugging
         window.APIsIntegration = APIsIntegration;
+        window.AIIntegration = AIIntegration;
 
         // Inicializar Lucide (si disponible) para iconos <i data-lucide>
         if (window.lucide && typeof window.lucide.createIcons === 'function') {
