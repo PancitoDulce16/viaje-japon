@@ -8,6 +8,128 @@ import { Notifications } from './notifications.js';
  */
 
 export const APIsIntegration = {
+  /**
+   * Mock fetch for local /api endpoints, bridging to Firebase data
+   * Endpoints:
+   * - GET /api/itinerary/:tripId
+   * - POST /api/itinerary/:tripId/day
+   * - GET /api/activities/:dayId
+   * - POST /api/activities/:dayId
+   */
+  async handleLocalApi(request) {
+    const url = new URL(request.url, window.location.origin);
+    const path = url.pathname;
+    const method = request.method.toUpperCase();
+
+    try {
+      // Read current itinerary from ItineraryHandler to avoid duplicating Firebase code
+      const Itinerary = window.ItineraryHandler;
+
+      // GET /api/itinerary/:tripId
+      const itineraryMatch = path.match(/^\/api\/itinerary\/(.+)$/);
+      if (method === 'GET' && itineraryMatch) {
+        const tripId = itineraryMatch[1];
+        // Ensure itinerary is loaded for the active trip
+        const data = await Itinerary.ensureLoaded();
+        const response = (data?.days || []).map(d => ({
+          id: `day-${d.day}`,
+          tripId,
+          day: d.day,
+          date: d.date,
+          city: d.city || '',
+          heroImage: d.heroImage || '',
+          activities: d.activities || []
+        }));
+        return new Response(JSON.stringify(response), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+
+      // POST /api/itinerary/:tripId/day
+      const addDayMatch = path.match(/^\/api\/itinerary\/([^/]+)\/day$/);
+      if (method === 'POST' && addDayMatch) {
+        const tripId = addDayMatch[1];
+        const body = await request.json();
+        await Itinerary.ensureLoaded();
+        const itinerary = Itinerary.currentItinerary;
+        const newDay = {
+          id: `day-${body.day}`,
+          day: body.day,
+          date: body.date,
+          city: body.city || '',
+          heroImage: body.heroImage || '',
+          activities: []
+        };
+        // Insert or replace day
+        const idx = itinerary.days.findIndex(d => d.day === body.day);
+        if (idx >= 0) itinerary.days[idx] = newDay; else itinerary.days.push(newDay);
+        // Persist via existing save method
+        await (async () => {
+          const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+          const { db } = await import('./firebase-config.js');
+          const { FIREBASE_PATHS } = await import('./constants.js');
+          const itineraryRef = doc(db, FIREBASE_PATHS.ITINERARY(tripId));
+          await setDoc(itineraryRef, itinerary);
+        })();
+        return new Response(JSON.stringify(newDay), { status: 201, headers: { 'Content-Type': 'application/json' } });
+      }
+
+      // GET /api/activities/:dayId
+      const getActsMatch = path.match(/^\/api\/activities\/([^/]+)$/);
+      if (method === 'GET' && getActsMatch) {
+        const dayId = getActsMatch[1];
+        await Itinerary.ensureLoaded();
+        const dayNum = parseInt(dayId.replace('day-', ''));
+        const day = Itinerary.currentItinerary?.days?.find(d => d.day === dayNum);
+        const response = (day?.activities || []).map(a => ({
+          id: a.id,
+          dayId,
+          time: a.time || '',
+          title: a.title || a.name || '',
+          location: a.station || a.location || '',
+          type: (a.category || 'activity'),
+          weather: a.weather || null
+        }));
+        return new Response(JSON.stringify(response), { status: 200, headers: { 'Content-Type': 'application/json' } });
+      }
+
+      // POST /api/activities/:dayId
+      if (method === 'POST' && getActsMatch) {
+        const dayId = getActsMatch[1];
+        const body = await request.json();
+        await Itinerary.ensureLoaded();
+        const dayNum = parseInt(dayId.replace('day-', ''));
+        const itinerary = Itinerary.currentItinerary;
+        const day = itinerary.days.find(d => d.day === dayNum);
+        if (!day) {
+          return new Response(JSON.stringify({ error: 'Day not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+        }
+        const newActivity = {
+          id: `act-${Date.now()}`,
+          time: body.time || '',
+          title: body.title || '',
+          desc: body.description || '',
+          station: body.location || '',
+          cost: typeof body.cost === 'number' ? body.cost : 0,
+          type: body.type || 'activity'
+        };
+        day.activities.push(newActivity);
+        // Persist
+        const tripId = window.TripsManager?.currentTrip?.id || localStorage.getItem('currentTripId');
+        await (async () => {
+          const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+          const { db } = await import('./firebase-config.js');
+          const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+          await setDoc(itineraryRef, itinerary);
+        })();
+        return new Response(JSON.stringify(newActivity), { status: 201, headers: { 'Content-Type': 'application/json' } });
+      }
+
+      // Not handled
+      return null;
+    } catch (err) {
+      console.error('Local API error:', err);
+      return new Response(JSON.stringify({ error: String(err) }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    }
+  },
   
   // ==============================
   // ✈️ VUELOS (AviationStack)

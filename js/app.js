@@ -57,8 +57,28 @@ function initApp() {
         console.log('✨ Itinerary Builder listo');
         console.log('🔌 APIs Integration listo');
         
+        // Interceptar fetch para endpoints locales /api/* (mock backend)
+        const originalFetch = window.fetch.bind(window);
+        window.fetch = async (input, init) => {
+            const req = new Request(input, init);
+            if (new URL(req.url, window.location.origin).pathname.startsWith('/api/')) {
+                const handled = await APIsIntegration.handleLocalApi(req);
+                if (handled) return handled;
+            }
+            return originalFetch(input, init);
+        };
+
         // Exponer APIs globalmente para debugging
         window.APIsIntegration = APIsIntegration;
+
+        // Inicializar Lucide (si disponible) para iconos <i data-lucide>
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            try {
+                window.lucide.createIcons();
+            } catch (e) {
+                console.warn('Lucide init warning:', e);
+            }
+        }
     }, 100);
 }
 
