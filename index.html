@@ -16,7 +16,10 @@
                 extend: {
                     colors: {
                         'japan-red': '#dc2626',
-                        'japan-pink': '#ec4899'
+                        'japan-pink': '#ec4899',
+                        primary: '#FF6B9D',      // Sakura Pink (principal)
+                        secondary: '#4F46E5',    // Indigo Blue (secundario)
+                        accent: '#F59E0B'        // Warm Amber (acento)
                     }
                 }
             }
@@ -374,22 +377,39 @@
             const petal = document.createElement('div');
             petal.classList.add('petal');
 
+            // Posición y tamaño variables
+            const size = 14 + Math.random() * 14; // 14px a 28px
+            petal.style.width = size + 'px';
+            petal.style.height = size * 1.5 + 'px';
             petal.style.left = Math.random() * 100 + 'vw';
-            petal.style.animationDuration = Math.random() * 3 + 4 + 's'; // Duración entre 4s y 7s
-            petal.style.animationDelay = Math.random() * 5 + 's'; // Retraso hasta 5s
+
+            // Ritmo de caída suave
+            const durationSec = 15 + Math.random() * 10; // 15s a 25s
+            const delaySec = Math.random() * 10; // 0s a 10s
+            petal.style.animationDuration = durationSec + 's';
+            petal.style.animationDelay = delaySec + 's';
 
             container.appendChild(petal);
 
-            // Eliminar el pétalo después de que caiga para no sobrecargar el DOM
+            // Eliminar el pétalo después de su animación
+            const maxLifetimeMs = (durationSec + delaySec + 1) * 1000;
             setTimeout(() => {
                 petal.remove();
-            }, 7000); // Duración máxima de la animación
+            }, maxLifetimeMs);
+        }
+
+        function spawnInitialSakura(count = 50) {
+            for (let i = 0; i < count; i++) {
+                createSakura();
+            }
         }
 
         // Iniciar animación solo si landing page está visible
         function startSakuraAnimation() {
             if (!sakuraInterval) {
-                sakuraInterval = setInterval(createSakura, 400);
+                // Lote inicial para densidad inmediata
+                spawnInitialSakura(50);
+                sakuraInterval = setInterval(createSakura, 1200);
             }
         }
 

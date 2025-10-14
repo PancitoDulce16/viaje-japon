@@ -17,21 +17,22 @@
 
 .petal {
     position: absolute;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><path d="M25,0 C40,10 40,25 25,50 C10,25 10,10 25,0 Z" fill="%23FFC0CB"/></svg>');
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><path d="M25,0 C40,10 40,25 25,50 C10,25 10,10 25,0 Z" fill="%23FF6B9D"/></svg>');
     background-size: contain;
     background-repeat: no-repeat;
     width: 20px;
     height: 30px;
-    animation: fall linear infinite;
+    animation: fall linear forwards;
+    will-change: transform, opacity;
 }
 
 @keyframes fall {
     0% {
-        transform: translateY(-10vh) rotateZ(0deg);
+        transform: translateY(-10vh) rotate(0deg);
         opacity: 1;
     }
     100% {
-        transform: translateY(110vh) rotateZ(720deg);
+        transform: translateY(100vh) rotate(360deg);
         opacity: 0;
     }
 }
