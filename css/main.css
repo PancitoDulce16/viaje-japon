@@ -1010,3 +1010,108 @@ html {
     print-color-adjust: exact;
   }
 }
+
+/* City Block Styles for New Flexible Itinerary System */
+.city-block {
+  transition: all 0.2s ease;
+}
+
+.city-block:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.city-block-city,
+.city-block-time-start,
+.city-block-time-end {
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.city-block-city:focus,
+.city-block-time-start:focus,
+.city-block-time-end:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.dark .city-block-city:focus,
+.dark .city-block-time-start:focus,
+.dark .city-block-time-end:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+/* City block animation on add */
+@keyframes slideInCity {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.city-block {
+  animation: slideInCity 0.3s ease-out;
+}
+
+/* Multi-city indicator styling */
+.bg-white\/50 {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.dark .bg-white\/50 {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced day container with city blocks */
+#cityByDateContainer > div {
+  transition: box-shadow 0.2s ease;
+}
+
+#cityByDateContainer > div:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Improved button styling for add city */
+#cityByDateContainer button[onclick*="addCityBlock"] {
+  white-space: nowrap;
+}
+
+/* Responsive adjustments for city blocks */
+@media (max-width: 768px) {
+  .city-block .grid {
+    grid-template-columns: 1fr;
+  }
+  
+  #cityByDateContainer > div .flex {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  #cityByDateContainer > div .flex > div:first-child {
+    width: 100%;
+  }
+  
+  #cityByDateContainer button[onclick*="addCityBlock"] {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* City count badge styling */
+#cityByDateContainer [id^="city-count-day-"] {
+  font-weight: 500;
+}
+
+/* Empty state styling */
+[id^="empty-state-day-"] {
+  opacity: 0.6;
+}
+
+[id^="empty-state-day-"]:hover {
+  opacity: 0.8;
+}

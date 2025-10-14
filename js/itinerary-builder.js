@@ -165,22 +165,29 @@ export const ItineraryBuilder = {
 
             <!-- Step 2: Itinerario por Fechas -->
             <div id="wizardStep2" class="wizard-content hidden">
-              <h3 class="text-xl font-bold mb-4 dark:text-white">📅 Itinerario por Fechas</h3>
+              <h3 class="text-xl font-bold mb-4 dark:text-white">📅 Itinerario Flexible por Día</h3>
               <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Selecciona qué ciudad visitarás cada día de tu viaje. Puedes repetir ciudades cuantas veces quieras.
+                Agrega una o más ciudades para cada día. Puedes hacer visitas cortas o quedarte todo el día en una ciudad.
               </p>
 
-              <div id="cityByDateContainer" class="space-y-2 max-h-[500px] overflow-y-auto">
+              <div id="cityByDateContainer" class="space-y-4 max-h-[500px] overflow-y-auto">
                 <!-- Este contenedor se llenará dinámicamente cuando el usuario avance desde el Paso 1 -->
                 <div class="text-center py-8 text-gray-500 dark:text-gray-400">
                   <p>Las fechas aparecerán aquí automáticamente...</p>
                 </div>
               </div>
 
-              <div class="mt-4 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                <p class="text-sm text-blue-800 dark:text-blue-300">
-                  💡 <strong>Tip:</strong> Puedes visitar una ciudad múltiples veces. Por ejemplo: Tokyo → Kyoto → Osaka → Tokyo
-                </p>
+              <div class="mt-4 space-y-2">
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <p class="text-sm text-blue-800 dark:text-blue-300">
+                    💡 <strong>Tip:</strong> Agrega múltiples ciudades por día para visitas cortas. Por ejemplo: Tokyo (9am-1pm) + Yokohama (3pm-8pm)
+                  </p>
+                </div>
+                <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                  <p class="text-sm text-green-800 dark:text-green-300">
+                    ✨ <strong>Nuevo:</strong> Si solo agregas una ciudad sin horario, se asume que pasarás todo el día allí
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -492,7 +499,7 @@ export const ItineraryBuilder = {
     container.insertAdjacentHTML('beforeend', html);
   },
 
-  // === DATE-CITY ASSIGNMENT (NEW SYSTEM) === //
+  // === DATE-CITY ASSIGNMENT (NEW IMPROVED SYSTEM) === //
 
   generateDateCitySelector() {
     const startDate = document.getElementById('itineraryStartDate').value;
@@ -520,7 +527,7 @@ export const ItineraryBuilder = {
       return `<option value="${cityId}">${cityData.city}</option>`;
     }).join('');
 
-    // Generate HTML for each date
+    // Generate HTML for each date with multiple city blocks support
     const container = document.getElementById('cityByDateContainer');
     container.innerHTML = dates.map((date, index) => {
       const dateStr = date.toISOString().split('T')[0];
@@ -529,54 +536,161 @@ export const ItineraryBuilder = {
       const dayNumber = index + 1;
 
       return `
-        <div class="flex items-center gap-2 p-3 bg-white dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 hover:shadow-md transition">
-          <div class="flex-shrink-0 text-center w-20">
-            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">${dayOfWeek}</div>
-            <div class="text-lg font-bold dark:text-white">Día ${dayNumber}</div>
-            <div class="text-xs text-gray-600 dark:text-gray-400">${dayMonth}</div>
-          </div>
-          <div class="flex-1">
-            <select
-              id="city-date-${dayNumber}"
-              data-date="${dateStr}"
-              data-day="${dayNumber}"
-              class="city-date-selector w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white font-semibold"
+        <div class="bg-white dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 p-4 hover:shadow-md transition">
+          <!-- Day Header -->
+          <div class="flex items-center justify-between mb-3 pb-3 border-b border-gray-200 dark:border-gray-600">
+            <div class="flex items-center gap-3">
+              <div class="text-center">
+                <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">${dayOfWeek}</div>
+                <div class="text-lg font-bold dark:text-white">Día ${dayNumber}</div>
+                <div class="text-xs text-gray-600 dark:text-gray-400">${dayMonth}</div>
+              </div>
+              <div class="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
+              <div>
+                <div class="text-sm font-semibold dark:text-white">Ciudades a visitar</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400" id="city-count-day-${dayNumber}">Sin ciudades</div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onclick="ItineraryBuilder.addCityBlock(${dayNumber}, '${dateStr}')"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition text-sm font-semibold flex items-center gap-2"
             >
-              <option value="">-- Selecciona una ciudad --</option>
-              ${cityOptions}
-            </select>
+              <i class="fas fa-plus"></i> Agregar Ciudad
+            </button>
           </div>
-          ${dayNumber > 1 ? `
-          <button
-            type="button"
-            onclick="ItineraryBuilder.copyPreviousDay(${dayNumber})"
-            class="flex-shrink-0 p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
-            title="Copiar ciudad del día anterior"
-          >
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path>
-              <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"></path>
-            </svg>
-          </button>
-          ` : ''}
+          
+          <!-- City Blocks Container -->
+          <div id="city-blocks-day-${dayNumber}" class="space-y-2" data-date="${dateStr}" data-day="${dayNumber}">
+            <!-- City blocks will be added dynamically -->
+            <div class="text-center py-6 text-gray-400 dark:text-gray-500 text-sm" id="empty-state-day-${dayNumber}">
+              <i class="fas fa-map-marked-alt text-2xl mb-2"></i>
+              <p>Haz clic en "Agregar Ciudad" para empezar</p>
+            </div>
+          </div>
         </div>
       `;
     }).join('');
 
-    console.log(`✅ Generated ${dates.length} date selectors`);
+    console.log(`✅ Generated ${dates.length} flexible date containers`);
   },
 
-  copyPreviousDay(dayNumber) {
-    const previousSelect = document.getElementById(`city-date-${dayNumber - 1}`);
-    const currentSelect = document.getElementById(`city-date-${dayNumber}`);
+  // Add a city block to a specific day
+  addCityBlock(dayNumber, dateStr) {
+    const container = document.getElementById(`city-blocks-day-${dayNumber}`);
+    const emptyState = document.getElementById(`empty-state-day-${dayNumber}`);
+    
+    if (emptyState) {
+      emptyState.remove();
+    }
 
-    if (previousSelect && currentSelect && previousSelect.value) {
-      currentSelect.value = previousSelect.value;
-      // Visual feedback
-      currentSelect.classList.add('bg-blue-50', 'dark:bg-blue-900/30');
-      setTimeout(() => {
-        currentSelect.classList.remove('bg-blue-50', 'dark:bg-blue-900/30');
-      }, 500);
+    const blockId = `city-block-${dayNumber}-${Date.now()}`;
+    
+    // Build city options HTML
+    const cityOptions = Object.keys(ACTIVITIES_DATABASE).map(cityId => {
+      const cityData = ACTIVITIES_DATABASE[cityId];
+      return `<option value="${cityId}">${cityData.city}</option>`;
+    }).join('');
+
+    const blockHtml = `
+      <div id="${blockId}" class="city-block bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-600" data-day="${dayNumber}">
+        <div class="flex items-start gap-2">
+          <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <!-- City Selection -->
+            <div>
+              <label class="block text-xs font-semibold mb-1 dark:text-gray-300">Ciudad *</label>
+              <select
+                class="city-block-city w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm"
+                required
+              >
+                <option value="">Seleccionar...</option>
+                ${cityOptions}
+              </select>
+            </div>
+            
+            <!-- Time Start (Optional) -->
+            <div>
+              <label class="block text-xs font-semibold mb-1 dark:text-gray-300">
+                Hora inicio <span class="text-gray-400">(opcional)</span>
+              </label>
+              <input
+                type="time"
+                class="city-block-time-start w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm"
+                placeholder="09:00"
+              />
+            </div>
+            
+            <!-- Time End (Optional) -->
+            <div>
+              <label class="block text-xs font-semibold mb-1 dark:text-gray-300">
+                Hora fin <span class="text-gray-400">(opcional)</span>
+              </label>
+              <input
+                type="time"
+                class="city-block-time-end w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm"
+                placeholder="18:00"
+              />
+            </div>
+          </div>
+          
+          <!-- Remove Button -->
+          <button
+            type="button"
+            onclick="ItineraryBuilder.removeCityBlock('${blockId}', ${dayNumber})"
+            class="flex-shrink-0 mt-6 p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+            title="Eliminar"
+          >
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
+        
+        <!-- Duration Indicator -->
+        <div class="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
+          💡 Deja los horarios vacíos para indicar que pasarás todo el día en esta ciudad
+        </div>
+      </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', blockHtml);
+    this.updateCityCount(dayNumber);
+  },
+
+  // Remove a city block
+  removeCityBlock(blockId, dayNumber) {
+    const block = document.getElementById(blockId);
+    if (block) {
+      block.remove();
+      this.updateCityCount(dayNumber);
+      
+      // Show empty state if no blocks remain
+      const container = document.getElementById(`city-blocks-day-${dayNumber}`);
+      if (container && container.querySelectorAll('.city-block').length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 text-gray-400 dark:text-gray-500 text-sm" id="empty-state-day-${dayNumber}">
+            <i class="fas fa-map-marked-alt text-2xl mb-2"></i>
+            <p>Haz clic en "Agregar Ciudad" para empezar</p>
+          </div>
+        `;
+      }
+    }
+  },
+
+  // Update city count display
+  updateCityCount(dayNumber) {
+    const container = document.getElementById(`city-blocks-day-${dayNumber}`);
+    const countDisplay = document.getElementById(`city-count-day-${dayNumber}`);
+    
+    if (container && countDisplay) {
+      const blocks = container.querySelectorAll('.city-block');
+      const count = blocks.length;
+      
+      if (count === 0) {
+        countDisplay.textContent = 'Sin ciudades';
+      } else if (count === 1) {
+        countDisplay.textContent = '1 ciudad';
+      } else {
+        countDisplay.textContent = `${count} ciudades`;
+      }
     }
   },
 
@@ -686,18 +800,42 @@ export const ItineraryBuilder = {
     }
 
     if (this.currentStep === 2) {
-      // 🔥 NUEVO: Validar que todas las fechas tengan ciudad asignada
-      const dateSelectors = document.querySelectorAll('.city-date-selector');
-      const unassignedDates = [];
-
-      dateSelectors.forEach(selector => {
-        if (!selector.value || selector.value === '') {
-          unassignedDates.push(selector.dataset.day);
+      // 🔥 NUEVO: Validar que todos los días tengan al menos una ciudad asignada
+      const startDate = document.getElementById('itineraryStartDate').value;
+      const endDate = document.getElementById('itineraryEndDate').value;
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      
+      const unassignedDays = [];
+      
+      for (let dayNumber = 1; dayNumber <= totalDays; dayNumber++) {
+        const container = document.getElementById(`city-blocks-day-${dayNumber}`);
+        if (container) {
+          const blocks = container.querySelectorAll('.city-block');
+          
+          if (blocks.length === 0) {
+            unassignedDays.push(dayNumber);
+            continue;
+          }
+          
+          // Validate that each block has a city selected
+          let hasInvalidBlock = false;
+          blocks.forEach(block => {
+            const citySelect = block.querySelector('.city-block-city');
+            if (!citySelect || !citySelect.value) {
+              hasInvalidBlock = true;
+            }
+          });
+          
+          if (hasInvalidBlock) {
+            unassignedDays.push(dayNumber);
+          }
         }
-      });
+      }
 
-      if (unassignedDates.length > 0) {
-        Notifications.warning(`Por favor selecciona una ciudad para todos los días. Días sin asignar: ${unassignedDates.join(', ')}`);
+      if (unassignedDays.length > 0) {
+        Notifications.warning(`Por favor agrega al menos una ciudad para los siguientes días: ${unassignedDays.join(', ')}`);
         return false;
       }
     }
@@ -846,63 +984,55 @@ export const ItineraryBuilder = {
   },
 
   getCityDayAssignments() {
-    // 🔥 NUEVO SISTEMA: Leer de los dropdowns por fecha
-    const dateSelectors = document.querySelectorAll('.city-date-selector');
-    const dayByDayAssignments = [];
-
-    // Collect day-by-day assignments
-    dateSelectors.forEach(selector => {
-      const cityId = selector.value;
-      const day = parseInt(selector.dataset.day);
-      const date = selector.dataset.date;
-
-      if (cityId) {
-        dayByDayAssignments.push({
-          day: day,
-          date: date,
-          cityId: cityId,
-          cityName: ACTIVITIES_DATABASE[cityId].city
+    // 🔥 NEW IMPROVED SYSTEM: Collect city blocks for each day
+    const startDate = document.getElementById('itineraryStartDate').value;
+    const endDate = document.getElementById('itineraryEndDate').value;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    
+    const allAssignments = [];
+    
+    for (let dayNumber = 1; dayNumber <= totalDays; dayNumber++) {
+      const container = document.getElementById(`city-blocks-day-${dayNumber}`);
+      if (!container) continue;
+      
+      const blocks = container.querySelectorAll('.city-block');
+      const dayAssignments = [];
+      
+      blocks.forEach((block, index) => {
+        const citySelect = block.querySelector('.city-block-city');
+        const timeStart = block.querySelector('.city-block-time-start');
+        const timeEnd = block.querySelector('.city-block-time-end');
+        
+        if (citySelect && citySelect.value) {
+          const cityId = citySelect.value;
+          const cityData = ACTIVITIES_DATABASE[cityId];
+          
+          dayAssignments.push({
+            cityId: cityId,
+            cityName: cityData.city,
+            timeStart: timeStart.value || null,
+            timeEnd: timeEnd.value || null,
+            order: index + 1,
+            isFullDay: !timeStart.value && !timeEnd.value
+          });
+        }
+      });
+      
+      if (dayAssignments.length > 0) {
+        allAssignments.push({
+          day: dayNumber,
+          date: new Date(start.getTime() + (dayNumber - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          cities: dayAssignments,
+          cityCount: dayAssignments.length,
+          isMultiCity: dayAssignments.length > 1
         });
       }
-    });
-
-    // Group consecutive days in the same city
-    const assignments = [];
-    let currentGroup = null;
-
-    dayByDayAssignments.forEach(assignment => {
-      if (!currentGroup || currentGroup.cityId !== assignment.cityId) {
-        // Start new group
-        if (currentGroup) {
-          assignments.push(currentGroup);
-        }
-        currentGroup = {
-          cityId: assignment.cityId,
-          cityName: assignment.cityName,
-          dayStart: assignment.day,
-          dayEnd: assignment.day,
-          daysCount: 1,
-          type: 'multi-day'
-        };
-      } else {
-        // Extend current group
-        currentGroup.dayEnd = assignment.day;
-        currentGroup.daysCount++;
-      }
-    });
-
-    // Push last group
-    if (currentGroup) {
-      // Mark single-day visits
-      if (currentGroup.daysCount === 1) {
-        currentGroup.type = 'single-day';
-        currentGroup.day = currentGroup.dayStart;
-      }
-      assignments.push(currentGroup);
     }
-
-    console.log('📋 City day assignments:', assignments);
-    return assignments;
+    
+    console.log('📋 New flexible city day assignments:', allAssignments);
+    return allAssignments;
   },
 
   getConnectionFlights(type) {
@@ -964,14 +1094,51 @@ export const ItineraryBuilder = {
       // Integrate generated activities into days structure
       const daysWithActivities = days.map(day => {
         const dayActivities = activities.filter(act => act.day === day.day);
+        
+        // Find city assignment for this day
+        const dayAssignment = data.cityDayAssignments.find(a => a.day === day.day);
+        
+        // Build day title and location from cities
+        let dayTitle = 'Día libre';
+        let dayLocation = '';
+        
+        if (dayAssignment && dayAssignment.cities) {
+          if (dayAssignment.isMultiCity) {
+            dayTitle = `Visitando ${dayAssignment.cities.map(c => c.cityName).join(' y ')}`;
+            dayLocation = dayAssignment.cities.map(c => {
+              if (c.timeStart && c.timeEnd) {
+                return `${c.cityName} (${c.timeStart}-${c.timeEnd})`;
+              }
+              return c.cityName;
+            }).join(' → ');
+          } else {
+            const city = dayAssignment.cities[0];
+            dayTitle = `Explorando ${city.cityName}`;
+            dayLocation = city.cityName;
+            if (city.timeStart && city.timeEnd) {
+              dayTitle += ` (${city.timeStart}-${city.timeEnd})`;
+            }
+          }
+        }
+        
         return {
           ...day,
+          title: dayTitle,
+          location: dayLocation,
+          cities: dayAssignment?.cities || [],
+          isMultiCity: dayAssignment?.isMultiCity || false,
           activities: dayActivities
         };
       });
 
-      // Extract city list from assignments
-      const cityList = data.cityDayAssignments.map(a => a.cityId);
+      // Extract unique city list from all assignments
+      const citySet = new Set();
+      data.cityDayAssignments.forEach(dayAssignment => {
+        dayAssignment.cities.forEach(city => {
+          citySet.add(city.cityId);
+        });
+      });
+      const cityList = Array.from(citySet);
 
       // Guardar en Firebase
       const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
@@ -1029,7 +1196,7 @@ export const ItineraryBuilder = {
   },
 
   async generateActivitiesFromTemplate(templateId, cityDayAssignments, selectedCategories, totalDays) {
-    console.log('🎯 Generating smart itinerary:', { templateId, cityDayAssignments, selectedCategories, totalDays });
+    console.log('🎯 Generating smart itinerary with flexible city visits:', { templateId, cityDayAssignments, selectedCategories, totalDays });
 
     // Get template configuration
     const template = TEMPLATES.find(t => t.id === templateId);
@@ -1051,76 +1218,79 @@ export const ItineraryBuilder = {
     const generatedActivities = [];
     let activityIdCounter = 1;
 
-    // For each city assignment
-    cityDayAssignments.forEach(assignment => {
-      const cityId = assignment.cityId;
-      const cityData = ACTIVITIES_DATABASE[cityId];
-
-      if (!cityData || !cityData.activities) {
-        console.warn(`No activities found for city: ${cityId}`);
-        return;
+    // For each day assignment (NEW: supports multiple cities per day)
+    cityDayAssignments.forEach(dayAssignment => {
+      const dayNumber = dayAssignment.day;
+      const cities = dayAssignment.cities;
+      
+      // Calculate how many activities per city based on number of cities in the day
+      const citiesCount = cities.length;
+      let activitiesPerCity;
+      
+      if (citiesCount === 1 && cities[0].isFullDay) {
+        // Full day in one city: normal activity count
+        activitiesPerCity = activitiesPerDay.min + Math.floor(Math.random() * (activitiesPerDay.max - activitiesPerDay.min + 1));
+      } else if (citiesCount === 1) {
+        // Partial day in one city: fewer activities
+        activitiesPerCity = Math.max(1, Math.floor(activitiesPerDay.min / 1.5));
+      } else {
+        // Multiple cities: distribute activities
+        const totalActivities = activitiesPerDay.min + Math.floor(Math.random() * (activitiesPerDay.max - activitiesPerDay.min + 1));
+        activitiesPerCity = Math.max(1, Math.floor(totalActivities / citiesCount));
       }
+      
+      // Generate activities for each city in this day
+      cities.forEach((cityVisit, cityIndex) => {
+        const cityId = cityVisit.cityId;
+        const cityData = ACTIVITIES_DATABASE[cityId];
 
-      // Filter activities by selected categories
-      let availableActivities = cityData.activities.filter(activity =>
-        allCategories.includes(activity.category)
-      );
+        if (!cityData || !cityData.activities) {
+          console.warn(`No activities found for city: ${cityId}`);
+          return;
+        }
 
-      // If no activities match categories, use all activities from the city
-      if (availableActivities.length === 0) {
-        availableActivities = cityData.activities;
-      }
-
-      // Shuffle activities for variety
-      availableActivities = this.shuffleArray([...availableActivities]);
-
-      if (assignment.type === 'single-day') {
-        // Single day visit: assign 2-4 activities
-        const activityCount = Math.min(
-          Math.floor((activitiesPerDay.min + activitiesPerDay.max) / 2),
-          availableActivities.length
+        // Filter activities by selected categories
+        let availableActivities = cityData.activities.filter(activity =>
+          allCategories.includes(activity.category)
         );
 
+        // If no activities match categories, use all activities from the city
+        if (availableActivities.length === 0) {
+          availableActivities = cityData.activities;
+        }
+
+        // Shuffle activities for variety
+        availableActivities = this.shuffleArray([...availableActivities]);
+        
+        // Determine activity count for this city
+        const activityCount = Math.min(activitiesPerCity, availableActivities.length);
+        
+        // Generate start time for activities if time range is specified
+        let currentTime = cityVisit.timeStart || '09:00';
+        
         for (let i = 0; i < activityCount; i++) {
           if (i < availableActivities.length) {
             const activity = availableActivities[i];
+            
             generatedActivities.push({
               id: `activity-${activityIdCounter++}`,
-              day: assignment.day,
+              day: dayNumber,
               city: cityId,
-              cityName: assignment.cityName,
+              cityName: cityVisit.cityName,
               ...activity,
-              order: i + 1,
+              time: cityVisit.timeStart ? this.calculateActivityTime(currentTime, i) : activity.time || `${9 + i * 2}:00`,
+              cityVisitInfo: {
+                timeStart: cityVisit.timeStart,
+                timeEnd: cityVisit.timeEnd,
+                isFullDay: cityVisit.isFullDay,
+                order: cityVisit.order
+              },
+              order: (cityIndex * 10) + i + 1,
               isGenerated: true
             });
           }
         }
-      } else {
-        // Multi-day stay: distribute activities across days
-        const daysInCity = assignment.daysCount;
-        let activityIndex = 0;
-
-        for (let dayOffset = 0; dayOffset < daysInCity; dayOffset++) {
-          const currentDay = assignment.dayStart + dayOffset;
-          const dailyActivityCount = Math.min(
-            activitiesPerDay.min + Math.floor(Math.random() * (activitiesPerDay.max - activitiesPerDay.min + 1)),
-            availableActivities.length - activityIndex
-          );
-
-          for (let i = 0; i < dailyActivityCount && activityIndex < availableActivities.length; i++) {
-            const activity = availableActivities[activityIndex++];
-            generatedActivities.push({
-              id: `activity-${activityIdCounter++}`,
-              day: currentDay,
-              city: cityId,
-              cityName: assignment.cityName,
-              ...activity,
-              order: i + 1,
-              isGenerated: true
-            });
-          }
-        }
-      }
+      });
     });
 
     // Sort by day and order
@@ -1129,8 +1299,17 @@ export const ItineraryBuilder = {
       return a.order - b.order;
     });
 
-    console.log(`✅ Generated ${generatedActivities.length} activities`);
+    console.log(`✅ Generated ${generatedActivities.length} activities across ${cityDayAssignments.length} days with flexible city visits`);
     return generatedActivities;
+  },
+  
+  // Helper to calculate activity time based on sequence
+  calculateActivityTime(startTime, activityIndex) {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + (activityIndex * 90); // 1.5 hours per activity
+    const newHours = Math.floor(totalMinutes / 60) % 24;
+    const newMinutes = totalMinutes % 60;
+    return `${String(newHours).padStart(2, '0')}:${String(newMinutes).padStart(2, '0')}`;
   },
 
   shuffleArray(array) {
