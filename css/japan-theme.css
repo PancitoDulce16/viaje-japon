@@ -7,6 +7,7 @@
   --japan-red: #C41E3A;           /* Rojo de la bandera japonesa */
   --japan-white: #FFFFFF;         /* Blanco puro */
   --sakura-pink: #FFB7C5;         /* Rosa de cerezo */
+  --sakura-strong: #FF6B9D;       /* Sakura Pink (vivo) */
   --sakura-light: #FFF0F5;        /* Rosa muy claro */
   --matcha-green: #88B04B;        /* Verde matcha */
   --bamboo-green: #4A7C59;        /* Verde bambú */
@@ -16,6 +17,13 @@
   --paper-beige: #F5E6D3;         /* Beige papel washi */
   --mist-gray: #E8E8E8;           /* Gris neblina */
   --ocean-blue: #1E4D8B;          /* Azul océano */
+  --indigo-blue: #4F46E5;         /* Indigo Blue (secundario) */
+  --warm-amber: #F59E0B;          /* Warm Amber (acento) */
+
+  /* Aliases de conveniencia */
+  --primary-color: var(--sakura-strong);
+  --secondary-color: var(--indigo-blue);
+  --accent-color: var(--warm-amber);
 
   /* 🌸 Gradientes Japoneses */
   --gradient-sakura: linear-gradient(135deg, #FFB7C5 0%, #FF69B4 100%);
