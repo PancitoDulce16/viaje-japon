@@ -567,6 +567,16 @@ function renderDayOverview(day) {
                 >
                     <i class="fas fa-plus-circle"></i> Añadir Actividad
                 </button>
+                <div class="mt-4 flex gap-2">
+                    <button type="button" id="viewToggleList"
+                        class="px-3 py-2 text-sm rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        Lista
+                    </button>
+                    <button type="button" id="viewToggleTimeline"
+                        class="px-3 py-2 text-sm rounded bg-pink-100 dark:bg-gray-700 border border-pink-300 dark:border-gray-600">
+                        Timeline
+                    </button>
+                </div>
             </div>
         </div>
     `;
@@ -582,7 +592,7 @@ function renderActivities(day) {
         sortableInstance = null;
     }
 
-    container.innerHTML = `
+    const listViewHtml = `
         <div class="itinerary-timeline" id="sortable-timeline">
             ${day.activities.map((act, i) => {
                 const activityType = detectActivityType(act);
@@ -697,13 +707,64 @@ function renderActivities(day) {
         </div>
     `;
 
-    // 🔥 Inicializar drag & drop DESPUÉS de renderizar
-    setTimeout(() => {
-        const timelineContainer = document.getElementById('sortable-timeline');
-        if (timelineContainer) {
-            initializeDragAndDrop(timelineContainer);
-        }
-    }, 100);
+    const timelineCardsHtml = `
+        <div class="relative">
+            <div class="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-pink-500 to-indigo-500 opacity-50"></div>
+            <div class="space-y-8">
+                ${day.activities.map((act, i) => {
+                    const isCompleted = checkedActivities[act.id];
+                    const activityType = detectActivityType(act);
+                    const iconClass = getActivityIcon(activityType);
+                    return `
+                    <div class="relative pl-16 slide-in-timeline" style="animation-delay: ${i * 60}ms">
+                        <div class="absolute left-6 top-2 w-4 h-4 rounded-full bg-pink-500 border-4 border-white dark:border-gray-800 timeline-dot"></div>
+                        <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+                            <div class="p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                        <i class="far fa-clock"></i>
+                                        <span>${act.time || '—'}</span>
+                                    </div>
+                                    <button class="activity-edit-btn p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" data-activity-id="${act.id}" data-day="${day.day}" title="Editar">
+                                        <i class="fas fa-edit text-gray-600 dark:text-gray-400"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="activity-icon-japan ${activityType}"><i class="${iconClass} text-white"></i></div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-lg font-bold dark:text-white mb-1 ${isCompleted ? 'line-through opacity-70' : ''}">${act.title || act.name || 'Actividad'}</h3>
+                                        ${act.desc ? `<p class=\"text-sm text-gray-600 dark:text-gray-400\">${act.desc}</p>` : ''}
+                                        ${act.station ? `<p class=\"text-xs text-gray-500 dark:text-gray-400 mt-2\"><i class=\"fas fa-subway\"></i> ${act.station}</p>` : ''}
+                                        ${act.cost ? `<span class=\"badge-japan badge-matcha mt-2 inline-block\"><i class=\"fas fa-yen-sign\"></i> ${act.cost.toLocaleString()}</span>` : ''}
+                                    </div>
+                                    <input type="checkbox" class="activity-checkbox w-5 h-5 mt-1" data-id="${act.id}" ${isCompleted ? 'checked' : ''} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>
+    `;
+
+    // Default to timeline view on render
+    container.innerHTML = timelineCardsHtml;
+
+    // Hook up view toggle if available
+    const listBtn = document.getElementById('viewToggleList');
+    const timelineBtn = document.getElementById('viewToggleTimeline');
+    if (listBtn && timelineBtn) {
+        listBtn.onclick = () => {
+            container.innerHTML = listViewHtml;
+            setTimeout(() => {
+                const tl = document.getElementById('sortable-timeline');
+                if (tl) initializeDragAndDrop(tl);
+            }, 50);
+        };
+        timelineBtn.onclick = () => {
+            container.innerHTML = timelineCardsHtml;
+        };
+    }
 }
 
 // 🔥 NUEVO: Inicializar drag & drop con SortableJS
