@@ -1,0 +1,36 @@
+✅ Suggested Improvements for Attractions Section
+1. Organization
+
+Keep the current category grouping (Museums, Themed Cafés, Restaurants, Sushi, etc.).
+Add secondary grouping by city (Tokyo, Kyoto, Osaka, etc.) so users can filter by destination.
+Optional: Add tags for finer filtering (e.g., “anime”, “traditional”, “Michelin”, “kids-friendly”).
+
+
+2. Filters
+
+Search bar:
+
+Functional, debounced search across name, category, city, and tags.
+Highlight matches in results.
+
+
+Category filter: Multi-select chips (Museums, Cafés, Restaurants, etc.).
+City filter: Dropdown or multi-select chips.
+Price filter: Based on your existing average price tiers ($, $$, $$$).
+Rating filter: Slider or discrete options (≥4.5, ≥4.0).
+Reservation filter: Toggle (Required / Not Required).
+Optional: Tags filter for special interests.
+
+
+3. Search Behavior
+
+Matches across:
+
+Name
+Category
+City
+Tags
+
+
+Use Fuse.js for fuzzy matching if dataset is large.
+Debounce input (150–250ms) for performance.
