@@ -566,6 +566,226 @@ export const ItineraryBuilder = {
     console.log(`✅ Generated ${dates.length} date selectors`);
   },
 
+  // === ASIGNACIÓN RÁPIDA DE CIUDADES (NUEVO) === //
+  renderQuickCityBlocksUI() {
+    try {
+      const step2 = document.getElementById('wizardStep2');
+      if (!step2) return;
+
+      // Evitar duplicados
+      if (document.getElementById('quickCityBlocks')) return;
+
+      // Opciones de ciudades para el dropdown "Rellenar todo"
+      const cityOptions = Object.keys(ACTIVITIES_DATABASE).map(cityId => {
+        const cityData = ACTIVITIES_DATABASE[cityId];
+        return `<option value="${cityId}">${cityData.city}</option>`;
+      }).join('');
+
+      const html = `
+        <div id="quickCityBlocks" class="mb-4">
+          <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 space-y-3">
+            <div class="flex items-start gap-3">
+              <div class="text-xl">⚡</div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                  <h4 class="font-bold text-sm md:text-base dark:text-white">Modo rápido: asigna ciudades por bloques</h4>
+                </div>
+                <p class="text-xs md:text-sm text-gray-700 dark:text-gray-300 mt-1">Ejemplos: <span class="font-mono">Tokyo 3, Kyoto 2, Osaka 2</span> o <span class="font-mono">Tokyo→Kyoto→Osaka</span> (se reparte equitativamente).</p>
+                <div class="mt-3 grid grid-cols-1 md:grid-cols-12 gap-2">
+                  <input id="quickCityBlocksInput" type="text" class="md:col-span-8 w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white text-sm" placeholder="Tokyo 3, Kyoto 2, Osaka 2" />
+                  <button type="button" onclick="ItineraryBuilder.applyCityBlocks()" class="md:col-span-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-semibold">Aplicar</button>
+                  <button type="button" onclick="ItineraryBuilder.clearAllCitySelections()" class="md:col-span-2 px-3 py-2 bg-gray-200 dark:bg-gray-700 dark:text-white rounded-lg text-sm font-semibold">Vaciar</button>
+                </div>
+                <div class="mt-2 flex items-center gap-3 flex-wrap">
+                  <label class="text-xs md:text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <input id="autoFillRemainder" type="checkbox" class="rounded border-gray-300 dark:border-gray-600" />
+                    Autocompletar faltantes con la última ciudad
+                  </label>
+                  <div class="flex items-center gap-2">
+                    <select id="fillAllCity" class="p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white text-xs md:text-sm">
+                      <option value="">-- Ciudad --</option>
+                      ${cityOptions}
+                    </select>
+                    <button type="button" onclick="ItineraryBuilder.fillAllDaysWithCity()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm font-semibold">Rellenar todo</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      const container = document.getElementById('cityByDateContainer');
+      if (container) {
+        container.insertAdjacentHTML('beforebegin', html);
+      } else {
+        step2.insertAdjacentHTML('afterbegin', html);
+      }
+    } catch (error) {
+      console.error('❌ Error renderizando asignación rápida:', error);
+    }
+  },
+
+  fillAllDaysWithCity() {
+    const selectEl = document.getElementById('fillAllCity');
+    if (!selectEl || !selectEl.value) {
+      Notifications.warning('Selecciona una ciudad para rellenar');
+      return;
+    }
+    const cityId = selectEl.value;
+    const dateSelectors = document.querySelectorAll('.city-date-selector');
+    dateSelectors.forEach(sel => { sel.value = cityId; });
+    Notifications.success('✅ Días rellenados con la ciudad seleccionada');
+  },
+
+  clearAllCitySelections() {
+    const dateSelectors = document.querySelectorAll('.city-date-selector');
+    dateSelectors.forEach(sel => { sel.value = ''; });
+    const input = document.getElementById('quickCityBlocksInput');
+    if (input) input.value = '';
+  },
+
+  applyCityBlocks() {
+    try {
+      const inputEl = document.getElementById('quickCityBlocksInput');
+      if (!inputEl) return;
+      const raw = (inputEl.value || '').trim();
+      const dateSelectors = Array.from(document.querySelectorAll('.city-date-selector'));
+      if (dateSelectors.length === 0) {
+        Notifications.warning('Primero define fechas en el Paso 1');
+        return;
+      }
+
+      const totalDays = dateSelectors.length;
+      const blocks = this.parseCityBlocksInput(raw, totalDays);
+
+      if (!blocks || blocks.length === 0) {
+        Notifications.warning('No se detectaron ciudades. Revisa el formato.');
+        return;
+      }
+
+      let assigned = 0;
+      for (const block of blocks) {
+        const daysToAssign = Math.min(block.days, totalDays - assigned);
+        for (let i = 0; i < daysToAssign; i++) {
+          if (assigned + i < totalDays) {
+            dateSelectors[assigned + i].value = block.cityId;
+          }
+        }
+        assigned += daysToAssign;
+        if (assigned >= totalDays) break;
+      }
+
+      const autoFill = document.getElementById('autoFillRemainder');
+      if (assigned < totalDays && autoFill && autoFill.checked && blocks.length > 0) {
+        const lastCity = blocks[blocks.length - 1].cityId;
+        for (let i = assigned; i < totalDays; i++) {
+          dateSelectors[i].value = lastCity;
+        }
+        assigned = totalDays;
+      }
+
+      if (assigned < totalDays) {
+        Notifications.warning(`Quedaron ${totalDays - assigned} día(s) sin asignar`);
+      } else {
+        Notifications.success('✅ Asignación rápida aplicada');
+      }
+    } catch (error) {
+      console.error('❌ Error aplicando bloques de ciudades:', error);
+      Notifications.error('Error aplicando la asignación rápida');
+    }
+  },
+
+  parseCityBlocksInput(raw, totalDays) {
+    if (!raw) return [];
+
+    const separators = /[,;\n]|→|\u2192/; // coma, punto y coma, salto de línea o flecha
+    const parts = raw.split(separators).map(s => s.trim()).filter(Boolean);
+
+    const nameToIdEntries = Object.keys(ACTIVITIES_DATABASE).map(id => {
+      const name = (ACTIVITIES_DATABASE[id]?.city || '').toString();
+      return [this.normalizeString(name), id, name];
+    });
+
+    const aliasMap = {
+      'tokio': 'tokyo',
+      'kioto': 'kyoto',
+      'osaka': 'osaka',
+      'nara': 'nara',
+      'hiroshima': 'hiroshima',
+      'hakone': 'hakone',
+      'nikko': 'nikko',
+      'kanazawa': 'kanazawa',
+      'kobe': 'kobe',
+      'fukuoka': 'fukuoka'
+    };
+
+    const hasAnyNumber = parts.some(p => /\d+/.test(p));
+
+    const blocks = [];
+    if (!hasAnyNumber) {
+      const cityIds = [];
+      for (const p of parts) {
+        const name = this.normalizeString(p.replace(/[-_]/g, ' ').trim());
+        const cityId = this.matchCityIdByName(name, nameToIdEntries, aliasMap);
+        if (cityId) cityIds.push(cityId);
+      }
+      if (cityIds.length === 0) return [];
+      const base = Math.floor(totalDays / cityIds.length);
+      let remainder = totalDays % cityIds.length;
+      cityIds.forEach((cid) => {
+        const extra = remainder > 0 ? 1 : 0;
+        if (remainder > 0) remainder--;
+        blocks.push({ cityId: cid, days: base + extra });
+      });
+      return blocks;
+    }
+
+    for (const p of parts) {
+      const match = p.match(/^(.*?)(?:\s*[xX\-:]?\s*)(\d+)/);
+      const nameRaw = match ? match[1] : p;
+      const daysRaw = match ? match[2] : null;
+      const nameNorm = this.normalizeString(nameRaw.replace(/[-_]/g, ' ').trim());
+      const cityId = this.matchCityIdByName(nameNorm, nameToIdEntries, aliasMap);
+      if (!cityId) continue;
+      const days = daysRaw ? Math.max(1, parseInt(daysRaw, 10)) : 1;
+      blocks.push({ cityId, days });
+    }
+
+    return blocks;
+  },
+
+  matchCityIdByName(nameNorm, nameToIdEntries, aliasMap) {
+    if (!nameNorm) return null;
+    const aliasKey = this.normalizeString(nameNorm);
+    const aliasTarget = aliasMap[aliasKey];
+
+    const exact = nameToIdEntries.find(([normName]) => normName === aliasKey);
+    if (exact) return exact[1];
+
+    if (aliasTarget) {
+      const aliasExact = nameToIdEntries.find(([normName, id, display]) => this.normalizeString(display) === this.normalizeString(aliasTarget));
+      if (aliasExact) return aliasExact[1];
+    }
+
+    const partial = nameToIdEntries.find(([normName]) => normName.startsWith(aliasKey) || normName.includes(aliasKey));
+    if (partial) return partial[1];
+
+    return null;
+  },
+
+  normalizeString(str) {
+    try {
+      return (str || '')
+        .toString()
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+    } catch {
+      return (str || '').toString().trim().toLowerCase();
+    }
+  },
+
   copyPreviousDay(dayNumber) {
     const previousSelect = document.getElementById(`city-date-${dayNumber - 1}`);
     const currentSelect = document.getElementById(`city-date-${dayNumber}`);
