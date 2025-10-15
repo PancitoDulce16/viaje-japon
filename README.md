@@ -139,7 +139,7 @@ cd viaje-japon
 
 ```javascript
 const firebaseConfig = {
-  apiKey: "TU-API-KEY",
+  apiKey: "<YOUR_API_KEY>",
   authDomain: "TU-PROJECT.firebaseapp.com",
   projectId: "TU-PROJECT-ID",
   storageBucket: "TU-PROJECT.appspot.com",

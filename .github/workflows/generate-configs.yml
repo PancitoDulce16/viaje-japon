@@ -1,0 +1,39 @@
+name: Generate config files for deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  generate-configs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate js/config.js from secret
+        if: ${{ secrets.CONFIG_GOOGLE_PLACES_KEY }}
+        run: |
+          echo "// Generated file - DO NOT COMMIT" > js/config.js
+          echo "export const APP_CONFIG = {" >> js/config.js
+          echo "  GOOGLE_PLACES_API_KEY: '${{ secrets.CONFIG_GOOGLE_PLACES_KEY }}'" >> js/config.js
+          echo "};" >> js/config.js
+
+      - name: Generate js/firebase-config.js from secret
+        if: ${{ secrets.FIREBASE_CONFIG_JSON }}
+        run: |
+          echo "// Generated file - DO NOT COMMIT" > js/firebase-config.js
+          echo "window.FIREBASE_CONFIG = ${{ secrets.FIREBASE_CONFIG_JSON }};" >> js/firebase-config.js
+
+      - name: Generate js/apis-config.js from secret
+        if: ${{ secrets.API_KEYS_JSON }}
+        run: |
+          echo "// Generated file - DO NOT COMMIT" > js/apis-config.js
+          echo "window.RUNTIME_API_KEYS = ${{ secrets.API_KEYS_JSON }};" >> js/apis-config.js
+
+      - name: Show created files
+        run: |
+          ls -la js || true
+          sed -n '1,120p' js/config.js || true
+          sed -n '1,120p' js/firebase-config.js || true

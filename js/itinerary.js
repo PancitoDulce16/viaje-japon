@@ -1,30 +1,161 @@
-// js/itinerary.js - VERSIÓN OPTIMIZADA Y ESCALABLE
+// js/itinerary.js - VERSIÓN MEJORADA con Creación Dinámica
 
 import { db, auth } from './firebase-config.js';
 import { Notifications } from './notifications.js';
-import { Logger, retry, formatDuration, parseDuration, AppError, handleError } from './helpers.js';
-import { FIREBASE_PATHS, STORAGE_KEYS, ERROR_CODES, TIMEOUTS } from './constants.js';
-import {
+import { 
   doc,
   setDoc,
   getDoc,
   onSnapshot
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-// 📊 Estado de la aplicación
+// Local cities fallback provider
+import { searchCities } from '../data/japan-cities.js';
+import { APP_CONFIG } from './config.js';
+
 let checkedActivities = {};
 let currentDay = 1;
 let unsubscribe = null;
 let currentItinerary = null;
-let sortableInstance = null;
+let sortableInstance = null; // 🔥 Para drag & drop
 let isListenerAttached = false;
-let isFormListenerAttached = false;
+
+// Debounced local save timer
+let saveDebounceTimer = null;
+
+// --- Google Places integration (uses provided API key if available) ---
+const GOOGLE_PLACES_API_KEY = APP_CONFIG?.GOOGLE_PLACES_API_KEY || '';
+let googlePlacesReady = false;
+let googlePlacesPromise = null;
+let googleAutocompleteService = null;
+
+function loadGooglePlaces() {
+  if (!GOOGLE_PLACES_API_KEY) return Promise.reject(new Error('No API key'));
+  if (googlePlacesPromise) return googlePlacesPromise;
+
+  googlePlacesPromise = new Promise((resolve, reject) => {
+    // If already available
+    if (window.google && window.google.maps && window.google.maps.places) {
+      googleAutocompleteService = new google.maps.places.AutocompleteService();
+      googlePlacesReady = true;
+      return resolve(true);
+    }
+
+    // Create callback
+    const callbackName = '__initGooglePlaces_' + Date.now();
+    window[callbackName] = () => {
+      try {
+        googleAutocompleteService = new google.maps.places.AutocompleteService();
+        googlePlacesReady = true;
+        resolve(true);
+      } catch (e) {
+        reject(e);
+      } finally {
+        try { delete window[callbackName]; } catch (e) {}
+      }
+    };
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_API_KEY}&libraries=places&callback=${callbackName}`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = (e) => reject(e);
+    document.head.appendChild(script);
+  });
+
+  return googlePlacesPromise;
+}
+
+function getGooglePlacePredictions(input) {
+  return new Promise((resolve) => {
+    if (!googlePlacesReady || !googleAutocompleteService) return resolve([]);
+    googleAutocompleteService.getPlacePredictions({ input, types: ['(cities)'] }, (predictions, status) => {
+      if (!predictions || !predictions.length) return resolve([]);
+      const results = predictions.map(p => ({ id: p.place_id, name: p.structured_formatting ? p.structured_formatting.main_text : p.description }));
+      resolve(results);
+    });
+  });
+}
 
 function getCurrentTripId() {
   if (window.TripsManager && window.TripsManager.currentTrip) {
     return window.TripsManager.currentTrip.id;
   }
   return localStorage.getItem('currentTripId');
+}
+
+async function saveCurrentItineraryToFirebase() {
+  const tripId = getCurrentTripId();
+  if (!tripId || !currentItinerary) throw new Error('No trip or itinerary');
+
+  try {
+    const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+    await setDoc(itineraryRef, currentItinerary);
+    return true;
+  } catch (e) {
+    console.error('Error saving itinerary to Firebase', e);
+    throw e;
+  }
+}
+
+async function importLocalIntoTrip() {
+  if (!currentItinerary) {
+    throw new Error('No currentItinerary to import into');
+  }
+  const local = window.localItinerary || [];
+  if (!local.length) return;
+
+  // Build map by date for existing days
+  const existingByDate = new Map();
+  (currentItinerary.days || []).forEach(d => {
+    if (d.date) existingByDate.set(d.date, d);
+  });
+
+  // Determine starting day number
+  const maxDay = (currentItinerary.days || []).reduce((m, d) => Math.max(m, d.day || 0), 0);
+  let nextDay = maxDay + 1;
+
+  // Merge: for each local entry, if date exists, update its title/location; else create new day object
+  for (const entry of local) {
+    const existing = existingByDate.get(entry.date);
+    if (existing) {
+      // last added wins for city, preserve notes: store in day.notes
+      existing.title = entry.city;
+      existing.date = entry.date;
+      existing.notes = existing.notes || entry.notes || '';
+    } else {
+      const newDay = {
+        day: nextDay++,
+        date: entry.date,
+        title: entry.city,
+        activities: [],
+        notes: entry.notes || ''
+      };
+      currentItinerary.days.push(newDay);
+    }
+  }
+
+  // Remove duplicate dates and sort chronologically by date, then reassign day numbers sequentially starting at 1
+  const uniqueByDate = new Map();
+  currentItinerary.days.sort((a,b) => new Date(a.date) - new Date(b.date));
+  currentItinerary.days.forEach(d => {
+    if (!uniqueByDate.has(d.date)) {
+      uniqueByDate.set(d.date, d);
+    } else {
+      // merge: keep the later one (already in place), or prefer non-empty activities
+      const prev = uniqueByDate.get(d.date);
+      if ((d.activities || []).length > (prev.activities || []).length) {
+        uniqueByDate.set(d.date, d);
+      }
+    }
+  });
+
+  const mergedDays = Array.from(uniqueByDate.values()).sort((a,b) => new Date(a.date) - new Date(b.date));
+  mergedDays.forEach((d, idx) => d.day = idx + 1);
+  currentItinerary.days = mergedDays;
+
+  // Save to Firebase
+  await saveCurrentItineraryToFirebase();
 }
 
 async function loadItinerary() {
@@ -312,666 +443,350 @@ function renderTripSelector() {
 function renderDaySelector() {
     const container = document.getElementById('daySelector');
     if (!container) return;
-
+    
     const itinerary = currentItinerary;
     if (!itinerary || !itinerary.days) {
         container.innerHTML = '';
         return;
     }
     const days = itinerary.days || [];
-
-    // 📱 DETECCIÓN: Usar carrusel en móvil, botones en escritorio
-    const isMobile = window.innerWidth <= 768;
-
-    if (isMobile) {
-        // 🎠 CARRUSEL DE DÍAS CON SWIPER
-        renderDaysCarousel(days, container);
-    } else {
-        // 💻 BOTONES TRADICIONALES EN ESCRITORIO
-        container.innerHTML = days.map(day => `
-            <button data-day="${day.day}" class="day-btn-japan ${
-                currentDay === day.day ? 'active' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-            }">
-                <i class="fas fa-calendar-day"></i> Día ${day.day}
-            </button>
-        `).join('');
-    }
-}
-
-// 🎠 Renderizar carrusel de días con Swiper
-function renderDaysCarousel(days, container) {
-    const totalDays = days.length;
-
-    container.innerHTML = `
-        <div class="days-carousel-container">
-            <!-- Indicador de progreso -->
-            <div class="days-progress-indicator">
-                Día <span id="current-day-number">${currentDay}</span> / ${totalDays}
-            </div>
-
-            <!-- Swiper Container -->
-            <div class="swiper days-swiper">
-                <div class="swiper-wrapper">
-                    ${days.map(day => {
-                        // Calcular fecha (ejemplo: 16 de Febrero 2026)
-                        const tripStart = new Date('2026-02-16');
-                        const dayDate = new Date(tripStart);
-                        dayDate.setDate(tripStart.getDate() + (day.day - 1));
-
-                        const weekday = dayDate.toLocaleDateString('es-ES', { weekday: 'short' }).toUpperCase();
-                        const dayNumber = dayDate.getDate();
-                        const month = dayDate.toLocaleDateString('es-ES', { month: 'short' }).toUpperCase();
-
-                        return `
-                            <div class="swiper-slide">
-                                <div class="day-calendar-card ${currentDay === day.day ? 'active' : ''}"
-                                     data-day="${day.day}">
-                                    <div class="day-calendar-weekday">${weekday}</div>
-                                    <div class="day-calendar-number">${dayNumber}</div>
-                                    <div class="day-calendar-month">${month}</div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            </div>
-        </div>
-    `;
-
-    // 🔥 Inicializar Swiper
-    setTimeout(() => {
-        if (typeof Swiper !== 'undefined') {
-            const swiper = new Swiper('.days-swiper', {
-                slidesPerView: 3,
-                centeredSlides: true,
-                spaceBetween: 16,
-                initialSlide: currentDay - 1,
-                slideToClickedSlide: true,
-
-                on: {
-                    slideChange: function() {
-                        const newDay = this.activeIndex + 1;
-                        if (newDay !== currentDay) {
-                            selectDay(newDay);
-                        }
-                    },
-                    init: function() {
-                        console.log('✅ Swiper inicializado');
-                    }
-                }
-            });
-
-            // Event listener para clicks en las cards
-            container.querySelectorAll('.day-calendar-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    const day = parseInt(card.dataset.day);
-                    if (day !== currentDay) {
-                        selectDay(day);
-                        swiper.slideTo(day - 1);
-                    }
-                });
-            });
-        } else {
-            console.warn('⚠️ Swiper no está disponible');
-        }
-    }, 100);
-}
-
-/**
- * Detectar tipo de actividad basado en palabras clave
- * @param {Object} activity - Actividad
- * @returns {string} Tipo de actividad
- */
-function detectActivityType(activity) {
-    const title = (activity.title || '').toLowerCase();
-    const desc = (activity.desc || '').toLowerCase();
-    const combined = `${title} ${desc}`;
-
-    if (combined.match(/templo|santuario|shrine|temple|pagoda|torii/i)) return 'temple';
-    if (combined.match(/comer|comida|desayuno|almuerzo|cena|restaurante|ramen|sushi|food|lunch|dinner|breakfast/i)) return 'food';
-    if (combined.match(/tren|metro|bus|taxi|transporte|train|subway|transport|transfer/i)) return 'transport';
-    if (combined.match(/comprar|shopping|tienda|mercado|souvenir|shop/i)) return 'shopping';
-    if (combined.match(/parque|jardín|naturaleza|monte|montaña|park|garden|nature|mountain|fuji/i)) return 'nature';
-
-    return 'default';
-}
-
-/**
- * Obtener icono FontAwesome según tipo de actividad
- * @param {string} type - Tipo de actividad
- * @returns {string} Clase de icono
- */
-function getActivityIcon(type) {
-    const icons = {
-        temple: 'fas fa-torii-gate',
-        food: 'fas fa-utensils',
-        transport: 'fas fa-train',
-        shopping: 'fas fa-shopping-bag',
-        nature: 'fas fa-tree',
-        default: 'fas fa-map-marker-alt'
-    };
-    return icons[type] || icons.default;
-}
-
-/**
- * Calcular tiempo total del día
- * @param {Array} activities - Lista de actividades
- * @returns {string} Tiempo total formateado
- */
-function calculateDayTime(activities) {
-    try {
-        const totalMinutes = activities.reduce((total, act) => {
-            return total + (act.duration ? parseDuration(act.duration) : 0);
-        }, 0);
-
-        return formatDuration(totalMinutes);
-    } catch (error) {
-        Logger.error('Error calculando tiempo del día', error);
-        return 'No definido';
-    }
-}
-
-/**
- * Calcular costo total del día
- * @param {Array} activities - Lista de actividades
- * @returns {number} Costo total
- */
-function calculateDayBudget(activities) {
-    try {
-        return activities.reduce((total, act) => {
-            const cost = typeof act.cost === 'number' ? act.cost : 0;
-            return total + cost;
-        }, 0);
-    } catch (error) {
-        Logger.error('Error calculando presupuesto del día', error);
-        return 0;
-    }
+    
+    container.innerHTML = days.map(day => `
+        <button data-day="${day.day}" class="day-btn px-4 py-2 rounded-lg whitespace-nowrap font-medium transition-all ${
+            currentDay === day.day 
+                ? 'bg-red-600 text-white shadow-md' 
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+        }">
+            Día ${day.day}
+        </button>
+    `).join('');
 }
 
 function renderDayOverview(day) {
     const container = document.getElementById('dayOverview');
     if (!container) return;
-
+    
+    // 🔥 Limpiar listener anterior si existe
+    const oldBtn = document.getElementById(`addActivityBtn_${day.day}`);
+    if (oldBtn) {
+        oldBtn.replaceWith(oldBtn.cloneNode(true));
+    }
+    
     const completed = day.activities.filter(a => checkedActivities[a.id]).length;
     const progress = day.activities.length > 0 ? (completed / day.activities.length) * 100 : 0;
-    const totalTime = calculateDayTime(day.activities);
-    const totalBudget = calculateDayBudget(day.activities);
-
+    
     const tripId = getCurrentTripId();
     let syncStatus;
-
+    
     if (!auth.currentUser) {
-      syncStatus = '<span class="text-xs text-yellow-600 dark:text-yellow-400"><i class="fas fa-mobile-alt"></i> Solo local</span>';
+      syncStatus = '<span class="text-xs text-yellow-600 dark:text-yellow-400">📱 Solo local</span>';
     } else if (tripId) {
-      syncStatus = '<span class="text-xs text-green-600 dark:text-green-400"><i class="fas fa-users"></i> Modo Colaborativo</span>';
+      syncStatus = '<span class="text-xs text-green-600 dark:text-green-400">🤝 Modo Colaborativo</span>';
     } else {
-      syncStatus = '<span class="text-xs text-blue-600 dark:text-blue-400"><i class="fas fa-cloud"></i> Sincronizado</span>';
+      syncStatus = '<span class="text-xs text-blue-600 dark:text-blue-400">☁️ Sincronizado</span>';
     }
-
+    
     container.innerHTML = `
-        <div class="day-overview-japan">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="w-12 h-12 bg-gradient-sakura rounded-full flex items-center justify-center text-white text-xl font-bold">
-                    ${day.day}
-                </div>
-                <div>
-                    <h2 class="text-xl font-bold dark:text-white font-japanese">Día ${day.day}</h2>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">${day.date}</p>
-                </div>
+        <div class="flex items-center gap-2 mb-4">
+            <span class="text-2xl">📅</span>
+            <h2 class="text-2xl font-bold dark:text-white">Día ${day.day}</h2>
+        </div>
+        <div class="mb-4">
+            <div class="flex justify-between text-sm mb-1 dark:text-gray-300">
+                <span>Progreso</span>
+                <span>${completed}/${day.activities.length}</span>
             </div>
-
-            <div class="mb-6">
-                <div class="flex justify-between text-sm mb-2 dark:text-gray-300 font-japanese">
-                    <span>Progreso del día</span>
-                    <span class="font-bold">${completed}/${day.activities.length}</span>
-                </div>
-                <div class="progress-japan-itinerary">
-                    <div class="progress-bar-japan-itinerary" style="width: ${progress}%"></div>
-                </div>
-                <div class="mt-2 text-right">
-                    ${syncStatus}
-                </div>
+            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div class="bg-red-600 h-2 rounded-full transition-all duration-500" style="width: ${progress}%"></div>
             </div>
-
-            <!-- Estadísticas del día -->
-            <div class="mb-6 space-y-3">
-                <div class="stat-card-japan time">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-clock text-xl text-blue-600 dark:text-blue-400"></i>
-                        <span class="text-sm font-semibold dark:text-white">Tiempo total</span>
-                    </div>
-                    <span class="text-sm font-bold text-blue-600 dark:text-blue-400">${totalTime}</span>
-                </div>
-                <div class="stat-card-japan budget">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-yen-sign text-xl text-green-600 dark:text-green-400"></i>
-                        <span class="text-sm font-semibold dark:text-white">Presupuesto</span>
-                    </div>
-                    <span class="text-sm font-bold text-green-600 dark:text-green-400">¥${totalBudget.toLocaleString()}</span>
-                </div>
-            </div>
-
-            <div class="space-y-3 text-sm border-t border-gray-200 dark:border-gray-700 pt-4">
-                <div class="bg-gradient-sakura/10 dark:bg-sakura-pink/20 p-3 rounded-lg">
-                    <p class="font-bold text-base text-japan-red dark:text-sakura-pink mb-1">${day.title || 'Día ' + day.day}</p>
-                    ${day.hotel ? `<p class="text-gray-700 dark:text-gray-300 flex items-center gap-2 mt-2"><i class="fas fa-hotel text-japan-red dark:text-sakura-pink"></i> ${day.hotel}</p>` : ''}
-                    
-                    ${day.cities && day.cities.length > 0 ? `
-                        <div class="mt-3 space-y-2">
-                            <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                                <i class="fas fa-map-marked-alt"></i> 
-                                ${day.isMultiCity ? 'Ciudades del día' : 'Ciudad'}:
-                            </p>
-                            ${day.cities.map(city => `
-                                <div class="bg-white/50 dark:bg-gray-700/50 p-2 rounded flex items-center justify-between">
-                                    <div>
-                                        <span class="font-semibold text-gray-800 dark:text-white">${city.cityName}</span>
-                                        ${city.timeStart && city.timeEnd ? `
-                                            <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">
-                                                <i class="far fa-clock"></i> ${city.timeStart} - ${city.timeEnd}
-                                            </span>
-                                        ` : city.isFullDay ? `
-                                            <span class="text-xs text-green-600 dark:text-green-400 ml-2">
-                                                <i class="fas fa-check-circle"></i> Todo el día
-                                            </span>
-                                        ` : ''}
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : day.location ? `
-                        <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-1">
-                            <i class="fas fa-map-marker-alt"></i> ${day.location}
-                        </p>
-                    ` : ''}
-                </div>
-            </div>
-
-            <div class="mt-6">
-                <button
-                    type="button"
-                    id="addActivityBtn_${day.day}"
-                    class="btn-japan w-full flex items-center justify-center gap-2"
-                >
-                    <i class="fas fa-plus-circle"></i> Añadir Actividad
-                </button>
-                
-                <!-- AI Recommendations Button -->
-                <button
-                    type="button"
-                    onclick="ItineraryBuilder.showAIRecommendationsForCurrent()"
-                    class="w-full mt-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 rounded-lg hover:from-purple-600 hover:to-pink-600 transition font-semibold flex items-center justify-center gap-2"
-                >
-                    <i class="fas fa-magic"></i> 🤖 Sugerencias AI
-                </button>
-                
-                <div class="mt-4 flex gap-2">
-                    <button type="button" id="viewToggleList"
-                        class="px-3 py-2 text-sm rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
-                        Lista
-                    </button>
-                    <button type="button" id="viewToggleTimeline"
-                        class="px-3 py-2 text-sm rounded bg-pink-100 dark:bg-gray-700 border border-pink-300 dark:border-gray-600">
-                        Timeline
-                    </button>
-                </div>
+            <div class="mt-2 text-right">
+                ${syncStatus}
             </div>
         </div>
+        <div class="space-y-3 text-sm">
+            <p class="font-semibold text-base dark:text-gray-300">${day.date}</p>
+            <p class="font-bold text-lg text-red-600 dark:text-red-400">${day.title}</p>
+            ${day.hotel ? `<p class="dark:text-gray-300">🏨 ${day.hotel}</p>` : ''}
+            ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-400">📍 ${day.location}</p>` : ''}
+        </div>
+        <div class="mt-6">
+            <button
+                type="button"
+                id="addActivityBtn_${day.day}"
+                class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition"
+            >
+                + Añadir Actividad
+            </button>
+        </div>
     `;
+     
 }
 
 function renderActivities(day) {
     const container = document.getElementById('activitiesTimeline');
     if (!container) return;
-
+    
     // 🔥 Limpiar Sortable anterior si existe
     if (sortableInstance) {
         sortableInstance.destroy();
         sortableInstance = null;
     }
-
-    const listViewHtml = `
-        <div class="itinerary-timeline" id="sortable-timeline">
-            ${day.activities.map((act, i) => {
-                const activityType = detectActivityType(act);
-                const iconClass = getActivityIcon(activityType);
-                const isCompleted = checkedActivities[act.id];
-
-                return `
-                    <div class="activity-card-japan fade-in-up ${isCompleted ? 'completed' : ''}" style="animation-delay: ${i * 0.05}s; margin-bottom: 1.5rem;" data-activity-index="${i}">
-                        <div class="flex items-start gap-4">
-                            <input
-                                type="checkbox"
-                                data-id="${act.id}"
-                                ${isCompleted ? 'checked' : ''}
-                                class="activity-checkbox mt-1 w-5 h-5 cursor-pointer accent-red-600 flex-shrink-0"
-                            >
-                            <!-- 📱 Botones de reordenamiento (solo móvil) -->
-                            <div class="reorder-buttons">
-                                <button
-                                    type="button"
-                                    class="reorder-btn reorder-up"
-                                    data-index="${i}"
-                                    data-day="${day.day}"
-                                    ${i === 0 ? 'disabled' : ''}
-                                    title="Mover arriba"
-                                >
-                                    <i class="fas fa-chevron-up"></i>
-                                </button>
-                                <button
-                                    type="button"
-                                    class="reorder-btn reorder-down"
-                                    data-index="${i}"
-                                    data-day="${day.day}"
-                                    ${i === day.activities.length - 1 ? 'disabled' : ''}
-                                    title="Mover abajo"
-                                >
-                                    <i class="fas fa-chevron-down"></i>
-                                </button>
+    
+    container.innerHTML = day.activities.map((act, i) => `
+        <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md border-l-4 border-red-500 fade-in transition-all hover:shadow-lg ${
+            checkedActivities[act.id] ? 'opacity-60' : ''
+        }" style="animation-delay: ${i * 0.05}s">
+            <div class="p-5 flex items-start gap-4">
+                <input 
+                    type="checkbox" 
+                    data-id="${act.id}" 
+                    ${checkedActivities[act.id] ? 'checked' : ''} 
+                    class="activity-checkbox mt-1 w-5 h-5 cursor-pointer accent-red-600 flex-shrink-0"
+                >
+                <div class="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-lg text-2xl flex-shrink-0">
+                    ${act.icon}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">${act.time}</span>
+                                ${act.cost > 0 ? `<span class="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded">¥${act.cost.toLocaleString()}</span>` : ''}
                             </div>
-                            <div class="activity-icon-japan ${activityType}">
-                                <i class="${iconClass} text-white"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex justify-between items-start mb-2">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2 mb-2 flex-wrap">
-                                            <span class="activity-type-badge ${activityType}">
-                                                <i class="${iconClass}"></i>
-                                                ${activityType === 'temple' ? 'Templo' :
-                                                  activityType === 'food' ? 'Comida' :
-                                                  activityType === 'transport' ? 'Transporte' :
-                                                  activityType === 'shopping' ? 'Compras' :
-                                                  activityType === 'nature' ? 'Naturaleza' : 'Actividad'}
-                                            </span>
-                                            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                                                <i class="far fa-clock"></i> ${act.time}
-                                            </span>
-                                            ${act.cost > 0 ? `
-                                                <span class="badge-japan badge-matcha">
-                                                    <i class="fas fa-yen-sign"></i> ${act.cost.toLocaleString()}
-                                                </span>
-                                            ` : ''}
-                                        </div>
-                                        <h3 class="text-lg font-bold dark:text-white mb-1 font-japanese ${isCompleted ? 'line-through' : ''}">${act.title}</h3>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">${act.desc}</p>
-                                        ${act.station ? `
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-1">
-                                                <i class="fas fa-subway"></i> ${act.station}
-                                            </p>
-                                        ` : ''}
-                                    </div>
-                                    <div class="flex gap-1 flex-shrink-0 ml-2">
-                                        <button
-                                            type="button"
-                                            data-action="edit"
-                                            data-activity-id="${act.id}"
-                                            data-day="${day.day}"
-                                            class="activity-edit-btn p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                                            title="Editar"
-                                        >
-                                            <i class="fas fa-edit text-gray-600 dark:text-gray-400"></i>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            data-action="delete"
-                                            data-activity-id="${act.id}"
-                                            data-day="${day.day}"
-                                            class="activity-delete-btn p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-                                            title="Eliminar"
-                                        >
-                                            <i class="fas fa-trash-alt text-red-600 dark:text-red-400"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                ${act.train ? `
-                                    <div class="train-info-japan">
-                                        <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1 flex items-center gap-1">
-                                            <i class="fas fa-train"></i> ${act.train.line}
-                                        </p>
-                                        <p class="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                                            <i class="fas fa-arrow-right"></i> ${act.train.from} → ${act.train.to}
-                                        </p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
-                                            <i class="far fa-clock"></i> ${act.train.duration}
-                                        </p>
-                                    </div>
-                                ` : ''}
-                            </div>
+                            <h3 class="text-lg font-bold dark:text-white mb-1">${act.title}</h3>
+                        </div>
+                        <div class="flex gap-2 flex-shrink-0">
+                            <button type="button" data-action="edit" data-activity-id="${act.id}" data-day="${day.day}" class="activity-edit-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                                <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828zM5 12V7a2 2 0 012-2h4l-2 2H7v5l-2 2z"></path></svg>
+                            </button>
+                            <button type="button" data-action="delete" data-activity-id="${act.id}" data-day="${day.day}" class="activity-delete-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                                <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
+                            </button>
                         </div>
                     </div>
-                `;
-            }).join('')}
-        </div>
-    `;
-
-    const timelineCardsHtml = `
-        <div class="relative">
-            <div class="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-pink-500 to-indigo-500 opacity-50"></div>
-            <div class="space-y-8">
-                ${day.activities.map((act, i) => {
-                    const isCompleted = checkedActivities[act.id];
-                    const activityType = detectActivityType(act);
-                    const iconClass = getActivityIcon(activityType);
-                    return `
-                    <div class="relative pl-16 slide-in-timeline" style="animation-delay: ${i * 60}ms">
-                        <div class="absolute left-6 top-2 w-4 h-4 rounded-full bg-pink-500 border-4 border-white dark:border-gray-800 timeline-dot"></div>
-                        <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl shadow hover:shadow-lg transition overflow-hidden">
-                            <div class="p-4">
-                                <div class="flex items-center justify-between mb-2">
-                                    <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                                        <i class="far fa-clock"></i>
-                                        <span>${act.time || '—'}</span>
-                                    </div>
-                                    <button class="activity-edit-btn p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700" data-activity-id="${act.id}" data-day="${day.day}" title="Editar">
-                                        <i class="fas fa-edit text-gray-600 dark:text-gray-400"></i>
-                                    </button>
-                                </div>
-                                <div class="flex items-start gap-3">
-                                    <div class="activity-icon-japan ${activityType}"><i class="${iconClass} text-white"></i></div>
-                                    <div class="flex-1 min-w-0">
-                                        <h3 class="text-lg font-bold dark:text-white mb-1 ${isCompleted ? 'line-through opacity-70' : ''}">${act.title || act.name || 'Actividad'}</h3>
-                                        ${act.desc ? `<p class=\"text-sm text-gray-600 dark:text-gray-400\">${act.desc}</p>` : ''}
-                                        ${act.station ? `<p class=\"text-xs text-gray-500 dark:text-gray-400 mt-2\"><i class=\"fas fa-subway\"></i> ${act.station}</p>` : ''}
-                                        ${act.cost ? `<span class=\"badge-japan badge-matcha mt-2 inline-block\"><i class=\"fas fa-yen-sign\"></i> ${act.cost.toLocaleString()}</span>` : ''}
-                                    </div>
-                                    <input type="checkbox" class="activity-checkbox w-5 h-5 mt-1" data-id="${act.id}" ${isCompleted ? 'checked' : ''} />
-                                </div>
-                            </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">${act.desc}</p>
+                    ${act.station ? `<p class="text-xs text-gray-500 dark:text-gray-500 mt-2">🚉 ${act.station}</p>` : ''}
+                    ${act.train ? `
+                        <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-2 border-blue-500">
+                            <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">🚄 ${act.train.line}</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">${act.train.from} → ${act.train.to}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-500">⏱️ ${act.train.duration}</p>
                         </div>
-                    </div>`;
-                }).join('')}
+                    ` : ''}
+                </div>
             </div>
         </div>
-    `;
-
-    // Default to timeline view on render
-    container.innerHTML = timelineCardsHtml;
-
-    // Hook up view toggle if available
-    const listBtn = document.getElementById('viewToggleList');
-    const timelineBtn = document.getElementById('viewToggleTimeline');
-    if (listBtn && timelineBtn) {
-        listBtn.onclick = () => {
-            container.innerHTML = listViewHtml;
-            setTimeout(() => {
-                const tl = document.getElementById('sortable-timeline');
-                if (tl) initializeDragAndDrop(tl);
-            }, 50);
-        };
-        timelineBtn.onclick = () => {
-            container.innerHTML = timelineCardsHtml;
-        };
-    }
+    `).join('');
+    
 }
 
 // 🔥 NUEVO: Inicializar drag & drop con SortableJS
-function initializeDragAndDrop(timelineContainer) {
-    if (!timelineContainer) {
-        console.warn('⚠️ Timeline container no proporcionado');
+function initializeDragAndDrop(container) {
+    if (!container || typeof Sortable === 'undefined') {
+        console.warn('Sortable no está disponible');
         return;
     }
 
-    if (typeof Sortable === 'undefined') {
-        console.warn('⚠️ SortableJS no está cargado');
-        return;
-    }
+    sortableInstance = new Sortable(container, {
+        animation: 200,
+        handle: '.activity-card', // Toda la card es draggable
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        dragClass: 'sortable-drag',
+        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        
+        onStart: function(evt) {
+            evt.item.style.opacity = '0.5';
+        },
+        
+        onEnd: function(evt) {
+            evt.item.style.opacity = '1';
+            
+            const oldIndex = evt.oldIndex;
+            const newIndex = evt.newIndex;
+            
+            if (oldIndex === newIndex) return;
+            
+            // Actualizar el orden en el itinerario
+            const dayData = currentItinerary.days.find(d => d.day === currentDay);
+            if (!dayData) return;
+            
+            // Reorganizar array
+            const [movedItem] = dayData.activities.splice(oldIndex, 1);
+            dayData.activities.splice(newIndex, 0, movedItem);
+            
+            // 🔥 Guardar cambios en Firebase automáticamente
+            saveReorderedActivities();
+        }
+    });
+}
 
+// ------- New helpers: date generation, local itinerary merging & persistence -------
+
+function formatISO(date) {
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function formatLocalized(dateStr) {
+  try {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString();
+  } catch (e) {
+    return dateStr;
+  }
+}
+
+function* iterateDates(startISO, endISO) {
+  const start = new Date(startISO + 'T00:00:00');
+  const end = new Date(endISO + 'T00:00:00');
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    yield formatISO(d);
+  }
+}
+
+function generateEntriesForRange(cityName, cityId, startISO, endISO) {
+  const arr = [];
+  for (const date of iterateDates(startISO, endISO)) {
+    arr.push({
+      id: `day_${date}`,
+      date: date,
+      city: cityName,
+      cityId: cityId || null,
+      notes: ''
+    });
+  }
+  return arr;
+}
+
+function mergeLocalItinerary(newEntries) {
+  // Use a map by date to ensure uniqueness; last added wins for city but preserve notes when possible
+  const map = new Map();
+
+  // Start with existing entries
+  (window.localItinerary || []).forEach(e => map.set(e.date, { ...e }));
+
+  // Apply new entries in order (so last added overrides)
+  newEntries.forEach(e => {
+    const existing = map.get(e.date);
+    if (existing) {
+      // Preserve notes if present
+      map.set(e.date, { ...existing, city: e.city, cityId: e.cityId, notes: existing.notes || '' });
+    } else {
+      map.set(e.date, { ...e });
+    }
+  });
+
+  // Convert back to sorted array
+  const merged = Array.from(map.values()).sort((a,b) => new Date(a.date) - new Date(b.date));
+  window.localItinerary = merged;
+}
+
+function scheduleLocalSave() {
+  if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+  saveDebounceTimer = setTimeout(() => {
     try {
-        sortableInstance = new Sortable(timelineContainer, {
-            animation: 300,
-            handle: '.activity-card-japan',
-            filter: '.activity-edit-btn, .activity-delete-btn, .activity-checkbox',
-            preventOnFilter: true,
-            ghostClass: 'sortable-ghost',
-            chosenClass: 'sortable-chosen',
-            dragClass: 'sortable-drag',
-            easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-            forceFallback: false,
-            swapThreshold: 0.65,
-            delay: 100,
-            delayOnTouchOnly: true,
-
-            onStart: function(evt) {
-                evt.item.style.opacity = '0.6';
-                evt.item.style.cursor = 'grabbing';
-                console.log('🎯 Drag iniciado');
-            },
-
-            onEnd: function(evt) {
-                evt.item.style.opacity = '1';
-                evt.item.style.cursor = 'grab';
-
-                const oldIndex = evt.oldIndex;
-                const newIndex = evt.newIndex;
-
-                console.log('📍 Drag finalizado:', { oldIndex, newIndex });
-
-                if (oldIndex === newIndex) return;
-
-                // Actualizar el orden en el itinerario
-                const dayData = currentItinerary.days.find(d => d.day === currentDay);
-                if (!dayData) {
-                    console.error('❌ No se encontró el día actual');
-                    return;
-                }
-
-                // Reorganizar array
-                const [movedItem] = dayData.activities.splice(oldIndex, 1);
-                dayData.activities.splice(newIndex, 0, movedItem);
-
-                console.log('✅ Orden actualizado en memoria');
-
-                // 🔥 Guardar cambios en Firebase automáticamente
-                saveReorderedActivities();
-            }
-        });
-
-        console.log('✅ Drag & Drop inicializado correctamente');
-    } catch (error) {
-        console.error('❌ Error inicializando Sortable:', error);
+      localStorage.setItem('localItinerary_v1', JSON.stringify(window.localItinerary || []));
+      Notifications.show('Itinerario guardado localmente', 'success');
+    } catch (e) {
+      console.error('Error guardando localItinerary', e);
     }
+  }, 600);
 }
 
-/**
- * Reordenar actividad hacia arriba o abajo
- * @param {number} index - Índice de la actividad
- * @param {number} direction - Dirección: -1 para arriba, 1 para abajo
- * @param {number} dayNumber - Número del día
- */
-async function reorderActivity(index, direction, dayNumber) {
-    const dayData = currentItinerary.days.find(d => d.day === dayNumber);
-    if (!dayData || !dayData.activities) {
-        console.error('❌ No se encontró el día o las actividades');
-        return;
-    }
+function renderLocalItinerary() {
+  const container = document.getElementById('itineraryByDate');
+  if (!container) return;
 
-    const newIndex = index + direction;
+  const items = window.localItinerary || [];
+  if (!items.length) {
+    container.innerHTML = `<div class="p-6 text-center text-sm text-gray-600 dark:text-gray-400">Aún no hay días generados. Usa el formulario superior para añadir un rango por ciudad.</div>`;
+    return;
+  }
 
-    // Validar límites
-    if (newIndex < 0 || newIndex >= dayData.activities.length) {
-        console.warn('⚠️ No se puede mover fuera de los límites');
-        return;
-    }
+  container.innerHTML = items.map(item => `
+    <div class="p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm flex justify-between items-start">
+      <div>
+        <div class="text-sm text-gray-500">${formatLocalized(item.date)}</div>
+        <div class="font-semibold text-lg text-red-600">${item.city}</div>
+        <div class="text-xs text-gray-500 mt-1">${item.notes || ''}</div>
+      </div>
+      <div class="flex flex-col items-end gap-2">
+        <button data-action="editNote" data-date="${item.date}" class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 rounded">Editar notas</button>
+        <button data-action="deleteDay" data-date="${item.date}" class="px-2 py-1 text-xs bg-red-600 text-white rounded">Eliminar</button>
+      </div>
+    </div>
+  `).join('');
 
-    // Intercambiar posiciones
-    const [movedItem] = dayData.activities.splice(index, 1);
-    dayData.activities.splice(newIndex, 0, movedItem);
+  // Wire simple delegated listeners
+  container.querySelectorAll('[data-action="editNote"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const date = btn.dataset.date;
+      const entry = (window.localItinerary || []).find(e => e.date === date);
+      if (!entry) return;
+      const newNotes = prompt(`Notas para ${formatLocalized(date)} (${entry.city})`, entry.notes || '');
+      if (newNotes !== null) {
+        entry.notes = newNotes;
+        scheduleLocalSave();
+        renderLocalItinerary();
+      }
+    });
+  });
 
-    console.log('✅ Actividad reordenada:', { from: index, to: newIndex });
-
-    // Guardar cambios en Firebase
-    await saveReorderedActivities();
-
-    // Re-renderizar la vista
-    render();
+  container.querySelectorAll('[data-action="deleteDay"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const date = btn.dataset.date;
+      if (!confirm('Eliminar este día del itinerario?')) return;
+      window.localItinerary = (window.localItinerary || []).filter(e => e.date !== date);
+      scheduleLocalSave();
+      renderLocalItinerary();
+    });
+  });
 }
 
-/**
- * Guardar actividades reordenadas en Firebase con retry logic
- */
+
+// 🔥 NUEVO: Guardar actividades reordenadas en Firebase
 async function saveReorderedActivities() {
     const tripId = getCurrentTripId();
-    if (!tripId || !currentItinerary) {
-        Logger.warn('No se puede guardar: falta tripId o itinerario');
-        return;
-    }
-
+    if (!tripId || !currentItinerary) return;
+    
     try {
-        await retry(async () => {
-            const itineraryRef = doc(db, FIREBASE_PATHS.ITINERARY(tripId));
-            await setDoc(itineraryRef, currentItinerary);
-        }, {
-            maxAttempts: 3,
-            delay: 1000,
-            onRetry: (attempt) => {
-                Logger.warn(`Reintentando guardar orden (intento ${attempt})...`);
-            }
-        });
-
+        const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+        await setDoc(itineraryRef, currentItinerary);
+        
+        // Mostrar notificación de éxito
         if (window.Notifications) {
             window.Notifications.success('✅ Orden actualizado');
         }
-
-        Logger.success('Actividades reordenadas guardadas');
+        
+        console.log('✅ Actividades reordenadas guardadas');
     } catch (error) {
-        Logger.error('Error guardando orden después de reintentos', error);
-
+        console.error('❌ Error guardando orden:', error);
         if (window.Notifications) {
-            window.Notifications.error('❌ Error al guardar orden. Intenta de nuevo.');
+            window.Notifications.error('❌ Error al guardar orden');
         }
     }
 }
 
 export const ItineraryHandler = {
-    // 🔥 Exponer currentItinerary para que otros módulos puedan accederlo
-    get currentItinerary() {
-        return currentItinerary;
-    },
-
-    // 🔥 Asegurar que el itinerario esté cargado (útil para otros módulos)
-    async ensureLoaded() {
-        if (!currentItinerary) {
-            await loadItinerary();
-        }
-        return currentItinerary;
-    },
-
     async init() {
         const container = document.getElementById('content-itinerary');
         if (!container) return;
-
+        
         // Verificar si hay trip seleccionado
         const tripId = getCurrentTripId();
-
+        
         if (!tripId) {
           renderEmptyState();
           return;
         }
-
+        
         // Cargar itinerario
         await loadItinerary();
-
+        
         // Si no hay itinerario creado, mostrar pantalla de creación
         if (!currentItinerary) {
           renderNoItinerary();
@@ -985,7 +800,7 @@ export const ItineraryHandler = {
             </div>
 
             <!-- Selector de Días -->
-            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-[72px] z-10 shadow-sm">
+            <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-[72px] z-30 shadow-sm">
                 <div class="max-w-6xl mx-auto p-4">
                     <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" id="daySelector"></div>
                 </div>
@@ -998,7 +813,34 @@ export const ItineraryHandler = {
                         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sticky top-36 fade-in" id="dayOverview"></div>
                     </div>
                     <div class="md:col-span-2">
-                        <div class="space-y-4" id="activitiesTimeline"></div>
+            <div class="space-y-4">
+              <!-- New: Range planner -->
+              <div id="rangePlanner" class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 mb-4">
+                <h3 class="font-bold mb-2">Agregar rango por ciudad</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                  <div>
+                    <label for="cityInput" class="text-xs text-gray-600 dark:text-gray-400">Ciudad</label>
+                    <input id="cityInput" aria-autocomplete="list" aria-haspopup="true" aria-expanded="false" type="text" placeholder="Escribe una ciudad (ej. Tokyo)" class="w-full mt-1 px-3 py-2 border rounded-lg" />
+                    <div id="citySuggestions" class="bg-white dark:bg-gray-900 border rounded mt-1 max-h-48 overflow-auto hidden" role="listbox"></div>
+                  </div>
+                  <div>
+                    <label for="dateStart" class="text-xs text-gray-600 dark:text-gray-400">Inicio</label>
+                    <input id="dateStart" type="date" class="w-full mt-1 px-3 py-2 border rounded-lg" />
+                  </div>
+                  <div>
+                    <label for="dateEnd" class="text-xs text-gray-600 dark:text-gray-400">Fin</label>
+                    <input id="dateEnd" type="date" class="w-full mt-1 px-3 py-2 border rounded-lg" />
+                  </div>
+                </div>
+                <div class="mt-3 flex gap-2">
+                  <button id="addRangeBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg">+ Añadir al Itinerario</button>
+                  <button id="clearPlannerBtn" class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg">Limpiar</button>
+                </div>
+              </div>
+
+              <div id="itineraryByDate" class="space-y-2"></div>
+              <div id="activitiesTimeline" class="space-y-4"></div>
+            </div>
                     </div>
                 </div>
             </div>
@@ -1012,14 +854,10 @@ export const ItineraryHandler = {
                 const addBtn = e.target.closest('[id^="addActivityBtn_"]');
                 const editBtn = e.target.closest('.activity-edit-btn');
                 const deleteBtn = e.target.closest('.activity-delete-btn');
-                const dayBtn = e.target.closest('.day-btn-japan');
-                const reorderUpBtn = e.target.closest('.reorder-up');
-                const reorderDownBtn = e.target.closest('.reorder-down');
+                const dayBtn = e.target.closest('.day-btn');
 
                 if (addBtn) {
-                    console.log('✅ Botón "Añadir Actividad" clickeado:', addBtn.id);
                     const day = parseInt(addBtn.id.split('_')[1]);
-                    console.log('📅 Día extraído:', day);
                     ItineraryHandler.showActivityModal(null, day);
                 } else if (editBtn) {
                     const activityId = editBtn.dataset.activityId;
@@ -1031,14 +869,6 @@ export const ItineraryHandler = {
                     ItineraryHandler.deleteActivity(activityId, dayNum);
                 } else if (dayBtn) {
                     selectDay(parseInt(dayBtn.dataset.day));
-                } else if (reorderUpBtn) {
-                    const index = parseInt(reorderUpBtn.dataset.index);
-                    const day = parseInt(reorderUpBtn.dataset.day);
-                    reorderActivity(index, -1, day);
-                } else if (reorderDownBtn) {
-                    const index = parseInt(reorderDownBtn.dataset.index);
-                    const day = parseInt(reorderDownBtn.dataset.day);
-                    reorderActivity(index, 1, day);
                 }
             });
 
@@ -1051,20 +881,207 @@ export const ItineraryHandler = {
             isListenerAttached = true;
         }
 
-        // 🔥 Drag & drop se inicializa automáticamente en renderActivities()
-
-        // 🔥 Solo agregar listener al formulario una vez
-        if (!isFormListenerAttached) {
-            const activityForm = document.getElementById('activityForm');
-            if (activityForm) {
-                activityForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    ItineraryHandler.saveActivity();
-                });
-                isFormListenerAttached = true;
-                console.log('✅ Form listener attached');
-            }
+        const timeline = document.getElementById('activitiesTimeline');
+        if (timeline) {
+            initializeDragAndDrop(timeline);
         }
+
+        const activityForm = document.getElementById('activityForm');
+        if (activityForm) {
+            activityForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                ItineraryHandler.saveActivity();
+            });
+        }
+
+    // Restore local per-day itinerary if present (localStorage fallback)
+    const saved = localStorage.getItem('localItinerary_v1');
+    if (saved) {
+      try {
+        window.localItinerary = JSON.parse(saved);
+      } catch (e) {
+        window.localItinerary = [];
+      }
+    } else {
+      window.localItinerary = [];
+    }
+
+    // Wire planner controls
+    const cityInput = document.getElementById('cityInput');
+    const suggestions = document.getElementById('citySuggestions');
+    const dateStart = document.getElementById('dateStart');
+    const dateEnd = document.getElementById('dateEnd');
+    const addRangeBtn = document.getElementById('addRangeBtn');
+    const clearPlannerBtn = document.getElementById('clearPlannerBtn');
+    const itineraryByDate = document.getElementById('itineraryByDate');
+
+    if (cityInput) {
+      let activeIndex = -1;
+      // Try loading Google Places in background (but don't block typing)
+      loadGooglePlaces().catch(() => {
+        // silently ignore if cannot load
+      });
+
+      cityInput.addEventListener('input', async (e) => {
+        const q = e.target.value.trim();
+        if (q.length < 2) {
+          suggestions.classList.add('hidden');
+          cityInput.setAttribute('aria-expanded', 'false');
+          return;
+        }
+
+        let results = [];
+
+        // If Google Places is ready, try it first
+        if (googlePlacesReady) {
+          try {
+            results = await getGooglePlacePredictions(q);
+          } catch (err) {
+            results = [];
+          }
+        }
+
+        // If no results from Google or not ready, fallback to local search
+        if (!results.length) {
+          const local = (window.searchCities ? window.searchCities(q) : searchCities(q)).slice(0,8);
+          results = local.map(c => ({ id: c.id, name: c.name, meta: c.prefecture || '' }));
+        }
+
+        if (!results.length) {
+          suggestions.innerHTML = '<div class="px-3 py-2 text-sm text-gray-500">No hay sugerencias</div>';
+          suggestions.classList.remove('hidden');
+          cityInput.setAttribute('aria-expanded', 'true');
+          activeIndex = -1;
+          return;
+        }
+
+        suggestions.innerHTML = results.map((c, idx) => `
+          <div role="option" data-idx="${idx}" data-id="${c.id}" data-name="${c.name}" class="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">${c.name} <span class="text-xs text-gray-400">${c.meta || ''}</span></div>
+        `).join('');
+        suggestions.classList.remove('hidden');
+        cityInput.setAttribute('aria-expanded', 'true');
+
+        // keyboard nav
+        activeIndex = -1;
+      });
+
+      cityInput.addEventListener('keydown', (e) => {
+        const items = suggestions.querySelectorAll('[role="option"]');
+        if (!items.length) return;
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          activeIndex = Math.min(activeIndex + 1, items.length - 1);
+          items.forEach((it,i) => {
+            it.classList.toggle('focused', i === activeIndex);
+            it.setAttribute('aria-selected', i === activeIndex ? 'true' : 'false');
+          });
+          const sel = items[activeIndex];
+          if (sel) sel.scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          activeIndex = Math.max(activeIndex - 1, 0);
+          items.forEach((it,i) => {
+            it.classList.toggle('focused', i === activeIndex);
+            it.setAttribute('aria-selected', i === activeIndex ? 'true' : 'false');
+          });
+          const sel = items[activeIndex];
+          if (sel) sel.scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (activeIndex >= 0) {
+            const sel = items[activeIndex];
+            selectCitySuggestion(sel.dataset.name, sel.dataset.id);
+          }
+        } else if (e.key === 'Escape') {
+          suggestions.classList.add('hidden');
+          cityInput.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      suggestions.addEventListener('click', (ev) => {
+        const opt = ev.target.closest('[role="option"]');
+        if (!opt) return;
+        selectCitySuggestion(opt.dataset.name, opt.dataset.id);
+      });
+
+      function selectCitySuggestion(name, id) {
+        cityInput.value = name;
+        cityInput.dataset.cityId = id || '';
+        suggestions.classList.add('hidden');
+        cityInput.setAttribute('aria-expanded', 'false');
+        cityInput.focus();
+      }
+    }
+
+    // Add range handler
+    if (addRangeBtn) {
+      addRangeBtn.addEventListener('click', () => {
+        const city = cityInput.value.trim();
+        const cityId = cityInput.dataset.cityId || null;
+        const start = dateStart.value;
+        const end = dateEnd.value;
+
+        if (!city || !start || !end) {
+          Notifications.show('Completa ciudad, inicio y fin.', 'error');
+          return;
+        }
+
+        if (new Date(end) < new Date(start)) {
+          Notifications.show('La fecha de fin no puede ser anterior a la de inicio.', 'error');
+          return;
+        }
+
+        // generate per-day entries
+        const entries = generateEntriesForRange(city, cityId, start, end);
+
+        // merge with existing localItinerary (last added wins for city on overlaps)
+        mergeLocalItinerary(entries);
+
+        // persist debounced
+        scheduleLocalSave();
+
+        // re-render
+        renderLocalItinerary();
+
+        // clear inputs except keep city for convenience
+        dateStart.value = '';
+        dateEnd.value = '';
+      });
+    }
+
+    if (clearPlannerBtn) {
+      clearPlannerBtn.addEventListener('click', () => {
+        cityInput.value = '';
+        dateStart.value = '';
+        dateEnd.value = '';
+        cityInput.dataset.cityId = '';
+        document.getElementById('citySuggestions').classList.add('hidden');
+      });
+    }
+
+    // Render local itinerary if any
+    renderLocalItinerary();
+
+    // Add import button for users who want to push local days into their trip stored itinerary
+    const importBtn = document.createElement('button');
+    importBtn.textContent = 'Importar días locales al viaje';
+    importBtn.className = 'mt-3 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg';
+    importBtn.addEventListener('click', async () => {
+      if (!confirm('Esto añadirá/mezclará los días locales con el itinerario del viaje en Firebase. Continuar?')) return;
+      try {
+        await importLocalIntoTrip();
+        Notifications.show('Días importados al viaje', 'success');
+        // reload itinerary from Firebase
+        await loadItinerary();
+        await this.init();
+      } catch (e) {
+        console.error('Error importando días:', e);
+        Notifications.show('Error importando días', 'error');
+      }
+    });
+    const planner = document.getElementById('rangePlanner');
+    if (planner) planner.appendChild(importBtn);
     },
     
     // Re-inicializar cuando cambie el trip
@@ -1091,90 +1108,61 @@ export const ItineraryHandler = {
     },
 
     showActivityModal(activityId, day) {
-        try {
-            console.log('🔔 showActivityModal llamado con:', { activityId, day });
-
-            // Esperar a que el DOM esté completamente cargado
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', () => {
-                    this.showActivityModal(activityId, day);
-                });
-                return;
-            }
-
-            const modal = document.getElementById('activityModal');
-            if (!modal) {
-                console.error('❌ Modal de actividad no encontrado en el DOM');
-                console.log('📋 Elementos en el body:', document.body.children.length);
-                console.log('📋 modalsContainer existe:', !!document.getElementById('modalsContainer'));
-                return;
-            }
-            console.log('✅ Modal encontrado:', modal);
-
-            const form = document.getElementById('activityForm');
-            const modalTitle = document.getElementById('activityModalTitle');
-
-            if (form) form.reset();
-
-            const dayInput = document.getElementById('activityDay');
-            if (dayInput) {
-                dayInput.value = day;
-            } else {
-                console.error('❌ Input activityDay no encontrado');
-            }
-
-            if (activityId) {
-                // Modo Editar
-                if (modalTitle) modalTitle.textContent = 'Editar Actividad';
-                const dayData = currentItinerary.days.find(d => d.day === day);
-                const activity = dayData?.activities.find(a => a.id === activityId);
-
-                if (activity) {
-                    document.getElementById('activityId').value = activity.id;
-                    document.getElementById('activityIcon').value = activity.icon || '';
-                    document.getElementById('activityTime').value = activity.time || '';
-                    document.getElementById('activityTitle').value = activity.title || '';
-                    document.getElementById('activityDesc').value = activity.desc || '';
-                    document.getElementById('activityCost').value = activity.cost || 0;
-                    document.getElementById('activityStation').value = activity.station || '';
-                }
-            } else {
-                // Modo Crear
-                if (modalTitle) modalTitle.textContent = 'Añadir Actividad';
-                const activityIdInput = document.getElementById('activityId');
-                if (activityIdInput) activityIdInput.value = '';
-            }
-
-            // 🔥 Usar clases de Tailwind en lugar de estilos inline
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.body.style.overflow = 'hidden';
-
-            console.log('✅ Modal de actividad abierto', { activityId, day });
-        } catch (error) {
-            console.error('❌ Error en showActivityModal:', error);
-            alert('Error al abrir el modal. Por favor, revisa la consola.');
+        const modal = document.getElementById('activityModal');
+        if (!modal) {
+            console.error('❌ Modal de actividad no encontrado');
+            return;
         }
+        
+        const form = document.getElementById('activityForm');
+        const modalTitle = document.getElementById('activityModalTitle');
+
+        if (form) form.reset();
+        
+        const dayInput = document.getElementById('activityDay');
+        if (dayInput) dayInput.value = day;
+
+        if (activityId) {
+            // Modo Editar
+            modalTitle.textContent = 'Editar Actividad';
+            const dayData = currentItinerary.days.find(d => d.day === day);
+            const activity = dayData.activities.find(a => a.id === activityId);
+
+            if (activity) {
+                document.getElementById('activityId').value = activity.id;
+                document.getElementById('activityIcon').value = activity.icon || '';
+                document.getElementById('activityTime').value = activity.time || '';
+                document.getElementById('activityTitle').value = activity.title || '';
+                document.getElementById('activityDesc').value = activity.desc || '';
+                document.getElementById('activityCost').value = activity.cost || 0;
+                document.getElementById('activityStation').value = activity.station || '';
+            }
+        } else {
+            // Modo Crear
+            modalTitle.textContent = 'Añadir Actividad';
+            document.getElementById('activityId').value = '';
+        }
+
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        console.log('✅ Modal de actividad abierto', { activityId, day });
     },
 
     closeActivityModal() {
-        try {
-            const modal = document.getElementById('activityModal');
-            if (modal) {
-                // 🔥 Usar clases de Tailwind en lugar de estilos inline
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-                document.body.style.overflow = '';
-            }
-
-            // Limpiar formulario
-            const form = document.getElementById('activityForm');
-            if (form) form.reset();
-
-            console.log('✅ Modal de actividad cerrado');
-        } catch (error) {
-            console.error('❌ Error en closeActivityModal:', error);
+        const modal = document.getElementById('activityModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
         }
+        
+        // Limpiar formulario
+        const form = document.getElementById('activityForm');
+        if (form) form.reset();
+        
+        console.log('✅ Modal de actividad cerrado');
     },
 
     async deleteActivity(activityId, day) {
@@ -1202,10 +1190,6 @@ export const ItineraryHandler = {
                 const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
                 await setDoc(itineraryRef, currentItinerary);
                 Notifications.show('Actividad eliminada con éxito.', 'success');
-
-                // 🔥 Recargar y renderizar el itinerario para actualizar la vista
-                await loadItinerary();
-                render();
             } catch (error) {
                 console.error("Error al eliminar la actividad:", error);
                 Notifications.show('Error al eliminar la actividad.', 'error');
@@ -1262,10 +1246,6 @@ export const ItineraryHandler = {
             await setDoc(itineraryRef, currentItinerary);
             Notifications.show('Actividad guardada con éxito.', 'success');
             this.closeActivityModal();
-
-            // 🔥 Recargar y renderizar el itinerario para actualizar la vista
-            await loadItinerary();
-            render();
         } catch (error) {
             console.error("Error al guardar la actividad:", error);
             Notifications.show('Error al guardar la actividad.', 'error');

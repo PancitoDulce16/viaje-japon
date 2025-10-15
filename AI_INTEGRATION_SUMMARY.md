@@ -191,7 +191,7 @@ User gets improvement suggestions!
 
 ### OpenAI Setup
 ```javascript
-apiKey: 'sk-proj-Ax0GG...' // Your provided key
+apiKey: '<OPENAI_OR_SIMILAR_KEY>' // Your provided key (PLACEHOLDER)
 model: 'gpt-4o-mini'        // Cost-effective
 endpoint: 'https://api.openai.com/v1/chat/completions'
 ```

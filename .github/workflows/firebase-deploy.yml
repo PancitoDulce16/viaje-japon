@@ -1,0 +1,65 @@
+name: Build and Deploy to Firebase Hosting & Functions
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          npm ci || echo "No package.json found or no dependencies to install"
+
+      - name: Generate client config files
+        env:
+          CONFIG_GOOGLE_PLACES_KEY: ${{ secrets.CONFIG_GOOGLE_PLACES_KEY }}
+          FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
+          API_KEYS_JSON: ${{ secrets.API_KEYS_JSON }}
+        run: |
+          mkdir -p js || true
+          if [ -n "$CONFIG_GOOGLE_PLACES_KEY" ]; then
+            echo "// Generated file - DO NOT COMMIT" > js/config.js
+            echo "export const APP_CONFIG = {" >> js/config.js
+            echo "  GOOGLE_PLACES_API_KEY: '$CONFIG_GOOGLE_PLACES_KEY'" >> js/config.js
+            echo "};" >> js/config.js
+          fi
+
+          if [ -n "$FIREBASE_CONFIG_JSON" ]; then
+            echo "// Generated file - DO NOT COMMIT" > js/firebase-config.js
+            echo "window.FIREBASE_CONFIG = $FIREBASE_CONFIG_JSON;" >> js/firebase-config.js
+          fi
+
+          if [ -n "$API_KEYS_JSON" ]; then
+            echo "// Generated file - DO NOT COMMIT" > js/apis-config.js
+            echo "window.RUNTIME_API_KEYS = $API_KEYS_JSON;" >> js/apis-config.js
+          fi
+
+      - name: Build site (if you have a build step)
+        run: |
+          if [ -f package.json ]; then
+            npm run build || true
+          fi
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+
+      - name: Install firebase-tools
+        run: npm install -g firebase-tools
+
+      - name: Deploy to Firebase
+        run: |
+          firebase deploy --only hosting,functions --project ${{ secrets.FIREBASE_PROJECT_ID }}
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

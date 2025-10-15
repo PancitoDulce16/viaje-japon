@@ -1,90 +1,64 @@
-// js/apis-config.js - Configuración REAL de APIs
+// js/apis-config.js - Runtime API keys loader (safe stub)
+// This file should not contain real API keys in the repository.
+// For local development copy js/apis-config.example.js to js/apis-config.js and populate keys.
 
-export const API_KEYS = {
-  // AviationStack - Vuelos
-  aviationStack: {
-    apiKey: '4374cea236b04a5bf7e6d0c7d2cbf676',
-    endpoint: 'http://api.aviationstack.com/v1'
-  },
-  
-  // LiteAPI - Hoteles (Sandbox)
-  liteAPI: {
-    apiKey: '1757d988-56b3-4b5a-9618-c7b5053ac3aa', // Sandbox public key
-    searchEndpoint: 'https://api.liteapi.travel/v3.0',
-    bookingEndpoint: 'https://book.liteapi.travel/v3.0',
-    dataEndpoint: 'https://api.liteapi.travel/v3.0/data'
-  },
-  
-  // Geoapify - Mapas y Geocoding
-  geoapify: {
-    apiKey: '4ed258337c3d4edb94841d6001273ad7',
-    endpoint: 'https://api.geoapify.com/v1'
-  },
-  
-  // Foursquare - Lugares y Atracciones
-  foursquare: {
-    apiKey: 'MDWP4CPLGUO1AUSDLDCWC3JHWYTWGWEJ5UXIPT3Q5DLI0EKO',
-    endpoint: 'https://api.foursquare.com/v3'
-  },
-  
-  // LocationIQ - Geocoding
-  locationIQ: {
-    apiKey: '994358ef247499e7bf49de710d455da3',
-    endpoint: 'https://us1.locationiq.com/v1'
-  },
-  
-  // Nominatim (OpenStreetMap) - Gratuito, sin key
-  nominatim: {
-    endpoint: 'https://nominatim.openstreetmap.org'
-  }
+// API_KEYS may be provided at runtime via window.RUNTIME_API_KEYS or generated during CI deploy.
+export const API_KEYS = (typeof window !== 'undefined' && window.RUNTIME_API_KEYS) ? window.RUNTIME_API_KEYS : {
+  // Example structure:
+  // aviationStack: { apiKey: '', endpoint: 'http://api.aviationstack.com/v1' },
+  // liteAPI: { apiKey: '', searchEndpoint: 'https://api.liteapi.travel/v3.0', ... },
+  // geoapify: { apiKey: '', endpoint: 'https://api.geoapify.com/v1' },
+  // foursquare: { apiKey: '', endpoint: 'https://api.foursquare.com/v3' },
+  // locationIQ: { apiKey: '', endpoint: 'https://us1.locationiq.com/v1' },
+  // nominatim: { endpoint: 'https://nominatim.openstreetmap.org' }
 };
 
-// Endpoints específicos
+// Endpoints built from API_KEYS (will use values from API_KEYS at runtime)
 export const API_ENDPOINTS = {
   // Vuelos
   flights: {
     search: (params) => 
-      `${API_KEYS.aviationStack.endpoint}/flights?access_key=${API_KEYS.aviationStack.apiKey}&${new URLSearchParams(params).toString()}`,
+      `${API_KEYS.aviationStack?.endpoint || 'http://api.aviationstack.com/v1'}/flights?access_key=${API_KEYS.aviationStack?.apiKey || ''}&${new URLSearchParams(params).toString()}`,
     airlines: () =>
-      `${API_KEYS.aviationStack.endpoint}/airlines?access_key=${API_KEYS.aviationStack.apiKey}`,
+      `${API_KEYS.aviationStack?.endpoint || 'http://api.aviationstack.com/v1'}/airlines?access_key=${API_KEYS.aviationStack?.apiKey || ''}`,
     airports: (search) =>
-      `${API_KEYS.aviationStack.endpoint}/airports?access_key=${API_KEYS.aviationStack.apiKey}&search=${search}`
+      `${API_KEYS.aviationStack?.endpoint || 'http://api.aviationstack.com/v1'}/airports?access_key=${API_KEYS.aviationStack?.apiKey || ''}&search=${search}`
   },
   
   // Hoteles
   hotels: {
-    search: () => `${API_KEYS.liteAPI.searchEndpoint}/hotels/search`,
-    list: (params) => `${API_KEYS.liteAPI.dataEndpoint}/hotels?${new URLSearchParams(params).toString()}`,
-    details: (hotelId) => `${API_KEYS.liteAPI.dataEndpoint}/hotel?hotelId=${hotelId}`,
-    reviews: (hotelId) => `${API_KEYS.liteAPI.dataEndpoint}/reviews?hotelId=${hotelId}`,
-    cities: (countryCode) => `${API_KEYS.liteAPI.dataEndpoint}/cities?countryCode=${countryCode}`,
-    countries: () => `${API_KEYS.liteAPI.dataEndpoint}/countries`,
-    prebook: () => `${API_KEYS.liteAPI.bookingEndpoint}/rates/prebook`,
-    book: () => `${API_KEYS.liteAPI.bookingEndpoint}/rates/book`,
-    bookings: () => `${API_KEYS.liteAPI.bookingEndpoint}/bookings`,
-    bookingDetails: (bookingId) => `${API_KEYS.liteAPI.bookingEndpoint}/bookings/${bookingId}`
+    search: () => `${API_KEYS.liteAPI?.searchEndpoint || 'https://api.liteapi.travel/v3.0'}/hotels/search`,
+    list: (params) => `${API_KEYS.liteAPI?.dataEndpoint || 'https://api.liteapi.travel/v3.0/data'}/hotels?${new URLSearchParams(params).toString()}`,
+    details: (hotelId) => `${API_KEYS.liteAPI?.dataEndpoint || 'https://api.liteapi.travel/v3.0/data'}/hotel?hotelId=${hotelId}`,
+    reviews: (hotelId) => `${API_KEYS.liteAPI?.dataEndpoint || 'https://api.liteapi.travel/v3.0/data'}/reviews?hotelId=${hotelId}`,
+    cities: (countryCode) => `${API_KEYS.liteAPI?.dataEndpoint || 'https://api.liteapi.travel/v3.0/data'}/cities?countryCode=${countryCode}`,
+    countries: () => `${API_KEYS.liteAPI?.dataEndpoint || 'https://api.liteapi.travel/v3.0/data'}/countries`,
+    prebook: () => `${API_KEYS.liteAPI?.bookingEndpoint || 'https://book.liteapi.travel/v3.0'}/rates/prebook`,
+    book: () => `${API_KEYS.liteAPI?.bookingEndpoint || 'https://book.liteapi.travel/v3.0'}/rates/book`,
+    bookings: () => `${API_KEYS.liteAPI?.bookingEndpoint || 'https://book.liteapi.travel.v3.0'}/bookings`,
+    bookingDetails: (bookingId) => `${API_KEYS.liteAPI?.bookingEndpoint || 'https://book.liteapi.travel/v3.0'}/bookings/${bookingId}`
   },
   
   // Lugares y Atracciones (Foursquare)
   places: {
     search: (lat, lng, query, radius = 5000) =>
-      `${API_KEYS.foursquare.endpoint}/places/search?ll=${lat},${lng}&query=${query}&radius=${radius}`,
+      `${API_KEYS.foursquare?.endpoint || 'https://api.foursquare.com/v3'}/places/search?ll=${lat},${lng}&query=${query}&radius=${radius}`,
     nearby: (lat, lng, categories, radius = 5000) =>
-      `${API_KEYS.foursquare.endpoint}/places/nearby?ll=${lat},${lng}&categories=${categories}&radius=${radius}`,
+      `${API_KEYS.foursquare?.endpoint || 'https://api.foursquare.com/v3'}/places/nearby?ll=${lat},${lng}&categories=${categories}&radius=${radius}`,
     details: (fsqId) =>
-      `${API_KEYS.foursquare.endpoint}/places/${fsqId}`,
+      `${API_KEYS.foursquare?.endpoint || 'https://api.foursquare.com/v3'}/places/${fsqId}`,
     photos: (fsqId) =>
-      `${API_KEYS.foursquare.endpoint}/places/${fsqId}/photos`
+      `${API_KEYS.foursquare?.endpoint || 'https://api.foursquare.com/v3'}/places/${fsqId}/photos`
   },
   
   // Geocoding (LocationIQ)
   geocoding: {
     forward: (address) =>
-      `${API_KEYS.locationIQ.endpoint}/search?key=${API_KEYS.locationIQ.apiKey}&q=${encodeURIComponent(address)}&format=json`,
+      `${API_KEYS.locationIQ?.endpoint || 'https://us1.locationiq.com/v1'}/search?key=${API_KEYS.locationIQ?.apiKey || ''}&q=${encodeURIComponent(address)}&format=json`,
     reverse: (lat, lng) =>
-      `${API_KEYS.locationIQ.endpoint}/reverse?key=${API_KEYS.locationIQ.apiKey}&lat=${lat}&lon=${lng}&format=json`,
+      `${API_KEYS.locationIQ?.endpoint || 'https://us1.locationiq.com/v1'}/reverse?key=${API_KEYS.locationIQ?.apiKey || ''}&lat=${lat}&lon=${lng}&format=json`,
     autocomplete: (query) =>
-      `${API_KEYS.locationIQ.endpoint}/autocomplete?key=${API_KEYS.locationIQ.apiKey}&q=${encodeURIComponent(query)}&format=json`
+      `${API_KEYS.locationIQ?.endpoint || 'https://us1.locationiq.com/v1'}/autocomplete?key=${API_KEYS.locationIQ?.apiKey || ''}&q=${encodeURIComponent(query)}&format=json`
   },
   
   // Nominatim (backup gratuito)
@@ -98,11 +72,11 @@ export const API_ENDPOINTS = {
   // Mapas (Geoapify)
   maps: {
     staticMap: (lat, lng, zoom = 14) =>
-      `${API_KEYS.geoapify.endpoint}/staticmap?style=osm-bright&width=600&height=400&center=lonlat:${lng},${lat}&zoom=${zoom}&apiKey=${API_KEYS.geoapify.apiKey}`,
+      `${API_KEYS.geoapify?.endpoint || 'https://api.geoapify.com/v1'}/staticmap?style=osm-bright&width=600&height=400&center=lonlat:${lng},${lat}&zoom=${zoom}&apiKey=${API_KEYS.geoapify?.apiKey || ''}`,
     routing: (start, end) =>
-      `${API_KEYS.geoapify.endpoint}/routing?waypoints=${start}|${end}&mode=walk&apiKey=${API_KEYS.geoapify.apiKey}`,
+      `${API_KEYS.geoapify?.endpoint || 'https://api.geoapify.com/v1'}/routing?waypoints=${start}|${end}&mode=walk&apiKey=${API_KEYS.geoapify?.apiKey || ''}`,
     places: (lat, lng, categories, radius = 5000) =>
-      `${API_KEYS.geoapify.endpoint}/places?categories=${categories}&filter=circle:${lng},${lat},${radius}&limit=20&apiKey=${API_KEYS.geoapify.apiKey}`
+      `${API_KEYS.geoapify?.endpoint || 'https://api.geoapify.com/v1'}/places?categories=${categories}&filter=circle:${lng},${lat},${radius}&limit=20&apiKey=${API_KEYS.geoapify?.apiKey || ''}`
   }
 };
 

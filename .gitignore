@@ -1,2 +1,7 @@
 server.log
 SETUP_API_KEY.md
+js/config.js
+js/firebase-config.js
+js/apis-config.js
+functions/node_modules/
+public/
