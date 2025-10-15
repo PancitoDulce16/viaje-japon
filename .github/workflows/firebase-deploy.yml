@@ -24,21 +24,22 @@ jobs:
 
       - name: Generate client config files
         env:
-          FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
+          # Mantenemos las otras variables de entorno como estaban
           CONFIG_GOOGLE_PLACES_KEY: ${{ secrets.CONFIG_GOOGLE_PLACES_KEY }}
           API_KEYS_JSON: ${{ secrets.API_KEYS_JSON }}
         run: |
           mkdir -p js || true
           
-          # Generar js/firebase-config.js
-          cat << EOF > js/firebase-config.js
+          # SOLUCIÓN DEFINITIVA para js/firebase-config.js
+          # Inyectamos el secreto directamente para evitar problemas con el shell
+          echo "
           // Generated file - DO NOT COMMIT
           import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
           import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
           import { getAuth, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
           import { getStorage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
-          const firebaseConfig = $FIREBASE_CONFIG_JSON;
+          const firebaseConfig = ${{ secrets.FIREBASE_CONFIG_JSON }};
 
           let app = null;
           let db = null;
@@ -58,9 +59,9 @@ jobs:
           }
 
           export { app, db, auth, storage, googleProvider };
-          EOF
+          " > js/firebase-config.js
 
-          # Generar js/config.js (Este bloque faltaba)
+          # Generar js/config.js
           if [ -n "$CONFIG_GOOGLE_PLACES_KEY" ]; then
             printf 'export const APP_CONFIG = { GOOGLE_PLACES_API_KEY: "%s" };\n' "$CONFIG_GOOGLE_PLACES_KEY" > js/config.js
           fi
@@ -87,4 +88,3 @@ jobs:
       - name: Deploy to Firebase
         run: |
           firebase deploy --only hosting,functions --project ${{ secrets.FIREBASE_PROJECT_ID }} --force
-
