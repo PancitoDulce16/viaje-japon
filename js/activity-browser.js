@@ -16,6 +16,7 @@ export const ActivityBrowser = {
     priceRange: 'all',
     sortBy: 'rating' // rating, price, duration
   },
+   
   
   currentDayNumber: null,
   useAPIs: false, // Se activa si las APIs están configuradas
