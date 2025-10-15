@@ -24,58 +24,111 @@ jobs:
 
       - name: Generate client config files
         env:
-          CONFIG_GOOGLE_PLACES_KEY: ${{ secrets.CONFIG_GOOGLE_PLACES_KEY }}
-          API_KEYS_JSON: ${{ secrets.API_KEYS_JSON }}
+          # Define el contenido completo de firebase-config.js como una variable
+          FIREBASE_CONFIG_CONTENT: |
+            // Generated file - DO NOT COMMIT
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+            import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+            import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+            import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+            const firebaseConfig = ${{ secrets.FIREBASE_CONFIG_JSON }};
+
+            let app = null;
+            let db = null;
+            let auth = null;
+            let storage = null;
+            let googleProvider = null;
+
+            if (firebaseConfig && firebaseConfig.apiKey) {
+              app = initializeApp(firebaseConfig);
+              db = getFirestore(app);
+              auth = getAuth(app);
+              storage = getStorage(app);
+              googleProvider = new GoogleAuthProvider();
+              console.log("🔥 Firebase initialized for project:", firebaseConfig.projectId || "(unknown)");
+            } else {
+              console.warn("⚠️ Firebase not initialized because configuration is missing or incomplete.");
+            }
+
+            export { app, db, auth, storage, googleProvider };
+
+          # Define el contenido completo de apis-config.js como una variable
+          APIS_CONFIG_CONTENT: |
+            // Generated file - DO NOT COMMIT
+            export const RUNTIME_API_KEYS = ${{ secrets.API_KEYS_JSON }};
+
+            // Para compatibilidad con el resto del código
+            export const API_KEYS = RUNTIME_API_KEYS;
+
+            // Definición completa de los Endpoints
+            export const API_ENDPOINTS = {
+              flights: {
+                search: (params) => `${API_KEYS.aviationStack.endpoint}/flights?access_key=${API_KEYS.aviationStack.apiKey}&${new URLSearchParams(params)}`,
+                airports: (iata) => `${API_KEYS.aviationStack.endpoint}/airports?access_key=${API_KEYS.aviationStack.apiKey}&airport_iata=${iata}`,
+              },
+              hotels: {
+                search: () => `${API_KEYS.liteAPI.searchEndpoint}/hotel-search`,
+                details: (id) => `${API_KEYS.liteAPI.dataEndpoint}/hotel-details?hotelId=${id}`,
+                cities: (country) => `${API_KEYS.liteAPI.dataEndpoint}/cities?countryCode=${country}`,
+              },
+              places: {
+                nearby: (lat, lng, cat, rad) => `/api/places/nearby?ll=${lat},${lng}&categories=${cat}&radius=${rad}`,
+                search: (lat, lng, q, rad) => `/api/places/search?ll=${lat},${lng}&query=${q}&radius=${rad}`,
+                details: (id) => `/api/places/details?fsq_id=${id}`,
+              },
+              geocoding: {
+                forward: (addr) => `${API_KEYS.locationIQ.endpoint}/search?key=${API_KEYS.locationIQ.apiKey}&q=${encodeURIComponent(addr)}&format=json`,
+                reverse: (lat, lng) => `${API_KEYS.locationIQ.endpoint}/reverse?key=${API_KEYS.locationIQ.apiKey}&lat=${lat}&lon=${lng}&format=json`,
+                autocomplete: (q) => `${API_KEYS.locationIQ.endpoint}/autocomplete?key=${API_KEYS.locationIQ.apiKey}&q=${encodeURIComponent(q)}`,
+              },
+              maps: {
+                staticMap: (lat, lng, zoom) => `${API_KEYS.geoapify.endpoint}/maps/staticmap?style=osm-carto&width=600&height=400&center=lonlat:${lng},${lat}&zoom=${zoom}&marker=lonlat:${lng},${lat};color:%23ff0000;size:medium&apiKey=${API_KEYS.geoapify.apiKey}`,
+                routing: (start, end) => `${API_KEYS.geoapify.endpoint}/routing?waypoints=${start}|${end}&mode=walk&apiKey=${API_KEYS.geoapify.apiKey}`,
+                places: (lat, lng, cat, rad) => `${API_KEYS.geoapify.endpoint}/places?categories=${cat}&filter=circle:${lng},${lat},${rad}&apiKey=${API_KEYS.geoapify.apiKey}`,
+              },
+              nominatimGeocode: {
+                  forward: (addr) => `${API_KEYS.nominatim.endpoint}/search?q=${encodeURIComponent(addr)}&format=json`,
+              }
+            };
+
+            // Función de ayuda para hacer peticiones
+            export async function apiRequest(url, options = {}) {
+                const defaultHeaders = {
+                    'Content-Type': 'application/json',
+                };
+
+                if (url.includes('liteapi.travel')) {
+                    defaultHeaders['X-API-KEY'] = API_KEYS.liteAPI.apiKey;
+                }
+                
+                const config = {
+                    ...options,
+                    headers: {
+                        ...defaultHeaders,
+                        ...options.headers,
+                    },
+                };
+
+                const response = await fetch(url, config);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: 'Error desconocido en la API' }));
+                    throw new Error(errorData.message || `Error en la petición: ${response.status}`);
+                }
+
+                return response.json();
+            }
+
         run: |
           mkdir -p js || true
           
-          # SOLUCIÓN DEFINITIVA: Incrustar la configuración directamente
-          # para eliminar cualquier problema con el sistema de secretos de GitHub.
-          echo '
-          // Generated file - DO NOT COMMIT
-          import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-          import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-          import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-          import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-
-          const firebaseConfig = {
-            "apiKey": "AIzaSyAfydxW2angrEgZ7TT2PJxv7RGGUUiGbW4",
-            "authDomain": "japan-itin-dev.firebaseapp.com",
-            "projectId": "japan-itin-dev",
-            "storageBucket": "japan-itin-dev.firebasestorage.app",
-            "messagingSenderId": "545081226259",
-            "appId": "1:545081226259:web:d06fd9962e05d42d40fbe6",
-            "measurementId": "G-DJ00DQ3MC8"
-          };
-
-          let app = null;
-          let db = null;
-          let auth = null;
-          let storage = null;
-          let googleProvider = null;
-
-          if (firebaseConfig && firebaseConfig.apiKey) {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            storage = getStorage(app);
-            googleProvider = new GoogleAuthProvider();
-            console.log("🔥 Firebase initialized for project:", firebaseConfig.projectId || "(unknown)");
-          } else {
-            console.warn("⚠️ Firebase not initialized because configuration is missing or incomplete.");
-          }
-
-          export { app, db, auth, storage, googleProvider };
-          ' > js/firebase-config.js
-
-          # Generar js/config.js
-          if [ -n "$CONFIG_GOOGLE_PLACES_KEY" ]; then
-            printf 'export const APP_CONFIG = { GOOGLE_PLACES_API_KEY: "%s" };\n' "$CONFIG_GOOGLE_PLACES_KEY" > js/config.js
-          fi
+          # Escribir los archivos usando las variables de entorno
+          echo "${FIREBASE_CONFIG_CONTENT}" > js/firebase-config.js
+          echo "${APIS_CONFIG_CONTENT}" > js/apis-config.js
           
-          # Generar js/apis-config.js
-          if [ -n "$API_KEYS_JSON" ]; then
-            printf 'export const RUNTIME_API_KEYS = %s;\n' "$API_KEYS_JSON" > js/apis-config.js
+          if [ -n "${{ secrets.CONFIG_GOOGLE_PLACES_KEY }}" ]; then
+            printf 'export const APP_CONFIG = { GOOGLE_PLACES_API_KEY: "%s" };\n' "${{ secrets.CONFIG_GOOGLE_PLACES_KEY }}" > js/config.js
           fi
 
       - name: Authenticate to Google Cloud
@@ -95,3 +148,4 @@ jobs:
       - name: Deploy to Firebase
         run: |
           firebase deploy --only hosting,functions --project ${{ secrets.FIREBASE_PROJECT_ID }} --force
+
