@@ -29,16 +29,24 @@ jobs:
         run: |
           mkdir -p js || true
           
-          # SOLUCIÓN DEFINITIVA para js/firebase-config.js
-          # Inyectamos el secreto con un NUEVO NOMBRE para evitar caché
-          echo "
+          # SOLUCIÓN DEFINITIVA: Incrustar la configuración directamente
+          # para eliminar cualquier problema con el sistema de secretos de GitHub.
+          echo '
           // Generated file - DO NOT COMMIT
-          import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-          import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-          import { getAuth, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-          import { getStorage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+          import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+          import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+          import { getAuth, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+          import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-          const firebaseConfig = ${{ secrets.FIREBASE_CONFIG_DATA }};
+          const firebaseConfig = {
+            "apiKey": "AIzaSyAfydxW2angrEgZ7TT2PJxv7RGGUUiGbW4",
+            "authDomain": "japan-itin-dev.firebaseapp.com",
+            "projectId": "japan-itin-dev",
+            "storageBucket": "japan-itin-dev.firebasestorage.app",
+            "messagingSenderId": "545081226259",
+            "appId": "1:545081226259:web:d06fd9962e05d42d40fbe6",
+            "measurementId": "G-DJ00DQ3MC8"
+          };
 
           let app = null;
           let db = null;
@@ -52,13 +60,13 @@ jobs:
             auth = getAuth(app);
             storage = getStorage(app);
             googleProvider = new GoogleAuthProvider();
-            console.log('🔥 Firebase initialized for project:', firebaseConfig.projectId || '(unknown)');
+            console.log("🔥 Firebase initialized for project:", firebaseConfig.projectId || "(unknown)");
           } else {
-            console.warn('⚠️ Firebase not initialized because configuration is missing or incomplete.');
+            console.warn("⚠️ Firebase not initialized because configuration is missing or incomplete.");
           }
 
           export { app, db, auth, storage, googleProvider };
-          " > js/firebase-config.js
+          ' > js/firebase-config.js
 
           # Generar js/config.js
           if [ -n "$CONFIG_GOOGLE_PLACES_KEY" ]; then
