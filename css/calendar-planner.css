@@ -1,0 +1,7 @@
+/* calendar-planner.css — Estilos para planner de ciudades por calendario */
+.calendar-grid { display:grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: .5rem; }
+.day-cell { transition: box-shadow .15s, transform .05s; }
+.day-cell:hover { box-shadow: 0 4px 8px rgba(0,0,0,.08); transform: translateY(-1px); }
+.city-badge { display:inline-flex; align-items:center; justify-content:center; height:20px; min-width:20px; padding:0 6px; border-radius:9999px; font-size:10px; font-weight:700; background:#dbeafe; color:#1e40af; }
+.dark .city-badge { background: rgba(59,130,246,.2); color:#93c5fd; }
+@media (max-width: 768px) { .calendar-grid { grid-template-columns: repeat(4, minmax(0,1fr)); } }
