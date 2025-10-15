@@ -1,10 +1,9 @@
-// js/auth.js - Sistema de Autenticación con Landing Page
-
 import { auth, googleProvider } from './firebase-config.js';
 import { 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect, // CAMBIO: Usaremos redirección en lugar de popup
+  getRedirectResult,  // CAMBIO: Para obtener el resultado después de volver
   signOut,
   onAuthStateChanged
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
@@ -24,6 +23,9 @@ export const AuthHandler = {
       this.setupLandingPage();
     }
     
+    // CAMBIO: Manejar el resultado de la redirección al cargar la página
+    this.handleRedirectResult();
+
     // Listener de cambios de autenticación (solo si auth está inicializado)
     if (typeof auth !== 'undefined' && auth) {
       try {
@@ -41,13 +43,25 @@ export const AuthHandler = {
         });
       } catch (err) {
         console.error('❌ Error registrando onAuthStateChanged:', err);
-        // Fallback: mostrar landing para que los botones funcionen
         this.showLandingPage();
       }
     } else {
       console.warn('⚠️ Firebase Auth no está inicializado. Se mostrará la landing page sin sesión.');
-      // Asegurarse que la landing está visible para que los botones funcionen
       this.showLandingPage();
+    }
+  },
+
+  // NUEVA FUNCIÓN: Maneja el resultado del login por redirección
+  async handleRedirectResult() {
+    try {
+      const result = await getRedirectResult(auth);
+      if (result) {
+        // El usuario ha vuelto del inicio de sesión de Google
+        console.log('✅ Redirección de Google exitosa:', result.user.email);
+      }
+    } catch (error) {
+      console.error('❌ Error en el resultado de la redirección:', error);
+      this.handleAuthError(error);
     }
   },
 
@@ -55,7 +69,7 @@ export const AuthHandler = {
   setupLandingPage() {
     console.log('🎨 Setup de landing page');
     
-    // Tabs de Login/Register
+    // ... (El código de los tabs de Login/Register no cambia) ...
     const loginTabBtn = document.getElementById('loginTabBtn');
     const registerTabBtn = document.getElementById('registerTabBtn');
     const loginForm = document.getElementById('landingLoginForm');
@@ -78,13 +92,11 @@ export const AuthHandler = {
         loginForm.classList.add('hidden');
       });
 
-      // Login form
       loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
         this.handleLandingLogin();
       });
 
-      // Register form
       registerForm.addEventListener('submit', (e) => {
         e.preventDefault();
         this.handleLandingRegister();
@@ -107,7 +119,6 @@ export const AuthHandler = {
       console.warn('⚠️ Botón de Google no encontrado');
     }
 
-    // Logout button (para cuando esté en dashboard)
     setTimeout(() => {
       const logoutBtn = document.getElementById('logoutBtn');
       if (logoutBtn) {
@@ -120,13 +131,11 @@ export const AuthHandler = {
     }, 500);
   },
 
-  // Login desde landing page
+  // ... (Las funciones de login y registro con email/contraseña no cambian) ...
   async handleLandingLogin() {
     const email = document.getElementById('landingLoginEmail').value;
     const password = document.getElementById('landingLoginPassword').value;
-
     console.log('📧 Intentando login con:', email);
-
     try {
       await signInWithEmailAndPassword(auth, email, password);
       console.log('✅ Login exitoso');
@@ -136,19 +145,15 @@ export const AuthHandler = {
     }
   },
 
-  // Registro desde landing page
   async handleLandingRegister() {
     const email = document.getElementById('landingRegisterEmail').value;
     const password = document.getElementById('landingRegisterPassword').value;
     const confirmPassword = document.getElementById('landingRegisterConfirmPassword').value;
-
     if (password !== confirmPassword) {
       alert('⚠️ Las contraseñas no coinciden');
       return;
     }
-
     console.log('📧 Intentando registro con:', email);
-
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       console.log('✅ Registro exitoso');
@@ -159,20 +164,19 @@ export const AuthHandler = {
     }
   },
 
-  // Login con Google
+  // CAMBIO: Login con Google ahora usa redirección
   async loginWithGoogle() {
-    console.log('🔑 Intentando login con Google...');
-    
+    console.log('🔑 Redirigiendo para login con Google...');
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      console.log('✅ Login con Google exitoso:', result.user.email);
+      await signInWithRedirect(auth, googleProvider);
+      // La página se redirigirá, así que no se ejecutará más código aquí.
     } catch (error) {
-      console.error('❌ Error en login con Google:', error);
+      console.error('❌ Error al iniciar redirección con Google:', error);
       this.handleAuthError(error);
     }
   },
 
-  // Logout
+  // ... (El resto de las funciones no cambian) ...
   async logout() {
     try {
       await signOut(auth);
@@ -183,11 +187,9 @@ export const AuthHandler = {
     }
   },
 
-  // Mostrar landing page
   showLandingPage() {
     const landingPage = document.getElementById('landingPage');
     const appDashboard = document.getElementById('appDashboard');
-    
     if (landingPage) {
       landingPage.classList.remove('hidden');
       console.log('👋 Landing page mostrada');
@@ -198,11 +200,9 @@ export const AuthHandler = {
     }
   },
 
-  // Mostrar dashboard de la app
   showAppDashboard() {
     const landingPage = document.getElementById('landingPage');
     const appDashboard = document.getElementById('appDashboard');
-    
     if (landingPage) {
       landingPage.classList.add('hidden');
       console.log('👋 Landing page ocultada');
@@ -213,7 +213,6 @@ export const AuthHandler = {
     }
   },
 
-  // Actualizar info del usuario en el header
   updateUserInfo(user) {
     const userEmailDisplay = document.getElementById('userEmailDisplay');
     if (userEmailDisplay) {
@@ -221,10 +220,8 @@ export const AuthHandler = {
     }
   },
 
-  // Manejo de errores de autenticación
   handleAuthError(error) {
     let message = 'Error en autenticación';
-    
     switch (error.code) {
       case 'auth/invalid-email':
         message = '⚠️ Email inválido';
@@ -241,16 +238,10 @@ export const AuthHandler = {
       case 'auth/weak-password':
         message = '⚠️ La contraseña es muy débil (mínimo 6 caracteres)';
         break;
-      case 'auth/popup-closed-by-user':
-        message = 'Inicio de sesión cancelado';
-        break;
-      case 'auth/cancelled-popup-request':
-        message = 'Popup cerrado';
-        break;
+      // Ya no son necesarios los errores de popup
       default:
         message = `⚠️ Error: ${error.message}`;
     }
-    
     alert(message);
   }
 };
