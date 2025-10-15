@@ -14,7 +14,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20' # ACTUALIZADO: Versión de Node.js actualizada
 
       - name: Install dependencies
         run: |
@@ -34,20 +34,38 @@ jobs:
           fi
 
           if [ -n "$FIREBASE_CONFIG_JSON" ]; then
-          printf '%s\n%s\n%s\n%s\n%s\n' "// Generated file - DO NOT COMMIT" "import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';" "import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';" "import { getAuth, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';" "import { getStorage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';" > js/firebase-config.js
-          printf '%s\n' "" >> js/firebase-config.js
-          printf '%s\n' "const firebaseConfig = $FIREBASE_CONFIG_JSON;" >> js/firebase-config.js
-          printf '%s\n' "" >> js/firebase-config.js
-          printf '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n' "let app = null;" "let db = null;" "let auth = null;" "let storage = null;" "let googleProvider = null;" "" "if (firebaseConfig && firebaseConfig.apiKey) {" "  app = initializeApp(firebaseConfig);" "  db = getFirestore(app);" >> js/firebase-config.js
-          printf '%s\n%s\n%s\n%s\n%s\n' "  auth = getAuth(app);" "  storage = getStorage(app);" "  googleProvider = new GoogleAuthProvider();" "  console.log('🔥 Firebase initialized for project:', firebaseConfig.projectId || '(unknown)');" "} else {" >> js/firebase-config.js
-          printf '%s\n%s\n' "  console.warn('⚠️ Firebase not initialized because configuration is missing or incomplete.');" "}" >> js/firebase-config.js
-          printf '%s\n' "" >> js/firebase-config.js
+          # --- Contenido del archivo firebase-config.js ---
+          # Se escribe todo de una vez para mayor claridad
+          printf '%s\n' "// Generated file - DO NOT COMMIT" > js/firebase-config.js
+          printf '%s\n' "import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';" >> js/firebase-config.js
+          printf '%s\n' "import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';" >> js/firebase-config.js
+          printf '%s\n' "import { getAuth, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';" >> js/firebase-config.js
+          printf '%s\n\n' "import { getStorage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';" >> js/firebase-config.js
+          
+          # CORREGIDO: Esta línea ahora inserta el JSON de forma segura
+          printf 'const firebaseConfig = %s;\n\n' "$FIREBASE_CONFIG_JSON" >> js/firebase-config.js
+
+          printf '%s\n' "let app = null;" >> js/firebase-config.js
+          printf '%s\n' "let db = null;" >> js/firebase-config.js
+          printf '%s\n' "let auth = null;" >> js/firebase-config.js
+          printf '%s\n' "let storage = null;" >> js/firebase-config.js
+          printf '%s\n\n' "let googleProvider = null;" >> js/firebase-config.js
+          printf '%s\n' "if (firebaseConfig && firebaseConfig.apiKey) {" >> js/firebase-config.js
+          printf '%s\n' "  app = initializeApp(firebaseConfig);" >> js/firebase-config.js
+          printf '%s\n' "  db = getFirestore(app);" >> js/firebase-config.js
+          printf '%s\n' "  auth = getAuth(app);" >> js/firebase-config.js
+          printf '%s\n' "  storage = getStorage(app);" >> js/firebase-config.js
+          printf '%s\n' "  googleProvider = new GoogleAuthProvider();" >> js/firebase-config.js
+          printf '%s\n' "  console.log('🔥 Firebase initialized for project:', firebaseConfig.projectId || '(unknown)');" >> js/firebase-config.js
+          printf '%s\n' "} else {" >> js/firebase-config.js
+          printf '%s\n' "  console.warn('⚠️ Firebase not initialized because configuration is missing or incomplete.');" >> js/firebase-config.js
+          printf '%s\n\n' "}" >> js/firebase-config.js
           printf '%s\n' "export { app, db, auth, storage, googleProvider };" >> js/firebase-config.js
           fi
 
           if [ -n "$API_KEYS_JSON" ]; then
           printf '%s\n' "// Generated file - DO NOT COMMIT" > js/apis-config.js
-          printf '%s\n' "export const RUNTIME_API_KEYS = $API_KEYS_JSON;" >> js/apis-config.js
+          printf 'export const RUNTIME_API_KEYS = %s;\n' "$API_KEYS_JSON" >> js/apis-config.js
           fi
 
       - name: Build site (if you have a build step)
@@ -80,9 +98,6 @@ jobs:
           if [ -d functions ]; then
             echo "Installing functions dependencies..."
             npm --prefix functions ci || npm --prefix functions install || true
-            echo "Listing functions package.json and node_modules..."
-            ls -la functions || true
-            ls -la functions/node_modules || true
           else
             echo "No functions directory present"
           fi
@@ -95,18 +110,11 @@ jobs:
       - name: Prepare public folder for Hosting
         run: |
           echo "Preparing public directory for Firebase Hosting..."
-          rm -rf public || true
+          # No need to remove 'public' as deploy action handles it.
+          # Create dir just in case
           mkdir -p public
-          # Copy main site files if present
-          if [ -f index.html ]; then cp index.html public/ || true; fi
-          if [ -f manifest.json ]; then cp manifest.json public/ || true; fi
-          if [ -f service-worker.js ]; then cp service-worker.js public/ || true; fi
-          # Copy static folders if they exist
-          for d in css js data images; do
-            if [ -d "$d" ]; then cp -R "$d" public/ || true; fi
-          done
-          # Copy icons folder if present
-          if [ -d images/icons ]; then mkdir -p public/images && cp -R images/icons public/images || true; fi
+          # Copy all root files and static folders into public
+          cp -R * public/ --parents
 
       - name: Deploy to Firebase
         run: |
