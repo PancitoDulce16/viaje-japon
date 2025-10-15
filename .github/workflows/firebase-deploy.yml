@@ -64,6 +64,28 @@ jobs:
             echo "{\"projects\": {\"default\": \"${{ secrets.FIREBASE_PROJECT_ID }}\"}}" > .firebaserc
           fi
 
+      - name: List currently deployed functions (for debug)
+        run: |
+          echo "Listing functions for project: ${{ secrets.FIREBASE_PROJECT_ID }}"
+          firebase functions:list --project ${{ secrets.FIREBASE_PROJECT_ID }} || true
+
+      - name: Install functions dependencies (if any)
+        run: |
+          if [ -d functions ]; then
+            echo "Installing functions dependencies..."
+            npm --prefix functions ci || npm --prefix functions install || true
+            echo "Listing functions package.json and node_modules..."
+            ls -la functions || true
+            ls -la functions/node_modules || true
+          else
+            echo "No functions directory present"
+          fi
+
+      - name: Explicitly deploy placesProxy function (debug)
+        run: |
+          echo "Attempting explicit deploy of functions:placesProxy (debug mode)"
+          firebase deploy --only functions:placesProxy --project ${{ secrets.FIREBASE_PROJECT_ID }} --debug || true
+
       - name: Prepare public folder for Hosting
         run: |
           echo "Preparing public directory for Firebase Hosting..."
