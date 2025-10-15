@@ -87,10 +87,10 @@ jobs:
             echo "No functions directory present"
           fi
 
-      - name: Explicitly deploy placesProxy function (debug)
+      - name: Explicitly deploy all functions (debug)
         run: |
-          echo "Attempting explicit deploy of functions:placesProxy (debug mode)"
-          firebase deploy --only functions:placesProxy --project ${{ secrets.FIREBASE_PROJECT_ID }} --debug || true
+          echo "Attempting explicit deploy of all functions (debug mode)"
+          firebase deploy --only functions --project ${{ secrets.FIREBASE_PROJECT_ID }} --debug || true
 
       - name: Prepare public folder for Hosting
         run: |
