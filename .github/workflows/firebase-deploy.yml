@@ -27,21 +27,52 @@ jobs:
           API_KEYS_JSON: ${{ secrets.API_KEYS_JSON }}
         run: |
           mkdir -p js || true
+
           if [ -n "$CONFIG_GOOGLE_PLACES_KEY" ]; then
-            echo "// Generated file - DO NOT COMMIT" > js/config.js
-            echo "export const APP_CONFIG = {" >> js/config.js
-            echo "  GOOGLE_PLACES_API_KEY: '$CONFIG_GOOGLE_PLACES_KEY'" >> js/config.js
-            echo "};" >> js/config.js
+            cat > js/config.js <<'EOF'
+            // Generated file - DO NOT COMMIT
+            export const APP_CONFIG = {
+              GOOGLE_PLACES_API_KEY: '$CONFIG_GOOGLE_PLACES_KEY'
+            };
+            EOF
           fi
 
           if [ -n "$FIREBASE_CONFIG_JSON" ]; then
-            echo "// Generated file - DO NOT COMMIT" > js/firebase-config.js
-            echo "window.FIREBASE_CONFIG = $FIREBASE_CONFIG_JSON;" >> js/firebase-config.js
+            cat > js/firebase-config.js <<'EOF'
+            // Generated file - DO NOT COMMIT
+            import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+            import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+            import { getAuth, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+            import { getStorage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+            const firebaseConfig = $FIREBASE_CONFIG_JSON;
+
+            let app = null;
+            let db = null;
+            let auth = null;
+            let storage = null;
+            let googleProvider = null;
+
+            if (firebaseConfig && firebaseConfig.apiKey) {
+              app = initializeApp(firebaseConfig);
+              db = getFirestore(app);
+              auth = getAuth(app);
+              storage = getStorage(app);
+              googleProvider = new GoogleAuthProvider();
+              console.log('🔥 Firebase initialized for project:', firebaseConfig.projectId || '(unknown)');
+            } else {
+              console.warn('⚠️ Firebase not initialized because configuration is missing or incomplete.');
+            }
+
+            export { app, db, auth, storage, googleProvider };
+            EOF
           fi
 
           if [ -n "$API_KEYS_JSON" ]; then
-            echo "// Generated file - DO NOT COMMIT" > js/apis-config.js
-            echo "window.RUNTIME_API_KEYS = $API_KEYS_JSON;" >> js/apis-config.js
+            cat > js/apis-config.js <<'EOF'
+            // Generated file - DO NOT COMMIT
+            export const RUNTIME_API_KEYS = $API_KEYS_JSON;
+            EOF
           fi
 
       - name: Build site (if you have a build step)
