@@ -765,9 +765,9 @@ export const ItineraryBuilder = {
     if (this.currentStep < 5) {
       this.currentStep++;
 
-      // 🔥 NUEVO: Si avanzamos al Paso 2, generar el selector de fechas
-      if (this.currentStep === 2) {
-        this.generateDateCitySelector();
+if (this.currentStep === 2) {
+  this.generateDateCitySelector();  // ← VIEJO
+}
         this.renderQuickCityBlocksUI && this.renderQuickCityBlocksUI();
       }
 
