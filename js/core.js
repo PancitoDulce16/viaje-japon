@@ -331,6 +331,9 @@ export const AppCore = {
     }
 };
 
+// Expose globally for inline handlers and other modules
+window.AppCore = AppCore;
+
 // Inicializar cuando cambia el estado de autenticación
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 

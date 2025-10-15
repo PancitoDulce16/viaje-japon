@@ -19,8 +19,8 @@ import { TripsManager } from './trips-manager.js';
 import './firebase-config.js'; // Inicializar Firebase primero
 
 // 🔌 APIs imports
-import './apis-config.js'; // Configuración de APIs
-import { APIsIntegration } from './apis-integration.js'; // Integración de APIs
+// APIs integration is imported dynamically at runtime so CI-generated config files are optional
+// (avoid breaking the app if js/apis-config.js is missing during local dev)
 
 // 🤖 AI Integration imports
 import { AIIntegration } from './ai-integration.js'; // OpenAI Integration
@@ -61,20 +61,34 @@ function initApp() {
         console.log('🔌 APIs Integration listo');
         console.log('🤖 AI Integration listo');
         
-        // Interceptar fetch para endpoints locales /api/* (mock backend)
-        const originalFetch = window.fetch.bind(window);
-        window.fetch = async (input, init) => {
-            const req = new Request(input, init);
-            if (new URL(req.url, window.location.origin).pathname.startsWith('/api/')) {
-                const handled = await APIsIntegration.handleLocalApi(req);
-                if (handled) return handled;
-            }
-            return originalFetch(input, init);
-        };
+        // Cargar integraciones opcionalmente y de forma asíncrona
+        (async () => {
+            try {
+                await import('./apis-config.js'); // may be generated at build time
+                const apisModule = await import('./apis-integration.js');
+                window.APIsIntegration = apisModule.APIsIntegration;
 
-        // Exponer APIs globalmente para debugging
-        window.APIsIntegration = APIsIntegration;
-        window.AIIntegration = AIIntegration;
+                // Interceptar fetch para endpoints locales /api/* (mock backend)
+                const originalFetch = window.fetch.bind(window);
+                window.fetch = async (input, init) => {
+                    const req = new Request(input, init);
+                    if (new URL(req.url, window.location.origin).pathname.startsWith('/api/')) {
+                        const handled = await window.APIsIntegration?.handleLocalApi(req);
+                        if (handled) return handled;
+                    }
+                    return originalFetch(input, init);
+                };
+            } catch (e) {
+                console.warn('⚠️ APIs integration not available:', e);
+            }
+
+            try {
+                const aiModule = await import('./ai-integration.js');
+                window.AIIntegration = aiModule.AIIntegration;
+            } catch (e) {
+                console.warn('⚠️ AI integration not available:', e);
+            }
+        })();
 
         // Inicializar Lucide (si disponible) para iconos <i data-lucide>
         if (window.lucide && typeof window.lucide.createIcons === 'function') {
