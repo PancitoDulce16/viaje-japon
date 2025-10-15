@@ -1,234 +1,416 @@
-
-// js/itinerary-builder.js — Calendario + ✨ AI Planner (v2)
-// Novedades v2:
-//  • Heurística multi‑ciudad por día: reparte actividades AI según categoría/estación
-//  • Modal de “AI Travel Insights” post‑creación (summary/tips/transporte/presupuesto)
-//  • Guarda aiInsights en Firestore junto al itinerario
+// js/itinerary-builder.js - Sistema Completo de Construcción de Itinerarios
 
 import { db, auth } from './firebase-config.js';
 import { Notifications } from './notifications.js';
 import { CATEGORIES, TEMPLATES } from '../data/categories-data.js';
-import { ACTIVITIES_DATABASE } from '../data/activities-database.js';
-import { AIRLINES } from '../data/airlines-data.js';
-import { doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { ACTIVITIES_DATABASE, getActivitiesByCity, getActivitiesByCategory } from '../data/activities-database.js';
+import { AIRLINES, AIRPORTS, getAirlineByCode, getAirportByCode } from '../data/airlines-data.js';
+import {
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  onSnapshot,
+  updateDoc,
+  arrayUnion,
+  deleteField
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 export const ItineraryBuilder = {
-  // ===== Estado =====
   currentItinerary: null,
-  shouldCreateTrip: false,
-  currentStep: 1,
+  selectedCategories: [],
+  selectedTemplate: null,
+  cities: [],
+  flights: [],
+  activities: [],
+  draggedItem: null,
+  optimizationEnabled: false,
 
-  // Planner por calendario
-  cityAssignments: {},    // { [cityId]: Set('YYYY-MM-DD') }
-  activeCity: null,
-
-  // ✨ AI Planner
-  aiPlan: null,           // { summary, tips, days, transportationTips, budgetSummary }
-  aiApplyMode: {},        // { [dayNumber]: 'replace' | 'merge' }
-  aiApplied: false,       // marcado cuando se presiona “Aplicar”
-  multiCityHeuristic: true,
+  // === INICIALIZACIÓN === //
 
   init() {
-    console.log('🎨 Itinerary Builder v2 listo');
+    console.log('🎨 Inicializando Itinerary Builder...');
     this.setupEventListeners();
   },
 
   setupEventListeners() {
+    // Listeners para drag and drop se configuran dinámicamente
     document.addEventListener('click', (e) => {
-      const btnConn = e.target.closest('[data-add-connection]');
-      if (btnConn) this.addConnectionFlight(btnConn.getAttribute('data-add-connection'));
+      // Botón de agregar actividad
+      if (e.target.closest('.add-activity-btn')) {
+        this.showAddActivityModal();
+      }
 
-      if (e.target.id === 'wizardPrevBtn') this.previousWizardStep();
-      if (e.target.id === 'wizardNextBtn') this.nextWizardStep();
-      if (e.target.id === 'wizardFinishBtn') this.finishWizard();
-      if (e.target.id === 'skipFlightsBtn') this.nextWizardStep();
+      // Botón de editar actividad
+      if (e.target.closest('.edit-activity-btn')) {
+        const activityId = e.target.closest('.edit-activity-btn').dataset.activityId;
+        this.editActivity(activityId);
+      }
 
-      if (e.target.id === 'aiPlannerBtn') this.openAIPlannerModal();
-      if (e.target.id === 'aiPlannerCloseBtn') this.closeAIPlannerModal();
-      if (e.target.id === 'aiStartBtn') this.startAIGeneration();
-      if (e.target.dataset?.aiApplyDay) this.toggleDayApplyMode(parseInt(e.target.dataset.aiApplyDay), e.target.dataset.mode);
-      if (e.target.id === 'aiApplyAllMerge') this.applyAllMode('merge');
-      if (e.target.id === 'aiApplyAllReplace') this.applyAllMode('replace');
-      if (e.target.id === 'aiApplyBtn') this.applyAISelection();
+      // Botón de eliminar actividad
+      if (e.target.closest('.delete-activity-btn')) {
+        const activityId = e.target.closest('.delete-activity-btn').dataset.activityId;
+        this.deleteActivity(activityId);
+      }
 
-      if (e.target.id === 'aiInsightsCloseBtn') this.closeAIInsightsModal();
+      // Botón de optimizar ruta
+      if (e.target.closest('.optimize-route-btn')) {
+        this.toggleOptimization();
+      }
+
+      // Botón de agregar vuelo
+      if (e.target.closest('.add-flight-btn')) {
+        this.showAddFlightModal();
+      }
     });
   },
 
-  // ===== Wizard =====
+  // === CREACIÓN DE ITINERARIO === //
+
+  shouldCreateTrip: false, // Flag to indicate if wizard should create trip
+
   async showCreateItineraryWizard(createTripFlag = false) {
     this.shouldCreateTrip = createTripFlag;
-    this.currentStep = 1;
-
-    const airlinesOptions = AIRLINES.map(a => `<option value="${a.code || a.id || a.name}">${a.logo || ''} ${a.name}</option>`).join('');
-    const categoriesCards = CATEGORIES.map(cat => `
-      <label class="category-card block border rounded-lg p-3 cursor-pointer hover:shadow-sm transition">
-        <input type="checkbox" class="category-checkbox hidden" name="categories" value="${cat.id}">
-        <div class="flex items-start gap-3">
-          <span class="text-xl">${cat.icon}</span>
-          <div>
-            <div class="font-semibold">${cat.name}</div>
-            <div class="text-xs text-gray-500">${cat.description || ''}</div>
-          </div>
-        </div>
-      </label>
-    `).join('');
-
-    const templateCards = `
-      <label class="template-card block border rounded-lg p-3 cursor-pointer hover:shadow-sm transition">
-        <input type="radio" class="template-radio hidden" name="template" value="blank" checked>
-        <div class="flex items-start gap-3">
-          <span class="text-xl">📝</span>
-          <div>
-            <div class="font-semibold">Desde Cero</div>
-            <div class="text-xs text-gray-500">Crea tu itinerario personalizado desde el inicio</div>
-          </div>
-        </div>
-      </label>
-      ${TEMPLATES.map(t => `
-        <label class="template-card block border rounded-lg p-3 cursor-pointer hover:shadow-sm transition">
-          <input type="radio" class="template-radio hidden" name="template" value="${t.id}">
-          <div class="flex items-start gap-3">
-            <span class="text-xl">${t.icon}</span>
-            <div>
-              <div class="font-semibold">${t.name}</div>
-              <div class="text-xs text-gray-500 mb-1">${t.description || ''}</div>
-              <div class="text-[11px] opacity-75">Ritmo: ${t.pace === 'relaxed' ? '🐢 Relajado' : t.pace === 'moderate' ? '🚶 Moderado' : '🏃 Intenso'}</div>
-            </div>
-          </div>
-        </label>
-      `).join('')}
-    `;
+    console.log('🎨 Opening wizard with createTripFlag:', createTripFlag);
 
     const modalHtml = `
-      <div id="createItineraryWizard" class="modal active" style="z-index:9999;">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-5xl w-full p-0 overflow-hidden">
-          <div class="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-red-600 to-pink-500 text-white">
-            <h3 class="text-xl font-bold">✈️ Crear Nuevo Itinerario</h3>
-            <button id="closeCreateItineraryWizard" class="modal-close text-white" onclick="document.getElementById('createItineraryWizard')?.remove(); document.body.style.overflow='';">×</button>
+      <div id="createItineraryWizard" class="modal active" style="z-index: 10001;">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <!-- Header -->
+          <div class="sticky top-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 rounded-t-xl z-10">
+            <h2 class="text-3xl font-bold flex items-center gap-3">
+              ✈️ Crear Nuevo Itinerario
+            </h2>
+            <p class="text-sm text-white/80 mt-2">Paso a paso para planear tu viaje perfecto</p>
           </div>
 
-          <!-- Steps -->
-          <div class="px-6 pt-4">
-            <ol class="grid grid-cols-5 gap-2 text-xs">
-              ${[1,2,3,4,5].map(n => `
-                <li class="wizard-step flex items-center gap-2">
-                  <div class="w-6 h-6 rounded-full flex items-center justify-center bg-gray-300 text-gray-800 font-bold">${n}</div>
-                  <span class="hidden sm:inline">${['Básico','Ciudades','Vuelos','Intereses','Plantilla'][n-1]}</span>
-                </li>
-              `).join('')}
-            </ol>
-          </div>
-
-          <div class="p-6 space-y-6">
-            <!-- Paso 1 -->
-            <section id="wizardStep1" class="wizard-content">
-              <h4 class="text-lg font-semibold mb-3">📋 Información Básica</h4>
-              <div class="grid md:grid-cols-3 gap-4">
-                <div>
-                  <label class="text-sm block mb-1">Nombre del Viaje *</label>
-                  <input id="itineraryName" type="text" class="w-full rounded-md p-2 border" placeholder="Ej. Japón Otoño 2025" />
+          <!-- Steps Container -->
+          <div class="p-6">
+            <!-- Step Indicator -->
+            <div class="flex items-center justify-center mb-8">
+              <div class="flex items-center gap-2">
+                <div class="wizard-step active" data-step="1">
+                  <div class="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold">1</div>
+                  <span class="text-xs mt-1">Básico</span>
                 </div>
-                <div>
-                  <label class="text-sm block mb-1">Fecha Inicio *</label>
-                  <input id="itineraryStartDate" type="date" class="w-full rounded-md p-2 border" />
+                <div class="w-8 h-1 bg-gray-300"></div>
+                <div class="wizard-step" data-step="2">
+                  <div class="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center font-bold">2</div>
+                  <span class="text-xs mt-1">Ciudades</span>
                 </div>
-                <div>
-                  <label class="text-sm block mb-1">Fecha Fin *</label>
-                  <input id="itineraryEndDate" type="date" class="w-full rounded-md p-2 border" />
+                <div class="w-8 h-1 bg-gray-300"></div>
+                <div class="wizard-step" data-step="3">
+                  <div class="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center font-bold">3</div>
+                  <span class="text-xs mt-1">Vuelos</span>
+                </div>
+                <div class="w-8 h-1 bg-gray-300"></div>
+                <div class="wizard-step" data-step="4">
+                  <div class="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center font-bold">4</div>
+                  <span class="text-xs mt-1">Intereses</span>
+                </div>
+                <div class="w-8 h-1 bg-gray-300"></div>
+                <div class="wizard-step" data-step="5">
+                  <div class="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center font-bold">5</div>
+                  <span class="text-xs mt-1">Plantilla</span>
                 </div>
               </div>
-              <p class="text-xs text-gray-500 mt-2">💡 Siguiente paso: Seleccionarás ciudades y marcarás días (sin horas).</p>
-            </section>
+            </div>
 
-            <!-- Paso 2: Calendario -->
-            <section id="wizardStep2" class="wizard-content hidden">
-              <h4 class="text-lg font-semibold mb-2">🗺️ Itinerario por calendario</h4>
-              <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Elige ciudades y márcalas en el calendario. Puedes asignar varias el mismo día.</p>
-              <div id="citySelectChips" class="mb-4"></div>
-              <div id="cityCalendarGrid"></div>
-            </section>
-
-            <!-- Paso 3: Vuelos (opcional) -->
-            <section id="wizardStep3" class="wizard-content hidden">
-              <h4 class="text-lg font-semibold mb-3">🛫 Información de Vuelos (opcional)</h4>
-              <div class="grid md:grid-cols-2 gap-6">
+            <!-- Step 1: Información Básica -->
+            <div id="wizardStep1" class="wizard-content">
+              <h3 class="text-xl font-bold mb-4 dark:text-white">📋 Información Básica</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Comienza con la información fundamental de tu viaje
+              </p>
+              <div class="space-y-4">
                 <div>
-                  <h5 class="font-semibold mb-2">Vuelo de Ida</h5>
-                  <div class="space-y-2">
-                    <select id="outboundAirline" class="w-full rounded-md p-2 border">
-                      <option value="">Aerolínea</option>${airlinesOptions}
-                    </select>
-                    <input id="outboundFlightNumber" class="w-full rounded-md p-2 border" placeholder="Número de vuelo" />
-                    <input id="outboundOrigin" class="w-full rounded-md p-2 border" placeholder="Origen" />
-                    <input id="outboundDestination" class="w-full rounded-md p-2 border" placeholder="Destino" />
-                    <input id="outboundDateTime" type="datetime-local" class="w-full rounded-md p-2 border" />
+                  <label class="block text-sm font-semibold mb-2 dark:text-gray-300">Nombre del Viaje *</label>
+                  <input
+                    type="text"
+                    id="itineraryName"
+                    placeholder="ej: Viaje a Japón 2026"
+                    class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                    required
+                  />
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-semibold mb-2 dark:text-gray-300">Fecha Inicio *</label>
+                    <input
+                      type="date"
+                      id="itineraryStartDate"
+                      class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold mb-2 dark:text-gray-300">Fecha Fin *</label>
+                    <input
+                      type="date"
+                      id="itineraryEndDate"
+                      class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <p class="text-sm text-blue-800 dark:text-blue-300">
+                    💡 <strong>Siguiente paso:</strong> Seleccionarás las ciudades que visitarás y asignarás cuántos días pasarás en cada una
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: Itinerario por Fechas -->
+            <div id="wizardStep2" class="wizard-content hidden">
+              <h3 class="text-xl font-bold mb-4 dark:text-white">📅 Itinerario Flexible por Día</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Agrega una o más ciudades para cada día. Puedes hacer visitas cortas o quedarte todo el día en una ciudad.
+              </p>
+
+              <div id="cityByDateContainer" class="space-y-4 max-h-[500px] overflow-y-auto">
+                <!-- Este contenedor se llenará dinámicamente cuando el usuario avance desde el Paso 1 -->
+                <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <p>Las fechas aparecerán aquí automáticamente...</p>
+                </div>
+              </div>
+
+              <div class="mt-4 space-y-2">
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <p class="text-sm text-blue-800 dark:text-blue-300">
+                    💡 <strong>Tip:</strong> Agrega múltiples ciudades por día para visitas cortas. Por ejemplo: Tokyo (9am-1pm) + Yokohama (3pm-8pm)
+                  </p>
+                </div>
+                <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                  <p class="text-sm text-green-800 dark:text-green-300">
+                    ✨ <strong>Nuevo:</strong> Si solo agregas una ciudad sin horario, se asume que pasarás todo el día allí
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: Vuelos -->
+            <div id="wizardStep3" class="wizard-content hidden">
+              <h3 class="text-xl font-bold mb-4 dark:text-white">✈️ Información de Vuelos (Opcional)</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Puedes agregar tus vuelos ahora o hacerlo más tarde desde la sección de vuelos
+              </p>
+              <div class="space-y-6">
+                <!-- Vuelo de Ida -->
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <h4 class="font-bold mb-3 dark:text-white flex items-center gap-2">
+                    <span>🛫</span> Vuelo de Ida
+                  </h4>
+                  <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-sm font-semibold mb-1 dark:text-gray-300">Aerolínea</label>
+                        <select id="outboundAirline" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm">
+                          <option value="">Seleccionar...</option>
+                          ${AIRLINES.map(airline => `
+                            <option value="${airline.id}">${airline.logo} ${airline.name}</option>
+                          `).join('')}
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-semibold mb-1 dark:text-gray-300">Número de Vuelo</label>
+                        <input type="text" id="outboundFlightNumber" placeholder="ej: AM58" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm" />
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                      <div>
+                        <label class="block text-sm font-semibold mb-1 dark:text-gray-300">Origen</label>
+                        <input type="text" id="outboundOrigin" placeholder="ej: MEX" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm" />
+                      </div>
+                      <div>
+                        <label class="block text-sm font-semibold mb-1 dark:text-gray-300">Destino</label>
+                        <input type="text" id="outboundDestination" placeholder="ej: NRT" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm" />
+                      </div>
+                      <div>
+                        <label class="block text-sm font-semibold mb-1 dark:text-gray-300">Fecha/Hora</label>
+                        <input type="datetime-local" id="outboundDateTime" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm" />
+                      </div>
+                    </div>
+                    
+                    <!-- Vuelos de Conexión (Ida) -->
                     <div id="outboundConnections" class="space-y-2"></div>
-                    <button type="button" data-add-connection="outbound" class="px-3 py-2 rounded bg-gray-100 hover:bg-gray-200 text-sm">+ Agregar Conexión</button>
+                    <button type="button" onclick="ItineraryBuilder.addConnectionFlight('outbound')" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                      + Agregar Conexión
+                    </button>
                   </div>
                 </div>
-                <div>
-                  <h5 class="font-semibold mb-2">Vuelo de Regreso</h5>
-                  <div class="space-y-2">
-                    <select id="returnAirline" class="w-full rounded-md p-2 border">
-                      <option value="">Aerolínea</option>${airlinesOptions}
-                    </select>
-                    <input id="returnFlightNumber" class="w-full rounded-md p-2 border" placeholder="Número de vuelo" />
-                    <input id="returnOrigin" class="w-full rounded-md p-2 border" placeholder="Origen" />
-                    <input id="returnDestination" class="w-full rounded-md p-2 border" placeholder="Destino" />
-                    <input id="returnDateTime" type="datetime-local" class="w-full rounded-md p-2 border" />
+
+                <!-- Vuelo de Regreso -->
+                <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                  <h4 class="font-bold mb-3 dark:text-white flex items-center gap-2">
+                    <span>🛬</span> Vuelo de Regreso
+                  </h4>
+                  <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-sm font-semibold mb-1 dark:text-gray-300">Aerolínea</label>
+                        <select id="returnAirline" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm">
+                          <option value="">Seleccionar...</option>
+                          ${AIRLINES.map(airline => `
+                            <option value="${airline.id}">${airline.logo} ${airline.name}</option>
+                          `).join('')}
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-semibold mb-1 dark:text-gray-300">Número de Vuelo</label>
+                        <input type="text" id="returnFlightNumber" placeholder="ej: AM57" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm" />
+                      </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                      <div>
+                        <label class="block text-sm font-semibold mb-1 dark:text-gray-300">Origen</label>
+                        <input type="text" id="returnOrigin" placeholder="ej: NRT" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm" />
+                      </div>
+                      <div>
+                        <label class="block text-sm font-semibold mb-1 dark:text-gray-300">Destino</label>
+                        <input type="text" id="returnDestination" placeholder="ej: MEX" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm" />
+                      </div>
+                      <div>
+                        <label class="block text-sm font-semibold mb-1 dark:text-gray-300">Fecha/Hora</label>
+                        <input type="datetime-local" id="returnDateTime" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm" />
+                      </div>
+                    </div>
+                    
+                    <!-- Vuelos de Conexión (Regreso) -->
                     <div id="returnConnections" class="space-y-2"></div>
-                    <button type="button" data-add-connection="return" class="px-3 py-2 rounded bg-gray-100 hover:bg-gray-200 text-sm">+ Agregar Conexión</button>
+                    <button type="button" onclick="ItineraryBuilder.addConnectionFlight('return')" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                      + Agregar Conexión
+                    </button>
                   </div>
                 </div>
-              </div>
-            </section>
 
-            <!-- Paso 4: Intereses -->
-            <section id="wizardStep4" class="wizard-content hidden">
-              <h4 class="text-lg font-semibold mb-3">🎯 ¿Qué te interesa hacer?</h4>
-              <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3">${categoriesCards}</div>
-            </section>
-
-            <!-- Paso 5: Plantilla + AI -->
-            <section id="wizardStep5" class="wizard-content hidden">
-              <div class="flex items-center justify-between mb-3">
-                <h4 class="text-lg font-semibold">📎 Elige una Plantilla (opcional)</h4>
-                <button id="aiPlannerBtn" class="px-3 py-2 rounded bg-purple-600 hover:bg-purple-700 text-white text-sm flex items-center gap-2" title="Generar con AI">✨ Planificar con AI</button>
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                  <p class="text-sm text-yellow-800 dark:text-yellow-300">
+                    💡 <strong>Tip:</strong> Puedes agregar vuelos de conexión si tu viaje incluye escalas
+                  </p>
+                </div>
               </div>
-              <div class="grid md:grid-cols-2 gap-3">${templateCards}</div>
-              <div class="mt-3 text-xs text-gray-500 flex items-center gap-2">
-                <label class="flex items-center gap-2 cursor-pointer select-none">
-                  <input id="toggleMultiCityHeuristic" type="checkbox" checked>
-                  Repartir actividades AI según ciudad del día (heurística multi‑ciudad)
+            </div>
+
+            <!-- Step 4: Categorías de Interés -->
+            <div id="wizardStep4" class="wizard-content hidden">
+              <h3 class="text-xl font-bold mb-4 dark:text-white">🎯 ¿Qué te interesa hacer?</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Selecciona tus intereses para recibir sugerencias personalizadas
+              </p>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                ${CATEGORIES.map(cat => `
+                  <label class="category-card cursor-pointer border-2 border-gray-300 dark:border-gray-600 rounded-lg p-4 hover:border-${cat.color}-500 hover:bg-${cat.color}-50 dark:hover:bg-${cat.color}-900/20 transition">
+                    <input type="checkbox" name="categories" value="${cat.id}" class="hidden category-checkbox" />
+                    <div class="text-center">
+                      <div class="text-4xl mb-2">${cat.icon}</div>
+                      <div class="font-bold text-sm dark:text-white">${cat.name}</div>
+                      <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">${cat.description}</div>
+                    </div>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Step 5: Plantillas -->
+            <div id="wizardStep5" class="wizard-content hidden">
+              <h3 class="text-xl font-bold mb-4 dark:text-white">📋 Elige una Plantilla</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                O comienza desde cero y agrega actividades manualmente
+              </p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Opción: Desde Cero -->
+                <label class="template-card cursor-pointer border-2 border-gray-300 dark:border-gray-600 rounded-lg p-6 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition">
+                  <input type="radio" name="template" value="blank" class="hidden template-radio" />
+                  <div class="text-center">
+                    <div class="text-5xl mb-3">📝</div>
+                    <div class="font-bold text-lg dark:text-white">Desde Cero</div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                      Crea tu itinerario personalizado desde el inicio
+                    </div>
+                  </div>
                 </label>
-              </div>
-            </section>
-          </div>
 
-          <div class="px-6 pb-6 flex items-center justify-between gap-2">
-            <button id="wizardPrevBtn" class="bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded">← Anterior</button>
-            <div class="flex items-center gap-2">
-              <button id="skipFlightsBtn" class="hidden bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded">Omitir vuelos</button>
-              <button id="wizardNextBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Siguiente →</button>
-              <button id="wizardFinishBtn" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">✨ Crear Itinerario</button>
+                <!-- Plantillas Predefinidas -->
+                ${TEMPLATES.map(template => `
+                  <label class="template-card cursor-pointer border-2 border-gray-300 dark:border-gray-600 rounded-lg p-6 hover:border-${template.color}-500 hover:bg-${template.color}-50 dark:hover:bg-${template.color}-900/20 transition">
+                    <input type="radio" name="template" value="${template.id}" class="hidden template-radio" />
+                    <div class="text-center">
+                      <div class="text-5xl mb-3">${template.icon}</div>
+                      <div class="font-bold text-lg dark:text-white">${template.name}</div>
+                      <div class="text-sm text-gray-600 dark:text-gray-400 mt-2">${template.description}</div>
+                      <div class="flex flex-wrap gap-1 justify-center mt-3">
+                        ${template.categories.map(catId => {
+                          const cat = CATEGORIES.find(c => c.id === catId);
+                          return `<span class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">${cat?.icon} ${cat?.name}</span>`;
+                        }).join('')}
+                      </div>
+                      <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        Ritmo: <strong>${template.pace === 'relaxed' ? '🐢 Relajado' : template.pace === 'moderate' ? '🚶 Moderado' : '🏃 Intenso'}</strong>
+                      </div>
+                    </div>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <button 
+                type="button"
+                id="wizardPrevBtn"
+                onclick="ItineraryBuilder.previousWizardStep()"
+                class="px-6 py-3 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition font-semibold hidden"
+              >
+                ← Anterior
+              </button>
+              <div class="flex gap-3 ml-auto">
+                <button
+                  type="button"
+                  onclick="ItineraryBuilder.closeCreateItineraryWizard()"
+                  class="px-6 py-3 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition font-semibold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  id="skipFlightsBtn"
+                  onclick="ItineraryBuilder.nextWizardStep()"
+                  class="px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition font-semibold hidden"
+                >
+                  Omitir (agregar después) →
+                </button>
+                <button
+                  type="button"
+                  id="wizardNextBtn"
+                  onclick="ItineraryBuilder.nextWizardStep()"
+                  class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition font-semibold"
+                >
+                  Siguiente →
+                </button>
+                <button
+                  type="button"
+                  id="wizardFinishBtn"
+                  onclick="ItineraryBuilder.finishWizard()"
+                  class="px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition font-semibold hidden"
+                >
+                  ✨ Crear Itinerario
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>`;
+      </div>
+    `;
 
-    const existing = document.getElementById('createItineraryWizard');
-    if (existing) existing.remove();
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     document.body.style.overflow = 'hidden';
-
+    
+    // Setup category selection visual feedback
     this.setupCategorySelection();
     this.setupTemplateSelection();
-    this.updateWizardView();
-
-    // toggle heuristic
-    const chk = document.getElementById('toggleMultiCityHeuristic');
-    if (chk) chk.addEventListener('change', (e) => { this.multiCityHeuristic = !!e.target.checked; });
   },
 
   setupCategorySelection() {
@@ -236,9 +418,16 @@ export const ItineraryBuilder = {
       card.addEventListener('click', function() {
         const checkbox = this.querySelector('.category-checkbox');
         checkbox.checked = !checkbox.checked;
-        this.classList.toggle('ring-2');
-        this.classList.toggle('ring-purple-500');
-        this.classList.toggle('bg-purple-50');
+        
+        if (checkbox.checked) {
+          this.classList.add('selected');
+          this.style.borderColor = 'rgb(168, 85, 247)'; // purple-500
+          this.style.backgroundColor = 'rgb(250, 245, 255)'; // purple-50
+        } else {
+          this.classList.remove('selected');
+          this.style.borderColor = '';
+          this.style.backgroundColor = '';
+        }
       });
     });
   },
@@ -246,195 +435,489 @@ export const ItineraryBuilder = {
   setupTemplateSelection() {
     document.querySelectorAll('.template-card').forEach(card => {
       card.addEventListener('click', function() {
+        // Deselect all
         document.querySelectorAll('.template-card').forEach(c => {
-          c.classList.remove('ring-2','ring-blue-500','bg-blue-50');
-          const r = c.querySelector('.template-radio');
-          if (r) r.checked = false;
+          c.classList.remove('selected');
+          c.style.borderColor = '';
+          c.style.backgroundColor = '';
         });
+        
+        // Select this one
         const radio = this.querySelector('.template-radio');
-        if (radio) radio.checked = true;
-        this.classList.add('ring-2','ring-blue-500','bg-blue-50');
+        radio.checked = true;
+        this.classList.add('selected');
+        this.style.borderColor = 'rgb(59, 130, 246)'; // blue-500
+        this.style.backgroundColor = 'rgb(239, 246, 255)'; // blue-50
       });
     });
   },
 
   addConnectionFlight(type) {
     const container = document.getElementById(`${type}Connections`);
-    const id = `${type}-connection-${Date.now()}`;
-    const options = AIRLINES.map(a => `<option value="${a.code || a.id || a.name}">${a.name}</option>`).join('');
+    const connectionId = `${type}-connection-${Date.now()}`;
+
     const html = `
-      <div class="bg-gray-100 dark:bg-gray-700 rounded p-2" id="${id}">
-        <div class="flex items-center justify-between mb-2 text-sm font-semibold">Conexión
-          <button type="button" class="px-2 py-1 text-red-600" onclick="document.getElementById('${id}').remove()">× Eliminar</button>
+      <div id="${connectionId}" class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg space-y-2">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-semibold dark:text-white">Conexión</span>
+          <button onclick="document.getElementById('${connectionId}').remove()" class="text-red-500 hover:text-red-700 text-xs">
+            ✕ Eliminar
+          </button>
         </div>
-        <div class="grid md:grid-cols-5 gap-2">
-          <select class="connection-airline rounded p-2 border">
-            <option value="">Aerolínea</option>${options}
-          </select>
-          <input class="connection-flight-number rounded p-2 border" placeholder="Nº Vuelo" />
-          <input class="connection-origin rounded p-2 border" placeholder="Origen" />
-          <input class="connection-destination rounded p-2 border" placeholder="Destino" />
-          <input type="datetime-local" class="connection-datetime rounded p-2 border" />
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold mb-1 dark:text-gray-300">Aerolínea</label>
+            <select class="connection-airline w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-600 dark:text-white text-xs">
+              <option value="">Seleccionar...</option>
+              ${AIRLINES.map(airline => `
+                <option value="${airline.id}">${airline.logo} ${airline.name}</option>
+              `).join('')}
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-1 dark:text-gray-300">Número de Vuelo</label>
+            <input type="text" class="connection-flight-number w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-600 dark:text-white text-xs" placeholder="ej: AA123" />
+          </div>
         </div>
-      </div>`;
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-xs font-semibold mb-1 dark:text-gray-300">Origen</label>
+            <input type="text" class="connection-origin w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-600 dark:text-white text-xs" placeholder="LAX" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-1 dark:text-gray-300">Destino</label>
+            <input type="text" class="connection-destination w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-600 dark:text-white text-xs" placeholder="NRT" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold mb-1 dark:text-gray-300">Fecha/Hora</label>
+            <input type="datetime-local" class="connection-datetime w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-600 dark:text-white text-xs" />
+          </div>
+        </div>
+      </div>
+    `;
+
     container.insertAdjacentHTML('beforeend', html);
   },
 
-  // ===== Calendario =====
-  dateToISO(d) { return new Date(d).toISOString().split('T')[0]; },
+  // === DATE-CITY ASSIGNMENT (NEW IMPROVED SYSTEM) === //
 
-  renderCitySelectionUI() {
-    const container = document.getElementById('citySelectChips');
-    if (!container) return;
+  generateDateCitySelector() {
+    const startDate = document.getElementById('itineraryStartDate').value;
+    const endDate = document.getElementById('itineraryEndDate').value;
 
-    const allCities = Object.keys(ACTIVITIES_DATABASE).map(id => ({ id, name: ACTIVITIES_DATABASE[id].city }));
+    if (!startDate || !endDate) {
+      console.error('Start or end date missing');
+      return;
+    }
 
-    container.innerHTML = `
-      <div class="mb-2 text-sm text-gray-600 dark:text-gray-400">Selecciona una ciudad y luego márcala en el calendario ↓</div>
-      <div class="flex flex-wrap gap-2" id="cityChips">
-        ${allCities.map(c => `
-          <button type="button" class="px-3 py-1 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm" data-city-id="${c.id}">${c.name}</button>
-        `).join('')}
-      </div>`;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const dates = [];
+    let current = new Date(start);
 
-    this.cityAssignments ||= {};
+    // Generate all dates
+    while (current <= end) {
+      dates.push(new Date(current));
+      current.setDate(current.getDate() + 1);
+    }
 
-    container.querySelectorAll('#cityChips button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const cityId = btn.dataset.cityId;
-        container.querySelectorAll('#cityChips button').forEach(b => b.classList.remove('ring-2','ring-blue-500'));
-        btn.classList.add('ring-2','ring-blue-500');
-        this.activeCity = cityId;
-        if (!this.cityAssignments[cityId]) this.cityAssignments[cityId] = new Set();
-        const hint = document.getElementById('calendarHint');
-        if (hint) hint.textContent = `Ciudad activa: ${ACTIVITIES_DATABASE[cityId].city} — haz clic en días`;
-      });
-    });
+    // Build city options HTML
+    const cityOptions = Object.keys(ACTIVITIES_DATABASE).map(cityId => {
+      const cityData = ACTIVITIES_DATABASE[cityId];
+      return `<option value="${cityId}">${cityData.city}</option>`;
+    }).join('');
+
+    // Generate HTML for each date with multiple city blocks support
+    const container = document.getElementById('cityByDateContainer');
+    container.innerHTML = dates.map((date, index) => {
+      const dateStr = date.toISOString().split('T')[0];
+      const dayOfWeek = date.toLocaleDateString('es-ES', { weekday: 'short' });
+      const dayMonth = date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+      const dayNumber = index + 1;
+
+      return `
+        <div class="bg-white dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 p-4 hover:shadow-md transition">
+          <!-- Day Header -->
+          <div class="flex items-center justify-between mb-3 pb-3 border-b border-gray-200 dark:border-gray-600">
+            <div class="flex items-center gap-3">
+              <div class="text-center">
+                <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">${dayOfWeek}</div>
+                <div class="text-lg font-bold dark:text-white">Día ${dayNumber}</div>
+                <div class="text-xs text-gray-600 dark:text-gray-400">${dayMonth}</div>
+              </div>
+              <div class="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
+              <div>
+                <div class="text-sm font-semibold dark:text-white">Ciudades a visitar</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400" id="city-count-day-${dayNumber}">Sin ciudades</div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onclick="ItineraryBuilder.addCityBlock(${dayNumber}, '${dateStr}')"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition text-sm font-semibold flex items-center gap-2"
+            >
+              <i class="fas fa-plus"></i> Agregar Ciudad
+            </button>
+          </div>
+          
+          <!-- City Blocks Container -->
+          <div id="city-blocks-day-${dayNumber}" class="space-y-2" data-date="${dateStr}" data-day="${dayNumber}">
+            <!-- City blocks will be added dynamically -->
+            <div class="text-center py-6 text-gray-400 dark:text-gray-500 text-sm" id="empty-state-day-${dayNumber}">
+              <i class="fas fa-map-marked-alt text-2xl mb-2"></i>
+              <p>Haz clic en "Agregar Ciudad" para empezar</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    console.log(`✅ Generated ${dates.length} flexible date containers`);
   },
 
-  renderCityCalendarUI() {
-    const start = document.getElementById('itineraryStartDate')?.value;
-    const end   = document.getElementById('itineraryEndDate')?.value;
-    const grid  = document.getElementById('cityCalendarGrid');
-    if (!start || !end || !grid) return;
+  // Add a city block to a specific day
+  addCityBlock(dayNumber, dateStr) {
+    const container = document.getElementById(`city-blocks-day-${dayNumber}`);
+    const emptyState = document.getElementById(`empty-state-day-${dayNumber}`);
+    
+    if (emptyState) {
+      emptyState.remove();
+    }
 
-    const days = [];
-    let cur = new Date(start);
-    const endDate = new Date(end);
-    while (cur <= endDate) { days.push(new Date(cur)); cur.setDate(cur.getDate() + 1); }
+    const blockId = `city-block-${dayNumber}-${Date.now()}`;
+    
+    // Build city options HTML
+    const cityOptions = Object.keys(ACTIVITIES_DATABASE).map(cityId => {
+      const cityData = ACTIVITIES_DATABASE[cityId];
+      return `<option value="${cityId}">${cityData.city}</option>`;
+    }).join('');
 
-    grid.innerHTML = `
-      <div id="calendarHint" class="mb-2 text-xs text-gray-500 dark:text-gray-400">Selecciona una ciudad y marca los días</div>
-      <div class="calendar-grid">
-        ${days.map(d => {
-          const iso = this.dateToISO(d);
-          const dow = d.toLocaleDateString('es-ES', { weekday:'short' });
-          const dm  = d.toLocaleDateString('es-ES', { day:'numeric', month:'short' });
-          return `
-            <button type="button" class="day-cell bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-left p-2" data-date="${iso}">
-              <div class="text-[10px] uppercase text-gray-500 dark:text-gray-400">${dow}</div>
-              <div class="text-sm font-semibold">${dm}</div>
-              <div class="mt-1 flex flex-wrap gap-1 assignments" aria-live="polite"></div>
-            </button>`;
-        }).join('')}
-      </div>`;
+    const blockHtml = `
+      <div id="${blockId}" class="city-block bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-600" data-day="${dayNumber}">
+        <div class="flex items-start gap-2">
+          <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <!-- City Selection -->
+            <div>
+              <label class="block text-xs font-semibold mb-1 dark:text-gray-300">Ciudad *</label>
+              <select
+                class="city-block-city w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm"
+                required
+              >
+                <option value="">Seleccionar...</option>
+                ${cityOptions}
+              </select>
+            </div>
+            
+            <!-- Time Start (Optional) -->
+            <div>
+              <label class="block text-xs font-semibold mb-1 dark:text-gray-300">
+                Hora inicio <span class="text-gray-400">(opcional)</span>
+              </label>
+              <input
+                type="time"
+                class="city-block-time-start w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm"
+                placeholder="09:00"
+              />
+            </div>
+            
+            <!-- Time End (Optional) -->
+            <div>
+              <label class="block text-xs font-semibold mb-1 dark:text-gray-300">
+                Hora fin <span class="text-gray-400">(opcional)</span>
+              </label>
+              <input
+                type="time"
+                class="city-block-time-end w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-sm"
+                placeholder="18:00"
+              />
+            </div>
+          </div>
+          
+          <!-- Remove Button -->
+          <button
+            type="button"
+            onclick="ItineraryBuilder.removeCityBlock('${blockId}', ${dayNumber})"
+            class="flex-shrink-0 mt-6 p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+            title="Eliminar"
+          >
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
+        
+        <!-- Duration Indicator -->
+        <div class="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
+          💡 Deja los horarios vacíos para indicar que pasarás todo el día en esta ciudad
+        </div>
+      </div>
+    `;
 
-    grid.querySelectorAll('.day-cell').forEach(cell => {
-      cell.addEventListener('click', () => {
-        if (!this.activeCity) { Notifications.info('Selecciona primero una ciudad'); return; }
-        const dateStr = cell.dataset.date;
-        const set = (this.cityAssignments[this.activeCity] ||= new Set());
-        if (set.has(dateStr)) set.delete(dateStr); else set.add(dateStr);
-        this.refreshCalendarBadges();
-      });
-    });
-
-    this.refreshCalendarBadges();
+    container.insertAdjacentHTML('beforeend', blockHtml);
+    this.updateCityCount(dayNumber);
   },
 
-  refreshCalendarBadges() {
-    const grid = document.getElementById('cityCalendarGrid');
-    if (!grid) return;
-    grid.querySelectorAll('.day-cell .assignments').forEach(a => a.innerHTML = '');
-    Object.entries(this.cityAssignments || {}).forEach(([cityId, set]) => {
-      const cityName = ACTIVITIES_DATABASE[cityId]?.city || cityId;
-      const initials = cityName.split(/\s+/).map(s => s[0]).join('').slice(0,3).toUpperCase();
-      set.forEach(dateStr => {
-        const cell = grid.querySelector(`.day-cell[data-date="${dateStr}"] .assignments`);
-        if (!cell) return;
-        cell.insertAdjacentHTML('beforeend', `<span class="city-badge" title="${cityName}">${initials}</span>`);
-      });
-    });
+  // Remove a city block
+  removeCityBlock(blockId, dayNumber) {
+    const block = document.getElementById(blockId);
+    if (block) {
+      block.remove();
+      this.updateCityCount(dayNumber);
+      
+      // Show empty state if no blocks remain
+      const container = document.getElementById(`city-blocks-day-${dayNumber}`);
+      if (container && container.querySelectorAll('.city-block').length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 text-gray-400 dark:text-gray-500 text-sm" id="empty-state-day-${dayNumber}">
+            <i class="fas fa-map-marked-alt text-2xl mb-2"></i>
+            <p>Haz clic en "Agregar Ciudad" para empezar</p>
+          </div>
+        `;
+      }
+    }
   },
 
-  initCityCalendarPlanner() { this.renderCitySelectionUI(); this.renderCityCalendarUI(); },
+  // Update city count display
+  updateCityCount(dayNumber) {
+    const container = document.getElementById(`city-blocks-day-${dayNumber}`);
+    const countDisplay = document.getElementById(`city-count-day-${dayNumber}`);
+    
+    if (container && countDisplay) {
+      const blocks = container.querySelectorAll('.city-block');
+      const count = blocks.length;
+      
+      if (count === 0) {
+        countDisplay.textContent = 'Sin ciudades';
+      } else if (count === 1) {
+        countDisplay.textContent = '1 ciudad';
+      } else {
+        countDisplay.textContent = `${count} ciudades`;
+      }
+    }
+  },
 
-  // ===== Navegación =====
+  // === CITY/DAY ASSIGNMENT HELPERS (OLD SYSTEM - DEPRECATED) === //
+
+  toggleCityDayAssignment(cityId) {
+    const checkbox = document.getElementById(`city-${cityId}`);
+    const daysSection = document.getElementById(`days-${cityId}`);
+
+    if (checkbox.checked) {
+      daysSection.classList.remove('hidden');
+    } else {
+      daysSection.classList.add('hidden');
+      // Reset inputs when unchecked
+      const oneDayCheckbox = daysSection.querySelector('.one-day-checkbox');
+      if (oneDayCheckbox) oneDayCheckbox.checked = false;
+      daysSection.querySelectorAll('input[type="number"]').forEach(input => input.value = '');
+      document.getElementById(`multiday-${cityId}`).classList.remove('hidden');
+      document.getElementById(`oneday-${cityId}`).classList.add('hidden');
+    }
+  },
+
+  toggleOneDayVisit(cityId) {
+    const oneDayCheckbox = document.querySelector(`#days-${cityId} .one-day-checkbox`);
+    const multiDaySection = document.getElementById(`multiday-${cityId}`);
+    const oneDaySection = document.getElementById(`oneday-${cityId}`);
+
+    if (oneDayCheckbox.checked) {
+      // Show single day, hide multi-day
+      multiDaySection.classList.add('hidden');
+      oneDaySection.classList.remove('hidden');
+      // Clear multi-day inputs
+      multiDaySection.querySelectorAll('input').forEach(input => input.value = '');
+    } else {
+      // Show multi-day, hide single day
+      multiDaySection.classList.remove('hidden');
+      oneDaySection.classList.add('hidden');
+      // Clear single day input
+      oneDaySection.querySelector('input').value = '';
+    }
+  },
+
+  updateDayRange(cityId) {
+    const daysCount = document.querySelector(`#multiday-${cityId} .city-days-count`).value;
+    const dayStart = document.querySelector(`#multiday-${cityId} .city-day-start`);
+
+    if (daysCount && dayStart.value) {
+      const start = parseInt(dayStart.value);
+      const count = parseInt(daysCount);
+      const end = start + count - 1;
+
+      const dayEnd = document.querySelector(`#multiday-${cityId} .city-day-end`);
+      dayEnd.value = end;
+    }
+  },
+
+  validateDayAssignment(cityId) {
+    // Basic validation for day assignments
+    // Can be extended with more complex logic
+    console.log(`Validating day assignment for ${cityId}`);
+  },
+
+  // Navegación del Wizard
+  currentStep: 1,
+
   nextWizardStep() {
-    if (!this.validateCurrentStep()) return;
+    // Validación del paso actual
+    if (!this.validateCurrentStep()) {
+      return;
+    }
+
     if (this.currentStep < 5) {
       this.currentStep++;
-      if (this.currentStep === 2) this.initCityCalendarPlanner();
+
+if (this.currentStep === 2) {
+  this.generateDateCitySelector();  // ← VIEJO
+}
+        this.renderQuickCityBlocksUI && this.renderQuickCityBlocksUI();
+      }
+
       this.updateWizardView();
     }
   },
-  previousWizardStep() { if (this.currentStep > 1) { this.currentStep--; this.updateWizardView(); } },
+
+  previousWizardStep() {
+    if (this.currentStep > 1) {
+      this.currentStep--;
+      this.updateWizardView();
+    }
+  },
 
   validateCurrentStep() {
     if (this.currentStep === 1) {
       const name = document.getElementById('itineraryName').value;
-      const start = document.getElementById('itineraryStartDate').value;
-      const end = document.getElementById('itineraryEndDate').value;
-      if (!name || !start || !end) { Notifications.warning('Completa nombre y fechas'); return false; }
-      if (new Date(end) <= new Date(start)) { Notifications.warning('La fecha fin debe ser posterior a inicio'); return false; }
-    }
-    if (this.currentStep === 2) {
-      const start = document.getElementById('itineraryStartDate').value;
-      const end = document.getElementById('itineraryEndDate').value;
-      const s = new Date(start), e = new Date(end);
-      const totalDays = Math.ceil((e - s) / (1000*60*60*24)) + 1;
-      const unassigned = [];
-      for (let i = 0; i < totalDays; i++) {
-        const dateStr = this.dateToISO(new Date(s.getTime() + i*86400000));
-        const hasCity = Object.values(this.cityAssignments || {}).some(set => set && set.has(dateStr));
-        if (!hasCity) unassigned.push(i+1);
+      const startDate = document.getElementById('itineraryStartDate').value;
+      const endDate = document.getElementById('itineraryEndDate').value;
+
+      if (!name || !startDate || !endDate) {
+        Notifications.warning('Por favor completa todos los campos obligatorios');
+        return false;
       }
-      if (unassigned.length > 0) { Notifications.warning(`Agrega al menos una ciudad para los días: ${unassigned.join(', ')}`); return false; }
+
+      if (new Date(endDate) <= new Date(startDate)) {
+        Notifications.warning('La fecha de fin debe ser posterior a la fecha de inicio');
+        return false;
+      }
     }
+
+    if (this.currentStep === 2) {
+      // 🔥 NUEVO: Validar que todos los días tengan al menos una ciudad asignada
+      const startDate = document.getElementById('itineraryStartDate').value;
+      const endDate = document.getElementById('itineraryEndDate').value;
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      
+      const unassignedDays = [];
+      
+      for (let dayNumber = 1; dayNumber <= totalDays; dayNumber++) {
+        const container = document.getElementById(`city-blocks-day-${dayNumber}`);
+        if (container) {
+          const blocks = container.querySelectorAll('.city-block');
+          
+          if (blocks.length === 0) {
+            unassignedDays.push(dayNumber);
+            continue;
+          }
+          
+          // Validate that each block has a city selected
+          let hasInvalidBlock = false;
+          blocks.forEach(block => {
+            const citySelect = block.querySelector('.city-block-city');
+            if (!citySelect || !citySelect.value) {
+              hasInvalidBlock = true;
+            }
+          });
+          
+          if (hasInvalidBlock) {
+            unassignedDays.push(dayNumber);
+          }
+        }
+      }
+
+      if (unassignedDays.length > 0) {
+        Notifications.warning(`Por favor agrega al menos una ciudad para los siguientes días: ${unassignedDays.join(', ')}`);
+        return false;
+      }
+    }
+
+    // Step 3 (flights) is optional, no validation required
+
     return true;
   },
 
   updateWizardView() {
-    document.querySelectorAll('.wizard-content').forEach(c => c.classList.add('hidden'));
-    const sec = document.getElementById(`wizardStep${this.currentStep}`);
-    if (sec) sec.classList.remove('hidden');
-
-    document.querySelectorAll('.wizard-step').forEach((el, idx) => {
-      const num = idx + 1; const circle = el.querySelector('div');
-      if (num < this.currentStep) { circle.className = 'w-6 h-6 rounded-full flex items-center justify-center bg-green-500 text-white font-bold'; circle.textContent = '✓'; }
-      else if (num === this.currentStep) { circle.className = 'w-6 h-6 rounded-full flex items-center justify-center bg-purple-500 text-white font-bold'; circle.textContent = num; }
-      else { circle.className = 'w-6 h-6 rounded-full flex items-center justify-center bg-gray-300 text-gray-800 font-bold'; circle.textContent = num; }
+    // Ocultar todos los pasos
+    document.querySelectorAll('.wizard-content').forEach(content => {
+      content.classList.add('hidden');
     });
-
+    
+    // Mostrar paso actual
+    document.getElementById(`wizardStep${this.currentStep}`).classList.remove('hidden');
+    
+    // Actualizar indicadores de paso
+    document.querySelectorAll('.wizard-step').forEach((step, index) => {
+      const stepNumber = index + 1;
+      const circle = step.querySelector('div');
+      
+      if (stepNumber < this.currentStep) {
+        circle.classList.remove('bg-gray-300', 'bg-purple-500');
+        circle.classList.add('bg-green-500');
+        circle.innerHTML = '✓';
+      } else if (stepNumber === this.currentStep) {
+        circle.classList.remove('bg-gray-300', 'bg-green-500');
+        circle.classList.add('bg-purple-500');
+        circle.innerHTML = stepNumber;
+      } else {
+        circle.classList.remove('bg-purple-500', 'bg-green-500');
+        circle.classList.add('bg-gray-300');
+        circle.innerHTML = stepNumber;
+      }
+    });
+    
+    // Mostrar/ocultar botones
     const prevBtn = document.getElementById('wizardPrevBtn');
     const nextBtn = document.getElementById('wizardNextBtn');
     const finishBtn = document.getElementById('wizardFinishBtn');
-    const skipFlightsBtn = document.getElementById('skipFlightsBtn');
+    
+    if (this.currentStep === 1) {
+      prevBtn.classList.add('hidden');
+    } else {
+      prevBtn.classList.remove('hidden');
+    }
 
-    if (this.currentStep === 1) prevBtn.classList.add('hidden'); else prevBtn.classList.remove('hidden');
-    if (this.currentStep === 5) { nextBtn.classList.add('hidden'); finishBtn.classList.remove('hidden'); } else { nextBtn.classList.remove('hidden'); finishBtn.classList.add('hidden'); }
-    if (skipFlightsBtn) (this.currentStep === 3 ? skipFlightsBtn.classList.remove('hidden') : skipFlightsBtn.classList.add('hidden'));
+    if (this.currentStep === 5) {
+      nextBtn.classList.add('hidden');
+      finishBtn.classList.remove('hidden');
+    } else {
+      nextBtn.classList.remove('hidden');
+      finishBtn.classList.add('hidden');
+    }
+
+    // Special handling for Step 3 (flights) - show skip button
+    const skipFlightsBtn = document.getElementById('skipFlightsBtn');
+    if (skipFlightsBtn) {
+      if (this.currentStep === 3) {
+        skipFlightsBtn.classList.remove('hidden');
+      } else {
+        skipFlightsBtn.classList.add('hidden');
+      }
+    }
   },
 
-  // ===== Finalizar =====
   async finishWizard() {
+    // Recopilar todos los datos
     const data = {
       name: document.getElementById('itineraryName').value,
       startDate: document.getElementById('itineraryStartDate').value,
       endDate: document.getElementById('itineraryEndDate').value,
+
+      // Collect cities with day assignments
       cityDayAssignments: this.getCityDayAssignments(),
+
       categories: Array.from(document.querySelectorAll('input[name="categories"]:checked')).map(cb => cb.value),
       template: document.querySelector('input[name="template"]:checked')?.value || 'blank',
+
+      // Vuelo de Ida
       outboundFlight: {
         airline: document.getElementById('outboundAirline')?.value || '',
         flightNumber: document.getElementById('outboundFlightNumber')?.value || '',
@@ -443,6 +926,8 @@ export const ItineraryBuilder = {
         datetime: document.getElementById('outboundDateTime')?.value || '',
         connections: this.getConnectionFlights('outbound')
       },
+
+      // Vuelo de Regreso
       returnFlight: {
         airline: document.getElementById('returnAirline')?.value || '',
         flightNumber: document.getElementById('returnFlightNumber')?.value || '',
@@ -453,107 +938,209 @@ export const ItineraryBuilder = {
       }
     };
 
+    console.log('📋 Datos del Itinerario:', data);
+
+    // 🔥 NUEVO: Si shouldCreateTrip es true, crear el trip PRIMERO
     if (this.shouldCreateTrip) {
-      if (!window.TripsManager) { Notifications.error('TripsManager no está disponible'); return; }
+      console.log('🎯 Creating trip first...');
+
+      if (!window.TripsManager) {
+        Notifications.error('Error: TripsManager no está disponible');
+        return;
+      }
+
       try {
-        const tripData = { name: data.name, destination: 'Japón', dateStart: data.startDate, dateEnd: data.endDate, useTemplate: true };
+        // Create trip with basic data
+        const tripData = {
+          name: data.name,
+          destination: 'Japón',
+          dateStart: data.startDate,
+          dateEnd: data.endDate, // ✅ Fixed: usando data.endDate
+          useTemplate: true
+        };
+
+        console.log('🔍 Trip data being sent:', tripData);
+
         const tripId = await window.TripsManager.createTrip(tripData);
-        if (!tripId) throw new Error('createTrip no devolvió tripId');
-        await new Promise(r => setTimeout(r, 800));
-      } catch (err) {
-        console.error('Error creando trip desde wizard:', err);
+
+        if (tripId) {
+          console.log('✅ Trip created successfully:', tripId);
+          // Wait a moment for Firebase to propagate
+          await new Promise(resolve => setTimeout(resolve, 800));
+        } else {
+          throw new Error('Trip creation did not return tripId');
+        }
+      } catch (error) {
+        console.error('❌ Error creating trip:', error);
         Notifications.error('Error al crear el viaje. Inténtalo de nuevo.');
         return;
       }
     }
 
-    // Actividades por AI si corresponde
-    let activities = [];
-    if (this.aiApplied && this.aiPlan?.days?.length > 0) {
-      activities = this.convertAIRecommendationsToActivities(this.aiPlan, data.cityDayAssignments);
-      data.template = 'ai';
-    }
+    // Crear itinerario
+    await this.createItinerary(data);
 
-    await this.createItinerary({ ...data, __aiActivities: activities });
     this.closeCreateItineraryWizard();
-
-    // Mostrar insights si hubo AI
-    if (this.aiApplied && this.aiPlan) this.showAIInsightsModal(this.aiPlan);
   },
 
   getCityDayAssignments() {
+    // 🔥 NEW IMPROVED SYSTEM: Collect city blocks for each day
     const startDate = document.getElementById('itineraryStartDate').value;
-    const endDate   = document.getElementById('itineraryEndDate').value;
-    const start = new Date(startDate); const end = new Date(endDate);
-    const totalDays = Math.ceil((end - start) / (1000*60*60*24)) + 1;
-
-    const hasCalendarData = this.cityAssignments && Object.values(this.cityAssignments).some(s => s && s.size > 0);
-    if (hasCalendarData) {
-      const result = [];
-      for (let d = 0; d < totalDays; d++) {
-        const dateStr = this.dateToISO(new Date(start.getTime() + d*86400000));
-        const citiesForDay = [];
-        Object.keys(this.cityAssignments).forEach(cityId => {
-          if (this.cityAssignments[cityId].has(dateStr)) {
-            const cityName = ACTIVITIES_DATABASE[cityId]?.city || cityId;
-            citiesForDay.push({ cityId, cityName, timeStart: null, timeEnd: null, order: citiesForDay.length + 1, isFullDay: true });
-          }
-        });
-        if (citiesForDay.length > 0) {
-          result.push({ day: d + 1, date: dateStr, cities: citiesForDay, cityCount: citiesForDay.length, isMultiCity: citiesForDay.length > 1 });
+    const endDate = document.getElementById('itineraryEndDate').value;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    
+    const allAssignments = [];
+    
+    for (let dayNumber = 1; dayNumber <= totalDays; dayNumber++) {
+      const container = document.getElementById(`city-blocks-day-${dayNumber}`);
+      if (!container) continue;
+      
+      const blocks = container.querySelectorAll('.city-block');
+      const dayAssignments = [];
+      
+      blocks.forEach((block, index) => {
+        const citySelect = block.querySelector('.city-block-city');
+        const timeStart = block.querySelector('.city-block-time-start');
+        const timeEnd = block.querySelector('.city-block-time-end');
+        
+        if (citySelect && citySelect.value) {
+          const cityId = citySelect.value;
+          const cityData = ACTIVITIES_DATABASE[cityId];
+          
+          dayAssignments.push({
+            cityId: cityId,
+            cityName: cityData.city,
+            timeStart: timeStart.value || null,
+            timeEnd: timeEnd.value || null,
+            order: index + 1,
+            isFullDay: !timeStart.value && !timeEnd.value
+          });
         }
+      });
+      
+      if (dayAssignments.length > 0) {
+        allAssignments.push({
+          day: dayNumber,
+          date: new Date(start.getTime() + (dayNumber - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          cities: dayAssignments,
+          cityCount: dayAssignments.length,
+          isMultiCity: dayAssignments.length > 1
+        });
       }
-      return result;
     }
-    return [];
+    
+    console.log('📋 New flexible city day assignments:', allAssignments);
+    return allAssignments;
   },
 
   getConnectionFlights(type) {
-    const container = document.getElementById(`${type}Connections`); const connections = [];
-    if (!container) return connections;
-    container.querySelectorAll('.bg-gray-100, .dark:bg-gray-700').forEach(connDiv => {
+    const container = document.getElementById(`${type}Connections`);
+    const connections = [];
+    
+    container.querySelectorAll('.bg-gray-100').forEach(connDiv => {
       connections.push({
-        airline: connDiv.querySelector('.connection-airline')?.value || '',
-        flightNumber: connDiv.querySelector('.connection-flight-number')?.value || '',
-        origin: connDiv.querySelector('.connection-origin')?.value || '',
-        destination: connDiv.querySelector('.connection-destination')?.value || '',
-        datetime: connDiv.querySelector('.connection-datetime')?.value || ''
+        airline: connDiv.querySelector('.connection-airline').value,
+        flightNumber: connDiv.querySelector('.connection-flight-number').value,
+        origin: connDiv.querySelector('.connection-origin').value,
+        destination: connDiv.querySelector('.connection-destination').value,
+        datetime: connDiv.querySelector('.connection-datetime').value
       });
     });
+    
     return connections;
   },
 
-  // ===== Persistencia =====
+  closeCreateItineraryWizard() {
+    const modal = document.getElementById('createItineraryWizard');
+    if (modal) {
+      modal.remove();
+      document.body.style.overflow = '';
+    }
+    this.currentStep = 1;
+  },
+
+  // === CREAR ITINERARIO === //
+
   async createItinerary(data) {
-    if (!auth.currentUser) { Notifications.warning('Debes iniciar sesión'); return; }
-    if (!window.TripsManager || !window.TripsManager.currentTrip) { Notifications.warning('Primero crea o selecciona un viaje'); return; }
+    if (!auth.currentUser) {
+      Notifications.warning('Debes iniciar sesión para crear un itinerario');
+      return;
+    }
+
+    if (!window.TripsManager || !window.TripsManager.currentTrip) {
+      Notifications.warning('Primero debes crear o seleccionar un viaje');
+      return;
+    }
 
     try {
       const tripId = window.TripsManager.currentTrip.id;
+
+      // Generar días basados en fechas
       const days = this.generateDays(data.startDate, data.endDate);
 
-      // Actividades (AI o plantilla)
-      let activities = Array.isArray(data.__aiActivities) ? data.__aiActivities : [];
-      if ((!activities || activities.length === 0) && data.template !== 'blank') {
-        activities = await this.generateActivitiesFromTemplate(data.template, data.cityDayAssignments, data.categories, days.length);
+      // Si eligió una plantilla, generar actividades sugeridas inteligentemente
+      let activities = [];
+      if (data.template !== 'blank' && data.cityDayAssignments && data.cityDayAssignments.length > 0) {
+        activities = await this.generateActivitiesFromTemplate(
+          data.template,
+          data.cityDayAssignments,
+          data.categories,
+          days.length
+        );
       }
 
-      // Integrar actividades por día
+      // Integrate generated activities into days structure
       const daysWithActivities = days.map(day => {
-        const dayActivities = activities.filter(a => a.day === day.day);
+        const dayActivities = activities.filter(act => act.day === day.day);
+        
+        // Find city assignment for this day
         const dayAssignment = data.cityDayAssignments.find(a => a.day === day.day);
-        let dayTitle = 'Día libre', dayLocation = '';
+        
+        // Build day title and location from cities
+        let dayTitle = 'Día libre';
+        let dayLocation = '';
+        
         if (dayAssignment && dayAssignment.cities) {
-          if (dayAssignment.isMultiCity) { dayTitle = `Visitando ${dayAssignment.cities.map(c => c.cityName).join(' y ')}`; dayLocation = dayAssignment.cities.map(c => c.cityName).join(' → '); }
-          else { const city = dayAssignment.cities[0]; dayTitle = `Explorando ${city.cityName}`; dayLocation = city.cityName; }
+          if (dayAssignment.isMultiCity) {
+            dayTitle = `Visitando ${dayAssignment.cities.map(c => c.cityName).join(' y ')}`;
+            dayLocation = dayAssignment.cities.map(c => {
+              if (c.timeStart && c.timeEnd) {
+                return `${c.cityName} (${c.timeStart}-${c.timeEnd})`;
+              }
+              return c.cityName;
+            }).join(' → ');
+          } else {
+            const city = dayAssignment.cities[0];
+            dayTitle = `Explorando ${city.cityName}`;
+            dayLocation = city.cityName;
+            if (city.timeStart && city.timeEnd) {
+              dayTitle += ` (${city.timeStart}-${city.timeEnd})`;
+            }
+          }
         }
-        return { ...day, title: dayTitle, location: dayLocation, cities: dayAssignment?.cities || [], isMultiCity: dayAssignment?.isMultiCity || false, activities: dayActivities };
+        
+        return {
+          ...day,
+          title: dayTitle,
+          location: dayLocation,
+          cities: dayAssignment?.cities || [],
+          isMultiCity: dayAssignment?.isMultiCity || false,
+          activities: dayActivities
+        };
       });
 
+      // Extract unique city list from all assignments
       const citySet = new Set();
-      data.cityDayAssignments.forEach(d => d.cities.forEach(c => citySet.add(c.cityId)));
+      data.cityDayAssignments.forEach(dayAssignment => {
+        dayAssignment.cities.forEach(city => {
+          citySet.add(city.cityId);
+        });
+      });
       const cityList = Array.from(citySet);
 
+      // Guardar en Firebase
       const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
       await setDoc(itineraryRef, {
         name: data.name,
@@ -564,20 +1151,27 @@ export const ItineraryBuilder = {
         categories: data.categories,
         template: data.template,
         days: daysWithActivities,
-        flights: { outbound: data.outboundFlight, return: data.returnFlight },
-        aiInsights: this.aiApplied && this.aiPlan ? {
-          summary: this.aiPlan.summary || '',
-          tips: this.aiPlan.tips || [],
-          transportationTips: this.aiPlan.transportationTips || '',
-          budgetSummary: this.aiPlan.budgetSummary || '',
-          generatedAt: new Date().toISOString()
-        } : null,
+        flights: {
+          outbound: data.outboundFlight,
+          return: data.returnFlight
+        },
         createdAt: new Date().toISOString(),
         createdBy: auth.currentUser.email
       });
 
-      Notifications.success(`✨ Itinerario "${data.name}" creado exitosamente`);
-      if (window.ItineraryHandler && window.ItineraryHandler.reinitialize) window.ItineraryHandler.reinitialize();
+      Notifications.success(`✨ Itinerario "${data.name}" creado exitosamente con ${activities.length} actividades!`);
+
+      // Show AI insights if available
+      if (this.aiTips && this.aiTips.length > 0) {
+        this.showAIInsightsModal();
+      }
+
+      // Recargar vista
+      if (window.ItineraryHandler && window.ItineraryHandler.reinitialize) {
+        window.ItineraryHandler.reinitialize();
+      }
+
+      console.log('✅ Itinerario creado:', tripId, `con ${activities.length} actividades`);
     } catch (error) {
       console.error('❌ Error creando itinerario:', error);
       Notifications.error('Error al crear itinerario. Inténtalo de nuevo.');
@@ -585,307 +1179,518 @@ export const ItineraryBuilder = {
   },
 
   generateDays(startDate, endDate) {
-    const days = []; const start = new Date(startDate); const end = new Date(endDate);
-    let cur = new Date(start); let num = 1;
-    while (cur <= end) { days.push({ day: num, date: cur.toISOString().split('T')[0], activities: [] }); cur.setDate(cur.getDate() + 1); num++; }
+    const days = [];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    let current = new Date(start);
+    let dayNumber = 1;
+    
+    while (current <= end) {
+      days.push({
+        day: dayNumber,
+        date: current.toISOString().split('T')[0],
+        activities: []
+      });
+      
+      current.setDate(current.getDate() + 1);
+      dayNumber++;
+    }
+    
     return days;
   },
 
-  // === Fallback por plantilla ===
   async generateActivitiesFromTemplate(templateId, cityDayAssignments, selectedCategories, totalDays) {
-    const template = TEMPLATES.find(t => t.id === templateId); if (!template) return [];
-    const paceMap = { relaxed: { min:2, max:3 }, moderate: { min:3, max:4 }, intense: { min:4, max:6 } };
-    const apd = paceMap[template.pace] || paceMap.moderate;
-    const allCats = [...new Set([...(template.categories||[]), ...selectedCategories])];
+    console.log('🎯 Generating smart itinerary with flexible city visits:', { templateId, cityDayAssignments, selectedCategories, totalDays });
 
-    const out = []; let idc = 1;
-    cityDayAssignments.forEach(assign => {
-      const dayNum = assign.day; const cities = assign.cities; const citiesCount = cities.length;
+    // Get template configuration
+    const template = TEMPLATES.find(t => t.id === templateId);
+    if (!template) {
+      console.warn('Template not found, returning empty activities');
+      return [];
+    }
+
+    // 🤖 TRY AI GENERATION FIRST
+    if (window.AIIntegration && template.id !== 'blank') {
+      try {
+        console.log('🤖 Attempting AI-powered itinerary generation...');
+        
+        const cities = cityDayAssignments.map(d => d.cities.map(c => c.cityId)).flat();
+        const uniqueCities = [...new Set(cities)];
+        
+        const aiResult = await window.AIIntegration.generateItineraryRecommendations({
+          cities: uniqueCities,
+          interests: [...template.categories, ...selectedCategories],
+          days: totalDays,
+          travelStyle: template.pace,
+          userPreferences: {
+            budgetLevel: 'moderate'
+          }
+        });
+
+        if (aiResult.success && aiResult.recommendations && aiResult.recommendations.days) {
+          console.log('✅ AI generation successful! Using AI recommendations');
+          
+          // Convert AI recommendations to our format
+          const aiActivities = [];
+          let activityIdCounter = 1;
+          
+          aiResult.recommendations.days.forEach((aiDay, index) => {
+            const dayAssignment = cityDayAssignments[index];
+            if (!dayAssignment) return;
+            
+            aiDay.activities.forEach((activity, actIndex) => {
+              const cityVisit = dayAssignment.cities[0] || {};
+              
+              aiActivities.push({
+                id: `ai-activity-${activityIdCounter++}`,
+                day: aiDay.day,
+                city: cityVisit.cityId || uniqueCities[0],
+                cityName: cityVisit.cityName || 'Japan',
+                title: activity.title,
+                name: activity.title,
+                desc: activity.desc || activity.description,
+                description: activity.desc || activity.description,
+                time: activity.time,
+                duration: activity.duration || '1-2 hours',
+                cost: activity.cost || 0,
+                station: activity.station,
+                location: activity.location,
+                category: activity.category,
+                aiGenerated: true,
+                aiReasoning: activity.aiReasoning,
+                order: actIndex + 1
+              });
+            });
+          });
+          
+          // Store AI tips and summary for later display
+          if (window.ItineraryBuilder) {
+            window.ItineraryBuilder.aiTips = aiResult.recommendations.tips || [];
+            window.ItineraryBuilder.aiSummary = aiResult.recommendations.summary || '';
+            window.ItineraryBuilder.aiTransportationTips = aiResult.recommendations.transportationTips || '';
+            window.ItineraryBuilder.aiBudgetSummary = aiResult.recommendations.budgetSummary || '';
+          }
+          
+          console.log(`✅ Generated ${aiActivities.length} AI-powered activities`);
+          return aiActivities;
+        } else {
+          console.warn('⚠️ AI generation failed, falling back to template-based generation');
+        }
+      } catch (error) {
+        console.error('❌ Error in AI generation, falling back to template:', error);
+      }
+    }
+
+    // FALLBACK: Template-based generation
+    console.log('📋 Using template-based generation');
+
+    // Determine activities per day based on pace
+    const activitiesPerDay = {
+      relaxed: { min: 2, max: 3 },
+      moderate: { min: 3, max: 4 },
+      intense: { min: 4, max: 6 }
+    }[template.pace] || { min: 3, max: 4 };
+
+    // Merge template categories with user-selected categories
+    const allCategories = [...new Set([...template.categories, ...selectedCategories])];
+
+    const generatedActivities = [];
+    let activityIdCounter = 1;
+
+    // For each day assignment (NEW: supports multiple cities per day)
+    cityDayAssignments.forEach(dayAssignment => {
+      const dayNumber = dayAssignment.day;
+      const cities = dayAssignment.cities;
+      
+      // Calculate how many activities per city based on number of cities in the day
+      const citiesCount = cities.length;
       let activitiesPerCity;
-      if (citiesCount === 1 && cities[0].isFullDay) activitiesPerCity = apd.min + Math.floor(Math.random()*(apd.max-apd.min+1));
-      else if (citiesCount === 1) activitiesPerCity = Math.max(1, Math.floor(apd.min/1.5));
-      else { const total = apd.min + Math.floor(Math.random()*(apd.max-apd.min+1)); activitiesPerCity = Math.max(1, Math.floor(total / citiesCount)); }
+      
+      if (citiesCount === 1 && cities[0].isFullDay) {
+        // Full day in one city: normal activity count
+        activitiesPerCity = activitiesPerDay.min + Math.floor(Math.random() * (activitiesPerDay.max - activitiesPerDay.min + 1));
+      } else if (citiesCount === 1) {
+        // Partial day in one city: fewer activities
+        activitiesPerCity = Math.max(1, Math.floor(activitiesPerDay.min / 1.5));
+      } else {
+        // Multiple cities: distribute activities
+        const totalActivities = activitiesPerDay.min + Math.floor(Math.random() * (activitiesPerDay.max - activitiesPerDay.min + 1));
+        activitiesPerCity = Math.max(1, Math.floor(totalActivities / citiesCount));
+      }
+      
+      // Generate activities for each city in this day
+      cities.forEach((cityVisit, cityIndex) => {
+        const cityId = cityVisit.cityId;
+        const cityData = ACTIVITIES_DATABASE[cityId];
 
-      cities.forEach((visit, cIdx) => {
-        const cityData = ACTIVITIES_DATABASE[visit.cityId]; if (!cityData || !cityData.activities) return;
-        let pool = cityData.activities.filter(a => allCats.includes(a.category)); if (pool.length === 0) pool = cityData.activities;
-        pool = [...pool].sort(() => Math.random() - 0.5);
-        const count = Math.min(activitiesPerCity, pool.length);
-        for (let i=0; i<count; i++) {
-          const base = pool[i];
-          out.push({ id: `activity-${idc++}`, day: dayNum, city: visit.cityId, cityName: visit.cityName, title: base.title || base.name || 'Actividad', name: base.name || base.title || 'Actividad', desc: base.description || base.desc || '', description: base.description || base.desc || '', time: visit.isFullDay ? `${9 + i*2}:00` : (base.time || `${9 + i*2}:00`), duration: base.duration || '1-2 hours', cost: base.cost || 0, category: base.category, order: (cIdx*10)+i+1, isGenerated: true });
+        if (!cityData || !cityData.activities) {
+          console.warn(`No activities found for city: ${cityId}`);
+          return;
+        }
+
+        // Filter activities by selected categories
+        let availableActivities = cityData.activities.filter(activity =>
+          allCategories.includes(activity.category)
+        );
+
+        // If no activities match categories, use all activities from the city
+        if (availableActivities.length === 0) {
+          availableActivities = cityData.activities;
+        }
+
+        // Shuffle activities for variety
+        availableActivities = this.shuffleArray([...availableActivities]);
+        
+        // Determine activity count for this city
+        const activityCount = Math.min(activitiesPerCity, availableActivities.length);
+        
+        // Generate start time for activities if time range is specified
+        let currentTime = cityVisit.timeStart || '09:00';
+        
+        for (let i = 0; i < activityCount; i++) {
+          if (i < availableActivities.length) {
+            const activity = availableActivities[i];
+            
+            generatedActivities.push({
+              id: `activity-${activityIdCounter++}`,
+              day: dayNumber,
+              city: cityId,
+              cityName: cityVisit.cityName,
+              ...activity,
+              time: cityVisit.timeStart ? this.calculateActivityTime(currentTime, i) : activity.time || `${9 + i * 2}:00`,
+              cityVisitInfo: {
+                timeStart: cityVisit.timeStart,
+                timeEnd: cityVisit.timeEnd,
+                isFullDay: cityVisit.isFullDay,
+                order: cityVisit.order
+              },
+              order: (cityIndex * 10) + i + 1,
+              isGenerated: true
+            });
+          }
         }
       });
     });
 
-    out.sort((a,b) => a.day !== b.day ? a.day - b.day : a.order - b.order);
-    return out;
-  },
-
-  // ===== ✨ AI Planner =====
-  openAIPlannerModal() {
-    const existing = document.getElementById('aiPlannerModal'); if (existing) existing.remove();
-    const selectedCats = Array.from(document.querySelectorAll('input[name="categories"]:checked')).map(cb => cb.value);
-
-    const modal = `
-      <div id="aiPlannerModal" class="modal active" style="z-index:10001;">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-3xl w-full p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-xl font-bold dark:text-white">✨ AI Planner</h3>
-            <button id="aiPlannerCloseBtn" class="modal-close">×</button>
-          </div>
-
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-semibold mb-1 dark:text-gray-100">Ritmo</label>
-              <div class="flex gap-3 text-sm">
-                <label class="flex items-center gap-2"><input type="radio" name="aiPace" value="relaxed"> 🐢 Relajado</label>
-                <label class="flex items-center gap-2"><input type="radio" name="aiPace" value="moderate" checked> 🚶 Moderado</label>
-                <label class="flex items-center gap-2"><input type="radio" name="aiPace" value="intense"> 🏃 Intenso</label>
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold mb-1 dark:text-gray-100">Intereses</label>
-              <div class="grid grid-cols-2 gap-2 max-h-44 overflow-auto">
-                ${CATEGORIES.map(cat => `
-                  <label class="flex items-center gap-2 text-sm">
-                    <input type="checkbox" name="aiInterests" value="${cat.id}" ${selectedCats.includes(cat.id)?'checked':''}>
-                    <span>${cat.icon} ${cat.name}</span>
-                  </label>`).join('')}
-              </div>
-            </div>
-
-            <details class="bg-gray-50 dark:bg-gray-700/40 rounded p-3">
-              <summary class="cursor-pointer text-sm font-semibold dark:text-gray-100">⚙️ Ajustes de AI</summary>
-              <div class="mt-2 grid md:grid-cols-2 gap-3 text-sm">
-                <div>
-                  <label class="block mb-1">OpenAI API Key</label>
-                  <input id="aiApiKeyInput" type="password" class="w-full rounded-md p-2 border" placeholder="sk-..." value="${localStorage.getItem('openai_api_key')||''}" />
-                  <p class="text-xs text-gray-500 mt-1">Se guarda localmente en este navegador.</p>
-                </div>
-                <div>
-                  <label class="block mb-1">Preferencias</label>
-                  <label class="flex items-center gap-2 mb-1"><input id="aiIncludeHiddenGems" type="checkbox" checked> Incluir joyas ocultas</label>
-                  <label class="flex items-center gap-2 mb-1"><input id="aiIncludeFood" type="checkbox" checked> Sugerir comida</label>
-                  <label class="flex items-center gap-2"><input id="aiOptimizeTransit" type="checkbox" checked> Optimizar desplazamientos</label>
-                </div>
-              </div>
-            </details>
-
-            <div id="aiPlannerStatus" class="hidden text-sm"></div>
-            <div id="aiPlannerPreview" class="hidden"></div>
-          </div>
-
-          <div class="mt-6 flex items-center justify-between">
-            <button id="aiStartBtn" class="px-4 py-2 rounded bg-purple-600 hover:bg-purple-700 text-white">Generar con AI</button>
-            <div class="flex items-center gap-2">
-              <button id="aiApplyAllMerge" class="hidden px-3 py-2 rounded bg-blue-50 dark:bg-gray-700 text-blue-700 dark:text-blue-300 text-sm">Añadir a todos</button>
-              <button id="aiApplyAllReplace" class="hidden px-3 py-2 rounded bg-red-50 dark:bg-gray-700 text-red-700 dark:text-red-300 text-sm">Reemplazar todos</button>
-              <button id="aiApplyBtn" class="hidden px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white">Aplicar</button>
-            </div>
-          </div>
-        </div>
-      </div>`;
-
-    document.body.insertAdjacentHTML('beforeend', modal);
-    document.body.style.overflow = 'hidden';
-  },
-
-  closeAIPlannerModal() { const m = document.getElementById('aiPlannerModal'); if (m) { m.remove(); document.body.style.overflow=''; } },
-
-  async startAIGeneration() {
-    const keyInput = document.getElementById('aiApiKeyInput'); const apiKey = keyInput?.value?.trim(); if (apiKey) localStorage.setItem('openai_api_key', apiKey);
-    const savedKey = localStorage.getItem('openai_api_key'); if (!savedKey) { Notifications.warning('Ingresa tu OpenAI API Key'); return; }
-
-    const pace = (document.querySelector('input[name="aiPace"]:checked')?.value) || 'moderate';
-    const interests = Array.from(document.querySelectorAll('input[name="aiInterests"]:checked')).map(i => i.value);
-
-    const assignments = this.getCityDayAssignments(); if (!assignments || assignments.length === 0) { Notifications.warning('Asigna ciudades en el Paso 2'); return; }
-    const uniqueCities = [...new Set(assignments.flatMap(d => d.cities.map(c => c.cityId)))];
-    const totalDays = assignments.length;
-
-    const status = document.getElementById('aiPlannerStatus'); status.classList.remove('hidden'); status.innerHTML = `<div class="text-sm text-gray-600 dark:text-gray-300">🧠 Preparando prompt…</div>`;
-
-    try {
-      if (!window.AIIntegration || !window.AIIntegration.generateItineraryRecommendations) { Notifications.error('AIIntegration no está disponible'); return; }
-      status.innerHTML = `<div class="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-300">⏳ Generando recomendaciones…</div>`;
-
-      const userPreferences = {
-        budgetLevel: 'moderate',
-        includeHiddenGems: document.getElementById('aiIncludeHiddenGems')?.checked || false,
-        includeFood: document.getElementById('aiIncludeFood')?.checked || false,
-        optimizeTransit: document.getElementById('aiOptimizeTransit')?.checked || false
-      };
-
-      const result = await window.AIIntegration.generateItineraryRecommendations({ cities: uniqueCities, interests, days: totalDays, travelStyle: pace, existingActivities: [], userPreferences });
-      if (!result.success || !result.recommendations) { Notifications.error('No se pudieron generar recomendaciones AI.'); status.innerHTML = `<div class="text-sm text-red-600">❌ Error generando recomendaciones.</div>`; return; }
-
-      this.aiPlan = result.recommendations;
-      this.renderAIPreview(assignments);
-    } catch (err) {
-      console.error('AI Planner error:', err);
-      Notifications.error('Error con el AI Planner. Revisa tu API key.');
-      const st = document.getElementById('aiPlannerStatus'); st.innerHTML = `<div class="text-sm text-red-600">❌ ${String(err?.message||err)}</div>`;
-    }
-  },
-
-  renderAIPreview(assignments) {
-    const preview = document.getElementById('aiPlannerPreview'); const status = document.getElementById('aiPlannerStatus'); if (!preview) return;
-    status.innerHTML = `<div class="text-sm text-green-600 dark:text-green-400">✅ Recomendaciones listas. Revisa y elige cómo aplicarlas.</div>`;
-
-    const daysHtml = (this.aiPlan?.days||[]).map((d, idx) => {
-      const dayNum = idx + 1; const assign = assignments.find(a => a.day === dayNum); const cities = assign?.cities?.map(c => c.cityName).join(' → ') || '';
-      const acts = (d.activities||[]).map(a => `
-        <li class="text-sm p-2 rounded border dark:border-gray-700">
-          <div class="font-semibold">${a.time||''} ${a.title||'Actividad'}</div>
-          <div class="text-xs opacity-70">${a.desc||''}</div>
-          <div class="text-[11px] opacity-60">${a.location||''} ${a.station? '· 🚉 '+a.station:''} ${a.cost? '· ¥'+a.cost:''}</div>
-        </li>`).join('');
-      const mode = this.aiApplyMode[dayNum] || 'merge';
-      return `
-        <div class="rounded-lg border p-3 mb-3 dark:border-gray-700">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-sm font-semibold">Día ${dayNum} ${cities?`· <span class='opacity-70'>${cities}</span>`:''}</div>
-            <div class="flex items-center gap-2 text-xs">
-              <button data-ai-apply-day="${dayNum}" data-mode="merge" class="px-2 py-1 rounded ${mode==='merge'?'bg-blue-600 text-white':'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-blue-300'}">Añadir</button>
-              <button data-ai-apply-day="${dayNum}" data-mode="replace" class="px-2 py-1 rounded ${mode==='replace'?'bg-red-600 text-white':'bg-red-50 text-red-700 dark:bg-gray-700 dark:text-red-300'}">Reemplazar</button>
-            </div>
-          </div>
-          <ul class="space-y-2">${acts}</ul>
-        </div>`;
-    }).join('');
-
-    const tips = (this.aiPlan?.tips||[]).map(t => `<li>• ${t}</li>`).join('');
-    preview.classList.remove('hidden');
-    preview.innerHTML = `
-      <div class="mb-3 p-3 rounded bg-purple-50 dark:bg-purple-900/20 text-sm">
-        <div class="font-semibold mb-1">Resumen</div>
-        <div>${this.aiPlan?.summary || 'Itinerario generado por AI'}</div>
-        ${tips?`<ul class="mt-2">${tips}</ul>`:''}
-      </div>
-      ${daysHtml}`;
-
-    document.getElementById('aiApplyAllMerge')?.classList.remove('hidden');
-    document.getElementById('aiApplyAllReplace')?.classList.remove('hidden');
-    document.getElementById('aiApplyBtn')?.classList.remove('hidden');
-  },
-
-  toggleDayApplyMode(dayNumber, mode) { this.aiApplyMode[dayNumber] = mode === 'replace' ? 'replace' : 'merge'; const assignments = this.getCityDayAssignments(); this.renderAIPreview(assignments); },
-  applyAllMode(mode) { const assignments = this.getCityDayAssignments(); const totalDays = assignments.length; for (let d=1; d<=totalDays; d++) this.aiApplyMode[d] = mode; this.renderAIPreview(assignments); },
-  applyAISelection() { this.aiApplied = true; Notifications.success('Se aplicará el plan de AI al crear el itinerario.'); this.closeAIPlannerModal(); },
-
-  // ===== Heurística multi‑ciudad =====
-  pickCityForActivity(dayCities, activity) {
-    // dayCities: [{cityId, cityName,...}]
-    if (!dayCities || dayCities.length === 0) return null;
-    if (!this.multiCityHeuristic || dayCities.length === 1) return dayCities[0].cityId;
-
-    const cat = (activity.category||'').toLowerCase();
-    const station = (activity.station||'').toLowerCase();
-    const location = (activity.location||'').toLowerCase();
-
-    const nameIncludes = (cityName, ...keys) => keys.some(k => cityName.toLowerCase().includes(k));
-    const anyTextHas = (...keys) => keys.some(k => station.includes(k) || location.includes(k) || (activity.title||'').toLowerCase().includes(k) || (activity.desc||'').toLowerCase().includes(k));
-
-    // Preferencias por categoría
-    const preferKyoto = /temple|shrine|zen|garden|bamboo|culture|history|heritage|nature/.test(cat);
-    const preferOsaka = /food|nightlife|street|dotonbori|aquarium|entertainment/.test(cat);
-    const preferTokyo = /shopping|tech|electronics|anime|view|skytree|observatory|museum|city/.test(cat);
-
-    // Intento por estación/lugar
-    const stationToCity = [
-      { keys:['shinjuku','shibuya','ueno','asakusa','akihabara','ginza','harajuku','odaiba','tokyo','skytree'], city:'tokyo' },
-      { keys:['gion','fushimi','arashiyama','kiyomizu','nijo','kinkaku','kyoto'], city:'kyoto' },
-      { keys:['namba','dotonbori','umeda','shin-osaka','osaka'], city:'osaka' },
-      { keys:['nara','todaiji','kasuga'], city:'nara' },
-      { keys:['hiroshima','miyajima'], city:'hiroshima' }
-    ];
-
-    const cityIdByName = (needle) => {
-      const found = dayCities.find(c => c.cityName && c.cityName.toLowerCase().includes(needle));
-      return found?.cityId || null;
-    };
-
-    for (const map of stationToCity) {
-      if (anyTextHas(...map.keys)) { const cid = cityIdByName(map.city); if (cid) return cid; }
-    }
-
-    if (preferKyoto) { const cid = cityIdByName('kyoto') || cityIdByName('nara') || cityIdByName('arashiyama'); if (cid) return cid; }
-    if (preferOsaka) { const cid = cityIdByName('osaka') || cityIdByName('namba') || cityIdByName('dotonbori'); if (cid) return cid; }
-    if (preferTokyo) { const cid = cityIdByName('tokyo') || cityIdByName('asakusa') || cityIdByName('shinjuku') || cityIdByName('shibuya'); if (cid) return cid; }
-
-    // Fallback: primera ciudad del día
-    return dayCities[0].cityId;
-  },
-
-  convertAIRecommendationsToActivities(aiPlan, cityDayAssignments) {
-    const acts = []; let seq = 1;
-
-    (aiPlan?.days||[]).forEach((d, idx) => {
-      const day = idx + 1;
-      const dayCities = cityDayAssignments.find(x => x.day === day)?.cities || [];
-      const mode = this.aiApplyMode[day] || 'merge';
-
-      (d.activities||[]).forEach((a, i) => {
-        const chosenCityId = this.pickCityForActivity(dayCities, a) || dayCities[0]?.cityId;
-        const cityName = chosenCityId ? (ACTIVITIES_DATABASE[chosenCityId]?.city || (dayCities.find(c=>c.cityId===chosenCityId)?.cityName) || chosenCityId) : '';
-        acts.push({
-          id: `ai-activity-${seq++}`,
-          day,
-          city: chosenCityId,
-          cityName,
-          title: a.title || 'Actividad',
-          name: a.title || 'Actividad',
-          desc: a.desc || a.description || '',
-          description: a.desc || a.description || '',
-          time: a.time || `${9 + i*2}:00`,
-          duration: a.duration || '1-2 hours',
-          cost: a.cost || 0,
-          category: a.category || 'general',
-          station: a.station || '',
-          location: a.location || '',
-          order: i + 1,
-          aiGenerated: true,
-          __applyMode: mode
-        });
-      });
+    // Sort by day and order
+    generatedActivities.sort((a, b) => {
+      if (a.day !== b.day) return a.day - b.day;
+      return a.order - b.order;
     });
 
-    return acts;
+    console.log(`✅ Generated ${generatedActivities.length} activities across ${cityDayAssignments.length} days with flexible city visits`);
+    return generatedActivities;
+  },
+  
+  // Helper to calculate activity time based on sequence
+  calculateActivityTime(startTime, activityIndex) {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + (activityIndex * 90); // 1.5 hours per activity
+    const newHours = Math.floor(totalMinutes / 60) % 24;
+    const newMinutes = totalMinutes % 60;
+    return `${String(newHours).padStart(2, '0')}:${String(newMinutes).padStart(2, '0')}`;
   },
 
-  // ===== Insights Modal =====
-  showAIInsightsModal(ai) {
-    const existing = document.getElementById('aiInsightsModal'); if (existing) existing.remove();
-    const tips = (ai?.tips||[]).map(t => `<li class="mb-1">• ${t}</li>`).join('');
-    const modal = `
-      <div id="aiInsightsModal" class="modal active" style="z-index:10002;">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-3xl w-full p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-xl font-bold dark:text-white">✨ AI Travel Insights</h3>
-            <button id="aiInsightsCloseBtn" class="modal-close">×</button>
+  shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  },
+
+  // === AI INSIGHTS MODAL === //
+
+  showAIInsightsModal() {
+    const modalHtml = `
+      <div id="aiInsightsModal" class="modal active" style="z-index: 10002;">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <!-- Header -->
+          <div class="sticky top-0 bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white p-6 rounded-t-xl z-10">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="text-4xl">🤖</div>
+                <div>
+                  <h2 class="text-2xl font-bold">AI Travel Insights</h2>
+                  <p class="text-sm text-white/80 mt-1">Recomendaciones personalizadas para tu viaje</p>
+                </div>
+              </div>
+              <button 
+                onclick="ItineraryBuilder.closeAIInsightsModal()"
+                class="text-white/80 hover:text-white text-2xl"
+              >
+                ✕
+              </button>
+            </div>
           </div>
-          <div class="space-y-4 text-sm">
-            ${ai?.summary ? `<div><div class="font-semibold mb-1">Resumen</div><p class="opacity-90">${ai.summary}</p></div>`:''}
-            ${tips ? `<div><div class="font-semibold mb-1">Tips</div><ul>${tips}</ul></div>`:''}
-            ${ai?.transportationTips ? `<div><div class="font-semibold mb-1">Consejos de transporte</div><p class="opacity-90">${ai.transportationTips}</p></div>`:''}
-            ${ai?.budgetSummary ? `<div><div class="font-semibold mb-1">Presupuesto</div><p class="opacity-90">${ai.budgetSummary}</p></div>`:''}
+
+          <div class="p-6 space-y-6">
+            <!-- Summary -->
+            ${this.aiSummary ? `
+              <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-5 rounded-lg border border-purple-200 dark:border-purple-800">
+                <h3 class="text-lg font-bold text-purple-900 dark:text-purple-300 mb-2 flex items-center gap-2">
+                  <span>✨</span> Resumen del Itinerario
+                </h3>
+                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">${this.aiSummary}</p>
+              </div>
+            ` : ''}
+
+            <!-- Tips -->
+            ${this.aiTips && this.aiTips.length > 0 ? `
+              <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-5 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h3 class="text-lg font-bold text-blue-900 dark:text-blue-300 mb-3 flex items-center gap-2">
+                  <span>💡</span> Consejos Inteligentes
+                </h3>
+                <ul class="space-y-2">
+                  ${this.aiTips.map(tip => `
+                    <li class="flex items-start gap-2 text-gray-700 dark:text-gray-300">
+                      <span class="text-blue-500 mt-0.5">•</span>
+                      <span>${tip}</span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            ` : ''}
+
+            <!-- Transportation Tips -->
+            ${this.aiTransportationTips ? `
+              <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-5 rounded-lg border border-green-200 dark:border-green-800">
+                <h3 class="text-lg font-bold text-green-900 dark:text-green-300 mb-2 flex items-center gap-2">
+                  <span>🚄</span> Transporte
+                </h3>
+                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">${this.aiTransportationTips}</p>
+              </div>
+            ` : ''}
+
+            <!-- Budget Summary -->
+            ${this.aiBudgetSummary ? `
+              <div class="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-5 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <h3 class="text-lg font-bold text-yellow-900 dark:text-yellow-300 mb-2 flex items-center gap-2">
+                  <span>💰</span> Presupuesto
+                </h3>
+                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">${this.aiBudgetSummary}</p>
+              </div>
+            ` : ''}
+
+            <!-- AI Badge -->
+            <div class="text-center text-sm text-gray-500 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div class="flex items-center justify-center gap-2">
+                <span class="text-2xl">🤖</span>
+                <span>Generado por AI • Powered by OpenAI GPT-4</span>
+              </div>
+            </div>
           </div>
-          <div class="text-right mt-6">
-            <button id="aiInsightsCloseBtn" class="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white">Cerrar</button>
+
+          <!-- Footer -->
+          <div class="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6">
+            <button 
+              onclick="ItineraryBuilder.closeAIInsightsModal()"
+              class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-lg hover:from-purple-600 hover:to-pink-600 transition font-semibold"
+            >
+              ¡Entendido! 🎉
+            </button>
           </div>
         </div>
-      </div>`;
-    document.body.insertAdjacentHTML('beforeend', modal);
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
     document.body.style.overflow = 'hidden';
   },
-  closeAIInsightsModal() { const m = document.getElementById('aiInsightsModal'); if (m) { m.remove(); document.body.style.overflow=''; } },
 
-  // ===== Utilidades =====
-  generateDays(startDate, endDate) { const out=[]; let d=new Date(startDate), e=new Date(endDate), n=1; while (d<=e){ out.push({day:n, date:d.toISOString().split('T')[0], activities:[]}); d.setDate(d.getDate()+1); n++; } return out; },
-  calculateActivityTime(startTime, idx) { const [h,m]=(startTime||'09:00').split(':').map(Number); const t=h*60+(m||0)+idx*90; const nh=String(Math.floor(t/60)%24).padStart(2,'0'); const nm=String(t%60).padStart(2,'0'); return `${nh}:${nm}`; },
-  shuffleArray(a){const b=[...a]; for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [b[i],b[j]]=[b[j],b[i]];} return b;}
+  closeAIInsightsModal() {
+    const modal = document.getElementById('aiInsightsModal');
+    if (modal) {
+      modal.remove();
+      document.body.style.overflow = '';
+    }
+  },
+
+  // === GET AI RECOMMENDATIONS FOR EXISTING ITINERARY === //
+
+  async showAIRecommendationsForCurrent() {
+    if (!window.AIIntegration) {
+      Notifications.error('AI Integration no está disponible');
+      return;
+    }
+
+    if (!window.ItineraryHandler || !window.ItineraryHandler.currentItinerary) {
+      Notifications.warning('No hay itinerario para analizar');
+      return;
+    }
+
+    Notifications.info('🤖 Analizando tu itinerario con AI...');
+
+    try {
+      const currentItinerary = window.ItineraryHandler.currentItinerary;
+      const userTrip = window.TripsManager?.currentTrip;
+      
+      // Get user interests from categories if available
+      const userInterests = userTrip?.categories || [];
+
+      const result = await window.AIIntegration.getPersonalizedSuggestions(
+        currentItinerary,
+        userInterests
+      );
+
+      if (result.success && result.analysis) {
+        this.displayAIAnalysis(result.analysis);
+      } else {
+        Notifications.error('No se pudo generar análisis AI');
+      }
+    } catch (error) {
+      console.error('Error getting AI recommendations:', error);
+      Notifications.error('Error al obtener recomendaciones AI');
+    }
+  },
+
+  displayAIAnalysis(analysis) {
+    const modalHtml = `
+      <div id="aiAnalysisModal" class="modal active" style="z-index: 10002;">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <!-- Header -->
+          <div class="sticky top-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white p-6 rounded-t-xl z-10">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="text-4xl">🔍</div>
+                <div>
+                  <h2 class="text-2xl font-bold">Análisis AI de tu Itinerario</h2>
+                  <p class="text-sm text-white/80 mt-1">Mejora tu viaje con sugerencias personalizadas</p>
+                </div>
+              </div>
+              <button 
+                onclick="ItineraryBuilder.closeAIAnalysisModal()"
+                class="text-white/80 hover:text-white text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <div class="p-6 space-y-6">
+            <!-- Overall Analysis -->
+            ${analysis.overallAnalysis ? `
+              <div class="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-5 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                <h3 class="text-lg font-bold text-indigo-900 dark:text-indigo-300 mb-2 flex items-center gap-2">
+                  <span>📊</span> Análisis General
+                </h3>
+                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">${analysis.overallAnalysis}</p>
+              </div>
+            ` : ''}
+
+            <!-- Strengths -->
+            ${analysis.strengths && analysis.strengths.length > 0 ? `
+              <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-5 rounded-lg border border-green-200 dark:border-green-800">
+                <h3 class="text-lg font-bold text-green-900 dark:text-green-300 mb-3 flex items-center gap-2">
+                  <span>✅</span> Puntos Fuertes
+                </h3>
+                <ul class="space-y-2">
+                  ${analysis.strengths.map(strength => `
+                    <li class="flex items-start gap-2 text-gray-700 dark:text-gray-300">
+                      <span class="text-green-500 mt-0.5">✓</span>
+                      <span>${strength}</span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            ` : ''}
+
+            <!-- Improvements -->
+            ${analysis.improvements && analysis.improvements.length > 0 ? `
+              <div class="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-5 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <h3 class="text-lg font-bold text-yellow-900 dark:text-yellow-300 mb-3 flex items-center gap-2">
+                  <span>💡</span> Sugerencias de Mejora
+                </h3>
+                <div class="space-y-4">
+                  ${analysis.improvements.map(improvement => `
+                    <div class="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
+                      <div class="font-semibold text-gray-900 dark:text-white mb-1">
+                        Día ${improvement.day}
+                      </div>
+                      <div class="text-gray-700 dark:text-gray-300 text-sm mb-1">
+                        ${improvement.suggestion}
+                      </div>
+                      <div class="text-xs text-gray-600 dark:text-gray-400 italic">
+                        ${improvement.reasoning}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Hidden Gems -->
+            ${analysis.hiddenGems && analysis.hiddenGems.length > 0 ? `
+              <div class="bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 p-5 rounded-lg border border-pink-200 dark:border-pink-800">
+                <h3 class="text-lg font-bold text-pink-900 dark:text-pink-300 mb-3 flex items-center gap-2">
+                  <span>💎</span> Joyas Escondidas
+                </h3>
+                <div class="space-y-3">
+                  ${analysis.hiddenGems.map(gem => `
+                    <div class="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
+                      <div class="font-bold text-gray-900 dark:text-white mb-1">
+                        ${gem.title}
+                      </div>
+                      <div class="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                        ${gem.description}
+                      </div>
+                      <div class="text-xs text-pink-600 dark:text-pink-400 italic">
+                        ✨ ${gem.whySpecial}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <!-- Optimization Tips -->
+            ${analysis.optimizationTips && analysis.optimizationTips.length > 0 ? `
+              <div class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-5 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h3 class="text-lg font-bold text-blue-900 dark:text-blue-300 mb-3 flex items-center gap-2">
+                  <span>🎯</span> Consejos de Optimización
+                </h3>
+                <ul class="space-y-2">
+                  ${analysis.optimizationTips.map(tip => `
+                    <li class="flex items-start gap-2 text-gray-700 dark:text-gray-300">
+                      <span class="text-blue-500 mt-0.5">→</span>
+                      <span>${tip}</span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Footer -->
+          <div class="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6">
+            <button 
+              onclick="ItineraryBuilder.closeAIAnalysisModal()"
+              class="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-3 rounded-lg hover:from-indigo-600 hover:to-purple-600 transition font-semibold"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.body.style.overflow = 'hidden';
+  },
+
+  closeAIAnalysisModal() {
+    const modal = document.getElementById('aiAnalysisModal');
+    if (modal) {
+      modal.remove();
+      document.body.style.overflow = '';
+    }
+  },
+
+  // === MÁS FUNCIONES CONTINÚAN... ===
+  // (El resto de las funciones como drag & drop, optimización, etc.)
 };
 
+// Exportar para uso global
 window.ItineraryBuilder = ItineraryBuilder;
