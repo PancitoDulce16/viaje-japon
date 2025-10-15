@@ -24,19 +24,31 @@ export const AuthHandler = {
       this.setupLandingPage();
     }
     
-    // Listener de cambios de autenticación
-    onAuthStateChanged(auth, (user) => {
-      this.currentUser = user;
-      
-      if (user) {
-        console.log('✅ Usuario autenticado:', user.email);
-        this.showAppDashboard();
-        this.updateUserInfo(user);
-      } else {
-        console.log('⚠️ No hay usuario autenticado');
+    // Listener de cambios de autenticación (solo si auth está inicializado)
+    if (typeof auth !== 'undefined' && auth) {
+      try {
+        onAuthStateChanged(auth, (user) => {
+          this.currentUser = user;
+
+          if (user) {
+            console.log('✅ Usuario autenticado:', user.email);
+            this.showAppDashboard();
+            this.updateUserInfo(user);
+          } else {
+            console.log('⚠️ No hay usuario autenticado');
+            this.showLandingPage();
+          }
+        });
+      } catch (err) {
+        console.error('❌ Error registrando onAuthStateChanged:', err);
+        // Fallback: mostrar landing para que los botones funcionen
         this.showLandingPage();
       }
-    });
+    } else {
+      console.warn('⚠️ Firebase Auth no está inicializado. Se mostrará la landing page sin sesión.');
+      // Asegurarse que la landing está visible para que los botones funcionen
+      this.showLandingPage();
+    }
   },
 
   // Setup de la landing page
