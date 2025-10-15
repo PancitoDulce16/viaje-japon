@@ -24,14 +24,13 @@ jobs:
 
       - name: Generate client config files
         env:
-          # Mantenemos las otras variables de entorno como estaban
           CONFIG_GOOGLE_PLACES_KEY: ${{ secrets.CONFIG_GOOGLE_PLACES_KEY }}
           API_KEYS_JSON: ${{ secrets.API_KEYS_JSON }}
         run: |
           mkdir -p js || true
           
           # SOLUCIÓN DEFINITIVA para js/firebase-config.js
-          # Inyectamos el secreto directamente para evitar problemas con el shell
+          # Inyectamos el secreto con un NUEVO NOMBRE para evitar caché
           echo "
           // Generated file - DO NOT COMMIT
           import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
@@ -39,7 +38,7 @@ jobs:
           import { getAuth, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
           import { getStorage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
-          const firebaseConfig = ${{ secrets.FIREBASE_CONFIG_JSON }};
+          const firebaseConfig = ${{ secrets.FIREBASE_CONFIG_DATA }};
 
           let app = null;
           let db = null;
