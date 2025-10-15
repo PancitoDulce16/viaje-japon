@@ -772,8 +772,29 @@ window.TripsManager = TripsManager;
 
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    TripsManager.initUserTrips();
+try {
+  if (typeof auth !== 'undefined' && auth) {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        TripsManager.initUserTrips();
+      }
+    });
+  } else {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        try { TripsManager.initUserTrips(); } catch (e) { console.warn('TripsManager init deferred failed:', e); }
+      });
+    } else {
+      try { TripsManager.initUserTrips(); } catch (e) { console.warn('TripsManager init immediate failed:', e); }
+    }
   }
-});
+} catch (e) {
+  console.warn('Error setting up auth listener for TripsManager:', e);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      try { TripsManager.initUserTrips(); } catch (err) { console.warn('TripsManager fallback failed:', err); }
+    });
+  } else {
+    try { TripsManager.initUserTrips(); } catch (err) { console.warn('TripsManager fallback immediate failed:', err); }
+  }
+}

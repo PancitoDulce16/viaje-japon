@@ -478,9 +478,30 @@ export const PreparationHandler = {
 // Inicializar cuando cambia el estado de autenticación
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-onAuthStateChanged(auth, (user) => {
-    PreparationHandler.initRealtimeSync();
-});
+try {
+    if (typeof auth !== 'undefined' && auth) {
+        onAuthStateChanged(auth, (user) => {
+            PreparationHandler.initRealtimeSync();
+        });
+    } else {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                try { PreparationHandler.initRealtimeSync(); } catch (e) { console.warn('PreparationHandler init deferred failed:', e); }
+            });
+        } else {
+            try { PreparationHandler.initRealtimeSync(); } catch (e) { console.warn('PreparationHandler init immediate failed:', e); }
+        }
+    }
+} catch (e) {
+    console.warn('Error setting up auth listener for PreparationHandler:', e);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            try { PreparationHandler.initRealtimeSync(); } catch (err) { console.warn('PreparationHandler fallback failed:', err); }
+        });
+    } else {
+        try { PreparationHandler.initRealtimeSync(); } catch (err) { console.warn('PreparationHandler fallback immediate failed:', err); }
+    }
+}
 
 // Exponer globalmente
 window.PreparationHandler = PreparationHandler;

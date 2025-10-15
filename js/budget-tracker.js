@@ -289,8 +289,29 @@ export const BudgetTracker = {
 // Inicializar cuando cambia el estado de autenticación
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-onAuthStateChanged(auth, (user) => {
-  BudgetTracker.initRealtimeSync();
-});
+try {
+  if (typeof auth !== 'undefined' && auth) {
+    onAuthStateChanged(auth, (user) => {
+      BudgetTracker.initRealtimeSync();
+    });
+  } else {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        try { BudgetTracker.initRealtimeSync(); } catch (e) { console.warn('BudgetTracker init deferred failed:', e); }
+      });
+    } else {
+      try { BudgetTracker.initRealtimeSync(); } catch (e) { console.warn('BudgetTracker init immediate failed:', e); }
+    }
+  }
+} catch (e) {
+  console.warn('Error setting up auth listener for BudgetTracker:', e);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      try { BudgetTracker.initRealtimeSync(); } catch (err) { console.warn('BudgetTracker fallback failed:', err); }
+    });
+  } else {
+    try { BudgetTracker.initRealtimeSync(); } catch (err) { console.warn('BudgetTracker fallback immediate failed:', err); }
+  }
+}
 
 window.BudgetTracker = BudgetTracker;

@@ -337,8 +337,31 @@ window.AppCore = AppCore;
 // Inicializar cuando cambia el estado de autenticación
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-onAuthStateChanged(auth, (user) => {
-    AppCore.initNotesSync();
-});
+// Guardar: only register onAuthStateChanged if auth is initialized.
+try {
+    if (typeof auth !== 'undefined' && auth) {
+        onAuthStateChanged(auth, (user) => {
+            AppCore.initNotesSync();
+        });
+    } else {
+        // If auth is not available (missing firebase-config), ensure notes sync runs after DOM ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                try { AppCore.initNotesSync(); } catch (e) { console.warn('initNotesSync deferred failed:', e); }
+            });
+        } else {
+            try { AppCore.initNotesSync(); } catch (e) { console.warn('initNotesSync immediate failed:', e); }
+        }
+    }
+} catch (e) {
+    console.warn('Error setting up auth state listener:', e);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            try { AppCore.initNotesSync(); } catch (err) { console.warn('initNotesSync fallback failed:', err); }
+        });
+    } else {
+        try { AppCore.initNotesSync(); } catch (err) { console.warn('initNotesSync fallback immediate failed:', err); }
+    }
+}
 
 window.AppCore = AppCore;

@@ -1256,8 +1256,30 @@ export const ItineraryHandler = {
 // Inicializar cuando cambia el estado de autenticación
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-onAuthStateChanged(auth, (user) => {
-  initRealtimeSync();
-});
+// Guardar: only register onAuthStateChanged if auth is initialized; otherwise call initRealtimeSync after DOM ready
+try {
+  if (typeof auth !== 'undefined' && auth) {
+    onAuthStateChanged(auth, (user) => {
+      initRealtimeSync();
+    });
+  } else {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        try { initRealtimeSync(); } catch (e) { console.warn('initRealtimeSync deferred failed:', e); }
+      });
+    } else {
+      try { initRealtimeSync(); } catch (e) { console.warn('initRealtimeSync immediate failed:', e); }
+    }
+  }
+} catch (e) {
+  console.warn('Error setting up auth listener for itinerary:', e);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      try { initRealtimeSync(); } catch (err) { console.warn('initRealtimeSync fallback failed:', err); }
+    });
+  } else {
+    try { initRealtimeSync(); } catch (err) { console.warn('initRealtimeSync fallback immediate failed:', err); }
+  }
+}
 
 window.ItineraryHandler = ItineraryHandler;
