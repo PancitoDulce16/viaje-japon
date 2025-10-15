@@ -23,8 +23,36 @@ jobs:
       - name: Generate js/firebase-config.js from secret
         if: ${{ secrets.FIREBASE_CONFIG_JSON }}
         run: |
-          echo "// Generated file - DO NOT COMMIT" > js/firebase-config.js
-          echo "window.FIREBASE_CONFIG = ${{ secrets.FIREBASE_CONFIG_JSON }};" >> js/firebase-config.js
+          cat > js/firebase-config.js <<'EOF'
+          // Generated file - DO NOT COMMIT
+          // This file is an ES module that initializes Firebase using the secret provided by CI.
+          import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+          import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+          import { getAuth, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+          import { getStorage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+          // Injected config (from GitHub Secrets)
+          const firebaseConfig = ${{ secrets.FIREBASE_CONFIG_JSON }};
+
+          let app = null;
+          let db = null;
+          let auth = null;
+          let storage = null;
+          let googleProvider = null;
+
+          if (firebaseConfig && firebaseConfig.apiKey) {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            storage = getStorage(app);
+            googleProvider = new GoogleAuthProvider();
+            console.log('🔥 Firebase initialized for project:', firebaseConfig.projectId || '(unknown)');
+          } else {
+            console.warn('⚠️ Firebase not initialized because configuration is missing or incomplete.');
+          }
+
+          export { app, db, auth, storage, googleProvider };
+          EOF
 
       - name: Generate js/apis-config.js from secret
         if: ${{ secrets.API_KEYS_JSON }}
