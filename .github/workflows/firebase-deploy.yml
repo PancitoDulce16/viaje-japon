@@ -16,52 +16,53 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: |
-          npm ci || echo "No package.json found or no dependencies to install"
-
-      - name: Generate client config files
-        env:
-          CONFIG_GOOGLE_PLACES_KEY: ${{ secrets.CONFIG_GOOGLE_PLACES_KEY }}
-          FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
-          API_KEYS_JSON: ${{ secrets.API_KEYS_JSON }}
-        run: |
-          mkdir -p js || true
-          if [ -n "$CONFIG_GOOGLE_PLACES_KEY" ]; then
-            printf '%s\n%s\n%s\n' "// Generated file - DO NOT COMMIT" "export const APP_CONFIG = {" "  GOOGLE_PLACES_API_KEY: '$CONFIG_GOOGLE_PLACES_KEY'" > js/config.js
-            printf '%s\n%s\n' "};" "" >> js/config.js || true
-          fi
-          if [ -n "$FIREBASE_CONFIG_JSON" ]; then
-            printf '%s\n' "// Generated file - DO NOT COMMIT" > js/firebase-config.js
-            printf '%s\n' "import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';" >> js/firebase-config.js
-            printf '%s\n' "import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';" >> js/firebase-config.js
-            printf '%s\n' "import { getAuth, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';" >> js/firebase-config.js
-            printf '%s\n\n' "import { getStorage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';" >> js/firebase-config.js
-            printf 'const firebaseConfig = %s;\n\n' "$FIREBASE_CONFIG_JSON" >> js/firebase-config.js
-            printf '%s\n' "let app = null; let db = null; let auth = null; let storage = null; let googleProvider = null;" >> js/firebase-config.js
-            printf '%s\n' "if (firebaseConfig && firebaseConfig.apiKey) {" >> js/firebase-config.js
-            printf '%s\n' "  app = initializeApp(firebaseConfig);" >> js/firebase-config.js
-            printf '%s\n' "  db = getFirestore(app);" >> js/firebase-config.js
-            printf '%s\n' "  auth = getAuth(app);" >> js/firebase-config.js
-            printf '%s\n' "  storage = getStorage(app);" >> js/firebase-config.js
-            printf '%s\n' "  googleProvider = new GoogleAuthProvider();" >> js/firebase-config.js
-            printf '%s\n' "  console.log('🔥 Firebase initialized for project:', firebaseConfig.projectId || '(unknown)');" >> js/firebase-config.js
-            printf '%s\n' "} else {" >> js/firebase-config.js
-            printf '%s\n' "  console.warn('⚠️ Firebase not initialized because configuration is missing or incomplete.');" >> js/firebase-config.js
-            printf '%s\n\n' "}" >> js/firebase-config.js
-            printf '%s\n' "export { app, db, auth, storage, googleProvider };" >> js/firebase-config.js
-          fi
-          if [ -n "$API_KEYS_JSON" ]; then
-            printf '%s\n' "// Generated file - DO NOT COMMIT" > js/apis-config.js
-            printf 'export const RUNTIME_API_KEYS = %s;\n' "$API_KEYS_JSON" >> js/apis-config.js
-          fi
-
-      - name: Build site (if you have a build step)
+      - name: Install root dependencies (if any)
         run: |
           if [ -f package.json ]; then
-            npm run build || true
+            npm ci
           fi
 
+      - name: Generate client config files
+        run: |
+          mkdir -p js || true
+          
+          # --- MÉTODO INFALIBLE PARA GENERAR FIREBASE-CONFIG.JS ---
+          # Usamos un "Here Document" (cat << EOF) para escribir el archivo.
+          # Esto inserta el secreto directamente sin que el shell lo modifique.
+          cat << EOF > js/firebase-config.js
+          // Generated file - DO NOT COMMIT
+          import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+          import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+          import { getAuth, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+          import { getStorage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+          const firebaseConfig = ${{ secrets.FIREBASE_CONFIG_JSON }};
+
+          let app = null;
+          let db = null;
+          let auth = null;
+          let storage = null;
+          let googleProvider = null;
+
+          if (firebaseConfig && firebaseConfig.apiKey) {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            storage = getStorage(app);
+            googleProvider = new GoogleAuthProvider();
+            console.log('🔥 Firebase initialized for project:', firebaseConfig.projectId || '(unknown)');
+          } else {
+            console.warn('⚠️ Firebase not initialized because configuration is missing or incomplete.');
+          }
+
+          export { app, db, auth, storage, googleProvider };
+          EOF
+          
+          # --- Generación de otros archivos (sin cambios) ---
+          if [ -n "${{ secrets.API_KEYS_JSON }}" ]; then
+            printf '// Generated file - DO NOT COMMIT\nexport const RUNTIME_API_KEYS = %s;\n' "${{ secrets.API_KEYS_JSON }}" > js/apis-config.js
+          fi
+          
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
@@ -69,12 +70,6 @@ jobs:
 
       - name: Install firebase-tools
         run: npm install -g firebase-tools
-
-      - name: Ensure .firebaserc uses correct project
-        run: |
-          if [ -n "${{ secrets.FIREBASE_PROJECT_ID }}" ]; then
-            echo "{\"projects\": {\"default\": \"${{ secrets.FIREBASE_PROJECT_ID }}\"}}" > .firebaserc
-          fi
 
       - name: Install functions dependencies
         run: |
@@ -84,5 +79,4 @@ jobs:
 
       - name: Deploy to Firebase
         run: |
-          # El flag --force soluciona la advertencia de 'cleanup policy'
           firebase deploy --only hosting,functions --project ${{ secrets.FIREBASE_PROJECT_ID }} --force
