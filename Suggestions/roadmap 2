@@ -1,0 +1,351 @@
+1) Smart Recommendations
+Goal
+Propose relevant attractions and food spots for each itinerary day using user preferences, location, date, opening hours, weather, and popularity.
+(No new UI redesign required—adds a “Recommended for this day” section per day.)
+Inputs
+
+User interests (chips: food, culture, anime, outdoors, café, nightlife, family-friendly, etc.).
+Current itinerary day (city, date).
+Attractions dataset (you already have: category, rating, priceTier, city, tags, reservation link, imageUrl).
+(Optional) Places enrichment for missing images/hours (respect Google Places session/billing best practices and field masks). [developers...google.com], [developers...google.com], [developers...google.com]
+(Optional) Transit time or distance penalty via NAVITIME APIs (route and reachability). [api-sdk.na...time.co.jp], [api-sdk.na...time.co.jp]
+Weather (you already have) to penalize outdoor picks on heavy rain/typhoon days.
+
+Data model (augment existing)
+
+ type UserPrefs = {
+  likedTags: string[];        // ["ramen","onsen","temples","anime"]
+  avoidTags: string[];        // ["spicy","alcohol"]
+  maxBudgetTier?: "$" | "$$" | "$$$" | "$$$$";
+  pace?: "relaxed" | "balanced" | "packed";
+};
+
+type Recommendation = {
+  attractionId: string;
+  score: number;              // 0–1
+  reasons: string[];          // ["nearby","fits-weather","high-rating"]
+};
+
+ Ranking formula (scoring)
+
+ score = w_interest * InterestMatch
+      + w_city * CityMatch
+      + w_time * OpeningHoursScore
+      + w_weather * WeatherSuitability
+      + w_quality * NormalizedRating
+      + w_cost * PriceFit
+      - w_distance * TravelTimePenalty
+      - w_dupe * AlreadyPlannedPenalty
+
+ InterestMatch: cosine on tag vectors; account for category preference.
+OpeningHoursScore: 1 if open during user’s daily time window, else 0.5 if partial overlap, else 0.
+WeatherSuitability: 1 if indoor on rainy/typhoon alerts; 0.3 if outdoor under alerts; otherwise 1.
+(Weather alerts explained in section 5) [data.jma.go.jp], [jnto.go.jp]
+TravelTimePenalty: normalize minutes (door-to-door) using NAVITIME Route if available; fallback to haversine. [api-sdk.na...time.co.jp]
+
+Pseudocode
+function recommendForDay({city, date}, userPrefs, allAttractions, weather, hoursIndex, transit) {
+  const candidates = allAttractions.filter(a => a.city === city);
+  return candidates.map(a => {
+    const interest = interestMatch(userPrefs, a);    // 0..1
+    const openScore = openingHoursScore(a, date, hoursIndex); // 0..1
+    const weatherOk = weatherSuitability(a, weather[city][date]); // 0..1
+    const quality = normalizeRating(a.rating);       // 0..1
+    const costFit = priceFit(userPrefs, a.priceTier);// 0..1
+    const travelMin = transit?.eta(a) ?? haversineETA(a);
+    const distancePenalty = clamp(travelMin / 60, 0, 1);
+    const dupePenalty = alreadyInDayPlan(a) ? 0.3 : 0;
+
+    const score = 0.30*interest + 0.10*openScore + 0.15*weatherOk +
+                  0.25*quality + 0.10*costFit - 0.08*distancePenalty - 0.02*dupePenalty;
+
+    return { attractionId: a.id, score, reasons: buildReasons(...) };
+  })
+  .filter(r => r.score >= 0.45)
+  .sort((a,b) => b.score - a.score)
+  .slice(0, 6);
+}
+
+ UI/UX
+
+On each day card, show a “Recommended for this day (6)” carousel or list with quick actions: Add, Save to favorites, View on map.
+Inline chips show why: “near hotel • indoor (rain) • 4.7★”.
+
+Privacy, performance, a11y
+
+Compute locally; no personal data leaves device.
+Debounce calls when user toggles tags; cache per (city,date).
+Buttons have aria-label, keyboard focus order preserved.
+
+Acceptance criteria
+
+Recommendations update when city/date or preferences change.
+Rain day → indoor attractions gain ≥ 0.2 score boost.
+Outdoor-only suggestions suppressed when JMA Emergency Warning (heavy rain, storm, etc.) is active in that prefecture. [data.jma.go.jp]
+
+
+2) Packing Checklist Generator
+Goal
+Generate a checklist tailored by season, weather forecast window, itinerary activities, and airline baggage rules (from your Flights tab). Use airline size/weight as guardrails and warn on potential overweight.
+
+Most airlines cap checked bags at 62 linear inches / 158 cm and 23 kg in economy; show baseline + airline specifics if available. [reactjsguru.com]
+
+Inputs
+
+Travel dates & cities (from itinerary).
+10‑day forecast snapshot for cities on departure (you already have weather).
+Airlines + cabin & baggage rules (Phase 1 Flights dataset).
+Activities/tags (hiking, onsen, temples, fine dining, theme parks).
+
+Logic
+
+Seasonal set (winter jacket, heat packs; summer breathable layers).
+Weather deltas: add rain gear if forecast ≥50% rain or typhoon watch in first 3 days; add heat/UV items for heat warnings.
+(Use JMA warnings; see section 5) [data.jma.go.jp]
+Activity packs (onsen kit, temple dress etiquette, hiking shoes).
+Baggage guardrails: compute linear inches for each checked bag; estimate weight from user-provided rough weights or category heuristics; flag risk if ~>23 kg. [reactjsguru.com]
+
+Data model
+
+type PackingItem = { id: string; label: string; qty: number; category: string; optional?: boolean };
+type PackingList = { items: PackingItem[]; airlineNote?: string; limit?: { linearCm?: number; weightKg?: number } };
+
+
+UI/UX
+
+“Generate packing list” button on Preparation tab.
+Editable checklist with quantities, notes, and export (PDF/CSV).
+Warnings: “Your airline’s economy limit is 23 kg per bag; you marked heavy electronics.” (if we know airline)
+Localized labels (EN/ES).
+
+Acceptance criteria
+
+Forecasted heavy rain → list contains compact umbrella + packable raincoat.
+If airline = ANA/JAL economy, show 23 kg / 158 cm checks and red badge when likely exceeded. [drjoseferrer.com], [reactjsguru.com]
+
+
+3) Expense Tracker
+Goal
+Track trip spend in JPY with live conversion to home currency, budgets per category/city, and export.
+Data model
+
+type Expense = {
+  id: string;
+  date: string;               // ISO
+  city: string;
+  category: "transport" | "food" | "lodging" | "activities" | "shopping" | "other";
+  amountJPY: number;
+  memo?: string;
+};
+
+type Budget = { perTripJPY?: number; perDayJPY?: number; perCategoryJPY?: Record<Expense["category"], number> };
+
+Features
+
+Add/edit/delete expenses offline; localStorage first, optional cloud later.
+Auto‑convert totals to user currency with your exchange rate util.
+Charts: daily burn, category pie.
+Alerts when daily spend > planned budget.
+Import CSV (from banks) minimal mapping; Export CSV.
+
+UI
+
+Tabular list + filters (city/category/date).
+Quick‑add buttons with common prices (ramen, JR local fare).
+Accessibility: keyboard add (Enter), labels, high contrast.
+
+Acceptance criteria
+
+Works offline; replays saves when online (if cloud added later).
+Conversion uses last known rate; warns if stale > 72h.
+
+
+4) JR Pass Calculator
+Goal
+Help users decide if a Japan Rail Pass is worth it for their itinerary and, if so, which duration (7/14/21 days). Include Nozomi/Mizuho add‑on logic.
+Facts to observe (surface to user)
+
+JR Pass is issued by the JR Group; typical durations 7/14/21 days; price revision Oct 2023 remains current in 2025 (e.g., Ordinary 7‑day ¥50,000; 14‑day ¥80,000; 21‑day ¥100,000; Green higher). [japanrailpass.net], [japan.travel], [jrailpass.com]
+Nozomi/Mizuho are not included by default; since 2023 users can buy a special ticket add‑on per ride (e.g., Tokyo–Shin‑Osaka ¥4,960; Tokyo–Hiroshima ¥6,500). Prices adjust on Apr 1, 2025 for certain sections. [japanrailpass.net]
+
+Inputs
+
+User’s inter‑city hops (from itinerary).
+Travel window for aligning pass start date.
+Preferred trains (ok to avoid Nozomi/Mizuho).
+Seat class: Ordinary vs Green.
+
+Price sources
+
+Official JR Pass page for coverage and add‑on policy. [japanrailpass.net], [japanrailpass.net]
+Reference prices for pass durations (validate against official/JNTO). [japan.travel], [jrailpass.com]
+
+Fare estimation (point‑to‑point)
+
+Primary: query NAVITIME Route (totalnavi) for JR rail fares + time; prefer JR routes; exclude private rail where feasible. Cache per city‑pair/day. [api-sdk.na...time.co.jp]
+Fallback: static reference matrix for top city pairs (Tokyo↔Kyoto/Osaka/Hiroshima/Fukuoka/Sapporo).
+
+Algorithm
+
+Build segments from itinerary cities (date‑ordered).
+For each segment:
+
+Get fare (standard reserved seat) & travel time.
+If user opts for Nozomi/Mizuho on applicable corridors, add special ticket surcharge from official table. [japanrailpass.net]
+
+
+Sum total fares vs pass price (7/14/21).
+Fit pass activation date to maximize coverage (DP over start days in user window).
+Output cheapest option with explanation.
+
+Pseudocode
+
+function jrPassDecision(itinerarySegments, opts) {
+  const fareSum = itinerarySegments.reduce((acc, seg) => {
+    const base = estimateFare(seg); // Navitime or fallback JPY
+    const nozomiAddOn = needsNozomi(seg, opts) ? lookupNozomiAddOn(seg) : 0; // official table
+    return acc + base + nozomiAddOn;
+  }, 0);
+
+  const passCandidates = [
+    { days: 7,  price: 50000,  class: opts.green ? "Green" : "Ordinary" },
+    { days: 14, price: 80000,  class: opts.green ? "Green" : "Ordinary" },
+    { days: 21, price: 100000, class: opts.green ? "Green" : "Ordinary" },
+  ]; // keep in config; refresh periodically
+
+  const bestWindow = optimizeActivationWindow(itinerarySegments, passCandidates);
+  return compare(fareSum, bestWindow);
+}
+
+UI/UX
+
+“Should I buy a JR Pass?” card shows:
+
+Your estimated fares vs 7/14/21‑day pass cost.
+Note about Nozomi/Mizuho special ticket if selected, with official link and price lines. [japanrailpass.net]
+Coverage note & official JR site button. [japanrailpass.net]
+
+
+
+Acceptance criteria
+
+Tokyo‑Kyoto‑Osaka round trip within 7 days → calculator explains break‑even with 7‑day Pass given current prices. [jrailpass.com]
+If user toggles “Prefer Nozomi”, result includes add‑on math and still shows standard Hikari/Sakura alternative with time difference note (we can reference alternative services on JR network). [japan.travel]
+
+
+Compliance note: We surface official JR content for coverage and Nozomi add‑on; we don’t scrape or cache proprietary timetables. [japanrailpass.net], [japanrailpass.net]
+
+
+5) Weather Alerts (Japan‑specific)
+Goal
+Proactively warn users about JMA weather warnings/advisories, Emergency Warnings, earthquakes, tsunamis, and volcanic alerts relevant to their trip dates and locations.
+Sources & semantics
+
+Japan Meteorological Agency (JMA) publishes Advisories, Warnings, and Emergency Warnings; also provides real‑time risk maps and alert‑level action guidance. [data.jma.go.jp]
+JNTO Safety Tips aggregates JMA alerts (multi‑language) and explains Earthquake Early Warnings, Tsunami warnings, and Emergency Warnings for travelers. [jnto.go.jp]
+(Optional) JNTO Safe Travel dashboard for nationwide event status. [japan.travel]
+(Optional) MLIT Disaster Prevention Portal for rain radar, river levels during typhoons. [mlit.go.jp]
+
+Data pipeline
+
+Poll JMA warnings/advisories (prefecture index) in English, map to the user’s itinerary prefectures. Cache 5–10 min. [data.jma.go.jp]
+Normalize alert types to our schema:
+
+type JMAAlert = {
+  area: string; level: "advisory" | "warning" | "emergency";
+  kind: "heavy-rain" | "storm" | "high-waves" | "storm-surge" | "flood" | "landslide" | "snow" | "blizzard" | "thunderstorm" | "tsunami" | "volcano";
+  issuedAt: string; expiresAt?: string; sourceUrl: string;
+};
+``
+UX rules
+
+Banner on itinerary days affected. Severity color:
+
+Purple: Emergency Warning (life‑threatening) → show “avoid travel; shelter in place” summary linked to JNTO guidance. [data.jma.go.jp], [jnto.go.jp]
+Red: Warning (possible serious disaster).
+Yellow: Advisory (conditions may cause damage).
+
+
+Recommendation engine hook: on warning/emergency, boost indoor venues; suppress high‑risk outdoor items for that day (see §1). [data.jma.go.jp]
+Notifications: optional in‑app reminder when an alert changes state in a city on the user’s trip.
+
+Acceptance criteria
+
+When JMA posts Emergency Warning for heavy rain in Osaka, the Osaka days show a purple banner with link to JMA/“Action to be taken” guidance. [data.jma.go.jp]
+The same day’s Recommendations list contains ≥ 80% indoor suggestions.
+
+
+Shared Engineering Concerns
+Feature flags & config
+
+features.recommendations=true
+features.packing=true
+features.expenses=true
+features.jrpassCalc=true
+features.weatherAlerts=true
+
+i18n & a11y
+
+All UI strings in EN/ES; dates formatted by locale.
+Buttons and alerts with aria-live="polite" for warn banners.
+
+Telemetry (optional)
+
+recommendations_viewed, packing_generated, expense_added, jrpass_checked, alert_seen—no PII.
+
+Security & privacy
+
+Keep JR pass price table and airline rules in static JSON with lastReviewedAt.
+No personal data sent to third parties; if using Places/NAVITIME, only query public POI/route info and honor Google session tokens to control billing. [developers...google.com], [developers...google.com]
+
+
+Deliverables (for Claude)
+
+
+Data
+
+data/jrpass/prices.json (7/14/21 prices + lastReviewedAt) [jrailpass.com], [japan.travel]
+data/jrpass/nozomi_addon.json (official table w/ pre/post Apr 1, 2025) [japanrailpass.net]
+data/alerts/prefecture-map.json (city → prefecture mapping)
+
+
+
+Modules
+
+modules/recommendations.ts (scoring + reasons)
+modules/packing.ts (generator + airline guardrails) [reactjsguru.com]
+modules/expenses.ts (CRUD + currency util)
+modules/jrpassCalc.ts (fare estimation + window optimizer) [japanrailpass.net], [api-sdk.na...time.co.jp], [japanrailpass.net]
+modules/alerts.ts (JMA polling, normalization, cache) [data.jma.go.jp]
+
+
+
+UI
+
+components/DayRecommendations.tsx
+components/PackingChecklist.tsx
+components/ExpenseTracker.tsx
+components/JRPassCalculator.tsx
+components/WeatherAlertBanner.tsx
+
+
+
+Docs
+
+README-PHASE2.md (setup, env keys if using NAVITIME/Places, data refresh cadence, sources)
+
+
+
+
+What I’ll tackle first (suggested order)
+
+Weather Alerts (low risk, high trust; powers smarter recs) [data.jma.go.jp]
+Smart Recommendations (uses your existing attractions + alerts)
+JR Pass Calculator (static data + optional NAVITIME) [japanrailpass.net], [api-sdk.na...time.co.jp]
+Packing Checklist (ties to Flights & alerts) [reactjsguru.com]
+Expense Tracker (self‑contained; no external deps)
+
+                  
+
+
+ 

@@ -1,0 +1,103 @@
+✅ Suggested Improvements for Attractions Section
+1. Organization
+
+Keep the current category grouping (Museums, Themed Cafés, Restaurants, Sushi, etc.).
+Add secondary grouping by city (Tokyo, Kyoto, Osaka, etc.) so users can filter by destination.
+Optional: Add tags for finer filtering (e.g., “anime”, “traditional”, “Michelin”, “kids-friendly”).
+
+
+2. Filters
+
+Search bar:
+
+Functional, debounced search across name, category, city, and tags.
+Highlight matches in results.
+
+
+Category filter: Multi-select chips (Museums, Cafés, Restaurants, etc.).
+City filter: Dropdown or multi-select chips.
+Price filter: Based on your existing average price tiers ($, $$, $$$).
+Rating filter: Slider or discrete options (≥4.5, ≥4.0).
+Reservation filter: Toggle (Required / Not Required).
+Optional: Tags filter for special interests.
+
+
+3. Search Behavior
+
+Matches across:
+
+Name
+Category
+City
+Tags
+
+
+Use Fuse.js for fuzzy matching if dataset is large.
+Debounce input (150–250ms) for performance.
+
+4. Attraction Card Content
+Each card should include:
+
+Photo (mandatory improvement):
+
+Use official images if available.
+If not, use stock images relevant to category/city.
+Fallback: curated local image per category.
+
+
+Name of attraction.
+Rating (stars + numeric).
+Average price (already present).
+Category + City.
+Reservation link (primary CTA).
+Optional: Tags (as chips).
+Accessibility: alt text describing the image and attraction.
+
+
+5. Image Handling Rules
+
+Must-have for Claude:
+
+Use official/place images when available (Google Places API or Wikimedia Commons).
+If not available, fetch stock images from Unsplash/Pexels/Pixabay.
+If neither is possible, use local fallback images per category.
+
+
+Store final imageUrl in your dataset to avoid repeated API calls.
+Add imageSource metadata: "official" | "stock" | "fallback".
+
+
+6. UX Layout
+
+Desktop: Filters on left, results grid on right (2–3 cards per row).
+Mobile: Filters in a collapsible drawer; results in single-column list.
+Show applied filters summary + “Clear All” button.
+
+
+7. Performance & Accessibility
+
+Lazy-load images with fixed height to prevent layout shift.
+Keyboard navigation for filters and search.
+Screen reader-friendly labels for all interactive elements.
+
+
+8. Claude’s Mandatory Tasks
+
+Implement functional search bar with fuzzy matching.
+Add city filter and optional tags filter.
+Enhance cards with images following sourcing rules:
+
+Official → Stock → Fallback.
+
+
+Ensure reservation links, rating, and price remain visible.
+Optimize for mobile and desktop layouts.
+Document image sourcing and attribution in README.
+
+
+Optional Enhancements
+
+“Open Now” filter (requires hours data).
+Sort options: Rating, Price, Name.
+Map view toggle (future phase).
+Export favorites to itinerary.

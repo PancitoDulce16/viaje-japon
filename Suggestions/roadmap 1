@@ -1,0 +1,153 @@
+✅ Phase 1 – Core Experience (MVP Enhancements)
+Goal: Solidify itinerary planning and attraction browsing.
+
+Itinerary Improvements
+
+City input with autocomplete (Google Places or fallback dataset).
+Date range selector → auto-generate daily entries.
+Notes per day, edit/delete functionality.
+LocalStorage persistence.
+
+
+Attractions Upgrade
+
+Add city filter + category filter.
+Functional search bar (Fuse.js for fuzzy matching).
+Attraction cards with images:
+
+Official/place images → Stock → Fallback.
+Include rating, price, reservation link.
+
+
+
+
+Preparation Tab
+
+Airport arrival guide (Visit Japan Web, customs tips).
+Country selector → visa requirements (MOFA data).
+
+
+Flights Tab
+
+Airline selector → baggage rules (checked/carry-on).
+Visual size guide + official links.
+
+
+
+
+✅ Phase 2 – Personalization & Smart Utilities
+Goal: Make planning faster and more relevant.
+
+Smart Recommendations
+
+Suggest attractions based on itinerary cities and user interests.
+
+
+Packing Checklist Generator
+
+Based on season, airline baggage rules, and activities.
+
+
+Expense Tracker
+
+Log daily spend; auto-convert to home currency.
+
+
+JR Pass Calculator
+
+Compare JR Pass vs individual tickets.
+
+
+Weather Alerts
+
+Show typhoon or seasonal warnings for selected dates.
+
+
+
+
+✅ Phase 3 – Social & Collaboration
+Goal: Enable group planning and sharing.
+
+Group Planning Mode
+
+Invite friends to edit itinerary in real time.
+
+
+Polls for Decisions
+
+Let group vote on activities or restaurants.
+
+
+Shareable Trip Link
+
+Generate a public or private link for the itinerary.
+
+
+
+
+✅ Phase 4 – Advanced Differentiators
+Goal: Go beyond Wanderlog with unique features.
+
+Dynamic Itinerary Optimization
+
+Auto-adjust itinerary based on weather or user changes.
+
+
+Festival & Event Calendar
+
+Suggest local events during trip dates.
+
+
+Map View
+
+Interactive map with attractions, restaurants, Wi-Fi spots.
+
+
+Offline Mode
+
+Access itinerary and maps without internet.
+
+
+Menu Translator
+
+OCR + translation for Japanese menus.
+
+
+Safety Alerts
+
+Earthquake and typhoon notifications.
+
+
+
+
+✅ Phase 5 – Premium & Gamification
+Goal: Add value and engagement.
+
+AI Concierge
+
+Chatbot for quick answers: “Find a vegan café near Shinjuku.”
+
+
+Photo Planner
+
+Suggest best photo spots and golden hour times.
+
+
+Achievement Badges
+
+Gamify travel: “Visited 3 cities”, “Tried 5 sushi spots.”
+
+
+AR Landmark Guide
+
+Point phone at a landmark → get info overlay.
+
+
+
+
+🔍 Why This Beats Wanderlog
+
+Personalization: AI-driven suggestions and itinerary optimization.
+Cultural depth: Etiquette tips, festival integration, menu translation.
+Offline usability: Full offline mode for maps and itinerary.
+Gamification & AR: Adds fun and immersive experiences.

@@ -1,0 +1,112 @@
+Absolutely—let’s turn this into a clean, handoff‑ready Feature Improvement Report that Claude (or any teammate) can execute against your existing codebase without reinventing it.
+Below is a concise PRD + Tech Spec + Task Plan tailored to the features you listed, optimized to augment your current JS (not replace it). I’ve kept it framework‑agnostic where possible, with optional React notes if you choose to componentize later.
+
+Itinerary Planner – Feature Improvement Report
+Owner: Ivankovich, Noelia
+Repo: PancitoDulce16/viaje-japon
+Scope Type: Incremental enhancement over existing vanilla JS (or current stack)
+Primary Goal: Minimize repetitive input and accelerate planning by using a city + date range to auto-populate multiple itinerary days at once.
+
+1) Objectives & Non‑Goals
+Objectives
+
+
+City Input + Autocomplete
+
+Text field with suggestions while typing.
+Pluggable provider: Google Places (primary) with a no‑API fallback for dev/offline use.
+
+
+
+Date Range Selection
+
+Intuitive range picker (start/end).
+Keyboard accessible and mobile-friendly.
+
+
+
+Per‑Day Generation
+
+On “Add to Itinerary,” create one entry per day in range (inclusive).
+Each entry shows date and city.
+
+
+
+Itinerary Display & Editing
+
+Chronological list/cards.
+Per‑day notes (add/edit), delete, and optional edit city for that day.
+
+
+
+Multiple Cities
+
+Allow adding multiple ranges (e.g., 5 Tokyo days + 3 Kyoto days).
+Merge new entries chronologically.
+
+
+
+Persistence
+
+localStorage by default; future‑ready for cloud sync.
+
+
+
+UX Quality
+
+Clear empty states, loading, errors.
+A11y labels, tab order, visible focus.
+
+
+
+Non‑Goals (Phase 1)
+
+Multi‑user collab/sync
+Maps or transit estimates
+Drag‑and‑drop reordering
+Activity libraries/POI ingestion
+
+
+2) User Stories & Acceptance Criteria
+2.1 City Input + Autocomplete
+As a user, I want city suggestions as I type so that I don’t have to type full names.
+
+AC1: Typing ≥ 2 chars reveals up to 8 suggestions.
+AC2: Selecting a suggestion populates the city input.
+AC3: Works with Google Places when key is present; gracefully falls back to a local list (e.g., top 1–2k cities) when no key.
+AC4: A11y: input has aria-autocomplete="list"; suggestions navigable via arrows + Enter.
+
+2.2 Date Range Selection
+As a user, I want to select start and end dates so that the app can create daily entries.
+
+AC1: Range picker supports click‑drag or two clicks.
+AC2: Range is inclusive; prevents end < start.
+AC3: Keyboard navigable; screen‑reader labels for month/day.
+
+2.3 Per‑Day Generation
+As a user, I want entries per day so that my itinerary fills quickly.
+
+AC1: Clicking Add to Itinerary creates entries for each date in the selected range.
+AC2: Entries include {id, date:'YYYY‑MM‑DD', city, notes:''}.
+AC3: Itinerary is re‑sorted chronologically after insert.
+
+2.4 Itinerary Display
+As a user, I want a readable list/cards so that I can skim by date.
+
+AC1: Each item shows date (localized format), city, and optional notes.
+AC2: Can edit notes inline with Save/Cancel.
+AC3: Can delete an entry; confirm optional.
+AC4: Empty state message when no items.
+
+2.5 Multiple Cities & Overlaps
+As a user, I want to add more ranges so that I can plan multi‑city trips.
+
+AC1: Adding a new city+range appends entries, then resorts.
+AC2 (overlaps): On overlapping dates, last added wins for city while preserving existing notes (configurable).
+AC3: No duplicate dates in final list.
+
+2.6 Persistence
+As a user, I want my plan to persist so that it survives refreshes.
+
+AC1: Itinerary saves to localStorage on every change (debounced).
+AC2: On load, app restores prior state if present.

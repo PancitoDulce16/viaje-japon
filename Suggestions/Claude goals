@@ -1,0 +1,148 @@
+🥇 1) Weather Alerts banner (Japan‑specific) — Start here
+Why this is best for Claude first
+
+Clear, bounded scope; small UI; instantly useful and trust‑building for travelers.
+Leverages authoritative, machine‑readable sources with stable semantics (JMA Advisories/Warnings/Emergency Warnings) and official traveler guidance.
+Refs: JMA warnings dashboard & semantics; JNTO Safety Tips explain actions for travelers. [livejapan.com], [japan-trails.com]
+Also improves recommendations later (we’ll boost indoor picks on bad‑weather days).
+
+What to give Claude
+
+Data: data/alerts/prefecture-map.json (city → prefecture code).
+Module: modules/alerts.ts (fetch → normalize → cache 5–10 min).
+UI: components/WeatherAlertBanner.tsx (purple/red/yellow severity; links to JMA/JNTO).
+
+“Done” looks like
+
+A banner appears on itinerary days in affected prefectures:
+
+Purple for Emergency Warning with “life‑threatening—seek safety” action text + JNTO link. [livejapan.com], [japan-trails.com]
+Red/Yellow for Warnings/Advisories with short guidance and JMA link.
+
+
+Toggleable in settings; localized EN/ES.
+
+Why users will feel it: It’s proactive safety + planning signal (e.g., “shift outdoor day to tomorrow”).
+
+🥈 2) Expense Tracker — Self‑contained quick win
+Why next
+
+No external APIs required; simple CRUD + charts; ties into your exchange‑rate util you already have.
+Users love seeing daily burn rate and category breakdown.
+
+What to give Claude
+
+Data model: Expense, Budget (JPY base + converted display).
+Module: modules/expenses.ts (localStorage persistence, currency conversion).
+UI: components/ExpenseTracker.tsx (table + “quick add” buttons + CSV export).
+
+“Done” looks like
+
+Add/edit/delete entries offline; totals auto‑convert to user currency.
+Daily and category charts; budget overrun badge.
+
+
+🥉 3) Smart Recommendations (v1, offline) — Immediately useful
+Why third
+
+Uses your attractions data + user interests; no new backend.
+v1 can skip transit APIs & opening hours; still feels personal.
+v2 later: factor JMA alerts (indoor boost) and optional transit ETA.
+
+What to give Claude
+
+Module: modules/recommendations.ts with a simple scoring function (interest match + city + rating + price fit; penalize duplicates).
+UI: components/DayRecommendations.tsx (list of 6 items with “Add to day” / “Save”).
+
+“Done” looks like
+
+Each day shows a small “Recommended for this day” list, responding to interest chips and city.
+
+
+🧳 4) Packing Checklist Generator — After Flights dataset is stable
+Why fourth
+
+Relies on baggage guardrails (size/weight) + weather window.
+Easy to delight: season‑aware + “your airline’s econ limit is 23 kg / 158 cm” baseline.
+(Most carriers use ~62 linear inches/158 cm for checked bags; always show airline link + disclaimer.) [developers...google.com]
+
+What to give Claude
+
+Module: modules/packing.ts (seasonal set + weather deltas + airline limits).
+UI: components/PackingChecklist.tsx (editable list + export).
+
+
+🚄 5) JR Pass Calculator — Highest impact, but last in Phase‑2
+Why last in this batch
+
+Requires fare estimation + calendar optimization; most complex.
+Policy details matter (e.g., Nozomi/Mizuho add‑on now possible with a special ticket; prices differ by section and changed April 1, 2025 on some routes).
+Refs: Official JR Pass site; JNTO overview; price lines. [jal.co.jp], [travel.usnews.com], [mariepoulin.com]
+
+What to give Claude
+
+Data:
+
+data/jrpass/prices.json (7/14/21 standard & Green, lastReviewedAt). [tokyo-haneda.com]
+data/jrpass/nozomi_addon.json (official add‑on table, pre/post Apr 1 2025). [mariepoulin.com]
+
+
+Module: modules/jrpassCalc.ts (sum point‑to‑point vs pass; slide activation window).
+UI: components/JRPassCalculator.tsx (clear “Pass pays off” verdict + links to JR official). [jal.co.jp]
+
+
+🔧 For Claude — 48‑hour plan (copy/paste into task tracker)
+Day 1 — Weather Alerts
+
+Add data/alerts/prefecture-map.json (city → prefecture).
+Implement modules/alerts.ts:
+
+fetchJMAAlerts() → normalize to { area, level, kind, issuedAt, sourceUrl } (EN). [livejapan.com]
+Cache 10 min; expose getAlertsByPrefecture(prefCode).
+
+
+components/WeatherAlertBanner.tsx:
+
+Map level → color (purple/red/yellow).
+Buttons: “Action guidance” → JNTO Safety Tips (multi‑language). [japan-trails.com]
+
+
+Wire to itinerary day cards (city → prefecture; show if active alert).
+
+Day 2 — Expense Tracker
+
+Implement modules/expenses.ts (CRUD, totals, budget check; localStorage key expenses_v1).
+Build components/ExpenseTracker.tsx:
+
+Filters (date, city, category); CSV export.
+Totals in JPY + converted currency (reuse existing FX util).
+
+
+Add tests for add/edit/delete & conversion fallback when rate is stale.
+
+Stretch (end of Day 2) — Recommendations v1
+
+modules/recommendations.ts: simple scored list by (tags, rating, price fit).
+components/DayRecommendations.tsx + “Add to day” action.
+
+
+📦 Branch & PR template for Claude
+Branch: feat/phase2-alerts-expenses
+PR title: feat: JMA Weather Alerts + Expense Tracker (Phase 2 step 1)
+PR body:
+
+Adds JMA alerts with JNTO guidance links (safety banner). [livejapan.com], [japan-trails.com]
+Introduces Expense Tracker (offline‑first, FX conversion).
+Includes tests & i18n strings (EN/ES).
+Next PR: Recommendations v1 + Packing Checklist scaffolding.
+
+
+TL;DR — Most useful handoff for Claude right now
+
+Weather Alerts banner (tiny, high impact, improves trust & feeds recs). [livejapan.com], [japan-trails.com]
+Expense Tracker (self‑contained, immediate user value).
+Recommendations v1 (offline; upgrades day cards).
+Packing Checklist (after Flights data). [developers...google.com]
+JR Pass Calculator (complex; follow with official data & add‑on rules). [jal.co.jp], [mariepoulin.com]
+
+If you want, I can generate the data skeleton files (prefecture-map.json, prices.json, nozomi_addon.json) and a minimal alerts module stub you can drop in now.
