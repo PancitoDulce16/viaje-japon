@@ -64,6 +64,22 @@ jobs:
             echo "{\"projects\": {\"default\": \"${{ secrets.FIREBASE_PROJECT_ID }}\"}}" > .firebaserc
           fi
 
+      - name: Prepare public folder for Hosting
+        run: |
+          echo "Preparing public directory for Firebase Hosting..."
+          rm -rf public || true
+          mkdir -p public
+          # Copy main site files if present
+          if [ -f index.html ]; then cp index.html public/ || true; fi
+          if [ -f manifest.json ]; then cp manifest.json public/ || true; fi
+          if [ -f service-worker.js ]; then cp service-worker.js public/ || true; fi
+          # Copy static folders if they exist
+          for d in css js data images; do
+            if [ -d "$d" ]; then cp -R "$d" public/ || true; fi
+          done
+          # Copy icons folder if present
+          if [ -d images/icons ]; then mkdir -p public/images && cp -R images/icons public/images || true; fi
+
       - name: Deploy to Firebase
         run: |
           firebase deploy --only hosting,functions --project ${{ secrets.FIREBASE_PROJECT_ID }}
