@@ -1,7 +1,8 @@
-/* ai-planner.css — Estilos mínimos para el modal del AI Planner */
-#aiPlannerModal .text-sm { font-size: .875rem; }
-#aiPlannerModal .text-xs { font-size: .75rem; }
+
+/* ai-planner.css — Estilos mínimos para AI Planner & Insights */
+#aiPlannerModal .text-sm, #aiInsightsModal .text-sm { font-size: .875rem; }
+#aiPlannerModal .text-xs, #aiInsightsModal .text-xs { font-size: .75rem; }
 #aiPlannerModal details[open] summary { margin-bottom: .5rem; }
-#aiPlannerModal summary { list-style: none; }
-#aiPlannerModal summary::-webkit-details-marker { display: none; }
+#aiPlannerModal summary, #aiInsightsModal summary { list-style: none; }
+#aiPlannerModal summary::-webkit-details-marker, #aiInsightsModal summary::-webkit-details-marker { display: none; }
 
