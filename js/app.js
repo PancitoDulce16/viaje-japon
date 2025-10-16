@@ -25,23 +25,25 @@ import './firebase-config.js'; // Inicializar Firebase primero
 // 🤖 AI Integration imports
 import { AIIntegration } from './ai-integration.js'; // OpenAI Integration
 
-function initApp() {
+async function initApp() {
     console.log('🚀 Iniciando aplicación...');
-    
+
     // 🔔 Inicializar sistema de notificaciones
     Notifications.init();
-    
-    // 🔥 Inicializar Firebase Auth PRIMERO
-    AuthHandler.init();
-    
+
+    // 🔥 Inicializar Firebase Auth PRIMERO y ESPERAR a que esté listo
+    console.log('⏳ Esperando a que la autenticación esté lista...');
+    await AuthHandler.init();
+    console.log('✅ Autenticación lista, continuando con la inicialización...');
+
     // Esperar un momento para que el DOM esté listo
     setTimeout(() => {
         // Inicializar el resto de la app
         ModalRenderer.renderModals();
-        
+
         // Obtener tripId actual (si existe)
         const currentTripId = localStorage.getItem('currentTripId');
-        
+
         // Solo inicializar estos si el usuario está autenticado
         // (se verificará dentro de cada módulo)
         ItineraryHandler.init();

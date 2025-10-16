@@ -10,10 +10,17 @@ import {
 
 export const AuthHandler = {
   currentUser: null,
+  _authReadyPromise: null,
+  _authReadyResolve: null,
 
   init() {
     console.log('🔐 Inicializando autenticación...');
-    
+
+    // Create a promise that resolves when auth is ready
+    this._authReadyPromise = new Promise((resolve) => {
+      this._authReadyResolve = resolve;
+    });
+
     // Esperar a que el DOM esté completamente cargado
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
@@ -22,7 +29,7 @@ export const AuthHandler = {
     } else {
       this.setupLandingPage();
     }
-    
+
     // CAMBIO: Manejar el resultado de la redirección al cargar la página
     this.handleRedirectResult();
 
@@ -40,15 +47,31 @@ export const AuthHandler = {
             console.log('⚠️ No hay usuario autenticado');
             this.showLandingPage();
           }
+
+          // Resolve the auth ready promise
+          if (this._authReadyResolve) {
+            this._authReadyResolve(user);
+            this._authReadyResolve = null;
+          }
         });
       } catch (err) {
         console.error('❌ Error registrando onAuthStateChanged:', err);
         this.showLandingPage();
+        if (this._authReadyResolve) {
+          this._authReadyResolve(null);
+          this._authReadyResolve = null;
+        }
       }
     } else {
       console.warn('⚠️ Firebase Auth no está inicializado. Se mostrará la landing page sin sesión.');
       this.showLandingPage();
+      if (this._authReadyResolve) {
+        this._authReadyResolve(null);
+        this._authReadyResolve = null;
+      }
     }
+
+    return this._authReadyPromise;
   },
 
   // NUEVA FUNCIÓN: Maneja el resultado del login por redirección
