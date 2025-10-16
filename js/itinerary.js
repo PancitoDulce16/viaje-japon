@@ -15,6 +15,23 @@ let sortableInstance = null; // 🔥 Para drag & drop
 let isListenerAttached = false;
 let saveDebounceTimer = null;
 
+// ---- Auth & Firestore validation helper ----
+function validateFirestoreAccess(operationName = 'Firestore operation') {
+  if (!db) {
+    const error = new Error(`❌ ${operationName} failed: Firestore (db) is not initialized`);
+    console.error(error.message);
+    throw error;
+  }
+
+  if (!auth || !auth.currentUser) {
+    const error = new Error(`❌ ${operationName} failed: User is not authenticated`);
+    console.error(error.message);
+    throw error;
+  }
+
+  return true;
+}
+
 // --- Google Places integration (optional) ---
 const GOOGLE_PLACES_API_KEY = APP_CONFIG?.GOOGLE_PLACES_API_KEY || '';
 let googlePlacesReady = false;
@@ -60,11 +77,26 @@ function getCurrentTripId() {
 }
 
 async function saveCurrentItineraryToFirebase() {
+  validateFirestoreAccess('Save itinerary');
+
   const tripId = getCurrentTripId();
-  if (!tripId || !currentItinerary) throw new Error('No trip or itinerary');
-  const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
-  await setDoc(itineraryRef, currentItinerary);
-  return true;
+  if (!tripId || !currentItinerary) {
+    throw new Error('❌ No trip or itinerary to save');
+  }
+
+  try {
+    const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+    await setDoc(itineraryRef, currentItinerary);
+    console.log('✅ Itinerary saved to Firebase');
+    return true;
+  } catch (error) {
+    if (error.code === 'permission-denied') {
+      throw new Error('❌ Permission denied: You do not have access to save this itinerary');
+    } else if (error.code === 'unavailable') {
+      throw new Error('❌ Firestore unavailable: Check your internet connection');
+    }
+    throw error;
+  }
 }
 
 // ---- Fallback/local itinerary helpers (sin cambios sustanciales) ----
@@ -77,47 +109,171 @@ function scheduleLocalSave(){ if(saveDebounceTimer) clearTimeout(saveDebounceTim
 
 // ---- Firebase load/sync (resumen del original) ----
 async function loadItinerary(){
-  const tripId=getCurrentTripId();
-  if(!tripId){ console.log('⚠️ No hay trip seleccionado, cargando plantilla por defecto.'); try{ const r=await fetch('/data/attractions.json'); const data=await r.json(); currentItinerary={ days: data.suggestedItinerary }; return currentItinerary; }catch(e){ console.error('❌ Error fallback:',e); return null; } }
+  const tripId = getCurrentTripId();
 
-  // Check if user is authenticated before accessing Firestore
-  if(!auth.currentUser){
-    console.log('⚠️ Usuario no autenticado, cargando plantilla por defecto.');
-    try{ const r=await fetch('/data/attractions.json'); const data=await r.json(); currentItinerary={ days: data.suggestedItinerary }; return currentItinerary; }
-    catch(e){ console.error('❌ Error fallback:',e); return null; }
+  // Helper function to load fallback template
+  const loadFallbackTemplate = async () => {
+    try {
+      const r = await fetch('/data/attractions.json');
+      const data = await r.json();
+      currentItinerary = { days: data.suggestedItinerary };
+      return currentItinerary;
+    } catch (e) {
+      console.error('❌ Error loading fallback template:', e);
+      return null;
+    }
+  };
+
+  if (!tripId) {
+    console.log('⚠️ No trip selected, loading default template');
+    return await loadFallbackTemplate();
   }
 
-  try{
-    const itineraryRef=doc(db, `trips/${tripId}/data`, 'itinerary');
-    const snap=await getDoc(itineraryRef);
-    if(snap.exists()) { currentItinerary=snap.data(); console.log('✅ Itinerario cargado desde Firebase'); return currentItinerary; }
-    else { console.log('⚠️ No existe itinerario, fallback.'); const r=await fetch('/data/attractions.json'); const data=await r.json(); currentItinerary={ days: data.suggestedItinerary }; return currentItinerary; }
-  }catch(error){ console.error('❌ Error cargando itinerario:',error); try{ const r=await fetch('/data/attractions.json'); const data=await r.json(); currentItinerary={ days: data.suggestedItinerary }; return currentItinerary; }catch(e){ console.error('❌ Error fallback:', e); return null; } }
+  // Check if user is authenticated before accessing Firestore
+  if (!db || !auth || !auth.currentUser) {
+    console.log('⚠️ User not authenticated or Firestore not initialized, loading default template');
+    return await loadFallbackTemplate();
+  }
+
+  try {
+    const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+    const snap = await getDoc(itineraryRef);
+
+    if (snap.exists()) {
+      currentItinerary = snap.data();
+      console.log('✅ Itinerary loaded from Firebase');
+      return currentItinerary;
+    } else {
+      console.log('⚠️ No itinerary exists in Firebase, loading fallback');
+      return await loadFallbackTemplate();
+    }
+  } catch (error) {
+    console.error('❌ Error loading itinerary from Firebase:', error);
+
+    // Specific error handling
+    if (error.code === 'permission-denied') {
+      console.error('❌ Permission denied: You do not have access to this itinerary');
+      Notifications?.show?.('No tienes permiso para acceder a este itinerario', 'error');
+    } else if (error.code === 'unavailable') {
+      console.error('❌ Firestore unavailable: Check your internet connection');
+      Notifications?.show?.('No se pudo conectar a Firestore. Verifica tu conexión.', 'error');
+    }
+
+    return await loadFallbackTemplate();
+  }
 }
 
 async function initRealtimeSync(){
-  if(unsubscribe){ unsubscribe(); }
-  if(!auth.currentUser){ checkedActivities = JSON.parse(localStorage.getItem('checkedActivities')||'{}'); render(); return; }
-  const tripId=getCurrentTripId(); if(!tripId){ console.log('⚠️ No hay trip seleccionado'); renderEmptyState(); return; }
-  console.log('🤝 Modo colaborativo activado para trip:', tripId);
-  const checklistRef=doc(db, `trips/${tripId}/activities`, 'checklist');
-  unsubscribe=onSnapshot(checklistRef, (docSnap)=>{
-    if(docSnap.exists()) checkedActivities=docSnap.data().checked||{}; else checkedActivities={};
-    localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));
-    render(); console.log('✅ Checklist sincronizado:', Object.keys(checkedActivities).length, 'actividades');
-  }, (error)=>{ console.error('❌ Error en sync:',error); checkedActivities=JSON.parse(localStorage.getItem('checkedActivities')||'{}'); render(); });
+  // Clean up existing listener
+  if (unsubscribe) {
+    unsubscribe();
+    unsubscribe = null;
+  }
+
+  // Fallback to local storage if not authenticated
+  if (!db || !auth || !auth.currentUser) {
+    console.log('⚠️ Not authenticated, using local storage only');
+    checkedActivities = JSON.parse(localStorage.getItem('checkedActivities') || '{}');
+    render();
+    return;
+  }
+
+  const tripId = getCurrentTripId();
+  if (!tripId) {
+    console.log('⚠️ No trip selected');
+    renderEmptyState();
+    return;
+  }
+
+  console.log('🤝 Collaborative mode activated for trip:', tripId);
+
+  try {
+    const checklistRef = doc(db, `trips/${tripId}/activities`, 'checklist');
+
+    unsubscribe = onSnapshot(
+      checklistRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          checkedActivities = docSnap.data().checked || {};
+        } else {
+          checkedActivities = {};
+        }
+        localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));
+        render();
+        console.log('✅ Checklist synced:', Object.keys(checkedActivities).length, 'activities');
+      },
+      (error) => {
+        console.error('❌ Error in realtime sync:', error);
+
+        // Specific error handling
+        if (error.code === 'permission-denied') {
+          console.error('❌ Permission denied: You do not have access to this checklist');
+          Notifications?.show?.('No tienes permiso para acceder a esta lista', 'error');
+        } else if (error.code === 'unavailable') {
+          console.error('❌ Firestore unavailable: Connection lost');
+          Notifications?.show?.('Conexión perdida. Trabajando en modo local.', 'warning');
+        }
+
+        // Fallback to local storage
+        checkedActivities = JSON.parse(localStorage.getItem('checkedActivities') || '{}');
+        render();
+      }
+    );
+  } catch (error) {
+    console.error('❌ Error setting up realtime sync:', error);
+    // Fallback to local storage
+    checkedActivities = JSON.parse(localStorage.getItem('checkedActivities') || '{}');
+    render();
+  }
 }
 
-function selectDay(dayNumber){ currentDay=dayNumber; render(); }
-async function toggleActivity(activityId){
-  checkedActivities[activityId] = !checkedActivities[activityId];
-  try{
-    if(!auth.currentUser){ localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities)); render(); return; }
-    const tripId=getCurrentTripId(); if(!tripId){ alert('⚠️ Debes seleccionar un viaje primero'); return; }
-    const checklistRef=doc(db, `trips/${tripId}/activities`, 'checklist');
-    await setDoc(checklistRef,{ checked: checkedActivities, lastUpdated: new Date().toISOString(), updatedBy: auth.currentUser.email });
-    console.log('✅ Actividad sincronizada por:', auth.currentUser.email);
-  }catch(error){ console.error('❌ Error guardando actividad:', error); checkedActivities[activityId] = !checkedActivities[activityId]; render(); alert('Error al sincronizar. Intenta de nuevo.'); }
+function selectDay(dayNumber){ currentDay = dayNumber; render(); }
+
+async function toggleActivity(activityId) {
+  const previousState = checkedActivities[activityId];
+  checkedActivities[activityId] = !previousState;
+
+  try {
+    // If not authenticated, save locally only
+    if (!db || !auth || !auth.currentUser) {
+      localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));
+      render();
+      return;
+    }
+
+    const tripId = getCurrentTripId();
+    if (!tripId) {
+      alert('⚠️ Debes seleccionar un viaje primero');
+      checkedActivities[activityId] = previousState; // Revert
+      render();
+      return;
+    }
+
+    // Save to Firestore
+    const checklistRef = doc(db, `trips/${tripId}/activities`, 'checklist');
+    await setDoc(checklistRef, {
+      checked: checkedActivities,
+      lastUpdated: new Date().toISOString(),
+      updatedBy: auth.currentUser.email
+    });
+
+    console.log('✅ Activity synced by:', auth.currentUser.email);
+  } catch (error) {
+    console.error('❌ Error saving activity:', error);
+
+    // Specific error handling
+    if (error.code === 'permission-denied') {
+      alert('⚠️ No tienes permiso para modificar este checklist');
+    } else if (error.code === 'unavailable') {
+      alert('⚠️ No se pudo conectar. Verifica tu conexión a internet.');
+    } else {
+      alert('⚠️ Error al sincronizar. Intenta de nuevo.');
+    }
+
+    // Revert the change
+    checkedActivities[activityId] = previousState;
+    render();
+  }
 }
 
 // --- Vacíos/No trip ---
