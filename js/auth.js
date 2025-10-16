@@ -32,10 +32,12 @@ export const AuthHandler = {
     console.log('✅ Resultado de redirección procesado');
 
     // Create a promise that resolves when auth state is determined
+    // IMPORTANT: We use a small delay to allow Firebase to process the redirect fully
     return new Promise((resolve) => {
       // Listener de cambios de autenticación (solo si auth está inicializado)
       if (typeof auth !== 'undefined' && auth) {
         try {
+          let firstCall = true;
           onAuthStateChanged(auth, (user) => {
             this.currentUser = user;
 
@@ -43,13 +45,25 @@ export const AuthHandler = {
               console.log('✅ Usuario autenticado:', user.email);
               this.showAppDashboard();
               this.updateUserInfo(user);
+              // Always resolve when we have a user
+              resolve(user);
             } else {
               console.log('⚠️ No hay usuario autenticado');
               this.showLandingPage();
+
+              // Only resolve on first call if no user
+              // This prevents resolving before redirect is fully processed
+              if (firstCall) {
+                // Give Firebase a moment to process redirect
+                setTimeout(() => {
+                  if (!this.currentUser) {
+                    resolve(null);
+                  }
+                }, 500);
+              }
             }
 
-            // Resolve the promise on first auth state change
-            resolve(user);
+            firstCall = false;
           });
         } catch (err) {
           console.error('❌ Error registrando onAuthStateChanged:', err);
