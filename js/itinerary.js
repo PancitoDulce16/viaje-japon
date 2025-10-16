@@ -32,6 +32,83 @@ function validateFirestoreAccess(operationName = 'Firestore operation') {
   return true;
 }
 
+// ---- Retry logic with exponential backoff for onSnapshot ----
+function createResilientSnapshot(docRef, onSuccess, onError, maxRetries = 3) {
+  let retryCount = 0;
+  let retryTimeout = null;
+  let currentUnsubscribe = null;
+
+  const attemptSubscription = () => {
+    console.log(`🔄 Attempting onSnapshot subscription (attempt ${retryCount + 1}/${maxRetries + 1})`);
+
+    currentUnsubscribe = onSnapshot(
+      docRef,
+      (docSnap) => {
+        // Success - reset retry count
+        retryCount = 0;
+        if (retryTimeout) {
+          clearTimeout(retryTimeout);
+          retryTimeout = null;
+        }
+        onSuccess(docSnap);
+      },
+      (error) => {
+        console.error(`❌ onSnapshot error (attempt ${retryCount + 1}):`, error);
+
+        // Handle specific error codes
+        if (error.code === 'permission-denied') {
+          // Don't retry on permission errors
+          console.error('❌ Permission denied - not retrying');
+          onError(error);
+          return;
+        }
+
+        // Retry on network errors (unavailable, deadline-exceeded, etc.)
+        if (
+          error.code === 'unavailable' ||
+          error.code === 'deadline-exceeded' ||
+          error.code === 'internal' ||
+          error.code === 'unknown'
+        ) {
+          if (retryCount < maxRetries) {
+            // Exponential backoff: 1s, 2s, 4s, 8s...
+            const delay = Math.pow(2, retryCount) * 1000;
+            retryCount++;
+
+            console.warn(`⏳ Retrying onSnapshot in ${delay}ms (attempt ${retryCount}/${maxRetries})`);
+
+            retryTimeout = setTimeout(() => {
+              attemptSubscription();
+            }, delay);
+          } else {
+            console.error('❌ Max retries reached for onSnapshot');
+            onError(error);
+          }
+        } else {
+          // Unknown error - don't retry
+          console.error('❌ Unknown error - not retrying');
+          onError(error);
+        }
+      }
+    );
+  };
+
+  // Start first attempt
+  attemptSubscription();
+
+  // Return cleanup function
+  return () => {
+    if (currentUnsubscribe) {
+      currentUnsubscribe();
+      currentUnsubscribe = null;
+    }
+    if (retryTimeout) {
+      clearTimeout(retryTimeout);
+      retryTimeout = null;
+    }
+  };
+}
+
 // --- Google Places integration (optional) ---
 const GOOGLE_PLACES_API_KEY = APP_CONFIG?.GOOGLE_PLACES_API_KEY || '';
 let googlePlacesReady = false;
@@ -190,9 +267,11 @@ async function initRealtimeSync(){
   try {
     const checklistRef = doc(db, `trips/${tripId}/activities`, 'checklist');
 
-    unsubscribe = onSnapshot(
+    // Use resilient snapshot with automatic retry
+    unsubscribe = createResilientSnapshot(
       checklistRef,
       (docSnap) => {
+        // Success callback
         if (docSnap.exists()) {
           checkedActivities = docSnap.data().checked || {};
         } else {
@@ -203,15 +282,18 @@ async function initRealtimeSync(){
         console.log('✅ Checklist synced:', Object.keys(checkedActivities).length, 'activities');
       },
       (error) => {
-        console.error('❌ Error in realtime sync:', error);
+        // Error callback (after all retries exhausted)
+        console.error('❌ Error in realtime sync (all retries failed):', error);
 
         // Specific error handling
         if (error.code === 'permission-denied') {
           console.error('❌ Permission denied: You do not have access to this checklist');
           Notifications?.show?.('No tienes permiso para acceder a esta lista', 'error');
         } else if (error.code === 'unavailable') {
-          console.error('❌ Firestore unavailable: Connection lost');
-          Notifications?.show?.('Conexión perdida. Trabajando en modo local.', 'warning');
+          console.error('❌ Firestore unavailable: Connection lost after retries');
+          Notifications?.show?.('Conexión perdida después de varios intentos. Trabajando en modo local.', 'warning');
+        } else {
+          Notifications?.show?.('Error de sincronización. Trabajando en modo local.', 'warning');
         }
 
         // Fallback to local storage
