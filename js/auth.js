@@ -5,10 +5,10 @@ import {
   signInWithRedirect, // CAMBIO: Usaremos redirección en lugar de popup
   getRedirectResult,  // CAMBIO: Para obtener el resultado después de volver
   signOut,
-  setPersistence, browserLocalPersistence,
-    onAuthStateChanged
+  onAuthStateChanged
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
+import { setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 export const AuthHandler = {
   currentUser: null,
   _authReadyPromise: null,
@@ -54,9 +54,12 @@ export const AuthHandler = {
 
   async init() {
     console.log('🔐 Inicializando autenticación...');
-    // ✅ Establecer persistencia de sesión para mantener al usuario autenticado
-    await setPersistence(auth, browserLocalPersistence);
-
+        try {
+            await setPersistence(auth, browserLocalPersistence);
+            console.log('✅ Persistence configurada correctamente');
+        } catch (err) {
+            console.error('❌ Error configurando persistence:', err);
+        }
 
     // Show loading screen
     this.showAuthLoading('Iniciando aplicación...');
@@ -70,8 +73,7 @@ export const AuthHandler = {
 
     this.setupLandingPage();
 
-    // IMPORTANT: Wait for redirect result BEFORE setting up setPersistence, browserLocalPersistence,
-    onAuthStateChanged
+    // IMPORTANT: Wait for redirect result BEFORE setting up onAuthStateChanged
     // This ensures we process Google login before checking auth state
     console.log('⏳ Verificando resultado de redirección de Google...');
     this.showAuthLoading('Procesando inicio de sesión...');
@@ -98,8 +100,7 @@ export const AuthHandler = {
             }
           }, 5000);
 
-          unsubscribe = setPersistence, browserLocalPersistence,
-    onAuthStateChanged(
+          unsubscribe = onAuthStateChanged(
             auth,
             (user) => {
               authCheckCount++;
@@ -136,8 +137,7 @@ export const AuthHandler = {
               }
             },
             (error) => {
-              // Error handler para setPersistence, browserLocalPersistence,
-    onAuthStateChanged
+              // Error handler para onAuthStateChanged
               clearTimeout(timeout);
               console.error('❌ Error en auth state changed:', error);
               this.showLandingPage();
@@ -149,8 +149,7 @@ export const AuthHandler = {
             }
           );
         } catch (err) {
-          console.error('❌ Error registrando setPersistence, browserLocalPersistence,
-    onAuthStateChanged:', err);
+          console.error('❌ Error registrando onAuthStateChanged:', err);
           this.showLandingPage();
           reject(err);
         }
@@ -384,14 +383,16 @@ export const AuthHandler = {
 };
 
 window.AuthHandler = AuthHandler;
+/*
+🚫 Service Worker Caching Tip:
+To avoid interference with Firebase Auth, exclude auth-related URLs from caching in service-worker.js:
 
+const authUrls = [
+  'https://www.gstatic.com/firebasejs/',
+  'https://securetoken.googleapis.com/',
+];
 
-// ✅ Sugerencia: En service-worker.js, excluir URLs relacionadas con Firebase Auth del caché
-// Ejemplo:
-// const authUrls = [
-//   'https://www.gstatic.com/firebasejs/',
-//   'https://securetoken.googleapis.com/',
-// ];
-// if (authUrls.some(url => request.url.includes(url))) {
-//   return fetch(request);
-// }
+if (authUrls.some(url => request.url.includes(url))) {
+  return fetch(request);
+}
+*/
