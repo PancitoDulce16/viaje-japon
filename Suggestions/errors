@@ -1,0 +1,46 @@
+🔥 Firebase initialized for project: japan-itin-dev
+apis-integration.js:788 🔌 APIs Integration module loaded
+ai-integration.js:491 🤖 AI Integration module loaded
+app.js:72 🚀 Iniciando aplicación...
+app.js:78 ⏳ Esperando a que la autenticación esté lista...
+auth.js:56 🔐 Inicializando autenticación...
+(index):358 ✅ Service Worker registrado: https://japan-itin-dev.web.app/
+(index):1 Error while trying to use the following icon from the Manifest: https://japan-itin-dev.web.app/viaje-japon/images/icons/icon-192.png (Download error or resource isn't a valid image)Understand this error
+itinerary.js:252 ⚠️ Not authenticated, using local storage only
+auth.js:59 ✅ Persistence configurada correctamente
+auth.js:189 🎨 Setup de landing page
+auth.js:224 ✅ Event listeners de login/register agregados
+auth.js:236 ✅ Event listener de Google agregado
+auth.js:78 ⏳ Verificando resultado de redirección de Google...
+auth.js:168 📥 Llamando a getRedirectResult...
+auth.js:170 📦 Resultado de getRedirectResult: null (no hay redirect pendiente)
+auth.js:177 ℹ️ No hay resultado de redirección (carga normal de página)
+auth.js:81 ✅ Resultado de redirección procesado
+auth.js:109 🔍 Auth check #1: Sin usuario
+auth.js:125 ⏳ Primera verificación sin usuario, esperando posible actualización...
+auth.js:248 ✅ Event listener de logout agregado
+service-worker.js:43 [Service Worker] Instalando...
+service-worker.js:47 [Service Worker] Guardando archivos en caché...
+(index):1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+japan-itin-dev.fireb…rpctoken=23516650:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+service-worker.js:59 [Service Worker] Activando...
+service-worker.js:71 [Service Worker] Controlando páginas abiertas...
+auth.js:95 ⚠️ Auth state check timeout después de 5 segundos
+(anonymous) @ auth.js:95
+setTimeout
+(anonymous) @ auth.js:93
+init @ auth.js:84
+await in init
+initApp @ app.js:81
+(anonymous) @ app.js:210Understand this warning
+auth.js:330 👋 Landing page mostrada
+auth.js:334 📱 Dashboard ocultado
+app.js:82 ✅ Autenticación lista, continuando con la inicialización...
+itinerary.js:211 ⚠️ User not authenticated or Firestore not initialized, loading default template
+itinerary.js:252 ⚠️ Not authenticated, using local storage only
+itinerary-builder.js:32 🎨 Inicializando Itinerary Builder...
+app.js:157 ✅ Aplicación iniciada correctamente
+app.js:158 🔥 Firebase listo
+app.js:159 ✨ Itinerary Builder listo
+app.js:160 🔌 APIs Integration listo
+app.js:161 🤖 AI Integration listo
