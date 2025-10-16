@@ -1,19 +1,14 @@
-// service-worker.js
+// service-worker.js actualizado para Japan Trip Planner
 
-// Incrementa la versión para forzar la actualización del caché.
-// Cada vez que hagas un cambio importante, incrementa este número (v1.8, v1.9, etc.).
-const CACHE_NAME = 'japan-trip-planner-cache-v2.0'; 
+const CACHE_NAME = 'japan-trip-planner-cache-v2.0';
 
-// Lista de archivos esenciales para que la app funcione sin conexión.
-// Las rutas son relativas a la raíz del sitio, correctas para Firebase Hosting.
+// Archivos esenciales para funcionamiento offline
 const urlsToCache = [
     '/',
     '/index.html',
-    // CSS
     '/css/main.css',
     '/css/sakura.css',
     '/css/japan-theme.css',
-    // JS Core & Modules
     '/js/app.js',
     '/js/core.js',
     '/js/auth.js',
@@ -33,105 +28,104 @@ const urlsToCache = [
     '/js/helpers.js',
     '/js/utils.js',
     '/js/constants.js',
-    // Data
     '/data/activities-database.js',
     '/data/airlines-data.js',
     '/data/attractions-data.js',
     '/data/categories-data.js',
     '/data/japan-cities.js',
-    // Manifest & Icons
     '/manifest.json',
     '/images/icons/icon-192.png',
     '/images/icons/icon-512.png'
-    // Los archivos de configuración (firebase-config.js, etc.) se excluyen 
-    // intencionalmente para que siempre se descarguen de la red.
 ];
 
-// Evento 'install': Se dispara cuando el navegador instala el service worker.
+// Instalación del Service Worker
 self.addEventListener('install', event => {
     console.log('[Service Worker] Instalando...');
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('[Service Worker] Abriendo caché y guardando archivos principales.');
+                console.log('[Service Worker] Guardando archivos en caché...');
                 return cache.addAll(urlsToCache);
             })
-            .then(() => {
-                // Forzar la activación del nuevo service worker inmediatamente.
-                return self.skipWaiting(); 
-            })
+            .then(() => self.skipWaiting())
             .catch(error => {
-                console.error('[Service Worker] Falló el cacheo de archivos durante la instalación:', error);
+                console.error('[Service Worker] Error al cachear archivos:', error);
             })
     );
 });
 
-// Evento 'activate': Se dispara cuando el service worker se activa.
-// Es el momento ideal para limpiar cachés antiguos.
+// Activación del Service Worker
 self.addEventListener('activate', event => {
     console.log('[Service Worker] Activando...');
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cacheName => {
-                    // Si el nombre del caché no es el actual, se borra.
                     if (cacheName !== CACHE_NAME) {
-                        console.log('[Service Worker] Borrando caché antiguo:', cacheName);
+                        console.log('[Service Worker] Eliminando caché antiguo:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
             );
         }).then(() => {
-            console.log('[Service Worker] Reclamando control de las páginas abiertas.');
-            // Tomar control inmediato de las páginas para que usen este service worker.
+            console.log('[Service Worker] Controlando páginas abiertas...');
             return self.clients.claim();
         })
     );
 });
 
-// Evento 'fetch': Se dispara cada vez que la página realiza una petición de red.
+// Intercepción de peticiones
 self.addEventListener('fetch', event => {
-  const authUrls = [
-    '/__/auth/handler',
-    'https://www.gstatic.com/firebasejs/',
-    'https://securetoken.googleapis.com/'
-  ];
-  if (authUrls.some(url => event.request.url.includes(url))) {
-    return; // No interceptar, dejar que Firebase maneje la redirección
-  }
-    const url = new URL(event.request.url);
+    const url = event.request.url;
 
-    // Para archivos JavaScript y HTML: usar estrategia "Network First"
-    // Esto asegura que siempre se obtenga la última versión cuando hay conexión
-    if (url.pathname.endsWith('.js') || url.pathname.endsWith('.html') || url.pathname === '/') {
+    // 🔐 Evitar interferencia con rutas de autenticación de Firebase
+    const authUrls = [
+        '/__/auth/handler',
+        'https://www.gstatic.com/firebasejs/',
+        'https://securetoken.googleapis.com/'
+    ];
+    if (authUrls.some(authUrl => url.includes(authUrl))) {
+        return;
+    }
+
+    // 🧠 Evitar interceptar navegación HTML (redirecciones)
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request).catch(() => caches.match('/index.html'))
+        );
+        return;
+    }
+
+    const requestURL = new URL(url);
+
+    // Estrategia "Network First" para JS y HTML
+    if (requestURL.pathname.endsWith('.js') || requestURL.pathname.endsWith('.html') || requestURL.pathname === '/') {
         event.respondWith(
             fetch(event.request)
                 .then(response => {
-                    // Guardar la nueva versión en caché
                     const responseClone = response.clone();
                     caches.open(CACHE_NAME).then(cache => {
                         cache.put(event.request, responseClone);
                     });
                     return response;
                 })
-                .catch(() => {
-                    // Si falla la red, usar caché como fallback
-                    return caches.match(event.request);
-                })
+                .catch(() => caches.match(event.request))
         );
     } else {
-        // Para otros recursos (CSS, imágenes, etc.): usar estrategia "Cache First"
+        // Estrategia "Cache First" para otros recursos
         event.respondWith(
             caches.match(event.request)
                 .then(cachedResponse => {
-                    if (cachedResponse) {
-                        return cachedResponse;
-                    }
-                    return fetch(event.request);
+                    return cachedResponse || fetch(event.request);
                 })
                 .catch(error => {
-                    console.error(`[Service Worker] Error de fetch para ${event.request.url}:`, error);
+                    console.error(`[Service Worker] Error al obtener ${event.request.url}:`, error);
                 })
         );
     }
+});
+
+// Manejo de errores globales del Service Worker
+self.addEventListener('error', event => {
+    console.error('[Service Worker] Error global:', event);
 });
