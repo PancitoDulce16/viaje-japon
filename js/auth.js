@@ -13,65 +13,55 @@ export const AuthHandler = {
   _authReadyPromise: null,
   _authReadyResolve: null,
 
-  init() {
+  async init() {
     console.log('🔐 Inicializando autenticación...');
-
-    // Create a promise that resolves when auth is ready
-    this._authReadyPromise = new Promise((resolve) => {
-      this._authReadyResolve = resolve;
-    });
 
     // Esperar a que el DOM esté completamente cargado
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        this.setupLandingPage();
+      await new Promise(resolve => {
+        document.addEventListener('DOMContentLoaded', resolve);
       });
-    } else {
-      this.setupLandingPage();
     }
 
-    // CAMBIO: Manejar el resultado de la redirección al cargar la página
-    this.handleRedirectResult();
+    this.setupLandingPage();
 
-    // Listener de cambios de autenticación (solo si auth está inicializado)
-    if (typeof auth !== 'undefined' && auth) {
-      try {
-        onAuthStateChanged(auth, (user) => {
-          this.currentUser = user;
+    // IMPORTANT: Wait for redirect result BEFORE setting up onAuthStateChanged
+    // This ensures we process Google login before checking auth state
+    console.log('⏳ Verificando resultado de redirección de Google...');
+    await this.handleRedirectResult();
+    console.log('✅ Resultado de redirección procesado');
 
-          if (user) {
-            console.log('✅ Usuario autenticado:', user.email);
-            this.showAppDashboard();
-            this.updateUserInfo(user);
-          } else {
-            console.log('⚠️ No hay usuario autenticado');
-            this.showLandingPage();
-          }
+    // Create a promise that resolves when auth state is determined
+    return new Promise((resolve) => {
+      // Listener de cambios de autenticación (solo si auth está inicializado)
+      if (typeof auth !== 'undefined' && auth) {
+        try {
+          onAuthStateChanged(auth, (user) => {
+            this.currentUser = user;
 
-          // Resolve the auth ready promise
-          if (this._authReadyResolve) {
-            this._authReadyResolve(user);
-            this._authReadyResolve = null;
-          }
-        });
-      } catch (err) {
-        console.error('❌ Error registrando onAuthStateChanged:', err);
-        this.showLandingPage();
-        if (this._authReadyResolve) {
-          this._authReadyResolve(null);
-          this._authReadyResolve = null;
+            if (user) {
+              console.log('✅ Usuario autenticado:', user.email);
+              this.showAppDashboard();
+              this.updateUserInfo(user);
+            } else {
+              console.log('⚠️ No hay usuario autenticado');
+              this.showLandingPage();
+            }
+
+            // Resolve the promise on first auth state change
+            resolve(user);
+          });
+        } catch (err) {
+          console.error('❌ Error registrando onAuthStateChanged:', err);
+          this.showLandingPage();
+          resolve(null);
         }
+      } else {
+        console.warn('⚠️ Firebase Auth no está inicializado. Se mostrará la landing page sin sesión.');
+        this.showLandingPage();
+        resolve(null);
       }
-    } else {
-      console.warn('⚠️ Firebase Auth no está inicializado. Se mostrará la landing page sin sesión.');
-      this.showLandingPage();
-      if (this._authReadyResolve) {
-        this._authReadyResolve(null);
-        this._authReadyResolve = null;
-      }
-    }
-
-    return this._authReadyPromise;
+    });
   },
 
   // NUEVA FUNCIÓN: Maneja el resultado del login por redirección
