@@ -32,38 +32,48 @@ export const AuthHandler = {
     console.log('✅ Resultado de redirección procesado');
 
     // Create a promise that resolves when auth state is determined
-    // IMPORTANT: We use a small delay to allow Firebase to process the redirect fully
     return new Promise((resolve) => {
       // Listener de cambios de autenticación (solo si auth está inicializado)
       if (typeof auth !== 'undefined' && auth) {
         try {
-          let firstCall = true;
-          onAuthStateChanged(auth, (user) => {
+          let authCheckCount = 0;
+          let resolved = false;
+          let unsubscribe;
+
+          unsubscribe = onAuthStateChanged(auth, (user) => {
+            authCheckCount++;
             this.currentUser = user;
+
+            console.log(`🔍 Auth check #${authCheckCount}:`, user ? `Usuario: ${user.email}` : 'Sin usuario');
 
             if (user) {
               console.log('✅ Usuario autenticado:', user.email);
               this.showAppDashboard();
               this.updateUserInfo(user);
-              // Always resolve when we have a user
-              resolve(user);
-            } else {
-              console.log('⚠️ No hay usuario autenticado');
-              this.showLandingPage();
 
-              // Only resolve on first call if no user
-              // This prevents resolving before redirect is fully processed
-              if (firstCall) {
-                // Give Firebase a moment to process redirect
-                setTimeout(() => {
-                  if (!this.currentUser) {
-                    resolve(null);
-                  }
-                }, 500);
+              // Resolve with user and unsubscribe
+              if (!resolved) {
+                resolved = true;
+                unsubscribe();
+                resolve(user);
               }
-            }
+            } else if (authCheckCount === 1) {
+              // First check with no user - wait for potential second check
+              console.log('⏳ Primera verificación sin usuario, esperando posible actualización...');
 
-            firstCall = false;
+              // Wait up to 1 second for a second auth state change
+              setTimeout(() => {
+                if (!resolved) {
+                  console.log('⚠️ No hay usuario autenticado después de espera');
+                  this.showLandingPage();
+                  resolved = true;
+                  unsubscribe();
+                  resolve(null);
+                }
+              }, 1000);
+            }
+            // If authCheckCount > 1 and still no user, do nothing
+            // The setTimeout above will handle resolution
           });
         } catch (err) {
           console.error('❌ Error registrando onAuthStateChanged:', err);
