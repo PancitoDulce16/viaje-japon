@@ -5,12 +5,21 @@
   "firestore": {
     "rules": "firestore.rules"
   },
-  "hosting": {
-    "public": ".",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [
-      { "source": "/api/**", "function": "placesProxy" },
-      { "source": "**", "destination": "/index.html" }
-    ]
-  }
+"hosting": {
+  "public": ".",
+  "ignore": [
+    "firebase.json",
+    "**/.*",
+    "**/node_modules/**"
+  ],
+  "rewrites": [
+    {
+      "source": "/api/**",
+      "function": "placesProxy"
+    },
+    {
+      "source": "!**/*.@(js|css|html|json|png|jpg|gif|svg|ico)",
+      "destination": "/index.html"
+    }
+  ]
 }
