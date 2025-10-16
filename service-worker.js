@@ -91,6 +91,14 @@ self.addEventListener('activate', event => {
 
 // Evento 'fetch': Se dispara cada vez que la página realiza una petición de red.
 self.addEventListener('fetch', event => {
+  const authUrls = [
+    '/__/auth/handler',
+    'https://www.gstatic.com/firebasejs/',
+    'https://securetoken.googleapis.com/'
+  ];
+  if (authUrls.some(url => event.request.url.includes(url))) {
+    return; // No interceptar, dejar que Firebase maneje la redirección
+  }
     const url = new URL(event.request.url);
 
     // Para archivos JavaScript y HTML: usar estrategia "Network First"
