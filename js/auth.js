@@ -32,7 +32,7 @@ export const AuthHandler = {
     console.log('✅ Resultado de redirección procesado');
 
     // Create a promise that resolves when auth state is determined
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       // Listener de cambios de autenticación (solo si auth está inicializado)
       if (typeof auth !== 'undefined' && auth) {
         try {
@@ -40,50 +40,75 @@ export const AuthHandler = {
           let resolved = false;
           let unsubscribe;
 
-          unsubscribe = onAuthStateChanged(auth, (user) => {
-            authCheckCount++;
-            this.currentUser = user;
+          // Timeout de 5 segundos (aumentado desde 1s) para dar más tiempo a Firebase
+          const timeout = setTimeout(() => {
+            if (!resolved) {
+              console.warn('⚠️ Auth state check timeout después de 5 segundos');
+              this.showLandingPage();
+              resolved = true;
+              if (unsubscribe) unsubscribe();
+              resolve(null);
+            }
+          }, 5000);
 
-            console.log(`🔍 Auth check #${authCheckCount}:`, user ? `Usuario: ${user.email}` : 'Sin usuario');
+          unsubscribe = onAuthStateChanged(
+            auth,
+            (user) => {
+              authCheckCount++;
+              this.currentUser = user;
 
-            if (user) {
-              console.log('✅ Usuario autenticado:', user.email);
-              this.showAppDashboard();
-              this.updateUserInfo(user);
+              console.log(`🔍 Auth check #${authCheckCount}:`, user ? `Usuario: ${user.email}` : 'Sin usuario');
 
-              // Resolve with user and unsubscribe
-              if (!resolved) {
-                resolved = true;
-                unsubscribe();
-                resolve(user);
-              }
-            } else if (authCheckCount === 1) {
-              // First check with no user - wait for potential second check
-              console.log('⏳ Primera verificación sin usuario, esperando posible actualización...');
+              if (user) {
+                console.log('✅ Usuario autenticado:', user.email);
+                this.showAppDashboard();
+                this.updateUserInfo(user);
 
-              // Wait up to 1 second for a second auth state change
-              setTimeout(() => {
+                // Resolve with user and unsubscribe
                 if (!resolved) {
-                  console.log('⚠️ No hay usuario autenticado después de espera');
+                  clearTimeout(timeout);
+                  resolved = true;
+                  unsubscribe();
+                  resolve(user);
+                }
+              } else if (authCheckCount === 1) {
+                // First check with no user - wait for potential second check
+                console.log('⏳ Primera verificación sin usuario, esperando posible actualización...');
+                // El timeout global manejará la resolución
+              } else if (authCheckCount > 1 && !user) {
+                // Second check still no user - resolve immediately
+                console.log('⚠️ Segunda verificación confirma: no hay usuario');
+                if (!resolved) {
+                  clearTimeout(timeout);
                   this.showLandingPage();
                   resolved = true;
                   unsubscribe();
                   resolve(null);
                 }
-              }, 1000);
+              }
+            },
+            (error) => {
+              // Error handler para onAuthStateChanged
+              clearTimeout(timeout);
+              console.error('❌ Error en auth state changed:', error);
+              this.showLandingPage();
+              if (unsubscribe) unsubscribe();
+              if (!resolved) {
+                resolved = true;
+                reject(error);
+              }
             }
-            // If authCheckCount > 1 and still no user, do nothing
-            // The setTimeout above will handle resolution
-          });
+          );
         } catch (err) {
           console.error('❌ Error registrando onAuthStateChanged:', err);
           this.showLandingPage();
-          resolve(null);
+          reject(err);
         }
       } else {
-        console.warn('⚠️ Firebase Auth no está inicializado. Se mostrará la landing page sin sesión.');
+        const error = new Error('Firebase Auth no está inicializado');
+        console.error('❌', error);
         this.showLandingPage();
-        resolve(null);
+        reject(error);
       }
     });
   },
