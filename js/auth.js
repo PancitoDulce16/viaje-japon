@@ -13,8 +13,49 @@ export const AuthHandler = {
   _authReadyPromise: null,
   _authReadyResolve: null,
 
+  showAuthLoading(message = 'Verificando autenticación...') {
+    const landingPage = document.getElementById('landingPage');
+    const appDashboard = document.getElementById('appDashboard');
+
+    // Hide both pages
+    if (landingPage) landingPage.classList.add('hidden');
+    if (appDashboard) appDashboard.classList.add('hidden');
+
+    // Show loading screen
+    let loadingScreen = document.getElementById('authLoadingScreen');
+    if (!loadingScreen) {
+      loadingScreen = document.createElement('div');
+      loadingScreen.id = 'authLoadingScreen';
+      loadingScreen.className = 'fixed inset-0 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center z-50';
+      loadingScreen.innerHTML = `
+        <div class="text-center text-white">
+          <div class="mb-6">
+            <div class="inline-block animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent"></div>
+          </div>
+          <h2 class="text-2xl font-bold mb-2" id="authLoadingMessage">${message}</h2>
+          <p class="text-white/80 text-sm">Por favor espera...</p>
+        </div>
+      `;
+      document.body.appendChild(loadingScreen);
+    } else {
+      loadingScreen.classList.remove('hidden');
+      const messageEl = document.getElementById('authLoadingMessage');
+      if (messageEl) messageEl.textContent = message;
+    }
+  },
+
+  hideAuthLoading() {
+    const loadingScreen = document.getElementById('authLoadingScreen');
+    if (loadingScreen) {
+      loadingScreen.classList.add('hidden');
+    }
+  },
+
   async init() {
     console.log('🔐 Inicializando autenticación...');
+
+    // Show loading screen
+    this.showAuthLoading('Iniciando aplicación...');
 
     // Esperar a que el DOM esté completamente cargado
     if (document.readyState === 'loading') {
@@ -28,6 +69,7 @@ export const AuthHandler = {
     // IMPORTANT: Wait for redirect result BEFORE setting up onAuthStateChanged
     // This ensures we process Google login before checking auth state
     console.log('⏳ Verificando resultado de redirección de Google...');
+    this.showAuthLoading('Procesando inicio de sesión...');
     await this.handleRedirectResult();
     console.log('✅ Resultado de redirección procesado');
 
@@ -205,12 +247,17 @@ export const AuthHandler = {
   async handleLandingLogin() {
     const email = document.getElementById('landingLoginEmail').value;
     const password = document.getElementById('landingLoginPassword').value;
+
     console.log('📧 Intentando login con:', email);
+    this.showAuthLoading('Iniciando sesión...');
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
       console.log('✅ Login exitoso');
+      // Loading screen will be hidden by showAppDashboard
     } catch (error) {
       console.error('❌ Error en login:', error);
+      this.hideAuthLoading();
       this.handleAuthError(error);
     }
   },
@@ -219,17 +266,23 @@ export const AuthHandler = {
     const email = document.getElementById('landingRegisterEmail').value;
     const password = document.getElementById('landingRegisterPassword').value;
     const confirmPassword = document.getElementById('landingRegisterConfirmPassword').value;
+
     if (password !== confirmPassword) {
       alert('⚠️ Las contraseñas no coinciden');
       return;
     }
+
     console.log('📧 Intentando registro con:', email);
+    this.showAuthLoading('Creando cuenta...');
+
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       console.log('✅ Registro exitoso');
       alert('✅ Cuenta creada exitosamente!');
+      // Loading screen will be hidden by showAppDashboard
     } catch (error) {
       console.error('❌ Error en registro:', error);
+      this.hideAuthLoading();
       this.handleAuthError(error);
     }
   },
@@ -237,11 +290,15 @@ export const AuthHandler = {
   // CAMBIO: Login con Google ahora usa redirección
   async loginWithGoogle() {
     console.log('🔑 Redirigiendo para login con Google...');
+    this.showAuthLoading('Redirigiendo a Google...');
+
     try {
       await signInWithRedirect(auth, googleProvider);
       // La página se redirigirá, así que no se ejecutará más código aquí.
+      // Loading screen will remain visible during redirect
     } catch (error) {
       console.error('❌ Error al iniciar redirección con Google:', error);
+      this.hideAuthLoading();
       this.handleAuthError(error);
     }
   },
@@ -258,6 +315,7 @@ export const AuthHandler = {
   },
 
   showLandingPage() {
+    this.hideAuthLoading(); // Hide loading screen first
     const landingPage = document.getElementById('landingPage');
     const appDashboard = document.getElementById('appDashboard');
     if (landingPage) {
@@ -271,6 +329,7 @@ export const AuthHandler = {
   },
 
   showAppDashboard() {
+    this.hideAuthLoading(); // Hide loading screen first
     const landingPage = document.getElementById('landingPage');
     const appDashboard = document.getElementById('appDashboard');
     if (landingPage) {
