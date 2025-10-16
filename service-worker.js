@@ -9,7 +9,7 @@
 // 📦 --- CONFIGURACIÓN DEL CACHÉ ---
 // IMPORTANTE: Cambia este número de versión CADA VEZ que hagas un cambio en los
 // archivos de la aplicación (JS, CSS, HTML) para forzar la actualización.
-const CACHE_VERSION = 'japan-trip-planner-v3.0';
+const CACHE_VERSION = 'japan-trip-planner-v3.1';
 const CACHE_NAME = `static-${CACHE_VERSION}`;
 
 // Lista de archivos base (el "cascarón" de la app) que se guardarán en caché.
@@ -131,3 +131,4 @@ self.addEventListener('fetch', event => {
             })
     );
 });
+
