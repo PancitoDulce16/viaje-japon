@@ -1,0 +1,39 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Allow users to read/write their own user document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Allow authenticated users to read/write trips
+    match /trips/{tripId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+
+      // Allow access to subcollections
+      match /{document=**} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+    // Allow authenticated users to read/write itineraries
+    match /itineraries/{itineraryId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+
+      // Allow access to subcollections
+      match /{document=**} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+    // Temporary: Allow test access (REMOVE IN PRODUCTION)
+    // Uncomment these lines ONLY for testing if nothing else works:
+    // match /{document=**} {
+    //   allow read, write: if true;
+    // }
+  }
+}
