@@ -765,10 +765,12 @@ export const ItineraryBuilder = {
     if (this.currentStep < 5) {
       this.currentStep++;
 
-if (this.currentStep === 2) {
-  this.generateDateCitySelector();  // ← VIEJO
-}
-        this.renderQuickCityBlocksUI && this.renderQuickCityBlocksUI();
+      if (this.currentStep === 2) {
+        this.generateDateCitySelector();
+      }
+
+      if (this.renderQuickCityBlocksUI) {
+        this.renderQuickCityBlocksUI();
       }
 
       this.updateWizardView();

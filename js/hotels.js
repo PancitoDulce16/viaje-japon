@@ -1,6 +1,6 @@
 // js/hotels.js - Gestión completa de hoteles
 import { db, auth } from './firebase-config.js';
-import { collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+import { collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { APIsIntegration } from './apis-integration.js';
 import { Notifications } from './notifications.js';
 
