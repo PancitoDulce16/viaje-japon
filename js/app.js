@@ -36,71 +36,68 @@ async function initApp() {
     await AuthHandler.init();
     console.log('✅ Autenticación lista, continuando con la inicialización...');
 
-    // Esperar un momento para que el DOM esté listo
-    setTimeout(() => {
-        // Inicializar el resto de la app
-        ModalRenderer.renderModals();
+    // Inicializar el resto de la app (NO usar setTimeout - ya esperamos auth)
+    ModalRenderer.renderModals();
 
-        // Obtener tripId actual (si existe)
-        const currentTripId = localStorage.getItem('currentTripId');
+    // Obtener tripId actual (si existe)
+    const currentTripId = localStorage.getItem('currentTripId');
 
-        // Solo inicializar estos si el usuario está autenticado
-        // (se verificará dentro de cada módulo)
-        ItineraryHandler.init();
-        ItineraryBuilder.init();
-        MapHandler.renderMap();
-        TabsHandler.renderAllTabs();
-        AttractionsHandler.renderAttractions();
-        PreparationHandler.init();
-        FlightsHandler.init(currentTripId);
-        HotelsHandler.init(currentTripId);
-        TransportHandler.renderTransport();
-        AppCore.init();
-        
-        console.log('✅ Aplicación iniciada correctamente');
-        console.log('🔥 Firebase listo');
-        console.log('✨ Itinerary Builder listo');
-        console.log('🔌 APIs Integration listo');
-        console.log('🤖 AI Integration listo');
-        
-        // Cargar integraciones opcionalmente y de forma asíncrona
-        (async () => {
-            try {
-                await import('./apis-config.js'); // may be generated at build time
-                const apisModule = await import('./apis-integration.js');
-                window.APIsIntegration = apisModule.APIsIntegration;
+    // Solo inicializar estos si el usuario está autenticado
+    // (se verificará dentro de cada módulo)
+    ItineraryHandler.init();
+    ItineraryBuilder.init();
+    MapHandler.renderMap();
+    TabsHandler.renderAllTabs();
+    AttractionsHandler.renderAttractions();
+    PreparationHandler.init();
+    FlightsHandler.init(currentTripId);
+    HotelsHandler.init(currentTripId);
+    TransportHandler.renderTransport();
+    AppCore.init();
 
-                // Interceptar fetch para endpoints locales /api/* (mock backend)
-                const originalFetch = window.fetch.bind(window);
-                window.fetch = async (input, init) => {
-                    const req = new Request(input, init);
-                    if (new URL(req.url, window.location.origin).pathname.startsWith('/api/')) {
-                        const handled = await window.APIsIntegration?.handleLocalApi(req);
-                        if (handled) return handled;
-                    }
-                    return originalFetch(input, init);
-                };
-            } catch (e) {
-                console.warn('⚠️ APIs integration not available:', e);
-            }
+    console.log('✅ Aplicación iniciada correctamente');
+    console.log('🔥 Firebase listo');
+    console.log('✨ Itinerary Builder listo');
+    console.log('🔌 APIs Integration listo');
+    console.log('🤖 AI Integration listo');
 
-            try {
-                const aiModule = await import('./ai-integration.js');
-                window.AIIntegration = aiModule.AIIntegration;
-            } catch (e) {
-                console.warn('⚠️ AI integration not available:', e);
-            }
-        })();
+    // Cargar integraciones opcionalmente y de forma asíncrona
+    (async () => {
+        try {
+            await import('./apis-config.js'); // may be generated at build time
+            const apisModule = await import('./apis-integration.js');
+            window.APIsIntegration = apisModule.APIsIntegration;
 
-        // Inicializar Lucide (si disponible) para iconos <i data-lucide>
-        if (window.lucide && typeof window.lucide.createIcons === 'function') {
-            try {
-                window.lucide.createIcons();
-            } catch (e) {
-                console.warn('Lucide init warning:', e);
-            }
+            // Interceptar fetch para endpoints locales /api/* (mock backend)
+            const originalFetch = window.fetch.bind(window);
+            window.fetch = async (input, init) => {
+                const req = new Request(input, init);
+                if (new URL(req.url, window.location.origin).pathname.startsWith('/api/')) {
+                    const handled = await window.APIsIntegration?.handleLocalApi(req);
+                    if (handled) return handled;
+                }
+                return originalFetch(input, init);
+            };
+        } catch (e) {
+            console.warn('⚠️ APIs integration not available:', e);
         }
-    }, 100);
+
+        try {
+            const aiModule = await import('./ai-integration.js');
+            window.AIIntegration = aiModule.AIIntegration;
+        } catch (e) {
+            console.warn('⚠️ AI integration not available:', e);
+        }
+    })();
+
+    // Inicializar Lucide (si disponible) para iconos <i data-lucide>
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        try {
+            window.lucide.createIcons();
+        } catch (e) {
+            console.warn('Lucide init warning:', e);
+        }
+    }
 }
 
 if (document.readyState === 'loading') {
