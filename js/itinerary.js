@@ -79,6 +79,14 @@ function scheduleLocalSave(){ if(saveDebounceTimer) clearTimeout(saveDebounceTim
 async function loadItinerary(){
   const tripId=getCurrentTripId();
   if(!tripId){ console.log('⚠️ No hay trip seleccionado, cargando plantilla por defecto.'); try{ const r=await fetch('/data/attractions.json'); const data=await r.json(); currentItinerary={ days: data.suggestedItinerary }; return currentItinerary; }catch(e){ console.error('❌ Error fallback:',e); return null; } }
+
+  // Check if user is authenticated before accessing Firestore
+  if(!auth.currentUser){
+    console.log('⚠️ Usuario no autenticado, cargando plantilla por defecto.');
+    try{ const r=await fetch('/data/attractions.json'); const data=await r.json(); currentItinerary={ days: data.suggestedItinerary }; return currentItinerary; }
+    catch(e){ console.error('❌ Error fallback:',e); return null; }
+  }
+
   try{
     const itineraryRef=doc(db, `trips/${tripId}/data`, 'itinerary');
     const snap=await getDoc(itineraryRef);
