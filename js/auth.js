@@ -91,14 +91,22 @@ export const AuthHandler = {
   // NUEVA FUNCIÓN: Maneja el resultado del login por redirección
   async handleRedirectResult() {
     try {
+      console.log('📥 Llamando a getRedirectResult...');
       const result = await getRedirectResult(auth);
+      console.log('📦 Resultado de getRedirectResult:', result ? `Usuario: ${result.user.email}` : 'null (no hay redirect pendiente)');
+
       if (result) {
         // El usuario ha vuelto del inicio de sesión de Google
         console.log('✅ Redirección de Google exitosa:', result.user.email);
+        return result;
+      } else {
+        console.log('ℹ️ No hay resultado de redirección (carga normal de página)');
+        return null;
       }
     } catch (error) {
       console.error('❌ Error en el resultado de la redirección:', error);
       this.handleAuthError(error);
+      return null;
     }
   },
 
