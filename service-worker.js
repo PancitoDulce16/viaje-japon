@@ -2,7 +2,7 @@
 
 // Incrementa la versión para forzar la actualización del caché.
 // Cada vez que hagas un cambio importante, incrementa este número (v1.8, v1.9, etc.).
-const CACHE_NAME = 'japan-trip-planner-cache-v1.8'; 
+const CACHE_NAME = 'japan-trip-planner-cache-v2.0'; 
 
 // Lista de archivos esenciales para que la app funcione sin conexión.
 // Las rutas son relativas a la raíz del sitio, correctas para Firebase Hosting.
@@ -91,25 +91,39 @@ self.addEventListener('activate', event => {
 
 // Evento 'fetch': Se dispara cada vez que la página realiza una petición de red.
 self.addEventListener('fetch', event => {
-    // Usar la estrategia "Cache First":
-    // 1. Intentar responder desde el caché.
-    // 2. Si no está en caché, ir a la red.
-    event.respondWith(
-        caches.match(event.request)
-            .then(cachedResponse => {
-                // Si la respuesta está en el caché, la devolvemos.
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
-                
-                // Si no, la buscamos en la red.
-                return fetch(event.request);
-            })
-            .catch(error => {
-                // En caso de error (por ejemplo, sin conexión),
-                // se puede devolver una página de fallback si se desea.
-                console.error(`[Service Worker] Error de fetch para ${event.request.url}:`, error);
-                // Opcional: return caches.match('/offline.html');
-            })
-    );
+    const url = new URL(event.request.url);
+
+    // Para archivos JavaScript y HTML: usar estrategia "Network First"
+    // Esto asegura que siempre se obtenga la última versión cuando hay conexión
+    if (url.pathname.endsWith('.js') || url.pathname.endsWith('.html') || url.pathname === '/') {
+        event.respondWith(
+            fetch(event.request)
+                .then(response => {
+                    // Guardar la nueva versión en caché
+                    const responseClone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseClone);
+                    });
+                    return response;
+                })
+                .catch(() => {
+                    // Si falla la red, usar caché como fallback
+                    return caches.match(event.request);
+                })
+        );
+    } else {
+        // Para otros recursos (CSS, imágenes, etc.): usar estrategia "Cache First"
+        event.respondWith(
+            caches.match(event.request)
+                .then(cachedResponse => {
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
+                    return fetch(event.request);
+                })
+                .catch(error => {
+                    console.error(`[Service Worker] Error de fetch para ${event.request.url}:`, error);
+                })
+        );
+    }
 });
