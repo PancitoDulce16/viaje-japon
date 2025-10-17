@@ -143,34 +143,85 @@ export const APIsIntegration = {
    */
   async searchFlights(flightNumber, date = null) {
     try {
+      console.log('🔍 === DEBUG SEARCH FLIGHTS ===');
+      console.log('📋 Parámetros de entrada:', { flightNumber, date });
+      console.log('🔑 API_KEYS importada desde apis-config:', typeof API_KEYS !== 'undefined' ? 'Sí' : 'No');
+      console.log('🔑 API_KEYS valor:', API_KEYS);
+      console.log('✈️ AviationStack en API_KEYS:', API_KEYS?.aviationStack ? 'Sí' : 'No');
+      console.log('✈️ AviationStack apiKey:', API_KEYS?.aviationStack?.apiKey ? 'Sí (***' + API_KEYS.aviationStack.apiKey.slice(-4) + ')' : 'No');
+      console.log('🔗 API_ENDPOINTS disponible:', typeof API_ENDPOINTS !== 'undefined' ? 'Sí' : 'No');
+
+      // Verificar que la API está configurada
+      if (!API_KEYS || !API_KEYS.aviationStack || !API_KEYS.aviationStack.apiKey) {
+        console.error('❌ API de vuelos no está configurada');
+        return {
+          success: false,
+          error: 'La API de vuelos (AviationStack) no está configurada. Por favor verifica las API keys.'
+        };
+      }
+
       const params = {
         flight_iata: flightNumber
       };
-      
+
       if (date) {
         params.flight_date = date;
       }
-      
+
+      console.log('📦 Parámetros de la API:', params);
+
       const url = API_ENDPOINTS.flights.search(params);
+      console.log('🔗 URL completa:', url);
+
       const data = await apiRequest(url);
-      
+      console.log('📊 Respuesta de API completa:', data);
+
       if (data.data && data.data.length > 0) {
-        console.log('✈️ Vuelo encontrado:', data.data[0]);
+        console.log(`✈️ ${data.data.length} vuelo(s) encontrado(s)`);
+        console.log('✈️ Primer vuelo:', data.data[0]);
         return {
           success: true,
           data: data.data
         };
-      } else {
+      } else if (data.data && Array.isArray(data.data) && data.data.length === 0) {
+        console.log('😕 Búsqueda exitosa pero sin resultados');
         return {
           success: false,
-          message: 'Vuelo no encontrado'
+          message: 'No se encontró información para ese vuelo. Verifica el número de vuelo y la fecha.'
+        };
+      } else if (data.error) {
+        console.error('❌ Error en respuesta de API:', data.error);
+        return {
+          success: false,
+          error: data.error.message || data.error.toString()
+        };
+      } else {
+        console.log('⚠️ Respuesta inesperada de la API');
+        return {
+          success: false,
+          message: 'Respuesta inesperada del servidor de vuelos'
         };
       }
     } catch (error) {
       console.error('❌ Error buscando vuelo:', error);
+
+      // Analizar el tipo de error
+      let errorMessage = error.message;
+
+      if (error.message.includes('API Error 401')) {
+        errorMessage = 'Error de autenticación con la API de vuelos (401). La clave API es inválida.';
+      } else if (error.message.includes('API Error 403')) {
+        errorMessage = 'Acceso denegado (403). La API key de vuelos no tiene permisos.';
+      } else if (error.message.includes('API Error 429')) {
+        errorMessage = 'Límite de solicitudes excedido (429). Intenta en unos minutos.';
+      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage = 'Error de red. Verifica tu conexión a internet.';
+      }
+
       return {
         success: false,
-        error: error.message
+        error: errorMessage,
+        originalError: error.message
       };
     }
   },

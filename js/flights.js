@@ -764,11 +764,20 @@ export const FlightsHandler = {
     `;
 
     try {
+      // 🔍 DEBUG: Verificar API Keys ANTES de la llamada
+      console.log('🔍 === DEBUG TRACK FLIGHT ===');
+      console.log('📦 window.API_KEYS existe:', typeof window.API_KEYS !== 'undefined');
+      console.log('📦 window.API_KEYS valor:', window.API_KEYS);
+      console.log('✈️ AviationStack configurada:', window.API_KEYS?.aviationStack?.apiKey ? 'Sí (***' + window.API_KEYS.aviationStack.apiKey.slice(-4) + ')' : 'No');
+      console.log('🏨 LiteAPI configurada:', window.API_KEYS?.liteAPI?.apiKey ? 'Sí (***' + window.API_KEYS.liteAPI.apiKey.slice(-4) + ')' : 'No');
+
       const result = await APIsIntegration.searchFlights(flightNumber, date || null);
-      
+
+      console.log('📊 Resultado completo de searchFlights:', result);
+
       if (result.success && result.data.length > 0) {
         const flight = result.data[0];
-        
+
         resultDiv.innerHTML = `
           <div class="p-4 bg-white/20 rounded-lg backdrop-blur-sm">
             <p class="text-xs font-bold mb-2">${flight.airline.name} ${flight.flight.iata}</p>
@@ -791,20 +800,30 @@ export const FlightsHandler = {
             </div>
           </div>
         `;
+        Notifications.success('✅ Información del vuelo encontrada');
       } else {
+        const errorMsg = result.message || result.error || 'No se encontró información del vuelo';
         resultDiv.innerHTML = `
           <div class="p-4 bg-red-500/20 rounded-lg backdrop-blur-sm border border-red-400/50">
-            <p class="text-sm">❌ No se encontró información del vuelo</p>
+            <p class="text-sm">❌ ${errorMsg}</p>
             <p class="text-xs opacity-80 mt-1">Verifica el número de vuelo y la fecha</p>
+            <details class="mt-2 text-xs">
+              <summary class="cursor-pointer opacity-80">Ver detalles técnicos</summary>
+              <pre class="mt-1 p-2 bg-black/30 rounded overflow-auto">${JSON.stringify(result, null, 2)}</pre>
+            </details>
           </div>
         `;
       }
     } catch (error) {
-      console.error('Error tracking flight:', error);
+      console.error('❌ Error tracking flight:', error);
       resultDiv.innerHTML = `
         <div class="p-4 bg-red-500/20 rounded-lg backdrop-blur-sm border border-red-400/50">
           <p class="text-sm">❌ Error al rastrear el vuelo</p>
           <p class="text-xs opacity-80 mt-1">${error.message}</p>
+          <details class="mt-2 text-xs">
+            <summary class="cursor-pointer opacity-80">Ver detalles técnicos</summary>
+            <pre class="mt-1 p-2 bg-black/30 rounded overflow-auto">${error.stack || error.message}</pre>
+          </details>
         </div>
       `;
     }
