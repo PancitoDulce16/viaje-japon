@@ -108,170 +108,66 @@ export const MapHandler = {
                         <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
                             ⭐ Atracciones Principales
                         </h3>
-                        <div class="grid md:grid-cols-3 gap-4">
-                            <a href="https://www.google.com/maps/search/Shibuya+Crossing+Tokyo" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="${tokyoImage}" alt="Shibuya Crossing" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🚶 Shibuya Crossing</p>
-                                        <p class="text-xs text-white/80">Tokyo • Día 2</p>
-                                    </div>
-                                </div>
+                        <div class="grid md:grid-cols-3 gap-3">
+                            <a href="https://www.google.com/maps/search/Shibuya+Crossing+Tokyo" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🚶 Shibuya Crossing</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Tokyo • Día 2</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Shibuya+Sky+Tokyo" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="${tokyoImage}" alt="Shibuya Sky" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🌆 Shibuya Sky</p>
-                                        <p class="text-xs text-white/80">Tokyo • Día 2</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Shibuya+Sky+Tokyo" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🌆 Shibuya Sky</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Tokyo • Día 2</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Kamakura+Great+Buddha" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=800&q=80" alt="Great Buddha" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🗿 Great Buddha</p>
-                                        <p class="text-xs text-white/80">Kamakura • Día 2</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Kamakura+Great+Buddha" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🗿 Great Buddha</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Kamakura • Día 2</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Akihabara+Electric+Town+Tokyo" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="${tokyoImage}" alt="Akihabara" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🎮 Akihabara</p>
-                                        <p class="text-xs text-white/80">Tokyo • Día 3</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Akihabara+Electric+Town+Tokyo" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🎮 Akihabara</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Tokyo • Día 3</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Fushimi+Inari+Taisha+Kyoto" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="https://images.unsplash.com/photo-1528164344705-47542687000d?w=800&q=80" alt="Fushimi Inari" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">⛩️ Fushimi Inari Shrine</p>
-                                        <p class="text-xs text-white/80">Kyoto • Día 4</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Fushimi+Inari+Taisha+Kyoto" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">⛩️ Fushimi Inari Shrine</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Kyoto • Día 4</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Nara+Park+Deer" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="${naraImage}" alt="Nara Park" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🦌 Nara Park</p>
-                                        <p class="text-xs text-white/80">Nara • Día 5</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Nara+Park+Deer" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🦌 Nara Park</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Nara • Día 5</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Todaiji+Temple+Nara" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="${naraImage}" alt="Todai-ji Temple" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🏯 Todai-ji Temple</p>
-                                        <p class="text-xs text-white/80">Nara • Día 5</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Todaiji+Temple+Nara" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🏯 Todai-ji Temple</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Nara • Día 5</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Arashiyama+Bamboo+Grove+Kyoto" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="https://images.unsplash.com/photo-1522383225653-ed111181a951?w=800&q=80" alt="Arashiyama Bamboo" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🎋 Arashiyama Bamboo</p>
-                                        <p class="text-xs text-white/80">Kyoto • Día 5</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Arashiyama+Bamboo+Grove+Kyoto" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🎋 Arashiyama Bamboo</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Kyoto • Día 5</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Kiyomizu+dera+Temple+Kyoto" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="${kyotoImage}" alt="Kiyomizu-dera" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">⛩️ Kiyomizu-dera</p>
-                                        <p class="text-xs text-white/80">Kyoto • Día 6</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Kiyomizu+dera+Temple+Kyoto" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">⛩️ Kiyomizu-dera</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Kyoto • Día 6</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Dotonbori+Osaka" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="${osakaImage}" alt="Dotonbori" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🌃 Dotonbori</p>
-                                        <p class="text-xs text-white/80">Osaka • Día 6</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Dotonbori+Osaka" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🌃 Dotonbori</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Osaka • Día 6</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Osaka+Aquarium+Kaiyukan" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="${osakaImage}" alt="Osaka Aquarium" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🐋 Osaka Aquarium</p>
-                                        <p class="text-xs text-white/80">Osaka • Día 7</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Osaka+Aquarium+Kaiyukan" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🐋 Osaka Aquarium</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Osaka • Día 7</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Tokyo+Skytree" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="${tokyoImage}" alt="Tokyo Skytree" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🏯 Tokyo Skytree</p>
-                                        <p class="text-xs text-white/80">Tokyo • Día 10</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Tokyo+Skytree" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🏯 Tokyo Skytree</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Tokyo • Día 10</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Sensoji+Temple+Asakusa+Tokyo" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="https://images.unsplash.com/photo-1478436127897-769e1b3f0f36?w=800&q=80" alt="Sensoji Temple" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🏮 Sensoji Temple</p>
-                                        <p class="text-xs text-white/80">Asakusa • Día 10</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Sensoji+Temple+Asakusa+Tokyo" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🏮 Sensoji Temple</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Asakusa • Día 10</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Harajuku+Takeshita+Street" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=800&q=80" alt="Harajuku" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">👗 Harajuku Takeshita Street</p>
-                                        <p class="text-xs text-white/80">Tokyo • Día 11</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Harajuku+Takeshita+Street" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">👗 Harajuku Takeshita Street</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Tokyo • Día 11</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Meiji+Shrine+Tokyo" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="https://images.unsplash.com/photo-1590559899731-a382839e5549?w=800&q=80" alt="Meiji Shrine" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">⛩️ Meiji Shrine</p>
-                                        <p class="text-xs text-white/80">Tokyo • Día 11</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Meiji+Shrine+Tokyo" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">⛩️ Meiji Shrine</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Tokyo • Día 11</p>
                             </a>
                         </div>
                     </div>
@@ -314,71 +210,30 @@ export const MapHandler = {
                         <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
                             🍜 Lugares de Comida
                         </h3>
-                        <div class="grid md:grid-cols-3 gap-4">
-                            <a href="https://www.google.com/maps/search/Ichiran+Ramen+Shinjuku" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=800&q=80" alt="Ichiran Ramen" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🍜 Ichiran Ramen</p>
-                                        <p class="text-xs text-white/80">Shinjuku • Múltiples ubicaciones</p>
-                                    </div>
-                                </div>
+                        <div class="grid md:grid-cols-3 gap-3">
+                            <a href="https://www.google.com/maps/search/Ichiran+Ramen+Shinjuku" target="_blank" class="p-4 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-lg hover:shadow-lg transition-all border border-orange-100 dark:border-orange-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🍜 Ichiran Ramen</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Shinjuku • Múltiples ubicaciones</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Omoide+Yokocho+Shinjuku" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&q=80" alt="Omoide Yokocho" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🍢 Omoide Yokocho</p>
-                                        <p class="text-xs text-white/80">Shinjuku • Yakitori</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Omoide+Yokocho+Shinjuku" target="_blank" class="p-4 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-lg hover:shadow-lg transition-all border border-orange-100 dark:border-orange-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🍢 Omoide Yokocho</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Shinjuku • Yakitori</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Takoyaki+Wanaka+Dotonbori" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="https://images.unsplash.com/photo-1581299894007-aaa50297cf16?w=800&q=80" alt="Takoyaki" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🐙 Takoyaki Wanaka</p>
-                                        <p class="text-xs text-white/80">Dotonbori, Osaka</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Takoyaki+Wanaka+Dotonbori" target="_blank" class="p-4 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-lg hover:shadow-lg transition-all border border-orange-100 dark:border-orange-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🐙 Takoyaki Wanaka</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Dotonbori, Osaka</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Chibo+Okonomiyaki+Osaka" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="https://images.unsplash.com/photo-1617093727343-374698b1b08d?w=800&q=80" alt="Okonomiyaki" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🥞 Chibo Okonomiyaki</p>
-                                        <p class="text-xs text-white/80">Osaka</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Chibo+Okonomiyaki+Osaka" target="_blank" class="p-4 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-lg hover:shadow-lg transition-all border border-orange-100 dark:border-orange-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🥞 Chibo Okonomiyaki</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Osaka</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Nemuro+Hanamaru+Sushi+Tokyo+Station" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80" alt="Sushi" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🍣 Nemuro Hanamaru</p>
-                                        <p class="text-xs text-white/80">Tokyo Station • Kaiten Sushi</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Nemuro+Hanamaru+Sushi+Tokyo+Station" target="_blank" class="p-4 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-lg hover:shadow-lg transition-all border border-orange-100 dark:border-orange-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🍣 Nemuro Hanamaru</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Tokyo Station • Kaiten Sushi</p>
                             </a>
-
-                            <a href="https://www.google.com/maps/search/Gyukaku+Yakiniku" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-32">
-                                    <img src="https://images.unsplash.com/photo-1581299894007-aaa50297cf16?w=800&q=80" alt="Yakiniku" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                                    <div class="absolute inset-0 p-3 flex flex-col justify-end">
-                                        <p class="font-bold text-white">🍖 Gyukaku Yakiniku</p>
-                                        <p class="text-xs text-white/80">Múltiples ubicaciones</p>
-                                    </div>
-                                </div>
+                            <a href="https://www.google.com/maps/search/Gyukaku+Yakiniku" target="_blank" class="p-4 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-lg hover:shadow-lg transition-all border border-orange-100 dark:border-orange-800">
+                                <p class="font-bold text-gray-800 dark:text-white mb-1">🍖 Gyukaku Yakiniku</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Múltiples ubicaciones</p>
                             </a>
                         </div>
                     </div>
