@@ -1,4 +1,5 @@
 // js/attractions.js - Módulo de atracciones optimizado
+// v2.0 - Cache bust 2025-10-17T19:40:00Z
 
 import { ATTRACTIONS_DATA } from '../data/attractions-data.js';
 import { Logger, debounce, AppError } from './helpers.js';
@@ -357,6 +358,7 @@ export const AttractionsHandler = {
 
     // 🔥 Modal para seleccionar día
     async showDaySelectionModal(attraction) {
+        alert('🔍 DEBUG: showDaySelectionModal iniciado - versión 2.0');
         try {
             // 🔥 Verificar que ItineraryHandler existe
             if (!window.ItineraryHandler) {
@@ -371,24 +373,24 @@ export const AttractionsHandler = {
 
             // Intentar cargar el itinerario si hay un currentTripId
             const currentTripId = localStorage.getItem('currentTripId');
-            console.log('currentTripId:', currentTripId);
-            console.log('currentItinerary before load:', window.ItineraryHandler.currentItinerary);
+            console.log('🔍 DEBUG currentTripId:', currentTripId);
+            console.log('🔍 DEBUG currentItinerary before load:', window.ItineraryHandler.currentItinerary);
 
             if (currentTripId) {
                 if (typeof window.ItineraryHandler.loadItinerary === 'function') {
                     try {
                         await window.ItineraryHandler.loadItinerary(currentTripId);
-                        console.log('currentItinerary after load:', window.ItineraryHandler.currentItinerary);
+                        console.log('🔍 DEBUG currentItinerary after load:', window.ItineraryHandler.currentItinerary);
                     } catch (e) {
-                        console.error('Error cargando itinerario:', e);
+                        console.error('🔍 DEBUG Error cargando itinerario:', e);
                     }
                 }
             }
 
             // Obtener días del itinerario actual
             const currentItinerary = window.ItineraryHandler.currentItinerary;
-            console.log('currentItinerary final:', currentItinerary);
-            console.log('days:', currentItinerary?.days);
+            console.log('🔍 DEBUG currentItinerary final:', currentItinerary);
+            console.log('🔍 DEBUG days:', currentItinerary?.days);
 
             // Verificar si hay días disponibles
             if (!currentItinerary || !currentItinerary.days || !Array.isArray(currentItinerary.days) || currentItinerary.days.length === 0) {
