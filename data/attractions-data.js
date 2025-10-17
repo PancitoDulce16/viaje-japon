@@ -1,4 +1,4 @@
-// data/attractions-data.js - Base de datos MASIVA de atracciones (500+)
+// data/attractions-data.js - Base de datos MASIVA de atracciones (200+ items)
 
 export const ATTRACTIONS_DATA = {
   // RESTAURANTES - RAMEN
@@ -1347,6 +1347,1170 @@ export const ATTRACTIONS_DATA = {
         rating: 4.7,
         description: "Roller coasters EXTREMOS. Récords mundiales. Vista de Mt. Fuji.",
         tips: "Fujiyama, Takabisha (121° drop), Eejanaika. Para amantes de adrenalina."
+      }
+    ]
+  },
+
+  // TEMPLOS & SANTUARIOS
+  templesAndShrines: {
+    category: "Temples & Shrines",
+    icon: "⛩️",
+    color: "red",
+    items: [
+      {
+        name: "Senso-ji Temple",
+        city: "Tokyo - Asakusa",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60-90 min",
+        rating: 4.8,
+        description: "Templo más antiguo de Tokyo (628 AD). Puerta Kaminarimon icónica con farol gigante.",
+        tips: "Ir temprano (6-7 AM) sin turistas. Omikuji (fortuna) por ¥100."
+      },
+      {
+        name: "Meiji Shrine",
+        city: "Tokyo - Harajuku",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60-90 min",
+        rating: 4.9,
+        description: "Santuario shintoista en bosque de 70 hectáreas. Dedicado al Emperador Meiji.",
+        tips: "Gratis. Ver bodas shintoistas fines de semana. Barrels de sake donados."
+      },
+      {
+        name: "Fushimi Inari Shrine",
+        city: "Kyoto",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2-3 horas",
+        rating: 5.0,
+        description: "¡10,000 torii rojos! Caminata de 2-4 hrs a la cima. IMPERDIBLE.",
+        tips: "Abierto 24/7. Ir temprano (6 AM) o tarde (después 6 PM) para evitar multitudes."
+      },
+      {
+        name: "Kinkaku-ji (Golden Pavilion)",
+        city: "Kyoto",
+        price: 500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "45-60 min",
+        rating: 4.9,
+        description: "Pabellón cubierto en oro. Reflejo en estanque es icónico. UNESCO.",
+        tips: "Mejor con sol (brilla más). No se puede entrar, solo ver. Jardín hermoso."
+      },
+      {
+        name: "Kiyomizu-dera",
+        city: "Kyoto",
+        price: 400,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90 min",
+        rating: 4.8,
+        description: "Templo en colina con terraza de madera sin clavos. Vista espectacular de Kyoto.",
+        tips: "Sube temprano. Área Higashiyama muy fotogénica. Santuario de amor Jishu."
+      },
+      {
+        name: "Todai-ji Temple",
+        city: "Nara",
+        price: 600,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60-90 min",
+        rating: 4.9,
+        description: "Gran Buda de bronce de 15m. Edificio de madera más grande del mundo. UNESCO.",
+        tips: "Combina con Nara Deer Park (gratis). Pilar con agujero = buena suerte."
+      },
+      {
+        name: "Itsukushima Shrine",
+        city: "Miyajima Island",
+        price: 300,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2-3 horas",
+        rating: 5.0,
+        description: "Torii flotante en el mar. Patrimonio UNESCO. Uno de los 3 paisajes más bellos de Japón.",
+        tips: "Visita con marea alta (torii flota) Y baja (puedes caminar). Isla tiene venados también."
+      },
+      {
+        name: "Ginkaku-ji (Silver Pavilion)",
+        city: "Kyoto",
+        price: 500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.7,
+        description: "Jardín zen con arena rastrillada. Philosopher's Path comienza aquí.",
+        tips: "Nunca fue plateado. Jardín de musgo hermoso. Menos turístico que Kinkaku-ji."
+      },
+      {
+        name: "Hase-dera Temple",
+        city: "Kamakura",
+        price: 400,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.6,
+        description: "Kannon dorado de 9m. Vista al mar. 2500 hydrangeas en junio.",
+        tips: "Combina con Great Buddha. Vista desde terraza espectacular."
+      },
+      {
+        name: "Zenko-ji Temple",
+        city: "Nagano",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90 min",
+        rating: 4.7,
+        description: "Templo budista del siglo VII. Ceremonia matutina única (6:30 AM).",
+        tips: "Túnel oscuro debajo del altar (¥500). Busca la 'llave de paraíso'."
+      },
+      {
+        name: "Tsurugaoka Hachimangu",
+        city: "Kamakura",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "45 min",
+        rating: 4.5,
+        description: "Santuario shintoista principal de Kamakura. Escaleras con vista al mar.",
+        tips: "Centro de Kamakura. Buena base para explorar la ciudad."
+      },
+      {
+        name: "Nikko Toshogu Shrine",
+        city: "Nikko",
+        price: 1300,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2-3 horas",
+        rating: 4.9,
+        description: "Mausoleo elaborado del shogun Tokugawa. Oro y colores vibrantes. UNESCO.",
+        tips: "Day trip desde Tokyo (2hrs). Ver los 3 monos sabios. Compra combo ticket."
+      },
+      {
+        name: "Atsuta Shrine",
+        city: "Nagoya",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.6,
+        description: "Segundo santuario más importante. Guarda una de las 3 insignias imperiales.",
+        tips: "Prueba kishimen (fideos planos) en el restaurante. Bosque sagrado hermoso."
+      },
+      {
+        name: "Byodo-in Temple",
+        city: "Uji (cerca Kyoto)",
+        price: 600,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60-90 min",
+        rating: 4.8,
+        description: "Aparece en moneda de ¥10. Phoenix Hall sobre estanque. UNESCO.",
+        tips: "Combina con té matcha en Uji. Mejor en otoño o primavera."
+      },
+      {
+        name: "Horyu-ji Temple",
+        city: "Nara Prefecture",
+        price: 1500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90 min",
+        rating: 4.7,
+        description: "Estructuras de madera más antiguas del mundo (607 AD). UNESCO.",
+        tips: "Lejos de Nara city pero vale la pena. Tesoros budistas increíbles."
+      }
+    ]
+  },
+
+  // MUSEOS
+  museums: {
+    category: "Museums & Art",
+    icon: "🏛️",
+    color: "blue",
+    items: [
+      {
+        name: "teamLab Borderless",
+        city: "Tokyo - Azabudai Hills",
+        price: 4800,
+        currency: "JPY",
+        reservationUrl: "https://www.teamlab.art/",
+        reserveDays: 30,
+        duration: "2-3 horas",
+        rating: 5.0,
+        description: "Arte digital interactivo ALUCINANTE. Instalaciones que se mueven entre salas.",
+        tips: "RESERVA CON ANTICIPACIÓN. Mejor en días de semana. Lleva calcetines."
+      },
+      {
+        name: "teamLab Planets",
+        city: "Tokyo - Toyosu",
+        price: 3800,
+        currency: "JPY",
+        reservationUrl: "https://www.teamlab.art/",
+        reserveDays: 14,
+        duration: "90 min",
+        rating: 4.9,
+        description: "Caminas por agua. Flores digitales. Experiencia inmersiva.",
+        tips: "Diferente a Borderless. Shorts o falda (te mojas). Cierra 2025."
+      },
+      {
+        name: "Ghibli Museum",
+        city: "Tokyo - Mitaka",
+        price: 1000,
+        currency: "JPY",
+        reservationUrl: "https://www.ghibli-museum.jp/en/",
+        reserveDays: 90,
+        duration: "2 horas (slot asignado)",
+        rating: 5.0,
+        description: "Museo de Studio Ghibli. Totoro, Spirited Away, etc. MÁGICO.",
+        tips: "Tickets se agotan en SEGUNDOS. Venta 3 meses antes. Lawson o sitio oficial."
+      },
+      {
+        name: "Tokyo National Museum",
+        city: "Tokyo - Ueno",
+        price: 1000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2-3 horas",
+        rating: 4.7,
+        description: "Museo más grande de Japón. Arte japonés, samurai armor, cerámica.",
+        tips: "En Ueno Park. Combina con zoo o otros museos. Audioguía gratis."
+      },
+      {
+        name: "Mori Art Museum",
+        city: "Tokyo - Roppongi Hills",
+        price: 2000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90 min",
+        rating: 4.6,
+        description: "Arte contemporáneo en piso 53. Incluye Tokyo City View observation deck.",
+        tips: "Combina museo + observatorio. Abierto hasta 10 PM. Vista nocturna increíble."
+      },
+      {
+        name: "Cup Noodles Museum",
+        city: "Yokohama",
+        price: 500,
+        currency: "JPY",
+        reservationUrl: "https://www.cupnoodles-museum.jp/en/",
+        reserveDays: 0,
+        duration: "90 min",
+        rating: 4.7,
+        description: "Historia del ramen instantáneo. ¡Crea tu propia cup noodle!",
+        tips: "My Cup Noodles Factory ¥500 extra. Divertido para todas las edades."
+      },
+      {
+        name: "Samurai Museum",
+        city: "Tokyo - Shinjuku",
+        price: 1900,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.5,
+        description: "Armaduras, espadas, shows de samurai. Puedes probarte armadura y fotos.",
+        tips: "Tours guiados en inglés incluidos. Show de espadas 4 veces al día."
+      },
+      {
+        name: "Tokyo Trick Art Museum",
+        city: "Tokyo - Odaiba",
+        price: 1000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60-90 min",
+        rating: 4.4,
+        description: "Ilusiones ópticas 3D. Instagram paradise. Interactivo.",
+        tips: "Lleva cámara. Combina con Odaiba. Divertido para grupos."
+      },
+      {
+        name: "Kyoto International Manga Museum",
+        city: "Kyoto",
+        price: 900,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90-120 min",
+        rating: 4.6,
+        description: "50,000 mangas para leer. Historia del manga. Wall of Manga.",
+        tips: "Puedes leer gratis en el césped. Algunos en inglés."
+      },
+      {
+        name: "Osaka Aquarium Kaiyukan",
+        city: "Osaka",
+        price: 2700,
+        currency: "JPY",
+        reservationUrl: "https://www.kaiyukan.com/language/eng/",
+        reserveDays: 0,
+        duration: "2 horas",
+        rating: 4.8,
+        description: "Uno de los acuarios más grandes del mundo. Tiburón ballena gigante.",
+        tips: "Tanque de 9m profundidad. Mejor en días de lluvia. Compra online con descuento."
+      },
+      {
+        name: "Edo-Tokyo Museum",
+        city: "Tokyo - Ryogoku",
+        price: 600,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2 horas",
+        rating: 4.5,
+        description: "Historia de Tokyo desde era Edo. Recreaciones a escala real.",
+        tips: "Cerrado por renovación hasta 2025. Cerca del Sumo Stadium."
+      },
+      {
+        name: "Hakone Open-Air Museum",
+        city: "Hakone",
+        price: 1600,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2 horas",
+        rating: 4.7,
+        description: "Esculturas al aire libre con vista de montañas. Picasso gallery.",
+        tips: "Combina con onsen en Hakone. Kids area con estructuras escalables."
+      }
+    ]
+  },
+
+  // VIDA NOCTURNA
+  nightlife: {
+    category: "Nightlife & Bars",
+    icon: "🍺",
+    color: "purple",
+    items: [
+      {
+        name: "Golden Gai",
+        city: "Tokyo - Shinjuku",
+        price: 2000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2-3 horas",
+        rating: 4.8,
+        description: "200+ tiny bars (4-8 personas). Cada uno único. Atmosphere único.",
+        tips: "Cover charge ¥500-1000. Algunos solo regulares. Mejor después 8 PM."
+      },
+      {
+        name: "Nonbei Yokocho",
+        city: "Tokyo - Shibuya",
+        price: 2500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2 horas",
+        rating: 4.6,
+        description: "Callejón estrecho con 40 small bars. Old-school Tokyo vibes.",
+        tips: "Menos turístico que Golden Gai. Cash only. Probar varios bars."
+      },
+      {
+        name: "Kabukicho Entertainment District",
+        city: "Tokyo - Shinjuku",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2-3 horas",
+        rating: 4.3,
+        description: "Red light district. Neones, karaoke, host/hostess clubs. Tokyo nightlife central.",
+        tips: "Seguro pero evita calles laterales. Robot Restaurant está aquí."
+      },
+      {
+        name: "Roppongi Hills Nightlife",
+        city: "Tokyo - Roppongi",
+        price: 3000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "Toda la noche",
+        rating: 4.4,
+        description: "Clubs internacionales. Expatriates everywhere. Dress code.",
+        tips: "V2, Muse popular. Caro. Entrada ¥3000-5000. Hasta 5 AM."
+      },
+      {
+        name: "Hub British Pub",
+        city: "Tokyo - Multiple",
+        price: 2000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2 horas",
+        rating: 4.2,
+        description: "Cadena de pubs británicos. Internacional crowd. Sports on TV.",
+        tips: "Happy hour 5-8 PM. Inglés hablado. Comida británica."
+      },
+      {
+        name: "Pontocho Jazz Club",
+        city: "Kyoto",
+        price: 2500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2 horas",
+        rating: 4.7,
+        description: "Jazz en vivo en callejón tradicional. Intimate atmosphere.",
+        tips: "Cover + drink ¥2500-3000. Reserva recomendada. Música en vivo nightly."
+      },
+      {
+        name: "Osaka Dotonbori Nightlife",
+        city: "Osaka",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2-4 horas",
+        rating: 4.7,
+        description: "Neones, street food, karaoke bars. Energía 24/7.",
+        tips: "Mejor de noche. Drunk salarymen everywhere. Seguro y divertido."
+      },
+      {
+        name: "Bar Benfiddich",
+        city: "Tokyo - Shinjuku",
+        price: 2000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 7,
+        duration: "90 min",
+        rating: 4.9,
+        description: "Cocktail bar artesanal. Hierbas frescas, mortero. Top 50 bars del mundo.",
+        tips: "Reserva recomendada. Íntimo. Bartender es un artista."
+      },
+      {
+        name: "Womb Shibuya",
+        city: "Tokyo - Shibuya",
+        price: 3000,
+        currency: "JPY",
+        reservationUrl: "https://www.womb.co.jp/",
+        reserveDays: 0,
+        duration: "Hasta 5 AM",
+        rating: 4.6,
+        description: "Mega club techno/house. DJs internacionales. 4 pisos.",
+        tips: "Viernes-sábado hasta 5 AM. Dress code semi-formal. Ladies free a veces."
+      }
+    ]
+  },
+
+  // NATURALEZA & OUTDOORS
+  natureOutdoors: {
+    category: "Nature & Outdoors",
+    icon: "🏔️",
+    color: "green",
+    items: [
+      {
+        name: "Mount Fuji Hiking",
+        city: "Yamanashi/Shizuoka",
+        price: 2000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 30,
+        duration: "2 días (con overnight)",
+        rating: 5.0,
+        description: "Escalar Monte Fuji (3776m). Ver sunrise desde la cima. Bucket list.",
+        tips: "Solo julio-septiembre. Reserva hut en advance. Bring warm clothes."
+      },
+      {
+        name: "Hakone Ropeway",
+        city: "Hakone",
+        price: 1550,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "30 min ride",
+        rating: 4.7,
+        description: "Teleférico sobre valle volcánico Owakudani. Vista de Mt. Fuji y azufre.",
+        tips: "Parte del Hakone Free Pass. Compra huevos negros (hervidos en azufre)."
+      },
+      {
+        name: "Jigokudani Monkey Park",
+        city: "Nagano",
+        price: 800,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60-90 min",
+        rating: 4.9,
+        description: "¡Monos de nieve en onsen! Único en el mundo. ADORABLES.",
+        tips: "Mejor en invierno con nieve. Caminata de 30 min desde parking. Bring snacks."
+      },
+      {
+        name: "Shirakawa-go Village",
+        city: "Gifu Prefecture",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "3-4 horas",
+        rating: 4.9,
+        description: "Pueblo histórico con casas gassho-zukuri (techo de paja). UNESCO. Como cuento de hadas.",
+        tips: "Mejor en invierno con nieve. Stay overnight en farmhouse. Illumination en febrero."
+      },
+      {
+        name: "Takachiho Gorge",
+        city: "Miyazaki Prefecture",
+        price: 4100,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90 min",
+        rating: 4.8,
+        description: "Cañón con acantilados volcánicos. Remar en bote bajo cascada. Surreal.",
+        tips: "Alquiler de bote ¥4100 (30 min). Ir temprano para evitar fila."
+      },
+      {
+        name: "Kumano Kodo Pilgrimage",
+        city: "Wakayama/Mie",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "1-7 días",
+        rating: 4.9,
+        description: "Antigua ruta de peregrinaje por montañas. Bosques sagrados, santuarios. UNESCO.",
+        tips: "Nakahechi route popular (2-3 días). Stay en minshuku. Sello en cada templo."
+      },
+      {
+        name: "Aogashima Island",
+        city: "Tokyo Islands",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 7,
+        duration: "2-3 días",
+        rating: 4.7,
+        description: "Isla volcánica remota. Población 170. Estrellas increíbles. Off the beaten path.",
+        tips: "Solo ferry o helicóptero. Reservar acomodo antes. Adventure travel."
+      },
+      {
+        name: "Kawachi Fuji Gardens",
+        city: "Fukuoka",
+        price: 1000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90 min",
+        rating: 4.9,
+        description: "Túneles de wisteria moradas. Como Avatar. Solo finales abril-mayo.",
+        tips: "SOLO en wisteria season. Advance ticket online. Fotografía espectacular."
+      },
+      {
+        name: "Hitachi Seaside Park",
+        city: "Ibaraki",
+        price: 450,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2-3 horas",
+        rating: 4.8,
+        description: "Flores todo el año. Nemophila azules (mayo), kokia rojos (octubre).",
+        tips: "Diferentes flores cada temporada. Alquila bici. Instagram famous."
+      },
+      {
+        name: "Matsumoto Castle",
+        city: "Nagano - Matsumoto",
+        price: 700,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90 min",
+        rating: 4.7,
+        description: "Castillo negro original (1590s). Uno de los 12 castillos originales. Con foso.",
+        tips: "Subir es steep. Vista desde arriba hermosa. Cherry blossoms en primavera."
+      }
+    ]
+  },
+
+  // COMPRAS
+  shopping: {
+    category: "Shopping Districts",
+    icon: "🛍️",
+    color: "pink",
+    items: [
+      {
+        name: "Don Quijote (Donki)",
+        city: "Tokyo/Osaka - Multiple",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90 min",
+        rating: 4.7,
+        description: "Mega tienda discount. TODO: snacks, electrónicos, cosméticos, disfraces. Chaotic.",
+        tips: "Abierto 24/7 muchas ubicaciones. Tax-free. Música loud. Experiencia única."
+      },
+      {
+        name: "Shibuya 109",
+        city: "Tokyo - Shibuya",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2 horas",
+        rating: 4.5,
+        description: "Centro comercial de moda femenina. Gyaru fashion. Tendencias japonesas.",
+        tips: "8 pisos. Marcas japonesas únicas. Purikura booths en piso superior."
+      },
+      {
+        name: "Tokyu Hands",
+        city: "Tokyo - Multiple",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90-120 min",
+        rating: 4.6,
+        description: "Todo para hobbies y crafts. Stationery, gadgets, DIY. Tesoro para nerds.",
+        tips: "Shibuya tiene 7 pisos. Tax-free. Mejores souvenirs únicos."
+      },
+      {
+        name: "Uniqlo Flagship Ginza",
+        city: "Tokyo - Ginza",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.4,
+        description: "Tienda flagship de 12 pisos. Todas las líneas. Precios mejores que en occidente.",
+        tips: "Heat tech y ultra light down populares. Tax-free. Collaborations exclusivas."
+      },
+      {
+        name: "Daiso (¥100 Shop)",
+        city: "Tokyo/Osaka - Multiple",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.3,
+        description: "TODO a ¥100 (+ tax). Gadgets, stationery, snacks, skincare. Tesoro.",
+        tips: "Harajuku store tiene 4 pisos. Souvenirs baratos. Calidad sorprendentemente buena."
+      },
+      {
+        name: "Pokémon Center Mega Tokyo",
+        city: "Tokyo - Ikebukuro",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.8,
+        description: "Tienda oficial Pokémon más grande. Merchandise exclusivo de Japón.",
+        tips: "Fila en fines de semana. Productos limitados se agotan rápido."
+      },
+      {
+        name: "Nintendo Tokyo",
+        city: "Tokyo - Shibuya Parco",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "45 min",
+        rating: 4.7,
+        description: "Primera tienda oficial Nintendo. Merchandise único. Play areas.",
+        tips: "En piso 6 de Shibuya Parco. Productos limitados exclusive a Japón."
+      },
+      {
+        name: "Nakamise Shopping Street",
+        city: "Tokyo - Asakusa",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "30-45 min",
+        rating: 4.6,
+        description: "250m de tiendas tradicionales. Souvenirs, kimonos, snacks. Camino a Senso-ji.",
+        tips: "Regateo NO común. Prueba ningyo-yaki. Souvenirs turísticos pero bonitos."
+      },
+      {
+        name: "Namba Parks",
+        city: "Osaka",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2 horas",
+        rating: 4.5,
+        description: "Centro comercial con rooftop garden de 8 pisos. Arquitectura única.",
+        tips: "Jardín escalonado hermoso. Buenas vistas. Combina compras y naturaleza."
+      },
+      {
+        name: "Ginza Six",
+        city: "Tokyo - Ginza",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2 horas",
+        rating: 4.6,
+        description: "Centro comercial de lujo. Marcas premium. Rooftop garden gratis.",
+        tips: "Tax-free. Art installations rotan. Tsutaya bookstore en piso 6."
+      }
+    ]
+  },
+
+  // MÁS RESTAURANTES
+  moreRestaurants: {
+    category: "More Restaurants",
+    icon: "🍱",
+    color: "orange",
+    items: [
+      {
+        name: "Butagumi Tonkatsu",
+        city: "Tokyo - Nishi-Azabu",
+        price: 2000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.8,
+        description: "MEJOR tonkatsu de Tokyo. Cerdo grueso premium, súper jugoso.",
+        tips: "Usa aceite vegetal. Menos grasoso que otros. Fila larga pero rápida."
+      },
+      {
+        name: "Maisen Tonkatsu",
+        city: "Tokyo - Aoyama",
+        price: 1800,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.7,
+        description: "Tonkatsu famoso en casa histórica. Crispy perfecto. Salsa especial.",
+        tips: "Baños públicos históricos convertidos en restaurant. Rebanadas gruesas."
+      },
+      {
+        name: "Tonki Tonkatsu",
+        city: "Tokyo - Meguro",
+        price: 1600,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "45 min",
+        rating: 4.6,
+        description: "Tonkatsu old-school desde 1939. Counter seating. Aceite de lardo.",
+        tips: "Cash only. Tradicional atmosphere. Llega temprano."
+      },
+      {
+        name: "Tsukiji Outer Market",
+        city: "Tokyo",
+        price: 2000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2 horas",
+        rating: 4.8,
+        description: "Aunque Tsukiji se movió, outer market sigue. Desayuno de sushi fresco.",
+        tips: "Ir temprano (6-8 AM). Street food everywhere. Prueba uni, toro, tamago."
+      },
+      {
+        name: "Okonomiyaki Mizuno",
+        city: "Osaka - Dotonbori",
+        price: 1300,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.7,
+        description: "Okonomiyaki legendario. Desde 1945. Mix perfecto. Fila siempre.",
+        tips: "Yam okonomiyaki es especial. Fila de 30-60 min. Cash only."
+      },
+      {
+        name: "Kushikatsu Daruma",
+        city: "Osaka - Shinsekai",
+        price: 2000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.6,
+        description: "Kushikatsu (brochetas fritas). Regla: NO double dipping en salsa.",
+        tips: "Cada brocheta ¥100-200. Orden mínimo. Ambiente local."
+      },
+      {
+        name: "Gyukatsu Motomura",
+        city: "Tokyo - Multiple",
+        price: 1500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "30-45 min",
+        rating: 4.7,
+        description: "Katsu de CARNE (no cerdo). Rare por dentro, crujiente afuera. Tú lo cocinas extra.",
+        tips: "Shibuya y Shinjuku. Fila corta. Parrilla en mesa para cocinar más."
+      },
+      {
+        name: "Coco Ichibanya Curry",
+        city: "Tokyo/Osaka - Multiple",
+        price: 800,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "30 min",
+        rating: 4.4,
+        description: "Curry japonés customizable. Elige nivel de picante y toppings.",
+        tips: "Cadena pero delicioso. Level 10 spicy = very spicy. Porciones grandes."
+      },
+      {
+        name: "Kichi Kichi Omurice",
+        city: "Kyoto",
+        price: 2500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 30,
+        duration: "30 min",
+        rating: 4.9,
+        description: "¡Omurice viral de YouTube! Chef Motokichi. Show cooking.",
+        tips: "RESERVA 1 MES ANTES. Solo 1 chef, 1 mesa. Experiencia única."
+      }
+    ]
+  },
+
+  // JARDINES & PARQUES ESPECIALES
+  specialGardens: {
+    category: "Special Gardens & Parks",
+    icon: "🌸",
+    color: "green",
+    items: [
+      {
+        name: "Shinjuku Gyoen National Garden",
+        city: "Tokyo - Shinjuku",
+        price: 500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2-3 horas",
+        rating: 4.9,
+        description: "58 hectáreas. Jardín francés, inglés y japonés. 1000+ cerezos. Oasis urbano.",
+        tips: "IMPERDIBLE en sakura season. No alcohol permitido. Cierra lunes."
+      },
+      {
+        name: "Gotokuji Temple (Cat Temple)",
+        city: "Tokyo - Setagaya",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "45-60 min",
+        rating: 4.8,
+        description: "¡Templo con 1000+ maneki-neko (gatos de la suerte)! Origen del lucky cat.",
+        tips: "GRATIS. Compra tu propio maneki-neko. Instagram heaven. Tranquilo."
+      },
+      {
+        name: "KITTE Rooftop Garden",
+        city: "Tokyo - Marunouchi",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "30 min",
+        rating: 4.5,
+        description: "Jardín en rooftop de KITTE. Vista perfecta de Tokyo Station. Gratis.",
+        tips: "Acceso desde 6to piso. Mejor al atardecer. Centro comercial abajo."
+      }
+    ]
+  },
+
+  // EXPERIENCIAS HAKONE
+  hakoneExperiences: {
+    category: "Hakone Experiences",
+    icon: "🗻",
+    color: "blue",
+    items: [
+      {
+        name: "Hakone Pirate Ship",
+        city: "Hakone - Lake Ashi",
+        price: 1200,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "30 min",
+        rating: 4.7,
+        description: "Barco pirata por Lake Ashi. Vista de Mt. Fuji. Parte del Hakone Free Pass.",
+        tips: "Mejor en día claro para ver Fuji-san. 3 barcos diferentes (todos piratas)."
+      },
+      {
+        name: "Owakudani Black Eggs",
+        city: "Hakone",
+        price: 500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.6,
+        description: "Valle volcánico activo. Huevos hervidos en azufre (negros). Se dice que añaden 7 años de vida.",
+        tips: "Compra 5 huevos por ¥500. Huelen a azufre. Vista increíble desde ropeway."
+      },
+      {
+        name: "Hakone Shrine Torii on Water",
+        city: "Hakone",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "45 min",
+        rating: 4.8,
+        description: "Torii rojo en Lake Ashi. Backdrop de montañas. Muy fotogénico.",
+        tips: "Gratis. Camina desde el muelle del pirate ship. Temprano para fotos sin gente."
+      }
+    ]
+  },
+
+  // VEGETARIANO & VEGANO
+  veganVegetarian: {
+    category: "Vegan & Vegetarian",
+    icon: "🥗",
+    color: "green",
+    items: [
+      {
+        name: "Ain Soph Journey",
+        city: "Tokyo - Shinjuku",
+        price: 1800,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.7,
+        description: "Vegan burgers gigantes. Pancakes masivos. Instagram-worthy.",
+        tips: "Cadena con varias locaciones. Ripley en Shinjuku muy popular."
+      },
+      {
+        name: "Saido (Shojin Ryori)",
+        city: "Tokyo - Minato",
+        price: 3500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 3,
+        duration: "90 min",
+        rating: 4.8,
+        description: "Comida budista vegana tradicional. Multi-course kaiseki vegetariano.",
+        tips: "Reserva recomendada. Experiencia de lujo. Set courses hermosos."
+      },
+      {
+        name: "Nagi Shokudo",
+        city: "Tokyo - Shibuya",
+        price: 1200,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "45 min",
+        rating: 4.6,
+        description: "Vegan ramen y comfort food. Barato y delicioso.",
+        tips: "100% vegano. Soy meat options. Pequeño pero acogedor."
+      },
+      {
+        name: "T's TanTan (Tokyo Station)",
+        city: "Tokyo Station",
+        price: 900,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "30 min",
+        rating: 4.5,
+        description: "¡Vegan ramen DENTRO de Tokyo Station! Tantanmen vegano delicioso.",
+        tips: "Perfecto si tienes shinkansen. Pequeño. Dentro de la estación."
+      },
+      {
+        name: "Paprika Shokudo Vegan",
+        city: "Kyoto",
+        price: 1400,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.7,
+        description: "Buffet vegetariano/vegano. All-you-can-eat por tiempo limitado.",
+        tips: "Opciones orgánicas. Popular con locales. Llega temprano."
+      }
+    ]
+  },
+
+  // ARCADES & CRANE GAMES
+  craneGamesArcades: {
+    category: "Crane Games & UFO Catchers",
+    icon: "🎪",
+    color: "pink",
+    items: [
+      {
+        name: "GiGO Akihabara",
+        city: "Tokyo - Akihabara",
+        price: 500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60-90 min",
+        rating: 4.7,
+        description: "7 pisos de crane games y arcades. Prizes de anime, figuras, plushies.",
+        tips: "Piso 1-2 = crane games. Staff ayuda si estás cerca. ¥100-200 por intento."
+      },
+      {
+        name: "Taito Station Shibuya",
+        city: "Tokyo - Shibuya",
+        price: 500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.6,
+        description: "Crane games con prizes exclusivos. Purikura booths en piso superior.",
+        tips: "Mejores chances en máquinas nuevas. Staff puede posicionar prizes."
+      },
+      {
+        name: "Round1 Ikebukuro",
+        city: "Tokyo - Ikebukuro",
+        price: 1000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2-3 horas",
+        rating: 4.7,
+        description: "Mega centro de entretenimiento. Bowling, karaoke, crane games, batting cages.",
+        tips: "Discount passes disponibles. Pisos enteros de UFO catchers."
+      },
+      {
+        name: "namco Sunshine City",
+        city: "Tokyo - Ikebukuro",
+        price: 500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90 min",
+        rating: 4.5,
+        description: "Arcade con themed games. Pokémon, One Piece, Demon Slayer prizes.",
+        tips: "Dentro de Sunshine City mall. Combina con shopping."
+      }
+    ]
+  },
+
+  // TIENDAS ESPECIALES
+  specialStores: {
+    category: "Specialty Stores",
+    icon: "🏬",
+    color: "indigo",
+    items: [
+      {
+        name: "Nintendo Store Kyoto",
+        city: "Kyoto",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.8,
+        description: "Segunda tienda oficial Nintendo. Merchandise exclusivo de Kyoto.",
+        tips: "En downtown Kyoto. Productos regionales únicos. Menos crowded que Tokyo."
+      },
+      {
+        name: "Pokémon Center Shibuya",
+        city: "Tokyo - Shibuya",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "45 min",
+        rating: 4.7,
+        description: "Pokémon Center con diseño único de Shibuya. Productos exclusivos.",
+        tips: "Menos grande que Ikebukuro pero productos exclusivos de la región."
+      },
+      {
+        name: "Pokémon Center DX Tokyo",
+        city: "Tokyo - Nihonbashi",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.9,
+        description: "Flagship Pokémon Center. El MÁS grande. Pokémon Cafe en mismo edificio.",
+        tips: "Reserva para el café con anticipación. Merchandise más amplio."
+      },
+      {
+        name: "Jump Shop Shibuya",
+        city: "Tokyo - Shibuya",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "45 min",
+        rating: 4.6,
+        description: "Tienda oficial Shonen Jump. One Piece, Naruto, Dragon Ball, MHA merchandise.",
+        tips: "Dentro de Shibuya. Productos limitados rotan. Colaboraciones especiales."
+      },
+      {
+        name: "Jump Shop Tokyo Station",
+        city: "Tokyo Station",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "30 min",
+        rating: 4.5,
+        description: "Jump Shop dentro de Character Street en Tokyo Station.",
+        tips: "Combina con otros character shops (Ghibli, Pokémon, etc) en mismo pasillo."
+      }
+    ]
+  },
+
+  // EXPERIENCIAS ESPECIALES
+  uniqueVenues: {
+    category: "Unique Venues & Experiences",
+    icon: "✨",
+    color: "purple",
+    items: [
+      {
+        name: "Art Aquarium Museum",
+        city: "Tokyo - Nihonbashi",
+        price: 2400,
+        currency: "JPY",
+        reservationUrl: "https://artaquarium.jp/",
+        reserveDays: 0,
+        duration: "90 min",
+        rating: 4.8,
+        description: "Goldfish en acuarios artísticos con luces y proyecciones. Arte + acuario.",
+        tips: "Mejor de noche. Instalación permanente. Bar dentro. Muy instagrameable."
+      },
+      {
+        name: "Tokyo Character Street",
+        city: "Tokyo Station",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60-90 min",
+        rating: 4.7,
+        description: "Pasillo subterráneo con 30+ character shops. Ghibli, Pokémon, Snoopy, Rilakkuma, etc.",
+        tips: "Dentro de Tokyo Station. Perfecto antes/después de shinkansen. Tax-free."
+      },
+      {
+        name: "Mega Web Toyota City Showcase",
+        city: "Tokyo - Odaiba",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90 min",
+        rating: 4.5,
+        description: "Showroom de Toyota. Historia de carros, exhibits interactivos. Gratis.",
+        tips: "Test drives disponibles (con licencia). Exhibits de carros clásicos."
       }
     ]
   }

@@ -52,7 +52,7 @@ export const AttractionsHandler = {
                             <input
                                 type="text"
                                 id="attractionSearch"
-                                placeholder="🔍 Buscar por nombre o ciudad..."
+                                placeholder="🔍 Buscar por nombre, ciudad, categoría o descripción..."
                                 class="w-full p-3 pl-10 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition"
                                 oninput="AttractionsHandler.searchAttractions(this.value)"
                             >
@@ -527,51 +527,86 @@ export const AttractionsHandler = {
      * Búsqueda de atracciones con debounce
      * @param {string} query - Término de búsqueda
      */
-    searchAttractions: debounce(function(query) {
-        try {
-            const searchTerm = query.toLowerCase().trim();
-            this.searchTerm = searchTerm;
+    searchAttractions(query) {
+        // Usar debounce manually para preservar contexto
+        if (this._searchTimeout) {
+            clearTimeout(this._searchTimeout);
+        }
 
-            const cards = document.querySelectorAll('.attraction-card');
-            const sections = document.querySelectorAll('.category-section');
+        this._searchTimeout = setTimeout(() => {
+            try {
+                const searchTerm = query.toLowerCase().trim();
+                AttractionsHandler.searchTerm = searchTerm;
 
-            if (!searchTerm) {
-                // Si no hay búsqueda, mostrar todas
-                cards.forEach(card => card.style.display = 'block');
-                sections.forEach(section => section.style.display = 'block');
-                Logger.info('Búsqueda limpiada, mostrando todas las atracciones');
-                return;
-            }
+                const cards = document.querySelectorAll('.attraction-card');
+                const sections = document.querySelectorAll('.category-section');
 
-            let totalResults = 0;
+                if (!searchTerm) {
+                    // Si no hay búsqueda, mostrar todas
+                    cards.forEach(card => card.style.display = 'block');
+                    sections.forEach(section => section.style.display = 'block');
+                    Logger.info('Búsqueda limpiada, mostrando todas las atracciones');
+                    return;
+                }
 
-            // Filtrar por nombre o ciudad
-            sections.forEach(section => {
-                const visibleCards = Array.from(section.querySelectorAll('.attraction-card')).filter(card => {
-                    const name = card.dataset.attraction?.toLowerCase() || '';
-                    const cityElement = card.querySelector('p.text-xs');
-                    const city = cityElement ? cityElement.textContent.toLowerCase() : '';
-                    const matches = name.includes(searchTerm) || city.includes(searchTerm);
-                    card.style.display = matches ? 'block' : 'none';
-                    return matches;
+                let totalResults = 0;
+
+                // Crear un índice de búsqueda con todos los datos de las atracciones
+                const searchableData = new Map();
+                Object.entries(ATTRACTIONS_DATA).forEach(([categoryKey, category]) => {
+                    category.items.forEach(item => {
+                        searchableData.set(item.name, {
+                            name: item.name.toLowerCase(),
+                            city: item.city.toLowerCase(),
+                            description: item.description.toLowerCase(),
+                            tips: (item.tips || '').toLowerCase(),
+                            category: category.category.toLowerCase()
+                        });
+                    });
                 });
 
-                totalResults += visibleCards.length;
-                section.style.display = visibleCards.length > 0 ? 'block' : 'none';
-            });
+                // Filtrar por nombre, ciudad, descripción, tips o categoría
+                sections.forEach(section => {
+                    const categoryName = section.dataset.category;
+                    const category = ATTRACTIONS_DATA[categoryName];
 
-            Logger.info(`Búsqueda completada: "${searchTerm}" - ${totalResults} resultados`);
+                    const visibleCards = Array.from(section.querySelectorAll('.attraction-card')).filter(card => {
+                        const attractionName = card.dataset.attraction;
+                        const searchData = searchableData.get(attractionName);
 
-            // Resetear filtro activo
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            const firstFilterBtn = document.querySelector('.filter-btn');
-            if (firstFilterBtn) {
-                firstFilterBtn.classList.add('active');
+                        if (!searchData) {
+                            card.style.display = 'none';
+                            return false;
+                        }
+
+                        // Buscar en todos los campos
+                        const matches = searchData.name.includes(searchTerm) ||
+                                      searchData.city.includes(searchTerm) ||
+                                      searchData.description.includes(searchTerm) ||
+                                      searchData.tips.includes(searchTerm) ||
+                                      searchData.category.includes(searchTerm);
+
+                        card.style.display = matches ? 'block' : 'none';
+                        return matches;
+                    });
+
+                    totalResults += visibleCards.length;
+                    section.style.display = visibleCards.length > 0 ? 'block' : 'none';
+                });
+
+                Logger.info(`Búsqueda completada: "${searchTerm}" - ${totalResults} resultados`);
+
+                // Resetear filtro activo
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                const firstFilterBtn = document.querySelector('.filter-btn');
+                if (firstFilterBtn) {
+                    firstFilterBtn.classList.add('active');
+                }
+            } catch (error) {
+                Logger.error('Error en búsqueda de atracciones', error);
             }
-        } catch (error) {
-            Logger.error('Error en búsqueda de atracciones', error);
-        }
-    }, TIMEOUTS.DEBOUNCE_SEARCH),
+        }, 300);
+    },
 
     /**
      * Guardar o quitar de favoritos una atracción
