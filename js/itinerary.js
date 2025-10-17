@@ -719,6 +719,16 @@ function initializeDragAndDrop(container) {
 
 // --- API público del handler ---
 export const ItineraryHandler = {
+  // Exponer currentItinerary y loadItinerary para que AttractionsHandler pueda acceder
+  get currentItinerary() {
+    return currentItinerary;
+  },
+  async loadItinerary(tripId) {
+    // Llamar a la función standalone loadItinerary
+    await loadItinerary();
+    return currentItinerary;
+  },
+
   async init(){
     const container=document.getElementById('content-itinerary'); if(!container) return;
     const tripId=getCurrentTripId(); if(!tripId){ renderEmptyState(); return; }
