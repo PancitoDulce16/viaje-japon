@@ -245,10 +245,11 @@ export const MapHandler = {
         // Crear el mapa centrado en Japón
         map = L.map('interactive-map').setView([36.2048, 138.2529], 6);
 
-        // Añadir capa de tiles (OpenStreetMap)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 18
+        // Añadir capa de tiles (CartoDB con nombres en inglés/romaji)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
         }).addTo(map);
 
         // Crear capa de marcadores
