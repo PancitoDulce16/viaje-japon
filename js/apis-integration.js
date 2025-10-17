@@ -247,6 +247,9 @@ export const APIsIntegration = {
    */
   async searchHotels(cityCode, checkIn, checkOut, guests = 2) {
     try {
+      console.log('🔍 Iniciando búsqueda de hoteles...');
+      console.log('📋 Parámetros:', { cityCode, checkIn, checkOut, guests });
+
       const searchData = {
         checkin: checkIn,
         checkout: checkOut,
@@ -261,31 +264,71 @@ export const APIsIntegration = {
         ],
         iataCode: cityCode
       };
-      
+
+      console.log('📦 Datos de búsqueda:', searchData);
+
       const url = API_ENDPOINTS.hotels.search();
+      console.log('🔗 URL:', url);
+      console.log('🔑 API Key presente:', API_KEYS?.liteAPI?.apiKey ? 'Sí (***' + API_KEYS.liteAPI.apiKey.slice(-4) + ')' : 'No');
+
       const data = await apiRequest(url, {
         method: 'POST',
         body: JSON.stringify(searchData)
       });
-      
-      if (data.data) {
+
+      console.log('📊 Respuesta de API:', data);
+
+      if (data.data && Array.isArray(data.data) && data.data.length > 0) {
         console.log(`🏨 ${data.data.length} hoteles encontrados en ${cityCode}`);
         return {
           success: true,
           hotels: data.data,
           searchId: data.searchId
         };
+      } else if (data.data && Array.isArray(data.data) && data.data.length === 0) {
+        console.log('😕 Búsqueda exitosa pero sin resultados');
+        return {
+          success: false,
+          message: 'No se encontraron hoteles para las fechas y ciudad seleccionadas'
+        };
+      } else if (data.error) {
+        console.error('❌ Error en respuesta de API:', data.error);
+        return {
+          success: false,
+          message: data.error.message || data.error.toString(),
+          error: data.error
+        };
       }
-      
+
+      console.log('⚠️ Respuesta inesperada de la API');
       return {
         success: false,
-        message: 'No se encontraron hoteles'
+        message: 'Respuesta inesperada del servidor'
       };
     } catch (error) {
       console.error('❌ Error buscando hoteles:', error);
+
+      // Analizar el tipo de error
+      let errorMessage = error.message;
+
+      if (error.message.includes('API Error 401')) {
+        errorMessage = 'Error de autenticación con la API (401). La clave API es inválida.';
+      } else if (error.message.includes('API Error 403')) {
+        errorMessage = 'Acceso denegado (403). La API key no tiene permisos.';
+      } else if (error.message.includes('API Error 429')) {
+        errorMessage = 'Límite de solicitudes excedido (429). Intenta en unos minutos.';
+      } else if (error.message.includes('API Error 404')) {
+        errorMessage = 'Endpoint no encontrado (404). Verifica la configuración de la API.';
+      } else if (error.message.includes('API Error 500')) {
+        errorMessage = 'Error del servidor (500). Intenta más tarde.';
+      } else if (error.message.includes('Failed to fetch')) {
+        errorMessage = 'Error de red. Verifica tu conexión a internet.';
+      }
+
       return {
         success: false,
-        error: error.message
+        error: errorMessage,
+        originalError: error.message
       };
     }
   },

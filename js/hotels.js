@@ -692,17 +692,28 @@ export const HotelsHandler = {
 
     const loadingDiv = document.getElementById('searchLoading');
     const recommendationsDiv = document.getElementById('recommendationsList');
-    
+
     loadingDiv.classList.remove('hidden');
     recommendationsDiv.innerHTML = '';
 
     try {
+      console.log('🔍 Buscando hoteles:', { cityCode, checkIn, checkOut, guests });
+      console.log('🔑 API Keys disponibles:', window.API_KEYS ? 'Sí' : 'No');
+      console.log('🔑 LiteAPI configurada:', window.API_KEYS?.liteAPI?.apiKey ? 'Sí' : 'No');
+
+      // Verificar que la API está configurada
+      if (!window.API_KEYS || !window.API_KEYS.liteAPI || !window.API_KEYS.liteAPI.apiKey) {
+        throw new Error('La API de hoteles no está configurada. Por favor contacta al administrador.');
+      }
+
       const result = await APIsIntegration.searchHotels(cityCode, checkIn, checkOut, guests);
-      
+
+      console.log('📊 Resultado de búsqueda:', result);
+
       if (result.success && result.hotels && result.hotels.length > 0) {
         // Process and store recommendations
         const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
-        
+
         this.recommendations = result.hotels.slice(0, 9).map(hotel => ({
           name: hotel.hotelName || hotel.name || 'Hotel',
           address: hotel.address || 'Dirección no disponible',
@@ -717,25 +728,52 @@ export const HotelsHandler = {
         this.renderRecommendations();
         Notifications.success(`✅ ${result.hotels.length} hoteles encontrados`);
       } else {
+        const errorMessage = result.message || result.error || 'No se encontraron hoteles disponibles';
         recommendationsDiv.innerHTML = `
           <div class="text-center py-8 text-gray-500 dark:text-gray-400">
             <div class="text-5xl mb-3">😕</div>
             <p class="font-semibold">No se encontraron hoteles</p>
-            <p class="text-sm">Intenta con otras fechas o ciudad</p>
+            <p class="text-sm">${errorMessage}</p>
+            <p class="text-xs mt-4 text-gray-400">Intenta con otras fechas o ciudad</p>
           </div>
         `;
-        Notifications.error('❌ No se encontraron hoteles disponibles');
+        Notifications.error('❌ ' + errorMessage);
       }
     } catch (error) {
-      console.error('Error buscando hoteles:', error);
+      console.error('❌ Error buscando hoteles:', error);
+
+      let userMessage = error.message;
+      let technicalDetails = '';
+
+      // Mensajes más claros según el tipo de error
+      if (error.message.includes('API de hoteles no está configurada')) {
+        technicalDetails = 'Las claves de API no están disponibles en este entorno.';
+      } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+        userMessage = 'Error de autenticación con la API de hoteles';
+        technicalDetails = 'La clave API es inválida o ha expirado.';
+      } else if (error.message.includes('403') || error.message.includes('Forbidden')) {
+        userMessage = 'Acceso denegado a la API de hoteles';
+        technicalDetails = 'La API key no tiene permisos suficientes.';
+      } else if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
+        userMessage = 'Límite de búsquedas excedido';
+        technicalDetails = 'Has realizado demasiadas búsquedas. Intenta en unos minutos.';
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('Network')) {
+        userMessage = 'Error de conexión';
+        technicalDetails = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
+      }
+
       recommendationsDiv.innerHTML = `
         <div class="text-center py-8 text-gray-500 dark:text-gray-400">
           <div class="text-5xl mb-3">⚠️</div>
-          <p class="font-semibold">Error al buscar hoteles</p>
-          <p class="text-sm">${error.message}</p>
+          <p class="font-semibold text-lg mb-2">${userMessage}</p>
+          <p class="text-sm mb-4">${technicalDetails}</p>
+          <details class="mt-4 text-left max-w-md mx-auto">
+            <summary class="cursor-pointer text-xs text-gray-400 hover:text-gray-600">Detalles técnicos</summary>
+            <pre class="mt-2 p-3 bg-gray-100 dark:bg-gray-900 rounded text-xs overflow-auto">${error.stack || error.message}</pre>
+          </details>
         </div>
       `;
-      Notifications.error('❌ Error al buscar hoteles');
+      Notifications.error('❌ ' + userMessage);
     } finally {
       loadingDiv.classList.add('hidden');
     }
