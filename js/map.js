@@ -251,6 +251,14 @@ export const MapHandler = {
         // Añadir todos los marcadores
         this.addAllMarkers();
 
+        // IMPORTANTE: Forzar recalculo del tamaño del mapa
+        setTimeout(() => {
+            if (map) {
+                map.invalidateSize();
+                console.log('✅ Map size recalculated');
+            }
+        }, 250);
+
         console.log('✅ Interactive map initialized');
     },
 
