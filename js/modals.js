@@ -70,9 +70,11 @@ export const ModalRenderer = {
                                 <input type="text" id="activityTime" placeholder="8:00 AM" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             </div>
                         </div>
-                        <div class="mt-4">
+                        <div class="mt-4 relative">
                             <label for="activityTitle" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Título</label>
-                            <input type="text" id="activityTitle" required placeholder="Narita Express → Shinjuku" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <input type="text" id="activityTitle" required placeholder="Narita Express → Shinjuku" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" autocomplete="off">
+                            <!-- Autocomplete Dropdown -->
+                            <div id="activityTitleAutocomplete" class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl max-h-80 overflow-y-auto"></div>
                         </div>
                         <div class="mt-4">
                             <label for="activityDesc" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Descripción</label>

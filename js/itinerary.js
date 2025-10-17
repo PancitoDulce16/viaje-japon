@@ -6,6 +6,7 @@ import { doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebas
 // Local cities fallback provider
 import { searchCities } from '../data/japan-cities.js';
 import { APP_CONFIG } from './config.js';
+import { ActivityAutocomplete } from './activity-autocomplete.js';
 
 let checkedActivities = {};
 let currentDay = 1;
@@ -761,12 +762,140 @@ export const ItineraryHandler = {
     await initRealtimeSync(); await this.init();
   },
 
-  // Los siguientes métodos (showActivityModal, closeActivityModal, saveActivity, deleteActivity)
-  // se mantienen como en tu proyecto original. Puedes conservarlos tal cual si ya funcionan.
-  showActivityModal(activityId, day){ /* usa tu implementación existente */ },
-  closeActivityModal(){ /* usa tu implementación existente */ },
-  async deleteActivity(activityId, day){ /* usa tu implementación existente */ },
-  async saveActivity(){ /* usa tu implementación existente */ }
+  // Mostrar modal de actividad (añadir o editar)
+  showActivityModal(activityId, day) {
+    const modal = document.getElementById('activityModal');
+    const form = document.getElementById('activityForm');
+    const title = document.getElementById('activityModalTitle');
+
+    if (!modal || !form) return;
+
+    // Reset form
+    form.reset();
+    document.getElementById('activityId').value = activityId || '';
+    document.getElementById('activityDay').value = day;
+
+    // Si estamos editando, cargar datos de la actividad
+    if (activityId) {
+      title.textContent = 'Editar Actividad';
+      const dayData = currentItinerary.days.find(d => d.day === day);
+      const activity = dayData?.activities.find(a => a.id === activityId);
+
+      if (activity) {
+        document.getElementById('activityIcon').value = activity.icon || '';
+        document.getElementById('activityTime').value = activity.time || '';
+        document.getElementById('activityTitle').value = activity.title || '';
+        document.getElementById('activityDesc').value = activity.desc || '';
+        document.getElementById('activityCost').value = activity.cost || '';
+        document.getElementById('activityStation').value = activity.station || '';
+      }
+    } else {
+      title.textContent = 'Añadir Actividad';
+    }
+
+    // Mostrar modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    // Inicializar autocomplete
+    setTimeout(() => {
+      if (window.ActivityAutocomplete && window.ActivityAutocomplete.init) {
+        window.ActivityAutocomplete.init();
+      }
+    }, 100);
+
+    // Setup form submit handler (only once)
+    if (!form.dataset.handlerAttached) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.saveActivity();
+      });
+      form.dataset.handlerAttached = 'true';
+    }
+  },
+
+  closeActivityModal() {
+    const modal = document.getElementById('activityModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+
+      // Limpiar autocomplete dropdown
+      if (window.ActivityAutocomplete && window.ActivityAutocomplete.hideDropdown) {
+        window.ActivityAutocomplete.hideDropdown();
+      }
+    }
+  },
+
+  async saveActivity() {
+    const activityId = document.getElementById('activityId').value;
+    const day = parseInt(document.getElementById('activityDay').value);
+    const icon = document.getElementById('activityIcon').value || '📍';
+    const time = document.getElementById('activityTime').value;
+    const title = document.getElementById('activityTitle').value;
+    const desc = document.getElementById('activityDesc').value;
+    const cost = parseFloat(document.getElementById('activityCost').value) || 0;
+    const station = document.getElementById('activityStation').value;
+
+    if (!title) {
+      alert('⚠️ El título es obligatorio');
+      return;
+    }
+
+    const dayData = currentItinerary.days.find(d => d.day === day);
+    if (!dayData) {
+      alert('⚠️ No se encontró el día');
+      return;
+    }
+
+    const activity = {
+      id: activityId || `activity_${Date.now()}`,
+      icon,
+      time,
+      title,
+      desc,
+      cost,
+      station
+    };
+
+    // Añadir o actualizar actividad
+    if (activityId) {
+      const index = dayData.activities.findIndex(a => a.id === activityId);
+      if (index >= 0) {
+        dayData.activities[index] = activity;
+      }
+    } else {
+      dayData.activities.push(activity);
+    }
+
+    try {
+      await saveCurrentItineraryToFirebase();
+      this.closeActivityModal();
+      render();
+      Notifications.show(activityId ? 'Actividad actualizada' : 'Actividad añadida', 'success');
+    } catch (error) {
+      console.error('❌ Error guardando actividad:', error);
+      alert('⚠️ Error al guardar la actividad');
+    }
+  },
+
+  async deleteActivity(activityId, day) {
+    if (!confirm('¿Seguro que deseas eliminar esta actividad?')) return;
+
+    const dayData = currentItinerary.days.find(d => d.day === day);
+    if (!dayData) return;
+
+    dayData.activities = dayData.activities.filter(a => a.id !== activityId);
+
+    try {
+      await saveCurrentItineraryToFirebase();
+      render();
+      Notifications.show('Actividad eliminada', 'success');
+    } catch (error) {
+      console.error('❌ Error eliminando actividad:', error);
+      alert('⚠️ Error al eliminar la actividad');
+    }
+  }
 };
 
 // Auth listener (igual que tu proyecto)
