@@ -14,8 +14,8 @@ export const MapHandler = {
             const fallbackImages = {
                 tokyo: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80',
                 kyoto: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80',
-                osaka: 'https://images.unsplash.com/photo-1624253321774-ffbd8d28a20f?auto=format&fit=crop&w=1200&q=80', // Dotonbori - OwbvX2iahvw
-                nara: 'https://images.unsplash.com/photo-1590559899731-a382839e5549?auto=format&fit=crop&w=1200&q=80' // Nara deer - OugwfKxatME
+                osaka: 'https://unsplash.com/photos/OwbvX2iahvw/download?force=true&w=1200', // Dotonbori
+                nara: 'https://unsplash.com/photos/OugwfKxatME/download?force=true&w=1200' // Nara deer
             };
             return fallbackImages[city] || fallbackImages.tokyo;
         };
