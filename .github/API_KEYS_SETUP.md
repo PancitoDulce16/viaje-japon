@@ -54,9 +54,12 @@ Después de agregar el secret, haz cualquier cambio y push para que se regenere 
 Una vez deployado, verifica en la consola del navegador:
 ```javascript
 console.log('API Keys configuradas:', window.API_KEYS);
+console.log('LiteAPI configurada:', window.API_KEYS?.liteAPI?.apiKey ? 'Sí' : 'No');
 ```
 
 Deberías ver todas las APIs configuradas.
+
+**Estado**: ✅ Secret configurado en GitHub Actions
 
 ## Notas Importantes
 
