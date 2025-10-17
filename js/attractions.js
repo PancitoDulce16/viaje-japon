@@ -77,6 +77,63 @@ export const AttractionsHandler = {
                             📅 Requiere Reserva
                         </button>
                     </div>
+
+                    <!-- 🔥 Advanced Filters -->
+                    <div class="grid md:grid-cols-3 gap-4 mb-6">
+                        <!-- City Filter -->
+                        <div>
+                            <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">📍 Ciudad</label>
+                            <select
+                                id="cityFilter"
+                                onchange="AttractionsHandler.applyAdvancedFilters()"
+                                class="w-full p-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 text-sm"
+                            >
+                                <option value="all">Todas las ciudades</option>
+                                ${this.getUniqueCities().map(city => `<option value="${city}">${city}</option>`).join('')}
+                            </select>
+                        </div>
+
+                        <!-- Price Filter -->
+                        <div>
+                            <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">💰 Precio</label>
+                            <select
+                                id="priceFilter"
+                                onchange="AttractionsHandler.applyAdvancedFilters()"
+                                class="w-full p-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 text-sm"
+                            >
+                                <option value="all">Todos los precios</option>
+                                <option value="free">Gratis</option>
+                                <option value="0-1000">¥0 - ¥1,000</option>
+                                <option value="1000-3000">¥1,000 - ¥3,000</option>
+                                <option value="3000-plus">¥3,000+</option>
+                            </select>
+                        </div>
+
+                        <!-- Rating Filter -->
+                        <div>
+                            <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">⭐ Rating mínimo</label>
+                            <select
+                                id="ratingFilter"
+                                onchange="AttractionsHandler.applyAdvancedFilters()"
+                                class="w-full p-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 text-sm"
+                            >
+                                <option value="0">Todos los ratings</option>
+                                <option value="4.5">4.5+ ⭐⭐⭐⭐⭐</option>
+                                <option value="4.0">4.0+ ⭐⭐⭐⭐</option>
+                                <option value="3.5">3.5+ ⭐⭐⭐</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Clear Filters Button -->
+                    <div class="mb-6">
+                        <button
+                            onclick="AttractionsHandler.clearAllFilters()"
+                            class="w-full md:w-auto px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg font-semibold text-sm transition"
+                        >
+                            🔄 Limpiar Filtros
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Categories -->
@@ -134,11 +191,11 @@ export const AttractionsHandler = {
         const isSaved = this.savedAttractions.includes(item.name);
         const priceDisplay = item.price === 0 ? 'GRATIS' : `¥${item.price.toLocaleString()}`;
         const needsReservation = item.reserveDays > 0;
-        
+
         return `
             <div class="attraction-card bg-gray-50 dark:bg-gray-700 rounded-lg p-4 hover:shadow-lg transition border-l-4 ${
                 isSaved ? 'border-yellow-400' : 'border-gray-200 dark:border-gray-600'
-            }" data-attraction="${item.name}" data-price="${item.price}" data-reservation="${needsReservation}">
+            }" data-attraction="${item.name}" data-price="${item.price}" data-reservation="${needsReservation}" data-city="${item.city}" data-rating="${item.rating}">
                 <div class="flex justify-between items-start mb-3">
                     <div class="flex-1">
                         <h4 class="font-bold text-lg dark:text-white mb-1">${item.name}</h4>
@@ -539,6 +596,111 @@ export const AttractionsHandler = {
             if (window.Notifications) {
                 window.Notifications.error('Error al guardar la atracción');
             }
+        }
+    },
+
+    /**
+     * Obtener lista única de ciudades
+     */
+    getUniqueCities() {
+        const cities = new Set();
+        Object.values(ATTRACTIONS_DATA).forEach(category => {
+            category.items.forEach(item => cities.add(item.city));
+        });
+        return Array.from(cities).sort();
+    },
+
+    /**
+     * Aplicar filtros avanzados (ciudad, precio, rating)
+     */
+    applyAdvancedFilters() {
+        try {
+            const cityFilter = document.getElementById('cityFilter')?.value || 'all';
+            const priceFilter = document.getElementById('priceFilter')?.value || 'all';
+            const ratingFilter = parseFloat(document.getElementById('ratingFilter')?.value || '0');
+
+            const cards = document.querySelectorAll('.attraction-card');
+            const sections = document.querySelectorAll('.category-section');
+
+            sections.forEach(section => {
+                const visibleCards = Array.from(section.querySelectorAll('.attraction-card')).filter(card => {
+                    const cardCity = card.dataset.city || '';
+                    const cardPrice = parseFloat(card.dataset.price || '0');
+                    const cardRating = parseFloat(card.dataset.rating || '0');
+
+                    // City filter
+                    const cityMatch = cityFilter === 'all' || cardCity === cityFilter;
+
+                    // Price filter
+                    let priceMatch = true;
+                    if (priceFilter === 'free') {
+                        priceMatch = cardPrice === 0;
+                    } else if (priceFilter === '0-1000') {
+                        priceMatch = cardPrice >= 0 && cardPrice <= 1000;
+                    } else if (priceFilter === '1000-3000') {
+                        priceMatch = cardPrice > 1000 && cardPrice <= 3000;
+                    } else if (priceFilter === '3000-plus') {
+                        priceMatch = cardPrice > 3000;
+                    }
+
+                    // Rating filter
+                    const ratingMatch = cardRating >= ratingFilter;
+
+                    const matches = cityMatch && priceMatch && ratingMatch;
+                    card.style.display = matches ? 'block' : 'none';
+                    return matches;
+                });
+
+                section.style.display = visibleCards.length > 0 ? 'block' : 'none';
+            });
+
+            // Reset basic filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            const firstFilterBtn = document.querySelector('.filter-btn');
+            if (firstFilterBtn) {
+                firstFilterBtn.classList.add('active');
+            }
+
+            Logger.info(`Filtros aplicados - Ciudad: ${cityFilter}, Precio: ${priceFilter}, Rating: ${ratingFilter}`);
+        } catch (error) {
+            Logger.error('Error aplicando filtros avanzados', error);
+        }
+    },
+
+    /**
+     * Limpiar todos los filtros
+     */
+    clearAllFilters() {
+        try {
+            // Reset dropdowns
+            const cityFilter = document.getElementById('cityFilter');
+            const priceFilter = document.getElementById('priceFilter');
+            const ratingFilter = document.getElementById('ratingFilter');
+            const searchInput = document.getElementById('attractionSearch');
+
+            if (cityFilter) cityFilter.value = 'all';
+            if (priceFilter) priceFilter.value = 'all';
+            if (ratingFilter) ratingFilter.value = '0';
+            if (searchInput) searchInput.value = '';
+
+            // Clear search term
+            this.searchTerm = '';
+
+            // Show all cards
+            const cards = document.querySelectorAll('.attraction-card');
+            const sections = document.querySelectorAll('.category-section');
+
+            cards.forEach(card => card.style.display = 'block');
+            sections.forEach(section => section.style.display = 'block');
+
+            // Reset filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            const allBtn = document.querySelector('.filter-btn');
+            if (allBtn) allBtn.classList.add('active');
+
+            Logger.info('Todos los filtros limpiados');
+        } catch (error) {
+            Logger.error('Error limpiando filtros', error);
         }
     }
 };
