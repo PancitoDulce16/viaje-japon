@@ -301,15 +301,27 @@ export const AttractionsHandler = {
     // 🔥 Modal para seleccionar día
     async showDaySelectionModal(attraction) {
         // 🔥 Asegurar que el itinerario esté cargado
-        if (window.ItineraryHandler && typeof window.ItineraryHandler.ensureLoaded === 'function') {
-            await window.ItineraryHandler.ensureLoaded();
+        if (window.ItineraryHandler) {
+            // Intentar cargar el itinerario del currentTripId
+            const currentTripId = localStorage.getItem('currentTripId');
+            if (currentTripId && typeof window.ItineraryHandler.loadItinerary === 'function') {
+                try {
+                    await window.ItineraryHandler.loadItinerary(currentTripId);
+                } catch (e) {
+                    console.warn('No se pudo cargar el itinerario automáticamente');
+                }
+            }
         }
 
         // Obtener días del itinerario actual
         const currentItinerary = window.ItineraryHandler?.currentItinerary;
 
         if (!currentItinerary || !currentItinerary.days || !currentItinerary.days.length) {
-            alert('⚠️ Primero debes crear un itinerario en la sección de Itinerario');
+            if (window.Notifications) {
+                window.Notifications.warning('⚠️ Primero debes crear un itinerario en la sección de Itinerario');
+            } else {
+                alert('⚠️ Primero debes crear un itinerario en la sección de Itinerario');
+            }
             return;
         }
 

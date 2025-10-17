@@ -18,6 +18,9 @@ import { AuthHandler } from './auth.js';
 import { TripsManager } from './trips-manager.js';
 import './firebase-config.js'; // Inicializar Firebase primero
 
+// 🖼️ Image Service imports
+import './image-service.js'; // Unsplash images service
+
 // 🔌 APIs imports
 // APIs integration is imported dynamically at runtime so CI-generated config files are optional
 // (avoid breaking the app if js/apis-config.js is missing during local dev)
@@ -73,6 +76,13 @@ async function initApp() {
 
         // 🔔 Inicializar sistema de notificaciones
         Notifications.init();
+
+        // 🤖 Configurar OpenAI API Key si no está configurada
+        if (!localStorage.getItem('openai_api_key')) {
+            const apiKey = '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';
+            localStorage.setItem('openai_api_key', apiKey);
+            console.log('🤖 OpenAI API Key configured');
+        }
 
         // 🔥 Inicializar Firebase Auth PRIMERO y ESPERAR a que esté listo
         console.log('⏳ Esperando a que la autenticación esté lista...');

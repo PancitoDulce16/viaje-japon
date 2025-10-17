@@ -225,15 +225,19 @@ async function loadItinerary(){
       return await loadFallbackTemplate();
     }
   } catch (error) {
+    // Silently handle offline errors (expected behavior)
+    if (error.code === 'unavailable' || error.message?.includes('client is offline')) {
+      console.log('⚠️ Firestore offline, loading fallback template');
+      return await loadFallbackTemplate();
+    }
+
+    // Log other errors
     console.error('❌ Error loading itinerary from Firebase:', error);
 
-    // Specific error handling
+    // Specific error handling for non-offline errors
     if (error.code === 'permission-denied') {
       console.error('❌ Permission denied: You do not have access to this itinerary');
       Notifications?.show?.('No tienes permiso para acceder a este itinerario', 'error');
-    } else if (error.code === 'unavailable') {
-      console.error('❌ Firestore unavailable: Check your internet connection');
-      Notifications?.show?.('No se pudo conectar a Firestore. Verifica tu conexión.', 'error');
     }
 
     return await loadFallbackTemplate();
@@ -396,6 +400,16 @@ async function render(){
   renderDaySelector();
   renderDayOverview(dayData);
   renderActivities(dayData);
+
+  // Initialize drag and drop AFTER rendering activities
+  console.log('⏰ Attempting to initialize drag & drop after render...');
+  const timeline = document.getElementById('activitiesTimeline');
+  console.log('📍 Timeline element:', timeline);
+  if (timeline) {
+    initializeDragAndDrop(timeline);
+  } else {
+    console.error('❌ Timeline element not found!');
+  }
 }
 
 // ⬇️⬇️⬇️  NUEVO: renderTripSelector con botón “Ver Insights AI”  ⬇️⬇️⬇️
@@ -421,17 +435,63 @@ function renderTripSelector(){
       </div>
     </div>`;
   try{
-    if (currentItinerary?.aiInsights && window.ItineraryBuilder?.showAIInsightsModal){
+    if (currentItinerary && window.ItineraryBuilder){
       const actions = container.querySelector('.flex.gap-2');
       if(actions){
         const btn=document.createElement('button');
-        btn.textContent='✨ Ver Insights AI';
-        btn.className='bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm';
-        btn.addEventListener('click', ()=> window.ItineraryBuilder.showAIInsightsModal(currentItinerary.aiInsights));
+        if (currentItinerary.aiInsights) {
+          // If AI insights exist, show "Ver Insights AI"
+          btn.textContent='✨ Ver Insights AI';
+          btn.className='bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm';
+          btn.addEventListener('click', ()=> {
+            if (window.ItineraryBuilder.showAIInsightsModal) {
+              window.ItineraryBuilder.showAIInsightsModal(currentItinerary.aiInsights);
+            }
+          });
+        } else {
+          // If no AI insights, show "Generar Sugerencias AI"
+          btn.textContent='✨ Sugerencias IA';
+          btn.className='bg-gradient-to-r from-purple-500/80 to-pink-500/80 hover:from-purple-600/90 hover:to-pink-600/90 px-4 py-2 rounded-lg transition text-sm font-bold backdrop-blur-sm shadow-md';
+          btn.addEventListener('click', async ()=> {
+            if (!window.AIIntegration) {
+              alert('⚠️ El módulo de IA no está disponible');
+              return;
+            }
+
+            // Show loading state
+            btn.disabled = true;
+            btn.textContent = '⏳ Generando...';
+
+            try {
+              // Generate AI suggestions for current itinerary
+              const suggestions = await window.AIIntegration.getPersonalizedSuggestions({
+                days: currentItinerary.days,
+                preferences: currentTrip?.preferences || {}
+              });
+
+              // Save AI insights to itinerary
+              currentItinerary.aiInsights = suggestions;
+              await saveCurrentItineraryToFirebase();
+
+              // Re-render to show the new button
+              render();
+
+              // Show the insights modal
+              if (window.ItineraryBuilder.showAIInsightsModal) {
+                window.ItineraryBuilder.showAIInsightsModal(suggestions);
+              }
+            } catch (error) {
+              console.error('Error generating AI suggestions:', error);
+              alert('⚠️ Error al generar sugerencias. Intenta de nuevo.');
+              btn.disabled = false;
+              btn.textContent = '✨ Sugerencias IA';
+            }
+          });
+        }
         actions.appendChild(btn);
       }
     }
-  }catch(e){ console.warn('No se pudo inyectar el botón de AI Insights:', e); }
+  }catch(e){ console.warn('No se pudo inyectar el botón de AI:', e); }
 }
 
 function renderDaySelector(){
@@ -452,11 +512,76 @@ function renderDayOverview(day){
   if(!auth.currentUser){ syncStatus='<span class="text-xs text-yellow-600 dark:text-yellow-400">📱 Solo local</span>'; }
   else if (tripId){ syncStatus='<span class="text-xs text-green-600 dark:text-green-400">🤝 Modo Colaborativo</span>'; }
   else { syncStatus='<span class="text-xs text-blue-600 dark:text-blue-400">☁️ Sincronizado</span>'; }
+
+  // Debug: Log day data to see what fields are available
+  console.log('📊 Day data for day', day.day, ':', {
+    city: day.city,
+    location: day.location,
+    title: day.title,
+    date: day.date
+  });
+
+  // Get city image based on day's city/location or title
+  let cityImage = '';
+  const citySource = day.city || day.location || day.title || '';
+  console.log('🔍 City source:', citySource);
+
+  if (citySource) {
+    const cityRaw = citySource.toLowerCase().trim();
+    console.log('🔍 City raw:', cityRaw);
+
+    // Match city names - handle variations
+    const cityName = cityRaw.includes('tokyo') ? 'tokyo' :
+                     cityRaw.includes('kyoto') ? 'kyoto' :
+                     cityRaw.includes('osaka') ? 'osaka' :
+                     cityRaw.includes('nara') ? 'nara' :
+                     cityRaw.includes('hiroshima') ? 'hiroshima' :
+                     cityRaw.includes('nikko') ? 'nikko' :
+                     cityRaw; // Use as-is if no match
+
+    console.log('🏙️ Detected city:', cityName);
+
+    if (window.ImageService && window.ImageService.getCityImage) {
+      cityImage = window.ImageService.getCityImage(cityName);
+      console.log('🖼️ Image from ImageService:', cityImage);
+    } else {
+      // Fallback images for each city
+      const cityImages = {
+        tokyo: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80',
+        kyoto: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80',
+        osaka: 'https://images.unsplash.com/photo-1624253321774-ffbd8d28a20f?auto=format&fit=crop&w=800&q=80', // Dotonbori - OwbvX2iahvw
+        nara: 'https://images.unsplash.com/photo-1590559899731-a382839e5549?auto=format&fit=crop&w=800&q=80', // Nara deer - OugwfKxatME
+        hiroshima: 'https://images.unsplash.com/photo-1617878223826-5a93d60fe046?auto=format&fit=crop&w=800&q=80',
+        nikko: 'https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&w=800&q=80'
+      };
+      cityImage = cityImages[cityName] || cityImages.tokyo;
+      console.log('🖼️ Image from fallback:', cityImage);
+    }
+  }
+
+  console.log('✅ Final cityImage:', cityImage);
+
   container.innerHTML = `
-    <div class="flex items-center gap-2 mb-4">
-      <span class="text-2xl">📅</span>
-      <h2 class="text-2xl font-bold dark:text-white">Día ${day.day}</h2>
-    </div>
+    ${cityImage ? `
+      <div class="relative h-48 w-full overflow-hidden rounded-t-xl -mx-6 -mt-6 mb-4">
+        <img src="${cityImage}" alt="${day.city || day.location || 'Japan'}" class="w-full h-full object-cover" loading="lazy" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+        <div class="absolute bottom-0 left-0 right-0 p-4">
+          <div class="flex items-center gap-2 text-white">
+            <span class="text-3xl">📅</span>
+            <div>
+              <h2 class="text-2xl font-bold text-white drop-shadow-lg">Día ${day.day}</h2>
+              <p class="text-sm text-white/90">${day.city || day.location || ''}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    ` : `
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-2xl">📅</span>
+        <h2 class="text-2xl font-bold dark:text-white">Día ${day.day}</h2>
+      </div>
+    `}
     <div class="mb-4">
       <div class="flex justify-between text-sm mb-1 dark:text-gray-300"><span>Progreso</span><span>${completed}/${day.activities.length}</span></div>
       <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2"><div class="bg-red-600 h-2 rounded-full transition-all duration-500" style="width:${progress}%"></div></div>
@@ -465,7 +590,12 @@ function renderDayOverview(day){
     <div class="space-y-3 text-sm">
       <p class="font-semibold text-base dark:text-gray-300">${day.date}</p>
       <p class="font-bold text-lg text-red-600 dark:text-red-400">${day.title||''}</p>
-      ${day.hotel ? `<p class="dark:text-gray-300">🏨 ${day.hotel}</p>`:''}
+      ${day.hotel ? `
+        <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border-l-2 border-blue-500">
+          <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">🏨 Hotel Recomendado</p>
+          <p class="text-sm text-gray-700 dark:text-gray-300">${day.hotel}</p>
+        </div>
+      `:''}
       ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-400">📍 ${day.location}</p>`:''}
     </div>
     <div class="mt-6">
@@ -476,10 +606,14 @@ function renderDayOverview(day){
 function renderActivities(day){
   const container=document.getElementById('activitiesTimeline'); if(!container) return;
   if (sortableInstance){ try{ sortableInstance.destroy(); }catch(_){} sortableInstance=null; }
-  container.innerHTML = (day.activities||[]).map((act,i)=> `
-    <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md border-l-4 border-red-500 fade-in transition-all hover:shadow-lg ${checkedActivities[act.id]?'opacity-60':''}" style="animation-delay:${i*0.05}s">
+  container.innerHTML = (day.activities||[]).map((act,i)=> {
+    return `
+    <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden fade-in transition-all hover:shadow-xl border-l-4 border-red-500 ${checkedActivities[act.id]?'opacity-60':''}" style="animation-delay:${i*0.05}s">
       <div class="p-5 flex items-start gap-4">
-        <input type="checkbox" data-id="${act.id}" ${checkedActivities[act.id]?'checked':''} class="activity-checkbox mt-1 w-5 h-5 cursor-pointer accent-red-600 flex-shrink-0" />
+        <div class="flex flex-col gap-2 items-center">
+          <div class="drag-handle text-gray-400 dark:text-gray-600 text-xs cursor-grab active:cursor-grabbing" title="Arrastra para reordenar">⋮⋮</div>
+          <input type="checkbox" data-id="${act.id}" ${checkedActivities[act.id]?'checked':''} class="activity-checkbox w-5 h-5 cursor-pointer accent-red-600 flex-shrink-0" />
+        </div>
         <div class="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-lg text-2xl flex-shrink-0">${act.icon||'📍'}</div>
         <div class="flex-1 min-w-0">
           <div class="flex justify-between items-start">
@@ -495,7 +629,7 @@ function renderActivities(day){
               <button type="button" data-action="delete" data-activity-id="${act.id}" data-day="${day.day}" class="activity-delete-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">🗑️</button>
             </div>
           </div>
-          <p class="text-sm text-gray-600 dark:text-gray-400">${act.desc||''}</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">${act.desc||''}</p>
           ${act.station?`<p class="text-xs text-gray-500 dark:text-gray-500 mt-2">🚉 ${act.station}</p>`:''}
           ${act.train?`
             <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-2 border-blue-500">
@@ -505,11 +639,82 @@ function renderActivities(day){
             </div>`:''}
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
-// --- Drag & Drop (igual que tu versión; aquí simplificado) ---
-function initializeDragAndDrop(container){ /* noop placeholder (tu proyecto puede incluir SortableJS) */ }
+// --- Drag & Drop with SortableJS ---
+function initializeDragAndDrop(container) {
+  if (!container) {
+    console.error('❌ Drag & Drop: container is null or undefined');
+    return;
+  }
+
+  if (!window.Sortable) {
+    console.error('❌ Drag & Drop: Sortable library not loaded');
+    return;
+  }
+
+  console.log('🎯 Initializing drag & drop on container:', container);
+  console.log('📦 Activity cards found:', container.querySelectorAll('.activity-card').length);
+  console.log('👆 Drag handles found:', container.querySelectorAll('.drag-handle').length);
+
+  try {
+    sortableInstance = new Sortable(container, {
+      animation: 200,
+      easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      dragClass: 'sortable-drag',
+      draggable: '.activity-card',
+      handle: '.drag-handle', // Only drag from the ⋮⋮ icon
+      onStart: function(evt) {
+        console.log('🚀 Drag started:', evt.oldIndex);
+      },
+      onMove: function(evt) {
+        console.log('🔄 Moving from', evt.dragged, 'to', evt.related);
+      },
+      onEnd: async function(evt) {
+        console.log('✅ Drag ended. Old index:', evt.oldIndex, 'New index:', evt.newIndex);
+        // Get the new order of activities
+        const activityCards = Array.from(container.querySelectorAll('.activity-card'));
+        const dayData = currentItinerary.days.find(d => d.day === currentDay);
+
+        if (!dayData) return;
+
+        // Reorder activities based on new positions
+        const reorderedActivities = activityCards.map(card => {
+          const checkbox = card.querySelector('.activity-checkbox');
+          const activityId = checkbox?.dataset?.id;
+          return dayData.activities.find(act => act.id === activityId);
+        }).filter(Boolean);
+
+        // Update the current itinerary
+        dayData.activities = reorderedActivities;
+
+        // Save to Firebase
+        try {
+          await saveCurrentItineraryToFirebase();
+          console.log('✅ Activity order saved');
+          if (window.Notifications) {
+            window.Notifications.show('Orden actualizado', 'success');
+          }
+        } catch (error) {
+          console.error('❌ Error saving activity order:', error);
+          if (window.Notifications) {
+            window.Notifications.show('Error al guardar el orden', 'error');
+          }
+          // Revert the UI on error
+          render();
+        }
+      }
+    });
+
+    console.log('✅ Drag & Drop initialized');
+  } catch (error) {
+    console.error('❌ Error initializing drag & drop:', error);
+  }
+}
 
 // --- API público del handler ---
 export const ItineraryHandler = {

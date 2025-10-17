@@ -150,6 +150,11 @@ export const FlightsHandler = {
         console.log('✅ Vuelos del wizard cargados automáticamente:', wizardFlightsArray.length);
       }
     } catch (error) {
+      // Silently handle offline errors (expected behavior)
+      if (error.code === 'unavailable' || error.message?.includes('client is offline')) {
+        console.log('⚠️ Firestore offline, skipping wizard flights load');
+        return;
+      }
       console.error('❌ Error cargando vuelos del wizard:', error);
     }
   },

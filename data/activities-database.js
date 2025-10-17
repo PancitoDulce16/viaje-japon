@@ -3,6 +3,7 @@
 export const ACTIVITIES_DATABASE = {
   tokyo: {
     city: 'Tokyo',
+    cityImage: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1200&q=80',
     activities: [
       // CULTURA
       {
@@ -16,7 +17,8 @@ export const ACTIVITIES_DATABASE = {
         station: 'Asakusa Station',
         rating: 4.8,
         timeOfDay: ['morning', 'afternoon'],
-        bestSeason: 'all'
+        bestSeason: 'all',
+        image: 'https://images.unsplash.com/photo-1528164344705-47542687000d?w=800&q=80'
       },
       {
         id: 'tokyo-meiji',
@@ -29,7 +31,8 @@ export const ACTIVITIES_DATABASE = {
         station: 'Harajuku Station',
         rating: 4.7,
         timeOfDay: ['morning', 'afternoon'],
-        bestSeason: 'all'
+        bestSeason: 'all',
+        image: 'https://images.unsplash.com/photo-1590559899731-a382839e5549?w=800&q=80'
       },
       
       // GASTRONOMÍA
@@ -57,7 +60,8 @@ export const ACTIVITIES_DATABASE = {
         station: 'Shibuya Station',
         rating: 4.5,
         timeOfDay: ['lunch', 'dinner'],
-        bestSeason: 'all'
+        bestSeason: 'all',
+        image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&q=80'
       },
       {
         id: 'tokyo-robot-restaurant',
