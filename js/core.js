@@ -185,19 +185,28 @@ export const AppCore = {
             tab.classList.add('hidden');
             tab.classList.remove('animate__animated', 'animate__fadeIn');
         });
-        
+
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('active');
         });
-        
+
         const content = document.getElementById(`content-${tabName}`);
         if (content) {
             content.classList.remove('hidden');
             content.classList.add('animate__animated', 'animate__fadeIn');
         }
-        
+
         const btn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
         if (btn) btn.classList.add('active');
+
+        // Fix map size when switching to map tab
+        if (tabName === 'map' && window.MapHandler) {
+            setTimeout(() => {
+                if (window.MapHandler.fixMapSize) {
+                    window.MapHandler.fixMapSize();
+                }
+            }, 150);
+        }
     },
 
     updateCountdown() {

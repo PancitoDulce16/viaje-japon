@@ -165,6 +165,8 @@ const createCustomIcon = (emoji, color = '#dc2626') => {
 };
 
 export const MapHandler = {
+    mapInitialized: false,
+
     renderMap() {
         const container = document.getElementById('content-map');
         if (!container) return;
@@ -217,16 +219,20 @@ export const MapHandler = {
             </div>
         `;
 
-        // Esperar un poco para que el DOM se actualice
-        setTimeout(() => {
-            this.initializeMap();
-        }, 100);
+        // NO inicializar el mapa aquí - esperar a que el tab sea visible
     },
 
     initializeMap() {
         const mapElement = document.getElementById('interactive-map');
         if (!mapElement) {
             console.error('❌ Map element not found');
+            return;
+        }
+
+        // Si el mapa ya existe, solo recalcular tamaño
+        if (map && this.mapInitialized) {
+            map.invalidateSize();
+            console.log('✅ Map size recalculated');
             return;
         }
 
@@ -251,15 +257,36 @@ export const MapHandler = {
         // Añadir todos los marcadores
         this.addAllMarkers();
 
+        // Marcar como inicializado
+        this.mapInitialized = true;
+
         // IMPORTANTE: Forzar recalculo del tamaño del mapa
         setTimeout(() => {
             if (map) {
                 map.invalidateSize();
-                console.log('✅ Map size recalculated');
+                console.log('✅ Map initialized and size calculated');
             }
-        }, 250);
+        }, 100);
 
-        console.log('✅ Interactive map initialized');
+        console.log('✅ Interactive map created');
+    },
+
+    fixMapSize() {
+        // Esta función es llamada cuando el tab del mapa se hace visible
+        const mapElement = document.getElementById('interactive-map');
+        if (!mapElement) return;
+
+        // Si el mapa no está inicializado, inicializarlo ahora
+        if (!this.mapInitialized) {
+            this.initializeMap();
+            return;
+        }
+
+        // Si ya está inicializado, solo recalcular el tamaño
+        if (map) {
+            map.invalidateSize();
+            console.log('✅ Map size fixed after tab switch');
+        }
     },
 
     addAllMarkers() {
