@@ -15,6 +15,24 @@ const getFoursquareKey = () => {
   return process.env.FOURSQUARE_API_KEY || '';
 };
 
+// Get AviationStack API Key from environment
+const getAviationStackKey = () => {
+  try {
+    const key = functions.config().aviationstack?.key;
+    if (key) return key;
+  } catch (e) {}
+  return process.env.AVIATIONSTACK_API_KEY || '';
+};
+
+// Get LiteAPI Key from environment
+const getLiteAPIKey = () => {
+  try {
+    const key = functions.config().liteapi?.key;
+    if (key) return key;
+  } catch (e) {}
+  return process.env.LITEAPI_API_KEY || '';
+};
+
 exports.placesProxy = functions.https.onRequest(async (req, res) => {
   const { lat, lng, query, radius } = req.query;
 
@@ -45,5 +63,100 @@ exports.placesProxy = functions.https.onRequest(async (req, res) => {
   } catch (error) {
     console.error('Error calling Foursquare:', error.response ? error.response.data : error.message);
     res.status(500).json({ error: 'Error fetching places' });
+  }
+});
+
+// ==============================
+// ✈️ FLIGHTS PROXY (AviationStack)
+// ==============================
+exports.flightsProxy = functions.https.onRequest(async (req, res) => {
+  // Enable CORS
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  const aviationStackKey = getAviationStackKey();
+  if (!aviationStackKey) {
+    res.status(500).json({ error: 'Server misconfigured: AviationStack API key missing' });
+    return;
+  }
+
+  try {
+    const { flight_iata, flight_date } = req.query;
+
+    console.log('🔍 Flights proxy called with:', { flight_iata, flight_date });
+
+    const url = 'https://api.aviationstack.com/v1/flights';
+    const params = {
+      access_key: aviationStackKey,
+      flight_iata: flight_iata
+    };
+
+    if (flight_date) {
+      params.flight_date = flight_date;
+    }
+
+    console.log('📡 Calling AviationStack API...');
+    const response = await axios.get(url, { params });
+
+    console.log('✅ AviationStack response received:', response.data?.data?.length || 0, 'flights');
+    res.json(response.data);
+  } catch (error) {
+    console.error('❌ Error calling AviationStack:', error.response ? error.response.data : error.message);
+    res.status(500).json({
+      error: 'Error fetching flight data',
+      details: error.response ? error.response.data : error.message
+    });
+  }
+});
+
+// ==============================
+// 🏨 HOTELS PROXY (LiteAPI)
+// ==============================
+exports.hotelsProxy = functions.https.onRequest(async (req, res) => {
+  // Enable CORS
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, X-API-KEY');
+
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    res.status(204).send('');
+    return;
+  }
+
+  const liteAPIKey = getLiteAPIKey();
+  if (!liteAPIKey) {
+    res.status(500).json({ error: 'Server misconfigured: LiteAPI key missing' });
+    return;
+  }
+
+  try {
+    console.log('🔍 Hotels proxy called');
+
+    const url = 'https://api.liteapi.travel/v3.0/hotel-search';
+
+    console.log('📡 Calling LiteAPI...');
+    const response = await axios.post(url, req.body, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-KEY': liteAPIKey
+      }
+    });
+
+    console.log('✅ LiteAPI response received:', response.data?.data?.length || 0, 'hotels');
+    res.json(response.data);
+  } catch (error) {
+    console.error('❌ Error calling LiteAPI:', error.response ? error.response.data : error.message);
+    res.status(500).json({
+      error: 'Error fetching hotel data',
+      details: error.response ? error.response.data : error.message
+    });
   }
 });

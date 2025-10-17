@@ -67,11 +67,11 @@ jobs:
             // Definición completa de los Endpoints
             export const API_ENDPOINTS = {
               flights: {
-                search: (params) => `${API_KEYS.aviationStack.endpoint}/flights?access_key=${API_KEYS.aviationStack.apiKey}&${new URLSearchParams(params)}`,
-                airports: (iata) => `${API_KEYS.aviationStack.endpoint}/airports?access_key=${API_KEYS.aviationStack.apiKey}&airport_iata=${iata}`,
+                search: (params) => `/flightsProxy?${new URLSearchParams(params)}`,
+                airports: (iata) => `/flightsProxy?airport_iata=${iata}`,
               },
               hotels: {
-                search: () => `${API_KEYS.liteAPI.searchEndpoint}/hotel-search`,
+                search: () => `/hotelsProxy`,
                 details: (id) => `${API_KEYS.liteAPI.dataEndpoint}/hotel-details?hotelId=${id}`,
                 cities: (country) => `${API_KEYS.liteAPI.dataEndpoint}/cities?countryCode=${country}`,
               },
@@ -147,6 +147,20 @@ jobs:
           if [ -d "functions" ]; then
             npm --prefix functions install
           fi
+
+      - name: Set Firebase Functions environment variables
+        run: |
+          # Parse API keys from JSON secret
+          AVIATION_KEY=$(echo '${{ secrets.API_KEYS_JSON }}' | jq -r '.aviationStack.apiKey')
+          LITEAPI_KEY=$(echo '${{ secrets.API_KEYS_JSON }}' | jq -r '.liteAPI.apiKey')
+          FOURSQUARE_KEY=$(echo '${{ secrets.API_KEYS_JSON }}' | jq -r '.foursquare.apiKey')
+
+          # Set environment variables for functions
+          firebase functions:config:set \
+            aviationstack.key="$AVIATION_KEY" \
+            liteapi.key="$LITEAPI_KEY" \
+            foursquare.key="$FOURSQUARE_KEY" \
+            --project ${{ secrets.FIREBASE_PROJECT_ID }} || true
 
       - name: Deploy to Firebase
         run: |
