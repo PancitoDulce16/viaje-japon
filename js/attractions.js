@@ -358,7 +358,6 @@ export const AttractionsHandler = {
 
     // 🔥 Modal para seleccionar día
     async showDaySelectionModal(attraction) {
-        console.log('🔍 DEBUG: showDaySelectionModal iniciado - versión 2.0');
         try {
             // 🔥 Verificar que ItineraryHandler existe
             if (!window.ItineraryHandler) {
@@ -371,26 +370,23 @@ export const AttractionsHandler = {
                 return;
             }
 
-            // Intentar cargar el itinerario si hay un currentTripId
-            const currentTripId = localStorage.getItem('currentTripId');
-            console.log('🔍 DEBUG currentTripId:', currentTripId);
-            console.log('🔍 DEBUG currentItinerary before load:', window.ItineraryHandler.currentItinerary);
+            // Primero intentar usar el itinerario ya cargado (más rápido)
+            let currentItinerary = window.ItineraryHandler.currentItinerary;
 
-            if (currentTripId) {
-                if (typeof window.ItineraryHandler.loadItinerary === 'function') {
+            // Solo cargar desde Firebase si no hay itinerario en memoria
+            if (!currentItinerary || !currentItinerary.days || currentItinerary.days.length === 0) {
+                const currentTripId = localStorage.getItem('currentTripId');
+
+                if (currentTripId && typeof window.ItineraryHandler.loadItinerary === 'function') {
                     try {
+                        console.log('⏳ Cargando itinerario desde Firebase...');
                         await window.ItineraryHandler.loadItinerary(currentTripId);
-                        console.log('🔍 DEBUG currentItinerary after load:', window.ItineraryHandler.currentItinerary);
+                        currentItinerary = window.ItineraryHandler.currentItinerary;
                     } catch (e) {
-                        console.error('🔍 DEBUG Error cargando itinerario:', e);
+                        console.error('Error cargando itinerario:', e);
                     }
                 }
             }
-
-            // Obtener días del itinerario actual
-            const currentItinerary = window.ItineraryHandler.currentItinerary;
-            console.log('🔍 DEBUG currentItinerary final:', currentItinerary);
-            console.log('🔍 DEBUG days:', currentItinerary?.days);
 
             // Verificar si hay días disponibles
             if (!currentItinerary || !currentItinerary.days || !Array.isArray(currentItinerary.days) || currentItinerary.days.length === 0) {
