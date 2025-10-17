@@ -129,7 +129,8 @@ export const PreparationHandler = {
         Object.keys(defaultItems).forEach(category => {
             packingList[category] = defaultItems[category].map(item => ({
                 name: item,
-                checked: false
+                checked: false,
+                isDefault: true // Marcar como item por defecto (no se puede eliminar)
             }));
         });
 
@@ -161,19 +162,23 @@ export const PreparationHandler = {
                 <h2 class="text-4xl font-bold mb-6 text-gray-800 dark:text-white">📦 Preparación del Viaje</h2>
 
                 <!-- Progress Overview -->
-                <div class="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl p-6 mb-6 shadow-lg">
+                <div class="bg-gradient-to-r ${progress === 100 ? 'from-green-500 to-emerald-500 animate-pulse' : 'from-blue-500 to-purple-500'} text-white rounded-xl p-6 mb-6 shadow-lg transition-all duration-500">
                     <div class="flex justify-between items-center mb-4">
                         <div>
-                            <h3 class="text-2xl font-bold">¿Listo para Japón?</h3>
+                            <h3 class="text-2xl font-bold">${progress === 100 ? '¡Todo Listo! 🎊' : '¿Listo para Japón?'}</h3>
                             <p class="text-sm opacity-90">${checkedItems} de ${totalItems} items completados</p>
+                            ${progress === 100 ? '<p class="text-xs mt-1 font-bold">¡Excelente preparación! Ya puedes viajar tranquilo.</p>' : ''}
                             <p class="text-xs mt-1">${syncStatus}</p>
                         </div>
-                        <div class="text-5xl">${progress === 100 ? '🎉' : '✈️'}</div>
+                        <div class="text-5xl ${progress === 100 ? 'animate-bounce' : ''}">${progress === 100 ? '🎉' : progress > 75 ? '🛫' : progress > 50 ? '📦' : progress > 25 ? '📝' : '✈️'}</div>
                     </div>
-                    <div class="w-full bg-white/30 rounded-full h-4">
-                        <div class="bg-white h-4 rounded-full transition-all duration-500" style="width: ${progress}%"></div>
+                    <div class="w-full bg-white/30 rounded-full h-4 overflow-hidden">
+                        <div class="bg-white h-4 rounded-full transition-all duration-500 ${progress === 100 ? 'animate-pulse' : ''}" style="width: ${progress}%"></div>
                     </div>
-                    <p class="text-sm mt-2 opacity-90">${progress.toFixed(0)}% completo</p>
+                    <div class="flex justify-between items-center mt-2">
+                        <p class="text-sm opacity-90">${progress.toFixed(0)}% completo</p>
+                        ${progress === 100 ? '<p class="text-sm font-bold">🌟 ¡Perfecto!</p>' : progress > 75 ? '<p class="text-sm">¡Casi listo! 💪</p>' : progress > 50 ? '<p class="text-sm">Vas muy bien 👍</p>' : ''}
+                    </div>
                 </div>
 
                 <div class="grid lg:grid-cols-2 gap-6">
@@ -243,17 +248,32 @@ export const PreparationHandler = {
                             </button>
                             <div class="category-content hidden p-4 space-y-2 bg-white dark:bg-gray-800" data-category="${key}">
                                 ${items.map((item, index) => `
-                                    <label class="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer ${item.checked ? 'opacity-50' : ''}">
-                                        <input 
-                                            type="checkbox" 
+                                    <div class="flex items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded group ${item.checked ? 'opacity-50' : ''}">
+                                        <input
+                                            type="checkbox"
                                             ${item.checked ? 'checked' : ''}
-                                            class="packing-checkbox w-5 h-5 accent-${cat.color}-500"
+                                            class="packing-checkbox w-5 h-5 accent-${cat.color}-500 cursor-pointer"
                                             data-category="${key}"
                                             data-index="${index}"
                                         >
                                         <span class="flex-1 dark:text-gray-300 ${item.checked ? 'line-through' : ''}">${item.name}</span>
-                                    </label>
+                                        ${!item.isDefault ? `
+                                            <button
+                                                class="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition text-sm delete-item-btn"
+                                                data-category="${key}"
+                                                data-index="${index}"
+                                                title="Eliminar"
+                                            >🗑️</button>
+                                        ` : ''}
+                                    </div>
                                 `).join('')}
+                                <!-- Add Item Button -->
+                                <button
+                                    class="w-full mt-2 p-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 hover:border-${cat.color}-500 hover:text-${cat.color}-600 dark:hover:text-${cat.color}-400 transition add-item-btn"
+                                    data-category="${key}"
+                                >
+                                    + Agregar item personalizado
+                                </button>
                             </div>
                         </div>
                     `;
@@ -442,6 +462,71 @@ export const PreparationHandler = {
         );
     },
 
+    async addCustomItem(category) {
+        const itemName = prompt('¿Qué item quieres agregar?');
+        if (!itemName || !itemName.trim()) return;
+
+        if (!this.packingList[category]) {
+            this.packingList[category] = [];
+        }
+
+        this.packingList[category].push({
+            name: itemName.trim(),
+            checked: false,
+            isDefault: false // Item personalizado, puede ser eliminado
+        });
+
+        await this.savePackingList('Item agregado');
+    },
+
+    async deleteCustomItem(category, index) {
+        if (!confirm('¿Seguro que deseas eliminar este item?')) return;
+
+        if (this.packingList[category] && this.packingList[category][index]) {
+            this.packingList[category].splice(index, 1);
+            await this.savePackingList('Item eliminado');
+        }
+    },
+
+    async savePackingList(successMessage = 'Lista guardada') {
+        try {
+            if (!auth.currentUser) {
+                // Sin usuario, solo guardar localmente
+                localStorage.setItem('packingList', JSON.stringify(this.packingList));
+                this.renderPreparation();
+                return;
+            }
+
+            const tripId = this.getCurrentTripId();
+
+            if (!tripId) {
+                // Modo individual
+                const userId = auth.currentUser.uid;
+                const packingRef = doc(db, `users/${userId}/packing`, 'list');
+
+                await setDoc(packingRef, {
+                    items: this.packingList,
+                    lastUpdated: new Date().toISOString(),
+                    updatedBy: auth.currentUser.email
+                });
+            } else {
+                // Modo colaborativo
+                const packingRef = doc(db, `trips/${tripId}/data`, 'packing');
+
+                await setDoc(packingRef, {
+                    items: this.packingList,
+                    lastUpdated: new Date().toISOString(),
+                    updatedBy: auth.currentUser.email
+                });
+            }
+
+            console.log('✅', successMessage);
+        } catch (error) {
+            console.error('❌ Error guardando packing list:', error);
+            alert('Error al guardar. Intenta de nuevo.');
+        }
+    },
+
     attachEventListeners() {
         // Category toggles
         document.querySelectorAll('.category-toggle-btn').forEach(btn => {
@@ -458,6 +543,26 @@ export const PreparationHandler = {
                 const category = e.target.dataset.category;
                 const index = parseInt(e.target.dataset.index);
                 this.toggleItem(category, index);
+            });
+        });
+
+        // Add item buttons
+        document.querySelectorAll('.add-item-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const category = e.currentTarget.dataset.category;
+                this.addCustomItem(category);
+            });
+        });
+
+        // Delete item buttons
+        document.querySelectorAll('.delete-item-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation(); // Evitar que se marque el checkbox
+                const category = e.currentTarget.dataset.category;
+                const index = parseInt(e.currentTarget.dataset.index);
+                this.deleteCustomItem(category, index);
             });
         });
     },
