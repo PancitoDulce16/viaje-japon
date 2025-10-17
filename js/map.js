@@ -1,7 +1,9 @@
 // js/map.js - Mapa Interactivo con Leaflet
+import { GooglePlacesAPI } from './google-places.js';
 
 let map = null;
 let markersLayer = null;
+let nearbyPlacesLayer = null;
 
 // Coordenadas de ciudades principales de Japón
 const CITY_COORDINATES = {
@@ -216,6 +218,70 @@ export const MapHandler = {
                         Usa los filtros para ver solo ciertos tipos de lugares.
                     </p>
                 </div>
+
+                <!-- 🔥 Búsqueda de Lugares Cercanos con Google Places -->
+                ${GooglePlacesAPI.isConfigured() ? `
+                <div class="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 dark:text-white flex items-center gap-2">
+                        🔍 Buscar Lugares Cercanos
+                        <span class="text-xs font-normal text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full">
+                            Powered by Google Places
+                        </span>
+                    </h3>
+
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                Buscar cerca de:
+                            </label>
+                            <select
+                                id="nearbySearchCity"
+                                class="w-full p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500"
+                            >
+                                <option value="35.6762,139.6503">Tokyo</option>
+                                <option value="35.0116,135.7681">Kyoto</option>
+                                <option value="34.6937,135.5023">Osaka</option>
+                                <option value="34.6851,135.8048">Nara</option>
+                                <option value="35.3192,139.5466">Kamakura</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                Tipo de lugar:
+                            </label>
+                            <select
+                                id="nearbySearchType"
+                                class="w-full p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500"
+                            >
+                                <option value="restaurant">🍽️ Restaurantes</option>
+                                <option value="cafe">☕ Cafés</option>
+                                <option value="tourist_attraction">🎯 Atracciones</option>
+                                <option value="shopping_mall">🛍️ Centros Comerciales</option>
+                                <option value="park">🌳 Parques</option>
+                                <option value="museum">🏛️ Museos</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button
+                        onclick="MapHandler.searchNearbyPlaces()"
+                        class="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-lg transition"
+                    >
+                        🔍 Buscar Lugares
+                    </button>
+
+                    <div id="nearbySearchResults" class="mt-4">
+                        <!-- Results will appear here -->
+                    </div>
+                </div>
+                ` : `
+                <div class="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border-l-4 border-yellow-500">
+                    <p class="text-sm dark:text-gray-300">
+                        💡 <strong>Tip:</strong> Configura Google Places API key en config.js para buscar restaurantes, cafés y más lugares cercanos.
+                    </p>
+                </div>
+                `}
             </div>
         `;
 
@@ -367,6 +433,126 @@ export const MapHandler = {
                 marker.setOpacity(marker.markerCategory === filterType ? 1 : 0.2);
             }
         });
+    },
+
+    // 🔥 Buscar lugares cercanos con Google Places
+    async searchNearbyPlaces() {
+        const citySelect = document.getElementById('nearbySearchCity');
+        const typeSelect = document.getElementById('nearbySearchType');
+        const resultsDiv = document.getElementById('nearbySearchResults');
+
+        if (!citySelect || !typeSelect) return;
+
+        const [lat, lng] = citySelect.value.split(',').map(Number);
+        const type = typeSelect.value;
+
+        resultsDiv.innerHTML = `
+            <div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-center">
+                <p class="text-sm font-semibold dark:text-white">🔄 Buscando lugares...</p>
+            </div>
+        `;
+
+        try {
+            const result = await GooglePlacesAPI.searchNearby({
+                lat,
+                lng,
+                radius: 2000,
+                type: type
+            });
+
+            if (result.success && result.places.length > 0) {
+                // Limpiar capa de lugares cercanos anterior
+                if (nearbyPlacesLayer) {
+                    nearbyPlacesLayer.clearLayers();
+                } else {
+                    nearbyPlacesLayer = L.layerGroup().addTo(map);
+                }
+
+                // Agregar nuevos marcadores
+                result.places.slice(0, 10).forEach(place => {
+                    const marker = L.marker([place.lat, place.lng], {
+                        icon: createCustomIcon('📍', '#10b981')
+                    }).addTo(nearbyPlacesLayer);
+
+                    marker.bindPopup(`
+                        <div class="p-3 min-w-[200px]">
+                            <h3 class="font-bold text-lg mb-2">📍 ${place.name}</h3>
+                            <p class="text-sm text-gray-600 mb-2">${place.address}</p>
+                            ${place.rating ? `<p class="text-sm mb-2">⭐ ${place.rating} (${place.userRatingsTotal || 0} reviews)</p>` : ''}
+                            ${place.openNow !== undefined ? `
+                                <p class="text-xs ${place.openNow ? 'text-green-600' : 'text-red-600'} font-semibold mb-2">
+                                    ${place.openNow ? '✅ Abierto ahora' : '🔴 Cerrado'}
+                                </p>
+                            ` : ''}
+                            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + place.address)}"
+                               target="_blank"
+                               class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                                Ver en Google Maps →
+                            </a>
+                        </div>
+                    `);
+                });
+
+                // Centrar mapa en los resultados
+                map.setView([lat, lng], 14);
+
+                // Mostrar resultados en lista
+                resultsDiv.innerHTML = `
+                    <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 mb-4">
+                        <p class="text-sm font-semibold text-green-700 dark:text-green-400">
+                            ✅ ${result.places.length} lugares encontrados (mostrando 10)
+                        </p>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                        ${result.places.slice(0, 10).map(place => `
+                            <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-l-4 border-green-500">
+                                <h4 class="font-bold text-sm dark:text-white mb-1">${place.name}</h4>
+                                <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">${place.address}</p>
+                                ${place.rating ? `<p class="text-xs mb-1">⭐ ${place.rating}/5</p>` : ''}
+                                <button
+                                    onclick="MapHandler.centerOnPlace(${place.lat}, ${place.lng})"
+                                    class="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                                >
+                                    📍 Ver en mapa
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                resultsDiv.innerHTML = `
+                    <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-center">
+                        <p class="text-sm font-semibold dark:text-white">⚠️ No se encontraron lugares</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error buscando lugares:', error);
+            resultsDiv.innerHTML = `
+                <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+                    <p class="text-sm font-semibold text-red-700 dark:text-red-400">
+                        ❌ Error: ${error.message}
+                    </p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                        Nota: Google Places API requiere un proxy o configuración de backend
+                    </p>
+                </div>
+            `;
+        }
+    },
+
+    // Centrar mapa en un lugar específico
+    centerOnPlace(lat, lng) {
+        if (map) {
+            map.setView([lat, lng], 16);
+            // Abrir popup del marcador más cercano
+            nearbyPlacesLayer.eachLayer(marker => {
+                const markerLatLng = marker.getLatLng();
+                if (Math.abs(markerLatLng.lat - lat) < 0.0001 && Math.abs(markerLatLng.lng - lng) < 0.0001) {
+                    marker.openPopup();
+                }
+            });
+        }
     }
 };
 
