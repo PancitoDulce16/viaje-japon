@@ -357,30 +357,61 @@ export const AttractionsHandler = {
 
     // 🔥 Modal para seleccionar día
     async showDaySelectionModal(attraction) {
-        // 🔥 Asegurar que el itinerario esté cargado
-        if (window.ItineraryHandler) {
-            // Intentar cargar el itinerario del currentTripId
+        try {
+            // 🔥 Verificar que ItineraryHandler existe
+            if (!window.ItineraryHandler) {
+                console.error('ItineraryHandler no disponible');
+                if (window.Notifications) {
+                    window.Notifications.warning('⚠️ El módulo de itinerario no está disponible');
+                } else {
+                    alert('⚠️ El módulo de itinerario no está disponible');
+                }
+                return;
+            }
+
+            // Intentar cargar el itinerario si hay un currentTripId
             const currentTripId = localStorage.getItem('currentTripId');
-            if (currentTripId && typeof window.ItineraryHandler.loadItinerary === 'function') {
-                try {
-                    await window.ItineraryHandler.loadItinerary(currentTripId);
-                } catch (e) {
-                    console.warn('No se pudo cargar el itinerario automáticamente');
+            console.log('currentTripId:', currentTripId);
+            console.log('currentItinerary before load:', window.ItineraryHandler.currentItinerary);
+
+            if (currentTripId) {
+                if (typeof window.ItineraryHandler.loadItinerary === 'function') {
+                    try {
+                        await window.ItineraryHandler.loadItinerary(currentTripId);
+                        console.log('currentItinerary after load:', window.ItineraryHandler.currentItinerary);
+                    } catch (e) {
+                        console.error('Error cargando itinerario:', e);
+                    }
                 }
             }
-        }
 
-        // Obtener días del itinerario actual
-        const currentItinerary = window.ItineraryHandler?.currentItinerary;
+            // Obtener días del itinerario actual
+            const currentItinerary = window.ItineraryHandler.currentItinerary;
+            console.log('currentItinerary final:', currentItinerary);
+            console.log('days:', currentItinerary?.days);
 
-        if (!currentItinerary || !currentItinerary.days || !currentItinerary.days.length) {
+            // Verificar si hay días disponibles
+            if (!currentItinerary || !currentItinerary.days || !Array.isArray(currentItinerary.days) || currentItinerary.days.length === 0) {
+                console.warn('No hay días en el itinerario');
+                if (window.Notifications) {
+                    window.Notifications.warning('⚠️ Primero debes crear días en tu itinerario. Ve a la sección de Itinerario y añade días a tu viaje.');
+                } else {
+                    alert('⚠️ Primero debes crear días en tu itinerario. Ve a la sección de Itinerario y añade días a tu viaje.');
+                }
+                return;
+            }
+        } catch (error) {
+            console.error('Error en showDaySelectionModal:', error);
             if (window.Notifications) {
-                window.Notifications.warning('⚠️ Primero debes crear un itinerario en la sección de Itinerario');
+                window.Notifications.error('❌ Error al cargar el itinerario');
             } else {
-                alert('⚠️ Primero debes crear un itinerario en la sección de Itinerario');
+                alert('❌ Error al cargar el itinerario');
             }
             return;
         }
+
+        // Si llegamos aquí, tenemos días disponibles
+        const currentItinerary = window.ItineraryHandler.currentItinerary;
 
         const modalHtml = `
             <div id="daySelectionModal" class="modal active" style="z-index: 10000;">
