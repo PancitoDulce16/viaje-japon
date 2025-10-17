@@ -169,50 +169,62 @@ export const TransportHandler = {
         return `
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
-                    🧮 Calculadora JR Pass
+                    🧮 Calculadora Interactiva JR Pass
                 </h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    ¿Quieres verificar si el JR Pass vale la pena para otros itinerarios?
+                    Agrega tus rutas y descubre si el JR Pass vale la pena
                 </p>
 
                 <div class="space-y-4">
+                    <!-- Routes List -->
+                    <div id="dynamicRoutes" class="space-y-2 max-h-64 overflow-y-auto">
+                        <!-- Routes will be added here -->
+                    </div>
+
+                    <!-- Add Route Button -->
+                    <button id="addRouteBtn" class="w-full p-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition">
+                        + Agregar ruta
+                    </button>
+
+                    <!-- Quick Presets -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="TransportHandler.addQuickRoute('Tokyo', 'Kyoto', 13320)" class="text-xs p-2 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                            Tokyo → Kyoto<br><span class="text-green-600 dark:text-green-400">¥13,320</span>
+                        </button>
+                        <button onclick="TransportHandler.addQuickRoute('Tokyo', 'Osaka', 13870)" class="text-xs p-2 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                            Tokyo → Osaka<br><span class="text-green-600 dark:text-green-400">¥13,870</span>
+                        </button>
+                        <button onclick="TransportHandler.addQuickRoute('Kyoto', 'Hiroshima', 11200)" class="text-xs p-2 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                            Kyoto → Hiroshima<br><span class="text-green-600 dark:text-green-400">¥11,200</span>
+                        </button>
+                        <button onclick="TransportHandler.addQuickRoute('Narita', 'Tokyo', 3070)" class="text-xs p-2 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                            Narita → Tokyo<br><span class="text-green-600 dark:text-green-400">¥3,070</span>
+                        </button>
+                    </div>
+
                     <div>
                         <label class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                            Días del JR Pass:
+                            Duración del JR Pass:
                         </label>
-                        <select id="jrPassDays" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <select id="jrPassDays" class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" onchange="TransportHandler.updateCalculation()">
                             <option value="7">7 días - ¥38,000 (~$262)</option>
                             <option value="14" selected>14 días - ¥62,000 (~$427)</option>
                             <option value="21">21 días - ¥85,000 (~$586)</option>
                         </select>
                     </div>
 
-                    <div>
-                        <label class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                            Costo estimado de tus tickets:
-                        </label>
-                        <input 
-                            type="number" 
-                            id="customTicketCost" 
-                            value="33900" 
-                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            placeholder="33900"
-                        >
-                    </div>
-
-                    <button id="calculateJRPass" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold">
-                        🧮 Calcular
-                    </button>
-
-                    <div id="calculatorResult" class="hidden p-4 rounded-lg">
-                        <!-- Results will be inserted here -->
+                    <!-- Result Display -->
+                    <div id="calculatorResult" class="p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
+                        <div class="text-center text-gray-500 dark:text-gray-400 py-4">
+                            <p class="text-sm">Agrega rutas para ver el análisis</p>
+                        </div>
                     </div>
                 </div>
 
                 <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <p class="text-xs text-gray-700 dark:text-gray-300">
-                        💡 <strong>Tip:</strong> El JR Pass generalmente vale la pena si haces viajes Tokyo↔Kyoto/Osaka múltiples veces 
-                        o si visitas más ciudades lejanas (Hiroshima, Nagano, etc.)
+                        💡 <strong>Tip:</strong> El JR Pass suele valer la pena con 2+ viajes Tokyo↔Kyoto/Osaka
+                        o visitando ciudades lejanas (Hiroshima, Nagano, Kanazawa).
                     </p>
                 </div>
             </div>
@@ -523,53 +535,193 @@ export const TransportHandler = {
         `;
     },
 
+    calculatorRoutes: [],
+
     attachEventListeners() {
-        const calculateBtn = document.getElementById('calculateJRPass');
-        if (calculateBtn) {
-            calculateBtn.addEventListener('click', () => this.calculateJRPass());
+        const addRouteBtn = document.getElementById('addRouteBtn');
+        if (addRouteBtn) {
+            addRouteBtn.addEventListener('click', () => this.showAddRouteDialog());
         }
     },
 
-    calculateJRPass() {
-        const days = parseInt(document.getElementById('jrPassDays').value);
-        const ticketCost = parseInt(document.getElementById('customTicketCost').value) || 0;
-        const jrPassCost = this.jrPassPrices[days];
-        const difference = jrPassCost - ticketCost;
+    addQuickRoute(from, to, price) {
+        this.calculatorRoutes.push({ from, to, price });
+        this.renderCalculatorRoutes();
+        this.updateCalculation();
+    },
+
+    showAddRouteDialog() {
+        const from = prompt('Ciudad de origen (ej: Tokyo, Kyoto, Osaka):');
+        if (!from) return;
+
+        const to = prompt('Ciudad de destino:');
+        if (!to) return;
+
+        const priceStr = prompt('Precio en yenes (ej: 13320):');
+        const price = parseInt(priceStr);
+        if (!price || isNaN(price)) {
+            alert('Precio inválido');
+            return;
+        }
+
+        this.calculatorRoutes.push({ from, to, price });
+        this.renderCalculatorRoutes();
+        this.updateCalculation();
+    },
+
+    removeRoute(index) {
+        this.calculatorRoutes.splice(index, 1);
+        this.renderCalculatorRoutes();
+        this.updateCalculation();
+    },
+
+    renderCalculatorRoutes() {
+        const container = document.getElementById('dynamicRoutes');
+        if (!container) return;
+
+        if (this.calculatorRoutes.length === 0) {
+            container.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400 text-center py-2">No hay rutas agregadas</p>';
+            return;
+        }
+
+        container.innerHTML = this.calculatorRoutes.map((route, index) => `
+            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg group">
+                <div class="flex-1">
+                    <p class="text-sm font-semibold dark:text-white">${route.from} → ${route.to}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">¥${route.price.toLocaleString()}</p>
+                </div>
+                <button
+                    onclick="TransportHandler.removeRoute(${index})"
+                    class="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition px-2"
+                    title="Eliminar"
+                >🗑️</button>
+            </div>
+        `).join('');
+    },
+
+    updateCalculation() {
         const resultDiv = document.getElementById('calculatorResult');
+        if (!resultDiv) return;
+
+        const totalCost = this.calculatorRoutes.reduce((sum, route) => sum + route.price, 0);
+        const days = parseInt(document.getElementById('jrPassDays')?.value || '14');
+        const jrPassCost = this.jrPassPrices[days];
+
+        if (totalCost === 0) {
+            resultDiv.innerHTML = '<div class="text-center text-gray-500 dark:text-gray-400 py-4"><p class="text-sm">Agrega rutas para ver el análisis</p></div>';
+            return;
+        }
+
+        const difference = jrPassCost - totalCost;
+        const savingsPercent = ((Math.abs(difference) / jrPassCost) * 100).toFixed(0);
+
+        // Barra visual de comparación
+        const totalBarWidth = jrPassCost > totalCost ? 100 : (totalCost / jrPassCost * 100);
+        const passBarWidth = 100;
 
         if (difference > 0) {
             // Tickets individuales son mejores
             resultDiv.innerHTML = `
-                <div class="bg-green-100 dark:bg-green-900/30 border-l-4 border-green-500 p-4">
-                    <p class="font-bold text-green-700 dark:text-green-400 mb-2">✅ Tickets Individuales = Mejor opción</p>
-                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                        Ahorras <strong>¥${Math.abs(difference).toLocaleString()}</strong> (~$${Math.round(Math.abs(difference) / 145)})
-                    </p>
-                    <div class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                        <p>• JR Pass ${days} días: ¥${jrPassCost.toLocaleString()}</p>
-                        <p>• Tus tickets: ¥${ticketCost.toLocaleString()}</p>
-                        <p>• Diferencia: <strong class="text-green-600">-¥${Math.abs(difference).toLocaleString()}</strong></p>
+                <div class="bg-green-50 dark:bg-green-900/20 border-2 border-green-500 rounded-lg p-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="text-3xl">✅</div>
+                        <div>
+                            <p class="font-bold text-green-700 dark:text-green-400 text-lg">Tickets Individuales</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">Mejor opción para tu viaje</p>
+                        </div>
+                    </div>
+
+                    <!-- Visual Comparison -->
+                    <div class="space-y-3 mb-4">
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="font-semibold text-gray-700 dark:text-gray-300">Tus tickets</span>
+                                <span class="font-bold text-green-600 dark:text-green-400">¥${totalCost.toLocaleString()}</span>
+                            </div>
+                            <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-end pr-2" style="width: ${totalBarWidth}%">
+                                    <span class="text-xs font-bold text-white">~$${Math.round(totalCost / 145)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="font-semibold text-gray-700 dark:text-gray-300">JR Pass ${days} días</span>
+                                <span class="font-bold text-gray-600 dark:text-gray-400">¥${jrPassCost.toLocaleString()}</span>
+                            </div>
+                            <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-gray-400 to-gray-500 flex items-center justify-end pr-2" style="width: ${passBarWidth}%">
+                                    <span class="text-xs font-bold text-white">~$${Math.round(jrPassCost / 145)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-white dark:bg-gray-800 rounded-lg">
+                        <p class="text-sm font-bold text-gray-800 dark:text-white mb-1">
+                            💰 Tu ahorro: ¥${Math.abs(difference).toLocaleString()} (~$${Math.round(Math.abs(difference) / 145)})
+                        </p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">
+                            Ahorras ${savingsPercent}% comprando tickets individuales
+                        </p>
                     </div>
                 </div>
             `;
         } else {
             // JR Pass es mejor
             resultDiv.innerHTML = `
-                <div class="bg-blue-100 dark:bg-blue-900/30 border-l-4 border-blue-500 p-4">
-                    <p class="font-bold text-blue-700 dark:text-blue-400 mb-2">✅ JR Pass = Mejor opción</p>
-                    <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">
-                        Ahorras <strong>¥${Math.abs(difference).toLocaleString()}</strong> (~$${Math.round(Math.abs(difference) / 145)})
-                    </p>
-                    <div class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                        <p>• Tus tickets: ¥${ticketCost.toLocaleString()}</p>
-                        <p>• JR Pass ${days} días: ¥${jrPassCost.toLocaleString()}</p>
-                        <p>• Diferencia: <strong class="text-blue-600">-¥${Math.abs(difference).toLocaleString()}</strong></p>
+                <div class="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500 rounded-lg p-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="text-3xl">🎫</div>
+                        <div>
+                            <p class="font-bold text-blue-700 dark:text-blue-400 text-lg">JR Pass</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">Mejor opción para tu viaje</p>
+                        </div>
+                    </div>
+
+                    <!-- Visual Comparison -->
+                    <div class="space-y-3 mb-4">
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="font-semibold text-gray-700 dark:text-gray-300">JR Pass ${days} días</span>
+                                <span class="font-bold text-blue-600 dark:text-blue-400">¥${jrPassCost.toLocaleString()}</span>
+                            </div>
+                            <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-end pr-2" style="width: ${passBarWidth}%">
+                                    <span class="text-xs font-bold text-white">~$${Math.round(jrPassCost / 145)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="font-semibold text-gray-700 dark:text-gray-300">Tus tickets</span>
+                                <span class="font-bold text-gray-600 dark:text-gray-400">¥${totalCost.toLocaleString()}</span>
+                            </div>
+                            <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-gray-400 to-gray-500 flex items-center justify-end pr-2" style="width: ${totalBarWidth}%">
+                                    <span class="text-xs font-bold text-white">~$${Math.round(totalCost / 145)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-white dark:bg-gray-800 rounded-lg">
+                        <p class="text-sm font-bold text-gray-800 dark:text-white mb-1">
+                            💰 Tu ahorro: ¥${Math.abs(difference).toLocaleString()} (~$${Math.round(Math.abs(difference) / 145)})
+                        </p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">
+                            Ahorras ${savingsPercent}% con el JR Pass de ${days} días
+                        </p>
+                    </div>
+
+                    <div class="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded">
+                        <p class="text-xs text-gray-700 dark:text-gray-300">
+                            💡 Recuerda: El JR Pass debe comprarse ANTES de llegar a Japón
+                        </p>
                     </div>
                 </div>
             `;
         }
-
-        resultDiv.classList.remove('hidden');
     }
 };
 
