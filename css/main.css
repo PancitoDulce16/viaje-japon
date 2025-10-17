@@ -1144,3 +1144,71 @@ html {
 [id^="empty-state-day-"]:hover {
   opacity: 0.8;
 }
+
+/* ========================================
+   MAP FILTER BUTTONS
+   ======================================== */
+
+.map-filter-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  border: 2px solid #e5e7eb;
+  background: white;
+  color: #4b5563;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.dark .map-filter-btn {
+  background: var(--bg-dark-card);
+  border-color: #4b5563;
+  color: #d1d5db;
+}
+
+.map-filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #dc2626;
+}
+
+.dark .map-filter-btn:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.map-filter-btn.active {
+  background: linear-gradient(135deg, #dc2626 0%, #ec4899 100%);
+  color: white;
+  border-color: #dc2626;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.dark .map-filter-btn.active {
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.5);
+}
+
+/* Custom Leaflet Marker Styles */
+.custom-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Leaflet Popup Custom Styles */
+.leaflet-popup-content-wrapper {
+  border-radius: 0.75rem !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark .leaflet-popup-content-wrapper {
+  background-color: var(--bg-dark-card) !important;
+  color: var(--text-primary-dark) !important;
+}
+
+.leaflet-popup-tip {
+  background-color: white !important;
+}
+
+.dark .leaflet-popup-tip {
+  background-color: var(--bg-dark-card) !important;
+}

@@ -1,251 +1,338 @@
-// js/map.js
+// js/map.js - Mapa Interactivo con Leaflet
+
+let map = null;
+let markersLayer = null;
+
+// Coordenadas de ciudades principales de Japón
+const CITY_COORDINATES = {
+    tokyo: [35.6762, 139.6503],
+    kyoto: [35.0116, 135.7681],
+    osaka: [34.6937, 135.5023],
+    nara: [34.6851, 135.8048],
+    hiroshima: [34.3853, 132.4553],
+    hakone: [35.2324, 139.1070],
+    nikko: [36.7564, 139.6054],
+    kamakura: [35.3192, 139.5466],
+    yokohama: [35.4437, 139.6380],
+    kanazawa: [36.5947, 136.6256],
+    nagoya: [35.1815, 136.9066],
+    sapporo: [43.0642, 141.3469],
+    fukuoka: [33.5904, 130.4017],
+    takayama: [36.1408, 137.2526]
+};
+
+// Ubicaciones de hoteles
+const HOTEL_LOCATIONS = [
+    {
+        name: 'APA Hotel Shinjuku Gyoemmae',
+        coords: [35.6893, 139.7108],
+        city: 'Tokyo',
+        dates: 'Feb 16-19, 2026 (Días 1-3)',
+        icon: '🏨'
+    },
+    {
+        name: 'Hotel Kyoto Tune Stay',
+        coords: [34.9858, 135.7583],
+        city: 'Kyoto',
+        dates: 'Feb 19-21, 2026 (Días 4-5)',
+        icon: '🏨'
+    },
+    {
+        name: 'Toyoko Inn Osaka Namba',
+        coords: [34.6651, 135.5012],
+        city: 'Osaka',
+        dates: 'Feb 21-24, 2026 (Días 6-8)',
+        icon: '🏨'
+    },
+    {
+        name: 'APA Hotel Yamanote Otsuka Eki Mae',
+        coords: [35.7308, 139.7286],
+        city: 'Tokyo',
+        dates: 'Feb 24 - Mar 2, 2026 (Días 8-15)',
+        icon: '🏨'
+    }
+];
+
+// Atracciones principales con coordenadas
+const TOP_ATTRACTIONS = [
+    {
+        name: 'Shibuya Crossing',
+        coords: [35.6595, 139.7005],
+        city: 'Tokyo',
+        icon: '🚶',
+        category: 'landmark'
+    },
+    {
+        name: 'Tokyo Skytree',
+        coords: [35.7101, 139.8107],
+        city: 'Tokyo',
+        icon: '🏯',
+        category: 'landmark'
+    },
+    {
+        name: 'Sensoji Temple',
+        coords: [35.7148, 139.7967],
+        city: 'Tokyo',
+        icon: '🏮',
+        category: 'temple'
+    },
+    {
+        name: 'Fushimi Inari Shrine',
+        coords: [34.9671, 135.7727],
+        city: 'Kyoto',
+        icon: '⛩️',
+        category: 'temple'
+    },
+    {
+        name: 'Kiyomizu-dera',
+        coords: [34.9949, 135.7850],
+        city: 'Kyoto',
+        icon: '⛩️',
+        category: 'temple'
+    },
+    {
+        name: 'Arashiyama Bamboo',
+        coords: [35.0170, 135.6731],
+        city: 'Kyoto',
+        icon: '🎋',
+        category: 'nature'
+    },
+    {
+        name: 'Dotonbori',
+        coords: [34.6686, 135.5014],
+        city: 'Osaka',
+        icon: '🌃',
+        category: 'nightlife'
+    },
+    {
+        name: 'Osaka Aquarium',
+        coords: [34.6546, 135.4291],
+        city: 'Osaka',
+        icon: '🐋',
+        category: 'entertainment'
+    },
+    {
+        name: 'Nara Park',
+        coords: [34.6851, 135.8428],
+        city: 'Nara',
+        icon: '🦌',
+        category: 'nature'
+    },
+    {
+        name: 'Todai-ji Temple',
+        coords: [34.6890, 135.8398],
+        city: 'Nara',
+        icon: '🏯',
+        category: 'temple'
+    },
+    {
+        name: 'Great Buddha Kamakura',
+        coords: [35.3167, 139.5363],
+        city: 'Kamakura',
+        icon: '🗿',
+        category: 'temple'
+    }
+];
+
+// Iconos personalizados para marcadores
+const createCustomIcon = (emoji, color = '#dc2626') => {
+    return L.divIcon({
+        html: `
+            <div style="
+                background: ${color};
+                width: 36px;
+                height: 36px;
+                border-radius: 50% 50% 50% 0;
+                border: 3px solid white;
+                transform: rotate(-45deg);
+                box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            ">
+                <span style="
+                    transform: rotate(45deg);
+                    font-size: 18px;
+                    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+                ">${emoji}</span>
+            </div>
+        `,
+        className: 'custom-marker',
+        iconSize: [36, 42],
+        iconAnchor: [18, 42],
+        popupAnchor: [0, -42]
+    });
+};
 
 export const MapHandler = {
     renderMap() {
         const container = document.getElementById('content-map');
         if (!container) return;
 
-        // Get city images from ImageService with fallbacks
-        const getImage = (city) => {
-            if (window.ImageService && window.ImageService.CITY_IMAGES) {
-                return window.ImageService.getCityImage(city);
-            }
-            // Fallback URLs if ImageService isn't loaded
-            const fallbackImages = {
-                tokyo: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80',
-                kyoto: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80',
-                osaka: 'https://unsplash.com/photos/OwbvX2iahvw/download?force=true&w=1200', // Dotonbori
-                nara: 'https://unsplash.com/photos/OugwfKxatME/download?force=true&w=1200' // Nara deer
-            };
-            return fallbackImages[city] || fallbackImages.tokyo;
-        };
-
-        const tokyoImage = getImage('tokyo');
-        const kyotoImage = getImage('kyoto');
-        const osakaImage = getImage('osaka');
-        const naraImage = getImage('nara');
-
         container.innerHTML = `
-            <div class="max-w-6xl mx-auto p-4 md:p-6">
-                <!-- Hero Map Section with Image -->
-                <div class="relative mb-6 rounded-xl overflow-hidden shadow-2xl">
-                    <div class="relative h-64 md:h-80">
-                        <img src="${tokyoImage}" alt="Japan Travel Map"
-                             class="w-full h-full object-cover" loading="eager" />
-                        <div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60"></div>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center text-white px-4">
-                            <h1 class="text-4xl md:text-5xl font-bold mb-3 text-center drop-shadow-lg">🗺️ Mapa del Viaje</h1>
-                            <p class="text-lg md:text-xl text-center max-w-2xl drop-shadow-md">
-                                Explora todas las ubicaciones de tu aventura por Japón
-                            </p>
-                        </div>
+            <div class="max-w-7xl mx-auto p-4 md:p-6">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl p-6 mb-6 shadow-lg">
+                    <h1 class="text-3xl font-bold mb-2">🗺️ Mapa Interactivo del Viaje</h1>
+                    <p class="text-white/90">Explora todas las ubicaciones de tu aventura por Japón</p>
+                </div>
+
+                <!-- Map Container -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden mb-6">
+                    <div id="interactive-map" style="height: 600px; width: 100%;"></div>
+                </div>
+
+                <!-- Leyenda y Filtros -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4 dark:text-white">Leyenda del Mapa</h3>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <button onclick="MapHandler.filterMarkers('all')" class="map-filter-btn active" data-filter="all">
+                            🗺️ Ver Todo
+                        </button>
+                        <button onclick="MapHandler.filterMarkers('hotels')" class="map-filter-btn" data-filter="hotels">
+                            🏨 Hoteles
+                        </button>
+                        <button onclick="MapHandler.filterMarkers('attractions')" class="map-filter-btn" data-filter="attractions">
+                            ⭐ Atracciones
+                        </button>
+                        <button onclick="MapHandler.filterMarkers('temple')" class="map-filter-btn" data-filter="temple">
+                            ⛩️ Templos
+                        </button>
+                        <button onclick="MapHandler.filterMarkers('nature')" class="map-filter-btn" data-filter="nature">
+                            🌿 Naturaleza
+                        </button>
+                        <button onclick="MapHandler.filterMarkers('nightlife')" class="map-filter-btn" data-filter="nightlife">
+                            🌃 Vida Nocturna
+                        </button>
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-                    <p class="text-gray-600 dark:text-gray-400 mb-6 text-center">
-                        Click en cualquier lugar para abrirlo en Google Maps y obtener direcciones 📍
+                <!-- Info Tips -->
+                <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500">
+                    <p class="text-sm dark:text-gray-300">
+                        💡 <strong>Tips:</strong> Haz clic en los marcadores para ver más información.
+                        Usa los filtros para ver solo ciertos tipos de lugares.
                     </p>
-                    
-                    <!-- Hotels Section -->
-                    <div class="mb-8">
-                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
-                            🏨 Hoteles
-                        </h3>
-                        <div class="grid md:grid-cols-2 gap-4">
-                            <a href="https://www.google.com/maps/search/APA+Hotel+Shinjuku+Gyoemmae" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-40">
-                                    <img src="${tokyoImage}" alt="Tokyo" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                                    <div class="absolute inset-0 p-4 flex flex-col justify-end">
-                                        <p class="font-bold text-white text-lg mb-1">🏨 APA Hotel Shinjuku Gyoemmae</p>
-                                        <p class="text-sm text-white/90">Feb 16-19, 2026 (Días 1-3)</p>
-                                        <p class="text-xs text-white/80 mt-1">📍 Shinjuku-Gyoemmae, Tokyo</p>
-                                    </div>
-                                </div>
-                            </a>
-
-                            <a href="https://www.google.com/maps/search/Hotel+Kyoto+Tune+Stay" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-40">
-                                    <img src="${kyotoImage}" alt="Kyoto" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                                    <div class="absolute inset-0 p-4 flex flex-col justify-end">
-                                        <p class="font-bold text-white text-lg mb-1">🏨 Hotel Kyoto Tune Stay</p>
-                                        <p class="text-sm text-white/90">Feb 19-21, 2026 (Días 4-5)</p>
-                                        <p class="text-xs text-white/80 mt-1">📍 5 min de Kyoto Station</p>
-                                    </div>
-                                </div>
-                            </a>
-
-                            <a href="https://www.google.com/maps/search/Toyoko+Inn+Osaka+Namba" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-40">
-                                    <img src="${osakaImage}" alt="Osaka" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                                    <div class="absolute inset-0 p-4 flex flex-col justify-end">
-                                        <p class="font-bold text-white text-lg mb-1">🏨 Toyoko Inn Osaka Namba</p>
-                                        <p class="text-sm text-white/90">Feb 21-24, 2026 (Días 6-8)</p>
-                                        <p class="text-xs text-white/80 mt-1">📍 10 min de Dotonbori</p>
-                                    </div>
-                                </div>
-                            </a>
-
-                            <a href="https://www.google.com/maps/search/APA+Hotel+Yamanote+Otsuka+Eki+Mae" target="_blank" class="group relative overflow-hidden rounded-lg hover:shadow-xl transition-all duration-300">
-                                <div class="relative h-40">
-                                    <img src="${tokyoImage}" alt="Tokyo" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" loading="lazy" />
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                                    <div class="absolute inset-0 p-4 flex flex-col justify-end">
-                                        <p class="font-bold text-white text-lg mb-1">🏨 APA Hotel Yamanote Otsuka Eki Mae</p>
-                                        <p class="text-sm text-white/90">Feb 24 - Mar 2, 2026 (Días 8-15)</p>
-                                        <p class="text-xs text-white/80 mt-1">📍 Otsuka Station, Tokyo</p>
-                                    </div>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Top Attractions -->
-                    <div class="mb-8">
-                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
-                            ⭐ Atracciones Principales
-                        </h3>
-                        <div class="grid md:grid-cols-3 gap-3">
-                            <a href="https://www.google.com/maps/search/Shibuya+Crossing+Tokyo" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🚶 Shibuya Crossing</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Tokyo • Día 2</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Shibuya+Sky+Tokyo" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🌆 Shibuya Sky</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Tokyo • Día 2</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Kamakura+Great+Buddha" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🗿 Great Buddha</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Kamakura • Día 2</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Akihabara+Electric+Town+Tokyo" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🎮 Akihabara</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Tokyo • Día 3</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Fushimi+Inari+Taisha+Kyoto" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">⛩️ Fushimi Inari Shrine</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Kyoto • Día 4</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Nara+Park+Deer" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🦌 Nara Park</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Nara • Día 5</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Todaiji+Temple+Nara" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🏯 Todai-ji Temple</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Nara • Día 5</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Arashiyama+Bamboo+Grove+Kyoto" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🎋 Arashiyama Bamboo</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Kyoto • Día 5</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Kiyomizu+dera+Temple+Kyoto" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">⛩️ Kiyomizu-dera</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Kyoto • Día 6</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Dotonbori+Osaka" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🌃 Dotonbori</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Osaka • Día 6</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Osaka+Aquarium+Kaiyukan" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🐋 Osaka Aquarium</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Osaka • Día 7</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Tokyo+Skytree" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🏯 Tokyo Skytree</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Tokyo • Día 10</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Sensoji+Temple+Asakusa+Tokyo" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🏮 Sensoji Temple</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Asakusa • Día 10</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Harajuku+Takeshita+Street" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">👗 Harajuku Takeshita Street</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Tokyo • Día 11</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Meiji+Shrine+Tokyo" target="_blank" class="p-4 bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-lg hover:shadow-lg transition-all border border-red-100 dark:border-red-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">⛩️ Meiji Shrine</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Tokyo • Día 11</p>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Stations -->
-                    <div class="mb-8">
-                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
-                            🚆 Estaciones Principales
-                        </h3>
-                        <div class="grid md:grid-cols-3 gap-3">
-                            <a href="https://www.google.com/maps/search/Narita+Airport+Terminal+1" target="_blank" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:shadow-md transition text-center">
-                                <p class="font-semibold dark:text-white">✈️ Narita Airport</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Llegada/Salida</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Shinjuku+Station+Tokyo" target="_blank" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:shadow-md transition text-center">
-                                <p class="font-semibold dark:text-white">🚉 Shinjuku Station</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Tokyo - Base 1</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Kyoto+Station" target="_blank" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:shadow-md transition text-center">
-                                <p class="font-semibold dark:text-white">🚉 Kyoto Station</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Kyoto - Base 2</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Namba+Station+Osaka" target="_blank" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:shadow-md transition text-center">
-                                <p class="font-semibold dark:text-white">🚉 Namba Station</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Osaka - Base 3</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Otsuka+Station+Tokyo" target="_blank" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:shadow-md transition text-center">
-                                <p class="font-semibold dark:text-white">🚉 Otsuka Station</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Tokyo - Base 4</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Tokyo+Station" target="_blank" class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:shadow-md transition text-center">
-                                <p class="font-semibold dark:text-white">🚉 Tokyo Station</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Hub Principal</p>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Food Spots -->
-                    <div>
-                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
-                            🍜 Lugares de Comida
-                        </h3>
-                        <div class="grid md:grid-cols-3 gap-3">
-                            <a href="https://www.google.com/maps/search/Ichiran+Ramen+Shinjuku" target="_blank" class="p-4 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-lg hover:shadow-lg transition-all border border-orange-100 dark:border-orange-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🍜 Ichiran Ramen</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Shinjuku • Múltiples ubicaciones</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Omoide+Yokocho+Shinjuku" target="_blank" class="p-4 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-lg hover:shadow-lg transition-all border border-orange-100 dark:border-orange-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🍢 Omoide Yokocho</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Shinjuku • Yakitori</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Takoyaki+Wanaka+Dotonbori" target="_blank" class="p-4 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-lg hover:shadow-lg transition-all border border-orange-100 dark:border-orange-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🐙 Takoyaki Wanaka</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Dotonbori, Osaka</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Chibo+Okonomiyaki+Osaka" target="_blank" class="p-4 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-lg hover:shadow-lg transition-all border border-orange-100 dark:border-orange-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🥞 Chibo Okonomiyaki</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Osaka</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Nemuro+Hanamaru+Sushi+Tokyo+Station" target="_blank" class="p-4 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-lg hover:shadow-lg transition-all border border-orange-100 dark:border-orange-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🍣 Nemuro Hanamaru</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Tokyo Station • Kaiten Sushi</p>
-                            </a>
-                            <a href="https://www.google.com/maps/search/Gyukaku+Yakiniku" target="_blank" class="p-4 bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-lg hover:shadow-lg transition-all border border-orange-100 dark:border-orange-800">
-                                <p class="font-bold text-gray-800 dark:text-white mb-1">🍖 Gyukaku Yakiniku</p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">Múltiples ubicaciones</p>
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500">
-                        <p class="text-sm dark:text-gray-300">
-                            💡 <strong>Tip:</strong> Al hacer click en cualquier lugar, se abrirá Google Maps en tu celular. 
-                            Desde ahí puedes obtener direcciones en tiempo real y ver fotos del lugar.
-                        </p>
-                    </div>
                 </div>
             </div>
         `;
+
+        // Esperar un poco para que el DOM se actualice
+        setTimeout(() => {
+            this.initializeMap();
+        }, 100);
+    },
+
+    initializeMap() {
+        const mapElement = document.getElementById('interactive-map');
+        if (!mapElement) {
+            console.error('❌ Map element not found');
+            return;
+        }
+
+        // Si el mapa ya existe, destruirlo primero
+        if (map) {
+            map.remove();
+            map = null;
+        }
+
+        // Crear el mapa centrado en Japón
+        map = L.map('interactive-map').setView([36.2048, 138.2529], 6);
+
+        // Añadir capa de tiles (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 18
+        }).addTo(map);
+
+        // Crear capa de marcadores
+        markersLayer = L.layerGroup().addTo(map);
+
+        // Añadir todos los marcadores
+        this.addAllMarkers();
+
+        console.log('✅ Interactive map initialized');
+    },
+
+    addAllMarkers() {
+        if (!markersLayer) return;
+
+        // Limpiar marcadores existentes
+        markersLayer.clearLayers();
+
+        // Añadir marcadores de hoteles
+        HOTEL_LOCATIONS.forEach(hotel => {
+            const marker = L.marker(hotel.coords, {
+                icon: createCustomIcon('🏨', '#3b82f6'),
+                type: 'hotels'
+            }).addTo(markersLayer);
+
+            marker.bindPopup(`
+                <div class="p-3 min-w-[200px]">
+                    <h3 class="font-bold text-lg mb-2">${hotel.icon} ${hotel.name}</h3>
+                    <p class="text-sm text-gray-600 mb-1">📍 ${hotel.city}</p>
+                    <p class="text-sm text-gray-600 mb-2">📅 ${hotel.dates}</p>
+                    <a href="https://www.google.com/maps/search/${encodeURIComponent(hotel.name)}"
+                       target="_blank"
+                       class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                        Ver en Google Maps →
+                    </a>
+                </div>
+            `);
+
+            // Guardar tipo para filtrado
+            marker.markerType = 'hotels';
+        });
+
+        // Añadir marcadores de atracciones
+        TOP_ATTRACTIONS.forEach(attraction => {
+            const marker = L.marker(attraction.coords, {
+                icon: createCustomIcon(attraction.icon, '#dc2626'),
+                type: 'attractions'
+            }).addTo(markersLayer);
+
+            marker.bindPopup(`
+                <div class="p-3 min-w-[200px]">
+                    <h3 class="font-bold text-lg mb-2">${attraction.icon} ${attraction.name}</h3>
+                    <p class="text-sm text-gray-600 mb-2">📍 ${attraction.city}</p>
+                    <a href="https://www.google.com/maps/search/${encodeURIComponent(attraction.name + ' ' + attraction.city)}"
+                       target="_blank"
+                       class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                        Ver en Google Maps →
+                    </a>
+                </div>
+            `);
+
+            // Guardar tipos para filtrado
+            marker.markerType = 'attractions';
+            marker.markerCategory = attraction.category;
+        });
+    },
+
+    filterMarkers(filterType) {
+        if (!markersLayer) return;
+
+        // Actualizar botones activos
+        document.querySelectorAll('.map-filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.filter === filterType) {
+                btn.classList.add('active');
+            }
+        });
+
+        // Filtrar marcadores
+        markersLayer.eachLayer(marker => {
+            if (filterType === 'all') {
+                marker.setOpacity(1);
+            } else if (filterType === 'hotels' || filterType === 'attractions') {
+                marker.setOpacity(marker.markerType === filterType ? 1 : 0.2);
+            } else {
+                // Filtro por categoría de atracción
+                marker.setOpacity(marker.markerCategory === filterType ? 1 : 0.2);
+            }
+        });
     }
 };
+
+// Exportar para uso global
+window.MapHandler = MapHandler;
