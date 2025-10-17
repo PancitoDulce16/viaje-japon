@@ -12,7 +12,7 @@
 {
   "aviationStack": {
     "apiKey": "4374cea236b04a5bf7e6d0c7d2cbf676",
-    "endpoint": "http://api.aviationstack.com/v1"
+    "endpoint": "https://api.aviationstack.com/v1"
   },
   "liteAPI": {
     "apiKey": "1757d988-56b3-4b5a-9618-c7b5053ac3aa",

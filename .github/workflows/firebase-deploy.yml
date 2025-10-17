@@ -61,6 +61,9 @@ jobs:
             // Para compatibilidad con el resto del código
             export const API_KEYS = RUNTIME_API_KEYS;
 
+            // Exponer globalmente para debugging y acceso desde otros módulos
+            window.API_KEYS = API_KEYS;
+
             // Definición completa de los Endpoints
             export const API_ENDPOINTS = {
               flights: {
