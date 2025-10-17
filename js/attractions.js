@@ -358,7 +358,7 @@ export const AttractionsHandler = {
 
     // 🔥 Modal para seleccionar día
     async showDaySelectionModal(attraction) {
-        alert('🔍 DEBUG: showDaySelectionModal iniciado - versión 2.0');
+        console.log('🔍 DEBUG: showDaySelectionModal iniciado - versión 2.0');
         try {
             // 🔥 Verificar que ItineraryHandler existe
             if (!window.ItineraryHandler) {
