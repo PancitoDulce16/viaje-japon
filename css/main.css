@@ -602,6 +602,21 @@ html {
    RESPONSIVE - MOBILE FIRST
    ======================================== */
 
+/* Mejorar performance en móvil */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Smooth scrolling mejorado */
+html {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Pull-to-refresh mejorado */
+body {
+  overscroll-behavior-y: contain;
+}
+
 /* Tablets y móviles grandes */
 @media (max-width: 1024px) {
   /* Reducir padding en contenedores */
@@ -633,10 +648,50 @@ html {
   h3, .text-2xl {
     font-size: 1.5rem !important;
   }
+
+  /* Dashboard stats responsive para tablet */
+  #tripStatsDashboard {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
 
 /* Móviles */
 @media (max-width: 768px) {
+  /* Dashboard stats a 1 columna en móvil */
+  #tripStatsDashboard {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Stats cards más compactas pero legibles */
+  .stat-card {
+    padding: 1rem !important;
+  }
+
+  .stat-card .text-3xl {
+    font-size: 2rem !important;
+  }
+
+  /* Ocultar textos "hidden md:inline" en header responsive */
+  .hidden.md\:inline {
+    display: none !important;
+  }
+
+  /* Header buttons más compactos */
+  header button {
+    padding: 0.5rem !important;
+    font-size: 0.875rem;
+  }
+
+  header button svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+
+  /* Countdown más compacto */
+  header .text-2xl {
+    font-size: 1.5rem !important;
+  }
+
   /* Botón flotante más pequeño */
   .floating-btn {
     width: 48px;

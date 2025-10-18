@@ -443,3 +443,123 @@
 .stagger-item:nth-child(3) { transition-delay: 0.3s; }
 .stagger-item:nth-child(4) { transition-delay: 0.4s; }
 .stagger-item:nth-child(5) { transition-delay: 0.5s; }
+
+/* =========================
+   MOBILE PWA ANIMATIONS
+   ========================= */
+
+/* Slide up animation for PWA install banner */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Mobile specific enhancements */
+@media (max-width: 768px) {
+  /* Faster animations on mobile for better perceived performance */
+  .animate-fade-in {
+    animation-duration: 0.3s;
+  }
+
+  .animate-slide-right,
+  .animate-slide-left {
+    animation-duration: 0.3s;
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Offline indicator */
+body.offline::before {
+  content: '📵 Sin conexión';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #ef4444;
+  color: white;
+  text-align: center;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  z-index: 10000;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Slow connection indicator */
+body.slow-connection::after {
+  content: '🐢 Conexión lenta';
+  position: fixed;
+  top: 0;
+  right: 1rem;
+  background: #f59e0b;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0 0 0.5rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Loading state for mobile */
+.is-mobile .loading-spinner {
+  width: 30px;
+  height: 30px;
+  border-width: 3px;
+}
+
+/* Better touch feedback */
+.is-mobile button:active,
+.is-mobile a:active {
+  transform: scale(0.97);
+  transition: transform 0.1s ease;
+}
+
+/* iOS specific adjustments */
+.is-ios input,
+.is-ios textarea,
+.is-ios select {
+  font-size: 16px !important; /* Prevents zoom on focus in iOS */
+}
+
+/* Landscape mode adjustments */
+body.landscape {
+  /* Adjust UI for landscape orientation */
+}
+
+/* Keyboard visible state */
+body.keyboard-visible .floating-btn {
+  bottom: 20px; /* Move floating button up when keyboard is visible */
+}
+
+/* PWA installed state */
+body.pwa-installed #pwa-install-banner {
+  display: none !important;
+}
