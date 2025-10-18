@@ -204,37 +204,42 @@ export const FlightsHandler = {
         </div>
 
         <div class="grid lg:grid-cols-2 gap-6 mb-6">
-          <!-- Flight Tracker -->
-          <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl shadow-lg p-6">
-            <h3 class="text-2xl font-bold mb-4 flex items-center gap-2">
+          <!-- Flight Tracker - Disabled (Free plan limitation) -->
+          <div class="bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded-xl shadow-lg p-6 relative overflow-hidden">
+            <div class="absolute top-0 right-0 bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg">
+              ⚠️ No disponible
+            </div>
+            <h3 class="text-2xl font-bold mb-4 flex items-center gap-2 opacity-60">
               📡 Track de Vuelo en Tiempo Real
             </h3>
-            <p class="text-sm opacity-90 mb-4">
-              Monitorea el estado de cualquier vuelo en tiempo real
+            <p class="text-sm opacity-70 mb-4">
+              Esta función requiere un plan premium de la API de vuelos
             </p>
-            
-            <div class="space-y-3">
-              <input 
+
+            <div class="space-y-3 opacity-50 pointer-events-none">
+              <input
                 type="text"
-                id="trackFlightNumber"
                 placeholder="Ej: AM58, UA882"
                 class="w-full p-3 rounded-lg text-gray-800 font-semibold"
+                disabled
               >
-              <input 
+              <input
                 type="date"
-                id="trackFlightDate"
                 class="w-full p-3 rounded-lg text-gray-800 font-semibold"
+                disabled
               >
-              <button 
-                id="trackFlightBtn"
-                class="w-full bg-white text-blue-600 py-3 rounded-lg hover:bg-blue-50 transition font-bold"
+              <button
+                class="w-full bg-white text-gray-600 py-3 rounded-lg font-bold cursor-not-allowed"
+                disabled
               >
                 🔍 Rastrear Vuelo
               </button>
             </div>
 
-            <div id="flightTrackResult" class="mt-4">
-              <!-- Results will appear here -->
+            <div class="mt-4 p-4 bg-white/20 rounded-lg backdrop-blur-sm">
+              <p class="text-sm">
+                💡 <strong>Tip:</strong> Usa la sección "Mis Vuelos" arriba para registrar y gestionar manualmente todos tus vuelos del viaje.
+              </p>
             </div>
           </div>
 
