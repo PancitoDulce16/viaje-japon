@@ -394,14 +394,22 @@ export const MapHandler = {
             }).addTo(markersLayer);
 
             marker.bindPopup(`
-                <div class="p-3 min-w-[200px]">
+                <div class="p-3 min-w-[220px]">
                     <h3 class="font-bold text-lg mb-2">${attraction.icon} ${attraction.name}</h3>
                     <p class="text-sm text-gray-600 mb-2">📍 ${attraction.city}</p>
-                    <a href="https://www.google.com/maps/search/${encodeURIComponent(attraction.name + ' ' + attraction.city)}"
-                       target="_blank"
-                       class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
-                        Ver en Google Maps →
-                    </a>
+                    <div class="flex flex-col gap-2 mt-3">
+                        <button
+                            onclick="MapHandler.addToItinerary('${attraction.name.replace(/'/g, "\\'")}', '${attraction.city}', '${attraction.icon}')"
+                            class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-sm font-bold py-2 px-4 rounded-lg transition transform hover:scale-105"
+                        >
+                            ➕ Agregar al Itinerario
+                        </button>
+                        <a href="https://www.google.com/maps/search/${encodeURIComponent(attraction.name + ' ' + attraction.city)}"
+                           target="_blank"
+                           class="text-center text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                            Ver en Google Maps →
+                        </a>
+                    </div>
                 </div>
             `);
 
@@ -475,7 +483,7 @@ export const MapHandler = {
                     }).addTo(nearbyPlacesLayer);
 
                     marker.bindPopup(`
-                        <div class="p-3 min-w-[200px]">
+                        <div class="p-3 min-w-[220px]">
                             <h3 class="font-bold text-lg mb-2">📍 ${place.name}</h3>
                             <p class="text-sm text-gray-600 mb-2">${place.address}</p>
                             ${place.rating ? `<p class="text-sm mb-2">⭐ ${place.rating} (${place.userRatingsTotal || 0} reviews)</p>` : ''}
@@ -484,11 +492,19 @@ export const MapHandler = {
                                     ${place.openNow ? '✅ Abierto ahora' : '🔴 Cerrado'}
                                 </p>
                             ` : ''}
-                            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + place.address)}"
-                               target="_blank"
-                               class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
-                                Ver en Google Maps →
-                            </a>
+                            <div class="flex flex-col gap-2 mt-3">
+                                <button
+                                    onclick="MapHandler.addToItinerary('${place.name.replace(/'/g, "\\'")}', '${typeSelect.options[typeSelect.selectedIndex].text}', '📍')"
+                                    class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-sm font-bold py-2 px-4 rounded-lg transition transform hover:scale-105"
+                                >
+                                    ➕ Agregar al Itinerario
+                                </button>
+                                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + place.address)}"
+                                   target="_blank"
+                                   class="text-center text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                                    Ver en Google Maps →
+                                </a>
+                            </div>
                         </div>
                     `);
                 });
@@ -552,6 +568,59 @@ export const MapHandler = {
                     marker.openPopup();
                 }
             });
+        }
+    },
+
+    // 🔥 NUEVO: Agregar lugar al itinerario desde el mapa
+    async addToItinerary(placeName, category, icon) {
+        try {
+            // Importar dinámicamente el módulo de itinerario
+            const { ItineraryHandler } = await import('./itinerary.js');
+
+            // Obtener el trip ID actual desde TripsManager
+            const currentTripId = window.TripsManager?.currentTripId;
+
+            if (!currentTripId) {
+                if (window.Notifications) {
+                    window.Notifications.error('⚠️ Por favor selecciona un viaje primero');
+                }
+                return;
+            }
+
+            // Crear actividad para agregar al itinerario
+            const activity = {
+                time: '10:00', // Hora por defecto
+                activity: `Visitar ${placeName}`,
+                location: placeName,
+                notes: `${icon} ${category}`,
+                addedFromMap: true
+            };
+
+            // Verificar si ItineraryHandler tiene el método para agregar actividad
+            if (ItineraryHandler && typeof ItineraryHandler.showQuickAddForm === 'function') {
+                // Usar el formulario rápido del itinerario
+                ItineraryHandler.showQuickAddForm(activity);
+
+                if (window.Notifications) {
+                    window.Notifications.success(`✅ "${placeName}" listo para agregar al itinerario`);
+                }
+            } else {
+                // Fallback: mostrar mensaje con instrucciones
+                if (window.Notifications) {
+                    window.Notifications.info(`📍 Ve al Itinerario y agrega: ${placeName}`);
+                }
+            }
+
+            // Cerrar el popup del mapa
+            if (map) {
+                map.closePopup();
+            }
+
+        } catch (error) {
+            console.error('Error agregando al itinerario:', error);
+            if (window.Notifications) {
+                window.Notifications.error('❌ Error al agregar al itinerario');
+            }
         }
     }
 };
