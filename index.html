@@ -41,6 +41,8 @@
     <link rel="stylesheet" href="./css/sakura.css">
     <link rel="stylesheet" href="./css/animations.css">
     <link rel="stylesheet" href="./css/enhanced-animations.css">
+    <link rel="stylesheet" href="./css/tooltips.css">
+    <link rel="stylesheet" href="./css/forms.css">
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/png" href="./images/icons/icon-192.png">
     <meta name="mobile-web-app-capable" content="yes">
@@ -240,25 +242,25 @@
     <div id="appDashboard" class="hidden">
         <!-- Botones Flotantes -->
         <div class="z-50 fixed bottom-8 right-8 flex flex-col gap-3 stagger-fade-in">
-            <button data-modal="budget" class="floating-btn ripple bounce-click gpu-accelerated" title="Budget Tracker" aria-label="Abrir Budget" style="animation-delay: 0.1s">
+            <button data-modal="budget" data-tooltip="💰 Budget Tracker" class="floating-btn ripple bounce-click gpu-accelerated tooltip-sakura" aria-label="Abrir Budget" style="animation-delay: 0.1s">
                 <i class="fas fa-yen-sign"></i>
             </button>
-            <button data-modal="packing" class="floating-btn ripple bounce-click gpu-accelerated" title="Checklist de Equipaje" aria-label="Abrir Equipaje" style="animation-delay: 0.2s">
+            <button data-modal="packing" data-tooltip="🎒 Checklist de Equipaje" class="floating-btn ripple bounce-click gpu-accelerated tooltip-info" aria-label="Abrir Equipaje" style="animation-delay: 0.2s">
                 <i class="fas fa-suitcase-rolling"></i>
             </button>
-            <button data-modal="favorites" class="floating-btn ripple bounce-click gpu-accelerated" title="Mis Favoritos" aria-label="Abrir Favoritos" style="animation-delay: 0.3s">
+            <button data-modal="favorites" data-tooltip="⭐ Mis Favoritos" class="floating-btn ripple bounce-click gpu-accelerated tooltip-warning" aria-label="Abrir Favoritos" style="animation-delay: 0.3s">
                 <i class="fas fa-star"></i>
             </button>
-            <button data-modal="gallery" class="floating-btn ripple bounce-click gpu-accelerated" title="Galería de Fotos" aria-label="Abrir Galería" style="animation-delay: 0.4s">
+            <button data-modal="gallery" data-tooltip="📸 Galería de Fotos" class="floating-btn ripple bounce-click gpu-accelerated tooltip-sakura" aria-label="Abrir Galería" style="animation-delay: 0.4s">
                 <i class="fas fa-camera"></i>
             </button>
-            <button data-modal="weather" class="floating-btn ripple bounce-click gpu-accelerated" title="Clima" aria-label="Abrir Clima" style="animation-delay: 0.5s">
+            <button data-modal="weather" data-tooltip="🌤️ Clima en Japón" class="floating-btn ripple bounce-click gpu-accelerated tooltip-info" aria-label="Abrir Clima" style="animation-delay: 0.5s">
                 <i class="fas fa-cloud-sun"></i>
             </button>
-            <button data-modal="phrases" class="floating-btn ripple bounce-click gpu-accelerated" title="Frases Útiles" aria-label="Abrir Frases" style="animation-delay: 0.6s">
+            <button data-modal="phrases" data-tooltip="🗣️ Frases Útiles" class="floating-btn ripple bounce-click gpu-accelerated tooltip-success" aria-label="Abrir Frases" style="animation-delay: 0.6s">
                 <i class="fas fa-language"></i>
             </button>
-            <button data-modal="notes" class="floating-btn ripple bounce-click gpu-accelerated" title="Mis Notas" aria-label="Abrir Notas" style="animation-delay: 0.7s">
+            <button data-modal="notes" data-tooltip="📝 Mis Notas" class="floating-btn ripple bounce-click gpu-accelerated tooltip-warning" aria-label="Abrir Notas" style="animation-delay: 0.7s">
                 <i class="fas fa-sticky-note"></i>
             </button>
         </div>
@@ -368,6 +370,9 @@
     <div id="modalsContainer">
         <!-- Los modales se renderizarán dinámicamente desde modals.js -->
     </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="toast-container"></div>
 
     <!-- Scripts -->
     <!-- SortableJS para drag & drop -->
