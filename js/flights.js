@@ -1,7 +1,6 @@
 // js/flights.js - Gestión completa de vuelos CON CARGA AUTOMÁTICA DEL WIZARD
 import { db, auth } from './firebase-config.js';
 import { doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { APIsIntegration } from './apis-integration.js';
 import { Notifications } from './notifications.js';
 
 export const FlightsHandler = {
@@ -204,32 +203,17 @@ export const FlightsHandler = {
         </div>
 
         <div class="grid lg:grid-cols-2 gap-6 mb-6">
-          <!-- Flight Tracker - Powered by FlightRadar24 -->
+          <!-- Flight Tracker Links -->
           <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl shadow-lg p-6">
             <h3 class="text-2xl font-bold mb-4 flex items-center gap-2">
-              📡 Track de Vuelo
+              📡 Track de Vuelo en Tiempo Real
             </h3>
             <p class="text-sm opacity-90 mb-4">
-              Busca información de vuelos (Powered by FlightRadar24)
+              Rastrea tu vuelo en las mejores plataformas
             </p>
 
             <div class="space-y-3">
-              <input
-                type="text"
-                id="trackFlightNumber"
-                placeholder="Ej: AM58, UA882"
-                class="w-full p-3 rounded-lg text-gray-800 font-semibold"
-              >
-              <button
-                id="trackFlightBtn"
-                class="w-full bg-white text-blue-600 py-3 rounded-lg hover:bg-blue-50 transition font-bold"
-              >
-                🔍 Buscar Vuelo
-              </button>
-            </div>
-
-            <div id="flightTrackResult" class="mt-4">
-              <!-- Results will appear here -->
+              ${this.renderFlightTrackingLinks()}
             </div>
           </div>
 
@@ -241,7 +225,7 @@ export const FlightsHandler = {
             <p class="text-sm opacity-90 mb-4">
               Compara precios en las mejores plataformas
             </p>
-            
+
             <div class="space-y-3">
               ${this.renderFlightSearchLinks()}
             </div>
@@ -302,14 +286,16 @@ export const FlightsHandler = {
           </div>
           <div class="flex gap-2">
             ${flight.flightNumber ? `
-              <button 
-                onclick="FlightsHandler.trackFlight('${flight.flightNumber}', '${flight.date || ''}')"
-                class="text-xs bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+              <a
+                href="https://www.flightradar24.com/data/flights/${flight.flightNumber.toLowerCase()}"
+                target="_blank"
+                class="text-xs bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 inline-flex items-center gap-1"
+                title="Rastrear en FlightRadar24"
               >
                 📡 Track
-              </button>
+              </a>
             ` : ''}
-            <button 
+            <button
               onclick="FlightsHandler.deleteFlight(${index})"
               class="text-red-500 hover:text-red-700 p-2"
               title="Eliminar vuelo"
@@ -507,6 +493,32 @@ export const FlightsHandler = {
     `;
   },
 
+  renderFlightTrackingLinks() {
+    const trackers = [
+      { name: 'FlightRadar24', url: 'https://www.flightradar24.com', icon: '📡', desc: 'Tracking en vivo con mapa' },
+      { name: 'FlightAware', url: 'https://flightaware.com', icon: '✈️', desc: 'Estado y horarios' },
+      { name: 'FlightStats', url: 'https://www.flightstats.com', icon: '📊', desc: 'Estadísticas de vuelo' },
+      { name: 'Google Flights', url: 'https://www.google.com/travel/flights', icon: '🔍', desc: 'Buscar y rastrear' }
+    ];
+
+    return trackers.map(tracker => `
+      <a
+        href="${tracker.url}"
+        target="_blank"
+        class="bg-white/20 hover:bg-white/30 p-4 rounded-lg flex items-center justify-between transition border-2 border-white/30"
+      >
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">${tracker.icon}</span>
+          <div>
+            <p class="font-bold">${tracker.name}</p>
+            <p class="text-xs opacity-80">${tracker.desc}</p>
+          </div>
+        </div>
+        <span class="text-2xl">→</span>
+      </a>
+    `).join('');
+  },
+
   renderFlightSearchLinks() {
     const searchEngines = [
       { name: 'Skyscanner', url: 'https://www.skyscanner.com', icon: '🔍', color: 'bg-blue-500' },
@@ -516,8 +528,8 @@ export const FlightsHandler = {
     ];
 
     return searchEngines.map(engine => `
-      <a 
-        href="${engine.url}" 
+      <a
+        href="${engine.url}"
         target="_blank"
         class="${engine.color} bg-opacity-20 hover:bg-opacity-30 p-4 rounded-lg flex items-center justify-between transition border-2 border-white/30"
       >
@@ -672,15 +684,6 @@ export const FlightsHandler = {
         this.saveFlight();
       });
     }
-
-    // Track flight
-    const trackBtn = document.getElementById('trackFlightBtn');
-    if (trackBtn) {
-      trackBtn.addEventListener('click', () => {
-        const flightNumber = document.getElementById('trackFlightNumber').value;
-        this.trackFlight(flightNumber, null);
-      });
-    }
   },
 
   showAddFlightForm() {
@@ -730,7 +733,7 @@ export const FlightsHandler = {
 
     try {
       this.myFlights.splice(index, 1);
-      
+
       const flightsRef = doc(db, 'trips', this.currentTripId, 'modules', 'flights');
       await setDoc(flightsRef, {
         flights: this.myFlights,
@@ -741,97 +744,6 @@ export const FlightsHandler = {
     } catch (error) {
       console.error('Error eliminando vuelo:', error);
       Notifications.error('❌ Error al eliminar');
-    }
-  },
-
-  async trackFlight(flightNumber, date) {
-    if (!flightNumber) {
-      Notifications.error('Ingresa un número de vuelo');
-      return;
-    }
-
-    const resultDiv = document.getElementById('flightTrackResult');
-    resultDiv.innerHTML = `
-      <div class="p-4 bg-white/10 rounded-lg backdrop-blur-sm">
-        <p class="text-sm">🔄 Buscando información...</p>
-      </div>
-    `;
-
-    try {
-      const result = await APIsIntegration.searchFlights(flightNumber, date || null);
-
-      console.log('📊 Resultado completo:', result);
-
-      if (result.success && result.data && result.data.length > 0) {
-        // Mostrar todos los vuelos encontrados
-        const flightsHtml = result.data.map(flight => {
-          const status = flight.status?.text || 'Desconocido';
-          const statusColor = status.toLowerCase().includes('scheduled') ? 'bg-blue-500/30' :
-                            status.toLowerCase().includes('active') ? 'bg-green-500/30' :
-                            status.toLowerCase().includes('landed') ? 'bg-gray-500/30' : 'bg-yellow-500/30';
-
-          const departure = flight.airport?.origin;
-          const arrival = flight.airport?.destination;
-          const airline = flight.airline?.name || 'Aerolínea desconocida';
-          const flightNum = flight.identification?.number?.default || flightNumber;
-
-          // Formatear tiempos
-          const depTime = flight.time?.scheduled?.departure ?
-            new Date(flight.time.scheduled.departure * 1000).toLocaleString('es-MX', {
-              weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-            }) : 'N/A';
-
-          const arrTime = flight.time?.scheduled?.arrival ?
-            new Date(flight.time.scheduled.arrival * 1000).toLocaleString('es-MX', {
-              weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-            }) : 'N/A';
-
-          return `
-            <div class="p-4 bg-white/20 rounded-lg backdrop-blur-sm mb-3">
-              <div class="flex justify-between items-start mb-2">
-                <p class="text-sm font-bold">${airline} ${flightNum}</p>
-                <span class="text-xs px-2 py-1 rounded ${statusColor}">${status}</span>
-              </div>
-
-              <div class="grid grid-cols-2 gap-3 text-sm mt-3">
-                <div>
-                  <p class="text-xs opacity-80">Salida</p>
-                  <p class="font-bold">${departure?.name || departure?.code?.iata || 'N/A'}</p>
-                  <p class="text-xs">${depTime}</p>
-                </div>
-                <div>
-                  <p class="text-xs opacity-80">Llegada</p>
-                  <p class="font-bold">${arrival?.name || arrival?.code?.iata || 'N/A'}</p>
-                  <p class="text-xs">${arrTime}</p>
-                </div>
-              </div>
-
-              ${flight.aircraft?.model?.code ? `
-                <p class="text-xs mt-2 opacity-80">✈️ ${flight.aircraft.model.code}</p>
-              ` : ''}
-            </div>
-          `;
-        }).join('');
-
-        resultDiv.innerHTML = flightsHtml;
-        Notifications.success(`✅ ${result.data.length} vuelo(s) encontrado(s)`);
-      } else {
-        const errorMsg = result.message || result.error || 'No se encontró información del vuelo';
-        resultDiv.innerHTML = `
-          <div class="p-4 bg-red-500/20 rounded-lg backdrop-blur-sm border border-red-400/50">
-            <p class="text-sm">❌ ${errorMsg}</p>
-            <p class="text-xs opacity-80 mt-1">Intenta con otro número de vuelo</p>
-          </div>
-        `;
-      }
-    } catch (error) {
-      console.error('❌ Error tracking flight:', error);
-      resultDiv.innerHTML = `
-        <div class="p-4 bg-red-500/20 rounded-lg backdrop-blur-sm border border-red-400/50">
-          <p class="text-sm">❌ Error al buscar el vuelo</p>
-          <p class="text-xs opacity-80 mt-1">${error.message}</p>
-        </div>
-      `;
     }
   }
 };
