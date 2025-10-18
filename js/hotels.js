@@ -73,25 +73,26 @@ export const HotelsHandler = {
           ${this.renderAddHotelForm()}
         </div>
 
-        <!-- Buscar Hoteles -->
-        <div class="bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl shadow-lg p-6 mb-6">
-          <h3 class="text-2xl font-bold mb-4 flex items-center gap-2">
+        <!-- Buscar Hoteles - Disabled (API key invalid) -->
+        <div class="bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded-xl shadow-lg p-6 mb-6 relative overflow-hidden">
+          <div class="absolute top-0 right-0 bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg">
+            ⚠️ No disponible
+          </div>
+          <h3 class="text-2xl font-bold mb-4 flex items-center gap-2 opacity-60">
             🔍 Buscar Hoteles Disponibles
           </h3>
-          <p class="text-sm opacity-90 mb-4">
-            Busca y compara hoteles en las ciudades de tu viaje
+          <p class="text-sm opacity-70 mb-4">
+            La API de búsqueda de hoteles requiere una clave válida
           </p>
-          
-          ${this.renderHotelSearchForm()}
-        </div>
 
-        <!-- Recomendaciones -->
-        <div id="hotelRecommendations" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
-          <h3 class="text-2xl font-bold mb-4 dark:text-white flex items-center gap-2">
-            ⭐ Recomendaciones de Hoteles
-          </h3>
-          <div id="recommendationsList">
-            ${this.renderEmptyRecommendations()}
+          <div class="opacity-50 pointer-events-none">
+            ${this.renderHotelSearchForm()}
+          </div>
+
+          <div class="mt-4 p-4 bg-white/20 rounded-lg backdrop-blur-sm">
+            <p class="text-sm">
+              💡 <strong>Tip:</strong> Usa la sección "Mis Reservas" arriba para agregar manualmente tus hoteles, o visita las plataformas de reserva abajo para buscar y comparar precios.
+            </p>
           </div>
         </div>
 
