@@ -267,6 +267,12 @@ export const AppCore = {
                 window.WeatherWidget.renderWeatherWidget(['Tokyo', 'Kyoto', 'Osaka', 'Hiroshima', 'Nara', 'Hakone']);
             }
         }
+
+        if (modalName === 'gallery') {
+            if (window.PhotoGallery) {
+                window.PhotoGallery.renderGallery();
+            }
+        }
     },
 
     closeModal(modalName) {

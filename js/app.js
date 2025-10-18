@@ -181,6 +181,14 @@ async function initApp() {
             console.error('❌ Error inicializando FavoritesManager:', e);
         }
 
+        try {
+            const { PhotoGallery } = await import('./photo-gallery.js');
+            await PhotoGallery.init();
+            window.PhotoGallery = PhotoGallery;
+        } catch (e) {
+            console.error('❌ Error inicializando PhotoGallery:', e);
+        }
+
         console.log('✅ Aplicación iniciada correctamente');
         console.log('🔥 Firebase listo');
         console.log('✨ Itinerary Builder listo');
@@ -189,6 +197,7 @@ async function initApp() {
         console.log('🎒 Packing List listo');
         console.log('⭐ Favorites Manager listo');
         console.log('🎨 Theme Manager listo');
+        console.log('📸 Photo Gallery listo');
         console.log('📱 Mobile Enhancements listo');
 
         // Cargar integraciones opcionalmente y de forma asíncrona
