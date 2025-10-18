@@ -678,8 +678,7 @@ export const FlightsHandler = {
     if (trackBtn) {
       trackBtn.addEventListener('click', () => {
         const flightNumber = document.getElementById('trackFlightNumber').value;
-        const date = document.getElementById('trackFlightDate').value;
-        this.trackFlight(flightNumber, date);
+        this.trackFlight(flightNumber, null);
       });
     }
   },
