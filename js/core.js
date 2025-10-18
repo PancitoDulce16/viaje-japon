@@ -261,18 +261,6 @@ export const AppCore = {
                 window.FavoritesManager.renderFavoritesList();
             }
         }
-
-        if (modalName === 'weather') {
-            if (window.WeatherWidget) {
-                window.WeatherWidget.renderWeatherWidget(['Tokyo', 'Kyoto', 'Osaka', 'Hiroshima', 'Nara', 'Hakone']);
-            }
-        }
-
-        if (modalName === 'gallery') {
-            if (window.PhotoGallery) {
-                window.PhotoGallery.renderGallery();
-            }
-        }
     },
 
     closeModal(modalName) {

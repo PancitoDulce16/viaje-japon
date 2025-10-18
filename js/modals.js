@@ -22,8 +22,6 @@ export const ModalRenderer = {
             ${this.getNotesModal()}
             ${this.getPackingListModal()}
             ${this.getFavoritesModal()}
-            ${this.getWeatherModal()}
-            ${this.getPhotoGalleryModal()}
             ${this.getCreateTripModal()}
             ${this.getTripsListModal()}
         `;
@@ -603,38 +601,6 @@ export const ModalRenderer = {
                             <button class="modal-close text-3xl hover:text-red-600 transition" data-modal-close="favorites" aria-label="Cerrar">&times;</button>
                         </div>
                         <div id="favoritesListContainer"></div>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-
-    getWeatherModal() {
-        return `
-            <div id="modal-weather" class="modal">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-                    <div class="p-6">
-                        <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold dark:text-white">🌤️ Clima en Japón</h2>
-                            <button class="modal-close text-3xl hover:text-red-600 transition" data-modal-close="weather" aria-label="Cerrar">&times;</button>
-                        </div>
-                        <div id="weatherWidgetContainer"></div>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-
-    getPhotoGalleryModal() {
-        return `
-            <div id="modal-gallery" class="modal">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-y-auto">
-                    <div class="p-6">
-                        <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold dark:text-white">📸 Galería de Fotos</h2>
-                            <button class="modal-close text-3xl hover:text-red-600 transition" data-modal-close="gallery" aria-label="Cerrar">&times;</button>
-                        </div>
-                        <div id="photoGalleryContainer"></div>
                     </div>
                 </div>
             </div>
