@@ -15,22 +15,14 @@ const getFoursquareKey = () => {
   return process.env.FOURSQUARE_API_KEY || '';
 };
 
-// Get AviationStack API Key from environment
+// Get AviationStack API Key from environment (Gen 2 Functions use process.env directly)
 const getAviationStackKey = () => {
-  try {
-    const key = functions.config().aviationstack?.key;
-    if (key) return key;
-  } catch (e) {}
-  return process.env.AVIATIONSTACK_API_KEY || '';
+  return process.env.AVIATIONSTACK_API_KEY || '4374cea236b04a5bf7e6d0c7d2cbf676';
 };
 
-// Get LiteAPI Key from environment
+// Get LiteAPI Key from environment (Gen 2 Functions use process.env directly)
 const getLiteAPIKey = () => {
-  try {
-    const key = functions.config().liteapi?.key;
-    if (key) return key;
-  } catch (e) {}
-  return process.env.LITEAPI_API_KEY || '';
+  return process.env.LITEAPI_API_KEY || '1757d988-56b3-4b5a-9618-c7b5053ac3aa';
 };
 
 exports.placesProxy = functions.https.onRequest(async (req, res) => {
