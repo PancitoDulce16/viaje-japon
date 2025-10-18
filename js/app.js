@@ -164,11 +164,32 @@ async function initApp() {
             console.error('❌ Error inicializando AppCore:', e);
         }
 
+        // Inicializar nuevos módulos
+        try {
+            const { PackingList } = await import('./packing-list.js');
+            await PackingList.init();
+            window.PackingList = PackingList;
+        } catch (e) {
+            console.error('❌ Error inicializando PackingList:', e);
+        }
+
+        try {
+            const { FavoritesManager } = await import('./favorites-manager.js');
+            await FavoritesManager.init();
+            window.FavoritesManager = FavoritesManager;
+        } catch (e) {
+            console.error('❌ Error inicializando FavoritesManager:', e);
+        }
+
         console.log('✅ Aplicación iniciada correctamente');
         console.log('🔥 Firebase listo');
         console.log('✨ Itinerary Builder listo');
         console.log('🔌 APIs Integration listo');
         console.log('🤖 AI Integration listo');
+        console.log('🎒 Packing List listo');
+        console.log('⭐ Favorites Manager listo');
+        console.log('🎨 Theme Manager listo');
+        console.log('📱 Mobile Enhancements listo');
 
         // Cargar integraciones opcionalmente y de forma asíncrona
         (async () => {

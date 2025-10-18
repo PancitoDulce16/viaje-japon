@@ -20,6 +20,9 @@ export const ModalRenderer = {
             ${this.getBudgetModal()}
             ${this.getPhrasesModal()}
             ${this.getNotesModal()}
+            ${this.getPackingListModal()}
+            ${this.getFavoritesModal()}
+            ${this.getWeatherModal()}
             ${this.getCreateTripModal()}
             ${this.getTripsListModal()}
         `;
@@ -556,17 +559,65 @@ export const ModalRenderer = {
                             <button class="modal-close text-3xl hover:text-red-600 transition cursor-pointer" data-modal-close="notes" aria-label="Cerrar">&times;</button>
                         </div>
                         <div class="sync-badge mb-4"></div>
-                        <textarea 
-                            id="notesTextarea" 
-                            class="w-full h-64 p-4 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-red-500" 
+                        <textarea
+                            id="notesTextarea"
+                            class="w-full h-64 p-4 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
                             placeholder="Escribe tus notas del viaje aquí..."
                         ></textarea>
-                        <button 
-                            id="saveNotesBtn" 
+                        <button
+                            id="saveNotesBtn"
                             class="mt-4 w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold transition"
                         >
                             💾 Guardar Notas
                         </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    getPackingListModal() {
+        return `
+            <div id="modal-packing" class="modal">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold dark:text-white">🎒 Checklist de Equipaje</h2>
+                            <button class="modal-close text-3xl hover:text-red-600 transition" data-modal-close="packing" aria-label="Cerrar">&times;</button>
+                        </div>
+                        <div id="packingListContainer"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    getFavoritesModal() {
+        return `
+            <div id="modal-favorites" class="modal">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold dark:text-white">⭐ Mis Favoritos</h2>
+                            <button class="modal-close text-3xl hover:text-red-600 transition" data-modal-close="favorites" aria-label="Cerrar">&times;</button>
+                        </div>
+                        <div id="favoritesListContainer"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    getWeatherModal() {
+        return `
+            <div id="modal-weather" class="modal">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold dark:text-white">🌤️ Clima en Japón</h2>
+                            <button class="modal-close text-3xl hover:text-red-600 transition" data-modal-close="weather" aria-label="Cerrar">&times;</button>
+                        </div>
+                        <div id="weatherWidgetContainer"></div>
                     </div>
                 </div>
             </div>

@@ -230,24 +230,42 @@ export const AppCore = {
     openModal(modalName) {
         const modal = document.getElementById(`modal-${modalName}`);
         if (!modal) return;
-        
+
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
-        
+
         if (modalName === 'notes') {
             const textarea = document.getElementById('notesTextarea');
             if (textarea) {
                 textarea.value = this.notes || localStorage.getItem('travelNotes') || '';
             }
-            
+
             // Actualizar indicador de sync
             this.updateNotesSyncIndicator();
         }
-        
+
         if (modalName === 'budget') {
             import('./budget-tracker.js').then(module => {
                 module.BudgetTracker.updateModal();
             });
+        }
+
+        if (modalName === 'packing') {
+            if (window.PackingList) {
+                window.PackingList.renderList();
+            }
+        }
+
+        if (modalName === 'favorites') {
+            if (window.FavoritesManager) {
+                window.FavoritesManager.renderFavoritesList();
+            }
+        }
+
+        if (modalName === 'weather') {
+            if (window.WeatherWidget) {
+                window.WeatherWidget.renderWeatherWidget(['Tokyo', 'Kyoto', 'Osaka', 'Hiroshima', 'Nara', 'Hakone']);
+            }
         }
     },
 

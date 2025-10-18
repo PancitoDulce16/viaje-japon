@@ -24,7 +24,15 @@
       "Bash(firebase firestore:rules:list:*)",
       "Bash(firebase deploy:*)",
       "Bash(cat:*)",
-      "WebFetch(domain:unsplash.com)"
+      "WebFetch(domain:unsplash.com)",
+      "Bash(gh run watch:*)",
+      "Bash(git -C \"c:\\Users\\Noelia\\Documents\\GitHub\\viaje-japon\" show HEAD:js/attractions.js)",
+      "Bash(firebase functions:log:*)",
+      "Bash(firebase functions:config:get:*)",
+      "Bash(curl:*)",
+      "Bash(python -m json.tool:*)",
+      "WebSearch",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []
