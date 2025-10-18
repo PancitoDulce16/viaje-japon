@@ -204,42 +204,32 @@ export const FlightsHandler = {
         </div>
 
         <div class="grid lg:grid-cols-2 gap-6 mb-6">
-          <!-- Flight Tracker - Disabled (Free plan limitation) -->
-          <div class="bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded-xl shadow-lg p-6 relative overflow-hidden">
-            <div class="absolute top-0 right-0 bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg">
-              ⚠️ No disponible
-            </div>
-            <h3 class="text-2xl font-bold mb-4 flex items-center gap-2 opacity-60">
-              📡 Track de Vuelo en Tiempo Real
+          <!-- Flight Tracker - Powered by FlightRadar24 -->
+          <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl shadow-lg p-6">
+            <h3 class="text-2xl font-bold mb-4 flex items-center gap-2">
+              📡 Track de Vuelo
             </h3>
-            <p class="text-sm opacity-70 mb-4">
-              Esta función requiere un plan premium de la API de vuelos
+            <p class="text-sm opacity-90 mb-4">
+              Busca información de vuelos (Powered by FlightRadar24)
             </p>
 
-            <div class="space-y-3 opacity-50 pointer-events-none">
+            <div class="space-y-3">
               <input
                 type="text"
+                id="trackFlightNumber"
                 placeholder="Ej: AM58, UA882"
                 class="w-full p-3 rounded-lg text-gray-800 font-semibold"
-                disabled
-              >
-              <input
-                type="date"
-                class="w-full p-3 rounded-lg text-gray-800 font-semibold"
-                disabled
               >
               <button
-                class="w-full bg-white text-gray-600 py-3 rounded-lg font-bold cursor-not-allowed"
-                disabled
+                id="trackFlightBtn"
+                class="w-full bg-white text-blue-600 py-3 rounded-lg hover:bg-blue-50 transition font-bold"
               >
-                🔍 Rastrear Vuelo
+                🔍 Buscar Vuelo
               </button>
             </div>
 
-            <div class="mt-4 p-4 bg-white/20 rounded-lg backdrop-blur-sm">
-              <p class="text-sm">
-                💡 <strong>Tip:</strong> Usa la sección "Mis Vuelos" arriba para registrar y gestionar manualmente todos tus vuelos del viaje.
-              </p>
+            <div id="flightTrackResult" class="mt-4">
+              <!-- Results will appear here -->
             </div>
           </div>
 
@@ -769,53 +759,69 @@ export const FlightsHandler = {
     `;
 
     try {
-      // 🔍 DEBUG: Verificar API Keys ANTES de la llamada
-      console.log('🔍 === DEBUG TRACK FLIGHT ===');
-      console.log('📦 window.API_KEYS existe:', typeof window.API_KEYS !== 'undefined');
-      console.log('📦 window.API_KEYS valor:', window.API_KEYS);
-      console.log('✈️ AviationStack configurada:', window.API_KEYS?.aviationStack?.apiKey ? 'Sí (***' + window.API_KEYS.aviationStack.apiKey.slice(-4) + ')' : 'No');
-      console.log('🏨 LiteAPI configurada:', window.API_KEYS?.liteAPI?.apiKey ? 'Sí (***' + window.API_KEYS.liteAPI.apiKey.slice(-4) + ')' : 'No');
-
       const result = await APIsIntegration.searchFlights(flightNumber, date || null);
 
-      console.log('📊 Resultado completo de searchFlights:', result);
+      console.log('📊 Resultado completo:', result);
 
-      if (result.success && result.data.length > 0) {
-        const flight = result.data[0];
+      if (result.success && result.data && result.data.length > 0) {
+        // Mostrar todos los vuelos encontrados
+        const flightsHtml = result.data.map(flight => {
+          const status = flight.status?.text || 'Desconocido';
+          const statusColor = status.toLowerCase().includes('scheduled') ? 'bg-blue-500/30' :
+                            status.toLowerCase().includes('active') ? 'bg-green-500/30' :
+                            status.toLowerCase().includes('landed') ? 'bg-gray-500/30' : 'bg-yellow-500/30';
 
-        resultDiv.innerHTML = `
-          <div class="p-4 bg-white/20 rounded-lg backdrop-blur-sm">
-            <p class="text-xs font-bold mb-2">${flight.airline.name} ${flight.flight.iata}</p>
-            <div class="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <p class="text-xs opacity-80">Salida</p>
-                <p class="font-bold">${flight.departure.airport}</p>
-                <p class="text-xs">${new Date(flight.departure.scheduled).toLocaleString()}</p>
+          const departure = flight.airport?.origin;
+          const arrival = flight.airport?.destination;
+          const airline = flight.airline?.name || 'Aerolínea desconocida';
+          const flightNum = flight.identification?.number?.default || flightNumber;
+
+          // Formatear tiempos
+          const depTime = flight.time?.scheduled?.departure ?
+            new Date(flight.time.scheduled.departure * 1000).toLocaleString('es-MX', {
+              weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+            }) : 'N/A';
+
+          const arrTime = flight.time?.scheduled?.arrival ?
+            new Date(flight.time.scheduled.arrival * 1000).toLocaleString('es-MX', {
+              weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+            }) : 'N/A';
+
+          return `
+            <div class="p-4 bg-white/20 rounded-lg backdrop-blur-sm mb-3">
+              <div class="flex justify-between items-start mb-2">
+                <p class="text-sm font-bold">${airline} ${flightNum}</p>
+                <span class="text-xs px-2 py-1 rounded ${statusColor}">${status}</span>
               </div>
-              <div>
-                <p class="text-xs opacity-80">Llegada</p>
-                <p class="font-bold">${flight.arrival.airport}</p>
-                <p class="text-xs">${new Date(flight.arrival.scheduled).toLocaleString()}</p>
+
+              <div class="grid grid-cols-2 gap-3 text-sm mt-3">
+                <div>
+                  <p class="text-xs opacity-80">Salida</p>
+                  <p class="font-bold">${departure?.name || departure?.code?.iata || 'N/A'}</p>
+                  <p class="text-xs">${depTime}</p>
+                </div>
+                <div>
+                  <p class="text-xs opacity-80">Llegada</p>
+                  <p class="font-bold">${arrival?.name || arrival?.code?.iata || 'N/A'}</p>
+                  <p class="text-xs">${arrTime}</p>
+                </div>
               </div>
+
+              ${flight.aircraft?.model?.code ? `
+                <p class="text-xs mt-2 opacity-80">✈️ ${flight.aircraft.model.code}</p>
+              ` : ''}
             </div>
-            <div class="mt-3 p-2 ${flight.flight_status === 'scheduled' ? 'bg-green-500/30' : 'bg-yellow-500/30'} rounded">
-              <p class="text-xs font-bold">
-                Estado: ${flight.flight_status === 'scheduled' ? '✅ Programado' : '⏱️ ' + flight.flight_status}
-              </p>
-            </div>
-          </div>
-        `;
-        Notifications.success('✅ Información del vuelo encontrada');
+          `;
+        }).join('');
+
+        resultDiv.innerHTML = flightsHtml;
+        Notifications.success(`✅ ${result.data.length} vuelo(s) encontrado(s)`);
       } else {
         const errorMsg = result.message || result.error || 'No se encontró información del vuelo';
         resultDiv.innerHTML = `
           <div class="p-4 bg-red-500/20 rounded-lg backdrop-blur-sm border border-red-400/50">
             <p class="text-sm">❌ ${errorMsg}</p>
-            <p class="text-xs opacity-80 mt-1">Verifica el número de vuelo y la fecha</p>
-            <details class="mt-2 text-xs">
-              <summary class="cursor-pointer opacity-80">Ver detalles técnicos</summary>
-              <pre class="mt-1 p-2 bg-black/30 rounded overflow-auto">${JSON.stringify(result, null, 2)}</pre>
-            </details>
+            <p class="text-xs opacity-80 mt-1">Intenta con otro número de vuelo</p>
           </div>
         `;
       }
@@ -823,12 +829,8 @@ export const FlightsHandler = {
       console.error('❌ Error tracking flight:', error);
       resultDiv.innerHTML = `
         <div class="p-4 bg-red-500/20 rounded-lg backdrop-blur-sm border border-red-400/50">
-          <p class="text-sm">❌ Error al rastrear el vuelo</p>
+          <p class="text-sm">❌ Error al buscar el vuelo</p>
           <p class="text-xs opacity-80 mt-1">${error.message}</p>
-          <details class="mt-2 text-xs">
-            <summary class="cursor-pointer opacity-80">Ver detalles técnicos</summary>
-            <pre class="mt-1 p-2 bg-black/30 rounded overflow-auto">${error.stack || error.message}</pre>
-          </details>
         </div>
       `;
     }

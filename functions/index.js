@@ -20,6 +20,11 @@ const getAviationStackKey = () => {
   return process.env.AVIATIONSTACK_API_KEY || '4374cea236b04a5bf7e6d0c7d2cbf676';
 };
 
+// Get FlightRadar24 API Key from environment
+const getFlightRadar24Key = () => {
+  return process.env.FLIGHTRADAR24_API_KEY || '0199f4f2-8886-737a-938b-25a28ebf36b2|5QAzk6kvHlvzqPknflfxFxCzuB7SsomJUjZ7Ry9rcc7fb9a0';
+};
+
 // Get LiteAPI Key from environment (Gen 2 Functions use process.env directly)
 const getLiteAPIKey = () => {
   return process.env.LITEAPI_API_KEY || '1757d988-56b3-4b5a-9618-c7b5053ac3aa';
@@ -59,7 +64,7 @@ exports.placesProxy = functions.https.onRequest(async (req, res) => {
 });
 
 // ==============================
-// ✈️ FLIGHTS PROXY (AviationStack)
+// ✈️ FLIGHTS PROXY (FlightRadar24)
 // ==============================
 exports.flightsProxy = functions.https.onRequest(async (req, res) => {
   // Enable CORS
@@ -73,34 +78,43 @@ exports.flightsProxy = functions.https.onRequest(async (req, res) => {
     return;
   }
 
-  const aviationStackKey = getAviationStackKey();
-  if (!aviationStackKey) {
-    res.status(500).json({ error: 'Server misconfigured: AviationStack API key missing' });
+  const flightRadar24Key = getFlightRadar24Key();
+  if (!flightRadar24Key) {
+    res.status(500).json({ error: 'Server misconfigured: FlightRadar24 API key missing' });
     return;
   }
 
   try {
-    const { flight_iata, flight_date } = req.query;
+    const { flight_number } = req.query;
 
-    console.log('🔍 Flights proxy called with:', { flight_iata, flight_date });
-
-    const url = 'https://api.aviationstack.com/v1/flights';
-    const params = {
-      access_key: aviationStackKey,
-      flight_iata: flight_iata
-    };
-
-    if (flight_date) {
-      params.flight_date = flight_date;
+    if (!flight_number) {
+      res.status(400).json({ error: 'Missing flight_number parameter' });
+      return;
     }
 
-    console.log('📡 Calling AviationStack API...');
+    console.log('🔍 Flights proxy called with:', { flight_number });
+
+    const url = 'https://api.flightradar24.com/common/v1/flight/list.json';
+    const params = {
+      query: flight_number,
+      fetchBy: 'flight',
+      page: 1,
+      limit: 10,
+      token: flightRadar24Key
+    };
+
+    console.log('📡 Calling FlightRadar24 API...');
     const response = await axios.get(url, { params });
 
-    console.log('✅ AviationStack response received:', response.data?.data?.length || 0, 'flights');
-    res.json(response.data);
+    const flights = response.data?.result?.response?.data || [];
+    console.log('✅ FlightRadar24 response received:', flights.length, 'flights');
+
+    res.json({
+      success: true,
+      data: flights
+    });
   } catch (error) {
-    console.error('❌ Error calling AviationStack:', error.response ? error.response.data : error.message);
+    console.error('❌ Error calling FlightRadar24:', error.response ? error.response.data : error.message);
     res.status(500).json({
       error: 'Error fetching flight data',
       details: error.response ? error.response.data : error.message
