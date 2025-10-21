@@ -125,25 +125,6 @@ export const TripsManager = {
     }
   },
 
-  // Copiar plantilla de itinerario (OPCIONAL)
-  async copyItineraryTemplate(tripId) {
-    try {
-      const { ITINERARY_DATA } = await import('./itinerary-data.js');
-      
-      const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
-      
-      await setDoc(itineraryRef, {
-        days: ITINERARY_DATA,
-        lastUpdated: new Date().toISOString(),
-        isTemplate: true
-      });
-      
-      console.log('✅ Plantilla de itinerario copiada al trip:', tripId);
-    } catch (error) {
-      console.error('❌ Error copiando plantilla de itinerario:', error);
-    }
-  },
-
   // Seleccionar trip actual
   async selectTrip(tripId) {
     try {
