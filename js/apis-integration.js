@@ -1,5 +1,5 @@
 // js/apis-integration.js - Integración completa de APIs externas
-import { API_KEYS, API_ENDPOINTS, apiRequest } from './apis-config.js';
+import { API_KEYS, API_ENDPOINTS, apiRequest } from '/js/apis-config.js';
 import { Notifications } from './notifications.js';
 
 /**

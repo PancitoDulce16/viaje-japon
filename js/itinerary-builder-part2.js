@@ -2,10 +2,10 @@
 // js/itinerary-builder-part2.js — Extensiones del Constructor de Itinerarios (patched)
 // Nota: elimina la dependencia a ItineraryBuilder.selectedCategories (leemos del DOM o usamos fallback)
 
-import { db, auth } from './firebase-config.js';
+import { db, auth } from '/js/firebase-config.js';
 import { Notifications } from './notifications.js';
-import { CATEGORIES } from '../data/categories-data.js';
-import { ACTIVITIES_DATABASE, getActivitiesByCity, getActivitiesByCategory, searchActivities } from '../data/activities-database.js';
+import { CATEGORIES } from '/data/categories-data.js';
+import { ACTIVITIES_DATABASE, getActivitiesByCity, getActivitiesByCategory, searchActivities } from '/data/activities-database.js';
 import { doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 export const ItineraryBuilderExtensions = {

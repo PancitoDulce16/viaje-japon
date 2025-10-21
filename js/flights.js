@@ -1,5 +1,5 @@
 // js/flights.js - Gestión completa de vuelos CON CARGA AUTOMÁTICA DEL WIZARD
-import { db, auth } from './firebase-config.js';
+import { db, auth } from '/js/firebase-config.js';
 import { doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { Notifications } from './notifications.js';
 

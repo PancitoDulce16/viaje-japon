@@ -3,7 +3,7 @@
 import { ModalRenderer } from './modals.js';
 import { ItineraryHandler } from './itinerary.js';
 import { TabsHandler } from './tabs.js';
-import { db, auth } from './firebase-config.js';
+import { db, auth } from '/js/firebase-config.js';
 import { 
   doc,
   setDoc,

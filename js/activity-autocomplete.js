@@ -1,5 +1,5 @@
 // js/activity-autocomplete.js - Autocomplete simple para actividades
-import { ATTRACTIONS_DATA } from '../data/attractions-data.js';
+import { ATTRACTIONS_DATA } from '/data/attractions-data.js';
 
 /**
  * Autocomplete Handler para el formulario de actividades

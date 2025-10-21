@@ -1,7 +1,7 @@
 // js/fcm-manager.js - Firebase Cloud Messaging Manager
 
 import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
-import { db, auth } from './firebase-config.js';
+import { db, auth } from '/js/firebase-config.js';
 import { doc, setDoc, updateDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { Notifications } from './notifications.js';
 

@@ -1,6 +1,6 @@
-import { ATTRACTIONS_DATA } from '../data/attractions-data.js';
+import { ATTRACTIONS_DATA } from '/data/attractions-data.js';
 import { Logger, debounce, AppError } from './helpers.js';
-import { STORAGE_KEYS, ERROR_CODES, TIMEOUTS, Z_INDEX, COLOR_SCHEMES, ACTIVITY_ICONS } from './constants.js';
+import { STORAGE_KEYS, ERROR_CODES, TIMEOUTS, Z_INDEX, COLOR_SCHEMES, ACTIVITY_ICONS } from '/js/constants.js';
 
 /**
  * Handler para la gestión de atracciones

@@ -1,11 +1,10 @@
-
 // js/itinerary.js — VERSIÓN MEJORADA con Creación Dinámica + AI Insights Button
-import { db, auth } from './firebase-config.js';
+import { db, auth } from '/js/firebase-config.js';
 import { Notifications } from './notifications.js';
 import { doc, setDoc, getDoc, onSnapshot, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 // Local cities fallback provider
-import { searchCities } from '../data/japan-cities.js';
-import { APP_CONFIG } from './config.js';
+import { searchCities } from '/data/japan-cities.js';
+import { APP_CONFIG } from '/js/config.js';
 import { ActivityAutocomplete } from './activity-autocomplete.js';
 
 let checkedActivities = {};

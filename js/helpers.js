@@ -1,6 +1,6 @@
 // js/helpers.js - Funciones auxiliares reutilizables
 
-import { TIMEOUTS, REGEX, ERROR_CODES, ERROR_MESSAGES } from './constants.js';
+import { TIMEOUTS, REGEX, ERROR_CODES, ERROR_MESSAGES } from '/js/constants.js';
 
 /**
  * Sistema de logging consistente
