@@ -3,9 +3,9 @@
   "version": "2.2.0",
   "type": "module",
   "scripts": {
-    "dev": "dev.bat",
-    "build": "build.bat",
-    "preview": "preview.bat"
+    "dev": "npx vite",
+    "build": "npx vite build",
+    "preview": "npx vite preview"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
