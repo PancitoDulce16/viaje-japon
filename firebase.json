@@ -26,6 +26,14 @@
         "function": "placesProxy"
       },
       {
+        "source": "/dashboard",
+        "destination": "/dashboard.html"
+      },
+      {
+        "source": "/login",
+        "destination": "/login.html"
+      },
+      {
         "source": "!**/*.@(js|css|html|json|png|jpg|gif|svg|ico)",
         "destination": "/index.html"
       }
