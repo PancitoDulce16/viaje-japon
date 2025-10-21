@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO & Metadata -->
+    <title>🇯🇵 Japan Trip Planner - Dashboard</title>
+    <meta name="description" content="Planifica tu viaje a Japón con nuestro dashboard colaborativo. Itinerarios, gastos, mapas y más.">
+    <meta name="theme-color" content="#dc2626">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://japan-itin-dev.web.app/dashboard">
+    <meta property="og:title" content="🇯🇵 Japan Trip Planner - Dashboard">
+    <meta property="og:description" content="Planifica tu viaje a Japón con nuestro dashboard colaborativo.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&q=80">
+
+    <!-- CSS específico para dashboard -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Leaflet CSS for Interactive Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    
+    <!-- CSS del dashboard -->
+    
+    <link rel="manifest" href="/assets/manifest-b6XEKFfq.json">
+    <link rel="icon" type="image/png" href="/assets/icon-192-DBUrCNZW.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/assets/icon-192-DBUrCNZW.png">
+  <script type="module" crossorigin src="/assets/dashboard-Fy2Qrf0z.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/notifications-UIywheBc.js">
+  <link rel="stylesheet" crossorigin href="/assets/notifications-C8Kv7lRi.css">
+  <link rel="stylesheet" crossorigin href="/assets/dashboard-DO5ElcyD.css">
+</head>
+<body>
+    <!-- APP DASHBOARD -->
+    <div id="appDashboard">
+        <!-- Botones Flotantes -->
+        <div class="z-40 fixed bottom-8 right-8 flex flex-col gap-3 stagger-fade-in floating-btn-container">
+            <button data-modal="budget" data-tooltip="💰 Budget Tracker" class="floating-btn ripple bounce-click gpu-accelerated tooltip-sakura" aria-label="Abrir control de gastos" style="animation-delay: 0.1s">
+                <i class="fas fa-yen-sign"></i>
+            </button>
+            <button data-modal="packing" data-tooltip="🎒 Checklist de Equipaje" class="floating-btn ripple bounce-click gpu-accelerated tooltip-info" aria-label="Abrir checklist de equipaje" style="animation-delay: 0.2s">
+                <i class="fas fa-suitcase-rolling"></i>
+            </button>
+            <button data-modal="favorites" data-tooltip="⭐ Mis Favoritos" class="floating-btn ripple bounce-click gpu-accelerated tooltip-warning" aria-label="Abrir mis favoritos" style="animation-delay: 0.3s">
+                <i class="fas fa-star"></i>
+            </button>
+            <button data-modal="phrases" data-tooltip="🗣️ Frases Útiles" class="floating-btn ripple bounce-click gpu-accelerated tooltip-success" aria-label="Abrir frases útiles" style="animation-delay: 0.4s">
+                <i class="fas fa-language"></i>
+            </button>
+            <button data-modal="notes" data-tooltip="📝 Mis Notas" class="floating-btn ripple bounce-click gpu-accelerated tooltip-info" aria-label="Abrir mis notas" style="animation-delay: 0.5s">
+                <i class="fas fa-sticky-note"></i>
+            </button>
+        </div>
+
+        <!-- Header -->
+        <header class="japan-header text-white p-6 shadow-lg">
+            <div class="max-w-6xl mx-auto">
+                <div class="flex justify-between items-center flex-wrap gap-4 mb-4">
+                    <div class="flex-1 min-w-[250px]">
+                        <h1 class="text-2xl md:text-3xl font-bold font-japanese">
+                            <i class="fas fa-torii-gate"></i> Japan Trip Planner
+                        </h1>
+                    </div>
+                    <div class="flex gap-2 items-center flex-wrap">
+                        <!-- User info -->
+                        <div id="userInfo" class="bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm">
+                            <span id="userEmailDisplay" class="text-sm"></span>
+                        </div>
+                        
+                        <button 
+                            id="logoutBtn"
+                            class="bg-red- doorway:bg-red-600 text-white px-4 py-2 rounded transition text-sm font-semibold"
+                            aria-label="Cerrar sesión"
+                        >
+                            Cerrar Sesión
+                        </button>
+                        
+                        <button
+                            id="themeToggle"
+                            class="bg-white/20 hover:bg-white/30 rounded-lg p-3 transition backdrop-blur-sm"
+                            aria-label="Cambiar tema de color"
+                            title="Cambiar tema"
+                        >
+                            <i id="darkModeIcon" class="fas fa-moon text-xl"></i>
+                        </button>
+                        <button
+                            data-modal="emergency"
+                            class="bg-red-500/80 hover:bg-red-600 rounded-lg px-4 py-2 transition font-semibold backdrop-blur-sm"
+                            aria-label="Ver números de emergencia"
+                            title="Números de emergencia"
+                        >
+                            <i class="fas fa-exclamation-triangle"></i> SOS
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Información del Viaje Actual -->
+                <div id="currentTripHeader"></div>
+            </div>
+        </header>
+        
+        <!-- Navegación de Tabs -->
+        <nav class="japan-nav bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30 shadow-sm" aria-label="Navegación principal">
+            <div id="tabSelector" class="max-w-6xl mx-auto px-4 flex gap-1 overflow-x-auto scrollbar-hide">
+                <button data-tab="itinerary" class="tab-btn active">
+                    <i class="far fa-calendar-alt"></i> Itinerario
+                </button>
+                <button data-tab="preparation" class="tab-btn">
+                    <i class="fas fa-tasks"></i> Preparación
+                </button>
+                <button data-tab="flights" class="tab-btn">
+                    <i class="fas fa-plane"></i> Vuelos
+                </button>
+                <button data-tab="hotels" class="tab-btn">
+                    <i class="fas fa-hotel"></i> Hoteles
+                </button>
+                <button data-tab="transport" class="tab-btn">
+                    <i class="fas fa-train"></i> Transporte
+                </button>
+                <button data-tab="map" class="tab-btn">
+                    <i class="fas fa-map-marked-alt"></i> Mapa
+                </button>
+                <button data-tab="attractions" class="tab-btn">
+                    <i class="fas fa-landmark"></i> Atracciones
+                </button>
+                <button data-tab="utils" class="tab-btn">
+                    <i class="fas fa-tools"></i> Utilidades
+                </button>
+            </div>
+        </nav>
+
+        <!-- Contenido Principal -->
+        <main id="main-content">
+            <div id="content-itinerary" class="tab-content"></div>
+            <div id="content-preparation" class="tab-content hidden"></div>
+            <div id="content-flights" class="tab-content hidden"></div>
+            <div id="content-hotels" class="tab-content hidden"></div>
+            <div id="content-transport" class="tab-content hidden"></div>
+            <div id="content-map" class="tab-content hidden"></div>
+            <div id="content-attractions" class="tab-content hidden"></div>
+            <div id="content-utils" class="tab-content hidden"></div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="japan-footer bg-gradient-japan text-white p-8 mt-12 text-center">
+            <div class="max-w-6xl mx-auto">
+                <p class="text-lg mb-2 font-japanese">
+                    <i class="fas fa-heart text-sakura-pink"></i> ¡Que tengas un viaje increíble!
+                </p>
+                <p class="text-sm text-white/80">
+                    <strong class="font-japanese">いってらっしゃい！</strong> (Itterasshai - ¡Buen viaje!)
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modales -->
+    <div id="modalsContainer">
+        <!-- Los modales se renderizarán dinámicamente desde modals.js -->
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts del Dashboard -->
+    <!-- SortableJS para drag & drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <!-- Swiper.js para carrusel de días -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <!-- Leaflet JS for Interactive Map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+
+    <!-- Firebase Configuration loaded from js/firebase-config.js (not tracked in git) -->
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registrado:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('❌ Error al registrar Service Worker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>

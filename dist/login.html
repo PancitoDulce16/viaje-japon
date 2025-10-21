@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO & Metadata -->
+    <title>🇯🇵 Japan Trip Planner - Iniciar Sesión</title>
+    <meta name="description" content="Inicia sesión en Japan Trip Planner para planificar tu viaje colaborativo a Japón.">
+    <meta name="theme-color" content="#dc2626">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://japan-itin-dev.web.app/">
+    <meta property="og:title" content="🇯🇵 Japan Trip Planner - Iniciar Sesión">
+    <meta property="og:description" content="Inicia sesión en Japan Trip Planner para planificar tu viaje colaborativo a Japón.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&q=80">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://japan-itin-dev.web.app/">
+    <meta property="twitter:title" content="🇯🇵 Japan Trip Planner - Iniciar Sesión">
+    <meta property="twitter:description" content="Inicia sesión en Japan Trip Planner para planificar tu viaje colaborativo a Japón.">
+    <meta property="twitter:image" content="https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&q=80">
+
+    <!-- Solo cargar CSS necesario para login -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    
+    <!-- CSS específico para login -->
+    
+    <link rel="manifest" href="/assets/manifest-b6XEKFfq.json">
+    <link rel="icon" type="image/png" href="/assets/icon-192-DBUrCNZW.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/assets/icon-192-DBUrCNZW.png">
+  <script type="module" crossorigin src="/assets/login-rCqRIWTC.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/notifications-UIywheBc.js">
+  <link rel="stylesheet" crossorigin href="/assets/notifications-C8Kv7lRi.css">
+  <link rel="stylesheet" crossorigin href="/assets/login-BifQWH_9.css">
+</head>
+<body>
+    <!-- LOGIN PAGE -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+        <!-- Background Image with Overlay -->
+        <div class="absolute inset-0 z-0">
+            <img
+                src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1920&q=80"
+                alt="Kyoto Japan"
+                class="w-full h-full object-cover"
+            />
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-purple-900/60 to-pink-900/70"></div>
+        </div>
+        <div id="sakura-container" class="z-10"></div>
+        <div class="max-w-6xl w-full z-10 relative">
+            <!-- Hero Section -->
+            <div class="text-center mb-12">
+                <h1 class="hero-title animate__animated animate__fadeInDown">
+                    <i class="fas fa-torii-gate"></i> Japan Trip Planner
+                </h1>
+                <p class="hero-subtitle">
+                    Planifica tu viaje a Japón de manera colaborativa
+                </p>
+                <p class="hero-description">
+                    <i class="fas fa-sparkles"></i> Crea itinerarios •
+                    <i class="fas fa-yen-sign"></i> Controla gastos •
+                    <i class="fas fa-users"></i> Colabora en tiempo real
+                </p>
+            </div>
+
+            <!-- Login Card -->
+            <div class="japan-card animate__animated animate__fadeInUp max-w-md mx-auto">
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold text-ink-black dark:text-white mb-2 font-japanese">
+                        ようこそ Bienvenido
+                    </h2>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Inicia sesión para comenzar a planificar
+                    </p>
+                </div>
+
+                <!-- Tabs de Login/Registro -->
+                <div class="flex gap-2 mb-6 border-b-2 border-gray-200 dark:border-gray-700">
+                    <button 
+                        id="loginTabBtn" 
+                        class="auth-tab-btn flex-1 px-4 py-2 font-semibold border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
+                        type="button"
+                    >
+                        Iniciar Sesión
+                    </button>
+                    <button 
+                        id="registerTabBtn" 
+                        class="auth-tab-btn flex-1 px-4 py-2 font-semibold border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                        type="button"
+                    >
+                        Registrarse
+                    </button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Email
+                        </label>
+                        <input 
+                            id="loginEmail" 
+                            type="email" 
+                            required
+                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            placeholder="tu@email.com"
+                        >
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Contraseña
+                        </label>
+                        <input 
+                            id="loginPassword" 
+                            type="password" 
+                            required
+                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            placeholder="••••••••"
+                        >
+                    </div>
+                    <button
+                        type="submit"
+                        class="btn-japan w-full"
+                    >
+                        <i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión
+                    </button>
+                </form>
+
+                <!-- Register Form (Hidden by default) -->
+                <form id="registerForm" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Email
+                        </label>
+                        <input 
+                            id="registerEmail" 
+                            type="email" 
+                            required
+                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-green-500 focus:outline-none"
+                            placeholder="tu@email.com"
+                        >
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Contraseña (mínimo 6 caracteres)
+                        </label>
+                        <input 
+                            id="registerPassword" 
+                            type="password" 
+                            required
+                            minlength="6"
+                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-green-500 focus:outline-none"
+                            placeholder="••••••••"
+                        >
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Confirmar Contraseña
+                        </label>
+                        <input 
+                            id="registerConfirmPassword" 
+                            type="password" 
+                            required
+                            minlength="6"
+                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-green-500 focus:outline-none"
+                            placeholder="••••••••"
+                        >
+                    </div>
+                    <button
+                        type="submit"
+                        class="btn-matcha w-full"
+                    >
+                        <i class="fas fa-user-plus mr-2"></i> Crear Cuenta
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="japan-divider my-6">
+                    <span>または</span>
+                </div>
+
+                <!-- Google Login -->
+                <button
+                    id="googleLogin"
+                    type="button"
+                    class="btn-secondary w-full flex items-center justify-center gap-3"
+                >
+                    <svg width="20" height="20" viewBox="0 0 20 20">
+                        <path fill="#4285F4" d="M19.6 10.23c0-.82-.1-1.42-.25-2.05H10v3.72h5.5c-.15.96-.74 2.31-2.04 3.22v2.45h3.16c1.89-1.73 2.98-4.3 2.98-7.34z"/>
+                        <path fill="#34A853" d="M13.46 15.13c-.83.59-1.96 1-3.46 1-2.64 0-4.88-1.74-5.68-4.15H1.07v2.52C2.72 17.75 6.09 20 10 20c2.7 0 4.96-.89 6.62-2.42l-3.16-2.45z"/>
+                        <path fill="#FBBC05" d="M3.99 10c0-.69.12-1.35.32-1.97V5.51H1.07A9.973 9.973 0 000 10c0 1.61.39 3.14 1.07 4.49l3.24-2.52c-.2-.62-.32-1.28-.32-1.97z"/>
+                        <path fill="#EA4335" d="M10 3.88c1.88 0 3.13.81 3.85 1.48l2.84-2.76C14.96.99 12.7 0 10 0 6.09 0 2.72 2.25 1.07 5.51l3.24 2.52C5.12 5.62 7.36 3.88 10 3.88z"/>
+                    </svg>
+                    Continuar con Google
+                </button>
+            </div>
+
+            <!-- Features -->
+            <div class="mt-12 grid md:grid-cols-3 gap-6">
+                <div class="feature-card animate__animated animate__fadeInUp" style="animation-delay: 0.1s">
+                    <div class="feature-icon bg-gradient-sakura">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2 font-japanese">Itinerarios Personalizados</h3>
+                    <p class="text-sm text-white/90">Crea tu propio itinerario día a día o usa nuestras plantillas</p>
+                </div>
+                <div class="feature-card animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
+                    <div class="feature-icon bg-gradient-bamboo">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2 font-japanese">Modo Colaborativo</h3>
+                    <p class="text-sm text-white/90">Planifica con amigos o familia en tiempo real</p>
+                </div>
+                <div class="feature-card animate__animated animate__fadeInUp" style="animation-delay: 0.3s">
+                    <div class="feature-icon bg-gradient-sunset">
+                        <i class="fas fa-yen-sign"></i>
+                    </div>
+                    <h3 class="font-bold text-lg mb-2 font-japanese">Control de Gastos</h3>
+                    <p class="text-sm text-white/90">Lleva el control de tu presupuesto compartido</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts específicos para login -->
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registrado:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('❌ Error al registrar Service Worker:', error);
+                    });
+            });
+        }
+
+        // Script para la animación de Sakura - Solo en login page
+        let sakuraInterval = null;
+
+        function createSakura() {
+            const container = document.getElementById('sakura-container');
+            if (!container) return;
+
+            const petal = document.createElement('div');
+            petal.classList.add('petal');
+
+            // Posición y tamaño variables
+            const size = 14 + Math.random() * 14; // 14px a 28px
+            petal.style.width = size + 'px';
+            petal.style.height = size * 1.5 + 'px';
+            petal.style.left = Math.random() * 100 + 'vw';
+
+            // Ritmo de caída suave
+            const durationSec = 15 + Math.random() * 10; // 15s a 25s
+            const delaySec = Math.random() * 10; // 0s a 10s
+            petal.style.animationDuration = durationSec + 's';
+            petal.style.animationDelay = delaySec + 's';
+
+            container.appendChild(petal);
+
+            // Eliminar el pétalo después de su animación
+            const maxLifetimeMs = (durationSec + delaySec + 1) * 1000;
+            setTimeout(() => {
+                petal.remove();
+            }, maxLifetimeMs);
+        }
+
+        function spawnInitialSakura(count = 50) {
+            for (let i = 0; i < count; i++) {
+                createSakura();
+            }
+        }
+
+        // Iniciar animación
+        function startSakuraAnimation() {
+            if (!sakuraInterval) {
+                spawnInitialSakura(50);
+                sakuraInterval = setInterval(createSakura, 1200);
+            }
+        }
+
+        // Iniciar animación cuando carga la página
+        startSakuraAnimation();
+    </script>
+</body>
+</html>

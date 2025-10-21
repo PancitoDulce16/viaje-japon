@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO & Metadata -->
+    <title>🇯🇵 Japan Trip Planner - Planifica tu viaje colaborativo</title>
+    <meta name="description" content="Planificador de viajes a Japón todo en uno. Crea itinerarios, controla gastos y colabora con tus amigos o familiares en tiempo real. Tu aventura japonesa empieza aquí.">
+    <meta name="theme-color" content="#dc2626">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://japan-itin-dev.web.app/">
+    <meta property="og:title" content="🇯🇵 Japan Trip Planner - Planifica tu viaje colaborativo">
+    <meta property="og:description" content="Crea itinerarios, controla gastos y colabora en tiempo real para tu viaje a Japón.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&q=80">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://japan-itin-dev.web.app/">
+    <meta property="twitter:title" content="🇯🇵 Japan Trip Planner - Planifica tu viaje colaborativo">
+    <meta property="twitter:description" content="Crea itinerarios, controla gastos y colabora en tiempo real para tu viaje a Japón.">
+    <meta property="twitter:image" content="https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&q=80">
+
+    <link rel="manifest" href="/assets/manifest-b6XEKFfq.json">
+    <link rel="icon" type="image/png" href="/assets/icon-192-DBUrCNZW.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/assets/icon-192-DBUrCNZW.png">
+</head>
+<body>
+    <!-- Página de redirección simple -->
+    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-100 dark:from-gray-900 dark:to-gray-800">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                🇯🇵 Japan Trip Planner
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400">
+                Redirigiendo a la aplicación...
+            </p>
+        </div>
+    </div>
+
+    <!-- Script de redirección -->
+    <script>
+        // Verificar si el usuario está autenticado
+        const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
+        
+        // Redirigir según el estado de autenticación
+        if (isAuthenticated) {
+            window.location.href = '/dashboard.html';
+        } else {
+            window.location.href = '/login.html';
+        }
+    </script>
+</body>
+</html>
