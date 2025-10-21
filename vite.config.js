@@ -1,21 +1,37 @@
+// vite.config.js - Configuración optimizada para la aplicación
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  // La raíz del proyecto donde está index.html
-  root: resolve(__dirname, ''),
-  resolve: {
-    alias: {
-      // Permite usar rutas absolutas como /js/module.js en los imports
-      '/js': resolve(__dirname, 'js'),
-      '/data': resolve(__dirname, 'data')
-    }
+  server: {
+    port: 3000,
+    host: true,
+    // Configurar redirecciones para SPA
+    historyApiFallback: true,
   },
   build: {
-    // La carpeta donde se generará la versión final
-    outDir: resolve(__dirname, 'dist'),
-    emptyOutDir: true, // Limpia la carpeta dist antes de cada build
-    rollupOptions: { input: resolve(__dirname, 'index.html') }
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
+    minify: 'terser',
+    rollupOptions: {
+      input: {
+        main: './index.html',
+        login: './login.html',
+        dashboard: './dashboard.html'
+      }
+    }
+  },
+  // Optimizaciones de rendimiento
+  optimizeDeps: {
+    include: [
+      'firebase/app',
+      'firebase/auth',
+      'firebase/firestore',
+      'firebase/storage'
+    ]
+  },
+  // Configuración de CSS
+  css: {
+    postcss: './postcss.config.js'
   }
 });

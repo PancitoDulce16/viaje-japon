@@ -1,0 +1,322 @@
+// js/dashboard.js - Lógica específica para el dashboard
+import { AppCore } from './core.js';
+
+// 🔥 IMPORTANTE: Importar el CSS principal para que Vite lo procese
+import '../css/main.css';
+
+import './mobile-enhancements.js'; // Import for side effects
+import './theme-manager.js'; // Import for side effects
+import { PackingList } from './packing-list.js';
+import { FavoritesManager } from './favorites-manager.js';
+import { ItineraryHandler } from './itinerary.js';
+import { TabsHandler } from './tabs.js';
+import { ModalRenderer } from './modals.js';
+import { MapHandler } from './map.js';
+import { AttractionsHandler } from './attractions.js';
+import { PreparationHandler } from './preparation.js';
+import { TransportHandler } from './transport.js';
+import { FlightsHandler } from './flights.js';
+import { HotelsHandler } from './hotels.js';
+import { Notifications } from './notifications.js';
+import { ItineraryBuilder } from './itinerary-builder.js';
+import { ItineraryBuilderExtensions } from './itinerary-builder-part2.js';
+import { Dialogs } from './dialogs.js';
+
+// 🔥 Firebase imports
+import { AuthHandler } from './auth.js';
+import { TripsManager } from './trips-manager.js';
+import { FCMManager } from './fcm-manager.js';
+import './chat.js';
+import './firebase-config.js';
+
+// 🖼️ Image Service imports
+import './image-service.js';
+
+class DashboardManager {
+    constructor() {
+        this.isInitialized = false;
+        this.init();
+    }
+
+    async init() {
+        try {
+            console.log('🚀 Iniciando dashboard...');
+
+            // Verificar autenticación
+            if (!this.checkAuthentication()) {
+                this.redirectToLogin();
+                return;
+            }
+
+            // 🔔 Inicializar sistema de notificaciones
+            Notifications.init();
+
+            // 🔥 Inicializar Firebase Auth
+            console.log('⏳ Esperando a que la autenticación esté lista...');
+            try {
+                await AuthHandler.init();
+                console.log('✅ Autenticación lista, continuando con la inicialización...');
+            } catch (authError) {
+                console.error('❌ Error crítico en autenticación:', authError);
+                console.warn('⚠️ Continuando sin autenticación (modo offline)');
+            }
+
+            // Inicializar el resto de la app
+            await this.initializeApp();
+
+            // Configurar eventos del dashboard
+            this.setupDashboardEvents();
+
+            this.isInitialized = true;
+            console.log('✅ Dashboard inicializado correctamente');
+
+        } catch (error) {
+            console.error('💥 Error crítico al inicializar dashboard:', error);
+            this.showErrorPage(error);
+        }
+    }
+
+    checkAuthentication() {
+        // Verificar si está autenticado
+        const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
+        const user = AuthHandler.getCurrentUser();
+        
+        return isAuthenticated || user;
+    }
+
+    redirectToLogin() {
+        console.log('🔐 Usuario no autenticado, redirigiendo al login...');
+        window.location.href = '/login.html';
+    }
+
+    async initializeApp() {
+        try {
+            // Inicializar el núcleo de la aplicación
+            await AppCore.init();
+
+            // Inicializar componentes específicos del dashboard
+            await this.initializeDashboardComponents();
+
+            console.log('✅ Aplicación inicializada correctamente');
+        } catch (error) {
+            console.error('❌ Error al inicializar aplicación:', error);
+            throw error;
+        }
+    }
+
+    async initializeDashboardComponents() {
+        try {
+            // Inicializar componentes en paralelo para mejor rendimiento
+            const initPromises = [
+                this.initUserInfo(),
+                this.initTabs(),
+                this.initModals(),
+                this.initNotifications()
+            ];
+
+            await Promise.all(initPromises);
+
+            console.log('✅ Componentes del dashboard inicializados');
+        } catch (error) {
+            console.error('❌ Error al inicializar componentes del dashboard:', error);
+            throw error;
+        }
+    }
+
+    async initUserInfo() {
+        try {
+            const user = AuthHandler.getCurrentUser();
+            if (user) {
+                const userEmailDisplay = document.getElementById('userEmailDisplay');
+                if (userEmailDisplay) {
+                    userEmailDisplay.textContent = user.email;
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error al inicializar información del usuario:', error);
+        }
+    }
+
+    async initTabs() {
+        try {
+            // Inicializar el manejador de tabs
+            if (window.TabsHandler) {
+                window.tabsHandler = new TabsHandler();
+            }
+        } catch (error) {
+            console.error('❌ Error al inicializar tabs:', error);
+        }
+    }
+
+    async initModals() {
+        try {
+            // Inicializar el renderizador de modales
+            if (window.ModalRenderer) {
+                window.modalRenderer = new ModalRenderer();
+            }
+        } catch (error) {
+            console.error('❌ Error al inicializar modales:', error);
+        }
+    }
+
+    async initNotifications() {
+        try {
+            // Inicializar notificaciones push si está disponible
+            if (window.FCMManager) {
+                const fcmManager = new FCMManager();
+                await fcmManager.init();
+            }
+        } catch (error) {
+            console.error('❌ Error al inicializar notificaciones:', error);
+        }
+    }
+
+    setupDashboardEvents() {
+        // Evento de logout
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => this.handleLogout());
+        }
+
+        // Evento de cambio de tema
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => this.handleThemeToggle());
+        }
+
+        // Prevenir navegación accidental
+        window.addEventListener('beforeunload', (e) => {
+            if (!this.isInitialized) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+    }
+
+    async handleLogout() {
+        try {
+            const confirmed = confirm('¿Estás seguro de que quieres cerrar sesión?');
+            if (!confirmed) return;
+
+            this.showLoading('Cerrando sesión...');
+
+            // Cerrar sesión en Firebase
+            await AuthHandler.signOut();
+
+            // Limpiar datos de sesión
+            sessionStorage.removeItem('authenticated');
+            localStorage.removeItem('currentTrip');
+
+            // Redirigir al login
+            setTimeout(() => {
+                window.location.href = '/login.html';
+            }, 1000);
+
+        } catch (error) {
+            console.error('❌ Error al cerrar sesión:', error);
+            this.showError('Error al cerrar sesión. Inténtalo de nuevo.');
+        }
+    }
+
+    handleThemeToggle() {
+        // Implementar cambio de tema
+        const body = document.body;
+        const isDark = body.classList.contains('dark');
+        
+        if (isDark) {
+            body.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        } else {
+            body.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        }
+
+        // Actualizar icono
+        const darkModeIcon = document.getElementById('darkModeIcon');
+        if (darkModeIcon) {
+            darkModeIcon.className = isDark ? 'fas fa-moon text-xl' : 'fas fa-sun text-xl';
+        }
+    }
+
+    showLoading(message) {
+        // Crear overlay de loading
+        const loadingOverlay = document.createElement('div');
+        loadingOverlay.id = 'loadingOverlay';
+        loadingOverlay.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+        loadingOverlay.innerHTML = `
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p class="text-gray-700 dark:text-gray-300">${message}</p>
+            </div>
+        `;
+        
+        document.body.appendChild(loadingOverlay);
+    }
+
+    hideLoading() {
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.remove();
+        }
+    }
+
+    showError(message) {
+        this.hideLoading();
+        Notifications.show(message, 'error');
+    }
+
+    showErrorPage(error) {
+        console.error('💥 Critical initialization error:', error);
+
+        const appContainer = document.getElementById('appDashboard') || document.body;
+        appContainer.innerHTML = `
+            <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-gray-900 dark:to-gray-800 px-4">
+                <div class="max-w-2xl w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center">
+                    <div class="text-6xl mb-6">⚠️</div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                        Error al iniciar la aplicación
+                    </h1>
+                    <p class="text-lg text-gray-600 dark:text-gray-400 mb-6">
+                        Lo sentimos, hubo un problema al cargar la aplicación. Por favor, intenta recargar la página.
+                    </p>
+                    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6 text-left">
+                        <p class="text-sm font-mono text-red-800 dark:text-red-400 break-all">
+                            ${error.message || error.toString()}
+                        </p>
+                    </div>
+                    <div class="flex gap-4 justify-center flex-wrap">
+                        <button
+                            onclick="location.reload()"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition shadow-md"
+                        >
+                            🔄 Recargar Página
+                        </button>
+                        <button
+                            onclick="localStorage.clear(); location.reload();"
+                            class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition shadow-md"
+                        >
+                            🗑️ Limpiar Cache y Recargar
+                        </button>
+                        <button
+                            onclick="window.location.href='/login.html'"
+                            class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition shadow-md"
+                        >
+                            🔐 Volver al Login
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-6">
+                        Si el problema persiste, contacta al soporte técnico.
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    new DashboardManager();
+});
+
+// Exportar para uso en otros módulos si es necesario
+export { DashboardManager };
