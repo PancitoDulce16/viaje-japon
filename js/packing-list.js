@@ -1,6 +1,6 @@
 // js/packing-list.js - Checklist de equipaje personalizable con sync
 
-import { db, auth } from './firebase-config.js';
+import { db, auth } from '/js/firebase-config.js';
 import {
   doc,
   setDoc,

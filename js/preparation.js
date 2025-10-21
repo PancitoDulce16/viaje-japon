@@ -1,6 +1,6 @@
 // js/preparation.js - Tab de Preparación con Modo Colaborativo
 
-import { db, auth } from './firebase-config.js';
+import { db, auth } from '/js/firebase-config.js';
 import { 
   doc,
   setDoc,

@@ -1,6 +1,6 @@
 // js/trips-manager.js - Sistema de Gestión de Viajes con Invitación Mejorada
 
-import { db, auth } from './firebase-config.js';
+import { db, auth } from '/js/firebase-config.js';
 import { Notifications } from './notifications.js';
 import { 
   collection,
