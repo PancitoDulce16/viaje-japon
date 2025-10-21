@@ -16,11 +16,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Dependencies & Build Project
-        run: |
-          npm install
-          npm run build
-
       - name: Generate client config files
         env:
           # Define el contenido completo de firebase-config.js como una variable
@@ -133,6 +128,11 @@ jobs:
             printf 'export const APP_CONFIG = { GOOGLE_PLACES_API_KEY: "%s" };\n' "${{ secrets.CONFIG_GOOGLE_PLACES_KEY }}" > js/config.js
           fi
 
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Project
+        run: npm run build
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
