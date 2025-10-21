@@ -20,7 +20,7 @@ class LoginManager {
             await AuthHandler.init();
             
             // Verificar si ya está autenticado
-            const user = AuthHandler.getCurrentUser();
+            const user = AuthHandler.currentUser;
             if (user) {
                 console.log('✅ Usuario ya autenticado, redirigiendo al dashboard...');
                 this.redirectToDashboard();

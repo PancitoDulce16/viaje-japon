@@ -79,7 +79,7 @@ class DashboardManager {
     checkAuthentication() {
         // Verificar si está autenticado
         const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
-        const user = AuthHandler.getCurrentUser();
+        const user = AuthHandler.currentUser;
         
         return isAuthenticated || user;
     }
@@ -125,7 +125,7 @@ class DashboardManager {
 
     async initUserInfo() {
         try {
-            const user = AuthHandler.getCurrentUser();
+            const user = AuthHandler.currentUser;
             if (user) {
                 const userEmailDisplay = document.getElementById('userEmailDisplay');
                 if (userEmailDisplay) {
