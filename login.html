@@ -23,11 +23,12 @@
     <meta property="twitter:description" content="Inicia sesión en Japan Trip Planner para planificar tu viaje colaborativo a Japón.">
     <meta property="twitter:image" content="https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&q=80">
 
-    <!-- Solo cargar CSS necesario para login -->
+    <!-- CSS necesario para login -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
     
-    <!-- CSS específico para login -->
+    <!-- CSS principal y específico para login -->
+    <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/japan-theme.css">
     <link rel="stylesheet" href="/css/sakura.css">
     <link rel="stylesheet" href="/css/animations.css">
@@ -56,42 +57,42 @@
         <div class="max-w-6xl w-full z-10 relative">
             <!-- Hero Section -->
             <div class="text-center mb-12">
-                <h1 class="hero-title animate__animated animate__fadeInDown">
-                    <i class="fas fa-torii-gate"></i> Japan Trip Planner
+                <h1 class="text-4xl md:text-6xl font-bold text-white mb-4 animate__animated animate__fadeInDown" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
+                    <i class="fas fa-torii-gate text-red-500"></i> Japan Trip Planner
                 </h1>
-                <p class="hero-subtitle">
+                <p class="text-xl md:text-2xl text-white/90 mb-2 animate__animated animate__fadeInDown" style="animation-delay: 0.2s;">
                     Planifica tu viaje a Japón de manera colaborativa
                 </p>
-                <p class="hero-description">
-                    <i class="fas fa-sparkles"></i> Crea itinerarios •
-                    <i class="fas fa-yen-sign"></i> Controla gastos •
-                    <i class="fas fa-users"></i> Colabora en tiempo real
+                <p class="text-lg text-white/80 animate__animated animate__fadeInDown" style="animation-delay: 0.4s;">
+                    <i class="fas fa-sparkles text-yellow-300"></i> Crea itinerarios •
+                    <i class="fas fa-yen-sign text-green-400"></i> Controla gastos •
+                    <i class="fas fa-users text-blue-400"></i> Colabora en tiempo real
                 </p>
             </div>
 
             <!-- Login Card -->
-            <div class="japan-card animate__animated animate__fadeInUp max-w-md mx-auto">
+            <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 animate__animated animate__fadeInUp max-w-md mx-auto" style="animation-delay: 0.6s;">
                 <div class="text-center mb-6">
-                    <h2 class="text-2xl font-bold text-ink-black dark:text-white mb-2 font-japanese">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2" style="font-family: 'Noto Sans JP', sans-serif;">
                         ようこそ Bienvenido
                     </h2>
-                    <p class="text-gray-600 dark:text-gray-400">
+                    <p class="text-gray-600">
                         Inicia sesión para comenzar a planificar
                     </p>
                 </div>
 
                 <!-- Tabs de Login/Registro -->
-                <div class="flex gap-2 mb-6 border-b-2 border-gray-200 dark:border-gray-700">
+                <div class="flex gap-2 mb-6 border-b-2 border-gray-200">
                     <button 
                         id="loginTabBtn" 
-                        class="auth-tab-btn flex-1 px-4 py-2 font-semibold border-b-2 border-blue-500 text-blue-600 dark:text-blue-400"
+                        class="flex-1 px-4 py-2 font-semibold border-b-2 border-blue-500 text-blue-600 transition-colors"
                         type="button"
                     >
                         Iniciar Sesión
                     </button>
                     <button 
                         id="registerTabBtn" 
-                        class="auth-tab-btn flex-1 px-4 py-2 font-semibold border-b-2 border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                        class="flex-1 px-4 py-2 font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors"
                         type="button"
                     >
                         Registrarse
@@ -101,32 +102,32 @@
                 <!-- Login Form -->
                 <form id="loginForm" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
                             Email
                         </label>
                         <input 
                             id="loginEmail" 
                             type="email" 
                             required
-                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none focus:border-blue-500"
                             placeholder="tu@email.com"
                         >
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
                             Contraseña
                         </label>
                         <input 
                             id="loginPassword" 
                             type="password" 
                             required
-                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none focus:border-blue-500"
                             placeholder="••••••••"
                         >
                     </div>
                     <button
                         type="submit"
-                        class="btn-japan w-full"
+                        class="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 px-6 rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-lg"
                     >
                         <i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión
                     </button>
@@ -135,19 +136,19 @@
                 <!-- Register Form (Hidden by default) -->
                 <form id="registerForm" class="space-y-4 hidden">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
                             Email
                         </label>
                         <input 
                             id="registerEmail" 
                             type="email" 
                             required
-                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-green-500 focus:outline-none"
+                            class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none focus:border-green-500"
                             placeholder="tu@email.com"
                         >
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
                             Contraseña (mínimo 6 caracteres)
                         </label>
                         <input 
@@ -155,12 +156,12 @@
                             type="password" 
                             required
                             minlength="6"
-                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-green-500 focus:outline-none"
+                            class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none focus:border-green-500"
                             placeholder="••••••••"
                         >
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
                             Confirmar Contraseña
                         </label>
                         <input 
@@ -168,28 +169,30 @@
                             type="password" 
                             required
                             minlength="6"
-                            class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-green-500 focus:outline-none"
+                            class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none focus:border-green-500"
                             placeholder="••••••••"
                         >
                     </div>
                     <button
                         type="submit"
-                        class="btn-matcha w-full"
+                        class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-3 px-6 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg"
                     >
                         <i class="fas fa-user-plus mr-2"></i> Crear Cuenta
                     </button>
                 </form>
 
                 <!-- Divider -->
-                <div class="japan-divider my-6">
-                    <span>または</span>
+                <div class="my-6 flex items-center">
+                    <div class="flex-1 border-t border-gray-300"></div>
+                    <span class="px-4 text-gray-500 bg-white">または</span>
+                    <div class="flex-1 border-t border-gray-300"></div>
                 </div>
 
                 <!-- Google Login -->
                 <button
                     id="googleLogin"
                     type="button"
-                    class="btn-secondary w-full flex items-center justify-center gap-3"
+                    class="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-md"
                 >
                     <svg width="20" height="20" viewBox="0 0 20 20">
                         <path fill="#4285F4" d="M19.6 10.23c0-.82-.1-1.42-.25-2.05H10v3.72h5.5c-.15.96-.74 2.31-2.04 3.22v2.45h3.16c1.89-1.73 2.98-4.3 2.98-7.34z"/>
@@ -203,25 +206,25 @@
 
             <!-- Features -->
             <div class="mt-12 grid md:grid-cols-3 gap-6">
-                <div class="feature-card animate__animated animate__fadeInUp" style="animation-delay: 0.1s">
-                    <div class="feature-icon bg-gradient-sakura">
-                        <i class="fas fa-map-marked-alt"></i>
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center animate__animated animate__fadeInUp" style="animation-delay: 0.8s;">
+                    <div class="w-16 h-16 bg-gradient-to-r from-pink-400 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-map-marked-alt text-white text-2xl"></i>
                     </div>
-                    <h3 class="font-bold text-lg mb-2 font-japanese">Itinerarios Personalizados</h3>
+                    <h3 class="font-bold text-lg mb-2 text-white" style="font-family: 'Noto Sans JP', sans-serif;">Itinerarios Personalizados</h3>
                     <p class="text-sm text-white/90">Crea tu propio itinerario día a día o usa nuestras plantillas</p>
                 </div>
-                <div class="feature-card animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
-                    <div class="feature-icon bg-gradient-bamboo">
-                        <i class="fas fa-users"></i>
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center animate__animated animate__fadeInUp" style="animation-delay: 1.0s;">
+                    <div class="w-16 h-16 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-users text-white text-2xl"></i>
                     </div>
-                    <h3 class="font-bold text-lg mb-2 font-japanese">Modo Colaborativo</h3>
+                    <h3 class="font-bold text-lg mb-2 text-white" style="font-family: 'Noto Sans JP', sans-serif;">Modo Colaborativo</h3>
                     <p class="text-sm text-white/90">Planifica con amigos o familia en tiempo real</p>
                 </div>
-                <div class="feature-card animate__animated animate__fadeInUp" style="animation-delay: 0.3s">
-                    <div class="feature-icon bg-gradient-sunset">
-                        <i class="fas fa-yen-sign"></i>
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center animate__animated animate__fadeInUp" style="animation-delay: 1.2s;">
+                    <div class="w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-yen-sign text-white text-2xl"></i>
                     </div>
-                    <h3 class="font-bold text-lg mb-2 font-japanese">Control de Gastos</h3>
+                    <h3 class="font-bold text-lg mb-2 text-white" style="font-family: 'Noto Sans JP', sans-serif;">Control de Gastos</h3>
                     <p class="text-sm text-white/90">Lleva el control de tu presupuesto compartido</p>
                 </div>
             </div>
