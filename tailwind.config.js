@@ -2,7 +2,7 @@
 export default {
   content: [
     "./index.html",
-    "./js/**/*.js", // Ahora la ruta es correcta desde la raíz
+    "./js/**/*.js",
   ],
   darkMode: 'class',
   theme: {

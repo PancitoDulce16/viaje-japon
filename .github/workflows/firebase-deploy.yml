@@ -16,11 +16,10 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install root dependencies (if any)
+      - name: Install root dependencies & Build project
         run: |
-          if [ -f package.json ]; then
-            npm ci
-          fi
+          npm ci
+          npm run build
 
       - name: Generate client config files
         env:
@@ -165,4 +164,3 @@ jobs:
       - name: Deploy to Firebase
         run: |
           firebase deploy --only hosting,functions --project ${{ secrets.FIREBASE_PROJECT_ID }} --force
-
