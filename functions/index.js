@@ -1,5 +1,6 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const { onDocumentDeleted, onDocumentCreated } = require("firebase-functions/v2/firestore");
 const fetch = require("node-fetch");
 
 admin.initializeApp();
@@ -8,7 +9,7 @@ admin.initializeApp();
  * Cloud Function para eliminar en cascada todos los datos de un viaje.
  * Se activa cuando un documento en `trips/{tripId}` es eliminado.
  */
-exports.onTripDeleted = functions.firestore.onDocumentDeleted('trips/{tripId}', async (event) => {
+exports.onTripDeleted = onDocumentDeleted('trips/{tripId}', async (event) => {
     const tripId = event.params.tripId;
     const path = `trips/${tripId}`;
     
@@ -34,7 +35,7 @@ exports.onTripDeleted = functions.firestore.onDocumentDeleted('trips/{tripId}', 
 /**
  * Cloud Function para enviar notificaciones cuando se agrega un nuevo gasto.
  */
-exports.onNewExpenseAdded = functions.firestore.onDocumentCreated('trips/{tripId}/expenses/{expenseId}', async (event) => {
+exports.onNewExpenseAdded = onDocumentCreated('trips/{tripId}/expenses/{expenseId}', async (event) => {
     const { tripId } = event.params;
     const expense = event.data.data();
 
