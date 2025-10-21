@@ -3,9 +3,9 @@
   "version": "2.2.0",
   "type": "module",
   "scripts": {
-    "dev": ".\\node_modules\\.bin\\vite.cmd",
-    "build": ".\\node_modules\\.bin\\vite.cmd build",
-    "preview": ".\\node_modules\\.bin\\vite.cmd preview"
+    "dev": "dev.bat",
+    "build": "build.bat",
+    "preview": "preview.bat"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
