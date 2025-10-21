@@ -8,7 +8,8 @@ export default defineConfig({
   resolve: {
     alias: {
       // Permite usar rutas absolutas como /js/module.js en los imports
-      '/js': resolve(__dirname, 'js')
+      '/js': resolve(__dirname, 'js'),
+      '/data': resolve(__dirname, 'data')
     }
   },
   build: {
