@@ -1,5 +1,9 @@
 // js/app.js - App principal con Firebase
 import { AppCore } from './core.js';
+
+// 🔥 IMPORTANTE: Importar el CSS principal para que Vite lo procese
+import '../css/main.css';
+
 import './mobile-enhancements.js'; // Import for side effects
 import './theme-manager.js'; // Import for side effects
 import { PackingList } from './packing-list.js';
