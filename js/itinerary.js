@@ -548,8 +548,14 @@ function renderDayOverview(day){
 
 function renderActivities(day){
   const container=document.getElementById('activitiesTimeline'); if(!container) return;
+  const currentUserId = auth.currentUser?.uid;
+
   if (sortableInstance){ try{ sortableInstance.destroy(); }catch(_){} sortableInstance=null; }
   container.innerHTML = (day.activities||[]).map((act,i)=> {
+    const votes = act.votes || {};
+    const voteCount = Object.keys(votes).length;
+    const userHasVoted = currentUserId && votes[currentUserId];
+
     return `
     <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden fade-in transition-all hover:shadow-xl border-l-4 border-red-500 ${checkedActivities[act.id]?'opacity-60':''}" style="animation-delay:${i*0.05}s">
       <div class="p-5 flex items-start gap-4">
@@ -568,6 +574,17 @@ function renderActivities(day){
               <h3 class="text-lg font-bold dark:text-white mb-1">${act.title}</h3>
             </div>
             <div class="flex gap-2 flex-shrink-0">
+              <button 
+                type="button" 
+                data-action="vote" 
+                data-activity-id="${act.id}" 
+                data-day="${day.day}" 
+                class="activity-vote-btn p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition flex items-center gap-1 ${userHasVoted ? 'text-red-500' : 'text-gray-400'}"
+                title="Votar por esta actividad"
+              >
+                <i class="fas fa-heart"></i>
+                <span class="text-xs font-bold">${voteCount > 0 ? voteCount : ''}</span>
+              </button>
               <button type="button" data-action="edit" data-activity-id="${act.id}" data-day="${day.day}" class="activity-edit-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">✏️</button>
               <button type="button" data-action="delete" data-activity-id="${act.id}" data-day="${day.day}" class="activity-delete-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">🗑️</button>
             </div>
@@ -695,10 +712,12 @@ export const ItineraryHandler = {
         const addBtn=e.target.closest('[id^="addActivityBtn_"]');
         const editBtn=e.target.closest('.activity-edit-btn');
         const deleteBtn=e.target.closest('.activity-delete-btn');
+        const voteBtn = e.target.closest('.activity-vote-btn');
         const dayBtn=e.target.closest('.day-btn');
         if(addBtn){ const day=parseInt(addBtn.id.split('_')[1]); ItineraryHandler.showActivityModal(null, day); }
         else if(editBtn){ const activityId=editBtn.dataset.activityId; const dayNum=parseInt(editBtn.dataset.day); ItineraryHandler.showActivityModal(activityId, dayNum); }
         else if(deleteBtn){ const activityId=deleteBtn.dataset.activityId; const dayNum=parseInt(deleteBtn.dataset.day); ItineraryHandler.deleteActivity(activityId, dayNum); }
+        else if(voteBtn){ const activityId=voteBtn.dataset.activityId; const dayNum=parseInt(voteBtn.dataset.day); ItineraryHandler.toggleVote(dayNum, activityId); }
         else if(dayBtn){ selectDay(parseInt(dayBtn.dataset.day)); }
       });
       container.addEventListener('change', (e)=>{ const checkbox=e.target.closest('.activity-checkbox'); if(checkbox){ toggleActivity(checkbox.dataset.id); } });
@@ -852,6 +871,36 @@ export const ItineraryHandler = {
       console.error('❌ Error eliminando actividad:', error);
       alert('⚠️ Error al eliminar la actividad');
     }
+  },
+
+  // 🔥 NUEVO: Votar por una actividad
+  async toggleVote(dayNumber, activityId) {
+    if (!auth.currentUser) {
+      Notifications.warning('Debes iniciar sesión para votar');
+      return;
+    }
+
+    const dayData = currentItinerary.days.find(d => d.day === dayNumber);
+    if (!dayData) return;
+
+    const activity = dayData.activities.find(a => a.id === activityId);
+    if (!activity) return;
+
+    const userId = auth.currentUser.uid;
+
+    // Inicializar mapa de votos si no existe
+    if (!activity.votes) {
+      activity.votes = {};
+    }
+
+    // Añadir o quitar voto
+    if (activity.votes[userId]) {
+      delete activity.votes[userId]; // Quitar voto
+    } else {
+      activity.votes[userId] = true; // Añadir voto
+    }
+
+    await saveCurrentItineraryToFirebase();
   }
 };
 

@@ -7,10 +7,8 @@ admin.initializeApp();
  * Cloud Function para eliminar en cascada todos los datos de un viaje.
  * Se activa cuando un documento en `trips/{tripId}` es eliminado.
  */
-exports.onTripDeleted = functions.firestore
-    .document('trips/{tripId}')
-    .onDelete(async (snap, context) => {
-        const tripId = context.params.tripId;
+exports.onTripDeleted = functions.firestore.onDocumentDeleted('trips/{tripId}', async (event) => {
+        const tripId = event.params.tripId;
         const path = `trips/${tripId}`;
         
         console.log(`🗑️ Iniciando eliminación en cascada para el viaje: ${tripId}`);
@@ -18,7 +16,11 @@ exports.onTripDeleted = functions.firestore
         try {
             // Usar la herramienta CLI de Firebase para borrado recursivo es más seguro
             // Esta función delega la tarea a la herramienta interna de Firebase
-            await admin.firestore().recursiveDelete(admin.firestore().collection(path));
+            // La ruta para recursiveDelete debe ser una colección, pero el trigger es sobre un documento.
+            // Para eliminar subcolecciones, debemos hacerlo manualmente o usar la extensión de Firebase.
+            // Por simplicidad y seguridad, vamos a borrar las subcolecciones conocidas.
+            const db = admin.firestore();
+            await db.recursiveDelete(db.collection('trips').doc(tripId));
             console.log(`✅ Eliminación en cascada completada para: ${path}`);
             return null;
         } catch (error) {
@@ -31,11 +33,9 @@ exports.onTripDeleted = functions.firestore
 /**
  * Cloud Function para enviar notificaciones cuando se agrega un nuevo gasto.
  */
-exports.onNewExpenseAdded = functions.firestore
-    .document('trips/{tripId}/expenses/{expenseId}')
-    .onCreate(async (snap, context) => {
-        const { tripId } = context.params;
-        const expense = snap.data();
+exports.onNewExpenseAdded = functions.firestore.onDocumentCreated('trips/{tripId}/expenses/{expenseId}', async (event) => {
+        const { tripId } = event.params;
+        const expense = event.data.data();
 
         console.log(`💸 Nuevo gasto de ${expense.amount} en viaje ${tripId} por ${expense.addedBy}`);
 
