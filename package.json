@@ -4,8 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "npx vite build",
+    "build:alt": "chmod +x build.sh && ./build.sh",
+    "preview": "npx vite preview"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",

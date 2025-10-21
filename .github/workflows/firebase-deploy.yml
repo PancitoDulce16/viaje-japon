@@ -132,7 +132,10 @@ jobs:
         run: npm install
 
       - name: Build Project
-        run: npm run build
+        run: |
+          # Make build script executable and run it
+          chmod +x build.sh
+          ./build.sh
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
