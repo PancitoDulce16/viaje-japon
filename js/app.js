@@ -1,5 +1,9 @@
 // js/app.js - App principal con Firebase
 import { AppCore } from './core.js';
+import './mobile-enhancements.js'; // Import for side effects
+import './theme-manager.js'; // Import for side effects
+import { PackingList } from './packing-list.js';
+import { FavoritesManager } from './favorites-manager.js';
 import { ItineraryHandler } from './itinerary.js';
 import { TabsHandler } from './tabs.js';
 import { ModalRenderer } from './modals.js';
@@ -159,7 +163,6 @@ async function initApp() {
 
         // Inicializar nuevos módulos
         try {
-            const { PackingList } = await import('./packing-list.js');
             await PackingList.init();
             window.PackingList = PackingList;
         } catch (e) {
@@ -167,7 +170,6 @@ async function initApp() {
         }
 
         try {
-            const { FavoritesManager } = await import('./favorites-manager.js');
             await FavoritesManager.init();
             window.FavoritesManager = FavoritesManager;
         } catch (e) {
