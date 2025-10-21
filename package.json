@@ -3,9 +3,9 @@
   "version": "2.2.0",
   "type": "module",
   "scripts": {
-    "dev": "npx vite",
-    "build": "npx vite build",
-    "preview": "npx vite preview"
+    "dev": ".\\node_modules\\.bin\\vite.cmd",
+    "build": ".\\node_modules\\.bin\\vite.cmd build",
+    "preview": ".\\node_modules\\.bin\\vite.cmd preview"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",
