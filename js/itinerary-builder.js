@@ -1,6 +1,6 @@
 // js/itinerary-builder.js - Sistema Completo de Construcción de Itinerarios
 
-import { db, auth } from '/js/firebase-config.js';
+import { db, auth } from './firebase-config.js';
 import { Notifications } from './notifications.js';
 import { CATEGORIES, TEMPLATES } from '../data/categories-data.js';
 import { ACTIVITIES_DATABASE, getActivitiesByCity, getActivitiesByCategory } from '../data/activities-database.js';

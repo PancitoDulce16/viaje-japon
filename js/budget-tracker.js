@@ -1,6 +1,6 @@
 // js/budget-tracker.js - CON MODO COLABORATIVO
 
-import { db, auth } from '/js/firebase-config.js';
+import { db, auth } from './firebase-config.js';
 import { 
   collection, 
   addDoc, 

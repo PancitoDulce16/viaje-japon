@@ -4,7 +4,7 @@
 // carrera del temporizador, asegurando un flujo de autenticación predecible y fiable.
 // ====================================================================================
 
-import { auth, googleProvider } from '/js/firebase-config.js';
+import { auth, googleProvider } from './firebase-config.js';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
