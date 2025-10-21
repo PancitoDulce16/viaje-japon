@@ -447,7 +447,7 @@ export const PreparationHandler = {
                 // Revertir cambio si falla
                 this.packingList[category][index].checked = !this.packingList[category][index].checked;
                 this.renderPreparation();
-                alert('Error al sincronizar. Intenta de nuevo.');
+                window.Notifications.error('Error al sincronizar. Intenta de nuevo.');
             }
         }
     },
@@ -463,8 +463,12 @@ export const PreparationHandler = {
     },
 
     async addCustomItem(category) {
-        const itemName = prompt('¿Qué item quieres agregar?');
-        if (!itemName || !itemName.trim()) return;
+        const itemName = await window.Dialogs.prompt({
+            title: '➕ Agregar Item Personalizado',
+            message: `Ingresa el nombre del item para la categoría "${category}".`,
+            placeholder: 'Ej: Batería extra'
+        });
+        if (!itemName) return; // El usuario canceló
 
         if (!this.packingList[category]) {
             this.packingList[category] = [];
@@ -480,7 +484,13 @@ export const PreparationHandler = {
     },
 
     async deleteCustomItem(category, index) {
-        if (!confirm('¿Seguro que deseas eliminar este item?')) return;
+        const confirmed = await window.Dialogs.confirm({
+            title: '🗑️ ¿Eliminar Item?',
+            message: 'Esta acción no se puede deshacer. ¿Estás seguro?',
+            okText: 'Sí, eliminar',
+            isDestructive: true
+        });
+        if (!confirmed) return;
 
         if (this.packingList[category] && this.packingList[category][index]) {
             this.packingList[category].splice(index, 1);
@@ -523,7 +533,7 @@ export const PreparationHandler = {
             console.log('✅', successMessage);
         } catch (error) {
             console.error('❌ Error guardando packing list:', error);
-            alert('Error al guardar. Intenta de nuevo.');
+            window.Notifications.error('Error al guardar. Intenta de nuevo.');
         }
     },
 
@@ -574,39 +584,20 @@ export const PreparationHandler = {
 
     // Cleanup
     cleanup() {
-        if (this.unsubscribe) {
-            this.unsubscribe();
-        }
+        if (this.unsubscribe) this.unsubscribe();
+        this.unsubscribe = null;
+        this.packingList = this.getDefaultPackingList();
+        localStorage.removeItem('packingList');
+        this.renderPreparation();
+        console.log('[PreparationHandler] 🧹 Estado de preparación limpiado.');
     }
 };
 
-// Inicializar cuando cambia el estado de autenticación
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-
-try {
-    if (typeof auth !== 'undefined' && auth) {
-        onAuthStateChanged(auth, (user) => {
-            PreparationHandler.initRealtimeSync();
-        });
-    } else {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                try { PreparationHandler.initRealtimeSync(); } catch (e) { console.warn('PreparationHandler init deferred failed:', e); }
-            });
-        } else {
-            try { PreparationHandler.initRealtimeSync(); } catch (e) { console.warn('PreparationHandler init immediate failed:', e); }
-        }
-    }
-} catch (e) {
-    console.warn('Error setting up auth listener for PreparationHandler:', e);
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            try { PreparationHandler.initRealtimeSync(); } catch (err) { console.warn('PreparationHandler fallback failed:', err); }
-        });
-    } else {
-        try { PreparationHandler.initRealtimeSync(); } catch (err) { console.warn('PreparationHandler fallback immediate failed:', err); }
-    }
-}
-
 // Exponer globalmente
 window.PreparationHandler = PreparationHandler;
+
+// ====================================================================================
+// MANEJO DE EVENTOS DE AUTENTICACIÓN
+// ====================================================================================
+window.addEventListener('auth:initialized', () => PreparationHandler.initRealtimeSync());
+window.addEventListener('auth:loggedOut', () => PreparationHandler.cleanup());

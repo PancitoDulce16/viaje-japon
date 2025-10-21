@@ -17,6 +17,13 @@ import {
   browserLocalPersistence
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
+// ====================================================================================
+// EVENTOS PERSONALIZADOS
+// Estos eventos comunican el estado de la autenticación a otros módulos.
+// ====================================================================================
+const authInitializedEvent = (user) => new CustomEvent('auth:initialized', { detail: { user } });
+const authLoggedOutEvent = new CustomEvent('auth:loggedOut');
+
 export const AuthHandler = {
   currentUser: null,
   authUnsubscribe: null,
@@ -120,27 +127,10 @@ export const AuthHandler = {
                 // Mostrar dashboard
                 this.showAppDashboard();
                 this.updateUserInfo(this.currentUser);
-
-                // Solo inicializar módulos en la primera llamada o después de redirección
-                if (isFirstCall || redirectHandled) {
-                    console.log('🔄 Inicializando módulos de la aplicación...');
-
-                    // Inicializar TripsManager si está disponible
-                    if (window.TripsManager && window.TripsManager.initUserTrips) {
-                      console.log('🔄 Inicializando TripsManager...');
-                      setTimeout(() => {
-                        window.TripsManager.initUserTrips();
-                      }, 500);
-                    }
-
-                    // Reinicializar el itinerario cuando el usuario inicia sesión
-                    if (window.ItineraryHandler && window.ItineraryHandler.reinitialize) {
-                      console.log('🔄 Reinicializando ItineraryHandler...');
-                      setTimeout(() => {
-                        window.ItineraryHandler.reinitialize();
-                      }, 1000);
-                    }
-                }
+                
+                // Disparamos el evento para que otros módulos se inicialicen.
+                console.log('🚀 Disparando evento auth:initialized');
+                window.dispatchEvent(authInitializedEvent(this.currentUser));
             } else {
                 // No hay redirección Y no hay sesión activa. El usuario no está logueado.
                 console.log('🚫 No hay sesión activa. Mostrando landing page.');
@@ -224,7 +214,7 @@ export const AuthHandler = {
     const password = document.getElementById('landingLoginPassword').value;
 
     if (!email || !password) {
-      alert('⚠️ Por favor ingresa tu email y contraseña');
+      this.showError('Por favor ingresa tu email y contraseña');
       return;
     }
 
@@ -249,17 +239,17 @@ export const AuthHandler = {
     const confirmPassword = document.getElementById('landingRegisterConfirmPassword').value;
 
     if (!email || !password || !confirmPassword) {
-      alert('⚠️ Por favor completa todos los campos');
+      this.showError('Por favor completa todos los campos');
       return;
     }
 
     if (password !== confirmPassword) {
-      alert('⚠️ Las contraseñas no coinciden');
+      this.showError('Las contraseñas no coinciden');
       return;
     }
 
     if (password.length < 6) {
-      alert('⚠️ La contraseña debe tener al menos 6 caracteres');
+      this.showError('La contraseña debe tener al menos 6 caracteres');
       return;
     }
 
@@ -293,7 +283,7 @@ export const AuthHandler = {
 
       // Si el popup fue bloqueado, intentar con redirect como fallback
       if (error.code === 'auth/popup-blocked') {
-        alert('⚠️ El popup fue bloqueado. Intentando con redirección...');
+        this.showError('El popup fue bloqueado. Intentando con redirección...', 'info');
         try {
           await signInWithRedirect(auth, googleProvider);
         } catch (redirectError) {
@@ -311,10 +301,12 @@ export const AuthHandler = {
       await signOut(auth);
       this.currentUser = null;
       console.log('✅ Sesión cerrada');
+      // Disparamos el evento de logout para que otros módulos limpien su estado.
+      window.dispatchEvent(authLoggedOutEvent);
       // onAuthStateChanged se encargará de mostrar la landing page
     } catch (error) {
       console.error('❌ Error al cerrar sesión:', error);
-      alert('Error al cerrar sesión');
+      this.showError('Error al cerrar sesión');
     }
   },
 
@@ -353,6 +345,16 @@ export const AuthHandler = {
     }
   },
 
+  showError(message, type = 'error') {
+    // Si existe un sistema de notificaciones, lo usamos. Si no, usamos alert.
+    if (window.Notifications && window.Notifications[type]) {
+      window.Notifications[type](message);
+    } else {
+      // Fallback a un alert simple
+      alert(`⚠️ ${message}`);
+    }
+  },
+
   handleAuthError(error) {
     let message = 'Error en autenticación';
     switch (error.code) {
@@ -364,7 +366,7 @@ export const AuthHandler = {
       case 'auth/invalid-credential': message = '⚠️ Email o contraseña incorrectos'; break;
       default: message = `⚠️ Error: ${error.message}`;
     }
-    alert(message);
+    this.showError(message);
   }
 };
 

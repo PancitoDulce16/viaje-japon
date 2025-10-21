@@ -383,9 +383,25 @@ export const FavoritesManager = {
 
   // Re-inicializar
   reinitialize() {
-    this.initSync();
+    return this.initSync();
+  },
+
+  // Limpiar estado
+  cleanup() {
+    if (this.unsubscribe) this.unsubscribe();
+    this.unsubscribe = null;
+    this.favorites = [];
+    localStorage.removeItem('favorites');
+    this.updateFavoritesUI();
+    console.log('[FavoritesManager] 🧹 Estado de favoritos limpiado.');
   }
 };
 
 // Exportar globalmente
 window.FavoritesManager = FavoritesManager;
+
+// ====================================================================================
+// MANEJO DE EVENTOS DE AUTENTICACIÓN
+// ====================================================================================
+window.addEventListener('auth:initialized', () => FavoritesManager.initSync());
+window.addEventListener('auth:loggedOut', () => FavoritesManager.cleanup());

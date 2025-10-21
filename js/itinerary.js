@@ -2,7 +2,7 @@
 // js/itinerary.js — VERSIÓN MEJORADA con Creación Dinámica + AI Insights Button
 import { db, auth } from './firebase-config.js';
 import { Notifications } from './notifications.js';
-import { doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { doc, setDoc, getDoc, onSnapshot, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 // Local cities fallback provider
 import { searchCities } from '../data/japan-cities.js';
 import { APP_CONFIG } from './config.js';
@@ -249,6 +249,7 @@ async function initRealtimeSync(){
   // Clean up existing listener
   if (unsubscribe) {
     unsubscribe();
+    console.log('[Itinerary] 🛑 Antiguo listener de itinerario detenido.');
     unsubscribe = null;
   }
 
@@ -269,39 +270,38 @@ async function initRealtimeSync(){
 
   console.log('🤝 Collaborative mode activated for trip:', tripId);
 
+  // 🔥 NUEVO: Listener unificado para itinerario y checklist
   try {
-    const checklistRef = doc(db, `trips/${tripId}/activities`, 'checklist');
+    const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
 
     // Use resilient snapshot with automatic retry
     unsubscribe = createResilientSnapshot(
-      checklistRef,
+      itineraryRef,
       (docSnap) => {
         // Success callback
         if (docSnap.exists()) {
-          checkedActivities = docSnap.data().checked || {};
+          currentItinerary = docSnap.data();
+          // Extraer el checklist del itinerario si existe, o usar uno vacío
+          checkedActivities = currentItinerary.checklist || {};
+          console.log('✅ Itinerario y checklist sincronizados en tiempo real.');
         } else {
+          // Si no hay itinerario, reseteamos todo
+          currentItinerary = null;
           checkedActivities = {};
+          console.log('⚠️ No hay itinerario en Firebase para este viaje.');
         }
         localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));
         render();
-        console.log('✅ Checklist synced:', Object.keys(checkedActivities).length, 'activities');
       },
       (error) => {
         // Error callback (after all retries exhausted)
         console.error('❌ Error in realtime sync (all retries failed):', error);
 
-        // Specific error handling
         if (error.code === 'permission-denied') {
-          console.error('❌ Permission denied: You do not have access to this checklist');
-          Notifications?.show?.('No tienes permiso para acceder a esta lista', 'error');
-        } else if (error.code === 'unavailable') {
-          console.error('❌ Firestore unavailable: Connection lost after retries');
-          Notifications?.show?.('Conexión perdida después de varios intentos. Trabajando en modo local.', 'warning');
-        } else {
-          Notifications?.show?.('Error de sincronización. Trabajando en modo local.', 'warning');
+          Notifications?.show?.('No tienes permiso para acceder a este itinerario', 'error');
         }
 
-        // Fallback to local storage
+        // Fallback a datos locales si la sincronización falla
         checkedActivities = JSON.parse(localStorage.getItem('checkedActivities') || '{}');
         render();
       }
@@ -337,9 +337,9 @@ async function toggleActivity(activityId) {
     }
 
     // Save to Firestore
-    const checklistRef = doc(db, `trips/${tripId}/activities`, 'checklist');
-    await setDoc(checklistRef, {
-      checked: checkedActivities,
+    const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+    await updateDoc(itineraryRef, {
+      'checklist.checked': checkedActivities,
       lastUpdated: new Date().toISOString(),
       updatedBy: auth.currentUser.email
     });
@@ -435,64 +435,6 @@ function renderTripSelector(){
         </div>
       </div>
     </div>`;
-  try{
-    if (currentItinerary && window.ItineraryBuilder){
-      const actions = container.querySelector('.flex.gap-2');
-      if(actions){
-        const btn=document.createElement('button');
-        if (currentItinerary.aiInsights) {
-          // If AI insights exist, show "Ver Insights AI"
-          btn.textContent='✨ Ver Insights AI';
-          btn.className='bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm';
-          btn.addEventListener('click', ()=> {
-            if (window.ItineraryBuilder.showAIInsightsModal) {
-              window.ItineraryBuilder.showAIInsightsModal(currentItinerary.aiInsights);
-            }
-          });
-        } else {
-          // If no AI insights, show "Generar Sugerencias AI"
-          btn.textContent='✨ Sugerencias IA';
-          btn.className='bg-gradient-to-r from-purple-500/80 to-pink-500/80 hover:from-purple-600/90 hover:to-pink-600/90 px-4 py-2 rounded-lg transition text-sm font-bold backdrop-blur-sm shadow-md';
-          btn.addEventListener('click', async ()=> {
-            if (!window.AIIntegration) {
-              alert('⚠️ El módulo de IA no está disponible');
-              return;
-            }
-
-            // Show loading state
-            btn.disabled = true;
-            btn.textContent = '⏳ Generando...';
-
-            try {
-              // Generate AI suggestions for current itinerary
-              const suggestions = await window.AIIntegration.getPersonalizedSuggestions({
-                days: currentItinerary.days,
-                preferences: currentTrip?.preferences || {}
-              });
-
-              // Save AI insights to itinerary
-              currentItinerary.aiInsights = suggestions;
-              await saveCurrentItineraryToFirebase();
-
-              // Re-render to show the new button
-              render();
-
-              // Show the insights modal
-              if (window.ItineraryBuilder.showAIInsightsModal) {
-                window.ItineraryBuilder.showAIInsightsModal(suggestions);
-              }
-            } catch (error) {
-              console.error('Error generating AI suggestions:', error);
-              alert('⚠️ Error al generar sugerencias. Intenta de nuevo.');
-              btn.disabled = false;
-              btn.textContent = '✨ Sugerencias IA';
-            }
-          });
-        }
-        actions.appendChild(btn);
-      }
-    }
-  }catch(e){ console.warn('No se pudo inyectar el botón de AI:', e); }
 }
 
 function renderDaySelector(){
@@ -565,7 +507,7 @@ function renderDayOverview(day){
   container.innerHTML = `
     ${cityImage ? `
       <div class="relative h-48 w-full overflow-hidden rounded-t-xl -mx-6 -mt-6 mb-4">
-        <img src="${cityImage}" alt="${day.city || day.location || 'Japan'}" class="w-full h-full object-cover" loading="lazy" />
+        <img src="${cityImage}" alt="${day.city || day.location || 'Japan'}" class="w-full h-full object-cover" loading="lazy">
         <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
         <div class="absolute bottom-0 left-0 right-0 p-4">
           <div class="flex items-center gap-2 text-white">
@@ -881,7 +823,7 @@ export const ItineraryHandler = {
     try {
       await saveCurrentItineraryToFirebase();
       this.closeActivityModal();
-      render();
+      // render() se llama automáticamente desde el listener onSnapshot del itinerario
       Notifications.show(activityId ? 'Actividad actualizada' : 'Actividad añadida', 'success');
     } catch (error) {
       console.error('❌ Error guardando actividad:', error);
@@ -890,16 +832,21 @@ export const ItineraryHandler = {
   },
 
   async deleteActivity(activityId, day) {
-    if (!confirm('¿Seguro que deseas eliminar esta actividad?')) return;
+    const confirmed = await window.Dialogs.confirm({
+        title: '🗑️ ¿Eliminar Actividad?',
+        message: '¿Estás seguro de que deseas eliminar esta actividad del itinerario?',
+        okText: 'Sí, eliminar',
+        isDestructive: true
+    });
+    if (!confirmed) return;
 
     const dayData = currentItinerary.days.find(d => d.day === day);
     if (!dayData) return;
 
     dayData.activities = dayData.activities.filter(a => a.id !== activityId);
-
     try {
       await saveCurrentItineraryToFirebase();
-      render();
+      // render() se llama automáticamente desde el listener onSnapshot del itinerario
       Notifications.show('Actividad eliminada', 'success');
     } catch (error) {
       console.error('❌ Error eliminando actividad:', error);
@@ -908,18 +855,23 @@ export const ItineraryHandler = {
   }
 };
 
-// Auth listener (igual que tu proyecto)
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-try{
-  if (typeof auth !== 'undefined' && auth){ onAuthStateChanged(auth, (user)=>{ initRealtimeSync(); }); }
-  else {
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>{ try{ initRealtimeSync(); }catch(e){ console.warn('initRealtimeSync deferred failed:', e); } });
-    else { try{ initRealtimeSync(); }catch(e){ console.warn('initRealtimeSync immediate failed:', e); } }
+// ====================================================================================
+// MANEJO DE EVENTOS DE AUTENTICACIÓN
+// ====================================================================================
+window.addEventListener('auth:initialized', (event) => {
+  console.log('[ItineraryHandler] ✨ Evento auth:initialized recibido. Inicializando sync...');
+  // Re-inicializamos para asegurarnos de que todo se cargue con el nuevo estado de auth.
+  ItineraryHandler.reinitialize();
+});
+
+window.addEventListener('auth:loggedOut', () => {
+  console.log('[ItineraryHandler] 🚫 Evento auth:loggedOut recibido. Limpiando...');
+  if (unsubscribe) {
+    unsubscribe();
+    unsubscribe = null;
   }
-}catch(e){
-  console.warn('Error setting up auth listener for itinerary:', e);
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=>{ try{ initRealtimeSync(); }catch(err){ console.warn('initRealtimeSync fallback failed:', err); } });
-  else { try{ initRealtimeSync(); }catch(err){ console.warn('initRealtimeSync fallback immediate failed:', err); } }
-}
+  currentItinerary = null;
+  renderEmptyState(); // Muestra el estado "No hay viaje seleccionado"
+});
 
 window.ItineraryHandler = ItineraryHandler;

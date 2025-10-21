@@ -12,10 +12,13 @@ import { HotelsHandler } from './hotels.js';
 import { Notifications } from './notifications.js';
 import { ItineraryBuilder } from './itinerary-builder.js';
 import { ItineraryBuilderExtensions } from './itinerary-builder-part2.js';
+import { Dialogs } from './dialogs.js';
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';
 import { TripsManager } from './trips-manager.js';
+import { FCMManager } from './fcm-manager.js'; // Importar el nuevo módulo
+import './chat.js'; // Importar el módulo de Chat
 import './firebase-config.js'; // Inicializar Firebase primero
 
 // 🖼️ Image Service imports
@@ -24,9 +27,6 @@ import './image-service.js'; // Unsplash images service
 // 🔌 APIs imports
 // APIs integration is imported dynamically at runtime so CI-generated config files are optional
 // (avoid breaking the app if js/apis-config.js is missing during local dev)
-
-// 🤖 AI Integration imports
-import { AIIntegration } from './ai-integration.js'; // OpenAI Integration
 
 // Error page display
 function showErrorPage(error) {
@@ -76,13 +76,6 @@ async function initApp() {
 
         // 🔔 Inicializar sistema de notificaciones
         Notifications.init();
-
-        // 🤖 Configurar OpenAI API Key si no está configurada
-        if (!localStorage.getItem('openai_api_key')) {
-            const apiKey = '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';
-            localStorage.setItem('openai_api_key', apiKey);
-            console.log('🤖 OpenAI API Key configured');
-        }
 
         // 🔥 Inicializar Firebase Auth PRIMERO y ESPERAR a que esté listo
         console.log('⏳ Esperando a que la autenticación esté lista...');
@@ -184,8 +177,6 @@ async function initApp() {
         console.log('✅ Aplicación iniciada correctamente');
         console.log('🔥 Firebase listo');
         console.log('✨ Itinerary Builder listo');
-        console.log('🔌 APIs Integration listo');
-        console.log('🤖 AI Integration listo');
         console.log('🎒 Packing List listo');
         console.log('⭐ Favorites Manager listo');
         console.log('🎨 Theme Manager listo');
@@ -210,13 +201,6 @@ async function initApp() {
                 };
             } catch (e) {
                 console.warn('⚠️ APIs integration not available:', e);
-            }
-
-            try {
-                const aiModule = await import('./ai-integration.js');
-                window.AIIntegration = aiModule.AIIntegration;
-            } catch (e) {
-                console.warn('⚠️ AI integration not available:', e);
             }
         })();
 

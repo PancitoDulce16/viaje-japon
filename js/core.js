@@ -299,7 +299,7 @@ export const AppCore = {
             if (!auth.currentUser) {
                 // Sin usuario, solo guardar localmente
                 localStorage.setItem('travelNotes', this.notes);
-                alert('✅ Notas guardadas localmente!');
+                window.Notifications.success('✅ Notas guardadas localmente');
                 this.closeModal('notes');
                 return;
             }
@@ -318,7 +318,7 @@ export const AppCore = {
                 });
                 
                 console.log('✅ Notas sincronizadas (individual)');
-                alert('✅ Notas guardadas y sincronizadas!');
+                window.Notifications.success('✅ Notas guardadas y sincronizadas');
             } else {
                 // 🔥 Modo colaborativo
                 const notesRef = doc(db, `trips/${tripId}/data`, 'notes');
@@ -330,13 +330,13 @@ export const AppCore = {
                 });
                 
                 console.log('✅ Notas sincronizadas (COMPARTIDAS) por:', auth.currentUser.email);
-                alert('✅ Notas guardadas y compartidas con el equipo!');
+                window.Notifications.success('✅ Notas guardadas y compartidas con el equipo');
             }
 
             this.closeModal('notes');
         } catch (error) {
             console.error('❌ Error guardando notas:', error);
-            alert('Error al guardar. Intenta de nuevo.');
+            window.Notifications.error('Error al guardar. Intenta de nuevo.');
         }
     },
 
@@ -354,35 +354,17 @@ export const AppCore = {
 
 // Expose globally for inline handlers and other modules
 window.AppCore = AppCore;
+// ====================================================================================
+// MANEJO DE EVENTOS DE AUTENTICACIÓN
+// ====================================================================================
+window.addEventListener('auth:initialized', (event) => {
+    console.log('[AppCore] ✨ Evento auth:initialized recibido. Inicializando sync de notas...');
+    AppCore.initNotesSync();
+});
 
-// Inicializar cuando cambia el estado de autenticación
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-
-// Guardar: only register onAuthStateChanged if auth is initialized.
-try {
-    if (typeof auth !== 'undefined' && auth) {
-        onAuthStateChanged(auth, (user) => {
-            AppCore.initNotesSync();
-        });
-    } else {
-        // If auth is not available (missing firebase-config), ensure notes sync runs after DOM ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                try { AppCore.initNotesSync(); } catch (e) { console.warn('initNotesSync deferred failed:', e); }
-            });
-        } else {
-            try { AppCore.initNotesSync(); } catch (e) { console.warn('initNotesSync immediate failed:', e); }
-        }
-    }
-} catch (e) {
-    console.warn('Error setting up auth state listener:', e);
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            try { AppCore.initNotesSync(); } catch (err) { console.warn('initNotesSync fallback failed:', err); }
-        });
-    } else {
-        try { AppCore.initNotesSync(); } catch (err) { console.warn('initNotesSync fallback immediate failed:', err); }
-    }
-}
-
-window.AppCore = AppCore;
+window.addEventListener('auth:loggedOut', () => {
+    console.log('[AppCore] 🚫 Evento auth:loggedOut recibido. Limpiando notas...');
+    if (AppCore.notesUnsubscribe) AppCore.notesUnsubscribe();
+    AppCore.notes = '';
+    localStorage.removeItem('travelNotes');
+});

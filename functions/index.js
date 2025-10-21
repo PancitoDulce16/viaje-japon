@@ -1,168 +1,77 @@
-const functions = require('firebase-functions');
-const axios = require('axios');
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
 
-// Example: proxy for Foursquare Places search
-// This Cloud Function forwards requests to Foursquare and keeps the API key secret.
+admin.initializeApp();
 
-// Configuration: set the FOURSQUARE_API_KEY in functions config or Secret Manager
-// Using functions.config() here (simple). For production, use Secret Manager.
-const getFoursquareKey = () => {
-  try {
-    const key = functions.config().foursquare?.key;
-    if (key) return key;
-  } catch (e) {}
-  // fallback to environment
-  return process.env.FOURSQUARE_API_KEY || '';
-};
+/**
+ * Cloud Function para eliminar en cascada todos los datos de un viaje.
+ * Se activa cuando un documento en `trips/{tripId}` es eliminado.
+ */
+exports.onTripDeleted = functions.firestore
+    .document('trips/{tripId}')
+    .onDelete(async (snap, context) => {
+        const tripId = context.params.tripId;
+        const path = `trips/${tripId}`;
+        
+        console.log(`🗑️ Iniciando eliminación en cascada para el viaje: ${tripId}`);
 
-// Get AviationStack API Key from environment (Gen 2 Functions use process.env directly)
-const getAviationStackKey = () => {
-  return process.env.AVIATIONSTACK_API_KEY || '4374cea236b04a5bf7e6d0c7d2cbf676';
-};
-
-// Get FlightRadar24 API Key from environment
-const getFlightRadar24Key = () => {
-  return process.env.FLIGHTRADAR24_API_KEY || '0199f4f2-8886-737a-938b-25a28ebf36b2|5QAzk6kvHlvzqPknflfxFxCzuB7SsomJUjZ7Ry9rcc7fb9a0';
-};
-
-// Get LiteAPI Key from environment (Gen 2 Functions use process.env directly)
-const getLiteAPIKey = () => {
-  return process.env.LITEAPI_API_KEY || '1757d988-56b3-4b5a-9618-c7b5053ac3aa';
-};
-
-exports.placesProxy = functions.https.onRequest(async (req, res) => {
-  const { lat, lng, query, radius } = req.query;
-
-  const foursquareKey = getFoursquareKey();
-  if (!foursquareKey) {
-    res.status(500).json({ error: 'Server misconfigured: FOURSQUARE API key missing' });
-    return;
-  }
-
-  try {
-    const url = `https://api.foursquare.com/v3/places/search`;
-    const params = {
-      ll: `${lat},${lng}`,
-      query: query || '',
-      radius: radius || 5000,
-      limit: 20
-    };
-
-    const response = await axios.get(url, {
-      params,
-      headers: {
-        Authorization: foursquareKey,
-        Accept: 'application/json'
-      }
+        try {
+            // Usar la herramienta CLI de Firebase para borrado recursivo es más seguro
+            // Esta función delega la tarea a la herramienta interna de Firebase
+            await admin.firestore().recursiveDelete(admin.firestore().collection(path));
+            console.log(`✅ Eliminación en cascada completada para: ${path}`);
+            return null;
+        } catch (error) {
+            console.error(`❌ Error en la eliminación en cascada para ${path}:`, error);
+            // Puedes agregar lógica para reintentar o notificar
+            return null;
+        }
     });
 
-    res.json(response.data);
-  } catch (error) {
-    console.error('Error calling Foursquare:', error.response ? error.response.data : error.message);
-    res.status(500).json({ error: 'Error fetching places' });
-  }
-});
+/**
+ * Cloud Function para enviar notificaciones cuando se agrega un nuevo gasto.
+ */
+exports.onNewExpenseAdded = functions.firestore
+    .document('trips/{tripId}/expenses/{expenseId}')
+    .onCreate(async (snap, context) => {
+        const { tripId } = context.params;
+        const expense = snap.data();
 
-// ==============================
-// ✈️ FLIGHTS PROXY (FlightRadar24)
-// ==============================
-exports.flightsProxy = functions.https.onRequest(async (req, res) => {
-  // Enable CORS
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type');
+        console.log(`💸 Nuevo gasto de ${expense.amount} en viaje ${tripId} por ${expense.addedBy}`);
 
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return;
-  }
+        // 1. Obtener los miembros del viaje
+        const tripRef = admin.firestore().doc(`trips/${tripId}`);
+        const tripSnap = await tripRef.get();
+        if (!tripSnap.exists) {
+            console.error('El viaje no existe.');
+            return null;
+        }
+        const tripMembers = tripSnap.data().members || [];
 
-  const flightRadar24Key = getFlightRadar24Key();
-  if (!flightRadar24Key) {
-    res.status(500).json({ error: 'Server misconfigured: FlightRadar24 API key missing' });
-    return;
-  }
+        // 2. Obtener los tokens de los miembros (excluyendo a quien agregó el gasto)
+        const tokens = [];
+        for (const memberId of tripMembers) {
+            const userSnap = await admin.firestore().doc(`users/${memberId}`).get();
+            if (userSnap.exists() && userSnap.data().fcmTokens) {
+                tokens.push(...userSnap.data().fcmTokens);
+            }
+        }
 
-  try {
-    const { flight_number } = req.query;
+        if (tokens.length === 0) {
+            console.log('No hay tokens para enviar notificaciones.');
+            return null;
+        }
 
-    if (!flight_number) {
-      res.status(400).json({ error: 'Missing flight_number parameter' });
-      return;
-    }
+        // 3. Crear y enviar la notificación
+        const payload = {
+            notification: {
+                title: `Nuevo gasto en "${tripSnap.data().info.name}"`,
+                body: `${expense.addedBy} agregó un gasto de ¥${expense.amount.toLocaleString()} en ${expense.desc}.`,
+                icon: '/images/icons/icon-192.png',
+                badge: '/images/icons/badge.png' // Opcional: un icono para la barra de notificaciones
+            }
+        };
 
-    console.log('🔍 Flights proxy called with:', { flight_number });
-
-    const url = 'https://api.flightradar24.com/common/v1/flight/list.json';
-    const params = {
-      query: flight_number,
-      fetchBy: 'flight',
-      page: 1,
-      limit: 10,
-      token: flightRadar24Key
-    };
-
-    console.log('📡 Calling FlightRadar24 API...');
-    const response = await axios.get(url, { params });
-
-    const flights = response.data?.result?.response?.data || [];
-    console.log('✅ FlightRadar24 response received:', flights.length, 'flights');
-
-    res.json({
-      success: true,
-      data: flights
+        console.log(`📤 Enviando notificación a ${tokens.length} token(s).`);
+        return admin.messaging().sendToDevice(tokens, payload);
     });
-  } catch (error) {
-    console.error('❌ Error calling FlightRadar24:', error.response ? error.response.data : error.message);
-    res.status(500).json({
-      error: 'Error fetching flight data',
-      details: error.response ? error.response.data : error.message
-    });
-  }
-});
-
-// ==============================
-// 🏨 HOTELS PROXY (LiteAPI)
-// ==============================
-exports.hotelsProxy = functions.https.onRequest(async (req, res) => {
-  // Enable CORS
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type, X-API-KEY');
-
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return;
-  }
-
-  const liteAPIKey = getLiteAPIKey();
-  if (!liteAPIKey) {
-    res.status(500).json({ error: 'Server misconfigured: LiteAPI key missing' });
-    return;
-  }
-
-  try {
-    console.log('🔍 Hotels proxy called');
-
-    const url = 'https://api.liteapi.travel/v3.0/hotel-search';
-
-    console.log('📡 Calling LiteAPI...');
-    const response = await axios.post(url, req.body, {
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-KEY': liteAPIKey
-      }
-    });
-
-    console.log('✅ LiteAPI response received:', response.data?.data?.length || 0, 'hotels');
-    res.json(response.data);
-  } catch (error) {
-    console.error('❌ Error calling LiteAPI:', error.response ? error.response.data : error.message);
-    res.status(500).json({
-      error: 'Error fetching hotel data',
-      details: error.response ? error.response.data : error.message
-    });
-  }
-});

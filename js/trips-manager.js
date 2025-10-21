@@ -181,6 +181,9 @@ export const TripsManager = {
         if (window.AppCore && window.AppCore.reinitialize) {
           window.AppCore.reinitialize();
         }
+        if (window.ChatHandler && window.ChatHandler.reinitialize) {
+          window.ChatHandler.reinitialize(tripId);
+        }
         
         this.closeTripsListModal();
         
@@ -194,12 +197,14 @@ export const TripsManager = {
   // 🔥 NUEVO: Invitar por Email
   async inviteMemberByEmail() {
     if (!this.currentTrip) {
-      alert('⚠️ Debes seleccionar un viaje primero');
+      window.Notifications.warning('Debes seleccionar un viaje primero');
       return;
     }
 
-    const email = prompt('📧 Ingresa el email de la persona que quieres invitar:');
-    
+    const email = await window.Dialogs.prompt({
+        title: '📧 Invitar por Email',
+        message: 'Ingresa el email de la persona que quieres invitar. Recibirá el código para unirse.'
+    });
     if (!email || email.trim() === '') {
       return;
     }
@@ -214,12 +219,9 @@ export const TripsManager = {
         pendingInvites: arrayUnion(email.trim().toLowerCase())
       });
 
-      Notifications.info(
-        `📧 Comparte el código con ${email}:\n${this.currentTrip.info.shareCode}`,
-        6000
-      );
+      Notifications.success(`✅ Invitación enviada a ${email}.`);
       
-      console.log('✅ Email agregado a invitaciones pendientes:', email);
+      console.log('✅ Invitación por email enviada a:', email);
     } catch (error) {
       console.error('❌ Error invitando por email:', error);
       Notifications.error('Error al enviar invitación. Inténtalo de nuevo.');
@@ -354,9 +356,11 @@ export const TripsManager = {
 
   // 🔥 NUEVO: Unirse con código
   async joinTripWithCode() {
-    const code = prompt('🔗 Ingresa el código de 6 dígitos del viaje:');
-    
-    if (!code || code.trim() === '') {
+    const code = await window.Dialogs.prompt({
+        title: '🔗 Unirse a un Viaje',
+        message: 'Ingresa el código de 6 caracteres que te compartieron.'
+    });
+    if (!code) {
       return;
     }
 
@@ -872,25 +876,30 @@ export const TripsManager = {
     }
 
     // Doble confirmación
-    if (!confirm(`¿Estás seguro de que quieres eliminar el viaje "${tripToDelete.info.name}"?`)) {
-      return;
-    }
-    if (!confirm(`Esta acción es PERMANENTE y no se puede deshacer. Se borrarán todos los datos asociados (itinerario, gastos, etc.).\n\n¿REALMENTE quieres continuar?`)) {
-      return;
-    }
+    const confirmed1 = await window.Dialogs.confirm({
+        title: `🗑️ ¿Eliminar "${tripToDelete.info.name}"?`,
+        message: '¿Estás seguro de que quieres eliminar este viaje?',
+        okText: 'Sí, continuar',
+        isDestructive: true
+    });
+    if (!confirmed1) return;
 
+    const confirmed2 = await window.Dialogs.confirm({
+        title: '⚠️ ¡Acción Permanente!',
+        message: 'Se borrarán todos los datos asociados (itinerario, gastos, etc.) y no se podrá recuperar. ¿REALMENTE quieres continuar?',
+        okText: 'Sí, eliminar permanentemente',
+        isDestructive: true
+    });
+    if (!confirmed2) {
+      return;
+    }
     try {
-      // Eliminar sub-colecciones (importante para una limpieza completa)
-      await deleteDoc(doc(db, `trips/${tripId}/data`, 'itinerary'));
-      await deleteDoc(doc(db, `trips/${tripId}/data`, 'notes'));
-      await deleteDoc(doc(db, `trips/${tripId}/activities`, 'checklist'));
-
-      // Eliminar el documento principal del viaje
+      // Eliminar el documento principal del viaje. La Cloud Function se encargará del resto.
       await deleteDoc(doc(db, 'trips', tripId));
 
       Notifications.success(`Viaje "${tripToDelete.info.name}" eliminado.`);
 
-      // Si el viaje eliminado era el actual, limpiar el estado
+      // Si el viaje eliminado era el actual, limpiar el estado local
       if (this.currentTrip && this.currentTrip.id === tripId) {
         this.currentTrip = null;
         localStorage.removeItem('currentTripId');
@@ -911,38 +920,30 @@ export const TripsManager = {
   // Cleanup
   cleanup() {
     if (this.unsubscribe) {
+      console.log('[TripsManager] 🛑 Deteniendo listener de viajes.');
       this.unsubscribe();
+      this.unsubscribe = null;
     }
+    this.currentTrip = null;
+    this.userTrips = [];
+    localStorage.removeItem('currentTripId');
+    this.updateTripHeaderEmpty();
+    this.renderTripsList();
+    console.log('[TripsManager] 🧹 Estado de viajes limpiado.');
   }
 };
 
 window.TripsManager = TripsManager;
 
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+// ====================================================================================
+// MANEJO DE EVENTOS DE AUTENTICACIÓN
+// ====================================================================================
+window.addEventListener('auth:initialized', (event) => {
+    console.log('[TripsManager] ✨ Evento auth:initialized recibido. Inicializando viajes...');
+    TripsManager.initUserTrips();
+});
 
-try {
-  if (typeof auth !== 'undefined' && auth) {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        TripsManager.initUserTrips();
-      }
-    });
-  } else {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        try { TripsManager.initUserTrips(); } catch (e) { console.warn('TripsManager init deferred failed:', e); }
-      });
-    } else {
-      try { TripsManager.initUserTrips(); } catch (e) { console.warn('TripsManager init immediate failed:', e); }
-    }
-  }
-} catch (e) {
-  console.warn('Error setting up auth listener for TripsManager:', e);
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      try { TripsManager.initUserTrips(); } catch (err) { console.warn('TripsManager fallback failed:', err); }
-    });
-  } else {
-    try { TripsManager.initUserTrips(); } catch (err) { console.warn('TripsManager fallback immediate failed:', err); }
-  }
-}
+window.addEventListener('auth:loggedOut', () => {
+    console.log('[TripsManager] 🚫 Evento auth:loggedOut recibido. Limpiando...');
+    TripsManager.cleanup();
+});

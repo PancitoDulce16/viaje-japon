@@ -9,13 +9,14 @@
 // 📦 --- CONFIGURACIÓN DEL CACHÉ ---
 // IMPORTANTE: Cambia este número de versión CADA VEZ que hagas un cambio en los
 // archivos de la aplicación (JS, CSS, HTML) para forzar la actualización.
-const CACHE_VERSION = 'japan-trip-planner-v3.1';
-const CACHE_NAME = `static-${CACHE_VERSION}`;
+const STATIC_CACHE_VERSION = 'japan-trip-planner-static-v3.2';
+const DYNAMIC_CACHE_VERSION = 'japan-trip-planner-dynamic-v3.2';
+const STATIC_CACHE_NAME = `static-${STATIC_CACHE_VERSION}`;
+const DYNAMIC_CACHE_NAME = `dynamic-${DYNAMIC_CACHE_VERSION}`;
 
 // Lista de archivos base (el "cascarón" de la app) que se guardarán en caché.
 // Estos son los archivos mínimos para que la app se muestre, incluso sin conexión.
 const APP_SHELL_URLS = [
-    '/',
     '/index.html',
     '/manifest.json',
     '/css/main.css',
@@ -31,10 +32,10 @@ const APP_SHELL_URLS = [
 self.addEventListener('install', event => {
     console.log(`[SW] ✅ Evento INSTALL: Iniciando instalación para la versión ${CACHE_VERSION}`);
     event.waitUntil(
-        caches.open(CACHE_NAME)
+        caches.open(STATIC_CACHE_NAME)
             .then(cache => {
-                console.log(`[SW] 📥 Abriendo caché "${CACHE_NAME}" y guardando el App Shell.`);
-                return cache.addAll(APP_SHELL_URLS);
+                console.log(`[SW] 📥 Abriendo caché estático "${STATIC_CACHE_NAME}" y guardando el App Shell.`);
+                return cache.addAll(APP_SHELL_URLS.map(url => new Request(url, { cache: 'reload' })));
             })
             .then(() => {
                 console.log('[SW] 🚀 App Shell guardado en caché correctamente. Pasando a la activación.');
@@ -50,13 +51,13 @@ self.addEventListener('install', event => {
 // 🧹 --- FASE 2: ACTIVACIÓN ---
 // Se ejecuta después de la instalación. Es el lugar perfecto para limpiar cachés antiguos.
 self.addEventListener('activate', event => {
-    console.log(`[SW] ✅ Evento ACTIVATE: Activando la versión ${CACHE_VERSION}`);
+    console.log(`[SW] ✅ Evento ACTIVATE: Activando nuevas versiones de caché.`);
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cacheName => {
                     // Si el nombre del caché no es el actual, se elimina.
-                    if (cacheName !== CACHE_NAME) {
+                    if (cacheName !== STATIC_CACHE_NAME && cacheName !== DYNAMIC_CACHE_NAME) {
                         console.log(`[SW] 🗑️ Limpiando caché antiguo: ${cacheName}`);
                         return caches.delete(cacheName);
                     }
@@ -70,65 +71,63 @@ self.addEventListener('activate', event => {
     );
 });
 
+// --- Estrategias de Caché ---
+
+// Estrategia: Network First, falling back to Cache (para documentos HTML)
+const networkFirst = (request) => {
+    return fetch(request)
+        .then(networkResponse => {
+            return networkResponse;
+        })
+        .catch(() => {
+            console.log(`[SW] ❌ Red falló para ${request.url}. Sirviendo desde caché como fallback.`);
+            return caches.match(request) || caches.match('/index.html');
+        });
+};
+
+// Estrategia: Cache First, falling back to Network (para App Shell y recursos estáticos)
+const cacheFirst = (request, cacheName) => {
+    return caches.match(request).then(cachedResponse => {
+        if (cachedResponse) {
+            // console.log(`[SW] ⚡️ Sirviendo desde caché: ${request.url}`);
+            return cachedResponse;
+        }
+        // Si no está en caché, vamos a la red y lo guardamos.
+        return fetch(request).then(networkResponse => {
+            return caches.open(cacheName).then(cache => {
+                cache.put(request, networkResponse.clone());
+                // console.log(`[SW] 📥 Guardado en caché dinámico: ${request.url}`);
+                return networkResponse;
+            });
+        });
+    });
+};
+
 // 📡 --- FASE 3: INTERCEPTACIÓN DE PETICIONES (FETCH) ---
 // Se ejecuta cada vez que la página pide un recurso (un script, una imagen, una API, etc.).
 self.addEventListener('fetch', event => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // --- REGLA 1: IGNORAR PETICIONES QUE NO DEBEN SER CACHEADAS ---
-    // Ignoramos peticiones que no son GET y las de Firebase/Google APIs para no interferir.
-    if (request.method !== 'GET' || url.protocol !== 'https:' || url.hostname.includes('googleapis.com')) {
-        // console.log(`[SW] ➡️ Ignorando petición (No-GET o API externa): ${url.pathname}`);
-        return; // Dejamos que el navegador la maneje normalmente.
-    }
-
-    // --- REGLA 2: ESTRATEGIA PARA NAVEGACIÓN (LA MÁS IMPORTANTE) ---
-    // Para peticiones de páginas (cuando el usuario entra o refresca).
-    // Esta es la solución al bucle de autenticación.
-    if (request.mode === 'navigate') {
-        // console.log(`[SW] 🧭 Navegación detectada para: ${url.pathname}. Usando estrategia "Network First".`);
-        event.respondWith(
-            fetch(request)
-                .then(response => {
-                    // console.log(`[SW]     ✅ Red disponible. Sirviendo página fresca desde el servidor.`);
-                    return response;
-                })
-                .catch(error => {
-                    console.log(`[SW]     ❌ Red falló. Sirviendo página de inicio desde el caché como fallback.`);
-                    return caches.match('/index.html');
-                })
-        );
+    // --- REGLA 1: IGNORAR PETICIONES QUE NO DEBEN SER CACHEADAS (Firebase, etc.) ---
+    if (request.method !== 'GET' || url.protocol.startsWith('chrome-extension') || url.hostname.includes('googleapis.com') || url.hostname.includes('firestore.googleapis.com')) {
         return;
     }
 
-    // --- REGLA 3: ESTRATEGIA PARA RECURSOS ESTÁTICOS (JS, CSS, IMÁGENES) ---
-    // Para todos los demás archivos (el "cascarón" de la app y otros).
-    // "Cache First, falling back to Network": es la más rápida.
-    event.respondWith(
-        caches.match(request)
-            .then(cachedResponse => {
-                if (cachedResponse) {
-                    // console.log(`[SW] ⚡️ Sirviendo desde caché: ${url.pathname}`);
-                    return cachedResponse;
-                }
+    // --- REGLA 2: ESTRATEGIA PARA NAVEGACIÓN (HTML) ---
+    if (request.mode === 'navigate') {
+        event.respondWith(networkFirst(request));
+        return;
+    }
 
-                // Si no está en caché, vamos a la red.
-                // console.log(`[SW] 🌐 No está en caché. Buscando en la red: ${url.pathname}`);
-                return fetch(request).then(networkResponse => {
-                    // Y lo guardamos en caché para la próxima vez.
-                    return caches.open(CACHE_NAME).then(cache => {
-                        // Guardamos una copia de la respuesta.
-                        cache.put(request, networkResponse.clone());
-                        // console.log(`[SW]     📥 Guardado en caché para el futuro: ${url.pathname}`);
-                        return networkResponse;
-                    });
-                });
-            })
-            .catch(error => {
-                console.error(`[SW] 🛑 ERROR CRÍTICO al manejar fetch para ${request.url}:`, error);
-                // Opcional: podrías devolver una imagen o recurso de "error" genérico.
-            })
-    );
+    // --- REGLA 3: ESTRATEGIA PARA RECURSOS DEL APP SHELL ---
+    // Si la petición es para un recurso que ya debería estar en el caché estático.
+    if (APP_SHELL_URLS.includes(url.pathname)) {
+        event.respondWith(cacheFirst(request, STATIC_CACHE_NAME));
+        return;
+    }
+
+    // --- REGLA 4: ESTRATEGIA PARA RECURSOS DINÁMICOS (Imágenes, Fuentes, etc.) ---
+    // Para cualquier otra petición, usamos el caché dinámico.
+    event.respondWith(cacheFirst(request, DYNAMIC_CACHE_NAME));
 });
-
