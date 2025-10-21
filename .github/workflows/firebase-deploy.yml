@@ -131,11 +131,35 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
+      - name: Verify Vite Installation
+        run: |
+          echo "🔍 Checking vite installation..."
+          ls -la node_modules/.bin/vite* || echo "No vite binaries found"
+          npm list vite || echo "Vite not in package.json"
+          
       - name: Build Project
         run: |
-          # Make build script executable and run it
-          chmod +x build.sh
-          ./build.sh
+          # Install vite globally first
+          npm install -g vite@latest
+          
+          # Try building with different methods
+          echo "🔨 Attempting build with global vite..."
+          if vite build; then
+            echo "✅ Build successful with global vite!"
+          else
+            echo "⚠️ Global vite failed, trying npx..."
+            if npx vite build; then
+              echo "✅ Build successful with npx!"
+            else
+              echo "⚠️ npx failed, trying local binary..."
+              if node ./node_modules/.bin/vite build; then
+                echo "✅ Build successful with local binary!"
+              else
+                echo "❌ All build methods failed!"
+                exit 1
+              fi
+            fi
+          fi
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
