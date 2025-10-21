@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies & Build project
         run: |
           cd js
-          npm ci
+          npm install
           npm run build
 
       - name: Generate client config files
