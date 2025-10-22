@@ -169,7 +169,7 @@ class LoginManager {
         try {
             this.showLoading('Iniciando sesión con Google...');
             
-            const user = await AuthHandler.signInWithGoogle();
+            const user = await AuthHandler.loginWithGoogle();
             
             if (user) {
                 console.log('✅ Login con Google exitoso:', user.email);

@@ -268,6 +268,28 @@ export const AuthHandler = {
     }
   },
 
+  async signIn(email, password) {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (error) {
+      console.error('❌ Error en signIn:', error);
+      this.handleAuthError(error);
+      return null;
+    }
+  },
+
+  async signUp(email, password) {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      return userCredential.user;
+    } catch (error) {
+      console.error('❌ Error en signUp:', error);
+      this.handleAuthError(error);
+      return null;
+    }
+  },
+
   async loginWithGoogle() {
     console.log('🔑 Iniciando login con Google...');
     this.showAuthLoading('Abriendo ventana de Google...');
@@ -277,6 +299,7 @@ export const AuthHandler = {
       const result = await signInWithPopup(auth, googleProvider);
       console.log('✅ Login con Google exitoso:', result.user.email);
       // onAuthStateChanged se encargará de mostrar el dashboard
+      return result.user;
     } catch (error) {
       console.error('❌ Error al iniciar login con Google:', error);
       this.hideAuthLoading();
@@ -293,6 +316,7 @@ export const AuthHandler = {
       } else {
         this.handleAuthError(error);
       }
+      return null;
     }
   },
 
