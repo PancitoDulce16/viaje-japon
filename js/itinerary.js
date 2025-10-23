@@ -726,9 +726,9 @@ export const ItineraryHandler = {
   },
 
   async reinitialize(){
-    const tripId=getCurrentTripId(); if(!tripId){ renderEmptyState(); return; }
-    await loadItinerary(); if(!currentItinerary){ renderNoItinerary(); return; }
-    await initRealtimeSync(); await this.init();
+    // The init function handles all the necessary setup, including loading data
+    // and setting up the realtime sync. Just call it.
+    await this.init();
   },
 
   // Mostrar modal de actividad (añadir o editar)
