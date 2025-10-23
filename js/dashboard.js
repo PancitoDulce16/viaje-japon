@@ -162,12 +162,12 @@ class DashboardManager {
     async initNotifications() {
         try {
             // Inicializar notificaciones push si está disponible
-            if (window.FCMManager) {
-                const fcmManager = new FCMManager();
-                await fcmManager.init();
+            if (FCMManager) {
+                await FCMManager.init();
             }
         } catch (error) {
             console.error('❌ Error al inicializar notificaciones:', error);
+            throw error;
         }
     }
 
