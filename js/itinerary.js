@@ -367,10 +367,10 @@ function renderNoItinerary(){
   const container=document.getElementById('content-itinerary'); if(!container) return;
   container.innerHTML = `
   <div class="max-w-4xl mx-auto p-8 text-center">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12">
+    <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-12 border dark:border-gray-600">
       <div class="text-6xl mb-6">✈️</div>
       <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-4">¡Crea tu Itinerario!</h2>
-      <p class="text-gray-600 dark:text-gray-400 mb-8 text-lg">Planifica tu viaje perfecto. Elige entre plantillas o crea uno desde cero.</p>
+      <p class="text-gray-600 dark:text-gray-200 mb-8 text-lg">Planifica tu viaje perfecto. Elige entre plantillas o crea uno desde cero.</p>
       <button onclick="ItineraryBuilder.showCreateItineraryWizard()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition font-bold text-lg shadow-lg">✨ Crear Itinerario</button>
     </div>
   </div>`;
@@ -380,10 +380,10 @@ function renderEmptyState(){
   const container=document.getElementById('content-itinerary'); if(!container) return;
   container.innerHTML = `
     <div class="max-w-4xl mx-auto p-8 text-center">
-      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-12">
+      <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-12 border dark:border-gray-600">
         <div class="text-6xl mb-4">🗺️</div>
         <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">No hay viaje seleccionado</h2>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">Para crear un itinerario, primero debes crear o seleccionar un viaje.</p>
+        <p class="text-gray-600 dark:text-gray-200 mb-6">Para crear un itinerario, primero debes crear o seleccionar un viaje.</p>
         <div class="flex gap-3 justify-center flex-wrap">
           <button onclick="TripsManager.showCreateTripModal()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold">➕ Crear Viaje</button>
           <button onclick="TripsManager.showTripsListModal()" class="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition font-semibold">📂 Ver Mis Viajes</button>
@@ -431,7 +431,7 @@ function renderDaySelector(){
   const itinerary=currentItinerary; if(!itinerary||!itinerary.days){ container.innerHTML=''; return; }
   const days=itinerary.days||[];
   container.innerHTML = days.map(day => `
-    <button data-day="${day.day}" class="day-btn px-5 py-2.5 rounded-xl whitespace-nowrap font-semibold transition-all hover:scale-105 ${ currentDay===day.day ? 'bg-red-600 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 shadow-md' }">Día ${day.day}</button>
+    <button data-day="${day.day}" class="day-btn px-5 py-2.5 rounded-xl whitespace-nowrap font-semibold transition-all hover:scale-105 ${ currentDay===day.day ? 'bg-red-600 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-500 shadow-md' }">Día ${day.day}</button>
   `).join('');
 }
 
@@ -515,20 +515,20 @@ function renderDayOverview(day){
       </div>
     `}
     <div class="mb-4">
-      <div class="flex justify-between text-sm mb-1 dark:text-gray-300"><span>Progreso</span><span>${completed}/${day.activities.length}</span></div>
-      <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2"><div class="bg-red-600 h-2 rounded-full transition-all duration-500" style="width:${progress}%"></div></div>
+      <div class="flex justify-between text-sm mb-1 dark:text-gray-100"><span>Progreso</span><span>${completed}/${day.activities.length}</span></div>
+      <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2"><div class="bg-red-600 dark:bg-red-500 h-2 rounded-full transition-all duration-500" style="width:${progress}%"></div></div>
       <div class="mt-2 text-right">${syncStatus}</div>
     </div>
     <div class="space-y-3 text-sm">
-      <p class="font-semibold text-base dark:text-gray-300">${day.date}</p>
+      <p class="font-semibold text-base dark:text-gray-100">${day.date}</p>
       <p class="font-bold text-lg text-red-600 dark:text-red-400">${day.title||''}</p>
       ${day.hotel ? `
-        <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border-l-2 border-blue-500">
+        <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg border-l-2 border-blue-500 dark:border-blue-400">
           <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">🏨 Hotel Recomendado</p>
-          <p class="text-sm text-gray-700 dark:text-gray-300">${day.hotel}</p>
+          <p class="text-sm text-gray-700 dark:text-gray-100">${day.hotel}</p>
         </div>
       `:''}
-      ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-400">📍 ${day.location}</p>`:''}
+      ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-300">📍 ${day.location}</p>`:''}
     </div>
     <div class="mt-6">
       <button type="button" id="addActivityBtn_${day.day}" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition">+ Añadir Actividad</button>
@@ -574,19 +574,19 @@ function renderActivities(day){
     const userHasVoted = currentUserId && votes[currentUserId];
 
     return `
-    <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden fade-in transition-all hover:shadow-xl border-l-4 border-red-500 ${checkedActivities[act.id]?'opacity-60':''}" style="animation-delay:${i*0.05}s">
+    <div class="activity-card bg-white dark:bg-gray-700 rounded-xl shadow-md overflow-hidden fade-in transition-all hover:shadow-xl border-l-4 border-red-500 dark:border-red-400 ${checkedActivities[act.id]?'opacity-60':''}" style="animation-delay:${i*0.05}s">
       <div class="p-5 flex items-start gap-4">
         <div class="flex flex-col gap-2 items-center">
-          <div class="drag-handle text-gray-400 dark:text-gray-600 text-xs cursor-grab active:cursor-grabbing" title="Arrastra para reordenar">⋮⋮</div>
+          <div class="drag-handle text-gray-400 dark:text-gray-400 text-xs cursor-grab active:cursor-grabbing" title="Arrastra para reordenar">⋮⋮</div>
           <input type="checkbox" data-id="${act.id}" ${checkedActivities[act.id]?'checked':''} class="activity-checkbox w-5 h-5 cursor-pointer accent-red-600 flex-shrink-0" />
         </div>
-        <div class="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-lg text-2xl flex-shrink-0">${act.icon||'📍'}</div>
+        <div class="bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300 p-3 rounded-lg text-2xl flex-shrink-0">${act.icon||'📍'}</div>
         <div class="flex-1 min-w-0">
           <div class="flex justify-between items-start">
             <div>
               <div class="flex items-center gap-2 mb-1 flex-wrap">
-                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">${act.time||''}</span>
-                ${act.cost>0?`<span class="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded">¥${Number(act.cost).toLocaleString()}</span>`:''}
+                <span class="text-xs font-semibold text-gray-500 dark:text-gray-300">${act.time||''}</span>
+                ${act.cost>0?`<span class="text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-2 py-1 rounded font-semibold">¥${Number(act.cost).toLocaleString()}</span>`:''}
               </div>
               <h3 class="text-lg font-bold dark:text-white mb-1">${act.title}</h3>
             </div>
@@ -596,23 +596,23 @@ function renderActivities(day){
                 data-action="vote"
                 data-activity-id="${act.id}"
                 data-day="${day.day}"
-                class="activity-vote-btn p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition flex items-center gap-1 ${userHasVoted ? 'text-red-500' : 'text-gray-400'}"
+                class="activity-vote-btn p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/40 transition flex items-center gap-1 ${userHasVoted ? 'text-red-500' : 'text-gray-400 dark:text-gray-300'}"
                 title="Votar por esta actividad"
               >
                 <i class="fas fa-heart"></i>
                 <span class="text-xs font-bold">${voteCount > 0 ? voteCount : ''}</span>
               </button>
-              <button type="button" data-action="edit" data-activity-id="${act.id}" data-day="${day.day}" class="activity-edit-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">✏️</button>
-              <button type="button" data-action="delete" data-activity-id="${act.id}" data-day="${day.day}" class="activity-delete-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">🗑️</button>
+              <button type="button" data-action="edit" data-activity-id="${act.id}" data-day="${day.day}" class="activity-edit-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition">✏️</button>
+              <button type="button" data-action="delete" data-activity-id="${act.id}" data-day="${day.day}" class="activity-delete-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition">🗑️</button>
             </div>
           </div>
-          <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">${act.desc||''}</p>
-          ${act.station?`<p class="text-xs text-gray-500 dark:text-gray-500 mt-2">🚉 ${act.station}</p>`:''}
+          <p class="text-sm text-gray-600 dark:text-gray-200 mt-2">${act.desc||''}</p>
+          ${act.station?`<p class="text-xs text-gray-500 dark:text-gray-300 mt-2">🚉 ${act.station}</p>`:''}
           ${act.train?`
-            <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-2 border-blue-500">
-              <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">🚄 ${act.train.line}</p>
-              <p class="text-xs text-gray-600 dark:text-gray-400">${act.train.from} → ${act.train.to}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-500">⏱️ ${act.train.duration}</p>
+            <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border-l-2 border-blue-500 dark:border-blue-400">
+              <p class="text-xs font-semibold text-blue-700 dark:text-blue-200 mb-1">🚄 ${act.train.line}</p>
+              <p class="text-xs text-gray-600 dark:text-gray-200">${act.train.from} → ${act.train.to}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-300">⏱️ ${act.train.duration}</p>
             </div>`:''}
         </div>
       </div>
@@ -716,12 +716,12 @@ export const ItineraryHandler = {
     if(!currentItinerary){ renderNoItinerary(); return; }
     container.innerHTML = `
       <div class="max-w-6xl mx-auto px-4 pt-6"><div id="tripSelectorHeader"></div></div>
-      <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-[72px] z-30 shadow-sm">
+      <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-600 sticky top-[72px] z-30 shadow-sm">
         <div class="max-w-6xl mx-auto px-6 py-5"><div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" id="daySelector"></div></div>
       </div>
       <div class="max-w-6xl mx-auto p-6 md:p-8">
         <div class="grid md:grid-cols-3 gap-6">
-          <div class="md:col-span-1"><div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sticky top-36 fade-in" id="dayOverview"></div></div>
+          <div class="md:col-span-1"><div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 sticky top-36 fade-in border dark:border-gray-600" id="dayOverview"></div></div>
           <div class="md:col-span-2"><div class="space-y-4" id="activitiesTimeline"></div></div>
         </div>
       </div>`;

@@ -196,10 +196,9 @@ class DashboardManager {
 
     async initTabs() {
         try {
-            // Inicializar el manejador de tabs
-            if (window.TabsHandler) {
-                window.tabsHandler = new TabsHandler();
-            }
+            // TabsHandler ya está exportado como objeto en window.TabsHandler
+            // No necesita inicialización especial
+            console.log('✅ TabsHandler disponible');
         } catch (error) {
             console.error('❌ Error al inicializar tabs:', error);
         }
