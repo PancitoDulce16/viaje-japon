@@ -184,6 +184,15 @@ class DashboardManager {
             themeToggle.addEventListener('click', () => this.handleThemeToggle());
         }
 
+        const enableNotificationsBtn = document.getElementById('enableNotificationsBtn');
+        if (enableNotificationsBtn) {
+            enableNotificationsBtn.addEventListener('click', () => {
+                if (window.FCMManager) {
+                    window.FCMManager.requestPermissionAndToken();
+                }
+            });
+        }
+
         // Prevenir navegación accidental
         window.addEventListener('beforeunload', (e) => {
             if (!this.isInitialized) {

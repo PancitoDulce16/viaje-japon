@@ -130,8 +130,8 @@ function loadGooglePlaces() {
       finally { try { delete window[callbackName]; } catch(e){} }
     };
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_API_KEY}&libraries=places&callback=${callbackName}`;
-    script.async = true; script.defer = true; script.onerror = (e)=>reject(e);
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_API_KEY}&libraries=places&callback=${callbackName}&loading=async`;
+    script.async = true; script.defer = true; script.onerror = (e) => reject(e);
     document.head.appendChild(script);
   });
   return googlePlacesPromise;
@@ -704,8 +704,6 @@ export const ItineraryHandler = {
         </div>
       </div>`;
 
-    await initRealtimeSync();
-
     if(!isListenerAttached){
       container.addEventListener('click', (e)=>{
         const addBtn=e.target.closest('[id^="addActivityBtn_"]');
@@ -723,7 +721,8 @@ export const ItineraryHandler = {
       isListenerAttached=true;
     }
 
-    const timeline=document.getElementById('activitiesTimeline'); if(timeline) initializeDragAndDrop(timeline);
+    // Now that the DOM is ready, initialize the realtime sync which will call render()
+    await initRealtimeSync();
   },
 
   async reinitialize(){

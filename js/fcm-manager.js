@@ -83,8 +83,4 @@ window.FCMManager = FCMManager;
 // Inicializar FCM cuando el usuario inicia sesión
 window.addEventListener('auth:initialized', async () => {
     await FCMManager.init();
-    // Esperar un poco antes de pedir permiso para no ser intrusivo
-    setTimeout(() => {
-        FCMManager.requestPermissionAndToken();
-    }, 5000); // 5 segundos después del login
 });
