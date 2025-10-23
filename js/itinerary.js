@@ -535,12 +535,40 @@ function renderDayOverview(day){
     </div>`;
 }
 
+// Función auxiliar para convertir hora en formato comparable
+function parseTime(timeStr) {
+  if (!timeStr) return 0;
+
+  // Limpiar el string de hora
+  const cleaned = timeStr.trim().toLowerCase();
+
+  // Extraer horas y minutos
+  const match = cleaned.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/);
+  if (!match) return 0;
+
+  let hours = parseInt(match[1]);
+  const minutes = parseInt(match[2] || 0);
+  const period = match[3];
+
+  // Convertir a formato 24h si es PM/AM
+  if (period === 'pm' && hours < 12) hours += 12;
+  if (period === 'am' && hours === 12) hours = 0;
+
+  return hours * 60 + minutes;
+}
+
 function renderActivities(day){
   const container=document.getElementById('activitiesTimeline'); if(!container) return;
   const currentUserId = auth.currentUser?.uid;
 
   if (sortableInstance){ try{ sortableInstance.destroy(); }catch(_){} sortableInstance=null; }
-  container.innerHTML = (day.activities||[]).map((act,i)=> {
+
+  // Ordenar actividades por hora antes de renderizar
+  const sortedActivities = (day.activities||[]).slice().sort((a, b) => {
+    return parseTime(a.time) - parseTime(b.time);
+  });
+
+  container.innerHTML = sortedActivities.map((act,i)=> {
     const votes = act.votes || {};
     const voteCount = Object.keys(votes).length;
     const userHasVoted = currentUserId && votes[currentUserId];

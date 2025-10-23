@@ -172,19 +172,36 @@ class DashboardManager {
     }
 
     setupDashboardEvents() {
-        // Evento de logout
+        // Evento de logout (Desktop y Mobile)
         const logoutBtn = document.getElementById('logoutBtn');
+        const logoutBtnMobile = document.getElementById('logoutBtnMobile');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => this.handleLogout());
         }
-
-        // Evento de cambio de tema
-        const themeToggle = document.getElementById('themeToggle');
-        if (themeToggle) {
-            themeToggle.addEventListener('click', () => this.handleThemeToggle());
+        if (logoutBtnMobile) {
+            logoutBtnMobile.addEventListener('click', () => {
+                this.closeMobileMenu();
+                this.handleLogout();
+            });
         }
 
+        // Evento de cambio de tema - Delegar a ThemeManager (Desktop y Mobile)
+        const themeToggle = document.getElementById('themeToggle');
+        const themeToggleMobile = document.getElementById('themeToggleMobile');
+        if (themeToggle && window.ThemeManager) {
+            themeToggle.addEventListener('click', () => {
+                window.ThemeManager.cycleTheme();
+            });
+        }
+        if (themeToggleMobile && window.ThemeManager) {
+            themeToggleMobile.addEventListener('click', () => {
+                window.ThemeManager.cycleTheme();
+            });
+        }
+
+        // Notificaciones (Desktop y Mobile)
         const enableNotificationsBtn = document.getElementById('enableNotificationsBtn');
+        const enableNotificationsBtnMobile = document.getElementById('enableNotificationsBtnMobile');
         if (enableNotificationsBtn) {
             enableNotificationsBtn.addEventListener('click', () => {
                 if (window.FCMManager) {
@@ -192,6 +209,28 @@ class DashboardManager {
                 }
             });
         }
+        if (enableNotificationsBtnMobile) {
+            enableNotificationsBtnMobile.addEventListener('click', () => {
+                this.closeMobileMenu();
+                if (window.FCMManager) {
+                    window.FCMManager.requestPermissionAndToken();
+                }
+            });
+        }
+
+        // Menú Hamburguesa Mobile
+        this.setupMobileMenu();
+
+        // Emergencia mobile
+        const emergencyBtnMobile = document.querySelector('.mobile-menu-emergency');
+        if (emergencyBtnMobile) {
+            emergencyBtnMobile.addEventListener('click', () => {
+                this.closeMobileMenu();
+            });
+        }
+
+        // Sincronizar email del usuario en ambos lugares
+        this.syncUserEmail();
 
         // Prevenir navegación accidental
         window.addEventListener('beforeunload', (e) => {
@@ -200,6 +239,73 @@ class DashboardManager {
                 e.returnValue = '';
             }
         });
+    }
+
+    setupMobileMenu() {
+        const menuToggle = document.getElementById('menuToggle');
+        const menuClose = document.getElementById('menuClose');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileMenuPanel = document.getElementById('mobileMenuPanel');
+
+        if (!menuToggle || !mobileMenu || !mobileMenuPanel) return;
+
+        // Abrir menú
+        menuToggle.addEventListener('click', () => {
+            mobileMenu.classList.remove('hidden');
+            setTimeout(() => {
+                mobileMenuPanel.classList.remove('translate-x-full');
+            }, 10);
+        });
+
+        // Cerrar menú
+        const closeMenu = () => {
+            mobileMenuPanel.classList.add('translate-x-full');
+            setTimeout(() => {
+                mobileMenu.classList.add('hidden');
+            }, 300);
+        };
+
+        if (menuClose) {
+            menuClose.addEventListener('click', closeMenu);
+        }
+
+        // Cerrar al hacer click fuera del panel
+        mobileMenu.addEventListener('click', (e) => {
+            if (e.target === mobileMenu) {
+                closeMenu();
+            }
+        });
+    }
+
+    closeMobileMenu() {
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileMenuPanel = document.getElementById('mobileMenuPanel');
+        if (mobileMenuPanel && mobileMenu) {
+            mobileMenuPanel.classList.add('translate-x-full');
+            setTimeout(() => {
+                mobileMenu.classList.add('hidden');
+            }, 300);
+        }
+    }
+
+    syncUserEmail() {
+        const userEmailDisplay = document.getElementById('userEmailDisplay');
+        const userEmailDisplayMobile = document.getElementById('userEmailDisplayMobile');
+
+        if (userEmailDisplay && userEmailDisplayMobile) {
+            const email = userEmailDisplay.textContent;
+            userEmailDisplayMobile.textContent = email;
+        }
+
+        // Observar cambios en el email
+        if (userEmailDisplay) {
+            const observer = new MutationObserver(() => {
+                if (userEmailDisplayMobile) {
+                    userEmailDisplayMobile.textContent = userEmailDisplay.textContent;
+                }
+            });
+            observer.observe(userEmailDisplay, { childList: true, characterData: true, subtree: true });
+        }
     }
 
     async handleLogout() {
@@ -228,22 +334,9 @@ class DashboardManager {
     }
 
     handleThemeToggle() {
-        // Implementar cambio de tema
-        const body = document.body;
-        const isDark = body.classList.contains('dark');
-        
-        if (isDark) {
-            body.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-        } else {
-            body.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-        }
-
-        // Actualizar icono
-        const darkModeIcon = document.getElementById('darkModeIcon');
-        if (darkModeIcon) {
-            darkModeIcon.className = isDark ? 'fas fa-moon text-xl' : 'fas fa-sun text-xl';
+        // Delegado a ThemeManager
+        if (window.ThemeManager) {
+            window.ThemeManager.cycleTheme();
         }
     }
 
