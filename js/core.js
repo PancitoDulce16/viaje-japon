@@ -181,6 +181,9 @@ export const AppCore = {
     },
 
     switchTab(tabName) {
+        // 🔥 Limpiar listeners de Firestore antes de cambiar de tab (previene memory leaks)
+        this.cleanupCurrentTab();
+
         document.querySelectorAll('.tab-content').forEach(tab => {
             tab.classList.add('hidden');
             tab.classList.remove('animate__animated', 'animate__fadeIn');
@@ -207,6 +210,26 @@ export const AppCore = {
                 }
             }, 150);
         }
+    },
+
+    cleanupCurrentTab() {
+        // 🔥 Limpiar listeners de Firestore de todos los handlers
+        const handlers = [
+            window.FlightsHandler,
+            window.HotelsHandler,
+            window.BudgetTracker,
+            window.PackingList,
+            window.FavoritesManager,
+            window.ChatManager,
+            window.PreparationHandler,
+            window.TripsManager
+        ];
+
+        handlers.forEach(handler => {
+            if (handler && typeof handler.cleanup === 'function') {
+                handler.cleanup();
+            }
+        });
     },
 
     updateCountdown() {

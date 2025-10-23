@@ -6,6 +6,7 @@ import { Notifications } from './notifications.js';
 export const FlightsHandler = {
   currentTripId: null,
   myFlights: [],
+  unsubscribe: null, // 🔥 Para limpiar el listener de Firestore
   
   // Información de equipaje por aerolínea
   airlineBaggage: {
@@ -159,15 +160,29 @@ export const FlightsHandler = {
   },
 
   async listenToFlights() {
+    // 🔥 Limpiar listener anterior si existe (previene memory leaks)
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
+    }
+
     const flightsRef = doc(db, 'trips', this.currentTripId, 'modules', 'flights');
-    
-    onSnapshot(flightsRef, (docSnap) => {
+
+    this.unsubscribe = onSnapshot(flightsRef, (docSnap) => {
       if (docSnap.exists()) {
         this.myFlights = docSnap.data().flights || [];
         this.renderMyFlights();
         this.renderBaggageInfoDynamic(); // 🔥 Actualizar equipaje dinámicamente
       }
     });
+  },
+
+  cleanup() {
+    // 🔥 Método para limpiar recursos cuando se cambia de tab
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
+    }
   },
 
   render() {

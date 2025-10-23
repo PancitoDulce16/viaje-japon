@@ -7,6 +7,7 @@ import { Notifications } from './notifications.js';
 export const HotelsHandler = {
   currentTripId: null,
   myHotels: [],
+  unsubscribe: null, // 🔥 Para limpiar el listener de Firestore
   recommendations: [],
   
   // Ciudades de Japón con códigos
@@ -31,14 +32,28 @@ export const HotelsHandler = {
   },
 
   async listenToHotels() {
+    // 🔥 Limpiar listener anterior si existe (previene memory leaks)
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
+    }
+
     const hotelsRef = doc(db, 'trips', this.currentTripId, 'modules', 'hotels');
-    
-    onSnapshot(hotelsRef, (docSnap) => {
+
+    this.unsubscribe = onSnapshot(hotelsRef, (docSnap) => {
       if (docSnap.exists()) {
         this.myHotels = docSnap.data().hotels || [];
         this.renderMyHotels();
       }
     });
+  },
+
+  cleanup() {
+    // 🔥 Método para limpiar recursos cuando se cambia de tab
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
+    }
   },
 
   render() {

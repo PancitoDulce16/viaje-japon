@@ -1,8 +1,8 @@
 // js/dashboard.js - Lógica específica para el dashboard
 import { AppCore } from './core.js';
 
-// 🔥 IMPORTANTE: Importar el CSS principal para que Vite lo procese
-import '../css/main.css';
+// CSS se carga via <link> en dashboard.html
+// No importar CSS aquí para evitar errores de MIME type
 
 import './mobile-enhancements.js'; // Import for side effects
 import './theme-manager.js'; // Import for side effects
