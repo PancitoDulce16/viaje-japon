@@ -605,41 +605,44 @@ export const TripsManager = {
         : '👤 Viaje individual';
 
     headerContainer.innerHTML = `
-      <div class="space-y-4">
+      <div class="space-y-6">
         <!-- Fila 1: Título y acciones -->
-        <div class="flex justify-between items-center w-full flex-wrap gap-4">
+        <div class="flex justify-between items-start w-full flex-wrap gap-6">
           <!-- Título principal y detalles del viaje -->
-          <div class="flex-1">
-              <h2 class="text-2xl md:text-3xl font-bold text-white animate__animated animate__fadeInDown">${this.currentTrip.info.name}</h2>
-              <div class="flex items-center gap-4 text-white/80 text-xs mt-2 flex-wrap">
-                  <span>📅 ${startDate.toLocaleDateString('es', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  <span class="hidden md:inline">|</span>
-                  <span>${collaborationStatus}</span>
+          <div class="flex-1 min-w-[280px]">
+              <h2 class="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight animate__animated animate__fadeInDown">${this.currentTrip.info.name}</h2>
+              <div class="flex items-center gap-3 text-white/90 text-sm flex-wrap">
+                  <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg>
+                    ${startDate.toLocaleDateString('es', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </span>
+                  <span class="hidden md:inline text-white/40">•</span>
+                  <span class="flex items-center gap-2">${collaborationStatus}</span>
               </div>
           </div>
 
           <!-- Acciones y Countdown -->
           <div class="flex items-center gap-3 flex-wrap">
-              <div class="text-right hidden sm:block bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
-                  <div class="text-2xl font-bold text-white">${daysUntil > 0 ? `${daysUntil}` : tripProgress < 100 ? `Día ${daysElapsed}` : '✅'}</div>
-                  <div class="text-xs text-white/70">${daysUntil > 0 ? `días restantes` : tripProgress < 100 ? 'en progreso' : 'Completado'}</div>
+              <div class="text-center bg-white/10 backdrop-blur-sm px-5 py-3 rounded-xl border border-white/20">
+                  <div class="text-3xl font-bold text-white leading-none mb-1">${daysUntil > 0 ? `${daysUntil}` : tripProgress < 100 ? `${daysElapsed}` : '✅'}</div>
+                  <div class="text-xs text-white/80 font-medium">${daysUntil > 0 ? `días restantes` : tripProgress < 100 ? `Día ${daysElapsed} de ${totalDays}` : 'Completado'}</div>
               </div>
               <button
                 onclick="TripsManager.showTripsListModal()"
-                class="bg-white/10 hover:bg-white/20 text-white font-semibold py-2 px-4 rounded-lg transition backdrop-blur-sm hover-lift"
+                class="bg-white/10 hover:bg-white/20 text-white font-semibold py-2.5 px-5 rounded-xl transition backdrop-blur-sm hover:scale-105 border border-white/10"
               >
                 Mis Viajes
               </button>
               <button
                 onclick="TripsManager.showCreateTripModal()"
-                class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition backdrop-blur-sm flex items-center gap-2 hover-lift"
+                class="bg-blue-500/90 hover:bg-blue-600 text-white font-bold py-2.5 px-5 rounded-xl transition backdrop-blur-sm flex items-center gap-2 hover:scale-105 shadow-md"
               >
                   <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
                   <span class="hidden md:inline">Agregar Viaje</span>
               </button>
                <button
                 onclick="TripsManager.showShareCode()"
-                class="bg-green-500/90 hover:bg-green-500 text-white font-bold py-2 px-4 rounded-lg transition backdrop-blur-sm flex items-center gap-2 hover-lift"
+                class="bg-green-500/90 hover:bg-green-600 text-white font-bold py-2.5 px-5 rounded-xl transition backdrop-blur-sm flex items-center gap-2 hover:scale-105 shadow-md"
                 title="Compartir código del viaje"
               >
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 4a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V4z"></path></svg>
@@ -647,7 +650,7 @@ export const TripsManager = {
               </button>
               <button
                 onclick="TripsManager.inviteMemberByEmail()"
-                class="bg-purple-500/90 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg transition backdrop-blur-sm flex items-center gap-2 hover-lift"
+                class="bg-purple-500/90 hover:bg-purple-600 text-white font-bold py-2.5 px-5 rounded-xl transition backdrop-blur-sm flex items-center gap-2 hover:scale-105 shadow-md"
                 title="Invitar por email"
               >
                   <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg>
@@ -657,9 +660,9 @@ export const TripsManager = {
         </div>
 
         <!-- Fila 2: Dashboard de Estadísticas Visuales -->
-        <div id="tripStatsDashboard" class="grid grid-cols-1 md:grid-cols-4 gap-4 animate-fade-in">
+        <div id="tripStatsDashboard" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 animate-fade-in">
           <!-- Loading placeholder -->
-          <div class="col-span-full text-center text-white/60 text-sm py-2">
+          <div class="col-span-full text-center text-white/60 text-sm py-4">
             <i class="fas fa-spinner animate-spin mr-2"></i>Cargando estadísticas...
           </div>
         </div>
@@ -722,68 +725,68 @@ export const TripsManager = {
       // Renderizar cards de estadísticas
       statsContainer.innerHTML = `
         <!-- Card 1: Progreso del Viaje -->
-        <div class="stat-card bg-gradient-to-br from-blue-500/90 to-cyan-500/90 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-white/90 text-sm font-semibold">Progreso del Viaje</div>
-            <div class="text-2xl">🗓️</div>
+        <div class="stat-card bg-gradient-to-br from-blue-500/90 to-cyan-500/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl hover-lift border border-white/10 transition-all hover:shadow-2xl">
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-white font-semibold text-sm tracking-wide uppercase">Progreso del Viaje</div>
+            <div class="text-3xl">🗓️</div>
           </div>
-          <div class="text-3xl font-bold text-white mb-2">${totalDays} días</div>
-          <div class="text-white/80 text-xs mb-3">
+          <div class="text-4xl font-bold text-white mb-3 leading-tight">${totalDays} días</div>
+          <div class="text-white/90 text-sm mb-4 font-medium">
             ${daysUntil > 0 ? `Comienza en ${daysUntil} días` : tripProgress < 100 ? `Día ${daysElapsed} de ${totalDays}` : 'Viaje completado'}
           </div>
-          <div class="w-full bg-white/20 rounded-full h-2">
-            <div class="bg-white h-2 rounded-full transition-all duration-500" style="width: ${tripProgress}%"></div>
+          <div class="w-full bg-white/20 rounded-full h-2.5">
+            <div class="bg-white h-2.5 rounded-full transition-all duration-500 shadow-sm" style="width: ${tripProgress}%"></div>
           </div>
         </div>
 
         <!-- Card 2: Actividades del Itinerario -->
-        <div class="stat-card bg-gradient-to-br from-purple-500/90 to-pink-500/90 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-white/90 text-sm font-semibold">Actividades</div>
-            <div class="text-2xl">📍</div>
+        <div class="stat-card bg-gradient-to-br from-purple-500/90 to-pink-500/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl hover-lift border border-white/10 transition-all hover:shadow-2xl">
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-white font-semibold text-sm tracking-wide uppercase">Actividades</div>
+            <div class="text-3xl">📍</div>
           </div>
-          <div class="text-3xl font-bold text-white mb-2">${totalActivities}</div>
-          <div class="text-white/80 text-xs mb-3">
+          <div class="text-4xl font-bold text-white mb-3 leading-tight">${totalActivities}</div>
+          <div class="text-white/90 text-sm mb-4 font-medium">
             ${completedActivities > 0 ? `${completedActivities} completadas` : 'Planificadas'}
           </div>
-          <div class="w-full bg-white/20 rounded-full h-2">
-            <div class="bg-white h-2 rounded-full transition-all duration-500" style="width: ${activityProgress}%"></div>
+          <div class="w-full bg-white/20 rounded-full h-2.5">
+            <div class="bg-white h-2.5 rounded-full transition-all duration-500 shadow-sm" style="width: ${activityProgress}%"></div>
           </div>
         </div>
 
         <!-- Card 3: Presupuesto -->
-        <div class="stat-card bg-gradient-to-br from-green-500/90 to-emerald-500/90 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-white/90 text-sm font-semibold">Presupuesto</div>
+        <div class="stat-card bg-gradient-to-br from-green-500/90 to-emerald-500/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl hover-lift border border-white/10 transition-all hover:shadow-2xl">
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-white font-semibold text-sm tracking-wide uppercase">Presupuesto</div>
             <div class="text-2xl">💰</div>
           </div>
-          <div class="text-3xl font-bold text-white mb-2">¥${totalBudget.toLocaleString()}</div>
-          <div class="text-white/80 text-xs mb-3">
+          <div class="text-4xl font-bold text-white mb-3 leading-tight">¥${totalBudget.toLocaleString()}</div>
+          <div class="text-white/90 text-sm mb-4 font-medium">
             ${budgetProgress > 0 ? `${budgetProgress.toFixed(0)}% del estimado` : 'Sin gastos registrados'}
           </div>
-          <div class="w-full bg-white/20 rounded-full h-2">
-            <div class="bg-white h-2 rounded-full transition-all duration-500" style="width: ${Math.min(100, budgetProgress)}%"></div>
+          <div class="w-full bg-white/20 rounded-full h-2.5">
+            <div class="bg-white h-2.5 rounded-full transition-all duration-500 shadow-sm" style="width: ${Math.min(100, budgetProgress)}%"></div>
           </div>
         </div>
 
         <!-- Card 4: Reservas -->
-        <div class="stat-card bg-gradient-to-br from-orange-500/90 to-red-500/90 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-white/90 text-sm font-semibold">Reservas</div>
-            <div class="text-2xl">✈️</div>
+        <div class="stat-card bg-gradient-to-br from-orange-500/90 to-red-500/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl hover-lift border border-white/10 transition-all hover:shadow-2xl">
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-white font-semibold text-sm tracking-wide uppercase">Reservas</div>
+            <div class="text-3xl">✈️</div>
           </div>
-          <div class="flex gap-4 items-center mb-2">
+          <div class="flex gap-6 items-center mb-3">
             <div>
-              <div class="text-2xl font-bold text-white">${flightsBooked}/2</div>
-              <div class="text-white/80 text-xs">Vuelos</div>
+              <div class="text-3xl font-bold text-white leading-tight">${flightsBooked}/2</div>
+              <div class="text-white/90 text-sm font-medium mt-1">Vuelos</div>
             </div>
-            <div class="w-px h-10 bg-white/30"></div>
+            <div class="w-px h-14 bg-white/30"></div>
             <div>
-              <div class="text-2xl font-bold text-white">${accommodationsCount}</div>
-              <div class="text-white/80 text-xs">Hoteles</div>
+              <div class="text-3xl font-bold text-white leading-tight">${accommodationsCount}</div>
+              <div class="text-white/90 text-sm font-medium mt-1">Hoteles</div>
             </div>
           </div>
-          <div class="text-white/80 text-xs">
+          <div class="text-white/90 text-sm font-medium">
             ${flightsBooked === 2 && accommodationsCount > 0 ? '✅ Todo listo' : '⚠️ Pendiente'}
           </div>
         </div>

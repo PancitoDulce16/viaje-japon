@@ -49,52 +49,55 @@
 <body>
     <!-- APP DASHBOARD -->
     <div id="appDashboard">
-        <!-- Botones Flotantes -->
-        <div class="z-40 fixed bottom-8 right-8 flex flex-col gap-3 stagger-fade-in floating-btn-container">
-            <button data-modal="budget" data-tooltip="💰 Budget Tracker" class="floating-btn ripple bounce-click gpu-accelerated tooltip-sakura" aria-label="Abrir control de gastos" style="animation-delay: 0.1s">
-                <i class="fas fa-yen-sign"></i>
+        <!-- Botones Flotantes - Mejorado espaciado -->
+        <div class="z-40 fixed bottom-6 right-6 md:bottom-8 md:right-8 flex flex-col gap-4 stagger-fade-in floating-btn-container">
+            <button data-modal="budget" data-tooltip="💰 Budget Tracker" class="floating-btn ripple bounce-click gpu-accelerated tooltip-sakura shadow-lg hover:shadow-xl transition-all" aria-label="Abrir control de gastos" style="animation-delay: 0.1s">
+                <i class="fas fa-yen-sign text-lg"></i>
             </button>
-            <button data-modal="packing" data-tooltip="🎒 Checklist de Equipaje" class="floating-btn ripple bounce-click gpu-accelerated tooltip-info" aria-label="Abrir checklist de equipaje" style="animation-delay: 0.2s">
-                <i class="fas fa-suitcase-rolling"></i>
+            <button data-modal="packing" data-tooltip="🎒 Checklist de Equipaje" class="floating-btn ripple bounce-click gpu-accelerated tooltip-info shadow-lg hover:shadow-xl transition-all" aria-label="Abrir checklist de equipaje" style="animation-delay: 0.2s">
+                <i class="fas fa-suitcase-rolling text-lg"></i>
             </button>
-            <button data-modal="favorites" data-tooltip="⭐ Mis Favoritos" class="floating-btn ripple bounce-click gpu-accelerated tooltip-warning" aria-label="Abrir mis favoritos" style="animation-delay: 0.3s">
-                <i class="fas fa-star"></i>
+            <button data-modal="favorites" data-tooltip="⭐ Mis Favoritos" class="floating-btn ripple bounce-click gpu-accelerated tooltip-warning shadow-lg hover:shadow-xl transition-all" aria-label="Abrir mis favoritos" style="animation-delay: 0.3s">
+                <i class="fas fa-star text-lg"></i>
             </button>
-            <button data-modal="phrases" data-tooltip="🗣️ Frases Útiles" class="floating-btn ripple bounce-click gpu-accelerated tooltip-success" aria-label="Abrir frases útiles" style="animation-delay: 0.4s">
-                <i class="fas fa-language"></i>
+            <button data-modal="phrases" data-tooltip="🗣️ Frases Útiles" class="floating-btn ripple bounce-click gpu-accelerated tooltip-success shadow-lg hover:shadow-xl transition-all" aria-label="Abrir frases útiles" style="animation-delay: 0.4s">
+                <i class="fas fa-language text-lg"></i>
             </button>
-            <button data-modal="notes" data-tooltip="📝 Mis Notas" class="floating-btn ripple bounce-click gpu-accelerated tooltip-info" aria-label="Abrir mis notas" style="animation-delay: 0.5s">
-                <i class="fas fa-sticky-note"></i>
+            <button data-modal="notes" data-tooltip="📝 Mis Notas" class="floating-btn ripple bounce-click gpu-accelerated tooltip-info shadow-lg hover:shadow-xl transition-all" aria-label="Abrir mis notas" style="animation-delay: 0.5s">
+                <i class="fas fa-sticky-note text-lg"></i>
             </button>
         </div>
 
-        <!-- Header Rediseñado -->
+        <!-- Header Mejorado con más espacio -->
         <header class="japan-header text-white shadow-lg sticky top-0 z-40">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto px-6 py-4">
                 <!-- Primera fila: Logo y controles principales -->
-                <div class="flex justify-between items-center h-16">
-                    <!-- Logo -->
+                <div class="flex justify-between items-center">
+                    <!-- Logo con más espacio -->
                     <div class="flex items-center">
-                        <h1 class="text-xl sm:text-2xl font-bold">
-                            <i class="fas fa-torii-gate mr-2"></i>
+                        <h1 class="text-2xl md:text-3xl font-bold flex items-center gap-3">
+                            <i class="fas fa-torii-gate"></i>
                             <span class="hidden sm:inline">Japan Trip Planner</span>
                             <span class="sm:hidden">JTP</span>
                         </h1>
                     </div>
 
-                    <!-- Controles Desktop -->
-                    <div class="hidden md:flex items-center gap-3">
-                        <!-- User info -->
-                        <div class="flex items-center gap-2 bg-white/10 px-3 py-2 rounded-lg backdrop-blur-sm">
-                            <i class="fas fa-user text-sm"></i>
-                            <span id="userEmailDisplay" class="text-sm font-medium"></span>
+                    <!-- Controles Desktop con mejor espaciado -->
+                    <div class="hidden lg:flex items-center gap-4">
+                        <!-- User info con más padding -->
+                        <div class="flex items-center gap-3 bg-white/10 px-4 py-2.5 rounded-xl backdrop-blur-sm">
+                            <i class="fas fa-user"></i>
+                            <span id="userEmailDisplay" class="font-medium"></span>
                         </div>
 
-                        <!-- Botones de acción -->
-                        <div class="flex items-center gap-2">
+                        <!-- Divisor visual -->
+                        <div class="h-8 w-px bg-white/20"></div>
+
+                        <!-- Botones de acción con más espacio -->
+                        <div class="flex items-center gap-3">
                             <button
                                 id="themeToggle"
-                                class="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+                                class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all hover:scale-105"
                                 aria-label="Cambiar tema"
                                 title="Cambiar tema"
                             >
@@ -103,7 +106,7 @@
 
                             <button
                                 id="enableNotificationsBtn"
-                                class="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+                                class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all hover:scale-105"
                                 aria-label="Notificaciones"
                                 title="Notificaciones"
                             >
@@ -112,34 +115,34 @@
 
                             <button
                                 data-modal="emergency"
-                                class="px-3 py-2 rounded-lg bg-red-600/80 hover:bg-red-700 transition text-sm font-semibold"
+                                class="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 transition-all hover:scale-105 font-semibold shadow-md"
                                 aria-label="Emergencias"
                             >
-                                SOS
+                                <i class="fas fa-exclamation-triangle mr-2"></i>SOS
                             </button>
 
                             <button
                                 id="logoutBtn"
-                                class="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition text-sm font-semibold"
+                                class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all hover:scale-105 font-semibold"
                                 aria-label="Cerrar sesión"
                             >
-                                <i class="fas fa-sign-out-alt"></i>
+                                <i class="fas fa-sign-out-alt mr-2"></i><span class="hidden xl:inline">Salir</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Menú Hamburguesa Mobile -->
+                    <!-- Menú Hamburguesa Mobile/Tablet -->
                     <button
                         id="menuToggle"
-                        class="md:hidden p-2 rounded-lg bg-white/10 hover:bg-white/20 transition"
+                        class="lg:hidden p-3 rounded-xl bg-white/10 hover:bg-white/20 transition"
                         aria-label="Abrir menú"
                     >
-                        <i class="fas fa-bars text-xl"></i>
+                        <i class="fas fa-bars text-2xl"></i>
                     </button>
                 </div>
 
-                <!-- Segunda fila: Información del viaje (si existe) -->
-                <div id="currentTripHeader"></div>
+                <!-- Segunda fila: Información del viaje (con margen superior) -->
+                <div id="currentTripHeader" class="mt-4"></div>
             </div>
         </header>
 
@@ -191,32 +194,40 @@
             </div>
         </div>
         
-        <!-- Navegación de Tabs Mejorada -->
-        <nav class="japan-nav bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-[64px] z-30 shadow-sm backdrop-blur-lg bg-white/95 dark:bg-gray-800/95" aria-label="Navegación principal">
-            <div id="tabSelector" class="max-w-6xl mx-auto px-2 py-2 flex gap-1 overflow-x-auto scrollbar-hide">
+        <!-- Navegación de Tabs con Mejor Espaciado -->
+        <nav class="japan-nav bg-white dark:bg-gray-800 border-b-2 border-gray-100 dark:border-gray-700 shadow-sm" aria-label="Navegación principal">
+            <div id="tabSelector" class="max-w-7xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto scrollbar-hide">
                 <button data-tab="itinerary" class="tab-btn active">
-                    <i class="far fa-calendar-alt"></i> <span class="hidden sm:inline">Itinerario</span>
+                    <i class="far fa-calendar-alt"></i>
+                    <span class="hidden md:inline ml-2">Itinerario</span>
                 </button>
                 <button data-tab="preparation" class="tab-btn">
-                    <i class="fas fa-tasks"></i> <span class="hidden sm:inline">Preparación</span>
+                    <i class="fas fa-tasks"></i>
+                    <span class="hidden md:inline ml-2">Preparación</span>
                 </button>
                 <button data-tab="flights" class="tab-btn">
-                    <i class="fas fa-plane"></i> <span class="hidden sm:inline">Vuelos</span>
+                    <i class="fas fa-plane"></i>
+                    <span class="hidden md:inline ml-2">Vuelos</span>
                 </button>
                 <button data-tab="hotels" class="tab-btn">
-                    <i class="fas fa-hotel"></i> <span class="hidden sm:inline">Hoteles</span>
+                    <i class="fas fa-hotel"></i>
+                    <span class="hidden md:inline ml-2">Hoteles</span>
                 </button>
                 <button data-tab="transport" class="tab-btn">
-                    <i class="fas fa-train"></i> <span class="hidden sm:inline">Transporte</span>
+                    <i class="fas fa-train"></i>
+                    <span class="hidden md:inline ml-2">Transporte</span>
                 </button>
                 <button data-tab="map" class="tab-btn">
-                    <i class="fas fa-map-marked-alt"></i> <span class="hidden sm:inline">Mapa</span>
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span class="hidden md:inline ml-2">Mapa</span>
                 </button>
                 <button data-tab="attractions" class="tab-btn">
-                    <i class="fas fa-landmark"></i> <span class="hidden sm:inline">Atracciones</span>
+                    <i class="fas fa-landmark"></i>
+                    <span class="hidden md:inline ml-2">Atracciones</span>
                 </button>
                 <button data-tab="utils" class="tab-btn">
-                    <i class="fas fa-tools"></i> <span class="hidden sm:inline">Utilidades</span>
+                    <i class="fas fa-tools"></i>
+                    <span class="hidden md:inline ml-2">Utilidades</span>
                 </button>
             </div>
         </nav>

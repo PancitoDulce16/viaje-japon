@@ -29,6 +29,16 @@ import { FCMManager } from './fcm-manager.js';
 import './chat.js';
 import './firebase-config.js';
 
+// Exportar handlers a window para acceso global
+window.MapHandler = MapHandler;
+window.AttractionsHandler = AttractionsHandler;
+window.TransportHandler = TransportHandler;
+window.TabsHandler = TabsHandler;
+window.FlightsHandler = FlightsHandler;
+window.HotelsHandler = HotelsHandler;
+window.PreparationHandler = PreparationHandler;
+window.ItineraryHandler = ItineraryHandler;
+
 // 🖼️ Image Service imports
 import './image-service.js';
 
@@ -106,7 +116,7 @@ class DashboardManager {
 
     async initializeDashboardComponents() {
         try {
-            // Inicializar componentes en paralelo para mejor rendimiento
+            // Inicializar componentes básicos
             const initPromises = [
                 this.initUserInfo(),
                 this.initTabs(),
@@ -116,10 +126,57 @@ class DashboardManager {
 
             await Promise.all(initPromises);
 
+            // Inicializar tabs con contenido
+            await this.initializeTabContents();
+
             console.log('✅ Componentes del dashboard inicializados');
         } catch (error) {
             console.error('❌ Error al inicializar componentes del dashboard:', error);
             throw error;
+        }
+    }
+
+    async initializeTabContents() {
+        try {
+            // Inicializar MapHandler
+            if (window.MapHandler) {
+                try {
+                    MapHandler.renderMap();
+                } catch (e) {
+                    console.error('❌ Error inicializando MapHandler:', e);
+                }
+            }
+
+            // Inicializar TabsHandler (Utils)
+            if (window.TabsHandler) {
+                try {
+                    TabsHandler.renderAllTabs();
+                } catch (e) {
+                    console.error('❌ Error inicializando TabsHandler:', e);
+                }
+            }
+
+            // Inicializar AttractionsHandler
+            if (window.AttractionsHandler) {
+                try {
+                    AttractionsHandler.renderAttractions();
+                } catch (e) {
+                    console.error('❌ Error inicializando AttractionsHandler:', e);
+                }
+            }
+
+            // Inicializar TransportHandler
+            if (window.TransportHandler) {
+                try {
+                    TransportHandler.renderTransport();
+                } catch (e) {
+                    console.error('❌ Error inicializando TransportHandler:', e);
+                }
+            }
+
+            console.log('✅ Contenido de tabs inicializado');
+        } catch (error) {
+            console.error('❌ Error al inicializar contenido de tabs:', error);
         }
     }
 
