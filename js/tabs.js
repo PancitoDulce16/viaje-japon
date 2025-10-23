@@ -119,53 +119,53 @@ export const TabsHandler = {
                 
                 <div class="grid md:grid-cols-2 gap-6">
                     <!-- Conversor de Moneda -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 border dark:border-gray-600">
                         <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
                             💸 Conversor de Moneda
                         </h3>
                         <div class="space-y-3">
                             <div class="flex gap-2">
                                 <div class="flex-1">
-                                    <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">USD (Dólares)</label>
-                                    <input 
-                                        id="usdInput" 
-                                        type="number" 
-                                        class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500" 
-                                        placeholder="0.00" 
+                                    <label class="text-xs text-gray-500 dark:text-gray-200 block mb-1 font-semibold">USD (Dólares)</label>
+                                    <input
+                                        id="usdInput"
+                                        type="number"
+                                        class="w-full p-3 border rounded-lg dark:bg-gray-600 dark:border-gray-500 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 dark:placeholder-gray-400"
+                                        placeholder="0.00"
                                         step="0.01"
                                     >
                                 </div>
                                 <div class="flex-1">
-                                    <label class="text-xs text-gray-500 dark:text-gray-400 block mb-1">JPY (Yenes)</label>
-                                    <input 
-                                        id="jpyInput" 
-                                        type="number" 
-                                        class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500" 
-                                        placeholder="0" 
+                                    <label class="text-xs text-gray-500 dark:text-gray-200 block mb-1 font-semibold">JPY (Yenes)</label>
+                                    <input
+                                        id="jpyInput"
+                                        type="number"
+                                        class="w-full p-3 border rounded-lg dark:bg-gray-600 dark:border-gray-500 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 dark:placeholder-gray-400"
+                                        placeholder="0"
                                         step="1"
                                     >
                                 </div>
                             </div>
                             <div class="flex items-center justify-center gap-2">
-                                <p class="text-xs text-gray-500 dark:text-gray-400 exchange-rate-text">
+                                <p class="text-xs text-gray-500 dark:text-gray-200 exchange-rate-text font-medium">
                                     Cargando tasa de cambio...
                                 </p>
-                                <button 
-                                    onclick="AppUtils.fetchExchangeRate().then(() => location.reload())" 
-                                    class="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                                <button
+                                    onclick="AppUtils.fetchExchangeRate().then(() => location.reload())"
+                                    class="text-xs bg-gray-100 dark:bg-gray-600 dark:text-white px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition font-semibold"
                                     title="Actualizar tasa"
                                 >
                                     🔄
                                 </button>
                             </div>
                             <div class="grid grid-cols-3 gap-2">
-                                <button class="quick-convert bg-gray-100 dark:bg-gray-700 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition text-sm font-semibold" data-amount="10">
+                                <button class="quick-convert bg-gray-100 dark:bg-gray-600 dark:text-white p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 transition text-sm font-semibold" data-amount="10">
                                     10 USD
                                 </button>
-                                <button class="quick-convert bg-gray-100 dark:bg-gray-700 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition text-sm font-semibold" data-amount="50">
+                                <button class="quick-convert bg-gray-100 dark:bg-gray-600 dark:text-white p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 transition text-sm font-semibold" data-amount="50">
                                     50 USD
                                 </button>
-                                <button class="quick-convert bg-gray-100 dark:bg-gray-700 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition text-sm font-semibold" data-amount="100">
+                                <button class="quick-convert bg-gray-100 dark:bg-gray-600 dark:text-white p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 transition text-sm font-semibold" data-amount="100">
                                     100 USD
                                 </button>
                             </div>
@@ -173,32 +173,32 @@ export const TabsHandler = {
                     </div>
 
                     <!-- Clima en Japón -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 border dark:border-gray-600">
                         <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
                             🌤️ Clima en Tiempo Real
                         </h3>
                         <div class="space-y-3">
-                            <div id="weather-tokyo" class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                            <div id="weather-tokyo" class="p-3 bg-blue-50 dark:bg-blue-900/40 rounded-lg border dark:border-blue-700">
                                 <div class="animate-pulse">
-                                    <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-20 mb-2"></div>
-                                    <div class="h-6 bg-gray-300 dark:bg-gray-600 rounded w-32"></div>
+                                    <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-20 mb-2"></div>
+                                    <div class="h-6 bg-gray-300 dark:bg-gray-500 rounded w-32"></div>
                                 </div>
                             </div>
-                            <div id="weather-kyoto" class="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                            <div id="weather-kyoto" class="p-3 bg-purple-50 dark:bg-purple-900/40 rounded-lg border dark:border-purple-700">
                                 <div class="animate-pulse">
-                                    <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-20 mb-2"></div>
-                                    <div class="h-6 bg-gray-300 dark:bg-gray-600 rounded w-32"></div>
+                                    <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-20 mb-2"></div>
+                                    <div class="h-6 bg-gray-300 dark:bg-gray-500 rounded w-32"></div>
                                 </div>
                             </div>
-                            <div id="weather-osaka" class="p-3 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
+                            <div id="weather-osaka" class="p-3 bg-orange-50 dark:bg-orange-900/40 rounded-lg border dark:border-orange-700">
                                 <div class="animate-pulse">
-                                    <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-20 mb-2"></div>
-                                    <div class="h-6 bg-gray-300 dark:bg-gray-600 rounded w-32"></div>
+                                    <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-20 mb-2"></div>
+                                    <div class="h-6 bg-gray-300 dark:bg-gray-500 rounded w-32"></div>
                                 </div>
                             </div>
-                            <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm">
+                            <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-600 rounded-lg text-sm border dark:border-gray-500">
                                 <p class="font-semibold mb-2 dark:text-white">👕 Qué llevar:</p>
-                                <ul class="space-y-1 text-gray-600 dark:text-gray-300 text-xs">
+                                <ul class="space-y-1 text-gray-600 dark:text-gray-100 text-xs font-medium">
                                     <li>• Abrigo o chamarra</li>
                                     <li>• Suéteres y capas</li>
                                     <li>• Pantalones largos</li>
@@ -209,44 +209,44 @@ export const TabsHandler = {
                     </div>
 
                     <!-- Zona Horaria -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 border dark:border-gray-600">
                         <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
                             🕐 Zona Horaria
                         </h3>
                         <div class="space-y-4">
-                            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Costa Rica (GMT-6)</p>
+                            <div class="p-4 bg-blue-50 dark:bg-blue-900/40 rounded-lg border dark:border-blue-700">
+                                <p class="text-sm text-gray-600 dark:text-gray-200 mb-1 font-semibold">Costa Rica (GMT-6)</p>
                                 <p id="crTime" class="text-2xl font-bold dark:text-white font-mono">--:--:--</p>
                             </div>
-                            <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Japón (GMT+9)</p>
+                            <div class="p-4 bg-red-50 dark:bg-red-900/40 rounded-lg border dark:border-red-700">
+                                <p class="text-sm text-gray-600 dark:text-gray-200 mb-1 font-semibold">Japón (GMT+9)</p>
                                 <p id="jpTime" class="text-2xl font-bold dark:text-white font-mono">--:--:--</p>
                             </div>
-                            <p class="text-xs text-center text-gray-500 dark:text-gray-400">
-                                📍 Diferencia: <strong>15 horas</strong> adelante
+                            <p class="text-xs text-center text-gray-500 dark:text-gray-200 font-medium">
+                                📍 Diferencia: <strong class="dark:text-white">15 horas</strong> adelante
                             </p>
                         </div>
                     </div>
 
                     <!-- Acciones Rápidas -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 border dark:border-gray-600">
                         <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
                             ⚡ Acciones Rápidas
                         </h3>
                         <div class="grid grid-cols-2 gap-3">
-                            <button data-modal="phrases" class="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition">
+                            <button data-modal="phrases" class="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition shadow-md">
                                 <div class="text-2xl mb-1">🗣️</div>
                                 <div class="text-sm font-semibold">Frases</div>
                             </button>
-                            <button data-modal="emergency" class="p-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition">
+                            <button data-modal="emergency" class="p-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition shadow-md">
                                 <div class="text-2xl mb-1">🚨</div>
                                 <div class="text-sm font-semibold">SOS</div>
                             </button>
-                            <button data-modal="budget" class="p-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition">
+                            <button data-modal="budget" class="p-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition shadow-md">
                                 <div class="text-2xl mb-1">💰</div>
                                 <div class="text-sm font-semibold">Budget</div>
                             </button>
-                            <button data-modal="notes" class="p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition">
+                            <button data-modal="notes" class="p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition shadow-md">
                                 <div class="text-2xl mb-1">📝</div>
                                 <div class="text-sm font-semibold">Notas</div>
                             </button>

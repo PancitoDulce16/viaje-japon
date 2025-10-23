@@ -146,7 +146,8 @@ export const ThemeManager = {
     if (window.Notifications) {
       const effectiveTheme = nextTheme === 'auto' ? this.systemPreference : nextTheme;
       const emoji = effectiveTheme === 'dark' ? '🌙' : '☀️';
-      window.Notifications.info(`${emoji} ${this.themes[nextTheme].name}`);
+      const themeName = nextTheme === 'auto' ? `${this.themes[nextTheme].name} (${effectiveTheme === 'dark' ? 'Oscuro' : 'Claro'})` : this.themes[nextTheme].name;
+      window.Notifications.info(`${emoji} ${themeName} activado`);
     }
 
     // Vibración táctil si está disponible
