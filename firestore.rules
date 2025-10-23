@@ -3,46 +3,95 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Rule 1: Users can manage their own user document.
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // =====================================================================
+    // Funciones de Ayuda (Helpers)
+    // =====================================================================
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // Rule 2: Trip-related operations.
+    function isTripMember(tripId) {
+      let trip = get(/databases/$(database)/documents/trips/$(tripId));
+      return isSignedIn() && trip.data != null && 'members' in trip.data && request.auth.uid in trip.data.members;
+    }
+
+    function isTripOwner(tripId) {
+        let trip = get(/databases/$(database)/documents/trips/$(tripId));
+        return isSignedIn() && trip.data != null && 'info' in trip.data && 'createdBy' in trip.data.info && request.auth.uid == trip.data.info.createdBy;
+    }
+
+    function isNewDataValidExpense(data) {
+        return data.desc is string &&
+               data.amount is number && data.amount > 0 &&
+               data.category is string &&
+               data.timestamp is number &&
+               data.addedBy == request.auth.email;
+    }
+
+    // =====================================================================
+    // Reglas para la colección 'users'
+    // =====================================================================
+    match /users/{userId}/{document=**} {
+      // Solo el propio usuario puede leer o escribir sus datos.
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // =====================================================================
+    // Reglas para la colección 'trips'
+    // =====================================================================
     match /trips/{tripId} {
-      // Helper function to safely check for trip membership.
-      function isMember() {
-        return 'members' in resource.data && request.auth.uid in resource.data.members;
+      // LECTURA: Cualquier miembro del viaje puede leer la información principal.
+      allow read: if isTripMember(tripId);
+
+      // CREACIÓN: Cualquier usuario autenticado puede crear un nuevo viaje.
+      // Se valida que el creador sea quien dice ser y que la lista de miembros lo incluya.
+      allow create: if isSignedIn() &&
+                       request.resource.data.info.createdBy == request.auth.uid &&
+                       request.auth.uid in request.resource.data.members;
+
+      // ACTUALIZACIÓN: Solo el dueño puede actualizar la información del viaje.
+      // Se previene que se cambie el creador o se eliminen miembros de forma no controlada.
+      allow update: if isTripOwner(tripId) &&
+                       request.resource.data.info.createdBy == resource.data.info.createdBy; // No se puede cambiar el dueño
+
+      // BORRADO: Solo el dueño del viaje puede eliminarlo.
+      allow delete: if isTripOwner(tripId);
+
+      // --- Sub-colección de Gastos ---
+      match /expenses/{expenseId} {
+        // LECTURA: Cualquier miembro puede leer los gastos.
+        allow read: if isTripMember(tripId);
+        // ESCRITURA: Cualquier miembro puede crear un gasto, pero debe tener el formato correcto.
+        allow create: if isTripMember(tripId) && isNewDataValidExpense(request.resource.data);
+        // BORRADO: Cualquier miembro puede borrar un gasto.
+        allow delete: if isTripMember(tripId);
+        // No se permite la actualización directa para evitar inconsistencias.
+        allow update: if false;
       }
-      
-      // Helper function to safely check if the user is the trip creator.
-      function isCreator() {
-        return 'info' in resource.data && 'createdBy' in resource.data.info && resource.data.info.createdBy == request.auth.uid;
-      }
 
-      // Allow members to read the trip document.
-      allow read: if request.auth != null && isMember();
-
-      // Allow any authenticated user to create a trip, ensuring they are the creator.
-      allow create: if request.auth != null && request.resource.data.info.createdBy == request.auth.uid;
-
-      // Allow members to update the trip.
-      allow update: if request.auth != null && isMember();
-      
-      // Allow only the creator to delete the trip.
-      allow delete: if request.auth != null && isCreator();
-
-      // Rule 3: Access control for the 'data' subcollection (e.g., itinerary).
+      // --- Sub-colección de Datos (Itinerario, Notas, Packing) ---
       match /data/{docId} {
-        // Helper function to safely check membership on the parent trip document.
-        function isTripMember() {
-          let tripDoc = get(/databases/$(database)/documents/trips/$(tripId));
-          // Check that the document exists and has a members field before checking for inclusion.
-          return tripDoc.data != null && 'members' in tripDoc.data && request.auth.uid in tripDoc.data.members;
-        }
+        // LECTURA: Cualquier miembro puede leer.
+        allow read: if isTripMember(tripId);
+        // ESCRITURA: Cualquier miembro puede escribir (crear o actualizar).
+        // Se valida que siempre se incluya quién y cuándo actualizó.
+        allow write: if isTripMember(tripId) &&
+                        'updatedBy' in request.resource.data &&
+                        request.resource.data.updatedBy == request.auth.email &&
+                        'lastUpdated' in request.resource.data &&
+                        request.resource.data.lastUpdated is string;
+      }
 
-        // Allow trip members to read and write documents in the subcollection.
-        allow read, write: if request.auth != null && isTripMember();
+      // --- Sub-colección de Actividades (Checklist) ---
+      match /activities/{docId} {
+         // LECTURA: Cualquier miembro puede leer.
+        allow read: if isTripMember(tripId);
+        // ESCRITURA: Cualquier miembro puede escribir.
+        allow write: if isTripMember(tripId) &&
+                        'updatedBy' in request.resource.data &&
+                        request.resource.data.updatedBy == request.auth.email &&
+                        'lastUpdated' in request.resource.data &&
+                        request.resource.data.lastUpdated is string;
       }
     }
   }
