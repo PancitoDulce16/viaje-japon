@@ -1,0 +1,21 @@
+name: Firebase Deploy (Manual)
+
+# Este workflow requiere configuración manual de secrets
+# Para configurarlo automático, sigue estos pasos:
+# 1. Ejecuta en tu terminal: firebase init hosting:github
+# 2. Esto configurará automáticamente los secrets necesarios
+
+on:
+  workflow_dispatch:  # Solo se ejecuta manualmente por ahora
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_JAPAN_ITIN_DEV }}'
+          channelId: live
+          projectId: japan-itin-dev

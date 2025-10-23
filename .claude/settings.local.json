@@ -33,7 +33,8 @@
       "Bash(python -m json.tool:*)",
       "WebSearch",
       "Bash(git restore:*)",
-      "Read(//c/Users/Noelia/Desktop/**)"
+      "Read(//c/Users/Noelia/Desktop/**)",
+      "Bash(firebase login:ci:*)"
     ],
     "deny": [],
     "ask": []
