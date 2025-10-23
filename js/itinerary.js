@@ -905,11 +905,7 @@ export const ItineraryHandler = {
 // ====================================================================================
 // MANEJO DE EVENTOS DE AUTENTICACIÓN
 // ====================================================================================
-window.addEventListener('auth:initialized', (event) => {
-  console.log('[ItineraryHandler] ✨ Evento auth:initialized recibido. Inicializando sync...');
-  // Re-inicializamos para asegurarnos de que todo se cargue con el nuevo estado de auth.
-  ItineraryHandler.reinitialize();
-});
+
 
 window.addEventListener('auth:loggedOut', () => {
   console.log('[ItineraryHandler] 🚫 Evento auth:loggedOut recibido. Limpiando...');
