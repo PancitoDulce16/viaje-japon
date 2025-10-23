@@ -12,12 +12,12 @@ service cloud.firestore {
 
     function isTripMember(tripId) {
       let trip = get(/databases/$(database)/documents/trips/$(tripId));
-      return isSignedIn() && trip.data != null && 'members' in trip.data && request.auth.uid in trip.data.members;
+      return isSignedIn() && trip.data != null && 'members' in trip.data && trip.data.members is list && request.auth.uid in trip.data.members;
     }
 
     function isTripOwner(tripId) {
         let trip = get(/databases/$(database)/documents/trips/$(tripId));
-        return isSignedIn() && trip.data != null && 'info' in trip.data && 'createdBy' in trip.data.info && request.auth.uid == trip.data.info.createdBy;
+        return isSignedIn() && trip.data != null && 'info' in trip.data && trip.data.info is map && 'createdBy' in trip.data.info && request.auth.uid == trip.data.info.createdBy;
     }
 
     function isNewDataValidExpense(data) {
