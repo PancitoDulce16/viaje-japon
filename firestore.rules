@@ -37,8 +37,8 @@ service cloud.firestore {
         // Helper function to safely check membership on the parent trip document.
         function isTripMember() {
           let tripDoc = get(/databases/$(database)/documents/trips/$(tripId));
-          // Check for the existence of 'members' field before checking for inclusion.
-          return 'members' in tripDoc.data && request.auth.uid in tripDoc.data.members;
+          // Check that the document exists and has a members field before checking for inclusion.
+          return tripDoc.data != null && 'members' in tripDoc.data && request.auth.uid in tripDoc.data.members;
         }
 
         // Allow trip members to read and write documents in the subcollection.
