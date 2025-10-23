@@ -593,11 +593,11 @@ a:focus {
       #16213e 100%);
 }
 
-/* Header alternativo */
+/* Header alternativo - Rediseñado */
 .japan-header {
   background: var(--japan-red);
   background-image: var(--gradient-japan);
-  box-shadow: 0 4px 12px rgba(196, 30, 58, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   position: relative;
 }
 
@@ -607,8 +607,26 @@ a:focus {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 4px;
+  height: 2px;
   background: var(--gradient-sakura);
+}
+
+/* Mejor espaciado de botones en header */
+.japan-header button {
+  min-width: auto;
+  white-space: nowrap;
+}
+
+.japan-header button i {
+  display: inline-block;
+}
+
+/* Mejorar contraste del user info */
+.japan-header #userInfo,
+.japan-header [id*="userInfo"] {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Navigation */

@@ -185,18 +185,19 @@ class DashboardManager {
             });
         }
 
-        // Evento de cambio de tema - Delegar a ThemeManager (Desktop y Mobile)
-        const themeToggle = document.getElementById('themeToggle');
+        // Evento de cambio de tema - Solo Mobile (Desktop lo maneja ThemeManager)
         const themeToggleMobile = document.getElementById('themeToggleMobile');
-        if (themeToggle && window.ThemeManager) {
-            themeToggle.addEventListener('click', () => {
-                window.ThemeManager.cycleTheme();
-            });
-        }
         if (themeToggleMobile && window.ThemeManager) {
             themeToggleMobile.addEventListener('click', () => {
                 window.ThemeManager.cycleTheme();
             });
+        }
+
+        // Verificar que ThemeManager esté activo
+        if (window.ThemeManager) {
+            console.log('✅ ThemeManager activo');
+        } else {
+            console.error('❌ ThemeManager no está disponible');
         }
 
         // Notificaciones (Desktop y Mobile)

@@ -32,7 +32,8 @@
       "Bash(curl:*)",
       "Bash(python -m json.tool:*)",
       "WebSearch",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Read(//c/Users/Noelia/Desktop/**)"
     ],
     "deny": [],
     "ask": []
