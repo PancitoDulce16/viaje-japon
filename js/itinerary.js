@@ -400,16 +400,6 @@ async function render(){
   renderDaySelector();
   renderDayOverview(dayData);
   renderActivities(dayData);
-
-  // Initialize drag and drop AFTER rendering activities
-  console.log('⏰ Attempting to initialize drag & drop after render...');
-  const timeline = document.getElementById('activitiesTimeline');
-  console.log('📍 Timeline element:', timeline);
-  if (timeline) {
-    initializeDragAndDrop(timeline);
-  } else {
-    console.error('❌ Timeline element not found!');
-  }
 }
 
 // ⬇️⬇️⬇️  NUEVO: renderTripSelector con botón “Ver Insights AI”  ⬇️⬇️⬇️
@@ -573,11 +563,11 @@ function renderActivities(day){
               <h3 class="text-lg font-bold dark:text-white mb-1">${act.title}</h3>
             </div>
             <div class="flex gap-2 flex-shrink-0">
-              <button 
-                type="button" 
-                data-action="vote" 
-                data-activity-id="${act.id}" 
-                data-day="${day.day}" 
+              <button
+                type="button"
+                data-action="vote"
+                data-activity-id="${act.id}"
+                data-day="${day.day}"
                 class="activity-vote-btn p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition flex items-center gap-1 ${userHasVoted ? 'text-red-500' : 'text-gray-400'}"
                 title="Votar por esta actividad"
               >
@@ -600,6 +590,10 @@ function renderActivities(day){
       </div>
     </div>`;
   }).join('');
+
+  // Initialize drag and drop AFTER rendering activities
+  console.log('⏰ Initializing drag & drop...');
+  initializeDragAndDrop(container);
 }
 
 // --- Drag & Drop with SortableJS ---
