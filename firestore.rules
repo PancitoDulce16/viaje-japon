@@ -32,9 +32,14 @@ service cloud.firestore {
     // =====================================================================
     // Reglas para la colección 'users'
     // =====================================================================
-    match /users/{userId}/{document=**} {
-      // Solo el propio usuario puede leer o escribir sus datos.
+    match /users/{userId} {
+      // Solo el propio usuario puede leer o escribir su documento principal
       allow read, write: if isSignedIn() && request.auth.uid == userId;
+
+      // Y todos sus subdocumentos
+      match /{document=**} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
     }
 
     // =====================================================================
