@@ -158,7 +158,8 @@ async function saveCurrentItineraryToFirebase() {
 
   const tripId = getCurrentTripId();
   if (!tripId || !currentItinerary) {
-    throw new Error('❌ No trip or itinerary to save');
+    console.warn('⚠️ No trip or itinerary to save - skipping save');
+    return false; // Retornar false en lugar de lanzar error
   }
 
   try {
