@@ -2514,6 +2514,90 @@ export const ATTRACTIONS_DATA = {
         rating: 4.8,
         description: "Café temático de Rilakkuma y San-X characters. Comida kawaii, bebidas decoradas.",
         tips: "REQUIERE RESERVA con anticipación. Límite de tiempo 90min. Menú seasonal."
+      },
+      {
+        name: "Nintendo Store Tokyo",
+        city: "Tokyo - Shibuya",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.9,
+        description: "Tienda oficial Nintendo en Shibuya PARCO. Merchandise de Mario, Zelda, Animal Crossing, Splatoon. Área de demos de juegos.",
+        tips: "Productos exclusivos de Japón. Demo stations para probar juegos nuevos. Tax-free disponible. Suele haber fila los fines de semana."
+      },
+      {
+        name: "Gundam Base Tokyo",
+        city: "Tokyo - Odaiba",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90 min",
+        rating: 4.8,
+        description: "Tienda oficial Gundam con 7 pisos. Gunpla exclusivos, dioramas gigantes, área de construcción de modelos.",
+        tips: "Modelos exclusivos Tokyo limited. Área de construcción gratuita. Estatua Gundam real size afuera (18m). En DiverCity Tokyo Plaza."
+      },
+      {
+        name: "Square Enix Cafe",
+        city: "Tokyo - Akihabara",
+        price: 2000,
+        currency: "JPY",
+        reservationUrl: "https://www.jp.square-enix.com/cafe/",
+        reserveDays: 14,
+        duration: "90 min",
+        rating: 4.7,
+        description: "Café temático oficial de Square Enix. Menús de Final Fantasy, Dragon Quest, Kingdom Hearts, NieR.",
+        tips: "REQUIERE RESERVA online obligatoria. Menú cambia cada temporada. Merchandise exclusivo. Ubicado en Akihabara UDX."
+      },
+      {
+        name: "Kirby Cafe Tokyo",
+        city: "Tokyo - Skytree",
+        price: 2500,
+        currency: "JPY",
+        reservationUrl: "https://kirbycafe.jp/",
+        reserveDays: 30,
+        duration: "90 min",
+        rating: 4.9,
+        description: "Café oficial de Kirby. Comida ultra kawaii con forma de Kirby. Bebidas, pasteles y menús temáticos.",
+        tips: "RESERVA DIFÍCIL - se agotan rápido (1 mes antes). En Tokyo Skytree. Sistema de turnos de 90min. Merchandise exclusivo."
+      },
+      {
+        name: "Nakano Broadway",
+        city: "Tokyo - Nakano",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "120-180 min",
+        rating: 4.7,
+        description: "Centro comercial otaku alternativo a Akihabara. 4 pisos con 20+ tiendas Mandarake. Figuras vintage, manga usado, coleccionables.",
+        tips: "Más auténtico que Akihabara. Precios mejores en figuras usadas. Muchas Mandarake especializadas (manga, figuras, cosplay). 5 min de Shinjuku."
+      },
+      {
+        name: "Animate Ikebukuro",
+        city: "Tokyo - Ikebukuro",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90 min",
+        rating: 4.6,
+        description: "Tienda de anime/manga MÁS GRANDE de Japón. 9 pisos. Anime goods, manga, light novels, doujinshi, CDs.",
+        tips: "Flagship store. Piso completo de doujinshi. Eventos de autógrafos frecuentes. Tax-free. Cerca de Pokémon Center Mega Tokyo."
+      },
+      {
+        name: "Mandarake Complex Akihabara",
+        city: "Tokyo - Akihabara",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90-120 min",
+        rating: 4.7,
+        description: "8 pisos de manga, figuras, doujinshi y coleccionables usados. Precios increíbles. Tesoros vintage.",
+        tips: "Cada piso tiene especialidad (figuras, manga, retro games, cosplay). Condition rating en productos. Acepta cash y tarjeta."
       }
     ]
   },
