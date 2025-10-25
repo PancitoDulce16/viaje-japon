@@ -295,6 +295,37 @@ export const RecommendationEngine = {
   },
 
   /**
+   * Clasificación de actividades por hora del día
+   */
+  timeOfDayClassification: {
+    morning: ['temple', 'shrine', 'garden', 'market', 'park', 'museum', 'castle', 'nature', 'hiking', 'breakfast', 'cafe'],
+    afternoon: ['shopping', 'district', 'museum', 'activity', 'theme park', 'aquarium', 'arcade', 'store', 'mall', 'cafe', 'lunch'],
+    evening: ['restaurant', 'dinner', 'view', 'observatory', 'sunset', 'illumination', 'night view'],
+    night: ['bar', 'izakaya', 'nightlife', 'club', 'karaoke', 'ramen', 'entertainment', 'golden gai']
+  },
+
+  /**
+   * Determina el mejor momento del día para una actividad
+   * @param {Object} attraction - Atracción a evaluar
+   * @returns {string} 'morning', 'afternoon', 'evening', 'night', or 'anytime'
+   */
+  getBestTimeOfDay(attraction) {
+    const text = `${attraction.name} ${attraction.description} ${attraction.tips || ''}`.toLowerCase();
+
+    // Chequear keywords de cada momento del día
+    for (const [timeOfDay, keywords] of Object.entries(this.timeOfDayClassification)) {
+      for (const keyword of keywords) {
+        if (text.includes(keyword)) {
+          return timeOfDay;
+        }
+      }
+    }
+
+    // Default: anytime
+    return 'anytime';
+  },
+
+  /**
    * Obtiene recomendaciones diarias basadas en la ciudad y día del viaje
    * @param {Array<string>} userPreferences - Preferencias del usuario
    * @param {string} city - Ciudad del día
@@ -358,14 +389,28 @@ export const RecommendationEngine = {
     }
 
     // Fase 3: Ordenar para mejor flujo del día
-    // Primero actividades caras/importantes, luego gratis/casuales
+    // ✨ NUEVO: Orden inteligente por momento del día
+    const timeOrder = { morning: 1, afternoon: 2, evening: 3, night: 4, anytime: 2.5 };
+
     selectedActivities.sort((a, b) => {
-      // Priorizar actividades con reserva necesaria (hacerlas primero)
+      // 1. Ordenar por momento del día óptimo
+      const aTime = this.getBestTimeOfDay(a);
+      const bTime = this.getBestTimeOfDay(b);
+      const timeComparison = timeOrder[aTime] - timeOrder[bTime];
+
+      if (timeComparison !== 0) return timeComparison;
+
+      // 2. Dentro del mismo momento, priorizar actividades con reserva
       if (a.reserveDays > 0 && b.reserveDays === 0) return -1;
       if (a.reserveDays === 0 && b.reserveDays > 0) return 1;
 
-      // Luego por score de recomendación
+      // 3. Finalmente por score de recomendación
       return b.recommendationScore - a.recommendationScore;
+    });
+
+    // Agregar metadata de tiempo recomendado
+    selectedActivities.forEach(activity => {
+      activity.bestTimeOfDay = this.getBestTimeOfDay(activity);
     });
 
     return selectedActivities;
