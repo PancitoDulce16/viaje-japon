@@ -164,15 +164,7 @@ async function saveCurrentItineraryToFirebase() {
 
   try {
     const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
-
-    // Agregar campos requeridos por las reglas de Firestore
-    const dataToSave = {
-      ...currentItinerary,
-      updatedBy: auth.currentUser?.email || 'unknown',
-      lastUpdated: new Date().toISOString()
-    };
-
-    await setDoc(itineraryRef, dataToSave);
+    await setDoc(itineraryRef, currentItinerary);
     console.log('✅ Itinerary saved to Firebase');
     return true;
   } catch (error) {
@@ -183,7 +175,7 @@ async function saveCurrentItineraryToFirebase() {
     });
 
     if (error.code === 'permission-denied') {
-      console.warn('⚠️ Permission denied - datos pueden faltar updatedBy/lastUpdated');
+      console.error('⚠️ Permission denied - usuario no es miembro del trip?');
       throw new Error('❌ Permission denied: You do not have access to save this itinerary');
     } else if (error.code === 'unavailable') {
       throw new Error('❌ Firestore unavailable: Check your internet connection');
