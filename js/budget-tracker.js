@@ -33,6 +33,7 @@ export const BudgetTracker = {
 
     // Si no hay usuario, cargar de localStorage
     if (!auth.currentUser) {
+      console.log('⚠️ Budget: No hay usuario autenticado, usando localStorage');
       this.expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
       this.updateModal();
       return;
@@ -41,31 +42,18 @@ export const BudgetTracker = {
     const tripId = this.getCurrentTripId();
     const userId = auth.currentUser.uid;
 
-    // Si NO hay trip, usar el sistema antiguo (por usuario)
+    console.log('🔍 DEBUG Budget initRealtimeSync:', {
+      userId: userId,
+      tripId: tripId,
+      hasTrip: !!tripId
+    });
+
+    // Si NO hay trip, solo usar localStorage (sin Firestore sync)
     if (!tripId) {
-      console.log('⚠️ Budget: No hay trip seleccionado, usando modo individual');
-      const expensesRef = collection(db, `users/${userId}/expenses`);
-      const q = query(expensesRef, orderBy('timestamp', 'desc'));
-
-      this.unsubscribe = onSnapshot(q, (snapshot) => {
-        this.expenses = [];
-        snapshot.forEach((doc) => {
-          this.expenses.push({
-            id: doc.id,
-            ...doc.data()
-          });
-        });
-        
-        localStorage.setItem('expenses', JSON.stringify(this.expenses));
-        this.updateModal();
-        
-        console.log('✅ Gastos (individual) sincronizados:', this.expenses.length);
-      }, (error) => {
-        console.error('❌ Error en sync de gastos:', error);
-        this.expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
-        this.updateModal();
-      });
-
+      console.log('⚠️ Budget: No hay trip seleccionado, solo localStorage (sin sync)');
+      // No crear listener de Firestore, solo usar localStorage
+      this.expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+      this.updateModal();
       return;
     }
 
@@ -289,10 +277,11 @@ export const BudgetTracker = {
       const tripId = this.getCurrentTripId();
 
       if (!tripId) {
-        // Modo individual
-        const userId = auth.currentUser.uid;
-        await addDoc(collection(db, `users/${userId}/expenses`), expense);
-        console.log('✅ Gasto guardado (individual) en Firebase');
+        // Sin trip, guardar solo localmente (no en Firestore)
+        console.log('⚠️ No hay trip, guardando solo en localStorage');
+        this.expenses.push(expense);
+        localStorage.setItem('expenses', JSON.stringify(this.expenses));
+        this.updateModal();
       } else {
         // 🔥 Modo colaborativo
         await addDoc(collection(db, `trips/${tripId}/expenses`), expense);
@@ -332,10 +321,13 @@ export const BudgetTracker = {
       const tripId = this.getCurrentTripId();
 
       if (!tripId) {
-        // Modo individual
-        const userId = auth.currentUser.uid;
-        await deleteDoc(doc(db, `users/${userId}/expenses`, expenseId));
-        console.log('✅ Gasto eliminado (individual) de Firebase');
+        // Sin trip, eliminar solo localmente
+        console.log('⚠️ No hay trip, eliminando solo de localStorage');
+        this.expenses = this.expenses.filter(exp =>
+          (exp.id || exp.timestamp.toString()) !== expenseId.toString()
+        );
+        localStorage.setItem('expenses', JSON.stringify(this.expenses));
+        this.updateModal();
       } else {
         // 🔥 Modo colaborativo
         await deleteDoc(doc(db, `trips/${tripId}/expenses`, expenseId));
