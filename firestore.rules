@@ -46,13 +46,11 @@ service cloud.firestore {
     // Reglas para la colección 'userSessions' (Feedback Tracker)
     // =====================================================================
     match /userSessions/{sessionId} {
-      // Solo el dueño de la sesión puede escribir
       // SessionId format: userId_timestamp
-      allow create, update: if isSignedIn() &&
-                              request.resource.data.userId == request.auth.uid;
-      // Solo el dueño puede leer sus propias sesiones
-      allow read: if isSignedIn() &&
-                     resource.data.userId == request.auth.uid;
+      // Extraer userId del sessionId (parte antes del primer '_')
+      // Permitir si el usuario autenticado coincide con el userId del sessionId
+      allow read, write: if isSignedIn() &&
+                            request.auth.uid == sessionId.split('_')[0];
     }
 
     // =====================================================================
