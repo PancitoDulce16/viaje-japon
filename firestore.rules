@@ -95,21 +95,13 @@ service cloud.firestore {
       // --- Sub-colección de Datos (Itinerario, Notas, Packing) ---
       match /data/{docId} {
         allow read: if isTripMember(tripId);
-        allow write: if isTripMember(tripId) &&
-                        'updatedBy' in request.resource.data &&
-                        request.resource.data.updatedBy == request.auth.email &&
-                        'lastUpdated' in request.resource.data &&
-                        request.resource.data.lastUpdated is string;
+        allow write: if isTripMember(tripId);
       }
 
       // --- Sub-colección de Actividades (Checklist) ---
       match /activities/{docId} {
         allow read: if isTripMember(tripId);
-        allow write: if isTripMember(tripId) &&
-                        'updatedBy' in request.resource.data &&
-                        request.resource.data.updatedBy == request.auth.email &&
-                        'lastUpdated' in request.resource.data &&
-                        request.resource.data.lastUpdated is string;
+        allow write: if isTripMember(tripId);
       }
 
       // --- Sub-colección de Módulos (Flights, Hotels, etc.) ---
