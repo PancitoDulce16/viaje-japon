@@ -115,6 +115,13 @@ export const FeedbackTracker = {
       return;
     }
 
+    console.log('🔍 DEBUG trackLike - Starting:', {
+      activityId,
+      activityName,
+      userId: auth.currentUser.uid,
+      userEmail: auth.currentUser.email
+    });
+
     const likeData = {
       activityId,
       activityName,
@@ -128,30 +135,45 @@ export const FeedbackTracker = {
     // Guardar en Firestore
     try {
       const userDoc = doc(db, 'users', auth.currentUser.uid);
-      await updateDoc(userDoc, {
-        likedActivities: arrayUnion({
-          activityId,
-          activityName,
-          likedAt: new Date().toISOString()
-        })
-      }).catch(async (error) => {
-        // Si el documento no existe, créalo
-        if (error.code === 'not-found') {
-          await setDoc(userDoc, {
-            likedActivities: [{
-              activityId,
-              activityName,
-              likedAt: new Date().toISOString()
-            }],
-            createdAt: new Date().toISOString()
-          }, { merge: true });
-        }
-      });
+      console.log('🔍 DEBUG - Firestore path:', `users/${auth.currentUser.uid}`);
+
+      // Primero verificar si el documento existe
+      const userSnap = await getDoc(userDoc);
+
+      if (userSnap.exists()) {
+        // Documento existe, actualizar
+        console.log('✅ User doc exists, updating...');
+        await updateDoc(userDoc, {
+          likedActivities: arrayUnion({
+            activityId,
+            activityName,
+            likedAt: new Date().toISOString()
+          })
+        });
+      } else {
+        // Documento no existe, crear
+        console.log('📝 User doc does not exist, creating...');
+        await setDoc(userDoc, {
+          likedActivities: [{
+            activityId,
+            activityName,
+            likedAt: new Date().toISOString()
+          }],
+          userId: auth.currentUser.uid,
+          email: auth.currentUser.email,
+          createdAt: new Date().toISOString()
+        });
+      }
 
       Notifications.success(`❤️ ${activityName} guardado en favoritos`);
-      console.log('❤️ Like saved:', activityName);
+      console.log('✅ Like saved successfully:', activityName);
     } catch (error) {
-      console.error('Error saving like:', error);
+      console.error('❌ Error saving like - Full details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack,
+        userId: auth.currentUser?.uid
+      });
       Notifications.error('Error al guardar favorito');
     }
   },
@@ -163,6 +185,12 @@ export const FeedbackTracker = {
     if (!auth.currentUser) {
       return;
     }
+
+    console.log('🔍 DEBUG trackDislike - Starting:', {
+      activityId,
+      activityName,
+      userId: auth.currentUser.uid
+    });
 
     const dislikeData = {
       activityId,
@@ -177,29 +205,44 @@ export const FeedbackTracker = {
     // Guardar en Firestore
     try {
       const userDoc = doc(db, 'users', auth.currentUser.uid);
-      await updateDoc(userDoc, {
-        dislikedActivities: arrayUnion({
-          activityId,
-          activityName,
-          dislikedAt: new Date().toISOString()
-        })
-      }).catch(async (error) => {
-        if (error.code === 'not-found') {
-          await setDoc(userDoc, {
-            dislikedActivities: [{
-              activityId,
-              activityName,
-              dislikedAt: new Date().toISOString()
-            }],
-            createdAt: new Date().toISOString()
-          }, { merge: true });
-        }
-      });
+      console.log('🔍 DEBUG - Firestore path:', `users/${auth.currentUser.uid}`);
+
+      // Primero verificar si el documento existe
+      const userSnap = await getDoc(userDoc);
+
+      if (userSnap.exists()) {
+        // Documento existe, actualizar
+        console.log('✅ User doc exists, updating...');
+        await updateDoc(userDoc, {
+          dislikedActivities: arrayUnion({
+            activityId,
+            activityName,
+            dislikedAt: new Date().toISOString()
+          })
+        });
+      } else {
+        // Documento no existe, crear
+        console.log('📝 User doc does not exist, creating...');
+        await setDoc(userDoc, {
+          dislikedActivities: [{
+            activityId,
+            activityName,
+            dislikedAt: new Date().toISOString()
+          }],
+          userId: auth.currentUser.uid,
+          email: auth.currentUser.email,
+          createdAt: new Date().toISOString()
+        });
+      }
 
       Notifications.info(`👎 No verás más "${activityName}"`);
-      console.log('👎 Dislike saved:', activityName);
+      console.log('✅ Dislike saved successfully:', activityName);
     } catch (error) {
-      console.error('Error saving dislike:', error);
+      console.error('❌ Error saving dislike - Full details:', {
+        code: error.code,
+        message: error.message,
+        userId: auth.currentUser?.uid
+      });
     }
   },
 
@@ -207,12 +250,25 @@ export const FeedbackTracker = {
    * Guardar datos de sesión en Firestore
    */
   async saveSessionData() {
-    if (!auth.currentUser) return;
+    if (!auth.currentUser) {
+      console.log('⚠️ No user logged in, skipping session save');
+      return;
+    }
 
     const sessionDuration = Date.now() - this.sessionData.sessionStart;
+    const sessionId = `${auth.currentUser.uid}_${this.sessionData.sessionStart}`;
+
+    console.log('🔍 DEBUG saveSessionData - Starting:', {
+      userId: auth.currentUser.uid,
+      sessionId: sessionId,
+      clicks: this.sessionData.clicks.length,
+      likes: this.sessionData.likes.length,
+      dislikes: this.sessionData.dislikes.length
+    });
 
     try {
-      const sessionDoc = doc(db, 'userSessions', `${auth.currentUser.uid}_${this.sessionData.sessionStart}`);
+      const sessionDoc = doc(db, 'userSessions', sessionId);
+      console.log('🔍 DEBUG - Firestore path:', `userSessions/${sessionId}`);
 
       await setDoc(sessionDoc, {
         userId: auth.currentUser.uid,
@@ -229,13 +285,18 @@ export const FeedbackTracker = {
         savedAt: new Date().toISOString()
       });
 
-      console.log('💾 Session data saved:', {
+      console.log('✅ Session data saved successfully:', {
         clicks: this.sessionData.clicks.length,
         likes: this.sessionData.likes.length,
         dislikes: this.sessionData.dislikes.length
       });
     } catch (error) {
-      console.error('Error saving session data:', error);
+      console.error('❌ Error saving session data - Full details:', {
+        code: error.code,
+        message: error.message,
+        sessionId: sessionId,
+        userId: auth.currentUser?.uid
+      });
     }
   },
 
