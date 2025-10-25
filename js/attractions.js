@@ -1,4 +1,6 @@
 import { ATTRACTIONS_DATA } from '/data/attractions-data.js';
+import { enrichAttraction } from '/data/coordinates-data.js';
+import { MapsHelper } from './maps-helper.js';
 import { Logger, debounce, AppError } from './helpers.js';
 import { STORAGE_KEYS, ERROR_CODES, TIMEOUTS, Z_INDEX, COLOR_SCHEMES, ACTIVITY_ICONS } from '/js/constants.js';
 
@@ -185,9 +187,12 @@ export const AttractionsHandler = {
     },
 
     renderAttractionCard(item, categoryKey) {
-        const isSaved = this.savedAttractions.includes(item.name);
-        const priceDisplay = item.price === 0 ? 'GRATIS' : `¥${item.price.toLocaleString()}`;
-        const needsReservation = item.reserveDays > 0;
+        // Enriquecer con coordenadas y datos de transporte
+        const enrichedItem = enrichAttraction(item);
+
+        const isSaved = this.savedAttractions.includes(enrichedItem.name);
+        const priceDisplay = enrichedItem.price === 0 ? 'GRATIS' : `¥${enrichedItem.price.toLocaleString()}`;
+        const needsReservation = enrichedItem.reserveDays > 0;
 
         return `
             <div class="attraction-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all ${
@@ -248,11 +253,22 @@ export const AttractionsHandler = {
                         </div>
                     ` : ''}
 
-                    ${item.tips ? `
+                    ${enrichedItem.tips ? `
                         <div class="bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded mb-4">
                             <p class="text-xs text-gray-700 dark:text-gray-300">
-                                💡 <strong>Tip:</strong> ${item.tips}
+                                💡 <strong>Tip:</strong> ${enrichedItem.tips}
                             </p>
+                        </div>
+                    ` : ''}
+
+                    <!-- Transport & Hours Info -->
+                    ${MapsHelper.createTransportInfo(enrichedItem)}
+                    ${MapsHelper.createHoursInfo(enrichedItem)}
+
+                    <!-- Maps Button -->
+                    ${enrichedItem.coordinates || enrichedItem.name ? `
+                        <div class="mt-3 mb-4">
+                            ${MapsHelper.createMapsButton(enrichedItem)}
                         </div>
                     ` : ''}
 

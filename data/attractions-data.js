@@ -17,7 +17,11 @@ export const ATTRACTIONS_DATA = {
         duration: "30-45 min",
         rating: 4.6,
         description: "Cadena famosa con cabinas individuales. Tonkotsu ramen personalizable. 24hrs en Shibuya.",
-        tips: "Sistema de tickets. Llena formulario antes de ordenar. Mejor temprano para evitar fila."
+        tips: "Sistema de tickets. Llena formulario antes de ordenar. Mejor temprano para evitar fila.",
+        coordinates: { lat: 35.6617, lng: 139.7006 },
+        nearestStation: "Shibuya Station",
+        transportLines: ["JR Yamanote Line", "Tokyo Metro Ginza Line"],
+        hours: "24 hours (Shibuya branch)"
       },
       {
         name: "Afuri Ramen",

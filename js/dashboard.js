@@ -7,6 +7,7 @@ import { AppCore } from './core.js';
 import './mobile-enhancements.js'; // Import for side effects
 import './theme-manager.js'; // Import for side effects
 import { SafeFirestore } from './firestore-wrapper.js'; // 🛡️ Wrapper seguro para Firestore
+import { MapsHelper } from './maps-helper.js'; // 🗺️ Helper para Google Maps
 import { PackingList } from './packing-list.js';
 import { FavoritesManager } from './favorites-manager.js';
 import { ItineraryHandler } from './itinerary.js';
