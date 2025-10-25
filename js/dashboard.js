@@ -21,6 +21,7 @@ import { Notifications } from './notifications.js';
 import { ItineraryBuilder } from './itinerary-builder.js';
 import { ItineraryBuilderExtensions } from './itinerary-builder-part2.js';
 import { Dialogs } from './dialogs.js';
+import { RecommendationEngine } from './recommendation-engine.js';
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';

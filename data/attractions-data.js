@@ -2466,6 +2466,54 @@ export const ATTRACTIONS_DATA = {
         rating: 4.5,
         description: "Jump Shop dentro de Character Street en Tokyo Station.",
         tips: "Combina con otros character shops (Ghibli, Pokémon, etc) en mismo pasillo."
+      },
+      {
+        name: "Sega Akihabara Building 1",
+        city: "Tokyo - Akihabara",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.7,
+        description: "Tienda oficial Sega de 5 pisos. Merchandise de Sonic, Persona, Yakuza, Hatsune Miku. Arcade en último piso.",
+        tips: "Productos exclusivos de Sega. Crane games con premios oficiales. Tax-free disponible."
+      },
+      {
+        name: "Capcom Store Tokyo",
+        city: "Tokyo - Shibuya",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "45 min",
+        rating: 4.6,
+        description: "Tienda oficial Capcom. Merchandise de Monster Hunter, Resident Evil, Street Fighter, Mega Man.",
+        tips: "Productos limitados y exclusivos. Colaboraciones especiales. Dentro de Shibuya PARCO."
+      },
+      {
+        name: "Pokémon Center Mega Tokyo",
+        city: "Tokyo - Ikebukuro",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60 min",
+        rating: 4.9,
+        description: "Flagship Pokémon Center. El MÁS grande de Japón. Pokémon Cafe en mismo edificio.",
+        tips: "Reserva para el café con anticipación. Merchandise exclusivo de Tokyo. Tax-free."
+      },
+      {
+        name: "Anakuma Café",
+        city: "Tokyo - Harajuku",
+        price: 1500,
+        currency: "JPY",
+        reservationUrl: "https://anakuma.jp",
+        reserveDays: 7,
+        duration: "90 min",
+        rating: 4.8,
+        description: "Café temático de Rilakkuma y San-X characters. Comida kawaii, bebidas decoradas.",
+        tips: "REQUIERE RESERVA con anticipación. Límite de tiempo 90min. Menú seasonal."
       }
     ]
   },
