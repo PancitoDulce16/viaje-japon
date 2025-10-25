@@ -155,10 +155,12 @@ export const [MODULE_NAME]Handler = {
     const updatedItems = [...this.data, newItem];
 
     // ✅ USAR SAFEFIRESTORE
+    // IMPORTANTE: Incluir updatedBy y lastUpdated si las reglas lo requieren
     const result = await SafeFirestore.setDocSafe(docRef, {
       items: updatedItems,
-      updatedAt: new Date().toISOString(),
-      updatedBy: auth.currentUser.email
+      updatedAt: new Date().toISOString(),    // timestamp
+      updatedBy: auth.currentUser.email,      // requerido por reglas
+      lastUpdated: new Date().toISOString()   // requerido por reglas
     }, { merge: true });
 
     if (result.success) {
@@ -192,7 +194,8 @@ export const [MODULE_NAME]Handler = {
     const result = await SafeFirestore.setDocSafe(docRef, {
       items: updatedItems,
       updatedAt: new Date().toISOString(),
-      updatedBy: auth.currentUser.email
+      updatedBy: auth.currentUser.email,
+      lastUpdated: new Date().toISOString()
     }, { merge: true });
 
     if (!result.success) {

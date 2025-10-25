@@ -294,6 +294,31 @@ Cuando uses `where('members', 'array-contains', userId)`:
 - La query ya filtra en el servidor
 - No necesitas validar `resource.data.members` en la regla
 
+### **Campos Requeridos en Reglas** ⚠️ IMPORTANTE
+Si tus reglas requieren campos específicos:
+```javascript
+allow write: if isTripMember(tripId) &&
+                'updatedBy' in request.resource.data &&
+                request.resource.data.updatedBy == request.auth.email &&
+                'lastUpdated' in request.resource.data &&
+                request.resource.data.lastUpdated is string;
+```
+
+**DEBES incluirlos en tu código:**
+```javascript
+// ❌ INCORRECTO - faltarán campos requeridos
+await setDoc(docRef, myData);
+
+// ✅ CORRECTO - incluye campos requeridos
+await setDoc(docRef, {
+  ...myData,
+  updatedBy: auth.currentUser.email,
+  lastUpdated: new Date().toISOString()
+});
+```
+
+**Síntoma:** Error `permission-denied` aunque el usuario sea miembro del trip.
+
 ### **Subcollecciones Recursivas**
 Para permitir todas las subcollecciones bajo un path:
 ```javascript
