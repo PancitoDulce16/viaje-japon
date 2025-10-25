@@ -174,6 +174,16 @@ export const FlightsHandler = {
         this.renderMyFlights();
         this.renderBaggageInfoDynamic(); // 🔥 Actualizar equipaje dinámicamente
       }
+    }, (error) => {
+      console.error('❌ ERROR en FlightsHandler onSnapshot - Full details:', {
+        code: error.code,
+        message: error.message,
+        tripId: this.currentTripId,
+        path: `trips/${this.currentTripId}/modules/flights`
+      });
+      // Fallback a array vacío
+      this.myFlights = [];
+      this.renderMyFlights();
     });
   },
 

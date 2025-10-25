@@ -45,6 +45,16 @@ export const HotelsHandler = {
         this.myHotels = docSnap.data().hotels || [];
         this.renderMyHotels();
       }
+    }, (error) => {
+      console.error('❌ ERROR en HotelsHandler onSnapshot - Full details:', {
+        code: error.code,
+        message: error.message,
+        tripId: this.currentTripId,
+        path: `trips/${this.currentTripId}/modules/hotels`
+      });
+      // Fallback a array vacío
+      this.myHotels = [];
+      this.renderMyHotels();
     });
   },
 

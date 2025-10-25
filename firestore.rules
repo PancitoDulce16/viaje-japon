@@ -111,6 +111,12 @@ service cloud.firestore {
                         'lastUpdated' in request.resource.data &&
                         request.resource.data.lastUpdated is string;
       }
+
+      // --- Sub-colección de Módulos (Flights, Hotels, etc.) ---
+      match /modules/{moduleId} {
+        allow read: if isTripMember(tripId);
+        allow write: if isTripMember(tripId);
+      }
     }
   }
 }
