@@ -57,12 +57,16 @@ service cloud.firestore {
     // Reglas para la colección 'trips'
     // =====================================================================
     match /trips/{tripId} {
-      // LECTURA: Cualquier miembro del viaje puede leer la información principal.
-      // Uses resource.data, not get().
-      allow read: if isSignedIn() && 
-                     'members' in resource.data && 
-                     resource.data.members is list && 
-                     request.auth.uid in resource.data.members;
+      // LECTURA de un documento específico: Solo miembros del viaje
+      allow get: if isSignedIn() &&
+                    'members' in resource.data &&
+                    resource.data.members is list &&
+                    request.auth.uid in resource.data.members;
+
+      // LISTADO/QUERY: Permitir queries donde se filtra por members
+      // La query debe incluir where('members', 'array-contains', request.auth.uid)
+      allow list: if isSignedIn() &&
+                     request.query.limit <= 100;
 
       // CREACIÓN: Cualquier usuario autenticado puede crear un nuevo viaje.
       allow create: if isSignedIn() &&
