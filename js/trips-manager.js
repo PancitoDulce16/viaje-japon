@@ -39,7 +39,9 @@ export const TripsManager = {
     }
 
     const userId = auth.currentUser.uid;
-    
+
+    console.log('🔍 DEBUG TripsManager - Inicializando listener de trips para userId:', userId);
+
     const tripsRef = collection(db, 'trips');
     const q = query(tripsRef, where('members', 'array-contains', userId));
 
@@ -61,6 +63,17 @@ export const TripsManager = {
         console.log('⚠️ No hay trips, mostrar mensaje de bienvenida');
         this.updateTripHeaderEmpty();
       }
+    }, (error) => {
+      console.error('❌ ERROR en TripsManager onSnapshot - Full details:', {
+        code: error.code,
+        message: error.message,
+        userId: userId,
+        query: 'trips where members array-contains userId'
+      });
+      // Mostrar mensaje al usuario
+      this.userTrips = [];
+      this.renderTripsList();
+      this.updateTripHeaderEmpty();
     });
   },
 

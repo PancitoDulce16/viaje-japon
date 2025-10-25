@@ -72,7 +72,16 @@ export const FavoritesManager = {
 
       console.log('✅ Favoritos sincronizados:', this.favorites.length);
     }, (error) => {
-      console.error('❌ Error en sync de favoritos:', error);
+      console.error('❌ ERROR en FavoritesManager onSnapshot - Full details:', {
+        code: error.code,
+        message: error.message,
+        userId: userId,
+        tripId: tripId || 'none',
+        path: tripId ? `trips/${tripId}/data/favorites` : `users/${userId}/data/favorites`
+      });
+      // Fallback a localStorage
+      this.favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      this.updateFavoritesUI();
     });
   },
 
