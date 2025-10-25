@@ -22,6 +22,8 @@ import { ItineraryBuilder } from './itinerary-builder.js';
 import { ItineraryBuilderExtensions } from './itinerary-builder-part2.js';
 import { Dialogs } from './dialogs.js';
 import { RecommendationEngine } from './recommendation-engine.js';
+import { FeedbackTracker } from './feedback-tracker.js';
+import { CostCalculator } from './cost-calculator.js';
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';
@@ -61,6 +63,9 @@ class DashboardManager {
 
             // 🔔 Inicializar sistema de notificaciones
             Notifications.init();
+
+            // 🎯 Inicializar Feedback Tracker
+            FeedbackTracker.init();
 
             // 🔥 Inicializar Firebase Auth
             console.log('⏳ Esperando a que la autenticación esté lista...');

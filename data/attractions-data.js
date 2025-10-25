@@ -2777,5 +2777,95 @@ export const ATTRACTIONS_DATA = {
         tips: "Test drives disponibles (con licencia). Exhibits de carros clásicos."
       }
     ]
+  },
+
+  // HIROSHIMA
+  hiroshima: {
+    category: "Hiroshima",
+    icon: "🕊️",
+    color: "gray",
+    items: [
+      {
+        name: "Hiroshima Peace Memorial Park",
+        city: "Hiroshima",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2-3 horas",
+        rating: 5.0,
+        description: "Parque conmemorativo con A-Bomb Dome (UNESCO). Museo de la Paz (¥200). Profundamente conmovedor.",
+        tips: "Llega temprano. Museo toma 2hrs. Emocional pero esencial. Gratis excepto museo."
+      },
+      {
+        name: "Miyajima Island Day Trip",
+        city: "Hiroshima - Miyajima",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "4-6 horas",
+        rating: 5.0,
+        description: "Torii flotante icónico. Isla sagrada con templos y venados. UNESCO. Uno de los 3 paisajes más bellos de Japón.",
+        tips: "Ferry desde Hiroshima (JR Pass cubre). Ver torii con marea alta Y baja. Oysters frescos increíbles."
+      },
+      {
+        name: "Okonomimura",
+        city: "Hiroshima",
+        price: 1000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60-90 min",
+        rating: 4.7,
+        description: "Edificio de 4 pisos con 25 puestos de okonomiyaki estilo Hiroshima. Heaven de comida.",
+        tips: "Okonomiyaki Hiroshima = con yakisoba. Piso 2-4 tienen puestos. Cada uno diferente."
+      }
+    ]
+  },
+
+  // FUKUOKA
+  fukuoka: {
+    category: "Fukuoka",
+    icon: "🏮",
+    color: "orange",
+    items: [
+      {
+        name: "Yatai Food Stalls",
+        city: "Fukuoka",
+        price: 1500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90-120 min",
+        rating: 4.9,
+        description: "Food stalls callejeros ÚNICOS de Fukuoka. Ramen, yakitori, oden. Experiencia local auténtica.",
+        tips: "Nakasu y Tenjin areas. Mejor de noche (7PM-2AM). Hakata ramen es must-try. Asientos limitados."
+      },
+      {
+        name: "Dazaifu Tenmangu Shrine",
+        city: "Fukuoka - Dazaifu",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2-3 horas",
+        rating: 4.8,
+        description: "Santuario dedicado al dios del aprendizaje. 6000 ciruelos. Arquitectura hermosa.",
+        tips: "Umegae mochi (dulce de arroz) en camino. Tren desde Fukuoka 30min. Estudiantes vienen a rezar antes exámenes."
+      },
+      {
+        name: "Canal City Hakata",
+        city: "Fukuoka",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "2-3 horas",
+        rating: 4.6,
+        description: "Shopping mall con canal interior. Shows de fuentes, tiendas, restaurantes, cine. Arquitectura única.",
+        tips: "Gratis entrar. Water fountain shows cada hora. Ramen Stadium dentro con 8 famosos ramen shops."
+      }
+    ]
   }
 };
