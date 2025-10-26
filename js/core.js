@@ -25,6 +25,9 @@ export const AppCore = {
             }
         }
 
+        // Renderizar modales (CRITICAL: necesario para que los modales existan en el DOM)
+        ModalRenderer.renderModals();
+
         this.setupEventListeners();
         this.updateCountdown();
         setInterval(() => this.updateCountdown(), 60000);
