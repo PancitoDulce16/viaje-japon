@@ -119,54 +119,54 @@ export const TabsHandler = {
                 
                 <div class="grid md:grid-cols-2 gap-6">
                     <!-- Conversor de Moneda -->
-                    <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 border dark:border-gray-600">
-                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                    <div class="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-xl shadow-lg p-6 border-2 border-emerald-200 dark:border-emerald-700">
+                        <h3 class="text-xl font-bold mb-4 text-emerald-800 dark:text-emerald-100 flex items-center gap-2">
                             💸 Conversor de Moneda
                         </h3>
                         <div class="space-y-3">
                             <div class="flex gap-2">
                                 <div class="flex-1">
-                                    <label class="text-xs text-gray-500 dark:text-gray-200 block mb-1 font-semibold">USD (Dólares)</label>
+                                    <label class="text-xs text-emerald-700 dark:text-emerald-200 block mb-1 font-semibold">💵 USD (Dólares)</label>
                                     <input
                                         id="usdInput"
                                         type="number"
-                                        class="w-full p-3 border rounded-lg dark:bg-gray-600 dark:border-gray-500 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 dark:placeholder-gray-400"
+                                        class="w-full p-3 border-2 border-emerald-300 rounded-lg bg-white dark:bg-gray-800 dark:border-emerald-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:placeholder-gray-500 font-semibold text-lg"
                                         placeholder="0.00"
                                         step="0.01"
                                     >
                                 </div>
                                 <div class="flex-1">
-                                    <label class="text-xs text-gray-500 dark:text-gray-200 block mb-1 font-semibold">JPY (Yenes)</label>
+                                    <label class="text-xs text-emerald-700 dark:text-emerald-200 block mb-1 font-semibold">💴 JPY (Yenes)</label>
                                     <input
                                         id="jpyInput"
                                         type="number"
-                                        class="w-full p-3 border rounded-lg dark:bg-gray-600 dark:border-gray-500 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 dark:placeholder-gray-400"
+                                        class="w-full p-3 border-2 border-emerald-300 rounded-lg bg-white dark:bg-gray-800 dark:border-emerald-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:placeholder-gray-500 font-semibold text-lg"
                                         placeholder="0"
                                         step="1"
                                     >
                                 </div>
                             </div>
-                            <div class="flex items-center justify-center gap-2">
-                                <p class="text-xs text-gray-500 dark:text-gray-200 exchange-rate-text font-medium">
+                            <div class="flex items-center justify-center gap-2 bg-white/50 dark:bg-black/20 p-2 rounded-lg">
+                                <p class="text-xs text-emerald-700 dark:text-emerald-200 exchange-rate-text font-bold">
                                     Cargando tasa de cambio...
                                 </p>
                                 <button
                                     onclick="AppUtils.fetchExchangeRate().then(() => location.reload())"
-                                    class="text-xs bg-gray-100 dark:bg-gray-600 dark:text-white px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition font-semibold"
+                                    class="text-xs bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white px-3 py-1 rounded-lg transition font-semibold shadow-md"
                                     title="Actualizar tasa"
                                 >
-                                    🔄
+                                    🔄 Actualizar
                                 </button>
                             </div>
                             <div class="grid grid-cols-3 gap-2">
-                                <button class="quick-convert bg-gray-100 dark:bg-gray-600 dark:text-white p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 transition text-sm font-semibold" data-amount="10">
-                                    10 USD
+                                <button class="quick-convert bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-lg transition text-sm font-bold shadow-md" data-amount="10">
+                                    💵 10 USD
                                 </button>
-                                <button class="quick-convert bg-gray-100 dark:bg-gray-600 dark:text-white p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 transition text-sm font-semibold" data-amount="50">
-                                    50 USD
+                                <button class="quick-convert bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-lg transition text-sm font-bold shadow-md" data-amount="50">
+                                    💵 50 USD
                                 </button>
-                                <button class="quick-convert bg-gray-100 dark:bg-gray-600 dark:text-white p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 transition text-sm font-semibold" data-amount="100">
-                                    100 USD
+                                <button class="quick-convert bg-emerald-500 hover:bg-emerald-600 text-white p-3 rounded-lg transition text-sm font-bold shadow-md" data-amount="100">
+                                    💵 100 USD
                                 </button>
                             </div>
                         </div>

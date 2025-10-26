@@ -287,6 +287,12 @@ export const AppCore = {
                 window.FavoritesManager.renderFavoritesList();
             }
         }
+
+        if (modalName === 'chat') {
+            if (window.GroupChat) {
+                window.GroupChat.init();
+            }
+        }
     },
 
     closeModal(modalName) {

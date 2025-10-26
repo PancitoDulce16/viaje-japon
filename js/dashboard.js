@@ -6,6 +6,7 @@ import { AppCore } from './core.js';
 
 import './mobile-enhancements.js'; // Import for side effects
 import './theme-manager.js'; // Import for side effects
+import './dark-mode-enforcer.js'; // Import for side effects - Force dark mode contrast
 import { SafeFirestore } from './firestore-wrapper.js'; // 🛡️ Wrapper seguro para Firestore
 import { MapsHelper } from './maps-helper.js'; // 🗺️ Helper para Google Maps
 import { PackingList } from './packing-list.js';
@@ -32,6 +33,7 @@ import { AuthHandler } from './auth.js';
 import { TripsManager } from './trips-manager.js';
 import { FCMManager } from './fcm-manager.js';
 import './chat.js';
+import { GroupChat } from './group-chat.js';
 import './firebase-config.js';
 
 // Exportar handlers a window para acceso global

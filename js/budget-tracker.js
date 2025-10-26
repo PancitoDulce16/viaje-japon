@@ -129,6 +129,15 @@ export const BudgetTracker = {
       ${categories.length > 0 ? `
         <div class="mb-6 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
           <h3 class="font-bold text-lg mb-4 dark:text-white">📊 Por Categoría</h3>
+
+          <!-- Gráfico Circular (Chart.js) -->
+          <div class="mb-6 flex justify-center">
+            <div class="w-64 h-64">
+              <canvas id="budgetPieChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Barras de Progreso -->
           <div class="space-y-3">
             ${categories.map(([cat, amount]) => {
               const percent = (amount / total * 100).toFixed(1);
@@ -234,6 +243,103 @@ export const BudgetTracker = {
         this.deleteExpense(expenseId);
       });
     });
+
+    // Renderizar gráfico de Chart.js
+    this.renderPieChart(byCategory);
+  },
+
+  renderPieChart(byCategory) {
+    const canvas = document.getElementById('budgetPieChart');
+    if (!canvas || Object.keys(byCategory).length === 0) return;
+
+    // Destruir gráfico anterior si existe
+    if (this.chartInstance) {
+      this.chartInstance.destroy();
+    }
+
+    const ctx = canvas.getContext('2d');
+
+    // Detectar modo oscuro
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#f1f5f9' : '#1f2937';
+    const gridColor = isDark ? '#475569' : '#e5e7eb';
+
+    // Preparar datos
+    const categories = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
+    const labels = categories.map(([cat]) => `${this.getCategoryIcon(cat)} ${cat}`);
+    const data = categories.map(([, amount]) => amount);
+    const colors = categories.map(([cat]) => this.getCategoryChartColor(cat));
+
+    // Crear gráfico
+    this.chartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: colors,
+          borderColor: isDark ? '#1e293b' : '#ffffff',
+          borderWidth: 3,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: textColor,
+              padding: 15,
+              font: {
+                size: 12,
+                weight: '600'
+              },
+              usePointStyle: true,
+              pointStyle: 'circle'
+            }
+          },
+          tooltip: {
+            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+            titleColor: textColor,
+            bodyColor: textColor,
+            borderColor: gridColor,
+            borderWidth: 1,
+            padding: 12,
+            displayColors: true,
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percent = ((value / total) * 100).toFixed(1);
+                return ` ${label}: ¥${value.toLocaleString()} (${percent}%)`;
+              }
+            }
+          }
+        },
+        cutout: '65%', // Dona con agujero en el centro
+        animation: {
+          animateScale: true,
+          animateRotate: true,
+          duration: 1000,
+          easing: 'easeOutQuart'
+        }
+      }
+    });
+  },
+
+  getCategoryChartColor(category) {
+    const colors = {
+      'Comida': '#f59e0b',           // Amber
+      'Transporte': '#3b82f6',       // Blue
+      'Alojamiento': '#8b5cf6',      // Purple
+      'Entretenimiento': '#ec4899',  // Pink
+      'Compras': '#10b981',          // Green
+      'Otros': '#6b7280'             // Gray
+    };
+    return colors[category] || colors['Otros'];
   },
 
   async addExpense() {

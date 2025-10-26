@@ -1,0 +1,392 @@
+/* ========================================
+   DARK MODE - ULTRA CONTRAST MODE
+   FORCE OVERRIDE - Load this LAST!
+   ======================================== */
+
+/* VARIABLES ULTRA CONTRAST */
+:root {
+  --ultra-dark-bg: #000000;           /* Negro puro */
+  --ultra-dark-card: #1a1a1a;        /* Casi negro */
+  --ultra-dark-elevated: #2d2d2d;     /* Gris muy oscuro */
+  --ultra-white-text: #ffffff;        /* Blanco puro */
+  --ultra-light-text: #f5f5f5;       /* Casi blanco */
+  --ultra-gray-text: #d4d4d4;        /* Gris muy claro */
+  --ultra-border: #404040;            /* Borde visible */
+}
+
+/* ========================================
+   FONDOS - MÁXIMO CONTRASTE
+   ======================================== */
+
+html.dark,
+html.dark body,
+html.dark #appDashboard {
+  background-color: var(--ultra-dark-bg) !important;
+  color: var(--ultra-white-text) !important;
+}
+
+/* Todos los fondos oscuros */
+html.dark .bg-white,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100,
+html.dark .bg-gray-700,
+html.dark .bg-gray-800,
+html.dark .bg-gray-900,
+html.dark .dark\:bg-gray-700,
+html.dark .dark\:bg-gray-800 {
+  background-color: var(--ultra-dark-card) !important;
+}
+
+/* Cards elevadas */
+html.dark .shadow-lg,
+html.dark .shadow-xl,
+html.dark .rounded-xl,
+html.dark .activity-card,
+html.dark .attraction-card {
+  background-color: var(--ultra-dark-card) !important;
+  border: 1px solid var(--ultra-border) !important;
+}
+
+/* ========================================
+   TEXTOS - BLANCO BRILLANTE
+   ======================================== */
+
+html.dark,
+html.dark *,
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6,
+html.dark p,
+html.dark span,
+html.dark div,
+html.dark label,
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-gray-700,
+html.dark .text-gray-600,
+html.dark .dark\:text-white,
+html.dark .dark\:text-gray-100,
+html.dark .dark\:text-gray-200,
+html.dark .dark\:text-gray-300 {
+  color: var(--ultra-white-text) !important;
+}
+
+/* Textos secundarios */
+html.dark .text-gray-500,
+html.dark .text-gray-400,
+html.dark .dark\:text-gray-400 {
+  color: var(--ultra-light-text) !important;
+}
+
+/* Textos terciarios */
+html.dark .text-gray-300,
+html.dark .dark\:text-gray-500 {
+  color: var(--ultra-gray-text) !important;
+}
+
+/* ========================================
+   INPUTS - ULTRA LEGIBLES
+   ======================================== */
+
+html.dark input,
+html.dark textarea,
+html.dark select,
+html.dark input[type="text"],
+html.dark input[type="email"],
+html.dark input[type="password"],
+html.dark input[type="number"],
+html.dark input[type="date"] {
+  background-color: var(--ultra-dark-elevated) !important;
+  border: 2px solid var(--ultra-border) !important;
+  color: var(--ultra-white-text) !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: var(--ultra-gray-text) !important;
+}
+
+html.dark input:focus,
+html.dark textarea:focus,
+html.dark select:focus {
+  border-color: #60a5fa !important;
+  background-color: var(--ultra-dark-card) !important;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3) !important;
+}
+
+/* ========================================
+   BORDERS - MUY VISIBLES
+   ======================================== */
+
+html.dark .border,
+html.dark .border-gray-200,
+html.dark .border-gray-300,
+html.dark .border-gray-600,
+html.dark .border-gray-700,
+html.dark .dark\:border-gray-600,
+html.dark .dark\:border-gray-700 {
+  border-color: var(--ultra-border) !important;
+}
+
+/* ========================================
+   BOTONES - BUEN CONTRASTE
+   ======================================== */
+
+html.dark .bg-gray-600,
+html.dark .hover\:bg-gray-700,
+html.dark button:not([class*="bg-red"]):not([class*="bg-blue"]):not([class*="bg-green"]):not([class*="bg-purple"]):not([class*="bg-pink"]):not([class*="gradient"]) {
+  background-color: var(--ultra-dark-elevated) !important;
+  color: var(--ultra-white-text) !important;
+  border: 1px solid var(--ultra-border) !important;
+}
+
+html.dark .bg-gray-600:hover {
+  background-color: #404040 !important;
+}
+
+/* ========================================
+   MODALES - CONTRASTE FUERTE
+   ======================================== */
+
+html.dark .modal > div,
+html.dark .modal-content {
+  background-color: var(--ultra-dark-card) !important;
+  border: 2px solid var(--ultra-border) !important;
+}
+
+/* ========================================
+   TABS - MUY VISIBLES
+   ======================================== */
+
+html.dark .tab-btn {
+  color: var(--ultra-gray-text) !important;
+}
+
+html.dark .tab-btn.active {
+  color: #ff6b6b !important;
+}
+
+/* ========================================
+   SCROLLBARS - VISIBLES
+   ======================================== */
+
+html.dark ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+  background: var(--ultra-dark-bg);
+}
+
+html.dark ::-webkit-scrollbar-track {
+  background: var(--ultra-dark-card);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: var(--ultra-border);
+  border-radius: 6px;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #606060;
+}
+
+/* ========================================
+   SOMBRAS - MÁS PRONUNCIADAS
+   ======================================== */
+
+html.dark .shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.9) !important;
+}
+
+html.dark .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.9) !important;
+}
+
+html.dark .shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.9) !important;
+}
+
+/* ========================================
+   COLORED BACKGROUNDS - AJUSTADOS
+   ======================================== */
+
+/* Blues */
+html.dark .bg-blue-50,
+html.dark .dark\:bg-blue-900\/30 {
+  background-color: rgba(37, 99, 235, 0.2) !important;
+}
+
+html.dark .text-blue-600,
+html.dark .text-blue-700,
+html.dark .dark\:text-blue-300,
+html.dark .dark\:text-blue-400 {
+  color: #93c5fd !important;
+}
+
+/* Greens */
+html.dark .bg-green-50,
+html.dark .dark\:bg-green-900\/30 {
+  background-color: rgba(34, 197, 94, 0.2) !important;
+}
+
+html.dark .text-green-600,
+html.dark .text-green-700,
+html.dark .dark\:text-green-300,
+html.dark .dark\:text-green-400 {
+  color: #86efac !important;
+}
+
+/* Reds */
+html.dark .bg-red-50,
+html.dark .dark\:bg-red-900\/30 {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+html.dark .text-red-600,
+html.dark .text-red-700,
+html.dark .dark\:text-red-300,
+html.dark .dark\:text-red-400 {
+  color: #fca5a5 !important;
+}
+
+/* Yellows */
+html.dark .bg-yellow-50,
+html.dark .dark\:bg-yellow-900\/20 {
+  background-color: rgba(234, 179, 8, 0.2) !important;
+}
+
+html.dark .text-yellow-600,
+html.dark .text-yellow-700 {
+  color: #fde047 !important;
+}
+
+/* Purples */
+html.dark .bg-purple-50,
+html.dark .dark\:bg-purple-900\/30 {
+  background-color: rgba(168, 85, 247, 0.2) !important;
+}
+
+html.dark .text-purple-600,
+html.dark .text-purple-700,
+html.dark .dark\:text-purple-300,
+html.dark .dark\:text-purple-400 {
+  color: #d8b4fe !important;
+}
+
+/* Oranges */
+html.dark .bg-orange-50,
+html.dark .dark\:bg-orange-900\/30 {
+  background-color: rgba(249, 115, 22, 0.2) !important;
+}
+
+html.dark .text-orange-600,
+html.dark .text-orange-700,
+html.dark .dark\:text-orange-300,
+html.dark .dark\:text-orange-400 {
+  color: #fdba74 !important;
+}
+
+/* Cyans */
+html.dark .bg-cyan-50,
+html.dark .dark\:bg-cyan-900\/20 {
+  background-color: rgba(6, 182, 212, 0.2) !important;
+}
+
+html.dark .text-cyan-600,
+html.dark .text-cyan-700,
+html.dark .dark\:text-cyan-300,
+html.dark .dark\:text-cyan-400 {
+  color: #67e8f9 !important;
+}
+
+/* Ambers */
+html.dark .bg-amber-50,
+html.dark .dark\:bg-amber-900\/20 {
+  background-color: rgba(245, 158, 11, 0.2) !important;
+}
+
+html.dark .text-amber-600,
+html.dark .text-amber-700,
+html.dark .dark\:text-amber-300,
+html.dark .dark\:text-amber-400 {
+  color: #fcd34d !important;
+}
+
+/* Pinks */
+html.dark .bg-pink-50,
+html.dark .dark\:bg-pink-900\/20 {
+  background-color: rgba(236, 72, 153, 0.2) !important;
+}
+
+html.dark .text-pink-600,
+html.dark .text-pink-700,
+html.dark .dark\:text-pink-400 {
+  color: #f9a8d4 !important;
+}
+
+/* ========================================
+   SPECIAL COMPONENTS
+   ======================================== */
+
+/* Activity Cards */
+html.dark .activity-card {
+  background-color: var(--ultra-dark-card) !important;
+  border-left: 4px solid #ff6b6b !important;
+}
+
+html.dark .activity-card:hover {
+  background-color: var(--ultra-dark-elevated) !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.9) !important;
+}
+
+/* Attraction Cards */
+html.dark .attraction-card {
+  background-color: var(--ultra-dark-card) !important;
+  border: 2px solid var(--ultra-border) !important;
+}
+
+/* Toast Notifications */
+html.dark .toast {
+  background-color: var(--ultra-dark-card) !important;
+  border: 2px solid var(--ultra-border) !important;
+  color: var(--ultra-white-text) !important;
+}
+
+/* Nav */
+html.dark nav {
+  background-color: rgba(0, 0, 0, 0.98) !important;
+  border-bottom: 1px solid var(--ultra-border) !important;
+}
+
+/* Links */
+html.dark a {
+  color: #93c5fd !important;
+}
+
+html.dark a:hover {
+  color: #bfdbfe !important;
+}
+
+/* ========================================
+   CHART.JS DARK MODE
+   ======================================== */
+
+html.dark .chart-container {
+  background-color: var(--ultra-dark-card) !important;
+  border: 1px solid var(--ultra-border) !important;
+}
+
+/* ========================================
+   PRINT - Override for printing
+   ======================================== */
+
+@media print {
+  html.dark,
+  html.dark * {
+    background: white !important;
+    color: black !important;
+    border-color: #000 !important;
+  }
+}

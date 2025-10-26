@@ -232,7 +232,7 @@ export const AttractionsHandler = {
                     <!-- Info Tags -->
                     <div class="flex flex-wrap gap-2 mb-4">
                         <span class="text-xs px-2 py-1 rounded-full font-semibold ${
-                            item.price === 0 
+                            item.price === 0
                                 ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                                 : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
                         }">💰 ${priceDisplay}
@@ -243,6 +243,17 @@ export const AttractionsHandler = {
                         <span class="text-xs px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-full font-semibold">
                             ⭐ ${item.rating}/5
                         </span>
+                        ${item.season ? `
+                            <span class="text-xs px-2 py-1 rounded-full font-semibold ${
+                                item.season === 'winter'
+                                    ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400'
+                                    : item.season === 'summer'
+                                    ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                            }">
+                                ${item.season === 'winter' ? '❄️ Invierno' : item.season === 'summer' ? '☀️ Verano' : '🌸 Todo el año'}
+                            </span>
+                        ` : ''}
                     </div>
 
                     ${needsReservation ? `
@@ -258,6 +269,35 @@ export const AttractionsHandler = {
                             <p class="text-xs text-gray-700 dark:text-gray-300">
                                 💡 <strong>Tip:</strong> ${enrichedItem.tips}
                             </p>
+                        </div>
+                    ` : ''}
+
+                    ${item.winterProducts || item.summerProducts ? `
+                        <div class="bg-gradient-to-r ${
+                            item.winterProducts
+                                ? 'from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 border-l-4 border-cyan-500'
+                                : 'from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-l-4 border-amber-500'
+                        } p-3 rounded mb-4">
+                            <p class="text-xs font-bold ${
+                                item.winterProducts ? 'text-cyan-700 dark:text-cyan-300' : 'text-amber-700 dark:text-amber-300'
+                            } mb-2">
+                                ${item.winterProducts ? '❄️ Ropa de Invierno Disponible:' : '☀️ Ropa de Verano Disponible:'}
+                            </p>
+                            <div class="flex flex-wrap gap-1">
+                                ${(item.winterProducts || item.summerProducts || []).slice(0, 4).map(product => `
+                                    <span class="text-xs px-2 py-0.5 bg-white dark:bg-gray-700 rounded-full ${
+                                        item.winterProducts ? 'text-cyan-700 dark:text-cyan-300' : 'text-amber-700 dark:text-amber-300'
+                                    }">${product}</span>
+                                `).join('')}
+                                ${(item.winterProducts || item.summerProducts || []).length > 4 ? `
+                                    <span class="text-xs px-2 py-0.5 text-gray-500 dark:text-gray-400">+${(item.winterProducts || item.summerProducts).length - 4} más</span>
+                                ` : ''}
+                            </div>
+                            ${item.bestMonths && item.bestMonths.length > 0 && item.bestMonths[0] !== 'All year' ? `
+                                <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                                    📅 Mejor época: ${item.bestMonths.slice(0, 3).join(', ')}${item.bestMonths.length > 3 ? '...' : ''}
+                                </p>
+                            ` : ''}
                         </div>
                     ` : ''}
 
