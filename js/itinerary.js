@@ -596,7 +596,7 @@ function renderActivities(day){
                 <span class="text-xs font-semibold text-gray-500 dark:text-gray-300">${act.time||''}</span>
                 ${act.cost>0?`<span class="text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-2 py-1 rounded font-semibold">¥${Number(act.cost).toLocaleString()}</span>`:''}
               </div>
-              <h3 class="text-lg font-bold dark:text-white mb-1">${act.title}</h3>
+              <h3 class="text-lg font-bold dark:text-white mb-1">${act.title || act.name || 'Sin título'}</h3>
             </div>
             <div class="flex gap-2 flex-shrink-0">
               <button
@@ -783,7 +783,7 @@ export const ItineraryHandler = {
       if (activity) {
         document.getElementById('activityIcon').value = activity.icon || '';
         document.getElementById('activityTime').value = activity.time || '';
-        document.getElementById('activityTitle').value = activity.title || '';
+        document.getElementById('activityTitle').value = activity.title || activity.name || '';
         document.getElementById('activityDesc').value = activity.desc || '';
         document.getElementById('activityCost').value = activity.cost || '';
         document.getElementById('activityStation').value = activity.station || '';
