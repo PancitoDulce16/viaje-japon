@@ -119,14 +119,14 @@ export const TabsHandler = {
                 
                 <div class="grid md:grid-cols-2 gap-6">
                     <!-- Conversor de Moneda -->
-                    <div class="bg-gradient-to-br from-emerald-50 to-teal-50 dark:bg-gray-800 rounded-xl shadow-lg p-6 border-2 border-emerald-200 dark:border-emerald-400">
-                        <h3 class="text-xl font-bold mb-4 text-emerald-900 dark:text-emerald-300 flex items-center gap-2">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-2 border-emerald-500 dark:border-emerald-400">
+                        <h3 class="text-xl font-bold mb-4 text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
                             💸 Conversor de Moneda
                         </h3>
                         <div class="space-y-3">
                             <div class="flex gap-2">
                                 <div class="flex-1">
-                                    <label class="text-xs text-emerald-900 dark:text-emerald-300 block mb-1 font-semibold">💵 USD (Dólares)</label>
+                                    <label class="text-xs text-emerald-700 dark:text-emerald-300 block mb-1 font-semibold">💵 USD (Dólares)</label>
                                     <input
                                         id="usdInput"
                                         type="number"
@@ -136,7 +136,7 @@ export const TabsHandler = {
                                     >
                                 </div>
                                 <div class="flex-1">
-                                    <label class="text-xs text-emerald-900 dark:text-emerald-300 block mb-1 font-semibold">💴 JPY (Yenes)</label>
+                                    <label class="text-xs text-emerald-700 dark:text-emerald-300 block mb-1 font-semibold">💴 JPY (Yenes)</label>
                                     <input
                                         id="jpyInput"
                                         type="number"
@@ -146,8 +146,8 @@ export const TabsHandler = {
                                     >
                                 </div>
                             </div>
-                            <div class="flex items-center justify-center gap-2 bg-white/50 dark:bg-gray-700/50 p-2 rounded-lg">
-                                <p class="text-xs text-emerald-900 dark:text-emerald-300 exchange-rate-text font-bold">
+                            <div class="flex items-center justify-center gap-2 bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg">
+                                <p class="text-xs text-emerald-700 dark:text-emerald-300 exchange-rate-text font-bold">
                                     Cargando tasa de cambio...
                                 </p>
                                 <button
