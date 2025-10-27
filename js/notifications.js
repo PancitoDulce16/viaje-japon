@@ -2,6 +2,7 @@
 
 export const Notifications = {
   container: null,
+  callCount: 0, // Contador para debugging
 
   init() {
     // Usar el contenedor del HTML o crear uno
@@ -58,6 +59,8 @@ export const Notifications = {
 
     this.container.appendChild(toast);
 
+    console.log('📢 Toasts actualmente en pantalla:', this.container.children.length);
+
     // Auto-remover
     if (duration > 0) {
       setTimeout(() => {
@@ -90,7 +93,9 @@ export const Notifications = {
   },
 
   info(message, duration) {
-    console.log('📢 Notifications.info() recibió:', message);
+    this.callCount++;
+    console.log(`📢 [#${this.callCount}] Notifications.info() recibió:`, message);
+    console.trace('📍 Stack trace de la llamada:');
     return this.show(message, 'info', duration);
   }
 };
