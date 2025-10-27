@@ -2,6 +2,7 @@
 
 import { ATTRACTIONS_DATA } from '/data/attractions-data.js';
 import { CATEGORIES } from '/data/categories-data.js';
+import { RESTAURANTS_DATABASE } from '/data/restaurants-data.js';
 
 /**
  * Motor de Recomendaciones basado en preferencias del usuario
@@ -703,6 +704,102 @@ export const RecommendationEngine = {
 
     const normalized = cityName.toLowerCase().trim();
     return cityMap[normalized] || null;
+  },
+
+  /**
+   * Agrega comidas (desayuno, almuerzo, cena) a un itinerario
+   * @param {Array} activities - Actividades existentes del día
+   * @param {string} cityName - Nombre de la ciudad
+   * @param {string} pace - Ritmo del viaje (relaxed, moderate, intense)
+   * @returns {Array} Actividades con comidas insertadas
+   */
+  addMealsToItinerary(activities, cityName, pace = 'moderate') {
+    if (!activities || activities.length === 0) return activities;
+
+    const cityRestaurants = RESTAURANTS_DATABASE[cityName];
+    if (!cityRestaurants) {
+      console.warn(`⚠️ No hay restaurantes para ${cityName}`);
+      return activities;
+    }
+
+    // Horarios típicos de comida
+    const mealTimes = {
+      breakfast: '08:30',
+      lunch: '12:30',
+      dinner: '19:00'
+    };
+
+    // Determinar qué comidas agregar según el ritmo
+    const mealsToAdd = pace === 'relaxed' || pace === 'moderate' ?
+      ['breakfast', 'lunch', 'dinner'] :
+      ['lunch', 'dinner']; // En ritmo intenso, desayuno rápido en konbini
+
+    const result = [...activities];
+    const addedMeals = [];
+
+    // Agregar desayuno si corresponde
+    if (mealsToAdd.includes('breakfast') && cityRestaurants.breakfast) {
+      const breakfast = this.selectRandomMeal(cityRestaurants.breakfast, pace);
+      if (breakfast) {
+        breakfast.time = mealTimes.breakfast;
+        breakfast.isMeal = true;
+        addedMeals.push(breakfast);
+      }
+    }
+
+    // Agregar almuerzo
+    if (cityRestaurants.lunch) {
+      const lunch = this.selectRandomMeal(cityRestaurants.lunch, pace);
+      if (lunch) {
+        lunch.time = mealTimes.lunch;
+        lunch.isMeal = true;
+        addedMeals.push(lunch);
+      }
+    }
+
+    // Agregar cena
+    if (cityRestaurants.dinner) {
+      const dinner = this.selectRandomMeal(cityRestaurants.dinner, pace);
+      if (dinner) {
+        dinner.time = mealTimes.dinner;
+        dinner.isMeal = true;
+        addedMeals.push(dinner);
+      }
+    }
+
+    // Insertar comidas en posiciones apropiadas basadas en el tiempo
+    addedMeals.forEach(meal => {
+      result.push(meal);
+    });
+
+    // Ordenar por tiempo
+    result.sort((a, b) => {
+      if (!a.time) return 1;
+      if (!b.time) return -1;
+      return a.time.localeCompare(b.time);
+    });
+
+    console.log(`🍽️ Added ${addedMeals.length} meals to ${cityName} itinerary`);
+    return result;
+  },
+
+  /**
+   * Selecciona una comida aleatoria apropiada para el ritmo
+   */
+  selectRandomMeal(mealOptions, pace) {
+    if (!mealOptions || mealOptions.length === 0) return null;
+
+    // Filtrar por ritmo
+    let filtered = mealOptions;
+    if (pace === 'intense') {
+      // Preferir opciones rápidas en ritmo intenso
+      const quickOptions = mealOptions.filter(m => m.quickOption);
+      if (quickOptions.length > 0) filtered = quickOptions;
+    }
+
+    // Seleccionar aleatoriamente
+    const randomIndex = Math.floor(Math.random() * filtered.length);
+    return { ...filtered[randomIndex] }; // Clone para evitar modificar original
   }
 };
 

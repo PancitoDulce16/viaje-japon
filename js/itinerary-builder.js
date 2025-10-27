@@ -1722,12 +1722,12 @@ export const ItineraryBuilder = {
     // Get template info
     const template = TEMPLATES.find(t => t.id === templateId) || { pace: 'moderate' };
 
-    // Determine activities per day based on pace
+    // Determine activities per day based on pace (INCREASED for more comprehensive itineraries)
     const activitiesPerDay = {
-      relaxed: { min: 2, max: 3 },
-      moderate: { min: 3, max: 4 },
-      intense: { min: 4, max: 6 }
-    }[template.pace] || { min: 3, max: 4 };
+      relaxed: { min: 4, max: 5 },    // Was 2-3, now 4-5 (includes meals)
+      moderate: { min: 5, max: 7 },   // Was 3-4, now 5-7 (includes meals)
+      intense: { min: 7, max: 9 }     // Was 4-6, now 7-9 (includes meals)
+    }[template.pace] || { min: 5, max: 7 };
 
     // Merge template categories with user-selected categories
     const allCategories = [...new Set([...template.categories, ...selectedCategories])];
@@ -1890,16 +1890,48 @@ export const ItineraryBuilder = {
       });
     });
 
-    // Sort by day and order
-    generatedActivities.sort((a, b) => {
-      if (a.day !== b.day) return a.day - b.day;
-      return a.order - b.order;
+    // 🍽️ NEW: Add meals to each day
+    console.log('🍽️ Adding meals to itinerary...');
+    const activitiesWithMeals = [];
+
+    // Group activities by day
+    const activitiesByDay = {};
+    generatedActivities.forEach(activity => {
+      if (!activitiesByDay[activity.day]) {
+        activitiesByDay[activity.day] = [];
+      }
+      activitiesByDay[activity.day].push(activity);
     });
 
-    const smartCount = generatedActivities.filter(a => a.matchedPreferences).length;
-    console.log(`✅ Generated ${generatedActivities.length} activities (${smartCount} smart, ${generatedActivities.length - smartCount} template) across ${cityDayAssignments.length} days`);
+    // Add meals to each day
+    Object.keys(activitiesByDay).forEach(day => {
+      const dayActivities = activitiesByDay[day];
+      const cityName = dayActivities[0]?.cityName;
 
-    return generatedActivities;
+      if (cityName && window.RecommendationEngine.addMealsToItinerary) {
+        const activitiesWithDayMeals = window.RecommendationEngine.addMealsToItinerary(
+          dayActivities,
+          cityName,
+          template.pace
+        );
+        activitiesWithMeals.push(...activitiesWithDayMeals);
+      } else {
+        activitiesWithMeals.push(...dayActivities);
+      }
+    });
+
+    // Sort by day and time
+    activitiesWithMeals.sort((a, b) => {
+      if (a.day !== b.day) return a.day - b.day;
+      if (a.time && b.time) return a.time.localeCompare(b.time);
+      return (a.order || 0) - (b.order || 0);
+    });
+
+    const smartCount = activitiesWithMeals.filter(a => a.matchedPreferences).length;
+    const mealsCount = activitiesWithMeals.filter(a => a.isMeal).length;
+    console.log(`✅ Generated ${activitiesWithMeals.length} activities (${smartCount} smart, ${mealsCount} meals, ${activitiesWithMeals.length - smartCount - mealsCount} template) across ${cityDayAssignments.length} days`);
+
+    return activitiesWithMeals;
   },
   
   // === GET AI RECOMMENDATIONS FOR EXISTING ITINERARY === //
