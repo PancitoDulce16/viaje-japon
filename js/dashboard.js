@@ -383,7 +383,7 @@ class DashboardManager {
             this.showLoading('Cerrando sesión...');
 
             // Cerrar sesión en Firebase
-            await AuthHandler.signOut();
+            await AuthHandler.logout();
 
             // Limpiar datos de sesión
             sessionStorage.removeItem('authenticated');
