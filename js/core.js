@@ -34,6 +34,16 @@ export const AppCore = {
 
         // Inicializar sync de notas
         this.initNotesSync();
+
+        // Inicializar el tab activo por defecto (itinerary)
+        setTimeout(() => {
+            const activeTab = document.querySelector('.tab-btn.active');
+            if (activeTab) {
+                const tabName = activeTab.getAttribute('data-tab');
+                console.log('🎯 Inicializando tab activo por defecto:', tabName);
+                this.switchTab(tabName);
+            }
+        }, 100);
     },
 
     // Obtener el tripId actual
