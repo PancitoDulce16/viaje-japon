@@ -27,6 +27,7 @@ import { Dialogs } from './dialogs.js';
 import { RecommendationEngine } from './recommendation-engine.js';
 import { FeedbackTracker } from './feedback-tracker.js';
 import { CostCalculator } from './cost-calculator.js';
+import { EssentialsHandler } from './essentials-handler.js';
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';
@@ -45,6 +46,7 @@ window.FlightsHandler = FlightsHandler;
 window.HotelsHandler = HotelsHandler;
 window.PreparationHandler = PreparationHandler;
 window.ItineraryHandler = ItineraryHandler;
+window.EssentialsHandler = EssentialsHandler;
 
 // 🖼️ Image Service imports
 import './image-service.js';

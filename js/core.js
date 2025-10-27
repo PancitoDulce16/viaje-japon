@@ -266,6 +266,20 @@ export const AppCore = {
                     console.warn('⚠️ AttractionsHandler no está disponible');
                 }
                 break;
+
+            case 'essentials':
+                if (window.EssentialsHandler) {
+                    console.log('🏪 Inicializando EssentialsHandler...');
+                    window.EssentialsHandler.init();
+                } else {
+                    console.warn('⚠️ EssentialsHandler no está disponible');
+                }
+                break;
+
+            case 'utils':
+                // Utils tab content is rendered via tabs.js
+                console.log('🛠️ Tab de utilidades cargado');
+                break;
         }
     },
 
