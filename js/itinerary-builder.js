@@ -170,13 +170,13 @@ export const ItineraryBuilder = {
               </p>
 
               <!-- City Selection with Date Picker -->
-              <div class="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-5 rounded-lg border-2 border-blue-200 dark:border-blue-800 mb-6">
-                <h4 class="font-bold text-blue-900 dark:text-blue-300 mb-4 flex items-center gap-2">
+              <div class="bg-white dark:from-blue-900/20 dark:to-purple-900/20 dark:bg-gradient-to-br p-5 rounded-lg border-4 border-blue-600 dark:border-blue-800 mb-6 shadow-lg">
+                <h4 class="font-black text-blue-800 dark:text-blue-300 mb-4 flex items-center gap-2 text-lg">
                   <span>📍</span> Selecciona Ciudad
                 </h4>
 
                 <div class="mb-4">
-                  <label class="block text-xs font-semibold mb-2 dark:text-gray-300">¿A qué ciudad vas? *</label>
+                  <label class="block text-sm font-black mb-2 text-black dark:text-gray-300">¿A qué ciudad vas? *</label>
                   <select
                     id="datePickerCitySelect"
                     class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white text-base font-semibold"
@@ -188,7 +188,7 @@ export const ItineraryBuilder = {
 
                 <!-- Calendar Date Picker -->
                 <div id="datePickerCalendar" class="hidden">
-                  <h4 class="font-bold text-blue-900 dark:text-blue-300 mb-3 flex items-center gap-2">
+                  <h4 class="font-black text-blue-800 dark:text-blue-300 mb-3 flex items-center gap-2 text-lg">
                     <span>📅</span> Selecciona las fechas en el calendario
                   </h4>
 
@@ -225,11 +225,11 @@ export const ItineraryBuilder = {
 
                     <!-- Selected Range Info -->
                     <div id="selectedRangeInfo" class="mt-4 hidden">
-                      <div class="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg border border-purple-200 dark:border-purple-800">
-                        <p class="text-sm font-semibold text-purple-900 dark:text-purple-300 mb-2">
+                      <div class="bg-white dark:bg-purple-900/20 p-3 rounded-lg border-4 border-purple-600 dark:border-purple-800 shadow-lg">
+                        <p class="text-sm font-black text-purple-800 dark:text-purple-300 mb-2">
                           Rango seleccionado:
                         </p>
-                        <p id="selectedRangeText" class="text-base font-bold text-purple-700 dark:text-purple-400"></p>
+                        <p id="selectedRangeText" class="text-base font-black text-purple-800 dark:text-purple-400"></p>
                         <button
                           type="button"
                           onclick="ItineraryBuilder.confirmDateRange()"
@@ -265,7 +265,7 @@ export const ItineraryBuilder = {
                 <button
                   type="button"
                   onclick="document.getElementById('detailedDayView').classList.toggle('hidden')"
-                  class="w-full text-left font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center justify-between hover:text-blue-600 dark:hover:text-blue-400 transition"
+                  class="w-full text-left font-black text-black dark:text-gray-300 mb-3 flex items-center justify-between hover:text-blue-700 dark:hover:text-blue-400 transition text-lg"
                 >
                   <span>📋 Vista Detallada Día por Día (opcional)</span>
                   <span class="text-sm">▼</span>
@@ -1967,23 +1967,23 @@ export const ItineraryBuilder = {
             <!-- Overall Analysis -->
             ${analysis.overallAnalysis ? `
               <div class="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-5 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                <h3 class="text-lg font-bold text-indigo-900 dark:text-indigo-300 mb-2 flex items-center gap-2">
+                <h3 class="text-lg font-black text-indigo-800 dark:text-indigo-300 mb-2 flex items-center gap-2">
                   <span>📊</span> Análisis General
                 </h3>
-                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">${analysis.overallAnalysis}</p>
+                <p class="text-black dark:text-gray-300 leading-relaxed font-bold">${analysis.overallAnalysis}</p>
               </div>
             ` : ''}
 
             <!-- Strengths -->
             ${analysis.strengths && analysis.strengths.length > 0 ? `
-              <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-5 rounded-lg border border-green-200 dark:border-green-800">
-                <h3 class="text-lg font-bold text-green-900 dark:text-green-300 mb-3 flex items-center gap-2">
+              <div class="bg-white dark:from-green-900/20 dark:to-emerald-900/20 dark:bg-gradient-to-br p-5 rounded-lg border-4 border-green-600 dark:border-green-800 shadow-lg">
+                <h3 class="text-lg font-black text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
                   <span>✅</span> Puntos Fuertes
                 </h3>
                 <ul class="space-y-2">
                   ${analysis.strengths.map(strength => `
-                    <li class="flex items-start gap-2 text-gray-700 dark:text-gray-300">
-                      <span class="text-green-500 mt-0.5">✓</span>
+                    <li class="flex items-start gap-2 text-black dark:text-gray-300 font-bold">
+                      <span class="text-green-700 mt-0.5 font-black">✓</span>
                       <span>${strength}</span>
                     </li>
                   `).join('')}
@@ -2041,14 +2041,14 @@ export const ItineraryBuilder = {
 
             <!-- Optimization Tips -->
             ${analysis.optimizationTips && analysis.optimizationTips.length > 0 ? `
-              <div class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-5 rounded-lg border border-blue-200 dark:border-blue-800">
-                <h3 class="text-lg font-bold text-blue-900 dark:text-blue-300 mb-3 flex items-center gap-2">
+              <div class="bg-white dark:from-blue-900/20 dark:to-cyan-900/20 dark:bg-gradient-to-br p-5 rounded-lg border-4 border-blue-600 dark:border-blue-800 shadow-lg">
+                <h3 class="text-lg font-black text-blue-800 dark:text-blue-300 mb-3 flex items-center gap-2">
                   <span>🎯</span> Consejos de Optimización
                 </h3>
                 <ul class="space-y-2">
                   ${analysis.optimizationTips.map(tip => `
-                    <li class="flex items-start gap-2 text-gray-700 dark:text-gray-300">
-                      <span class="text-blue-500 mt-0.5">→</span>
+                    <li class="flex items-start gap-2 text-black dark:text-gray-300 font-bold">
+                      <span class="text-blue-700 mt-0.5 font-black">→</span>
                       <span>${tip}</span>
                     </li>
                   `).join('')}
