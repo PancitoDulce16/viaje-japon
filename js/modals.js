@@ -62,8 +62,13 @@ export const ModalRenderer = {
                     </div>
                     <form id="activityForm">
                         <input type="hidden" id="activityId">
-                        <input type="hidden" id="activityDay">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="activityDay" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">📅 Día</label>
+                                <select id="activityDay" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white font-semibold">
+                                    <!-- Se llenará dinámicamente -->
+                                </select>
+                            </div>
                             <div>
                                 <label for="activityIcon" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Icono</label>
                                 <input type="text" id="activityIcon" placeholder="✈️" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">

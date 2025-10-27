@@ -438,8 +438,12 @@ function renderDaySelector(){
   const container=document.getElementById('daySelector'); if(!container) return;
   const itinerary=currentItinerary; if(!itinerary||!itinerary.days){ container.innerHTML=''; return; }
   const days=itinerary.days||[];
+
+  // Agregar clases para scroll horizontal
+  container.className = 'flex gap-3 overflow-x-auto pb-2 px-2 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent';
+
   container.innerHTML = days.map(day => `
-    <button data-day="${day.day}" class="day-btn px-5 py-2.5 rounded-xl whitespace-nowrap font-semibold transition-all hover:scale-105 ${ currentDay===day.day ? 'bg-red-600 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-500 shadow-md' }">Día ${day.day}</button>
+    <button data-day="${day.day}" class="day-btn px-5 py-2.5 rounded-xl whitespace-nowrap font-semibold transition-all hover:scale-105 flex-shrink-0 ${ currentDay===day.day ? 'bg-red-600 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-500 shadow-md' }">Día ${day.day}</button>
   `).join('');
 }
 
@@ -772,7 +776,17 @@ export const ItineraryHandler = {
     // Reset form
     form.reset();
     document.getElementById('activityId').value = activityId || '';
-    document.getElementById('activityDay').value = day;
+
+    // Guardar el día original para detectar cambios
+    form.dataset.originalDay = day;
+
+    // Llenar selector de días dinámicamente
+    const daySelect = document.getElementById('activityDay');
+    if (daySelect && currentItinerary && currentItinerary.days) {
+      daySelect.innerHTML = currentItinerary.days.map(d =>
+        `<option value="${d.day}" ${d.day === day ? 'selected' : ''}>Día ${d.day}</option>`
+      ).join('');
+    }
 
     // Si estamos editando, cargar datos de la actividad
     if (activityId) {
@@ -828,7 +842,9 @@ export const ItineraryHandler = {
 
   async saveActivity() {
     const activityId = document.getElementById('activityId').value;
-    const day = parseInt(document.getElementById('activityDay').value);
+    const newDay = parseInt(document.getElementById('activityDay').value);
+    const form = document.getElementById('activityForm');
+    const originalDay = parseInt(form.dataset.originalDay);
     const icon = document.getElementById('activityIcon').value || '📍';
     const time = document.getElementById('activityTime').value;
     const title = document.getElementById('activityTitle').value;
@@ -838,12 +854,6 @@ export const ItineraryHandler = {
 
     if (!title) {
       alert('⚠️ El título es obligatorio');
-      return;
-    }
-
-    const dayData = currentItinerary.days.find(d => d.day === day);
-    if (!dayData) {
-      alert('⚠️ No se encontró el día');
       return;
     }
 
@@ -857,21 +867,50 @@ export const ItineraryHandler = {
       station
     };
 
-    // Añadir o actualizar actividad
-    if (activityId) {
-      const index = dayData.activities.findIndex(a => a.id === activityId);
-      if (index >= 0) {
-        dayData.activities[index] = activity;
+    // Si estamos editando Y el día cambió, mover la actividad
+    if (activityId && originalDay !== newDay) {
+      // Eliminar del día original
+      const originalDayData = currentItinerary.days.find(d => d.day === originalDay);
+      if (originalDayData) {
+        originalDayData.activities = originalDayData.activities.filter(a => a.id !== activityId);
       }
+
+      // Agregar al nuevo día
+      const newDayData = currentItinerary.days.find(d => d.day === newDay);
+      if (!newDayData) {
+        alert('⚠️ No se encontró el día destino');
+        return;
+      }
+      newDayData.activities.push(activity);
+
+      Notifications.show(`Actividad movida al Día ${newDay}`, 'success');
     } else {
-      dayData.activities.push(activity);
+      // Añadir o actualizar en el mismo día
+      const dayData = currentItinerary.days.find(d => d.day === newDay);
+      if (!dayData) {
+        alert('⚠️ No se encontró el día');
+        return;
+      }
+
+      if (activityId) {
+        const index = dayData.activities.findIndex(a => a.id === activityId);
+        if (index >= 0) {
+          dayData.activities[index] = activity;
+        }
+      } else {
+        dayData.activities.push(activity);
+      }
     }
 
     try {
       await saveCurrentItineraryToFirebase();
       this.closeActivityModal();
       // render() se llama automáticamente desde el listener onSnapshot del itinerario
-      Notifications.show(activityId ? 'Actividad actualizada' : 'Actividad añadida', 'success');
+      if (!activityId) {
+        Notifications.show('Actividad añadida', 'success');
+      } else if (originalDay === newDay) {
+        Notifications.show('Actividad actualizada', 'success');
+      }
     } catch (error) {
       console.error('❌ Error guardando actividad:', error);
       alert('⚠️ Error al guardar la actividad');
