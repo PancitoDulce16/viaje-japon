@@ -212,6 +212,15 @@ export const AppCore = {
         console.log(`🔄 Switching to tab: ${tabName}, tripId: ${tripId || 'null'}`);
 
         switch(tabName) {
+            case 'itinerary':
+                if (window.ItineraryHandler) {
+                    console.log('📅 Inicializando ItineraryHandler...');
+                    window.ItineraryHandler.init();
+                } else {
+                    console.warn('⚠️ ItineraryHandler no está disponible');
+                }
+                break;
+
             case 'map':
                 if (window.MapHandler) {
                     setTimeout(() => {
