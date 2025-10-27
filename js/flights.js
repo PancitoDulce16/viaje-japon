@@ -187,6 +187,15 @@ export const FlightsHandler = {
     });
   },
 
+  init(tripId) {
+    this.currentTripId = tripId;
+    this.render();
+
+    if (auth.currentUser && tripId) {
+      this.listenToFlights();
+    }
+  },
+
   cleanup() {
     // 🔥 Método para limpiar recursos cuando se cambia de tab
     if (this.unsubscribe) {

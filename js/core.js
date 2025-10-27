@@ -205,13 +205,50 @@ export const AppCore = {
         const btn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
         if (btn) btn.classList.add('active');
 
-        // Fix map size when switching to map tab
-        if (tabName === 'map' && window.MapHandler) {
-            setTimeout(() => {
-                if (window.MapHandler.fixMapSize) {
-                    window.MapHandler.fixMapSize();
+        // 🔥 Initialize handlers when switching tabs
+        const currentTrip = window.TripsManager?.currentTrip;
+        const tripId = currentTrip?.id;
+
+        switch(tabName) {
+            case 'map':
+                if (window.MapHandler) {
+                    setTimeout(() => {
+                        if (window.MapHandler.fixMapSize) {
+                            window.MapHandler.fixMapSize();
+                        }
+                    }, 150);
                 }
-            }, 150);
+                break;
+
+            case 'flights':
+                if (window.FlightsHandler && tripId) {
+                    window.FlightsHandler.init(tripId);
+                }
+                break;
+
+            case 'hotels':
+                if (window.HotelsHandler && tripId) {
+                    window.HotelsHandler.init(tripId);
+                }
+                break;
+
+            case 'preparation':
+                if (window.PreparationHandler && tripId) {
+                    window.PreparationHandler.init(tripId);
+                }
+                break;
+
+            case 'transport':
+                if (window.TransportHandler) {
+                    window.TransportHandler.renderTransport();
+                }
+                break;
+
+            case 'attractions':
+                if (window.AttractionsHandler) {
+                    window.AttractionsHandler.renderAttractions();
+                }
+                break;
         }
     },
 
