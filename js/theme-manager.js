@@ -157,6 +157,14 @@ export const ThemeManager = {
         themeName = 'Modo Claro';
       }
 
+      // Debug: Log para verificar el tema aplicado
+      console.log('🎨 NOTIFICACIÓN:', {
+        nextTheme,
+        effectiveTheme,
+        themeName,
+        htmlClasses: document.documentElement.className
+      });
+
       window.Notifications.info(`${emoji} ${themeName} activado`);
     }
 
