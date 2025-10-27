@@ -376,80 +376,80 @@ export const ModalRenderer = {
                                 <!-- Opción 1: Viaje Simple -->
                                 <button
                                     onclick="TripsManager.showSimpleTripForm()"
-                                    class="group p-8 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-2xl border-3 border-blue-300 dark:border-blue-600 hover:border-blue-500 hover:shadow-2xl transition-all duration-300 transform hover:scale-105 text-left"
+                                    class="group p-8 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-slate-800 dark:to-slate-700 rounded-2xl border-3 border-blue-300 dark:border-blue-500 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-2xl transition-all duration-300 transform hover:scale-105 text-left"
                                 >
                                     <div class="text-center mb-4">
                                         <div class="text-7xl mb-3">📋</div>
-                                        <h3 class="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-2">
+                                        <h3 class="text-2xl font-bold text-blue-700 dark:text-blue-400 mb-2">
                                             Viaje Simple
                                         </h3>
                                         <span class="inline-block bg-green-500 text-white text-xs px-3 py-1 rounded-full font-bold">
                                             RÁPIDO
                                         </span>
                                     </div>
-                                    <div class="space-y-3 text-sm text-gray-800 dark:text-gray-200">
+                                    <div class="space-y-3 text-sm text-gray-800 dark:text-gray-100">
                                         <p class="flex items-start gap-2">
-                                            <span class="text-green-500 text-lg">✓</span>
+                                            <span class="text-green-500 dark:text-green-400 text-lg">✓</span>
                                             <span>Solo nombre y fechas del viaje</span>
                                         </p>
                                         <p class="flex items-start gap-2">
-                                            <span class="text-green-500 text-lg">✓</span>
+                                            <span class="text-green-500 dark:text-green-400 text-lg">✓</span>
                                             <span>Creas el itinerario después paso a paso</span>
                                         </p>
                                         <p class="flex items-start gap-2">
-                                            <span class="text-green-500 text-lg">✓</span>
+                                            <span class="text-green-500 dark:text-green-400 text-lg">✓</span>
                                             <span>Máxima flexibilidad y personalización</span>
                                         </p>
                                         <p class="flex items-start gap-2">
-                                            <span class="text-green-500 text-lg">✓</span>
+                                            <span class="text-green-500 dark:text-green-400 text-lg">✓</span>
                                             <span>Ideal si aún no tienes todo definido</span>
                                         </p>
                                     </div>
                                     <div class="mt-6 text-center">
-                                        <span class="text-xs text-gray-500 dark:text-gray-400">⏱️ Toma 30 segundos</span>
+                                        <span class="text-xs text-gray-500 dark:text-gray-300">⏱️ Toma 30 segundos</span>
                                     </div>
                                 </button>
 
                                 <!-- Opción 2: Wizard Completo -->
                                 <button
                                     onclick="TripsManager.showFullTripWizard()"
-                                    class="group p-8 bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-900 dark:to-pink-800 rounded-2xl border-3 border-purple-300 dark:border-purple-600 hover:border-purple-500 hover:shadow-2xl transition-all duration-300 transform hover:scale-105 text-left"
+                                    class="group p-8 bg-gradient-to-br from-purple-50 to-pink-100 dark:from-slate-800 dark:to-slate-700 rounded-2xl border-3 border-purple-300 dark:border-purple-500 hover:border-purple-500 dark:hover:border-purple-400 hover:shadow-2xl transition-all duration-300 transform hover:scale-105 text-left"
                                 >
                                     <div class="text-center mb-4">
                                         <div class="text-7xl mb-3">✨</div>
-                                        <h3 class="text-2xl font-bold text-purple-700 dark:text-purple-300 mb-2">
+                                        <h3 class="text-2xl font-bold text-purple-700 dark:text-purple-400 mb-2">
                                             Wizard Completo
                                         </h3>
                                         <span class="inline-block bg-yellow-500 text-white text-xs px-3 py-1 rounded-full font-bold">
                                             POPULAR
                                         </span>
                                     </div>
-                                    <div class="space-y-3 text-sm text-gray-800 dark:text-gray-200">
+                                    <div class="space-y-3 text-sm text-gray-800 dark:text-gray-100">
                                         <p class="flex items-start gap-2">
-                                            <span class="text-purple-500 text-lg">✓</span>
+                                            <span class="text-purple-500 dark:text-purple-400 text-lg">✓</span>
                                             <span>Elige ciudades, vuelos y conexiones</span>
                                         </p>
                                         <p class="flex items-start gap-2">
-                                            <span class="text-purple-500 text-lg">✓</span>
+                                            <span class="text-purple-500 dark:text-purple-400 text-lg">✓</span>
                                             <span>Selecciona tus intereses y categorías</span>
                                         </p>
                                         <p class="flex items-start gap-2">
-                                            <span class="text-purple-500 text-lg">✓</span>
+                                            <span class="text-purple-500 dark:text-purple-400 text-lg">✓</span>
                                             <span>Usa plantillas predefinidas (8 opciones)</span>
                                         </p>
                                         <p class="flex items-start gap-2">
-                                            <span class="text-purple-500 text-lg">✓</span>
+                                            <span class="text-purple-500 dark:text-purple-400 text-lg">✓</span>
                                             <span>Itinerario completo generado automáticamente</span>
                                         </p>
                                     </div>
                                     <div class="mt-6 text-center">
-                                        <span class="text-xs text-gray-500 dark:text-gray-400">⏱️ Toma 2-3 minutos</span>
+                                        <span class="text-xs text-gray-500 dark:text-gray-300">⏱️ Toma 2-3 minutos</span>
                                     </div>
                                 </button>
                             </div>
 
-                            <div class="mt-8 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-center border border-blue-200 dark:border-blue-700">
-                                <p class="text-sm text-gray-800 dark:text-gray-200">
+                            <div class="mt-8 p-4 bg-blue-50 dark:bg-slate-700 rounded-lg text-center border border-blue-200 dark:border-blue-500">
+                                <p class="text-sm text-gray-800 dark:text-gray-100">
                                     💡 <strong>Tip:</strong> Puedes empezar con el <strong>Viaje Simple</strong> y agregar detalles después,
                                     o usar el <strong>Wizard Completo</strong> para tener todo listo de inmediato.
                                 </p>
