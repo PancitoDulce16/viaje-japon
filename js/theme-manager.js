@@ -140,33 +140,49 @@ export const ThemeManager = {
     const nextIndex = (currentIndex + 1) % themeOrder.length;
     const nextTheme = themeOrder[nextIndex];
 
+    console.log('🎨 ANTES de aplicar tema:', {
+      currentTheme: this.currentTheme,
+      nextTheme: nextTheme,
+      htmlBefore: document.documentElement.className
+    });
+
     this.applyTheme(nextTheme);
 
-    // Mostrar notificación del NUEVO tema aplicado
-    if (window.Notifications) {
-      const effectiveTheme = nextTheme === 'auto' ? this.systemPreference : nextTheme;
-      const emoji = effectiveTheme === 'dark' ? '🌙' : '☀️';
+    console.log('🎨 DESPUÉS de aplicar tema:', {
+      currentTheme: this.currentTheme,
+      nextTheme: nextTheme,
+      htmlAfter: document.documentElement.className
+    });
 
-      // Mostrar el nombre del tema que SE ACABA DE ACTIVAR
-      let themeName;
-      if (nextTheme === 'auto') {
-        themeName = `Automático (${effectiveTheme === 'dark' ? 'Oscuro' : 'Claro'})`;
-      } else if (nextTheme === 'dark') {
-        themeName = 'Modo Oscuro';
-      } else {
-        themeName = 'Modo Claro';
+    // Mostrar notificación del NUEVO tema aplicado - USAR setTimeout para asegurar que se aplique primero
+    setTimeout(() => {
+      if (window.Notifications) {
+        const effectiveTheme = nextTheme === 'auto' ? this.systemPreference : nextTheme;
+        const emoji = effectiveTheme === 'dark' ? '🌙' : '☀️';
+
+        // Mostrar el nombre del tema que SE ACABA DE ACTIVAR
+        let themeName;
+        if (nextTheme === 'auto') {
+          themeName = `Automático (${effectiveTheme === 'dark' ? 'Oscuro' : 'Claro'})`;
+        } else if (nextTheme === 'dark') {
+          themeName = 'Modo Oscuro';
+        } else {
+          themeName = 'Modo Claro';
+        }
+
+        // Debug: Log para verificar el tema aplicado
+        console.log('🎨 NOTIFICACIÓN enviada:', {
+          nextTheme,
+          effectiveTheme,
+          themeName,
+          emoji,
+          htmlClasses: document.documentElement.className,
+          mensaje: `${emoji} ${themeName} activado`
+        });
+
+        window.Notifications.info(`${emoji} ${themeName} activado`);
       }
-
-      // Debug: Log para verificar el tema aplicado
-      console.log('🎨 NOTIFICACIÓN:', {
-        nextTheme,
-        effectiveTheme,
-        themeName,
-        htmlClasses: document.documentElement.className
-      });
-
-      window.Notifications.info(`${emoji} ${themeName} activado`);
-    }
+    }, 50); // Pequeño delay para asegurar que el DOM se actualice
 
     // Vibración táctil si está disponible
     if (window.MobileEnhancements) {
