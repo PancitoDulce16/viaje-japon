@@ -5,8 +5,8 @@ import { AppCore } from './core.js';
 // No importar CSS aquí para evitar errores de MIME type
 
 import './mobile-enhancements.js'; // Import for side effects
-import './theme-manager.js'; // Import for side effects
-import './dark-mode-enforcer.js'; // Import for side effects - Force dark mode contrast
+import './theme-manager.js?v=2025-10-26-03'; // Import for side effects - cache bust
+// import './dark-mode-enforcer.js'; // DISABLED - Was causing contrast issues and overriding balanced dark mode
 import { SafeFirestore } from './firestore-wrapper.js'; // 🛡️ Wrapper seguro para Firestore
 import { MapsHelper } from './maps-helper.js'; // 🗺️ Helper para Google Maps
 import { PackingList } from './packing-list.js';
