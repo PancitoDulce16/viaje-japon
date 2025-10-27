@@ -18,6 +18,8 @@ export const Notifications = {
   show(message, type = 'info', duration = 4000, title = null) {
     this.init();
 
+    console.log('📢 Notifications.show() creando toast:', { message, type, title });
+
     const icons = {
       success: '<i class="fas fa-check-circle"></i>',
       error: '<i class="fas fa-exclamation-circle"></i>',
@@ -45,6 +47,8 @@ export const Notifications = {
       </div>
       <button class="toast-close" aria-label="Cerrar">&times;</button>
     `;
+
+    console.log('📢 Toast HTML creado:', toast.innerHTML);
 
     // Event listener para cerrar
     const closeBtn = toast.querySelector('.toast-close');
@@ -86,6 +90,7 @@ export const Notifications = {
   },
 
   info(message, duration) {
+    console.log('📢 Notifications.info() recibió:', message);
     return this.show(message, 'info', duration);
   }
 };
