@@ -28,6 +28,7 @@ import { RecommendationEngine } from './recommendation-engine.js';
 import { FeedbackTracker } from './feedback-tracker.js';
 import { CostCalculator } from './cost-calculator.js';
 import { EssentialsHandler } from './essentials-handler.js';
+import { BudgetCalculator } from './budget-calculator.js';
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';

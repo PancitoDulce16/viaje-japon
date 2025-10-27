@@ -157,9 +157,20 @@ export const PreparationHandler = {
             syncStatus = '<span class="text-blue-600 dark:text-blue-400">☁️ Sincronizado</span>';
         }
 
+        // Get current trip for budget calculation
+        const currentTrip = window.TripsManager?.currentTrip;
+        let budgetHTML = '';
+
+        if (currentTrip && window.BudgetCalculator) {
+            budgetHTML = window.BudgetCalculator.generateBudgetSummary(currentTrip);
+        }
+
         container.innerHTML = `
             <div class="max-w-6xl mx-auto p-4 md:p-6">
                 <h2 class="text-4xl font-bold mb-6 text-gray-800 dark:text-white">📦 Preparación del Viaje</h2>
+
+                <!-- Budget Calculator -->
+                ${budgetHTML ? `<div class="mb-6">${budgetHTML}</div>` : ''}
 
                 <!-- Progress Overview -->
                 <div class="bg-gradient-to-r ${progress === 100 ? 'from-green-500 to-emerald-500 animate-pulse' : 'from-blue-500 to-purple-500'} text-white rounded-xl p-6 mb-6 shadow-lg transition-all duration-500">
