@@ -180,7 +180,7 @@ export const ThemeManager = {
         mensaje: `${emoji} ${themeName} activado`
       });
 
-      window.Notifications.info(`${emoji} ${themeName} activado`);
+      window.Notifications.info(`${emoji} ${themeName} activado`, 3000, true); // 3 segundos, isThemeNotification=true
     }
 
     // Vibración táctil si está disponible

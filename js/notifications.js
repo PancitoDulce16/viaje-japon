@@ -3,6 +3,7 @@
 export const Notifications = {
   container: null,
   callCount: 0, // Contador para debugging
+  themeToast: null, // Guardar referencia al toast del tema
 
   init() {
     // Usar el contenedor del HTML o crear uno
@@ -92,11 +93,26 @@ export const Notifications = {
     return this.show(message, 'warning', duration);
   },
 
-  info(message, duration) {
+  info(message, duration, isThemeNotification = false) {
     this.callCount++;
     console.log(`📢 [#${this.callCount}] Notifications.info() recibió:`, message);
     console.trace('📍 Stack trace de la llamada:');
-    return this.show(message, 'info', duration);
+
+    // Si es una notificación de tema, remover la anterior primero
+    if (isThemeNotification && this.themeToast) {
+      console.log('🗑️ Removiendo notificación de tema anterior');
+      this.removeToast(this.themeToast);
+      this.themeToast = null;
+    }
+
+    const toast = this.show(message, 'info', duration);
+
+    // Guardar referencia si es notificación de tema
+    if (isThemeNotification) {
+      this.themeToast = toast;
+    }
+
+    return toast;
   }
 };
 
