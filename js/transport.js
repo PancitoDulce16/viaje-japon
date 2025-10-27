@@ -114,27 +114,27 @@ export const TransportHandler = {
 
                 <div class="space-y-3">
                     ${this.yourRoutes.map((route, index) => `
-                        <div class="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border-l-4 border-blue-500">
+                        <div class="p-4 bg-white dark:from-blue-900/20 dark:to-purple-900/20 dark:bg-gradient-to-r rounded-lg border-l-4 border-blue-600 dark:border-blue-500 shadow-lg">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-bold text-blue-600 dark:text-blue-400">DÍA ${route.day} • ${route.line}</span>
-                                <span class="text-lg font-bold text-green-600 dark:text-green-400">¥${route.price.toLocaleString()}</span>
+                                <span class="text-xs font-black text-blue-800 dark:text-blue-400">DÍA ${route.day} • ${route.line}</span>
+                                <span class="text-lg font-black text-green-700 dark:text-green-400">¥${route.price.toLocaleString()}</span>
                             </div>
                             <div class="grid grid-cols-3 gap-2 items-center">
                                 <div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Desde</p>
-                                    <p class="font-semibold dark:text-white">${route.from}</p>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 font-bold">Desde</p>
+                                    <p class="font-black text-black dark:text-white">${route.from}</p>
                                 </div>
                                 <div class="text-center">
-                                    <p class="text-2xl text-gray-400">→</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">${route.duration}</p>
+                                    <p class="text-2xl text-gray-700 dark:text-gray-400 font-black">→</p>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 font-bold">${route.duration}</p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Hacia</p>
-                                    <p class="font-semibold dark:text-white">${route.to}</p>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 font-bold">Hacia</p>
+                                    <p class="font-black text-black dark:text-white">${route.to}</p>
                                 </div>
                             </div>
                             <div class="mt-2">
-                                <a href="https://world.hyper dia.com/en/?dep=${encodeURIComponent(route.from)}&arr=${encodeURIComponent(route.to)}" target="_blank" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                                <a href="https://world.hyperdia.com/en/?dep=${encodeURIComponent(route.from)}&arr=${encodeURIComponent(route.to)}" target="_blank" class="text-xs text-blue-700 dark:text-blue-400 hover:underline font-bold">
                                     🔍 Ver horarios en Hyperdia →
                                 </a>
                             </div>
@@ -142,21 +142,21 @@ export const TransportHandler = {
                     `).join('')}
                 </div>
 
-                <div class="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border-l-4 border-green-500">
+                <div class="mt-4 p-4 bg-white dark:bg-green-900/20 rounded-lg border-4 border-green-600 dark:border-green-500 shadow-lg">
                     <div class="flex justify-between items-center">
                         <div>
-                            <p class="font-bold text-gray-800 dark:text-white">Total en Tickets</p>
-                            <p class="text-xs text-gray-600 dark:text-gray-400">5 rutas principales</p>
+                            <p class="font-black text-black dark:text-white">Total en Tickets</p>
+                            <p class="text-xs text-gray-700 dark:text-gray-400 font-bold">5 rutas principales</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-3xl font-bold text-green-600 dark:text-green-400">¥${total.toLocaleString()}</p>
-                            <p class="text-xs text-gray-600 dark:text-gray-400">~$${Math.round(total / 145)} USD</p>
+                            <p class="text-3xl font-black text-green-700 dark:text-green-400">¥${total.toLocaleString()}</p>
+                            <p class="text-xs text-gray-700 dark:text-gray-400 font-bold">~$${Math.round(total / 145)} USD</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                    <p class="text-xs text-gray-700 dark:text-gray-300">
+                <div class="mt-4 p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg border-2 border-yellow-600 dark:border-yellow-700">
+                    <p class="text-xs text-black dark:text-gray-300 font-bold">
                         💡 <strong>Nota:</strong> Estos precios NO incluyen transporte local en metro/bus dentro de cada ciudad. 
                         Para eso, necesitarás una <strong>Suica o Pasmo card</strong> (ver abajo).
                     </p>
