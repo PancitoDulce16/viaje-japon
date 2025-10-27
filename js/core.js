@@ -209,6 +209,8 @@ export const AppCore = {
         const currentTrip = window.TripsManager?.currentTrip;
         const tripId = currentTrip?.id;
 
+        console.log(`🔄 Switching to tab: ${tabName}, tripId: ${tripId || 'null'}`);
+
         switch(tabName) {
             case 'map':
                 if (window.MapHandler) {
@@ -221,32 +223,47 @@ export const AppCore = {
                 break;
 
             case 'flights':
-                if (window.FlightsHandler && tripId) {
+                if (window.FlightsHandler) {
+                    console.log('✈️ Inicializando FlightsHandler...');
                     window.FlightsHandler.init(tripId);
+                } else {
+                    console.warn('⚠️ FlightsHandler no está disponible');
                 }
                 break;
 
             case 'hotels':
-                if (window.HotelsHandler && tripId) {
+                if (window.HotelsHandler) {
+                    console.log('🏨 Inicializando HotelsHandler...');
                     window.HotelsHandler.init(tripId);
+                } else {
+                    console.warn('⚠️ HotelsHandler no está disponible');
                 }
                 break;
 
             case 'preparation':
-                if (window.PreparationHandler && tripId) {
+                if (window.PreparationHandler) {
+                    console.log('📋 Inicializando PreparationHandler...');
                     window.PreparationHandler.init(tripId);
+                } else {
+                    console.warn('⚠️ PreparationHandler no está disponible');
                 }
                 break;
 
             case 'transport':
                 if (window.TransportHandler) {
+                    console.log('🚆 Inicializando TransportHandler...');
                     window.TransportHandler.renderTransport();
+                } else {
+                    console.warn('⚠️ TransportHandler no está disponible');
                 }
                 break;
 
             case 'attractions':
                 if (window.AttractionsHandler) {
+                    console.log('🎯 Inicializando AttractionsHandler...');
                     window.AttractionsHandler.renderAttractions();
+                } else {
+                    console.warn('⚠️ AttractionsHandler no está disponible');
                 }
                 break;
         }

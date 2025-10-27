@@ -2131,3 +2131,9 @@ export const ItineraryBuilder = {
 
 // Exportar para uso global
 window.ItineraryBuilder = ItineraryBuilder;
+
+// Log para confirmar que el módulo se cargó
+console.log('✅ ItineraryBuilder cargado y expuesto globalmente', {
+  hasShowCreateItineraryWizard: typeof ItineraryBuilder.showCreateItineraryWizard === 'function',
+  methods: Object.keys(ItineraryBuilder).slice(0, 10)
+});
