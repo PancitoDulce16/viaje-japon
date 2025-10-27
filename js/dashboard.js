@@ -59,19 +59,13 @@ class DashboardManager {
         try {
             console.log('🚀 Iniciando dashboard...');
 
-            // Verificar autenticación
-            if (!this.checkAuthentication()) {
-                this.redirectToLogin();
-                return;
-            }
-
             // 🔔 Inicializar sistema de notificaciones
             Notifications.init();
 
             // 🎯 Inicializar Feedback Tracker
             FeedbackTracker.init();
 
-            // 🔥 Inicializar Firebase Auth
+            // 🔥 Inicializar Firebase Auth PRIMERO
             console.log('⏳ Esperando a que la autenticación esté lista...');
             try {
                 await AuthHandler.init();
@@ -79,6 +73,12 @@ class DashboardManager {
             } catch (authError) {
                 console.error('❌ Error crítico en autenticación:', authError);
                 console.warn('⚠️ Continuando sin autenticación (modo offline)');
+            }
+
+            // Verificar autenticación DESPUÉS de init
+            if (!this.checkAuthentication()) {
+                this.redirectToLogin();
+                return;
             }
 
             // Inicializar el resto de la app
