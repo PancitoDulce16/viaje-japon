@@ -135,6 +135,11 @@ export const AttractionsHandler = {
                     </div>
                 </div>
 
+                <!-- 🏨 NUEVA SECCIÓN: Recomendaciones basadas en Hoteles -->
+                <div id="hotelRecommendationsSection" class="mb-8">
+                    ${this.renderHotelRecommendations()}
+                </div>
+
                 <!-- Categories -->
                 <div class="space-y-8" id="categoriesContainer">
                     ${this.renderAllCategories()}
@@ -736,6 +741,172 @@ export const AttractionsHandler = {
         } catch (error) {
             Logger.error('Error limpiando filtros', error);
         }
+    },
+
+    // 🏨 NUEVA FUNCIÓN: Renderiza recomendaciones basadas en hoteles
+    renderHotelRecommendations() {
+        // Verificar si hay hoteles y el RecommendationEngine está disponible
+        const hotelsHandler = window.HotelsHandler;
+        const recommendationEngine = window.RecommendationEngine;
+
+        if (!hotelsHandler || !recommendationEngine) {
+            return ''; // No mostrar nada si no están disponibles
+        }
+
+        const userHotels = hotelsHandler.myHotels || [];
+
+        if (userHotels.length === 0) {
+            return `
+                <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl shadow-lg p-6">
+                    <div class="flex items-start gap-4">
+                        <div class="text-5xl">🏨</div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold mb-2">¡Obtén Recomendaciones Personalizadas!</h3>
+                            <p class="text-white/90 mb-4">
+                                Agrega tus hoteles en la sección "Hoteles" y te mostraremos las mejores atracciones cercanas a donde te hospedarás.
+                            </p>
+                            <button
+                                onclick="TabsHandler.switchTab('hotels')"
+                                class="bg-white text-purple-600 px-6 py-3 rounded-lg font-bold hover:bg-purple-50 transition shadow-md"
+                            >
+                                ➕ Agregar Hoteles Ahora
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Obtener preferencias del usuario del trip actual
+        const userPreferences = window.TripsManager?.currentTrip?.categories || [];
+
+        // Obtener recomendaciones basadas en hoteles
+        const hotelRecs = recommendationEngine.getHotelBasedRecommendations(
+            userHotels,
+            userPreferences,
+            5 // 5 recomendaciones por hotel
+        );
+
+        if (!hotelRecs.hasHotels || hotelRecs.recommendations.length === 0) {
+            return '';
+        }
+
+        return `
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl shadow-lg p-6 border-2 border-purple-200 dark:border-purple-800">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-2xl font-bold text-purple-900 dark:text-purple-300 flex items-center gap-3">
+                            <span class="text-3xl">🏨</span>
+                            Cerca de tus Hoteles
+                        </h3>
+                        <p class="text-sm text-purple-700 dark:text-purple-400 mt-1">
+                            Atracciones a menos de 5km de donde te hospedarás
+                        </p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow">
+                        <p class="text-xs text-gray-600 dark:text-gray-400">Hoteles</p>
+                        <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">${hotelRecs.totalHotels}</p>
+                    </div>
+                </div>
+
+                ${hotelRecs.recommendations.map(rec => `
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-5 mb-4 shadow-md border border-purple-100 dark:border-purple-900">
+                        <!-- Hotel Info -->
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h4 class="font-bold text-lg text-gray-900 dark:text-white mb-1">
+                                    ${rec.hotel.name}
+                                </h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    📍 ${rec.hotel.city} • ${rec.hotel.nights} ${rec.hotel.nights === 1 ? 'noche' : 'noches'}
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                                    ${new Date(rec.hotel.checkIn).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })} -
+                                    ${new Date(rec.hotel.checkOut).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+                                </p>
+                            </div>
+                            ${rec.totalAttractions > 0 ? `
+                                <div class="bg-green-100 dark:bg-green-900/30 px-3 py-1 rounded-full">
+                                    <p class="text-xs font-bold text-green-700 dark:text-green-400">
+                                        ${rec.totalAttractions} cerca
+                                    </p>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        ${rec.totalAttractions === 0 ? `
+                            <div class="text-center py-4 text-gray-500 dark:text-gray-400">
+                                <p class="text-sm">No se encontraron atracciones registradas cerca de este hotel</p>
+                                <p class="text-xs mt-1">Distancia promedio: ${rec.avgDistance}km</p>
+                            </div>
+                        ` : `
+                            <!-- Attractions Grid -->
+                            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                ${rec.attractions.map(attraction => `
+                                    <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/10 dark:to-pink-900/10 p-4 rounded-lg border border-purple-200 dark:border-purple-800 hover:shadow-lg transition">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <h5 class="font-bold text-sm text-gray-900 dark:text-white flex-1 pr-2">
+                                                ${attraction.name}
+                                            </h5>
+                                            <span class="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full font-semibold whitespace-nowrap">
+                                                ${attraction.distanceKm}km
+                                            </span>
+                                        </div>
+
+                                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
+                                            ${attraction.description}
+                                        </p>
+
+                                        <div class="flex items-center justify-between text-xs">
+                                            <span class="text-xs px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-full font-semibold">
+                                                ⭐ ${attraction.rating}/5
+                                            </span>
+                                            ${attraction.price === 0 ? `
+                                                <span class="text-green-600 dark:text-green-400 font-bold">GRATIS</span>
+                                            ` : `
+                                                <span class="text-gray-700 dark:text-gray-300 font-semibold">
+                                                    ¥${attraction.price.toLocaleString()}
+                                                </span>
+                                            `}
+                                        </div>
+
+                                        ${attraction.matchReason ? `
+                                            <div class="mt-2 pt-2 border-t border-purple-200 dark:border-purple-800">
+                                                <p class="text-xs text-purple-600 dark:text-purple-400 font-semibold">
+                                                    ${attraction.matchReason}
+                                                </p>
+                                            </div>
+                                        ` : ''}
+
+                                        <button
+                                            onclick="AttractionsHandler.saveAttraction('${attraction.name.replace(/'/g, "\\'")}')"
+                                            class="w-full mt-3 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold transition"
+                                        >
+                                            ⭐ Guardar
+                                        </button>
+                                    </div>
+                                `).join('')}
+                            </div>
+
+                            ${rec.avgDistance > 0 ? `
+                                <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                    <p class="text-xs text-blue-800 dark:text-blue-300">
+                                        💡 <strong>Distancia promedio:</strong> ${rec.avgDistance}km del hotel. Puedes llegar caminando o en transporte público.
+                                    </p>
+                                </div>
+                            ` : ''}
+                        `}
+                    </div>
+                `).join('')}
+
+                <div class="mt-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                    <p class="text-sm text-indigo-900 dark:text-indigo-300">
+                        <strong>✨ Tip Pro:</strong> Estas recomendaciones están basadas en la ubicación de tus hoteles y tus preferencias de viaje.
+                        Agrupa las actividades por día según tu hospedaje para optimizar tiempo y transporte.
+                    </p>
+                </div>
+            </div>
+        `;
     }
 };
 

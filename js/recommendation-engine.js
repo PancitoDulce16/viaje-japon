@@ -463,6 +463,246 @@ export const RecommendationEngine = {
 
     results.sort((a, b) => b.relevanceScore - a.relevanceScore);
     return results;
+  },
+
+  /**
+   * 🌍 NUEVA FUNCIÓN: Calcula la distancia entre dos coordenadas geográficas
+   * Utiliza la fórmula de Haversine para calcular distancia en kilómetros
+   * @param {Object} coord1 - {lat, lng} primera coordenada
+   * @param {Object} coord2 - {lat, lng} segunda coordenada
+   * @returns {number} Distancia en kilómetros
+   */
+  calculateDistance(coord1, coord2) {
+    if (!coord1 || !coord2 || !coord1.lat || !coord1.lng || !coord2.lat || !coord2.lng) {
+      return Infinity; // Sin coordenadas = distancia infinita
+    }
+
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = this.deg2rad(coord2.lat - coord1.lat);
+    const dLng = this.deg2rad(coord2.lng - coord1.lng);
+
+    const a =
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(this.deg2rad(coord1.lat)) * Math.cos(this.deg2rad(coord2.lat)) *
+      Math.sin(dLng/2) * Math.sin(dLng/2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c; // Distancia en km
+
+    return distance;
+  },
+
+  /**
+   * Convierte grados a radianes
+   */
+  deg2rad(deg) {
+    return deg * (Math.PI/180);
+  },
+
+  /**
+   * 🏨 NUEVA FUNCIÓN: Obtiene atracciones cercanas a una ubicación específica
+   * Ideal para recomendar lugares cerca del hotel donde te hospedas
+   * @param {Object} location - {lat, lng, name} ubicación de referencia (hotel)
+   * @param {Array<string>} userPreferences - Preferencias del usuario
+   * @param {number} radiusKm - Radio de búsqueda en kilómetros (default: 5km)
+   * @param {number} limit - Número máximo de recomendaciones
+   * @returns {Array} Atracciones ordenadas por proximidad y relevancia
+   */
+  getNearbyRecommendations(location, userPreferences = [], radiusKm = 5, limit = 10) {
+    if (!location || !location.lat || !location.lng) {
+      console.warn('⚠️ getNearbyRecommendations: ubicación inválida', location);
+      return [];
+    }
+
+    const allAttractions = this.getAllAttractions();
+    const nearbyAttractions = [];
+
+    allAttractions.forEach(attraction => {
+      // Solo procesar atracciones con coordenadas
+      if (!attraction.coordinates) {
+        return;
+      }
+
+      const distance = this.calculateDistance(location, attraction.coordinates);
+
+      // Filtrar por radio de búsqueda
+      if (distance <= radiusKm) {
+        // Calcular score base de recomendación
+        let score = 0;
+        const matchedPreferences = [];
+
+        // Score por preferencias del usuario
+        if (userPreferences && userPreferences.length > 0) {
+          userPreferences.forEach(pref => {
+            if (this.categoryMapping[pref] &&
+                this.categoryMapping[pref].includes(attraction.categoryKey)) {
+              score += 10;
+              matchedPreferences.push(pref);
+            }
+
+            if (this.keywordMapping[pref]) {
+              const keywords = this.keywordMapping[pref];
+              const attractionText = `${attraction.name} ${attraction.description} ${attraction.tips || ''}`.toLowerCase();
+              keywords.forEach(keyword => {
+                if (attractionText.includes(keyword.toLowerCase())) {
+                  score += 3;
+                  if (!matchedPreferences.includes(pref)) {
+                    matchedPreferences.push(pref);
+                  }
+                }
+              });
+            }
+          });
+        }
+
+        // Bonus por rating alto
+        score += attraction.rating * 3;
+
+        // Bonus por proximidad (mientras más cerca, mayor score)
+        // 0km = +20 puntos, 5km = +0 puntos (decremento lineal)
+        const proximityBonus = Math.max(0, 20 * (1 - distance / radiusKm));
+        score += proximityBonus;
+
+        // Bonus por ser gratis
+        if (attraction.price === 0) {
+          score += 5;
+        }
+
+        nearbyAttractions.push({
+          ...attraction,
+          distanceKm: parseFloat(distance.toFixed(2)),
+          recommendationScore: score,
+          matchedPreferences: matchedPreferences,
+          matchReason: this.getNearbyMatchReason(matchedPreferences, distance, location.name),
+          proximityScore: proximityBonus
+        });
+      }
+    });
+
+    // Ordenar por score descendente
+    nearbyAttractions.sort((a, b) => b.recommendationScore - a.recommendationScore);
+
+    return nearbyAttractions.slice(0, limit);
+  },
+
+  /**
+   * Genera razón de recomendación para lugares cercanos
+   */
+  getNearbyMatchReason(matchedPreferences, distance, locationName) {
+    const distanceText = distance < 1
+      ? `A ${Math.round(distance * 1000)}m`
+      : `A ${distance.toFixed(1)}km`;
+
+    const locationText = locationName ? ` de ${locationName}` : '';
+
+    if (matchedPreferences.length === 0) {
+      return `📍 ${distanceText}${locationText}`;
+    }
+
+    const prefNames = matchedPreferences.map(pref => {
+      const cat = CATEGORIES.find(c => c.id === pref);
+      return cat ? cat.name : pref;
+    });
+
+    return `📍 ${distanceText}${locationText} • ${prefNames.slice(0, 2).join(', ')}`;
+  },
+
+  /**
+   * 🏨 NUEVA FUNCIÓN: Obtiene recomendaciones inteligentes basadas en hoteles del itinerario
+   * Esta función integra los hoteles guardados con las recomendaciones de atracciones
+   * @param {Array} hotels - Array de hoteles del usuario [{name, city, checkIn, checkOut, ...}]
+   * @param {Array<string>} userPreferences - Preferencias del usuario
+   * @param {number} limit - Número máximo de recomendaciones por hotel
+   * @returns {Object} Recomendaciones agrupadas por hotel
+   */
+  getHotelBasedRecommendations(hotels, userPreferences = [], limit = 5) {
+    if (!hotels || hotels.length === 0) {
+      return {
+        hasHotels: false,
+        message: 'Agrega tus hoteles en la sección "Hoteles" para recibir recomendaciones personalizadas de lugares cercanos.',
+        recommendations: []
+      };
+    }
+
+    const hotelRecommendations = [];
+
+    // Ciudades de Japón con coordenadas (del archivo hotels.js)
+    const japanCities = {
+      'Tokyo': { lat: 35.6762, lng: 139.6503 },
+      'Kyoto': { lat: 35.0116, lng: 135.7681 },
+      'Osaka': { lat: 34.6937, lng: 135.5023 },
+      'Nagoya': { lat: 35.1815, lng: 136.9066 },
+      'Fukuoka': { lat: 33.5904, lng: 130.4017 },
+      'Sapporo': { lat: 43.0642, lng: 141.3469 },
+      'Hakone': { lat: 35.2324, lng: 139.1069 },
+      'Hiroshima': { lat: 34.3853, lng: 132.4553 }
+    };
+
+    hotels.forEach(hotel => {
+      // Intentar obtener coordenadas de la ciudad del hotel
+      const cityCoords = japanCities[hotel.city] || this.getCityCoordinates(hotel.city);
+
+      if (cityCoords) {
+        const location = {
+          lat: cityCoords.lat,
+          lng: cityCoords.lng,
+          name: hotel.name
+        };
+
+        // Obtener atracciones cercanas (radio de 5km)
+        const nearby = this.getNearbyRecommendations(location, userPreferences, 5, limit);
+
+        // Calcular duración de la estadía
+        const checkIn = new Date(hotel.checkIn);
+        const checkOut = new Date(hotel.checkOut);
+        const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+
+        hotelRecommendations.push({
+          hotel: {
+            name: hotel.name,
+            city: hotel.city,
+            checkIn: hotel.checkIn,
+            checkOut: hotel.checkOut,
+            nights: nights,
+            coordinates: location
+          },
+          attractions: nearby,
+          totalAttractions: nearby.length,
+          avgDistance: nearby.length > 0
+            ? (nearby.reduce((sum, a) => sum + a.distanceKm, 0) / nearby.length).toFixed(2)
+            : 0
+        });
+      } else {
+        console.warn(`⚠️ No se encontraron coordenadas para la ciudad: ${hotel.city}`);
+      }
+    });
+
+    return {
+      hasHotels: true,
+      totalHotels: hotels.length,
+      recommendations: hotelRecommendations,
+      message: `Se encontraron ${hotelRecommendations.length} hoteles con recomendaciones cercanas`
+    };
+  },
+
+  /**
+   * Obtiene coordenadas aproximadas de una ciudad (fallback)
+   */
+  getCityCoordinates(cityName) {
+    // Mapeo básico de ciudades japonesas
+    const cityMap = {
+      'tokyo': { lat: 35.6762, lng: 139.6503 },
+      'kyoto': { lat: 35.0116, lng: 135.7681 },
+      'osaka': { lat: 34.6937, lng: 135.5023 },
+      'nagoya': { lat: 35.1815, lng: 136.9066 },
+      'fukuoka': { lat: 33.5904, lng: 130.4017 },
+      'sapporo': { lat: 43.0642, lng: 141.3469 },
+      'hakone': { lat: 35.2324, lng: 139.1069 },
+      'hiroshima': { lat: 34.3853, lng: 132.4553 }
+    };
+
+    const normalized = cityName.toLowerCase().trim();
+    return cityMap[normalized] || null;
   }
 };
 

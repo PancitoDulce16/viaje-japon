@@ -1769,17 +1769,61 @@ export const ItineraryBuilder = {
         // ✨ TRY SMART RECOMMENDATIONS FIRST
         if (useSmartRecommendations) {
           try {
-            // Get personalized recommendations for this city and day
-            const recommendations = window.RecommendationEngine.getDailyRecommendations(
-              allCategories,  // User preferences
-              cityName,       // City name
-              dayNumber,      // Day number for variety
-              activitiesPerCity // How many activities needed
-            );
+            // 🏨 NUEVO: Check if user has hotels in this city for this day
+            const userHotels = window.HotelsHandler?.myHotels || [];
+            const dayDate = this.calculateDayDate(startDate, dayNumber);
+            const hotelForThisDay = userHotels.find(hotel => {
+              if (hotel.city !== cityName) return false;
+              const checkIn = new Date(hotel.checkIn);
+              const checkOut = new Date(hotel.checkOut);
+              return dayDate >= checkIn && dayDate < checkOut;
+            });
+
+            let recommendations;
+
+            // 🌟 PRIORIDAD 1: Recomendaciones cerca del hotel
+            if (hotelForThisDay && window.RecommendationEngine.getNearbyRecommendations) {
+              console.log(`🏨 Found hotel for Day ${dayNumber} in ${cityName}: ${hotelForThisDay.name}`);
+
+              // Get hotel coordinates from city map
+              const cityCoords = window.RecommendationEngine.getCityCoordinates(cityName);
+              if (cityCoords) {
+                const location = {
+                  lat: cityCoords.lat,
+                  lng: cityCoords.lng,
+                  name: hotelForThisDay.name
+                };
+
+                // Get nearby recommendations (5km radius)
+                const nearbyRecs = window.RecommendationEngine.getNearbyRecommendations(
+                  location,
+                  allCategories,
+                  5, // 5km radius
+                  activitiesPerCity * 2 // Get more to have variety
+                );
+
+                if (nearbyRecs && nearbyRecs.length > 0) {
+                  recommendations = nearbyRecs;
+                  console.log(`📍 Found ${nearbyRecs.length} attractions near ${hotelForThisDay.name}`);
+                }
+              }
+            }
+
+            // 🌟 FALLBACK: Recomendaciones generales por ciudad si no hay hotel
+            if (!recommendations || recommendations.length === 0) {
+              // Get personalized recommendations for this city and day
+              recommendations = window.RecommendationEngine.getDailyRecommendations(
+                allCategories,  // User preferences
+                cityName,       // City name
+                dayNumber,      // Day number for variety
+                activitiesPerCity // How many activities needed
+              );
+            }
 
             if (recommendations && recommendations.length > 0) {
               selectedActivities = recommendations.slice(0, activitiesPerCity);
-              console.log(`✨ Day ${dayNumber} in ${cityName}: ${selectedActivities.length} smart recommendations selected`);
+              const nearbyCount = selectedActivities.filter(a => a.distanceKm !== undefined).length;
+              console.log(`✨ Day ${dayNumber} in ${cityName}: ${selectedActivities.length} smart recommendations (${nearbyCount} near hotel)`);
             }
           } catch (error) {
             console.warn('Smart recommendations failed, falling back to template:', error);
@@ -2036,6 +2080,49 @@ export const ItineraryBuilder = {
       modal.remove();
       document.body.style.overflow = '';
     }
+  },
+
+  // === HELPER FUNCTIONS === //
+
+  /**
+   * Calcula la fecha de un día específico basado en la fecha de inicio y el número de día
+   * @param {string|Date} startDate - Fecha de inicio del viaje
+   * @param {number} dayNumber - Número del día (1-based)
+   * @returns {Date} Fecha calculada
+   */
+  calculateDayDate(startDate, dayNumber) {
+    const start = new Date(startDate);
+    const dayDate = new Date(start);
+    dayDate.setDate(start.getDate() + (dayNumber - 1)); // dayNumber es 1-based
+    return dayDate;
+  },
+
+  /**
+   * Calcula la hora de una actividad basada en una hora de inicio y un índice
+   * @param {string} startTime - Hora de inicio (formato HH:MM)
+   * @param {number} index - Índice de la actividad
+   * @returns {string} Hora calculada (formato HH:MM)
+   */
+  calculateActivityTime(startTime, index) {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + (index * 120); // 2 horas por actividad
+    const newHours = Math.floor(totalMinutes / 60) % 24;
+    const newMinutes = totalMinutes % 60;
+    return `${String(newHours).padStart(2, '0')}:${String(newMinutes).padStart(2, '0')}`;
+  },
+
+  /**
+   * Mezcla un array aleatoriamente (Fisher-Yates shuffle)
+   * @param {Array} array - Array a mezclar
+   * @returns {Array} Array mezclado
+   */
+  shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
   },
 
   // === MÁS FUNCIONES CONTINÚAN... ===
