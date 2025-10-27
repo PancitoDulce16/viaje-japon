@@ -142,14 +142,21 @@ export const ThemeManager = {
 
     this.applyTheme(nextTheme);
 
-    // Mostrar notificación
+    // Mostrar notificación del NUEVO tema aplicado
     if (window.Notifications) {
       const effectiveTheme = nextTheme === 'auto' ? this.systemPreference : nextTheme;
       const emoji = effectiveTheme === 'dark' ? '🌙' : '☀️';
-      // Corregir los nombres de los modos (estaban invertidos)
-      const themeName = nextTheme === 'auto'
-        ? `${this.themes[nextTheme].name} (${effectiveTheme === 'dark' ? 'Oscuro' : 'Claro'})`
-        : this.themes[nextTheme].name;
+
+      // Mostrar el nombre del tema que SE ACABA DE ACTIVAR
+      let themeName;
+      if (nextTheme === 'auto') {
+        themeName = `Automático (${effectiveTheme === 'dark' ? 'Oscuro' : 'Claro'})`;
+      } else if (nextTheme === 'dark') {
+        themeName = 'Modo Oscuro';
+      } else {
+        themeName = 'Modo Claro';
+      }
+
       window.Notifications.info(`${emoji} ${themeName} activado`);
     }
 
