@@ -154,35 +154,34 @@ export const ThemeManager = {
       htmlAfter: document.documentElement.className
     });
 
-    // Mostrar notificación del NUEVO tema aplicado - USAR setTimeout para asegurar que se aplique primero
-    setTimeout(() => {
-      if (window.Notifications) {
-        const effectiveTheme = nextTheme === 'auto' ? this.systemPreference : nextTheme;
-        const emoji = effectiveTheme === 'dark' ? '🌙' : '☀️';
+    // Mostrar notificación del NUEVO tema aplicado
+    // Calcular INMEDIATAMENTE después de aplicar, no usar setTimeout que puede causar race conditions
+    if (window.Notifications) {
+      const effectiveTheme = nextTheme === 'auto' ? this.systemPreference : nextTheme;
+      const emoji = effectiveTheme === 'dark' ? '🌙' : '☀️';
 
-        // Mostrar el nombre del tema que SE ACABA DE ACTIVAR
-        let themeName;
-        if (nextTheme === 'auto') {
-          themeName = `Automático (${effectiveTheme === 'dark' ? 'Oscuro' : 'Claro'})`;
-        } else if (nextTheme === 'dark') {
-          themeName = 'Modo Oscuro';
-        } else {
-          themeName = 'Modo Claro';
-        }
-
-        // Debug: Log para verificar el tema aplicado
-        console.log('🎨 NOTIFICACIÓN enviada:', {
-          nextTheme,
-          effectiveTheme,
-          themeName,
-          emoji,
-          htmlClasses: document.documentElement.className,
-          mensaje: `${emoji} ${themeName} activado`
-        });
-
-        window.Notifications.info(`${emoji} ${themeName} activado`);
+      // Mostrar el nombre del tema que SE ACABA DE ACTIVAR
+      let themeName;
+      if (nextTheme === 'auto') {
+        themeName = `Automático (${effectiveTheme === 'dark' ? 'Oscuro' : 'Claro'})`;
+      } else if (nextTheme === 'dark') {
+        themeName = 'Modo Oscuro';
+      } else {
+        themeName = 'Modo Claro';
       }
-    }, 50); // Pequeño delay para asegurar que el DOM se actualice
+
+      // Debug: Log para verificar el tema aplicado
+      console.log('🎨 NOTIFICACIÓN enviada:', {
+        nextTheme,
+        effectiveTheme,
+        themeName,
+        emoji,
+        htmlClasses: document.documentElement.className,
+        mensaje: `${emoji} ${themeName} activado`
+      });
+
+      window.Notifications.info(`${emoji} ${themeName} activado`);
+    }
 
     // Vibración táctil si está disponible
     if (window.MobileEnhancements) {
