@@ -240,7 +240,7 @@ export const AttractionsHandler = {
                         <span class="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full font-semibold">
                             ⏱️ ${item.duration}
                         </span>
-                        <span class="text-xs px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-full font-semibold">
+                        <span class="text-xs px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-full font-semibold">
                             ⭐ ${item.rating}/5
                         </span>
                         ${item.season ? `

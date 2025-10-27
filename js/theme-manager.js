@@ -146,7 +146,10 @@ export const ThemeManager = {
     if (window.Notifications) {
       const effectiveTheme = nextTheme === 'auto' ? this.systemPreference : nextTheme;
       const emoji = effectiveTheme === 'dark' ? '🌙' : '☀️';
-      const themeName = nextTheme === 'auto' ? `${this.themes[nextTheme].name} (${effectiveTheme === 'dark' ? 'Oscuro' : 'Claro'})` : this.themes[nextTheme].name;
+      // Corregir los nombres de los modos (estaban invertidos)
+      const themeName = nextTheme === 'auto'
+        ? `${this.themes[nextTheme].name} (${effectiveTheme === 'dark' ? 'Oscuro' : 'Claro'})`
+        : this.themes[nextTheme].name;
       window.Notifications.info(`${emoji} ${themeName} activado`);
     }
 
