@@ -1,11 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir \"c:\\Users\\Noelia\\Downloads\\Screenshot*Japan*.png\" /b)",
-      "Read(//c/Users/Noelia/Downloads/**)",
-      "Bash(find:*)",
-      "Bash(npm install:*)",
-      "Bash(git add:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

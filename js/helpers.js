@@ -481,39 +481,11 @@ export function formatDuration(minutes) {
 }
 
 /**
- * Sanitizador de HTML para prevenir XSS usando DOMPurify
+ * Sanitizador de HTML para prevenir XSS - VERSIÓN SÍNCRONA POR DEFECTO
+ * Usa escapado básico de caracteres para compatibilidad con código existente
  */
-let DOMPurify = null;
-
-// Importación dinámica de DOMPurify
-async function loadDOMPurify() {
-    if (!DOMPurify) {
-        const module = await import('dompurify');
-        DOMPurify = module.default;
-    }
-    return DOMPurify;
-}
-
-/**
- * Sanitiza HTML usando DOMPurify para prevenir XSS
- * @param {string} dirty - HTML sucio que puede contener scripts maliciosos
- * @param {Object} config - Configuración opcional de DOMPurify
- * @returns {Promise<string>} - HTML limpio y seguro
- */
-export async function sanitizeHTML(dirty, config = {}) {
-    const purify = await loadDOMPurify();
-    return purify.sanitize(dirty, {
-        ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'span', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li'],
-        ALLOWED_ATTR: ['href', 'title', 'class', 'id'],
-        ...config
-    });
-}
-
-/**
- * Versión sincrónica del sanitizador (más ligera, solo escapa caracteres)
- * Útil para casos simples donde no necesitas HTML complejo
- */
-export function sanitizeHTMLSync(html) {
+export function sanitizeHTML(html) {
+    if (!html) return '';
     const div = document.createElement('div');
     div.textContent = html;
     return div.innerHTML;
@@ -543,6 +515,36 @@ export function sanitizeText(text) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#x27;')
         .replace(/\//g, '&#x2F;');
+}
+
+/**
+ * Sanitizador avanzado con DOMPurify (async) - OPCIONAL para casos especiales
+ * Solo usar cuando necesites permitir HTML complejo
+ */
+let DOMPurify = null;
+async function loadDOMPurify() {
+    if (!DOMPurify) {
+        try {
+            const module = await import('dompurify');
+            DOMPurify = module.default;
+        } catch (error) {
+            console.warn('DOMPurify not available:', error);
+            return null;
+        }
+    }
+    return DOMPurify;
+}
+
+export async function sanitizeHTMLAdvanced(dirty, config = {}) {
+    const purify = await loadDOMPurify();
+    if (!purify) {
+        return sanitizeHTML(dirty);
+    }
+    return purify.sanitize(dirty, {
+        ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'span', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li'],
+        ALLOWED_ATTR: ['href', 'title', 'class', 'id'],
+        ...config
+    });
 }
 
 /**
