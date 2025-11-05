@@ -17,6 +17,22 @@
     color: #e5e7eb !important; /* Gris claro con buen contraste */
 }
 
+/* Forzar contraste alto en colores cyan y amber */
+.text-cyan-700,
+.text-amber-700 {
+    color: #0e7490 !important; /* Cyan oscuro */
+}
+
+.dark .text-cyan-300,
+.dark .text-amber-300 {
+    color: #fef3c7 !important; /* Amarillo claro con alto contraste */
+}
+
+/* Asegurar que bg-white en dark mode sea oscuro */
+.dark .bg-white {
+    background-color: #1f2937 !important;
+}
+
 /* =================================================================
    MODALES - Asegurar buen contraste en todos los modales
    ================================================================= */
