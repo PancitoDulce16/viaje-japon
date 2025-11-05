@@ -580,10 +580,17 @@ function renderActivities(day){
     return parseTime(a.time) - parseTime(b.time);
   });
 
+  // DEBUG: Log activities data
+  console.log('🔍 Rendering activities for day', day.day, ':', sortedActivities.map(a => ({ id: a.id, title: a.title, name: a.name })));
+
   container.innerHTML = sortedActivities.map((act,i)=> {
     const votes = act.votes || {};
     const voteCount = Object.keys(votes).length;
     const userHasVoted = currentUserId && votes[currentUserId];
+
+    // DEBUG: Log each activity title
+    const activityTitle = act.title || act.name || 'Sin título';
+    console.log(`📝 Activity ${act.id}: title="${act.title}", name="${act.name}", final="${activityTitle}"`);
 
     return `
     <div class="activity-card bg-white dark:bg-gray-700 rounded-xl shadow-md overflow-hidden fade-in transition-all hover:shadow-xl border-l-4 border-red-500 dark:border-red-400 ${checkedActivities[act.id]?'opacity-60':''}" style="animation-delay:${i*0.05}s">
@@ -600,7 +607,7 @@ function renderActivities(day){
                 <span class="text-xs font-semibold text-gray-500 dark:text-gray-300">${act.time||''}</span>
                 ${act.cost>0?`<span class="text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-2 py-1 rounded font-semibold">¥${Number(act.cost).toLocaleString()}</span>`:''}
               </div>
-              <h3 class="text-lg font-bold dark:text-white mb-1">${act.title || act.name || 'Sin título'}</h3>
+              <h3 class="text-lg font-bold dark:text-white mb-1">${activityTitle}</h3>
             </div>
             <div class="flex gap-2 flex-shrink-0">
               <button
@@ -739,17 +746,43 @@ export const ItineraryHandler = {
       </div>`;
 
     if(!isListenerAttached){
+      console.log('🎯 Attaching event listeners to itinerary container');
       container.addEventListener('click', (e)=>{
+        console.log('🖱️ Click detected on:', e.target);
         const addBtn=e.target.closest('[id^="addActivityBtn_"]');
         const editBtn=e.target.closest('.activity-edit-btn');
         const deleteBtn=e.target.closest('.activity-delete-btn');
         const voteBtn = e.target.closest('.activity-vote-btn');
         const dayBtn=e.target.closest('.day-btn');
-        if(addBtn){ const day=parseInt(addBtn.id.split('_')[1]); ItineraryHandler.showActivityModal(null, day); }
-        else if(editBtn){ const activityId=editBtn.dataset.activityId; const dayNum=parseInt(editBtn.dataset.day); ItineraryHandler.showActivityModal(activityId, dayNum); }
-        else if(deleteBtn){ const activityId=deleteBtn.dataset.activityId; const dayNum=parseInt(deleteBtn.dataset.day); ItineraryHandler.deleteActivity(activityId, dayNum); }
-        else if(voteBtn){ const activityId=voteBtn.dataset.activityId; const dayNum=parseInt(voteBtn.dataset.day); ItineraryHandler.toggleVote(dayNum, activityId); }
-        else if(dayBtn){ selectDay(parseInt(dayBtn.dataset.day)); }
+
+        if(addBtn){
+          console.log('➕ Add button clicked');
+          const day=parseInt(addBtn.id.split('_')[1]);
+          console.log('📅 Opening modal for day:', day);
+          ItineraryHandler.showActivityModal(null, day);
+        }
+        else if(editBtn){
+          console.log('✏️ Edit button clicked');
+          const activityId=editBtn.dataset.activityId;
+          const dayNum=parseInt(editBtn.dataset.day);
+          ItineraryHandler.showActivityModal(activityId, dayNum);
+        }
+        else if(deleteBtn){
+          console.log('🗑️ Delete button clicked');
+          const activityId=deleteBtn.dataset.activityId;
+          const dayNum=parseInt(deleteBtn.dataset.day);
+          ItineraryHandler.deleteActivity(activityId, dayNum);
+        }
+        else if(voteBtn){
+          console.log('❤️ Vote button clicked');
+          const activityId=voteBtn.dataset.activityId;
+          const dayNum=parseInt(voteBtn.dataset.day);
+          ItineraryHandler.toggleVote(dayNum, activityId);
+        }
+        else if(dayBtn){
+          console.log('📅 Day button clicked');
+          selectDay(parseInt(dayBtn.dataset.day));
+        }
       });
       container.addEventListener('change', (e)=>{ const checkbox=e.target.closest('.activity-checkbox'); if(checkbox){ toggleActivity(checkbox.dataset.id); } });
       isListenerAttached=true;
