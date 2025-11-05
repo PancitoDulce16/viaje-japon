@@ -52,8 +52,8 @@ export const ModalRenderer = {
 
     getActivityModal() {
         return `
-            <div id="activityModal" class="fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 hidden animate__animated animate__fadeIn" style="z-index: 10001;">
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg p-6 animate__animated animate__slideInUp">
+            <div id="activityModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden animate__animated animate__fadeIn" style="z-index: 10001;">
+                <div class="modal-content bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg p-6 animate__animated animate__slideInUp">
                     <div class="flex justify-between items-center mb-4">
                         <h2 id="activityModalTitle" class="text-2xl font-bold dark:text-white">Añadir Actividad</h2>
                         <button onclick="ItineraryHandler.closeActivityModal()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">

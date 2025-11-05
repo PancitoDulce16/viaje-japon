@@ -1,6 +1,23 @@
 /* css/contrast-fixes.css - Correcciones de contraste para mejor legibilidad */
 
 /* =================================================================
+   FORZAR CONTRASTE ALTO EN TODOS LOS ELEMENTOS
+   ================================================================= */
+
+/* Sobrescribir text-gray-400, text-gray-500, text-gray-600 con alto contraste */
+.text-gray-400,
+.text-gray-500,
+.text-gray-600 {
+    color: #374151 !important; /* Gris oscuro con buen contraste */
+}
+
+.dark .text-gray-400,
+.dark .text-gray-500,
+.dark .text-gray-600 {
+    color: #e5e7eb !important; /* Gris claro con buen contraste */
+}
+
+/* =================================================================
    MODALES - Asegurar buen contraste en todos los modales
    ================================================================= */
 
