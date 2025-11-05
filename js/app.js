@@ -25,6 +25,8 @@ import { EmergencyAssistant } from './emergency-assistant.js';
 import { ExpenseSplitter } from './expense-splitter.js';
 import { PreTripChecklist } from './pre-trip-checklist.js';
 import { EssentialsHandler } from './essentials.js';
+import { runAutomatedTests } from './test-runner.js';
+import { runContrastValidation } from './contrast-validator.js';
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';
@@ -235,6 +237,21 @@ async function initApp() {
         console.log('⭐ Favorites Manager listo');
         console.log('🎨 Theme Manager listo');
         console.log('📱 Mobile Enhancements listo');
+
+        // 🧪 Ejecutar pruebas automáticas en desarrollo
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log('\n🧪 Modo desarrollo detectado - Ejecutando pruebas automáticas...\n');
+
+            // Ejecutar pruebas después de que todo esté cargado
+            setTimeout(async () => {
+                try {
+                    await runAutomatedTests();
+                    runContrastValidation();
+                } catch (error) {
+                    console.error('❌ Error ejecutando pruebas:', error);
+                }
+            }, 2000);
+        }
 
         // Cargar integraciones opcionalmente y de forma asíncrona
         (async () => {
