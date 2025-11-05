@@ -1,0 +1,574 @@
+/* css/contrast-fixes.css - Correcciones de contraste para mejor legibilidad */
+
+/* =================================================================
+   MODALES - Asegurar buen contraste en todos los modales
+   ================================================================= */
+
+/* Modal backgrounds - fondos claramente visibles */
+.modal {
+    background-color: rgba(0, 0, 0, 0.75);
+}
+
+.modal-content {
+    background-color: #ffffff;
+    color: #1f2937;
+}
+
+.dark .modal-content {
+    background-color: #1f2937;
+    color: #f3f4f6;
+}
+
+/* Modal headers con buen contraste */
+.modal-header {
+    background-color: #f9fafb;
+    color: #111827;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.dark .modal-header {
+    background-color: #374151;
+    color: #f9fafb;
+    border-bottom: 2px solid #4b5563;
+}
+
+/* Modal body - fondo neutro con texto oscuro */
+.modal-body {
+    background-color: #ffffff;
+    color: #1f2937;
+}
+
+.dark .modal-body {
+    background-color: #1f2937;
+    color: #e5e7eb;
+}
+
+/* =================================================================
+   TABS - Esenciales, Atracciones, Utilidades
+   ================================================================= */
+
+/* Tab content general */
+.tab-content {
+    background-color: #ffffff;
+    color: #1f2937;
+    min-height: 400px;
+    padding: 1.5rem;
+}
+
+.dark .tab-content {
+    background-color: #111827;
+    color: #f3f4f6;
+}
+
+/* Essentials tab específicamente */
+#content-essentials {
+    background-color: #ffffff;
+    color: #1f2937;
+}
+
+.dark #content-essentials {
+    background-color: #111827;
+    color: #f3f4f6;
+}
+
+/* Attractions tab */
+#content-attractions {
+    background-color: #ffffff;
+    color: #1f2937;
+}
+
+.dark #content-attractions {
+    background-color: #111827;
+    color: #f3f4f6;
+}
+
+/* Utils tab */
+#content-utils {
+    background-color: #ffffff;
+    color: #1f2937;
+}
+
+.dark #content-utils {
+    background-color: #111827;
+    color: #f3f4f6;
+}
+
+/* =================================================================
+   CARDS - Tarjetas con buen contraste
+   ================================================================= */
+
+/* Cards generales */
+.card,
+.attraction-card,
+.emergency-card,
+.phrase-card,
+.hotel-card,
+.hospital-card {
+    background-color: #ffffff;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+}
+
+.dark .card,
+.dark .attraction-card,
+.dark .emergency-card,
+.dark .phrase-card,
+.dark .hotel-card,
+.dark .hospital-card {
+    background-color: #374151;
+    color: #f3f4f6;
+    border: 1px solid #4b5563;
+}
+
+/* =================================================================
+   PACKING LIST / CHECKLIST - Contraste mejorado
+   ================================================================= */
+
+/* Packing list items */
+.packing-item,
+.packing-list-item {
+    background-color: #f9fafb;
+    color: #111827;
+    border: 1px solid #e5e7eb;
+}
+
+.dark .packing-item,
+.dark .packing-list-item {
+    background-color: #374151;
+    color: #f3f4f6;
+    border: 1px solid #4b5563;
+}
+
+/* Category headers en packing list */
+.packing-category-header,
+.category-header {
+    background-color: #e5e7eb;
+    color: #111827;
+    font-weight: 600;
+}
+
+.dark .packing-category-header,
+.dark .category-header {
+    background-color: #4b5563;
+    color: #f9fafb;
+}
+
+/* =================================================================
+   ITINERARY - Actividades y Day Selector
+   ================================================================= */
+
+/* Activity cards */
+.activity-card,
+.activity-item {
+    background-color: #ffffff;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+}
+
+.dark .activity-card,
+.dark .activity-item {
+    background-color: #374151;
+    color: #f3f4f6;
+    border: 1px solid #4b5563;
+}
+
+/* Day headers */
+.day-header,
+.day-tab {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+.dark .day-header,
+.dark .day-tab {
+    background-color: #4b5563;
+    color: #f9fafb;
+}
+
+/* Day Selector Container - Mejorado */
+#daySelector {
+    position: relative;
+    padding: 8px 0;
+    margin: 0 -8px;
+}
+
+/* Day buttons - Mejorado contraste y estilo */
+.day-btn {
+    min-width: 100px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.day-btn:not(.bg-red-600) {
+    background-color: #ffffff;
+    color: #1f2937;
+    border: 2px solid #e5e7eb;
+}
+
+.dark .day-btn:not(.bg-red-600) {
+    background-color: #374151;
+    color: #f9fafb;
+    border: 2px solid #4b5563;
+}
+
+.day-btn.bg-red-600 {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+    color: #ffffff;
+    border: 2px solid #dc2626;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+.day-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.dark .day-btn:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* =================================================================
+   INPUTS Y FORMS - Asegurar legibilidad
+   ================================================================= */
+
+/* Inputs generales */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+    background-color: #ffffff;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+}
+
+.dark input[type="text"],
+.dark input[type="number"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark textarea,
+.dark select {
+    background-color: #374151;
+    color: #f3f4f6;
+    border: 1px solid #6b7280;
+}
+
+/* Placeholders con buen contraste */
+input::placeholder,
+textarea::placeholder {
+    color: #9ca3af;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: #6b7280;
+}
+
+/* =================================================================
+   BUTTONS - Botones con buen contraste
+   ================================================================= */
+
+/* Botones primarios */
+.btn-primary,
+button.bg-blue-600,
+button.bg-red-600,
+button.bg-green-600 {
+    background-color: #2563eb;
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.dark .btn-primary,
+.dark button.bg-blue-600,
+.dark button.bg-red-600,
+.dark button.bg-green-600 {
+    background-color: #3b82f6;
+    color: #ffffff;
+}
+
+/* Botones secundarios */
+.btn-secondary {
+    background-color: #f3f4f6;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+}
+
+.dark .btn-secondary {
+    background-color: #4b5563;
+    color: #f9fafb;
+    border: 1px solid #6b7280;
+}
+
+/* =================================================================
+   LISTS - Listas y elementos de lista
+   ================================================================= */
+
+/* List items */
+li,
+.list-item {
+    color: #1f2937;
+}
+
+.dark li,
+.dark .list-item {
+    color: #e5e7eb;
+}
+
+/* =================================================================
+   TEXT COLORS - Colores de texto seguros
+   ================================================================= */
+
+/* Text primary */
+.text-gray-900 {
+    color: #111827 !important;
+}
+
+.dark .text-gray-900 {
+    color: #f9fafb !important;
+}
+
+/* Text secondary */
+.text-gray-600 {
+    color: #4b5563 !important;
+}
+
+.dark .text-gray-600 {
+    color: #d1d5db !important;
+}
+
+/* Text muted */
+.text-gray-500 {
+    color: #6b7280 !important;
+}
+
+.dark .text-gray-500 {
+    color: #9ca3af !important;
+}
+
+/* =================================================================
+   SPECIFIC FIXES - Correcciones específicas reportadas
+   ================================================================= */
+
+/* Atracciones - asegurar fondo oscuro y texto claro */
+#content-attractions .attraction-item,
+#content-attractions .attraction-card {
+    background-color: #ffffff;
+    color: #111827;
+}
+
+.dark #content-attractions .attraction-item,
+.dark #content-attractions .attraction-card {
+    background-color: #374151;
+    color: #f9fafb;
+}
+
+/* Utilidades - asegurar legibilidad */
+#content-utils > *,
+#content-utils .util-item {
+    background-color: #ffffff;
+    color: #111827;
+}
+
+.dark #content-utils > *,
+.dark #content-utils .util-item {
+    background-color: #374151;
+    color: #f9fafb;
+}
+
+/* Checklist de equipaje - contraste fuerte */
+#packingModal .modal-body,
+#packingModal .packing-item {
+    background-color: #ffffff;
+    color: #111827;
+}
+
+.dark #packingModal .modal-body,
+.dark #packingModal .packing-item {
+    background-color: #1f2937;
+    color: #f3f4f6;
+}
+
+/* Emergency modal - contraste de emergencia */
+#emergencyModal .modal-body {
+    background-color: #ffffff;
+    color: #111827;
+}
+
+.dark #emergencyModal .modal-body {
+    background-color: #1f2937;
+    color: #f3f4f6;
+}
+
+/* =================================================================
+   SCROLLBARS - Visibles en ambos modos
+   ================================================================= */
+
+/* Scrollbar styling - General */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: #374151;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #6b7280;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* Day Selector - Horizontal Scroll más visible */
+#daySelector {
+    scrollbar-width: thin;
+    scrollbar-color: #dc2626 #f1f1f1;
+}
+
+.dark #daySelector {
+    scrollbar-color: #ef4444 #374151;
+}
+
+#daySelector::-webkit-scrollbar {
+    height: 10px;
+}
+
+#daySelector::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+    margin: 0 10px;
+}
+
+.dark #daySelector::-webkit-scrollbar-track {
+    background: #374151;
+}
+
+#daySelector::-webkit-scrollbar-thumb {
+    background: linear-gradient(to right, #dc2626, #ef4444);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+#daySelector::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to right, #b91c1c, #dc2626);
+}
+
+.dark #daySelector::-webkit-scrollbar-thumb {
+    background: linear-gradient(to right, #ef4444, #f87171);
+}
+
+.dark #daySelector::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to right, #dc2626, #ef4444);
+}
+
+/* Indicador visual de que hay más días para scroll */
+#daySelector::after {
+    content: '→';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    color: #dc2626;
+    pointer-events: none;
+    opacity: 0.6;
+    animation: slideHint 2s ease-in-out infinite;
+}
+
+@keyframes slideHint {
+    0%, 100% {
+        opacity: 0.3;
+        transform: translateY(-50%) translateX(0);
+    }
+    50% {
+        opacity: 0.8;
+        transform: translateY(-50%) translateX(5px);
+    }
+}
+
+/* =================================================================
+   HOVER STATES - Estados hover con buen contraste
+   ================================================================= */
+
+/* Hover en cards */
+.card:hover,
+.attraction-card:hover,
+.activity-card:hover {
+    background-color: #f9fafb;
+    border-color: #2563eb;
+}
+
+.dark .card:hover,
+.dark .attraction-card:hover,
+.dark .activity-card:hover {
+    background-color: #4b5563;
+    border-color: #3b82f6;
+}
+
+/* =================================================================
+   BADGES Y TAGS - Insignias con buen contraste
+   ================================================================= */
+
+/* Badges */
+.badge,
+.tag {
+    background-color: #e5e7eb;
+    color: #1f2937;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+}
+
+.dark .badge,
+.dark .tag {
+    background-color: #4b5563;
+    color: #f9fafb;
+}
+
+/* Priority badges */
+.badge-high {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.dark .badge-high {
+    background-color: #7f1d1d;
+    color: #fecaca;
+}
+
+.badge-medium {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.dark .badge-medium {
+    background-color: #78350f;
+    color: #fde68a;
+}
+
+.badge-low {
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+.dark .badge-low {
+    background-color: #4b5563;
+    color: #d1d5db;
+}

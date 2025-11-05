@@ -24,6 +24,7 @@ import { Dialogs } from './dialogs.js';
 import { EmergencyAssistant } from './emergency-assistant.js';
 import { ExpenseSplitter } from './expense-splitter.js';
 import { PreTripChecklist } from './pre-trip-checklist.js';
+import { EssentialsHandler } from './essentials.js';
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';
@@ -217,6 +218,14 @@ async function initApp() {
             window.PreTripChecklist = PreTripChecklist;
         } catch (e) {
             console.error('❌ Error configurando PreTripChecklist:', e);
+        }
+
+        try {
+            // EssentialsHandler disponible globalmente y se inicializa
+            window.EssentialsHandler = EssentialsHandler;
+            EssentialsHandler.init();
+        } catch (e) {
+            console.error('❌ Error configurando EssentialsHandler:', e);
         }
 
         console.log('✅ Aplicación iniciada correctamente');
