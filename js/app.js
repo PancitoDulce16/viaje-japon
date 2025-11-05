@@ -22,6 +22,7 @@ import { ItineraryBuilder } from './itinerary-builder.js';
 import { ItineraryBuilderExtensions } from './itinerary-builder-part2.js';
 import { Dialogs } from './dialogs.js';
 import { EmergencyAssistant } from './emergency-assistant.js';
+import { ExpenseSplitter } from './expense-splitter.js';
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';
@@ -201,6 +202,13 @@ async function initApp() {
             });
         } catch (e) {
             console.error('❌ Error configurando EmergencyAssistant:', e);
+        }
+
+        try {
+            // ExpenseSplitter disponible globalmente
+            window.ExpenseSplitter = ExpenseSplitter;
+        } catch (e) {
+            console.error('❌ Error configurando ExpenseSplitter:', e);
         }
 
         console.log('✅ Aplicación iniciada correctamente');
