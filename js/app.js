@@ -23,6 +23,7 @@ import { ItineraryBuilderExtensions } from './itinerary-builder-part2.js';
 import { Dialogs } from './dialogs.js';
 import { EmergencyAssistant } from './emergency-assistant.js';
 import { ExpenseSplitter } from './expense-splitter.js';
+import { PreTripChecklist } from './pre-trip-checklist.js';
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';
@@ -209,6 +210,13 @@ async function initApp() {
             window.ExpenseSplitter = ExpenseSplitter;
         } catch (e) {
             console.error('❌ Error configurando ExpenseSplitter:', e);
+        }
+
+        try {
+            // PreTripChecklist disponible globalmente
+            window.PreTripChecklist = PreTripChecklist;
+        } catch (e) {
+            console.error('❌ Error configurando PreTripChecklist:', e);
         }
 
         console.log('✅ Aplicación iniciada correctamente');
