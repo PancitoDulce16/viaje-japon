@@ -274,6 +274,23 @@
         <!-- Los modales se renderizarán dinámicamente desde modals.js -->
     </div>
 
+    <!-- Modal de Emergencias -->
+    <div id="emergencyModal" class="modal hidden">
+        <div class="modal-content max-w-6xl">
+            <div class="modal-header">
+                <h2 class="text-2xl font-bold text-red-600 dark:text-red-400">
+                    🚨 Asistente de Emergencias
+                </h2>
+                <button class="close-modal" data-modal="emergency">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="emergencyContent" class="modal-body max-h-[70vh] overflow-y-auto">
+                <!-- El contenido se cargará dinámicamente desde emergency-assistant.js -->
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notifications Container -->
     <div id="toastContainer" class="toast-container"></div>
 

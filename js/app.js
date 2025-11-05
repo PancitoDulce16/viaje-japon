@@ -21,6 +21,9 @@ import { Notifications } from './notifications.js';
 import { ItineraryBuilder } from './itinerary-builder.js';
 import { ItineraryBuilderExtensions } from './itinerary-builder-part2.js';
 import { Dialogs } from './dialogs.js';
+import { EmergencyAssistant } from './emergency-assistant.js';
+import { ExpenseSplitter } from './expense-splitter.js';
+import { PreTripChecklist } from './pre-trip-checklist.js';
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';
@@ -178,6 +181,42 @@ async function initApp() {
             window.FavoritesManager = FavoritesManager;
         } catch (e) {
             console.error('❌ Error inicializando FavoritesManager:', e);
+        }
+
+        try {
+            // EmergencyAssistant se inicializa cuando se abre el modal
+            window.EmergencyAssistant = EmergencyAssistant;
+
+            // Agregar listener para el botón de emergencias
+            document.querySelectorAll('[data-modal="emergency"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('emergencyModal')?.classList.remove('hidden');
+                    EmergencyAssistant.init();
+                });
+            });
+
+            // Listener para cerrar modal
+            document.querySelectorAll('.close-modal[data-modal="emergency"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('emergencyModal')?.classList.add('hidden');
+                });
+            });
+        } catch (e) {
+            console.error('❌ Error configurando EmergencyAssistant:', e);
+        }
+
+        try {
+            // ExpenseSplitter disponible globalmente
+            window.ExpenseSplitter = ExpenseSplitter;
+        } catch (e) {
+            console.error('❌ Error configurando ExpenseSplitter:', e);
+        }
+
+        try {
+            // PreTripChecklist disponible globalmente
+            window.PreTripChecklist = PreTripChecklist;
+        } catch (e) {
+            console.error('❌ Error configurando PreTripChecklist:', e);
         }
 
         console.log('✅ Aplicación iniciada correctamente');
