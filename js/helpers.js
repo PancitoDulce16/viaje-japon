@@ -121,7 +121,7 @@ export function sleep(ms) {
 }
 
 /**
- * Validador de datos
+ * Validador de datos mejorado
  */
 export const Validator = {
     isEmail(email) {
@@ -129,7 +129,7 @@ export const Validator = {
     },
 
     isValidPrice(price) {
-        return typeof price === 'number' && price >= 0;
+        return typeof price === 'number' && price >= 0 && isFinite(price);
     },
 
     isValidDuration(duration) {
@@ -153,6 +153,116 @@ export const Validator = {
 
     minLength(value, min) {
         return value.length >= min;
+    },
+
+    /**
+     * Valida actividad del itinerario
+     */
+    validateActivity(activity) {
+        const errors = [];
+
+        if (!activity.title || activity.title.trim().length === 0) {
+            errors.push('El título es obligatorio');
+        }
+
+        if (activity.title && activity.title.length > 200) {
+            errors.push('El título no puede exceder 200 caracteres');
+        }
+
+        if (activity.desc && activity.desc.length > 1000) {
+            errors.push('La descripción no puede exceder 1000 caracteres');
+        }
+
+        if (activity.cost !== undefined && activity.cost !== null) {
+            if (activity.cost < 0 || !isFinite(activity.cost)) {
+                errors.push('El costo debe ser un número positivo válido');
+            }
+
+            if (activity.cost > 1000000) {
+                errors.push('El costo parece demasiado alto. Por favor verifica el monto.');
+            }
+        }
+
+        return {
+            isValid: errors.length === 0,
+            errors
+        };
+    },
+
+    /**
+     * Valida gasto del presupuesto
+     */
+    validateExpense(expense) {
+        const errors = [];
+
+        if (!expense.description || expense.description.trim().length === 0) {
+            errors.push('La descripción es obligatoria');
+        }
+
+        if (expense.description && expense.description.length > 200) {
+            errors.push('La descripción no puede exceder 200 caracteres');
+        }
+
+        if (!expense.amount || expense.amount <= 0 || !isFinite(expense.amount)) {
+            errors.push('El monto debe ser un número positivo válido');
+        }
+
+        if (expense.amount > 10000000) {
+            errors.push('El monto parece demasiado alto. Por favor verifica.');
+        }
+
+        if (!expense.category) {
+            errors.push('La categoría es obligatoria');
+        }
+
+        return {
+            isValid: errors.length === 0,
+            errors
+        };
+    },
+
+    /**
+     * Valida nombre de viaje
+     */
+    validateTripName(name) {
+        const errors = [];
+
+        if (!name || name.trim().length === 0) {
+            errors.push('El nombre del viaje es obligatorio');
+        }
+
+        if (name && name.length < 3) {
+            errors.push('El nombre debe tener al menos 3 caracteres');
+        }
+
+        if (name && name.length > 100) {
+            errors.push('El nombre no puede exceder 100 caracteres');
+        }
+
+        return {
+            isValid: errors.length === 0,
+            errors
+        };
+    },
+
+    /**
+     * Valida mensaje de chat
+     */
+    validateChatMessage(message) {
+        const errors = [];
+
+        if (!message || message.trim().length === 0) {
+            errors.push('El mensaje no puede estar vacío');
+        }
+
+        if (message && message.length > 500) {
+            errors.push('El mensaje no puede exceder 500 caracteres');
+        }
+
+        return {
+            isValid: errors.length === 0,
+            errors
+        };
     },
 
     /**
@@ -371,21 +481,68 @@ export function formatDuration(minutes) {
 }
 
 /**
- * Sanitizador de HTML para prevenir XSS
+ * Sanitizador de HTML para prevenir XSS usando DOMPurify
  */
-export function sanitizeHTML(html) {
+let DOMPurify = null;
+
+// Importación dinámica de DOMPurify
+async function loadDOMPurify() {
+    if (!DOMPurify) {
+        const module = await import('dompurify');
+        DOMPurify = module.default;
+    }
+    return DOMPurify;
+}
+
+/**
+ * Sanitiza HTML usando DOMPurify para prevenir XSS
+ * @param {string} dirty - HTML sucio que puede contener scripts maliciosos
+ * @param {Object} config - Configuración opcional de DOMPurify
+ * @returns {Promise<string>} - HTML limpio y seguro
+ */
+export async function sanitizeHTML(dirty, config = {}) {
+    const purify = await loadDOMPurify();
+    return purify.sanitize(dirty, {
+        ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'span', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li'],
+        ALLOWED_ATTR: ['href', 'title', 'class', 'id'],
+        ...config
+    });
+}
+
+/**
+ * Versión sincrónica del sanitizador (más ligera, solo escapa caracteres)
+ * Útil para casos simples donde no necesitas HTML complejo
+ */
+export function sanitizeHTMLSync(html) {
     const div = document.createElement('div');
     div.textContent = html;
     return div.innerHTML;
 }
 
 /**
- * Escapar strings para usar en HTML
+ * Escapar strings para usar en HTML (protección básica)
  */
 export function escapeHTML(str) {
+    if (!str) return '';
     const div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
+}
+
+/**
+ * Sanitizar texto simple (solo texto, sin HTML)
+ * @param {string} text - Texto a sanitizar
+ * @returns {string} - Texto escapado
+ */
+export function sanitizeText(text) {
+    if (!text) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/\//g, '&#x2F;');
 }
 
 /**
