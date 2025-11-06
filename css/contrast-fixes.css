@@ -34,30 +34,33 @@
     color: #f3f4f6 !important;
 }
 
-/* Fix pink/rose text colors in dark mode */
+/* Fix pink/rose text colors in dark mode - vibrant and saturated */
 .dark .text-pink-300,
 .dark .text-pink-400,
 .dark .text-pink-500,
 .dark .text-rose-300,
 .dark .text-rose-400,
 .dark .text-rose-500 {
-    color: #fda4af !important; /* Bright pink with good contrast on dark */
+    color: #ff6b9d !important; /* Vibrant pink - more saturated */
+    font-weight: 500;
 }
 
-/* Fix purple/violet text colors in dark mode */
+/* Fix purple/violet text colors in dark mode - vibrant */
 .dark .text-purple-300,
 .dark .text-purple-400,
 .dark .text-purple-500,
 .dark .text-violet-300,
 .dark .text-violet-400 {
-    color: #c4b5fd !important; /* Bright violet with good contrast */
+    color: #a78bfa !important; /* Vibrant violet */
+    font-weight: 500;
 }
 
-/* Fix blue text colors in dark mode */
+/* Fix blue text colors in dark mode - vibrant */
 .dark .text-blue-300,
 .dark .text-blue-400,
 .dark .text-blue-500 {
-    color: #93c5fd !important; /* Bright blue with good contrast */
+    color: #60a5fa !important; /* Vibrant blue */
+    font-weight: 500;
 }
 
 /* =================================================================
@@ -461,42 +464,95 @@ li,
 }
 
 /* =================================================================
-   MAP TAB - Fix contrast issues in map section
+   MAP TAB - Fix contrast issues in map section with vibrant colors
    ================================================================= */
 
-/* Map content - force dark backgrounds and light text */
-.dark #content-map,
+/* Map content - keep main background dark but not gray */
+.dark #content-map {
+    background-color: #111827 !important;
+    color: #f3f4f6 !important;
+}
+
+/* Map cards - use darker colored backgrounds instead of gray */
 .dark #content-map .bg-white {
-    background-color: #1f2937 !important;
-    color: #f3f4f6 !important;
+    background-color: #1e293b !important; /* Dark slate - not plain gray */
+    color: #f1f5f9 !important;
 }
 
-/* Map cards - hotels and attractions */
-.dark #content-map .rounded-xl,
-.dark #content-map .rounded-lg,
-.dark #content-map .rounded {
-    background-color: #374151 !important;
-    color: #f3f4f6 !important;
+/* Hotel cards - keep blue theme but darker */
+.dark #content-map [class*="border-blue"] {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important;
+    color: #e0e7ff !important;
+    border-color: #3b82f6 !important;
 }
 
-/* Map section headers */
+/* Attraction cards - keep red/pink theme but darker and more saturated */
+.dark #content-map [class*="border-red"],
+.dark #content-map [class*="border-pink"] {
+    background: linear-gradient(135deg, #881337 0%, #9f1239 100%) !important;
+    color: #fecdd3 !important;
+    border-color: #fb7185 !important;
+}
+
+/* Orange bordered cards */
+.dark #content-map [class*="border-orange"] {
+    background: linear-gradient(135deg, #7c2d12 0%, #9a3412 100%) !important;
+    color: #fed7aa !important;
+    border-color: #fb923c !important;
+}
+
+/* Purple bordered cards */
+.dark #content-map [class*="border-purple"],
+.dark #content-map [class*="border-violet"] {
+    background: linear-gradient(135deg, #581c87 0%, #6b21a8 100%) !important;
+    color: #e9d5ff !important;
+    border-color: #a78bfa !important;
+}
+
+/* Map section headers - keep vibrant */
 .dark #content-map h1,
 .dark #content-map h2,
 .dark #content-map h3,
 .dark #content-map h4 {
-    color: #f9fafb !important;
+    color: #ffffff !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Map section paragraphs and spans */
+/* Map section text - slightly brighter for readability */
 .dark #content-map p,
-.dark #content-map span,
-.dark #content-map div {
-    color: #e5e7eb !important;
+.dark #content-map span:not([class*="bg-"]) {
+    color: #f1f5f9 !important;
 }
 
-/* Map links */
+/* Keep colored badges vibrant */
+.dark #content-map .bg-blue-100,
+.dark #content-map .bg-blue-50 {
+    background-color: #1e40af !important;
+    color: #dbeafe !important;
+}
+
+.dark #content-map .bg-green-100,
+.dark #content-map .bg-green-50 {
+    background-color: #15803d !important;
+    color: #dcfce7 !important;
+}
+
+.dark #content-map .bg-red-100,
+.dark #content-map .bg-red-50 {
+    background-color: #991b1b !important;
+    color: #fecaca !important;
+}
+
+.dark #content-map .bg-purple-100,
+.dark #content-map .bg-purple-50 {
+    background-color: #6b21a8 !important;
+    color: #e9d5ff !important;
+}
+
+/* Map links - bright blue */
 .dark #content-map a {
     color: #60a5fa !important;
+    font-weight: 500;
 }
 
 .dark #content-map a:hover {
