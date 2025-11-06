@@ -38,6 +38,10 @@ import './chat.js';
 import { GroupChat } from './group-chat.js';
 import './firebase-config.js';
 
+// 🛡️ Firebase Resilience and Integration Tests
+import './firebase-resilience.js'; // Sistema de resiliencia para Firebase
+import './integration-tests.js'; // Pruebas de integración automáticas
+
 // Exportar handlers a window para acceso global
 window.MapHandler = MapHandler;
 window.AttractionsHandler = AttractionsHandler;
