@@ -482,45 +482,45 @@ async function showBalanceAnalysis() {
       const loadConfig = {
         empty: {
           icon: '⚪',
-          bgClass: 'bg-gray-100 dark:bg-gray-800',
-          borderClass: 'border-gray-300 dark:border-gray-600',
-          textClass: 'text-gray-900 dark:text-gray-100',
-          subtextClass: 'text-gray-700 dark:text-gray-300'
+          bgClass: 'bg-gray-200 dark:bg-gray-700',
+          borderClass: 'border-gray-400 dark:border-gray-500',
+          textClass: 'text-gray-900 dark:text-white',
+          subtextClass: 'text-gray-800 dark:text-gray-200'
         },
         low: {
           icon: '🔵',
-          bgClass: 'bg-blue-100 dark:bg-blue-900/30',
-          borderClass: 'border-blue-300 dark:border-blue-600',
-          textClass: 'text-blue-900 dark:text-blue-100',
-          subtextClass: 'text-blue-800 dark:text-blue-200'
+          bgClass: 'bg-blue-100 dark:bg-blue-800',
+          borderClass: 'border-blue-400 dark:border-blue-500',
+          textClass: 'text-blue-900 dark:text-white',
+          subtextClass: 'text-blue-800 dark:text-blue-100'
         },
         light: {
           icon: '🟢',
-          bgClass: 'bg-green-100 dark:bg-green-900/30',
-          borderClass: 'border-green-300 dark:border-green-600',
-          textClass: 'text-green-900 dark:text-green-100',
-          subtextClass: 'text-green-800 dark:text-green-200'
+          bgClass: 'bg-green-100 dark:bg-green-800',
+          borderClass: 'border-green-400 dark:border-green-500',
+          textClass: 'text-green-900 dark:text-white',
+          subtextClass: 'text-green-800 dark:text-green-100'
         },
         balanced: {
           icon: '✅',
-          bgClass: 'bg-emerald-100 dark:bg-emerald-900/30',
-          borderClass: 'border-emerald-300 dark:border-emerald-600',
-          textClass: 'text-emerald-900 dark:text-emerald-100',
-          subtextClass: 'text-emerald-800 dark:text-emerald-200'
+          bgClass: 'bg-emerald-100 dark:bg-emerald-800',
+          borderClass: 'border-emerald-400 dark:border-emerald-500',
+          textClass: 'text-emerald-900 dark:text-white',
+          subtextClass: 'text-emerald-800 dark:text-emerald-100'
         },
         heavy: {
           icon: '🟠',
-          bgClass: 'bg-orange-100 dark:bg-orange-900/30',
-          borderClass: 'border-orange-300 dark:border-orange-600',
-          textClass: 'text-orange-900 dark:text-orange-100',
-          subtextClass: 'text-orange-800 dark:text-orange-200'
+          bgClass: 'bg-orange-100 dark:bg-orange-800',
+          borderClass: 'border-orange-400 dark:border-orange-500',
+          textClass: 'text-orange-900 dark:text-white',
+          subtextClass: 'text-orange-800 dark:text-orange-100'
         },
         overloaded: {
           icon: '🔴',
-          bgClass: 'bg-red-100 dark:bg-red-900/30',
-          borderClass: 'border-red-300 dark:border-red-600',
-          textClass: 'text-red-900 dark:text-red-100',
-          subtextClass: 'text-red-800 dark:text-red-200'
+          bgClass: 'bg-red-100 dark:bg-red-800',
+          borderClass: 'border-red-400 dark:border-red-500',
+          textClass: 'text-red-900 dark:text-white',
+          subtextClass: 'text-red-800 dark:text-red-100'
         }
       };
 
@@ -890,102 +890,102 @@ function renderDayExperiencePrediction(day) {
   const energyConfig = {
     low: {
       icon: '😌', label: 'Ligero',
-      borderClass: 'border-green-300 dark:border-green-700',
-      textClass: 'text-green-800 dark:text-green-200'
+      borderClass: 'border-green-400 dark:border-green-500',
+      textClass: 'text-green-900 dark:text-green-100'
     },
     medium: {
       icon: '👍', label: 'Moderado',
-      borderClass: 'border-blue-300 dark:border-blue-700',
-      textClass: 'text-blue-800 dark:text-blue-200'
+      borderClass: 'border-blue-400 dark:border-blue-500',
+      textClass: 'text-blue-900 dark:text-blue-100'
     },
     high: {
       icon: '💪', label: 'Intenso',
-      borderClass: 'border-orange-300 dark:border-orange-700',
-      textClass: 'text-orange-800 dark:text-orange-200'
+      borderClass: 'border-orange-400 dark:border-orange-500',
+      textClass: 'text-orange-900 dark:text-orange-100'
     },
     extreme: {
       icon: '🔥', label: 'Extremo',
-      borderClass: 'border-red-300 dark:border-red-700',
-      textClass: 'text-red-800 dark:text-red-200'
+      borderClass: 'border-red-400 dark:border-red-500',
+      textClass: 'text-red-900 dark:text-red-100'
     }
   };
 
   const crowdConfig = {
     quiet: {
       icon: '🌿', label: 'Tranquilo',
-      borderClass: 'border-green-300 dark:border-green-700',
-      textClass: 'text-green-800 dark:text-green-200'
+      borderClass: 'border-green-400 dark:border-green-500',
+      textClass: 'text-green-900 dark:text-green-100'
     },
     moderate: {
       icon: '👥', label: 'Moderado',
-      borderClass: 'border-blue-300 dark:border-blue-700',
-      textClass: 'text-blue-800 dark:text-blue-200'
+      borderClass: 'border-blue-400 dark:border-blue-500',
+      textClass: 'text-blue-900 dark:text-blue-100'
     },
     crowded: {
       icon: '🏙️', label: 'Concurrido',
-      borderClass: 'border-orange-300 dark:border-orange-700',
-      textClass: 'text-orange-800 dark:text-orange-200'
+      borderClass: 'border-orange-400 dark:border-orange-500',
+      textClass: 'text-orange-900 dark:text-orange-100'
     },
     very_crowded: {
       icon: '🚨', label: 'Muy Concurrido',
-      borderClass: 'border-red-300 dark:border-red-700',
-      textClass: 'text-red-800 dark:text-red-200'
+      borderClass: 'border-red-400 dark:border-red-500',
+      textClass: 'text-red-900 dark:text-red-100'
     }
   };
 
   const paceConfig = {
     relaxed: {
       icon: '🧘', label: 'Relajado',
-      borderClass: 'border-green-300 dark:border-green-700',
-      textClass: 'text-green-800 dark:text-green-200'
+      borderClass: 'border-green-400 dark:border-green-500',
+      textClass: 'text-green-900 dark:text-green-100'
     },
     comfortable: {
       icon: '😊', label: 'Cómodo',
-      borderClass: 'border-blue-300 dark:border-blue-700',
-      textClass: 'text-blue-800 dark:text-blue-200'
+      borderClass: 'border-blue-400 dark:border-blue-500',
+      textClass: 'text-blue-900 dark:text-blue-100'
     },
     moderate: {
       icon: '⏰', label: 'Moderado',
-      borderClass: 'border-yellow-300 dark:border-yellow-700',
-      textClass: 'text-yellow-800 dark:text-yellow-200'
+      borderClass: 'border-yellow-400 dark:border-yellow-500',
+      textClass: 'text-yellow-900 dark:text-yellow-100'
     },
     intense: {
       icon: '🏃', label: 'Intenso',
-      borderClass: 'border-orange-300 dark:border-orange-700',
-      textClass: 'text-orange-800 dark:text-orange-200'
+      borderClass: 'border-orange-400 dark:border-orange-500',
+      textClass: 'text-orange-900 dark:text-orange-100'
     },
     aggressive: {
       icon: '🚀', label: 'Agresivo',
-      borderClass: 'border-red-300 dark:border-red-700',
-      textClass: 'text-red-800 dark:text-red-200'
+      borderClass: 'border-red-400 dark:border-red-500',
+      textClass: 'text-red-900 dark:text-red-100'
     }
   };
 
   const budgetConfig = {
     free: {
       icon: '🆓', label: 'Gratis',
-      borderClass: 'border-green-300 dark:border-green-700',
-      textClass: 'text-green-800 dark:text-green-200'
+      borderClass: 'border-green-400 dark:border-green-500',
+      textClass: 'text-green-900 dark:text-green-100'
     },
     budget: {
       icon: '💵', label: 'Económico',
-      borderClass: 'border-green-300 dark:border-green-700',
-      textClass: 'text-green-800 dark:text-green-200'
+      borderClass: 'border-green-400 dark:border-green-500',
+      textClass: 'text-green-900 dark:text-green-100'
     },
     moderate: {
       icon: '💰', label: 'Moderado',
-      borderClass: 'border-blue-300 dark:border-blue-700',
-      textClass: 'text-blue-800 dark:text-blue-200'
+      borderClass: 'border-blue-400 dark:border-blue-500',
+      textClass: 'text-blue-900 dark:text-blue-100'
     },
     high: {
       icon: '💳', label: 'Alto',
-      borderClass: 'border-orange-300 dark:border-orange-700',
-      textClass: 'text-orange-800 dark:text-orange-200'
+      borderClass: 'border-orange-400 dark:border-orange-500',
+      textClass: 'text-orange-900 dark:text-orange-100'
     },
     premium: {
       icon: '💎', label: 'Premium',
-      borderClass: 'border-purple-300 dark:border-purple-700',
-      textClass: 'text-purple-800 dark:text-purple-200'
+      borderClass: 'border-purple-400 dark:border-purple-500',
+      textClass: 'text-purple-900 dark:text-purple-100'
     }
   };
 
@@ -995,47 +995,47 @@ function renderDayExperiencePrediction(day) {
   const budget = budgetConfig[prediction.budget.category] || budgetConfig.moderate;
 
   return `
-    <div class="mt-4 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-800 dark:to-gray-800 border border-indigo-200 dark:border-indigo-600 rounded-lg p-4">
-      <h3 class="font-bold text-indigo-900 dark:text-indigo-200 mb-3 flex items-center gap-2">
+    <div class="mt-4 bg-indigo-50 dark:bg-gray-800 border-2 border-indigo-300 dark:border-indigo-500 rounded-lg p-4">
+      <h3 class="font-bold text-indigo-900 dark:text-white mb-3 flex items-center gap-2">
         <span>🔮</span>
         <span>Predicción de Experiencia</span>
       </h3>
 
       <div class="grid grid-cols-2 gap-2 mb-3">
-        <div class="bg-white dark:bg-gray-700 rounded p-2 border ${energy.borderClass}">
-          <div class="text-xs text-gray-600 dark:text-gray-300 mb-1">Energía</div>
+        <div class="bg-white dark:bg-gray-700 rounded p-2 border-2 ${energy.borderClass}">
+          <div class="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1">Energía</div>
           <div class="flex items-center gap-1">
             <span class="text-lg">${energy.icon}</span>
-            <span class="text-sm font-semibold ${energy.textClass}">${energy.label}</span>
+            <span class="text-sm font-bold ${energy.textClass}">${energy.label}</span>
           </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-700 rounded p-2 border ${crowds.borderClass}">
-          <div class="text-xs text-gray-600 dark:text-gray-300 mb-1">Multitudes</div>
+        <div class="bg-white dark:bg-gray-700 rounded p-2 border-2 ${crowds.borderClass}">
+          <div class="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1">Multitudes</div>
           <div class="flex items-center gap-1">
             <span class="text-lg">${crowds.icon}</span>
-            <span class="text-sm font-semibold ${crowds.textClass}">${crowds.label}</span>
+            <span class="text-sm font-bold ${crowds.textClass}">${crowds.label}</span>
           </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-700 rounded p-2 border ${pace.borderClass}">
-          <div class="text-xs text-gray-600 dark:text-gray-300 mb-1">Ritmo</div>
+        <div class="bg-white dark:bg-gray-700 rounded p-2 border-2 ${pace.borderClass}">
+          <div class="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1">Ritmo</div>
           <div class="flex items-center gap-1">
             <span class="text-lg">${pace.icon}</span>
-            <span class="text-sm font-semibold ${pace.textClass}">${pace.label}</span>
+            <span class="text-sm font-bold ${pace.textClass}">${pace.label}</span>
           </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-700 rounded p-2 border ${budget.borderClass}">
-          <div class="text-xs text-gray-600 dark:text-gray-300 mb-1">Presupuesto</div>
+        <div class="bg-white dark:bg-gray-700 rounded p-2 border-2 ${budget.borderClass}">
+          <div class="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1">Presupuesto</div>
           <div class="flex items-center gap-1">
             <span class="text-lg">${budget.icon}</span>
-            <span class="text-sm font-semibold ${budget.textClass}">¥${prediction.budget.total.toLocaleString()}</span>
+            <span class="text-sm font-bold ${budget.textClass}">¥${prediction.budget.total.toLocaleString()}</span>
           </div>
         </div>
       </div>
 
-      <div class="bg-white dark:bg-gray-700 rounded p-3 border border-indigo-200 dark:border-indigo-600">
+      <div class="bg-white dark:bg-gray-700 rounded p-3 border-2 border-indigo-300 dark:border-indigo-500">
         <div class="flex items-center gap-2 mb-2">
           <span class="text-2xl">${prediction.recommendation.icon}</span>
           <span class="font-bold text-indigo-900 dark:text-indigo-100">${prediction.recommendation.rating.toUpperCase()}</span>
@@ -1057,49 +1057,49 @@ function renderDayLoadIndicator(day) {
       color: 'gray',
       icon: '⚪',
       label: 'Vacío',
-      bgClass: 'bg-gray-100 dark:bg-gray-700',
-      textClass: 'text-gray-800 dark:text-gray-200',
-      borderClass: 'border-gray-300 dark:border-gray-500'
+      bgClass: 'bg-gray-200 dark:bg-gray-700',
+      textClass: 'text-gray-900 dark:text-white',
+      borderClass: 'border-gray-400 dark:border-gray-500'
     },
     low: {
       color: 'blue',
       icon: '🔵',
       label: 'Ligero',
-      bgClass: 'bg-blue-50 dark:bg-blue-900/50',
-      textClass: 'text-blue-800 dark:text-blue-200',
-      borderClass: 'border-blue-300 dark:border-blue-500'
+      bgClass: 'bg-blue-100 dark:bg-blue-800',
+      textClass: 'text-blue-900 dark:text-white',
+      borderClass: 'border-blue-400 dark:border-blue-500'
     },
     light: {
       color: 'green',
       icon: '🟢',
       label: 'Moderado',
-      bgClass: 'bg-green-50 dark:bg-green-900/50',
-      textClass: 'text-green-800 dark:text-green-200',
-      borderClass: 'border-green-300 dark:border-green-500'
+      bgClass: 'bg-green-100 dark:bg-green-800',
+      textClass: 'text-green-900 dark:text-white',
+      borderClass: 'border-green-400 dark:border-green-500'
     },
     balanced: {
       color: 'emerald',
       icon: '✅',
       label: 'Balanceado',
-      bgClass: 'bg-emerald-50 dark:bg-emerald-900/50',
-      textClass: 'text-emerald-800 dark:text-emerald-200',
-      borderClass: 'border-emerald-300 dark:border-emerald-500'
+      bgClass: 'bg-emerald-100 dark:bg-emerald-800',
+      textClass: 'text-emerald-900 dark:text-white',
+      borderClass: 'border-emerald-400 dark:border-emerald-500'
     },
     heavy: {
       color: 'orange',
       icon: '🟠',
       label: 'Cargado',
-      bgClass: 'bg-orange-50 dark:bg-orange-900/50',
-      textClass: 'text-orange-800 dark:text-orange-200',
-      borderClass: 'border-orange-300 dark:border-orange-500'
+      bgClass: 'bg-orange-100 dark:bg-orange-800',
+      textClass: 'text-orange-900 dark:text-white',
+      borderClass: 'border-orange-400 dark:border-orange-500'
     },
     overloaded: {
       color: 'red',
       icon: '🔴',
       label: 'Sobrecargado',
-      bgClass: 'bg-red-50 dark:bg-red-900/50',
-      textClass: 'text-red-800 dark:text-red-200',
-      borderClass: 'border-red-300 dark:border-red-500'
+      bgClass: 'bg-red-100 dark:bg-red-800',
+      textClass: 'text-red-900 dark:text-white',
+      borderClass: 'border-red-400 dark:border-red-500'
     }
   };
 
