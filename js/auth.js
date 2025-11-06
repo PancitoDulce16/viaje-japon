@@ -69,6 +69,13 @@ export const AuthHandler = {
   // =================================================================================
   async init() {
     console.log('🔐 Inicializando autenticación (versión robusta)...');
+
+    // ✅ IMPORTANTE: Prevenir múltiples llamadas a init()
+    if (this.authUnsubscribe) {
+      console.warn('⚠️ Auth ya está inicializado. Cancelando llamada duplicada.');
+      return this.currentUser;
+    }
+
     this.showAuthLoading('Iniciando...');
 
     // 1. Configurar la persistencia de la sesión
@@ -335,6 +342,13 @@ export const AuthHandler = {
   },
 
   showLandingPage() {
+    // ✅ Protección: NO mostrar landing si hay usuario autenticado
+    if (auth.currentUser) {
+      console.warn('⚠️ Bloqueado showLandingPage() - usuario autenticado detectado');
+      this.showAppDashboard();
+      return;
+    }
+
     this.hideAuthLoading();
     const landingPage = document.getElementById('landingPage');
     const appDashboard = document.getElementById('appDashboard');
@@ -349,6 +363,13 @@ export const AuthHandler = {
   },
 
   showAppDashboard() {
+    // ✅ Protección: NO mostrar dashboard si NO hay usuario autenticado
+    if (!auth.currentUser) {
+      console.warn('⚠️ Bloqueado showAppDashboard() - no hay usuario autenticado');
+      this.showLandingPage();
+      return;
+    }
+
     this.hideAuthLoading();
     const landingPage = document.getElementById('landingPage');
     const appDashboard = document.getElementById('appDashboard');
