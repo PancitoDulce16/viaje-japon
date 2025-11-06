@@ -11,7 +11,7 @@ import { SafeFirestore } from './firestore-wrapper.js'; // 🛡️ Wrapper segur
 import { MapsHelper } from './maps-helper.js'; // 🗺️ Helper para Google Maps
 import { PackingList } from './packing-list.js';
 import { FavoritesManager } from './favorites-manager.js';
-import { ItineraryHandler } from './itinerary.js?v=2025-11-05-04';
+import { ItineraryHandler } from './itinerary.js?v=2025-11-05-05';
 import { TabsHandler } from './tabs.js';
 import { ModalRenderer } from './modals.js';
 import { MapHandler } from './map.js';
@@ -29,6 +29,7 @@ import { FeedbackTracker } from './feedback-tracker.js';
 import { CostCalculator } from './cost-calculator.js';
 import { EssentialsHandler } from './essentials-handler.js';
 import { BudgetCalculator } from './budget-calculator.js';
+import { RouteOptimizer } from './route-optimizer.js'; // 🗺️ Optimizador de rutas
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';

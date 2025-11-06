@@ -6,6 +6,7 @@ import { doc, setDoc, getDoc, onSnapshot, updateDoc } from 'https://www.gstatic.
 import { searchCities } from '/data/japan-cities.js';
 import { APP_CONFIG } from '/js/config.js';
 import { ActivityAutocomplete } from './activity-autocomplete.js';
+import { RouteOptimizer } from './route-optimizer.js'; // 🗺️ Optimizador de rutas
 
 let checkedActivities = {};
 let currentDay = 1;
@@ -427,6 +428,70 @@ function renderEmptyState(){
     </div>`;
 }
 
+// 🗺️ Optimizar ruta del día
+async function optimizeDayRoute(dayNumber) {
+  console.log('🗺️ Optimizing route for day', dayNumber);
+
+  if (!currentItinerary || !currentItinerary.days) {
+    Notifications.show('No hay itinerario para optimizar', 'error');
+    return;
+  }
+
+  const dayData = currentItinerary.days.find(d => d.day === dayNumber);
+  if (!dayData || !dayData.activities || dayData.activities.length < 2) {
+    Notifications.show('Necesitas al menos 2 actividades para optimizar la ruta', 'info');
+    return;
+  }
+
+  try {
+    // Mostrar loading
+    Notifications.show('Optimizando ruta...', 'info');
+
+    // Optimizar usando el RouteOptimizer
+    const result = RouteOptimizer.optimizeRoute(dayData.activities, {
+      considerOpeningHours: true
+    });
+
+    if (!result.wasOptimized) {
+      Notifications.show('No se pudo optimizar. ¿Las actividades tienen ubicación?', 'warning');
+      return;
+    }
+
+    // Mostrar resultados en un diálogo
+    const savingsText = RouteOptimizer.generateOptimizationSuggestion(
+      dayData.activities,
+      result
+    );
+
+    const confirmed = await window.Dialogs.confirm({
+      title: '🗺️ Optimización de Ruta',
+      message: savingsText,
+      confirmText: 'Aplicar Optimización',
+      cancelText: 'Cancelar',
+      type: 'info'
+    });
+
+    if (confirmed) {
+      // Actualizar el itinerario con la ruta optimizada
+      dayData.activities = result.optimizedActivities;
+
+      // Guardar en Firebase
+      await saveCurrentItineraryToFirebase();
+
+      Notifications.show(
+        `¡Ruta optimizada! Ahorro: ${result.savings.time} min, ¥${result.savings.cost}`,
+        'success'
+      );
+
+      // Re-render
+      render();
+    }
+  } catch (error) {
+    console.error('❌ Error optimizing route:', error);
+    Notifications.show('Error al optimizar ruta', 'error');
+  }
+}
+
 // --- UI render principal ---
 async function render(){
   const itinerary=currentItinerary; if(!itinerary || !itinerary.days){ renderNoItinerary(); return; }
@@ -569,7 +634,11 @@ function renderDayOverview(day){
       `:''}
       ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-300">📍 ${day.location}</p>`:''}
     </div>
-    <div class="mt-6">
+    <div class="mt-6 space-y-2">
+      <button type="button" id="optimizeRouteBtn_${day.day}" class="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+        <span>🗺️</span>
+        <span>Optimizar Ruta</span>
+      </button>
       <button type="button" id="addActivityBtn_${day.day}" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition">+ Añadir Actividad</button>
     </div>`;
 }
@@ -780,12 +849,18 @@ export const ItineraryHandler = {
       container.addEventListener('click', (e)=>{
         console.log('🖱️ Click detected on:', e.target);
         const addBtn=e.target.closest('[id^="addActivityBtn_"]');
+        const optimizeBtn=e.target.closest('[id^="optimizeRouteBtn_"]');
         const editBtn=e.target.closest('.activity-edit-btn');
         const deleteBtn=e.target.closest('.activity-delete-btn');
         const voteBtn = e.target.closest('.activity-vote-btn');
         const dayBtn=e.target.closest('.day-btn');
 
-        if(addBtn){
+        if(optimizeBtn){
+          console.log('🗺️ Optimize route button clicked');
+          const day=parseInt(optimizeBtn.id.split('_')[1]);
+          optimizeDayRoute(day);
+        }
+        else if(addBtn){
           console.log('➕ Add button clicked');
           const day=parseInt(addBtn.id.split('_')[1]);
           console.log('📅 Opening modal for day:', day);
