@@ -329,15 +329,28 @@ export const AuthHandler = {
 
   async logout() {
     try {
+      console.log('🔐 Iniciando logout real...');
+      // 🛡️ PROTECCIÓN: Marcar explícitamente que esto es un logout REAL
+      sessionStorage.setItem('isRealLogout', 'true');
+
       await signOut(auth);
       this.currentUser = null;
       console.log('✅ Sesión cerrada');
+
       // Disparamos el evento de logout para que otros módulos limpien su estado.
+      console.log('📢 Disparando evento auth:loggedOut (logout real)');
       window.dispatchEvent(authLoggedOutEvent);
+
+      // Limpiar flag después de 1 segundo
+      setTimeout(() => {
+        sessionStorage.removeItem('isRealLogout');
+      }, 1000);
+
       // onAuthStateChanged se encargará de mostrar la landing page
     } catch (error) {
       console.error('❌ Error al cerrar sesión:', error);
       this.showError('Error al cerrar sesión');
+      sessionStorage.removeItem('isRealLogout');
     }
   },
 

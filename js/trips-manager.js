@@ -42,6 +42,15 @@ export const TripsManager = {
 
     console.log('🔍 DEBUG TripsManager - Inicializando listener de trips para userId:', userId);
 
+    // 🛡️ PROTECCIÓN: Restaurar currentTripId desde backup si se perdió
+    const currentTripId = localStorage.getItem('currentTripId');
+    const backupTripId = sessionStorage.getItem('backup_currentTripId');
+
+    if (!currentTripId && backupTripId) {
+      console.log('🔄 Restaurando currentTripId desde backup sessionStorage:', backupTripId);
+      localStorage.setItem('currentTripId', backupTripId);
+    }
+
     const tripsRef = collection(db, 'trips');
     const q = query(tripsRef, where('members', 'array-contains', userId));
 
@@ -151,8 +160,11 @@ export const TripsManager = {
         };
 
         localStorage.setItem('currentTripId', tripId);
+        // 🛡️ Backup adicional en sessionStorage
+        sessionStorage.setItem('backup_currentTripId', tripId);
 
         console.log('✅ Trip seleccionado:', this.currentTrip.info.name);
+        console.log('💾 Backup guardado en localStorage + sessionStorage');
         
         this.updateTripHeader();
         
@@ -915,7 +927,7 @@ export const TripsManager = {
   },
 
   // Cleanup
-  cleanup() {
+  cleanup(isRealLogout = false) {
     if (this.unsubscribe) {
       console.log('[TripsManager] 🛑 Deteniendo listener de viajes.');
       this.unsubscribe();
@@ -923,7 +935,22 @@ export const TripsManager = {
     }
     this.currentTrip = null;
     this.userTrips = [];
-    localStorage.removeItem('currentTripId');
+
+    // 🛡️ PROTECCIÓN: Solo borrar currentTripId si es un logout REAL
+    // NO borrarlo durante reinicios o cambios de estado temporal
+    if (isRealLogout) {
+      console.log('[TripsManager] 🗑️ Logout real - borrando currentTripId');
+      localStorage.removeItem('currentTripId');
+    } else {
+      console.log('[TripsManager] 🔒 Reinicio temporal - conservando currentTripId');
+      // Guardar backup adicional en sessionStorage por seguridad
+      const currentTripId = localStorage.getItem('currentTripId');
+      if (currentTripId) {
+        sessionStorage.setItem('backup_currentTripId', currentTripId);
+        console.log('[TripsManager] 💾 Backup creado en sessionStorage:', currentTripId);
+      }
+    }
+
     this.updateTripHeaderEmpty();
     this.renderTripsList();
     console.log('[TripsManager] 🧹 Estado de viajes limpiado.');
@@ -941,6 +968,14 @@ window.addEventListener('auth:initialized', (event) => {
 });
 
 window.addEventListener('auth:loggedOut', () => {
-    console.log('[TripsManager] 🚫 Evento auth:loggedOut recibido. Limpiando...');
-    TripsManager.cleanup();
+    // 🛡️ Verificar si realmente es un logout o solo un cambio de estado temporal
+    const isRealLogout = sessionStorage.getItem('isRealLogout') === 'true';
+
+    if (isRealLogout) {
+        console.log('[TripsManager] 🚫 Evento auth:loggedOut recibido (LOGOUT REAL). Limpiando todo...');
+        TripsManager.cleanup(true); // TRUE = es un logout real, sí borrar currentTripId
+    } else {
+        console.log('[TripsManager] ⚠️ Evento auth:loggedOut recibido pero NO es logout real. Ignorando.');
+        // No hacer nada - conservar los datos
+    }
 });
