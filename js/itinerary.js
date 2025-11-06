@@ -444,6 +444,20 @@ async function optimizeDayRoute(dayNumber) {
   }
 
   try {
+    // 🛡️ IMPORTANTE: Verificar que las actividades tienen coordenadas
+    const activitiesWithCoords = dayData.activities.filter(act =>
+      act.coordinates && act.coordinates.lat && act.coordinates.lng
+    );
+
+    if (activitiesWithCoords.length < 2) {
+      Notifications.show(
+        `⚠️ Necesitas agregar ubicaciones (coordenadas) a las actividades primero.\n` +
+        `Solo ${activitiesWithCoords.length} de ${dayData.activities.length} tienen ubicación.`,
+        'warning'
+      );
+      return;
+    }
+
     // Mostrar loading
     Notifications.show('Optimizando ruta...', 'info');
 
@@ -453,7 +467,7 @@ async function optimizeDayRoute(dayNumber) {
     });
 
     if (!result.wasOptimized) {
-      Notifications.show('No se pudo optimizar. ¿Las actividades tienen ubicación?', 'warning');
+      Notifications.show('No se pudo optimizar. Error interno.', 'error');
       return;
     }
 
