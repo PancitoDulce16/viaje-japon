@@ -454,20 +454,20 @@ async function showBalanceAnalysis() {
 
     // Resumen general
     message += `
-      <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-        <h3 class="font-bold text-lg mb-2 text-blue-900 dark:text-blue-100">📊 Resumen General</h3>
+      <div class="bg-blue-100 dark:bg-blue-800 p-4 rounded-lg border-2 border-blue-400 dark:border-blue-500">
+        <h3 class="font-bold text-lg mb-2 text-blue-900 dark:text-white">📊 Resumen General</h3>
         <div class="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <span class="text-gray-600 dark:text-gray-300">Score Promedio:</span>
+            <span class="text-gray-700 dark:text-gray-100">Score Promedio:</span>
             <span class="font-bold text-gray-900 dark:text-white ml-2">${analysis.overallScore}/100</span>
           </div>
           <div>
-            <span class="text-gray-600 dark:text-gray-300">Desviación Estándar:</span>
+            <span class="text-gray-700 dark:text-gray-100">Desviación Estándar:</span>
             <span class="font-bold text-gray-900 dark:text-white ml-2">${analysis.standardDeviation}</span>
           </div>
           <div class="col-span-2">
-            <span class="text-gray-600 dark:text-gray-300">Estado:</span>
-            <span class="font-bold ${analysis.balanced ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'} ml-2">
+            <span class="text-gray-700 dark:text-gray-100">Estado:</span>
+            <span class="font-bold ${analysis.balanced ? 'text-green-900 dark:text-green-100' : 'text-orange-900 dark:text-orange-100'} ml-2">
               ${analysis.balanced ? '✅ Balanceado' : '⚠️ Necesita ajustes'}
             </span>
           </div>
@@ -550,9 +550,9 @@ async function showBalanceAnalysis() {
     // Sugerencias
     if (analysis.suggestions && analysis.suggestions.length > 0) {
       message += `
-        <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-700">
-          <h3 class="font-bold text-yellow-900 dark:text-yellow-100 mb-2">💡 Sugerencias de Mejora:</h3>
-          <ul class="space-y-2 text-sm text-yellow-800 dark:text-yellow-200">
+        <div class="bg-yellow-100 dark:bg-yellow-800 p-4 rounded-lg border-2 border-yellow-400 dark:border-yellow-500">
+          <h3 class="font-bold text-yellow-900 dark:text-white mb-2">💡 Sugerencias de Mejora:</h3>
+          <ul class="space-y-2 text-sm text-yellow-900 dark:text-yellow-100">
       `;
 
       analysis.suggestions.slice(0, 5).forEach((suggestion, index) => {
@@ -1528,12 +1528,26 @@ Si ya tienes las coordenadas, simplemente pégalas:
     const station = document.getElementById('activityStation').value;
 
     // 📍 Get coordinates
-    const lat = parseFloat(document.getElementById('activityLat').value);
-    const lng = parseFloat(document.getElementById('activityLng').value);
+    let lat = parseFloat(document.getElementById('activityLat').value);
+    let lng = parseFloat(document.getElementById('activityLng').value);
 
     if (!title) {
       alert('⚠️ El título es obligatorio');
       return;
+    }
+
+    // 🔍 AUTO-BÚSQUEDA: Si no hay coordenadas, intentar buscarlas automáticamente
+    if ((isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) && window.LocationAutocomplete) {
+      const results = window.LocationAutocomplete.search(title);
+      if (results && results.length > 0) {
+        // Usar el primer resultado (el más relevante)
+        lat = results[0].lat;
+        lng = results[0].lng;
+        console.log(`✅ Auto-detected location for "${title}": ${lat}, ${lng}`);
+
+        // Mostrar notificación al usuario
+        Notifications.show(`📍 Ubicación detectada automáticamente: ${results[0].name}`, 'success', 3000);
+      }
     }
 
     const activity = {
@@ -1546,7 +1560,7 @@ Si ya tienes las coordenadas, simplemente pégalas:
       station
     };
 
-    // 📍 Add coordinates if both are provided and valid
+    // 📍 Add coordinates if valid
     if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
       activity.coordinates = { lat, lng };
     }
