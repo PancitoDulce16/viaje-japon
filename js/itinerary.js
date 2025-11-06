@@ -7,6 +7,7 @@ import { searchCities } from '/data/japan-cities.js';
 import { APP_CONFIG } from '/js/config.js';
 import { ActivityAutocomplete } from './activity-autocomplete.js';
 import { RouteOptimizer } from './route-optimizer.js'; // 🗺️ Optimizador de rutas
+import { DayBalancer } from './day-balancer.js'; // ⚖️ Balanceador inteligente de días
 
 let checkedActivities = {};
 let currentDay = 1;
@@ -429,6 +430,167 @@ function renderEmptyState(){
 }
 
 // 🗺️ Optimizar ruta del día
+/**
+ * Muestra análisis de balance de todo el itinerario
+ */
+async function showBalanceAnalysis() {
+  console.log('⚖️ Analyzing itinerary balance...');
+
+  if (!currentItinerary || !currentItinerary.days || currentItinerary.days.length === 0) {
+    Notifications.show('No hay días en el itinerario para analizar', 'info');
+    return;
+  }
+
+  try {
+    // Analizar balance
+    const analysis = DayBalancer.analyzeItineraryBalance(currentItinerary.days);
+
+    console.log('📊 Balance analysis:', analysis);
+
+    // Construir mensaje del modal
+    let message = `<div class="space-y-4">`;
+
+    // Resumen general
+    message += `
+      <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+        <h3 class="font-bold text-lg mb-2 text-blue-900 dark:text-blue-100">📊 Resumen General</h3>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <span class="text-gray-600 dark:text-gray-300">Score Promedio:</span>
+            <span class="font-bold text-gray-900 dark:text-white ml-2">${analysis.overallScore}/100</span>
+          </div>
+          <div>
+            <span class="text-gray-600 dark:text-gray-300">Desviación Estándar:</span>
+            <span class="font-bold text-gray-900 dark:text-white ml-2">${analysis.standardDeviation}</span>
+          </div>
+          <div class="col-span-2">
+            <span class="text-gray-600 dark:text-gray-300">Estado:</span>
+            <span class="font-bold ${analysis.balanced ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'} ml-2">
+              ${analysis.balanced ? '✅ Balanceado' : '⚠️ Necesita ajustes'}
+            </span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Análisis por día
+    message += `<div class="space-y-2"><h3 class="font-bold text-gray-900 dark:text-white">📅 Análisis por Día:</h3>`;
+
+    analysis.daysAnalysis.forEach(dayAnalysis => {
+      const loadConfig = {
+        empty: { icon: '⚪', color: 'gray' },
+        low: { icon: '🔵', color: 'blue' },
+        light: { icon: '🟢', color: 'green' },
+        balanced: { icon: '✅', color: 'emerald' },
+        heavy: { icon: '🟠', color: 'orange' },
+        overloaded: { icon: '🔴', color: 'red' }
+      };
+
+      const config = loadConfig[dayAnalysis.analysis.load] || loadConfig.balanced;
+
+      message += `
+        <div class="bg-${config.color}-50 dark:bg-${config.color}-900/20 p-3 rounded border border-${config.color}-200 dark:border-${config.color}-700">
+          <div class="flex justify-between items-center">
+            <span class="font-semibold text-${config.color}-900 dark:text-${config.color}-100">
+              ${config.icon} Día ${dayAnalysis.day}
+            </span>
+            <span class="text-xs font-mono text-${config.color}-700 dark:text-${config.color}-300">
+              ${dayAnalysis.analysis.score}/100
+            </span>
+          </div>
+          <div class="text-xs text-${config.color}-700 dark:text-${config.color}-300 mt-1">
+            ${dayAnalysis.activities.length} actividades •
+            ${dayAnalysis.analysis.factors.totalDuration ? Math.round(dayAnalysis.analysis.factors.totalDuration / 60) + 'h' : '0h'}
+          </div>
+        </div>
+      `;
+    });
+
+    message += `</div>`;
+
+    // Sugerencias
+    if (analysis.suggestions && analysis.suggestions.length > 0) {
+      message += `
+        <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-700">
+          <h3 class="font-bold text-yellow-900 dark:text-yellow-100 mb-2">💡 Sugerencias de Mejora:</h3>
+          <ul class="space-y-2 text-sm text-yellow-800 dark:text-yellow-200">
+      `;
+
+      analysis.suggestions.slice(0, 5).forEach((suggestion, index) => {
+        const priorityBadge = suggestion.priority === 'high' ? '🔴' :
+                             suggestion.priority === 'medium' ? '🟡' : '🟢';
+
+        message += `
+          <li class="flex items-start gap-2">
+            <span class="flex-shrink-0">${priorityBadge}</span>
+            <div>
+              <div class="font-semibold">${suggestion.description}</div>
+              <div class="text-xs opacity-80">${suggestion.reason}</div>
+            </div>
+          </li>
+        `;
+      });
+
+      message += `</ul></div>`;
+    }
+
+    message += `</div>`;
+
+    // Mostrar modal con Dialogs
+    const confirmed = await window.Dialogs.confirm({
+      title: '⚖️ Análisis de Balance del Itinerario',
+      message: message,
+      confirmText: analysis.suggestions.length > 0 ? 'Aplicar Sugerencias Automáticamente' : 'Cerrar',
+      cancelText: 'Cerrar',
+      type: 'info'
+    });
+
+    // Si el usuario confirma y hay sugerencias, aplicarlas
+    if (confirmed && analysis.suggestions.length > 0) {
+      await applyBalanceSuggestions(analysis.suggestions);
+    }
+
+  } catch (error) {
+    console.error('❌ Error analyzing balance:', error);
+    Notifications.show('Error al analizar balance', 'error');
+  }
+}
+
+/**
+ * Aplica las sugerencias de balance automáticamente
+ */
+async function applyBalanceSuggestions(suggestions) {
+  console.log('🔧 Applying balance suggestions...', suggestions);
+
+  try {
+    let modified = false;
+
+    for (const suggestion of suggestions) {
+      if (suggestion.type === 'move' && suggestion.priority === 'high') {
+        // Mover actividad
+        const newDays = DayBalancer.applySuggestion(currentItinerary.days, suggestion);
+        currentItinerary.days = newDays;
+        modified = true;
+      }
+    }
+
+    if (modified) {
+      await saveCurrentItineraryToFirebase();
+      Notifications.show(
+        `✅ Balance aplicado! Se movieron actividades para mejorar la distribución`,
+        'success'
+      );
+      render();
+    } else {
+      Notifications.show('No se aplicaron cambios', 'info');
+    }
+
+  } catch (error) {
+    console.error('❌ Error applying suggestions:', error);
+    Notifications.show('Error al aplicar sugerencias', 'error');
+  }
+}
+
 async function optimizeDayRoute(dayNumber) {
   console.log('🗺️ Optimizing route for day', dayNumber);
 
@@ -648,13 +810,101 @@ function renderDayOverview(day){
       `:''}
       ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-300">📍 ${day.location}</p>`:''}
     </div>
+    <!-- ⚖️ Indicador de Carga del Día -->
+    ${renderDayLoadIndicator(day)}
+
     <div class="mt-6 space-y-2">
+      <button type="button" id="analyzeBalanceBtn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+        <span>⚖️</span>
+        <span>Analizar Balance</span>
+      </button>
       <button type="button" id="optimizeRouteBtn_${day.day}" class="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2">
         <span>🗺️</span>
         <span>Optimizar Ruta</span>
       </button>
       <button type="button" id="addActivityBtn_${day.day}" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition">+ Añadir Actividad</button>
     </div>`;
+}
+
+/**
+ * Renderiza el indicador visual de carga del día
+ */
+function renderDayLoadIndicator(day) {
+  const analysis = DayBalancer.analyzeDayLoad(day);
+
+  const loadConfig = {
+    empty: {
+      color: 'gray',
+      icon: '⚪',
+      label: 'Vacío',
+      bgClass: 'bg-gray-100 dark:bg-gray-700',
+      textClass: 'text-gray-700 dark:text-gray-300',
+      borderClass: 'border-gray-300 dark:border-gray-600'
+    },
+    low: {
+      color: 'blue',
+      icon: '🔵',
+      label: 'Ligero',
+      bgClass: 'bg-blue-50 dark:bg-blue-900/30',
+      textClass: 'text-blue-700 dark:text-blue-300',
+      borderClass: 'border-blue-300 dark:border-blue-600'
+    },
+    light: {
+      color: 'green',
+      icon: '🟢',
+      label: 'Moderado',
+      bgClass: 'bg-green-50 dark:bg-green-900/30',
+      textClass: 'text-green-700 dark:text-green-300',
+      borderClass: 'border-green-300 dark:border-green-600'
+    },
+    balanced: {
+      color: 'emerald',
+      icon: '✅',
+      label: 'Balanceado',
+      bgClass: 'bg-emerald-50 dark:bg-emerald-900/30',
+      textClass: 'text-emerald-700 dark:text-emerald-300',
+      borderClass: 'border-emerald-300 dark:border-emerald-600'
+    },
+    heavy: {
+      color: 'orange',
+      icon: '🟠',
+      label: 'Cargado',
+      bgClass: 'bg-orange-50 dark:bg-orange-900/30',
+      textClass: 'text-orange-700 dark:text-orange-300',
+      borderClass: 'border-orange-300 dark:border-orange-600'
+    },
+    overloaded: {
+      color: 'red',
+      icon: '🔴',
+      label: 'Sobrecargado',
+      bgClass: 'bg-red-50 dark:bg-red-900/30',
+      textClass: 'text-red-700 dark:text-red-300',
+      borderClass: 'border-red-300 dark:border-red-600'
+    }
+  };
+
+  const config = loadConfig[analysis.load] || loadConfig.balanced;
+
+  return `
+    <div class="mt-4 ${config.bgClass} ${config.borderClass} border rounded-lg p-3">
+      <div class="flex items-center justify-between mb-2">
+        <span class="${config.textClass} text-sm font-semibold">
+          ${config.icon} ${config.label}
+        </span>
+        <span class="${config.textClass} text-xs font-mono">
+          Score: ${analysis.score}/100
+        </span>
+      </div>
+      <div class="space-y-1 text-xs ${config.textClass}">
+        ${analysis.issues.slice(0, 2).map(issue => `
+          <div class="flex items-start gap-1">
+            <span class="text-[10px]">•</span>
+            <span>${issue}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
 }
 
 // Función auxiliar para convertir hora en formato comparable
@@ -864,12 +1114,17 @@ export const ItineraryHandler = {
         console.log('🖱️ Click detected on:', e.target);
         const addBtn=e.target.closest('[id^="addActivityBtn_"]');
         const optimizeBtn=e.target.closest('[id^="optimizeRouteBtn_"]');
+        const analyzeBalanceBtn=e.target.closest('#analyzeBalanceBtn');
         const editBtn=e.target.closest('.activity-edit-btn');
         const deleteBtn=e.target.closest('.activity-delete-btn');
         const voteBtn = e.target.closest('.activity-vote-btn');
         const dayBtn=e.target.closest('.day-btn');
 
-        if(optimizeBtn){
+        if(analyzeBalanceBtn){
+          console.log('⚖️ Analyze balance button clicked');
+          showBalanceAnalysis();
+        }
+        else if(optimizeBtn){
           console.log('🗺️ Optimize route button clicked');
           const day=parseInt(optimizeBtn.id.split('_')[1]);
           optimizeDayRoute(day);
