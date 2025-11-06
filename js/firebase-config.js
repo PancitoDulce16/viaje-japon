@@ -40,4 +40,15 @@ if (firebaseConfig && firebaseConfig.apiKey) {
   console.warn('⚠️ Firebase not initialized because configuration is missing or incomplete.');
 }
 
+// Exportar para módulos ES6
 export { app, db, auth, storage, googleProvider };
+
+// 🔧 TAMBIÉN exponer globalmente para scripts de consola y debugging
+if (typeof window !== 'undefined') {
+  window.app = app;
+  window.db = db;
+  window.auth = auth;
+  window.storage = storage;
+  window.googleProvider = googleProvider;
+  console.log('🌐 Firebase expuesto globalmente en window');
+}
