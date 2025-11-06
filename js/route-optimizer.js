@@ -9,6 +9,14 @@
  * @returns {number} Distancia en kilómetros
  */
 function calculateDistance(point1, point2) {
+    // 🛡️ Validación de entrada
+    if (!point1 || !point2 ||
+        typeof point1.lat !== 'number' || typeof point1.lng !== 'number' ||
+        typeof point2.lat !== 'number' || typeof point2.lng !== 'number') {
+        console.warn('⚠️ Invalid coordinates for distance calculation:', { point1, point2 });
+        return 0;
+    }
+
     const R = 6371; // Radio de la Tierra en km
     const dLat = toRad(point2.lat - point1.lat);
     const dLon = toRad(point2.lng - point1.lng);

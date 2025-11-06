@@ -45,9 +45,21 @@ function analyzeDayLoad(day) {
 
     // Calcular distancia y tiempo de transporte
     if (activityCount > 1) {
-        const routeStats = RouteOptimizer.calculateRouteStats(activities);
-        factors.totalDistance = routeStats.totalDistance;
-        factors.transportTime = routeStats.totalTime;
+        // Solo calcular si hay actividades con coordenadas
+        const activitiesWithCoords = activities.filter(act =>
+            act.coordinates && act.coordinates.lat && act.coordinates.lng
+        );
+
+        if (activitiesWithCoords.length > 1) {
+            try {
+                const routeStats = RouteOptimizer.calculateRouteStats(activitiesWithCoords);
+                factors.totalDistance = routeStats.totalDistance;
+                factors.transportTime = routeStats.totalTime;
+            } catch (err) {
+                console.warn('⚠️ Error calculating route stats:', err);
+                // Continuar sin datos de ruta
+            }
+        }
     }
 
     // Detectar start/end times
