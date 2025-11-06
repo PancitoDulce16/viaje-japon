@@ -851,12 +851,12 @@ function renderDayOverview(day){
       <p class="font-semibold text-base dark:text-gray-100">${day.date}</p>
       <p class="font-bold text-lg text-red-600 dark:text-red-400">${day.title||''}</p>
       ${day.hotel ? `
-        <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg border-l-2 border-blue-500 dark:border-blue-400">
-          <p class="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1">🏨 Hotel Recomendado</p>
-          <p class="text-sm text-gray-700 dark:text-gray-100">${day.hotel}</p>
+        <div class="bg-blue-50 dark:bg-blue-800 p-3 rounded-lg border-l-2 border-blue-500 dark:border-blue-400">
+          <p class="text-xs font-semibold text-blue-700 dark:text-blue-100 mb-1">🏨 Hotel Recomendado</p>
+          <p class="text-sm text-gray-700 dark:text-white">${day.hotel}</p>
         </div>
       `:''}
-      ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-300">📍 ${day.location}</p>`:''}
+      ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-200">📍 ${day.location}</p>`:''}
     </div>
     <!-- ⚖️ Indicador de Carga del Día -->
     ${renderDayLoadIndicator(day)}
@@ -1182,13 +1182,13 @@ function renderActivities(day){
           <div class="drag-handle text-gray-400 dark:text-gray-400 text-xs cursor-grab active:cursor-grabbing" title="Arrastra para reordenar">⋮⋮</div>
           <input type="checkbox" data-id="${act.id}" ${checkedActivities[act.id]?'checked':''} class="activity-checkbox w-5 h-5 cursor-pointer accent-red-600 flex-shrink-0" />
         </div>
-        <div class="bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-300 p-3 rounded-lg text-2xl flex-shrink-0">${act.icon||'📍'}</div>
+        <div class="bg-red-100 dark:bg-red-800 text-red-600 dark:text-white p-3 rounded-lg text-2xl flex-shrink-0">${act.icon||'📍'}</div>
         <div class="flex-1 min-w-0">
           <div class="flex justify-between items-start">
             <div>
               <div class="flex items-center gap-2 mb-1 flex-wrap">
-                <span class="text-xs font-semibold text-gray-500 dark:text-gray-300">${act.time||''}</span>
-                ${act.cost>0?`<span class="text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-2 py-1 rounded font-semibold">¥${Number(act.cost).toLocaleString()}</span>`:''}
+                <span class="text-xs font-semibold text-gray-500 dark:text-gray-200">${act.time||''}</span>
+                ${act.cost>0?`<span class="text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-white px-2 py-1 rounded font-semibold">¥${Number(act.cost).toLocaleString()}</span>`:''}
               </div>
               <h3 class="text-lg font-bold dark:text-white mb-1">${activityTitle}</h3>
             </div>
@@ -1209,12 +1209,12 @@ function renderActivities(day){
             </div>
           </div>
           <p class="text-sm text-gray-600 dark:text-gray-200 mt-2">${act.desc||''}</p>
-          ${act.station?`<p class="text-xs text-gray-500 dark:text-gray-300 mt-2">🚉 ${act.station}</p>`:''}
+          ${act.station?`<p class="text-xs text-gray-500 dark:text-gray-200 mt-2">🚉 ${act.station}</p>`:''}
           ${act.train?`
-            <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border-l-2 border-blue-500 dark:border-blue-400">
-              <p class="text-xs font-semibold text-blue-700 dark:text-blue-200 mb-1">🚄 ${act.train.line}</p>
-              <p class="text-xs text-gray-600 dark:text-gray-200">${act.train.from} → ${act.train.to}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-300">⏱️ ${act.train.duration}</p>
+            <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-800 rounded-lg border-l-2 border-blue-500 dark:border-blue-400">
+              <p class="text-xs font-semibold text-blue-700 dark:text-blue-100 mb-1">🚄 ${act.train.line}</p>
+              <p class="text-xs text-gray-600 dark:text-gray-100">${act.train.from} → ${act.train.to}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-200">⏱️ ${act.train.duration}</p>
             </div>`:''}
         </div>
       </div>
