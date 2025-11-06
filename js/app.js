@@ -38,6 +38,10 @@ import './firebase-config.js'; // Inicializar Firebase primero
 // 🖼️ Image Service imports
 import './image-service.js'; // Unsplash images service
 
+// 🛡️ Firebase Resilience and Integration Tests
+import './firebase-resilience.js'; // Sistema de resiliencia para Firebase
+import './integration-tests.js'; // Pruebas de integración automáticas
+
 // 🔌 APIs imports
 // APIs integration is imported dynamically at runtime so CI-generated config files are optional
 // (avoid breaking the app if js/apis-config.js is missing during local dev)
