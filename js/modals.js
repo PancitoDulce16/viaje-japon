@@ -64,64 +64,64 @@ export const ModalRenderer = {
                         <input type="hidden" id="activityId">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label for="activityDay" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">📅 Día</label>
+                                <label for="activityDay" class="block text-sm font-semibold text-gray-700 dark:text-white mb-2">📅 Día</label>
                                 <select id="activityDay" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white font-semibold">
                                     <!-- Se llenará dinámicamente -->
                                 </select>
                             </div>
                             <div>
-                                <label for="activityIcon" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Icono</label>
+                                <label for="activityIcon" class="block text-sm font-semibold text-gray-700 dark:text-white mb-2">Icono</label>
                                 <input type="text" id="activityIcon" placeholder="✈️" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             </div>
                             <div>
-                                <label for="activityTime" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Hora</label>
+                                <label for="activityTime" class="block text-sm font-semibold text-gray-700 dark:text-white mb-2">Hora</label>
                                 <input type="text" id="activityTime" placeholder="8:00 AM" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             </div>
                         </div>
                         <div class="mt-4 relative">
-                            <label for="activityTitle" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Título</label>
+                            <label for="activityTitle" class="block text-sm font-semibold text-gray-700 dark:text-white mb-2">Título</label>
                             <input type="text" id="activityTitle" required placeholder="Narita Express → Shinjuku" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" autocomplete="off">
                             <!-- Autocomplete Dropdown -->
                             <div id="activityTitleAutocomplete" class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl max-h-80 overflow-y-auto"></div>
                         </div>
                         <div class="mt-4">
-                            <label for="activityDesc" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Descripción</label>
+                            <label for="activityDesc" class="block text-sm font-semibold text-gray-700 dark:text-white mb-2">Descripción</label>
                             <textarea id="activityDesc" rows="3" placeholder="Tren cubierto por JR Pass." class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                             <div>
-                                <label for="activityCost" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Costo (JPY)</label>
+                                <label for="activityCost" class="block text-sm font-semibold text-gray-700 dark:text-white mb-2">Costo (JPY)</label>
                                 <input type="number" id="activityCost" placeholder="3200" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             </div>
                             <div>
-                                <label for="activityStation" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Estación</label>
+                                <label for="activityStation" class="block text-sm font-semibold text-gray-700 dark:text-white mb-2">Estación</label>
                                 <input type="text" id="activityStation" placeholder="Shinjuku Station" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             </div>
                         </div>
-                        <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-800 rounded-lg border border-blue-200 dark:border-blue-500">
                             <div class="flex items-center gap-2 mb-3">
-                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-white">
                                     📍 Ubicación (para optimizador de rutas)
                                 </label>
-                                <button type="button" id="helpLocationBtn" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 text-xs font-semibold">
+                                <button type="button" id="helpLocationBtn" class="text-blue-600 dark:text-blue-200 hover:text-blue-800 dark:hover:text-white text-xs font-semibold">
                                     📖 Ver guía
                                 </button>
                             </div>
-                            <div class="mb-3 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded text-xs">
-                                <span class="font-semibold text-green-800 dark:text-green-200">✨ Tip:</span>
-                                <span class="text-green-700 dark:text-green-300"> Escribe el nombre del lugar arriba (ej: "Tokyo Tower") y aparecerán sugerencias con coordenadas automáticas</span>
+                            <div class="mb-3 p-2 bg-green-50 dark:bg-green-800 border border-green-200 dark:border-green-500 rounded text-xs">
+                                <span class="font-semibold text-green-800 dark:text-white">✨ Tip:</span>
+                                <span class="text-green-700 dark:text-green-100"> Escribe el nombre del lugar arriba (ej: "Tokyo Tower") y aparecerán sugerencias con coordenadas automáticas</span>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label for="activityLat" class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Latitud</label>
+                                    <label for="activityLat" class="block text-xs font-semibold text-gray-600 dark:text-gray-200 mb-1">Latitud</label>
                                     <input type="number" id="activityLat" step="0.000001" placeholder="35.681236" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm">
                                 </div>
                                 <div>
-                                    <label for="activityLng" class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Longitud</label>
+                                    <label for="activityLng" class="block text-xs font-semibold text-gray-600 dark:text-gray-200 mb-1">Longitud</label>
                                     <input type="number" id="activityLng" step="0.000001" placeholder="139.767125" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm">
                                 </div>
                             </div>
-                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                            <p class="text-xs text-gray-600 dark:text-gray-200 mt-2">
                                 💡 Opcional: Necesario para calcular rutas óptimas y tiempos de traslado
                             </p>
                         </div>
@@ -164,7 +164,7 @@ export const ModalRenderer = {
                         <!-- Login Form -->
                         <form id="loginForm" class="space-y-4">
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-white mb-2">
                                     Email
                                 </label>
                                 <input 
@@ -176,10 +176,10 @@ export const ModalRenderer = {
                                 >
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-white mb-2">
                                     Contraseña
                                 </label>
-                                <input 
+                                <input
                                     id="loginPassword" 
                                     type="password" 
                                     required
@@ -207,7 +207,7 @@ export const ModalRenderer = {
                         <!-- Register Form (Hidden by default) -->
                         <form id="registerForm" class="space-y-4 hidden">
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-white mb-2">
                                     Email
                                 </label>
                                 <input 
@@ -219,7 +219,7 @@ export const ModalRenderer = {
                                 >
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-white mb-2">
                                     Contraseña (mínimo 6 caracteres)
                                 </label>
                                 <input 
@@ -232,7 +232,7 @@ export const ModalRenderer = {
                                 >
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-white mb-2">
                                     Confirmar Contraseña
                                 </label>
                                 <input 
@@ -244,9 +244,9 @@ export const ModalRenderer = {
                                     placeholder="••••••••"
                                 >
                             </div>
-                            <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg mb-3">
-                                <p class="text-xs text-gray-700 dark:text-gray-300">
-                                    ⚠️ <strong>Seguridad:</strong> Usa una contraseña única que no uses en otros sitios. 
+                            <div class="p-3 bg-yellow-50 dark:bg-yellow-800 rounded-lg mb-3">
+                                <p class="text-xs text-gray-700 dark:text-white">
+                                    ⚠️ <strong>Seguridad:</strong> Usa una contraseña única que no uses en otros sitios.
                                     Mínimo 6 caracteres, recomendado 8+.
                                 </p>
                             </div>
@@ -280,8 +280,8 @@ export const ModalRenderer = {
                         </button>
 
                         <!-- Info -->
-                        <div class="mt-6 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                            <p class="text-xs text-gray-600 dark:text-gray-400">
+                        <div class="mt-6 p-3 bg-blue-50 dark:bg-blue-800 rounded-lg">
+                            <p class="text-xs text-gray-600 dark:text-gray-200">
                                 💡 <strong>¿Por qué registrarse?</strong> Para sincronizar tu presupuesto, 
                                 checklist y fotos en todos tus dispositivos y compartir con tu hermano.
                             </p>
@@ -302,23 +302,23 @@ export const ModalRenderer = {
                             <button class="modal-close text-3xl hover:text-red-600 transition" data-modal-close="emergency" aria-label="Cerrar">&times;</button>
                         </div>
                         <div class="space-y-4">
-                            <div class="p-4 bg-red-50 dark:bg-red-900/30 rounded-lg border-l-4 border-red-500">
+                            <div class="p-4 bg-red-50 dark:bg-red-800 rounded-lg border-l-4 border-red-500">
                                 <h3 class="font-bold text-lg mb-3 dark:text-white">Japón</h3>
                                 <div class="space-y-3">
                                     <div class="flex justify-between items-center">
-                                        <span class="dark:text-gray-300">🚓 Policía:</span>
-                                        <a href="tel:110" class="text-2xl font-bold text-red-600 dark:text-red-400 hover:underline">110</a>
+                                        <span class="dark:text-white">🚓 Policía:</span>
+                                        <a href="tel:110" class="text-2xl font-bold text-red-600 dark:text-red-200 hover:underline">110</a>
                                     </div>
                                     <div class="flex justify-between items-center">
-                                        <span class="dark:text-gray-300">🚑 Ambulancia/Bomberos:</span>
-                                        <a href="tel:119" class="text-2xl font-bold text-red-600 dark:text-red-400 hover:underline">119</a>
+                                        <span class="dark:text-white">🚑 Ambulancia/Bomberos:</span>
+                                        <a href="tel:119" class="text-2xl font-bold text-red-600 dark:text-red-200 hover:underline">119</a>
                                     </div>
                                 </div>
                             </div>
-                            <div class="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                            <div class="p-4 bg-blue-50 dark:bg-blue-800 rounded-lg">
                                 <h3 class="font-bold mb-2 dark:text-white">🇨🇷 Embajada Costa Rica</h3>
-                                <p class="text-sm dark:text-gray-300">📞 <a href="tel:+81-3-3486-1812" class="font-semibold hover:underline">+81-3-3486-1812</a></p>
-                                <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">Shibuya-ku, Tokyo</p>
+                                <p class="text-sm dark:text-white">📞 <a href="tel:+81-3-3486-1812" class="font-semibold hover:underline">+81-3-3486-1812</a></p>
+                                <p class="text-xs text-gray-600 dark:text-gray-200 mt-1">Shibuya-ku, Tokyo</p>
                             </div>
                         </div>
                     </div>
@@ -373,9 +373,9 @@ export const ModalRenderer = {
                         </div>
                         <div class="space-y-3 max-h-96 overflow-y-auto">
                             ${phrases.map(p => `
-                                <div class="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition cursor-pointer">
+                                <div class="p-3 bg-blue-50 dark:bg-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-700 transition cursor-pointer">
                                     <p class="font-semibold dark:text-white">${escapeHtml(p.jp)}</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">${escapeHtml(p.es)}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-100">${escapeHtml(p.es)}</p>
                                 </div>
                             `).join('')}
                         </div>

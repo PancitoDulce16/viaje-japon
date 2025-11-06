@@ -1040,7 +1040,7 @@ function renderDayExperiencePrediction(day) {
           <span class="text-2xl">${prediction.recommendation.icon}</span>
           <span class="font-bold text-indigo-900 dark:text-indigo-100">${prediction.recommendation.rating.toUpperCase()}</span>
         </div>
-        <p class="text-xs text-gray-700 dark:text-gray-300">${prediction.recommendation.message}</p>
+        <p class="text-xs text-gray-700 dark:text-gray-100">${prediction.recommendation.message}</p>
       </div>
     </div>
   `;
@@ -1198,7 +1198,7 @@ function renderActivities(day){
                 data-action="vote"
                 data-activity-id="${act.id}"
                 data-day="${day.day}"
-                class="activity-vote-btn p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/40 transition flex items-center gap-1 ${userHasVoted ? 'text-red-500' : 'text-gray-400 dark:text-gray-300'}"
+                class="activity-vote-btn p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-800 transition flex items-center gap-1 ${userHasVoted ? 'text-red-500' : 'text-gray-400 dark:text-gray-200'}"
                 title="Votar por esta actividad"
               >
                 <i class="fas fa-heart"></i>
