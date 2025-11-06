@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Recuperar Datos - Japan Itin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">🔧 Herramienta de Recuperación de Datos</h1>
+
+        <div class="bg-yellow-100 border border-yellow-400 rounded-lg p-4 mb-6">
+            <p class="text-yellow-800 font-semibold">⚠️ IMPORTANTE: Usa esta herramienta SOLO si el diagnóstico confirmó que perdiste datos.</p>
+        </div>
+
+        <div id="status" class="mb-6 p-4 bg-blue-100 rounded-lg">
+            <p class="text-blue-800">⏳ Esperando...</p>
+        </div>
+
+        <!-- Opciones de recuperación -->
+        <div class="space-y-4 mb-6">
+            <h2 class="text-xl font-bold">Opciones de recuperación:</h2>
+
+            <!-- Opción 1: Restaurar desde backup de localStorage -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="font-bold text-lg mb-3">1️⃣ Restaurar desde Backup Local</h3>
+                <p class="text-gray-600 mb-4">Si el diagnóstico guardó un backup, puedes restaurarlo aquí.</p>
+                <div id="backupsList" class="space-y-2 mb-4"></div>
+                <button id="restoreBackupBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    Restaurar Backup Seleccionado
+                </button>
+            </div>
+
+            <!-- Opción 2: Crear trip nuevo y copiar datos desde plantilla -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="font-bold text-lg mb-3">2️⃣ Crear Trip Nuevo Desde Plantilla</h3>
+                <p class="text-gray-600 mb-4">Si no hay backups, crea un nuevo trip con un itinerario base.</p>
+                <div class="space-y-3">
+                    <input type="text" id="newTripName" placeholder="Nombre del viaje (ej: Viaje a Japón 2025)" class="w-full px-4 py-2 border rounded-lg">
+                    <input type="date" id="newTripStart" class="w-full px-4 py-2 border rounded-lg">
+                    <input type="date" id="newTripEnd" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                <button id="createNewTripBtn" class="mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                    Crear Nuevo Trip
+                </button>
+            </div>
+
+            <!-- Opción 3: Fix del currentTripId -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="font-bold text-lg mb-3">3️⃣ Forzar Selección de Trip Existente</h3>
+                <p class="text-gray-600 mb-4">Si tus trips existen pero no se están cargando, fuerza la selección.</p>
+                <div id="existingTripsList" class="space-y-2 mb-4"></div>
+                <button id="forceSelectBtn" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    Forzar Selección
+                </button>
+            </div>
+        </div>
+
+        <div id="results" class="space-y-4"></div>
+    </div>
+
+    <script type="module">
+        import { db, auth } from '/js/firebase-config.js';
+        import {
+            collection,
+            getDocs,
+            setDoc,
+            doc,
+            query,
+            where
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        const statusDiv = document.getElementById('status');
+        const resultsDiv = document.getElementById('results');
+        const backupsListDiv = document.getElementById('backupsList');
+        const existingTripsListDiv = document.getElementById('existingTripsList');
+
+        let selectedBackup = null;
+        let selectedTripId = null;
+        let userTrips = [];
+
+        function log(message, type = 'info') {
+            const colors = {
+                info: 'bg-blue-100 text-blue-800',
+                success: 'bg-green-100 text-green-800',
+                error: 'bg-red-100 text-red-800',
+                warning: 'bg-yellow-100 text-yellow-800'
+            };
+
+            const div = document.createElement('div');
+            div.className = `p-4 rounded-lg ${colors[type]} mb-2`;
+            div.innerHTML = `<pre class="whitespace-pre-wrap text-sm">${message}</pre>`;
+            resultsDiv.appendChild(div);
+        }
+
+        async function loadBackups() {
+            backupsListDiv.innerHTML = '';
+            let found = false;
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('backup_trip_')) {
+                    found = true;
+                    const backup = JSON.parse(localStorage.getItem(key));
+                    const tripName = backup.tripData?.info?.name || 'Sin nombre';
+                    const activitiesCount = backup.itineraryData?.days?.reduce((sum, day) => sum + (day.activities?.length || 0), 0) || 0;
+
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center gap-3 p-3 border rounded cursor-pointer hover:bg-gray-50';
+                    div.innerHTML = `
+                        <input type="radio" name="backup" value="${key}" id="${key}">
+                        <label for="${key}" class="flex-1 cursor-pointer">
+                            <strong>${tripName}</strong><br>
+                            <span class="text-sm text-gray-600">${activitiesCount} actividades • ${backup.timestamp}</span>
+                        </label>
+                    `;
+                    div.querySelector('input').addEventListener('change', (e) => {
+                        selectedBackup = key;
+                    });
+                    backupsListDiv.appendChild(div);
+                }
+            }
+
+            if (!found) {
+                backupsListDiv.innerHTML = '<p class="text-gray-500 text-sm">No hay backups disponibles. Ejecuta el diagnóstico primero.</p>';
+                document.getElementById('restoreBackupBtn').disabled = true;
+            }
+        }
+
+        async function loadExistingTrips() {
+            if (!auth.currentUser) return;
+
+            const tripsRef = collection(db, 'trips');
+            const q = query(tripsRef, where('members', 'array-contains', auth.currentUser.uid));
+            const snapshot = await getDocs(q);
+
+            existingTripsListDiv.innerHTML = '';
+
+            if (snapshot.empty) {
+                existingTripsListDiv.innerHTML = '<p class="text-gray-500 text-sm">No se encontraron trips existentes.</p>';
+                document.getElementById('forceSelectBtn').disabled = true;
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                userTrips.push({ id: doc.id, ...data });
+
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-3 p-3 border rounded cursor-pointer hover:bg-gray-50';
+                div.innerHTML = `
+                    <input type="radio" name="trip" value="${doc.id}" id="trip_${doc.id}">
+                    <label for="trip_${doc.id}" class="flex-1 cursor-pointer">
+                        <strong>${data.info?.name || 'Sin nombre'}</strong><br>
+                        <span class="text-sm text-gray-600">${data.info?.dateStart} - ${data.info?.dateEnd}</span>
+                    </label>
+                `;
+                div.querySelector('input').addEventListener('change', (e) => {
+                    selectedTripId = doc.id;
+                });
+                existingTripsListDiv.appendChild(div);
+            });
+        }
+
+        // Restaurar backup
+        document.getElementById('restoreBackupBtn').addEventListener('click', async () => {
+            if (!selectedBackup) {
+                alert('⚠️ Por favor selecciona un backup primero');
+                return;
+            }
+
+            if (!confirm('¿Estás seguro de que quieres restaurar este backup? Esto sobrescribirá los datos actuales.')) {
+                return;
+            }
+
+            try {
+                const backup = JSON.parse(localStorage.getItem(selectedBackup));
+                const tripId = backup.tripId;
+
+                log(`🔄 Restaurando backup para trip ${tripId}...`, 'info');
+
+                // Restaurar trip principal
+                await setDoc(doc(db, 'trips', tripId), backup.tripData);
+                log(`✅ Trip restaurado`, 'success');
+
+                // Restaurar itinerario
+                await setDoc(doc(db, `trips/${tripId}/data`, 'itinerary'), backup.itineraryData);
+                log(`✅ Itinerario restaurado`, 'success');
+
+                // Configurar como trip actual
+                localStorage.setItem('currentTripId', tripId);
+                log(`✅ Trip configurado como actual`, 'success');
+
+                log(`\n🎉 ¡Recuperación completada! Redirigiendo al dashboard...`, 'success');
+
+                setTimeout(() => {
+                    window.location.href = '/dashboard.html';
+                }, 2000);
+
+            } catch (error) {
+                log(`❌ Error al restaurar: ${error.message}`, 'error');
+                console.error(error);
+            }
+        });
+
+        // Crear nuevo trip
+        document.getElementById('createNewTripBtn').addEventListener('click', async () => {
+            const name = document.getElementById('newTripName').value;
+            const start = document.getElementById('newTripStart').value;
+            const end = document.getElementById('newTripEnd').value;
+
+            if (!name || !start || !end) {
+                alert('⚠️ Por favor completa todos los campos');
+                return;
+            }
+
+            if (!confirm('¿Crear un nuevo trip con un itinerario base?')) {
+                return;
+            }
+
+            try {
+                const user = auth.currentUser;
+                const tripId = `trip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+                log(`🔄 Creando nuevo trip: ${name}...`, 'info');
+
+                const newTrip = {
+                    info: {
+                        name: name,
+                        destination: 'Japón',
+                        dateStart: start,
+                        dateEnd: end,
+                        createdBy: user.uid,
+                        createdAt: new Date().toISOString(),
+                        shareCode: generateTripCode(),
+                        creatorEmail: user.email
+                    },
+                    members: [user.uid],
+                    memberEmails: [user.email],
+                    flights: {},
+                    accommodations: [],
+                    cities: [],
+                    activities: { checklist: {} },
+                    expenses: []
+                };
+
+                await setDoc(doc(db, 'trips', tripId), newTrip);
+                log(`✅ Trip creado`, 'success');
+
+                // Crear itinerario vacío
+                const daysCount = Math.ceil((new Date(end) - new Date(start)) / (1000 * 60 * 60 * 24)) + 1;
+                const days = [];
+                for (let i = 1; i <= daysCount; i++) {
+                    days.push({
+                        day: i,
+                        date: new Date(new Date(start).getTime() + (i - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        activities: []
+                    });
+                }
+
+                await setDoc(doc(db, `trips/${tripId}/data`, 'itinerary'), { days });
+                log(`✅ Itinerario vacío creado con ${daysCount} días`, 'success');
+
+                localStorage.setItem('currentTripId', tripId);
+                log(`\n🎉 ¡Trip creado! Redirigiendo al dashboard...`, 'success');
+
+                setTimeout(() => {
+                    window.location.href = '/dashboard.html';
+                }, 2000);
+
+            } catch (error) {
+                log(`❌ Error al crear trip: ${error.message}`, 'error');
+                console.error(error);
+            }
+        });
+
+        // Forzar selección
+        document.getElementById('forceSelectBtn').addEventListener('click', () => {
+            if (!selectedTripId) {
+                alert('⚠️ Por favor selecciona un trip primero');
+                return;
+            }
+
+            log(`🔄 Configurando trip ${selectedTripId} como actual...`, 'info');
+            localStorage.setItem('currentTripId', selectedTripId);
+            log(`✅ Trip configurado. Redirigiendo...`, 'success');
+
+            setTimeout(() => {
+                window.location.href = '/dashboard.html';
+            }, 1000);
+        });
+
+        function generateTripCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        // Init
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                statusDiv.innerHTML = `<p class="text-green-800">✅ Autenticado como: ${user.email}</p>`;
+                loadBackups();
+                loadExistingTrips();
+            } else {
+                statusDiv.innerHTML = '<p class="text-red-800">❌ No autenticado. Redirigiendo...</p>';
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>

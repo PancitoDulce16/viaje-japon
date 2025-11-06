@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Diagnóstico de Datos - Japan Itin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">🔍 Diagnóstico de Datos de Firebase</h1>
+
+        <div id="status" class="mb-6 p-4 bg-blue-100 rounded-lg">
+            <p class="text-blue-800">⏳ Inicializando Firebase...</p>
+        </div>
+
+        <div id="results" class="space-y-4"></div>
+    </div>
+
+    <script type="module">
+        import { db, auth } from '/js/firebase-config.js';
+        import {
+            collection,
+            getDocs,
+            getDoc,
+            doc,
+            query,
+            where
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        const statusDiv = document.getElementById('status');
+        const resultsDiv = document.getElementById('results');
+
+        function log(message, type = 'info') {
+            const colors = {
+                info: 'bg-blue-100 text-blue-800',
+                success: 'bg-green-100 text-green-800',
+                error: 'bg-red-100 text-red-800',
+                warning: 'bg-yellow-100 text-yellow-800'
+            };
+
+            const div = document.createElement('div');
+            div.className = `p-4 rounded-lg ${colors[type]}`;
+            div.innerHTML = `<pre class="whitespace-pre-wrap">${message}</pre>`;
+            resultsDiv.appendChild(div);
+        }
+
+        async function diagnose() {
+            try {
+                statusDiv.innerHTML = '<p class="text-blue-800">✅ Firebase conectado</p>';
+
+                const user = auth.currentUser;
+                if (!user) {
+                    log('❌ No hay usuario autenticado. Por favor, inicia sesión en la aplicación primero.', 'error');
+                    return;
+                }
+
+                log(`✅ Usuario autenticado: ${user.email} (${user.uid})`, 'success');
+
+                // 1. Buscar trips del usuario
+                log('\n📂 Buscando trips del usuario...', 'info');
+                const tripsRef = collection(db, 'trips');
+                const q = query(tripsRef, where('members', 'array-contains', user.uid));
+                const tripsSnapshot = await getDocs(q);
+
+                if (tripsSnapshot.empty) {
+                    log('⚠️ NO SE ENCONTRARON TRIPS. Tus datos pueden haberse perdido.', 'warning');
+                    log('Posibles causas:\n1. El trip fue eliminado accidentalmente\n2. El userId cambió\n3. Error en la base de datos', 'warning');
+
+                    // Buscar TODOS los trips (para ver si existe alguno)
+                    log('\n🔍 Buscando TODOS los trips en la base de datos...', 'info');
+                    const allTripsSnapshot = await getDocs(collection(db, 'trips'));
+                    if (allTripsSnapshot.empty) {
+                        log('❌ No hay NINGÚN trip en la base de datos', 'error');
+                    } else {
+                        log(`✅ Se encontraron ${allTripsSnapshot.size} trips en total:`, 'info');
+                        allTripsSnapshot.forEach((doc) => {
+                            const data = doc.data();
+                            log(`\nTrip ID: ${doc.id}\nNombre: ${data.info?.name || 'Sin nombre'}\nCreador: ${data.info?.creatorEmail || 'Desconocido'}\nMiembros: ${data.memberEmails?.join(', ') || 'Ninguno'}`, 'info');
+                        });
+                    }
+                    return;
+                }
+
+                log(`✅ Se encontraron ${tripsSnapshot.size} trip(s) del usuario:`, 'success');
+
+                // Analizar cada trip
+                for (const tripDoc of tripsSnapshot.docs) {
+                    const tripData = tripDoc.data();
+                    const tripId = tripDoc.id;
+
+                    log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'info');
+                    log(`📌 Trip ID: ${tripId}`, 'success');
+                    log(`Nombre: ${tripData.info?.name || 'Sin nombre'}`, 'info');
+                    log(`Fechas: ${tripData.info?.dateStart} - ${tripData.info?.dateEnd}`, 'info');
+                    log(`Miembros: ${tripData.memberEmails?.join(', ') || 'Ninguno'}`, 'info');
+                    log(`Código compartir: ${tripData.info?.shareCode || 'Sin código'}`, 'info');
+
+                    // Buscar itinerario
+                    log(`\n🗓️ Verificando itinerario...`, 'info');
+                    try {
+                        const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+                        const itinerarySnap = await getDoc(itineraryRef);
+
+                        if (itinerarySnap.exists()) {
+                            const itineraryData = itinerarySnap.data();
+                            const daysCount = itineraryData.days?.length || 0;
+                            const totalActivities = itineraryData.days?.reduce((sum, day) => sum + (day.activities?.length || 0), 0) || 0;
+
+                            log(`✅ ITINERARIO ENCONTRADO`, 'success');
+                            log(`   Días: ${daysCount}`, 'success');
+                            log(`   Actividades totales: ${totalActivities}`, 'success');
+
+                            if (daysCount > 0) {
+                                log(`\n📅 Resumen de días:`, 'info');
+                                itineraryData.days.forEach((day, index) => {
+                                    log(`   Día ${day.day}: ${day.activities?.length || 0} actividades`, 'info');
+                                    if (day.activities && day.activities.length > 0) {
+                                        day.activities.forEach((act, i) => {
+                                            log(`      ${i + 1}. ${act.title || act.name || 'Sin título'}`, 'info');
+                                        });
+                                    }
+                                });
+                            }
+
+                            // Guardar backup local
+                            log(`\n💾 Guardando backup local...`, 'info');
+                            const backup = {
+                                tripId: tripId,
+                                tripData: tripData,
+                                itineraryData: itineraryData,
+                                timestamp: new Date().toISOString()
+                            };
+                            localStorage.setItem('backup_trip_' + tripId, JSON.stringify(backup));
+                            log(`✅ Backup guardado en localStorage con clave: backup_trip_${tripId}`, 'success');
+
+                        } else {
+                            log(`⚠️ NO SE ENCONTRÓ ITINERARIO para este trip`, 'warning');
+                        }
+                    } catch (itinError) {
+                        log(`❌ Error al leer itinerario: ${itinError.message}`, 'error');
+                    }
+
+                    // Verificar gastos
+                    const expensesCount = tripData.expenses?.length || 0;
+                    log(`\n💰 Gastos: ${expensesCount} registrados`, expensesCount > 0 ? 'success' : 'info');
+
+                    // Verificar vuelos
+                    const hasOutbound = tripData.flights?.outbound?.flightNumber;
+                    const hasReturn = tripData.flights?.return?.flightNumber;
+                    log(`✈️ Vuelos:`, 'info');
+                    log(`   Ida: ${hasOutbound ? '✅ ' + tripData.flights.outbound.flightNumber : '❌ No configurado'}`, hasOutbound ? 'success' : 'warning');
+                    log(`   Vuelta: ${hasReturn ? '✅ ' + tripData.flights.return.flightNumber : '❌ No configurado'}`, hasReturn ? 'success' : 'warning');
+
+                    // Verificar alojamientos
+                    const accommodationsCount = tripData.accommodations?.length || 0;
+                    log(`🏨 Alojamientos: ${accommodationsCount} registrados`, accommodationsCount > 0 ? 'success' : 'info');
+                }
+
+                // localStorage check
+                log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'info');
+                log(`\n💾 Verificando localStorage...`, 'info');
+                const currentTripId = localStorage.getItem('currentTripId');
+                if (currentTripId) {
+                    log(`Current Trip ID en localStorage: ${currentTripId}`, 'success');
+                } else {
+                    log(`⚠️ No hay currentTripId en localStorage`, 'warning');
+                }
+
+                // Listar todos los backups
+                log(`\n📦 Backups en localStorage:`, 'info');
+                let backupCount = 0;
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('backup_trip_')) {
+                        backupCount++;
+                        log(`   ✅ ${key}`, 'success');
+                    }
+                }
+                if (backupCount === 0) {
+                    log(`   ⚠️ No hay backups guardados`, 'warning');
+                }
+
+                statusDiv.innerHTML = '<p class="text-green-800">✅ Diagnóstico completado</p>';
+
+            } catch (error) {
+                log(`❌ ERROR CRÍTICO: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        // Esperar a que el usuario esté autenticado
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                log(`🔐 Usuario detectado: ${user.email}`, 'success');
+                setTimeout(() => diagnose(), 1000);
+            } else {
+                statusDiv.innerHTML = '<p class="text-red-800">❌ No autenticado. Redirigiendo al login...</p>';
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>

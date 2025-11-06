@@ -56,22 +56,32 @@ export const ActivityAutocomplete = {
 
         // Agregar sugerencias comunes de transporte
         const transportSuggestions = [
-            { name: 'Narita Express → Shinjuku', city: 'Tokyo', category: 'Transporte', icon: '🚄', description: 'Tren del aeropuerto a Shinjuku', price: 3200, rating: null },
-            { name: 'Shinkansen Tokyo → Kyoto', city: 'Tokyo → Kyoto', category: 'Transporte', icon: '🚅', description: 'Bullet train cubierto por JR Pass', price: 13320, rating: null },
-            { name: 'JR Yamanote Line', city: 'Tokyo', category: 'Transporte', icon: '🚇', description: 'Línea circular de Tokyo', price: 0, rating: null },
-            { name: 'Limousine Bus al Hotel', city: 'Tokyo', category: 'Transporte', icon: '🚌', description: 'Bus del aeropuerto', price: 3200, rating: null }
+            { name: 'Narita Express → Shinjuku', city: 'Aeropuerto Narita', category: 'Transporte', icon: '🚄', description: 'Tren del aeropuerto a Shinjuku', price: 3200, rating: null },
+            { name: 'Shinkansen Tokyo → Kyoto', city: 'Transporte Interurbano', category: 'Transporte', icon: '🚅', description: 'Bullet train cubierto por JR Pass', price: 13320, rating: null },
+            { name: 'Recoger Pocket WiFi', city: 'Aeropuerto', category: 'Logística', icon: '📶', description: 'Recoger dispositivo de internet móvil', price: 0, rating: null },
+            { name: 'Comprar Suica/Pasmo Card', city: 'Estación de Tren', category: 'Logística', icon: '💳', description: 'Tarjeta recargable para transporte', price: 2000, rating: null },
+            { name: 'Limousine Bus al Hotel', city: 'Aeropuerto', category: 'Transporte', icon: '🚌', description: 'Bus del aeropuerto al hotel', price: 3200, rating: null },
+            { name: 'Reservar asientos Shinkansen', city: 'Estación JR', category: 'Logística', icon: '🎟️', description: 'Reservar asientos para tren bala', price: 0, rating: null },
+            { name: 'Ferry a Miyajima', city: 'Hiroshima', category: 'Transporte', icon: '⛴️', description: 'Ferry a la isla de Miyajima', price: 180, rating: null }
         ];
 
         this.suggestions.push(...transportSuggestions);
 
         // Agregar sugerencias de comida
         const foodSuggestions = [
-            { name: 'Desayuno en hotel', city: 'Hotel', category: 'Comida', icon: '🍳', description: 'Incluido en reserva', price: 0, rating: null },
+            { name: 'Desayuno en Konbini', city: 'Cualquiera', category: 'Comida', icon: '🍙', description: 'Comida rápida de convenience store', price: 500, rating: null },
             { name: 'Almuerzo', city: '', category: 'Comida', icon: '🍽️', description: 'Por definir', price: 1500, rating: null },
             { name: 'Cena', city: '', category: 'Comida', icon: '🍜', description: 'Por definir', price: 2000, rating: null },
             { name: 'Ramen', city: '', category: 'Comida', icon: '🍜', description: 'Ramen auténtico japonés', price: 1200, rating: null },
             { name: 'Sushi', city: '', category: 'Comida', icon: '🍣', description: 'Sushi fresco', price: 3000, rating: null },
-            { name: 'Izakaya', city: '', category: 'Comida', icon: '🍻', description: 'Bar japonés tradicional', price: 3500, rating: null }
+            { name: 'Izakaya (cena y bebidas)', city: '', category: 'Comida', icon: '🍻', description: 'Bar japonés tradicional', price: 3500, rating: null },
+            { name: 'Okonomiyaki', city: 'Osaka/Hiroshima', category: 'Comida', icon: '🍳', description: 'Pizza/pancake japonés', price: 1500, rating: null },
+            { name: 'Takoyaki', city: 'Osaka', category: 'Comida', icon: '🐙', description: 'Bolas de pulpo', price: 600, rating: null },
+            { name: 'Tonkatsu', city: '', category: 'Comida', icon: '🐖', description: 'Chuleta de cerdo empanizada', price: 1800, rating: null },
+            { name: 'Tempura', city: '', category: 'Comida', icon: '🍤', description: 'Fritura japonesa', price: 2000, rating: null },
+            { name: 'Udon/Soba', city: '', category: 'Comida', icon: '🥢', description: 'Fideos japoneses', price: 900, rating: null },
+            { name: 'Matcha Parfait / Dulces', city: 'Kyoto', category: 'Comida', icon: '🍵', description: 'Postre de té verde', price: 1000, rating: null },
+            { name: 'Depachika (sótano de comida)', city: 'Grandes Almacenes', category: 'Comida', icon: '🍱', description: 'Explorar comida gourmet', price: 1500, rating: null }
         ];
 
         this.suggestions.push(...foodSuggestions);
@@ -82,7 +92,11 @@ export const ActivityAutocomplete = {
             { name: 'Check-out Hotel', city: 'Hotel', category: 'Logística', icon: '🧳', description: 'Salida del hotel', price: 0, rating: null },
             { name: 'Tiempo libre', city: '', category: 'Tiempo Libre', icon: '🚶', description: 'Exploración libre', price: 0, rating: null },
             { name: 'Descanso en hotel', city: 'Hotel', category: 'Descanso', icon: '😴', description: 'Tiempo de recuperación', price: 0, rating: null },
-            { name: 'Compras', city: '', category: 'Shopping', icon: '🛍️', description: 'Shopping', price: 5000, rating: null }
+            { name: 'Compras de souvenirs', city: '', category: 'Shopping', icon: '🛍️', description: 'Comprar recuerdos', price: 5000, rating: null },
+            { name: 'Enviar equipaje (Takkyubin)', city: 'Hotel/Konbini', category: 'Logística', icon: '📦', description: 'Enviar maletas a la siguiente ciudad', price: 2000, rating: null },
+            { name: 'Hacer lavandería', city: 'Hotel/Lavandería', category: 'Logística', icon: '🧺', description: 'Lavar ropa', price: 600, rating: null },
+            { name: 'Sacar dinero de ATM', city: '7-Eleven', category: 'Logística', icon: '🏧', description: 'Retirar efectivo', price: 0, rating: null },
+            { name: 'Explorar barrio local', city: '', category: 'Exploración', icon: '🗺️', description: 'Caminar sin rumbo fijo', price: 0, rating: null }
         ];
 
         this.suggestions.push(...otherSuggestions);

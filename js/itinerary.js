@@ -479,29 +479,66 @@ async function showBalanceAnalysis() {
 
     analysis.daysAnalysis.forEach(dayAnalysis => {
       const loadConfig = {
-        empty: { icon: '⚪', color: 'gray' },
-        low: { icon: '🔵', color: 'blue' },
-        light: { icon: '🟢', color: 'green' },
-        balanced: { icon: '✅', color: 'emerald' },
-        heavy: { icon: '🟠', color: 'orange' },
-        overloaded: { icon: '🔴', color: 'red' }
+        empty: {
+          icon: '⚪',
+          bgClass: 'bg-gray-100 dark:bg-gray-800',
+          borderClass: 'border-gray-300 dark:border-gray-600',
+          textClass: 'text-gray-900 dark:text-gray-100',
+          subtextClass: 'text-gray-700 dark:text-gray-300'
+        },
+        low: {
+          icon: '🔵',
+          bgClass: 'bg-blue-100 dark:bg-blue-900/30',
+          borderClass: 'border-blue-300 dark:border-blue-600',
+          textClass: 'text-blue-900 dark:text-blue-100',
+          subtextClass: 'text-blue-800 dark:text-blue-200'
+        },
+        light: {
+          icon: '🟢',
+          bgClass: 'bg-green-100 dark:bg-green-900/30',
+          borderClass: 'border-green-300 dark:border-green-600',
+          textClass: 'text-green-900 dark:text-green-100',
+          subtextClass: 'text-green-800 dark:text-green-200'
+        },
+        balanced: {
+          icon: '✅',
+          bgClass: 'bg-emerald-100 dark:bg-emerald-900/30',
+          borderClass: 'border-emerald-300 dark:border-emerald-600',
+          textClass: 'text-emerald-900 dark:text-emerald-100',
+          subtextClass: 'text-emerald-800 dark:text-emerald-200'
+        },
+        heavy: {
+          icon: '🟠',
+          bgClass: 'bg-orange-100 dark:bg-orange-900/30',
+          borderClass: 'border-orange-300 dark:border-orange-600',
+          textClass: 'text-orange-900 dark:text-orange-100',
+          subtextClass: 'text-orange-800 dark:text-orange-200'
+        },
+        overloaded: {
+          icon: '🔴',
+          bgClass: 'bg-red-100 dark:bg-red-900/30',
+          borderClass: 'border-red-300 dark:border-red-600',
+          textClass: 'text-red-900 dark:text-red-100',
+          subtextClass: 'text-red-800 dark:text-red-200'
+        }
       };
 
       const config = loadConfig[dayAnalysis.analysis.load] || loadConfig.balanced;
 
       message += `
-        <div class="bg-${config.color}-50 dark:bg-${config.color}-900/20 p-3 rounded border border-${config.color}-200 dark:border-${config.color}-700">
+        <div class="${config.bgClass} p-3 rounded border ${config.borderClass}">
           <div class="flex justify-between items-center">
-            <span class="font-semibold text-${config.color}-900 dark:text-${config.color}-100">
+            <span class="font-semibold ${config.textClass}">
               ${config.icon} Día ${dayAnalysis.day}
             </span>
-            <span class="text-xs font-mono text-${config.color}-700 dark:text-${config.color}-300">
+            <span class="text-xs font-mono ${config.subtextClass}">
               ${dayAnalysis.analysis.score}/100
             </span>
           </div>
-          <div class="text-xs text-${config.color}-700 dark:text-${config.color}-300 mt-1">
+          <div class="text-xs ${config.subtextClass} mt-1">
             ${dayAnalysis.activities.length} actividades •
-            ${dayAnalysis.analysis.factors.totalDuration ? Math.round(dayAnalysis.analysis.factors.totalDuration / 60) + 'h' : '0h'}
+            ${dayAnalysis.analysis.factors.totalDuration ? Math.round(dayAnalysis.analysis.factors.totalDuration / 60) + 'h' : '0h'} •
+            ¥${dayAnalysis.analysis.factors.totalCost ? dayAnalysis.analysis.factors.totalCost.toLocaleString() : '0'}
           </div>
         </div>
       `;
@@ -841,33 +878,105 @@ function renderDayExperiencePrediction(day) {
   const prediction = DayExperiencePredictor.predictDayExperience(day);
 
   const energyConfig = {
-    low: { icon: '😌', label: 'Ligero', color: 'green' },
-    medium: { icon: '👍', label: 'Moderado', color: 'blue' },
-    high: { icon: '💪', label: 'Intenso', color: 'orange' },
-    extreme: { icon: '🔥', label: 'Extremo', color: 'red' }
+    low: {
+      icon: '😌', label: 'Ligero',
+      borderClass: 'border-green-300 dark:border-green-700',
+      textClass: 'text-green-800 dark:text-green-200'
+    },
+    medium: {
+      icon: '👍', label: 'Moderado',
+      borderClass: 'border-blue-300 dark:border-blue-700',
+      textClass: 'text-blue-800 dark:text-blue-200'
+    },
+    high: {
+      icon: '💪', label: 'Intenso',
+      borderClass: 'border-orange-300 dark:border-orange-700',
+      textClass: 'text-orange-800 dark:text-orange-200'
+    },
+    extreme: {
+      icon: '🔥', label: 'Extremo',
+      borderClass: 'border-red-300 dark:border-red-700',
+      textClass: 'text-red-800 dark:text-red-200'
+    }
   };
 
   const crowdConfig = {
-    quiet: { icon: '🌿', label: 'Tranquilo', color: 'green' },
-    moderate: { icon: '👥', label: 'Moderado', color: 'blue' },
-    crowded: { icon: '🏙️', label: 'Concurrido', color: 'orange' },
-    very_crowded: { icon: '🚨', label: 'Muy Concurrido', color: 'red' }
+    quiet: {
+      icon: '🌿', label: 'Tranquilo',
+      borderClass: 'border-green-300 dark:border-green-700',
+      textClass: 'text-green-800 dark:text-green-200'
+    },
+    moderate: {
+      icon: '👥', label: 'Moderado',
+      borderClass: 'border-blue-300 dark:border-blue-700',
+      textClass: 'text-blue-800 dark:text-blue-200'
+    },
+    crowded: {
+      icon: '🏙️', label: 'Concurrido',
+      borderClass: 'border-orange-300 dark:border-orange-700',
+      textClass: 'text-orange-800 dark:text-orange-200'
+    },
+    very_crowded: {
+      icon: '🚨', label: 'Muy Concurrido',
+      borderClass: 'border-red-300 dark:border-red-700',
+      textClass: 'text-red-800 dark:text-red-200'
+    }
   };
 
   const paceConfig = {
-    relaxed: { icon: '🧘', label: 'Relajado', color: 'green' },
-    comfortable: { icon: '😊', label: 'Cómodo', color: 'blue' },
-    moderate: { icon: '⏰', label: 'Moderado', color: 'yellow' },
-    intense: { icon: '🏃', label: 'Intenso', color: 'orange' },
-    aggressive: { icon: '🚀', label: 'Agresivo', color: 'red' }
+    relaxed: {
+      icon: '🧘', label: 'Relajado',
+      borderClass: 'border-green-300 dark:border-green-700',
+      textClass: 'text-green-800 dark:text-green-200'
+    },
+    comfortable: {
+      icon: '😊', label: 'Cómodo',
+      borderClass: 'border-blue-300 dark:border-blue-700',
+      textClass: 'text-blue-800 dark:text-blue-200'
+    },
+    moderate: {
+      icon: '⏰', label: 'Moderado',
+      borderClass: 'border-yellow-300 dark:border-yellow-700',
+      textClass: 'text-yellow-800 dark:text-yellow-200'
+    },
+    intense: {
+      icon: '🏃', label: 'Intenso',
+      borderClass: 'border-orange-300 dark:border-orange-700',
+      textClass: 'text-orange-800 dark:text-orange-200'
+    },
+    aggressive: {
+      icon: '🚀', label: 'Agresivo',
+      borderClass: 'border-red-300 dark:border-red-700',
+      textClass: 'text-red-800 dark:text-red-200'
+    }
   };
 
   const budgetConfig = {
-    free: { icon: '🆓', label: 'Gratis', color: 'green' },
-    budget: { icon: '💵', label: 'Económico', color: 'green' },
-    moderate: { icon: '💰', label: 'Moderado', color: 'blue' },
-    high: { icon: '💳', label: 'Alto', color: 'orange' },
-    premium: { icon: '💎', label: 'Premium', color: 'purple' }
+    free: {
+      icon: '🆓', label: 'Gratis',
+      borderClass: 'border-green-300 dark:border-green-700',
+      textClass: 'text-green-800 dark:text-green-200'
+    },
+    budget: {
+      icon: '💵', label: 'Económico',
+      borderClass: 'border-green-300 dark:border-green-700',
+      textClass: 'text-green-800 dark:text-green-200'
+    },
+    moderate: {
+      icon: '💰', label: 'Moderado',
+      borderClass: 'border-blue-300 dark:border-blue-700',
+      textClass: 'text-blue-800 dark:text-blue-200'
+    },
+    high: {
+      icon: '💳', label: 'Alto',
+      borderClass: 'border-orange-300 dark:border-orange-700',
+      textClass: 'text-orange-800 dark:text-orange-200'
+    },
+    premium: {
+      icon: '💎', label: 'Premium',
+      borderClass: 'border-purple-300 dark:border-purple-700',
+      textClass: 'text-purple-800 dark:text-purple-200'
+    }
   };
 
   const energy = energyConfig[prediction.energy.level] || energyConfig.medium;
@@ -883,35 +992,35 @@ function renderDayExperiencePrediction(day) {
       </h3>
 
       <div class="grid grid-cols-2 gap-2 mb-3">
-        <div class="bg-white dark:bg-gray-800 rounded p-2 border border-${energy.color}-200 dark:border-${energy.color}-700">
+        <div class="bg-white dark:bg-gray-800 rounded p-2 border ${energy.borderClass}">
           <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Energía</div>
           <div class="flex items-center gap-1">
             <span class="text-lg">${energy.icon}</span>
-            <span class="text-sm font-semibold text-${energy.color}-700 dark:text-${energy.color}-300">${energy.label}</span>
+            <span class="text-sm font-semibold ${energy.textClass}">${energy.label}</span>
           </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded p-2 border border-${crowds.color}-200 dark:border-${crowds.color}-700">
+        <div class="bg-white dark:bg-gray-800 rounded p-2 border ${crowds.borderClass}">
           <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Multitudes</div>
           <div class="flex items-center gap-1">
             <span class="text-lg">${crowds.icon}</span>
-            <span class="text-sm font-semibold text-${crowds.color}-700 dark:text-${crowds.color}-300">${crowds.label}</span>
+            <span class="text-sm font-semibold ${crowds.textClass}">${crowds.label}</span>
           </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded p-2 border border-${pace.color}-200 dark:border-${pace.color}-700">
+        <div class="bg-white dark:bg-gray-800 rounded p-2 border ${pace.borderClass}">
           <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Ritmo</div>
           <div class="flex items-center gap-1">
             <span class="text-lg">${pace.icon}</span>
-            <span class="text-sm font-semibold text-${pace.color}-700 dark:text-${pace.color}-300">${pace.label}</span>
+            <span class="text-sm font-semibold ${pace.textClass}">${pace.label}</span>
           </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded p-2 border border-${budget.color}-200 dark:border-${budget.color}-700">
+        <div class="bg-white dark:bg-gray-800 rounded p-2 border ${budget.borderClass}">
           <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Presupuesto</div>
           <div class="flex items-center gap-1">
             <span class="text-lg">${budget.icon}</span>
-            <span class="text-sm font-semibold text-${budget.color}-700 dark:text-${budget.color}-300">¥${prediction.budget.total.toLocaleString()}</span>
+            <span class="text-sm font-semibold ${budget.textClass}">¥${prediction.budget.total.toLocaleString()}</span>
           </div>
         </div>
       </div>
@@ -1317,6 +1426,11 @@ export const ItineraryHandler = {
         document.getElementById('activityDesc').value = activity.desc || '';
         document.getElementById('activityCost').value = activity.cost || '';
         document.getElementById('activityStation').value = activity.station || '';
+        // 📍 Load coordinates if they exist
+        if (activity.coordinates) {
+          document.getElementById('activityLat').value = activity.coordinates.lat || '';
+          document.getElementById('activityLng').value = activity.coordinates.lng || '';
+        }
       }
     } else {
       title.textContent = 'Añadir Actividad';
@@ -1342,6 +1456,29 @@ export const ItineraryHandler = {
         this.saveActivity();
       });
       form.dataset.handlerAttached = 'true';
+    }
+
+    // Setup help button for coordinates (only once)
+    const helpBtn = document.getElementById('helpLocationBtn');
+    if (helpBtn && !helpBtn.dataset.handlerAttached) {
+      helpBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        alert(`📍 Cómo obtener coordenadas de Google Maps:
+
+1. Abre Google Maps (maps.google.com)
+2. Busca el lugar (ej: "Tokyo Tower")
+3. Haz clic derecho en el marcador del lugar
+4. Selecciona la primera opción (aparecen las coordenadas)
+5. Las coordenadas se copian automáticamente al portapapeles
+6. Pega aquí las coordenadas
+
+Ejemplo de coordenadas:
+• Latitud: 35.681236
+• Longitud: 139.767125
+
+Nota: Si copias ambas juntas (ej: "35.681236, 139.767125"), pega la primera parte en Latitud y la segunda en Longitud.`);
+      });
+      helpBtn.dataset.handlerAttached = 'true';
     }
   },
 
@@ -1370,6 +1507,10 @@ export const ItineraryHandler = {
     const cost = parseFloat(document.getElementById('activityCost').value) || 0;
     const station = document.getElementById('activityStation').value;
 
+    // 📍 Get coordinates
+    const lat = parseFloat(document.getElementById('activityLat').value);
+    const lng = parseFloat(document.getElementById('activityLng').value);
+
     if (!title) {
       alert('⚠️ El título es obligatorio');
       return;
@@ -1384,6 +1525,11 @@ export const ItineraryHandler = {
       cost,
       station
     };
+
+    // 📍 Add coordinates if both are provided and valid
+    if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+      activity.coordinates = { lat, lng };
+    }
 
     // Si estamos editando Y el día cambió, mover la actividad
     if (activityId && originalDay !== newDay) {
