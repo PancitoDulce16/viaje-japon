@@ -985,39 +985,39 @@ function renderDayExperiencePrediction(day) {
   const budget = budgetConfig[prediction.budget.category] || budgetConfig.moderate;
 
   return `
-    <div class="mt-4 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-700 rounded-lg p-4">
-      <h3 class="font-bold text-indigo-900 dark:text-indigo-100 mb-3 flex items-center gap-2">
+    <div class="mt-4 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-800 dark:to-gray-800 border border-indigo-200 dark:border-indigo-600 rounded-lg p-4">
+      <h3 class="font-bold text-indigo-900 dark:text-indigo-200 mb-3 flex items-center gap-2">
         <span>🔮</span>
         <span>Predicción de Experiencia</span>
       </h3>
 
       <div class="grid grid-cols-2 gap-2 mb-3">
-        <div class="bg-white dark:bg-gray-800 rounded p-2 border ${energy.borderClass}">
-          <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Energía</div>
+        <div class="bg-white dark:bg-gray-700 rounded p-2 border ${energy.borderClass}">
+          <div class="text-xs text-gray-600 dark:text-gray-300 mb-1">Energía</div>
           <div class="flex items-center gap-1">
             <span class="text-lg">${energy.icon}</span>
             <span class="text-sm font-semibold ${energy.textClass}">${energy.label}</span>
           </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded p-2 border ${crowds.borderClass}">
-          <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Multitudes</div>
+        <div class="bg-white dark:bg-gray-700 rounded p-2 border ${crowds.borderClass}">
+          <div class="text-xs text-gray-600 dark:text-gray-300 mb-1">Multitudes</div>
           <div class="flex items-center gap-1">
             <span class="text-lg">${crowds.icon}</span>
             <span class="text-sm font-semibold ${crowds.textClass}">${crowds.label}</span>
           </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded p-2 border ${pace.borderClass}">
-          <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Ritmo</div>
+        <div class="bg-white dark:bg-gray-700 rounded p-2 border ${pace.borderClass}">
+          <div class="text-xs text-gray-600 dark:text-gray-300 mb-1">Ritmo</div>
           <div class="flex items-center gap-1">
             <span class="text-lg">${pace.icon}</span>
             <span class="text-sm font-semibold ${pace.textClass}">${pace.label}</span>
           </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded p-2 border ${budget.borderClass}">
-          <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Presupuesto</div>
+        <div class="bg-white dark:bg-gray-700 rounded p-2 border ${budget.borderClass}">
+          <div class="text-xs text-gray-600 dark:text-gray-300 mb-1">Presupuesto</div>
           <div class="flex items-center gap-1">
             <span class="text-lg">${budget.icon}</span>
             <span class="text-sm font-semibold ${budget.textClass}">¥${prediction.budget.total.toLocaleString()}</span>
@@ -1025,7 +1025,7 @@ function renderDayExperiencePrediction(day) {
         </div>
       </div>
 
-      <div class="bg-white dark:bg-gray-800 rounded p-3 border border-indigo-200 dark:border-indigo-700">
+      <div class="bg-white dark:bg-gray-700 rounded p-3 border border-indigo-200 dark:border-indigo-600">
         <div class="flex items-center gap-2 mb-2">
           <span class="text-2xl">${prediction.recommendation.icon}</span>
           <span class="font-bold text-indigo-900 dark:text-indigo-100">${prediction.recommendation.rating.toUpperCase()}</span>
@@ -1048,48 +1048,48 @@ function renderDayLoadIndicator(day) {
       icon: '⚪',
       label: 'Vacío',
       bgClass: 'bg-gray-100 dark:bg-gray-700',
-      textClass: 'text-gray-700 dark:text-gray-300',
-      borderClass: 'border-gray-300 dark:border-gray-600'
+      textClass: 'text-gray-800 dark:text-gray-200',
+      borderClass: 'border-gray-300 dark:border-gray-500'
     },
     low: {
       color: 'blue',
       icon: '🔵',
       label: 'Ligero',
-      bgClass: 'bg-blue-50 dark:bg-blue-900/30',
-      textClass: 'text-blue-700 dark:text-blue-300',
-      borderClass: 'border-blue-300 dark:border-blue-600'
+      bgClass: 'bg-blue-50 dark:bg-blue-900/50',
+      textClass: 'text-blue-800 dark:text-blue-200',
+      borderClass: 'border-blue-300 dark:border-blue-500'
     },
     light: {
       color: 'green',
       icon: '🟢',
       label: 'Moderado',
-      bgClass: 'bg-green-50 dark:bg-green-900/30',
-      textClass: 'text-green-700 dark:text-green-300',
-      borderClass: 'border-green-300 dark:border-green-600'
+      bgClass: 'bg-green-50 dark:bg-green-900/50',
+      textClass: 'text-green-800 dark:text-green-200',
+      borderClass: 'border-green-300 dark:border-green-500'
     },
     balanced: {
       color: 'emerald',
       icon: '✅',
       label: 'Balanceado',
-      bgClass: 'bg-emerald-50 dark:bg-emerald-900/30',
-      textClass: 'text-emerald-700 dark:text-emerald-300',
-      borderClass: 'border-emerald-300 dark:border-emerald-600'
+      bgClass: 'bg-emerald-50 dark:bg-emerald-900/50',
+      textClass: 'text-emerald-800 dark:text-emerald-200',
+      borderClass: 'border-emerald-300 dark:border-emerald-500'
     },
     heavy: {
       color: 'orange',
       icon: '🟠',
       label: 'Cargado',
-      bgClass: 'bg-orange-50 dark:bg-orange-900/30',
-      textClass: 'text-orange-700 dark:text-orange-300',
-      borderClass: 'border-orange-300 dark:border-orange-600'
+      bgClass: 'bg-orange-50 dark:bg-orange-900/50',
+      textClass: 'text-orange-800 dark:text-orange-200',
+      borderClass: 'border-orange-300 dark:border-orange-500'
     },
     overloaded: {
       color: 'red',
       icon: '🔴',
       label: 'Sobrecargado',
-      bgClass: 'bg-red-50 dark:bg-red-900/30',
-      textClass: 'text-red-700 dark:text-red-300',
-      borderClass: 'border-red-300 dark:border-red-600'
+      bgClass: 'bg-red-50 dark:bg-red-900/50',
+      textClass: 'text-red-800 dark:text-red-200',
+      borderClass: 'border-red-300 dark:border-red-500'
     }
   };
 
