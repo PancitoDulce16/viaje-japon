@@ -288,6 +288,33 @@ async function initRealtimeSync(){
         // Success callback
         if (docSnap.exists()) {
           currentItinerary = docSnap.data();
+
+          // 🛡️ Data cleanup: Fix corrupted "undefined" titles
+          let needsCleanup = false;
+          if (currentItinerary?.days) {
+            currentItinerary.days.forEach(day => {
+              if (day.activities) {
+                day.activities.forEach(act => {
+                  if (act.title === 'undefined' || act.title === 'null' || !act.title) {
+                    if (act.name && act.name !== 'undefined' && act.name !== 'null') {
+                      act.title = act.name;
+                      needsCleanup = true;
+                      console.log(`🧹 Cleaned up activity "${act.id}": title "${act.title}" ← name "${act.name}"`);
+                    }
+                  }
+                });
+              }
+            });
+          }
+
+          // Save cleaned data back to Firebase
+          if (needsCleanup) {
+            console.log('💾 Saving cleaned itinerary to Firebase...');
+            saveCurrentItineraryToFirebase().catch(err =>
+              console.error('❌ Error saving cleaned itinerary:', err)
+            );
+          }
+
           // Extraer el checklist del itinerario si existe, o usar uno vacío
           checkedActivities = currentItinerary.checklist || {};
           console.log('✅ Itinerario y checklist sincronizados en tiempo real.');
@@ -589,8 +616,11 @@ function renderActivities(day){
     const userHasVoted = currentUserId && votes[currentUserId];
 
     // DEBUG: Log each activity title
-    const activityTitle = act.title || act.name || 'Sin título';
-    console.log(`📝 Activity ${act.id}: title="${act.title}", name="${act.name}", final="${activityTitle}"`);
+    // 🛡️ Data normalization: Filter out "undefined" string and falsy values
+    const normalizedTitle = (act.title && act.title !== 'undefined' && act.title !== 'null') ? act.title : null;
+    const normalizedName = (act.name && act.name !== 'undefined' && act.name !== 'null') ? act.name : null;
+    const activityTitle = normalizedTitle || normalizedName || 'Sin título';
+    console.log(`📝 Activity ${act.id}: title="${act.title}", name="${act.name}", normalized="${normalizedTitle}", final="${activityTitle}"`);
 
     return `
     <div class="activity-card bg-white dark:bg-gray-700 rounded-xl shadow-md overflow-hidden fade-in transition-all hover:shadow-xl border-l-4 border-red-500 dark:border-red-400 ${checkedActivities[act.id]?'opacity-60':''}" style="animation-delay:${i*0.05}s">
@@ -830,7 +860,9 @@ export const ItineraryHandler = {
       if (activity) {
         document.getElementById('activityIcon').value = activity.icon || '';
         document.getElementById('activityTime').value = activity.time || '';
-        document.getElementById('activityTitle').value = activity.title || activity.name || '';
+        // 🛡️ Data normalization: Filter out "undefined" string
+      const cleanTitle = (activity.title && activity.title !== 'undefined' && activity.title !== 'null') ? activity.title : activity.name;
+      document.getElementById('activityTitle').value = cleanTitle || '';
         document.getElementById('activityDesc').value = activity.desc || '';
         document.getElementById('activityCost').value = activity.cost || '';
         document.getElementById('activityStation').value = activity.station || '';
