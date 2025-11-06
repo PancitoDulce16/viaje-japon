@@ -8,6 +8,7 @@ import { APP_CONFIG } from '/js/config.js';
 import { ActivityAutocomplete } from './activity-autocomplete.js';
 import { RouteOptimizer } from './route-optimizer.js'; // 🗺️ Optimizador de rutas
 import { DayBalancer } from './day-balancer.js'; // ⚖️ Balanceador inteligente de días
+import { DayExperiencePredictor } from './day-experience-predictor.js'; // 🔮 Predictor de experiencia
 
 let checkedActivities = {};
 let currentDay = 1;
@@ -813,6 +814,9 @@ function renderDayOverview(day){
     <!-- ⚖️ Indicador de Carga del Día -->
     ${renderDayLoadIndicator(day)}
 
+    <!-- 🔮 Predicción de Experiencia -->
+    ${renderDayExperiencePrediction(day)}
+
     <div class="mt-6 space-y-2">
       <button type="button" id="analyzeBalanceBtn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2">
         <span>⚖️</span>
@@ -824,6 +828,103 @@ function renderDayOverview(day){
       </button>
       <button type="button" id="addActivityBtn_${day.day}" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition">+ Añadir Actividad</button>
     </div>`;
+}
+
+/**
+ * Renderiza la predicción de experiencia del día
+ */
+function renderDayExperiencePrediction(day) {
+  if (!day || !day.activities || day.activities.length === 0) {
+    return ''; // No mostrar nada si no hay actividades
+  }
+
+  const prediction = DayExperiencePredictor.predictDayExperience(day);
+
+  const energyConfig = {
+    low: { icon: '😌', label: 'Ligero', color: 'green' },
+    medium: { icon: '👍', label: 'Moderado', color: 'blue' },
+    high: { icon: '💪', label: 'Intenso', color: 'orange' },
+    extreme: { icon: '🔥', label: 'Extremo', color: 'red' }
+  };
+
+  const crowdConfig = {
+    quiet: { icon: '🌿', label: 'Tranquilo', color: 'green' },
+    moderate: { icon: '👥', label: 'Moderado', color: 'blue' },
+    crowded: { icon: '🏙️', label: 'Concurrido', color: 'orange' },
+    very_crowded: { icon: '🚨', label: 'Muy Concurrido', color: 'red' }
+  };
+
+  const paceConfig = {
+    relaxed: { icon: '🧘', label: 'Relajado', color: 'green' },
+    comfortable: { icon: '😊', label: 'Cómodo', color: 'blue' },
+    moderate: { icon: '⏰', label: 'Moderado', color: 'yellow' },
+    intense: { icon: '🏃', label: 'Intenso', color: 'orange' },
+    aggressive: { icon: '🚀', label: 'Agresivo', color: 'red' }
+  };
+
+  const budgetConfig = {
+    free: { icon: '🆓', label: 'Gratis', color: 'green' },
+    budget: { icon: '💵', label: 'Económico', color: 'green' },
+    moderate: { icon: '💰', label: 'Moderado', color: 'blue' },
+    high: { icon: '💳', label: 'Alto', color: 'orange' },
+    premium: { icon: '💎', label: 'Premium', color: 'purple' }
+  };
+
+  const energy = energyConfig[prediction.energy.level] || energyConfig.medium;
+  const crowds = crowdConfig[prediction.crowds.level] || crowdConfig.moderate;
+  const pace = paceConfig[prediction.pace.pace] || paceConfig.moderate;
+  const budget = budgetConfig[prediction.budget.category] || budgetConfig.moderate;
+
+  return `
+    <div class="mt-4 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-700 rounded-lg p-4">
+      <h3 class="font-bold text-indigo-900 dark:text-indigo-100 mb-3 flex items-center gap-2">
+        <span>🔮</span>
+        <span>Predicción de Experiencia</span>
+      </h3>
+
+      <div class="grid grid-cols-2 gap-2 mb-3">
+        <div class="bg-white dark:bg-gray-800 rounded p-2 border border-${energy.color}-200 dark:border-${energy.color}-700">
+          <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Energía</div>
+          <div class="flex items-center gap-1">
+            <span class="text-lg">${energy.icon}</span>
+            <span class="text-sm font-semibold text-${energy.color}-700 dark:text-${energy.color}-300">${energy.label}</span>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded p-2 border border-${crowds.color}-200 dark:border-${crowds.color}-700">
+          <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Multitudes</div>
+          <div class="flex items-center gap-1">
+            <span class="text-lg">${crowds.icon}</span>
+            <span class="text-sm font-semibold text-${crowds.color}-700 dark:text-${crowds.color}-300">${crowds.label}</span>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded p-2 border border-${pace.color}-200 dark:border-${pace.color}-700">
+          <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Ritmo</div>
+          <div class="flex items-center gap-1">
+            <span class="text-lg">${pace.icon}</span>
+            <span class="text-sm font-semibold text-${pace.color}-700 dark:text-${pace.color}-300">${pace.label}</span>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded p-2 border border-${budget.color}-200 dark:border-${budget.color}-700">
+          <div class="text-xs text-gray-600 dark:text-gray-400 mb-1">Presupuesto</div>
+          <div class="flex items-center gap-1">
+            <span class="text-lg">${budget.icon}</span>
+            <span class="text-sm font-semibold text-${budget.color}-700 dark:text-${budget.color}-300">¥${prediction.budget.total.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded p-3 border border-indigo-200 dark:border-indigo-700">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-2xl">${prediction.recommendation.icon}</span>
+          <span class="font-bold text-indigo-900 dark:text-indigo-100">${prediction.recommendation.rating.toUpperCase()}</span>
+        </div>
+        <p class="text-xs text-gray-700 dark:text-gray-300">${prediction.recommendation.message}</p>
+      </div>
+    </div>
+  `;
 }
 
 /**

@@ -31,6 +31,7 @@ import { EssentialsHandler } from './essentials-handler.js';
 import { BudgetCalculator } from './budget-calculator.js';
 import { RouteOptimizer } from './route-optimizer.js'; // 🗺️ Optimizador de rutas
 import { DayBalancer } from './day-balancer.js'; // ⚖️ Balanceador inteligente de días
+import { DayExperiencePredictor } from './day-experience-predictor.js'; // 🔮 Predictor de experiencia
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';
