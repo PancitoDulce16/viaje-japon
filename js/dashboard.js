@@ -11,7 +11,7 @@ import { SafeFirestore } from './firestore-wrapper.js'; // 🛡️ Wrapper segur
 import { MapsHelper } from './maps-helper.js'; // 🗺️ Helper para Google Maps
 import { PackingList } from './packing-list.js';
 import { FavoritesManager } from './favorites-manager.js';
-import { ItineraryHandler } from './itinerary.js?v=2025-11-05-03';
+import { ItineraryHandler } from './itinerary.js?v=2025-11-05-04';
 import { TabsHandler } from './tabs.js';
 import { ModalRenderer } from './modals.js';
 import { MapHandler } from './map.js';
@@ -224,8 +224,10 @@ class DashboardManager {
     async initModals() {
         try {
             // Inicializar el renderizador de modales
-            if (window.ModalRenderer) {
-                window.modalRenderer = new ModalRenderer();
+            if (ModalRenderer && ModalRenderer.renderModals) {
+                console.log('🎭 Rendering modals...');
+                ModalRenderer.renderModals();
+                console.log('✅ Modals rendered');
             }
         } catch (error) {
             console.error('❌ Error al inicializar modales:', error);

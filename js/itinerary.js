@@ -830,11 +830,17 @@ export const ItineraryHandler = {
 
   // Mostrar modal de actividad (añadir o editar)
   showActivityModal(activityId, day) {
+    console.log('🔍 showActivityModal called with:', { activityId, day });
     const modal = document.getElementById('activityModal');
     const form = document.getElementById('activityForm');
     const title = document.getElementById('activityModalTitle');
 
-    if (!modal || !form) return;
+    console.log('🔍 Modal elements:', { modal: !!modal, form: !!form, title: !!title });
+
+    if (!modal || !form) {
+      console.error('❌ Modal or form not found!', { modal: !!modal, form: !!form });
+      return;
+    }
 
     // Reset form
     form.reset();
@@ -872,8 +878,10 @@ export const ItineraryHandler = {
     }
 
     // Mostrar modal
+    console.log('🎭 Opening modal...');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    console.log('✅ Modal classes updated:', modal.classList.toString());
 
     // Inicializar autocomplete
     setTimeout(() => {
