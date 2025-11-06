@@ -31,6 +31,33 @@
 /* Asegurar que bg-white en dark mode sea oscuro */
 .dark .bg-white {
     background-color: #1f2937 !important;
+    color: #f3f4f6 !important;
+}
+
+/* Fix pink/rose text colors in dark mode */
+.dark .text-pink-300,
+.dark .text-pink-400,
+.dark .text-pink-500,
+.dark .text-rose-300,
+.dark .text-rose-400,
+.dark .text-rose-500 {
+    color: #fda4af !important; /* Bright pink with good contrast on dark */
+}
+
+/* Fix purple/violet text colors in dark mode */
+.dark .text-purple-300,
+.dark .text-purple-400,
+.dark .text-purple-500,
+.dark .text-violet-300,
+.dark .text-violet-400 {
+    color: #c4b5fd !important; /* Bright violet with good contrast */
+}
+
+/* Fix blue text colors in dark mode */
+.dark .text-blue-300,
+.dark .text-blue-400,
+.dark .text-blue-500 {
+    color: #93c5fd !important; /* Bright blue with good contrast */
 }
 
 /* =================================================================
@@ -431,6 +458,49 @@ li,
 .dark #emergencyModal .modal-body {
     background-color: #1f2937;
     color: #f3f4f6;
+}
+
+/* =================================================================
+   MAP TAB - Fix contrast issues in map section
+   ================================================================= */
+
+/* Map content - force dark backgrounds and light text */
+.dark #content-map,
+.dark #content-map .bg-white {
+    background-color: #1f2937 !important;
+    color: #f3f4f6 !important;
+}
+
+/* Map cards - hotels and attractions */
+.dark #content-map .rounded-xl,
+.dark #content-map .rounded-lg,
+.dark #content-map .rounded {
+    background-color: #374151 !important;
+    color: #f3f4f6 !important;
+}
+
+/* Map section headers */
+.dark #content-map h1,
+.dark #content-map h2,
+.dark #content-map h3,
+.dark #content-map h4 {
+    color: #f9fafb !important;
+}
+
+/* Map section paragraphs and spans */
+.dark #content-map p,
+.dark #content-map span,
+.dark #content-map div {
+    color: #e5e7eb !important;
+}
+
+/* Map links */
+.dark #content-map a {
+    color: #60a5fa !important;
+}
+
+.dark #content-map a:hover {
+    color: #93c5fd !important;
 }
 
 /* =================================================================
