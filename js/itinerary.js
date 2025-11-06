@@ -1020,3 +1020,4 @@ window.addEventListener('auth:loggedOut', () => {
 });
 
 window.ItineraryHandler = ItineraryHandler;
+
