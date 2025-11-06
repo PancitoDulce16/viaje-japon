@@ -103,9 +103,13 @@ export const ModalRenderer = {
                                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     📍 Ubicación (para optimizador de rutas)
                                 </label>
-                                <button type="button" id="helpLocationBtn" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 text-xs">
-                                    ¿Cómo obtener coordenadas?
+                                <button type="button" id="helpLocationBtn" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 text-xs font-semibold">
+                                    📖 Ver guía
                                 </button>
+                            </div>
+                            <div class="mb-3 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded text-xs">
+                                <span class="font-semibold text-green-800 dark:text-green-200">✨ Tip:</span>
+                                <span class="text-green-700 dark:text-green-300"> Escribe el nombre del lugar arriba (ej: "Tokyo Tower") y aparecerán sugerencias con coordenadas automáticas</span>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -118,7 +122,7 @@ export const ModalRenderer = {
                                 </div>
                             </div>
                             <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                                💡 Opcional: Agrega coordenadas para usar el optimizador de rutas y calcular traslados automáticamente
+                                💡 Opcional: Necesario para calcular rutas óptimas y tiempos de traslado
                             </p>
                         </div>
                         <div class="mt-6 flex justify-end gap-4">

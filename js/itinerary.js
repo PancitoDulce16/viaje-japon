@@ -6,6 +6,7 @@ import { doc, setDoc, getDoc, onSnapshot, updateDoc } from 'https://www.gstatic.
 import { searchCities } from '/data/japan-cities.js';
 import { APP_CONFIG } from '/js/config.js';
 import { ActivityAutocomplete } from './activity-autocomplete.js';
+import { LocationAutocomplete } from './location-autocomplete.js'; // 📍 Autocompletado de ubicaciones
 import { RouteOptimizer } from './route-optimizer.js'; // 🗺️ Optimizador de rutas
 import { DayBalancer } from './day-balancer.js'; // ⚖️ Balanceador inteligente de días
 import { DayExperiencePredictor } from './day-experience-predictor.js'; // 🔮 Predictor de experiencia
@@ -650,10 +651,19 @@ async function optimizeDayRoute(dayNumber) {
     );
 
     if (activitiesWithCoords.length < 2) {
+      const activitiesWithoutCoords = dayData.activities.filter(act =>
+        !act.coordinates || !act.coordinates.lat || !act.coordinates.lng
+      );
+
+      const activityNames = activitiesWithoutCoords.map(act => `• ${act.title || act.name}`).join('\n');
+
       Notifications.show(
-        `⚠️ Necesitas agregar ubicaciones (coordenadas) a las actividades primero.\n` +
-        `Solo ${activitiesWithCoords.length} de ${dayData.activities.length} tienen ubicación.`,
-        'warning'
+        `⚠️ Necesitas agregar ubicaciones a las actividades.\n\n` +
+        `${activitiesWithCoords.length} de ${dayData.activities.length} tienen ubicación.\n\n` +
+        `Actividades sin ubicación:\n${activityNames}\n\n` +
+        `💡 Tip: Al editar una actividad, escribe el nombre del lugar (ej: "Tokyo Tower") y aparecerán sugerencias con coordenadas automáticas. ¡Es súper fácil!`,
+        'warning',
+        8000
       );
       return;
     }
@@ -1442,10 +1452,13 @@ export const ItineraryHandler = {
     modal.classList.add('flex');
     console.log('✅ Modal classes updated:', modal.classList.toString());
 
-    // Inicializar autocomplete
+    // Inicializar autocomplete de actividades y ubicaciones
     setTimeout(() => {
       if (window.ActivityAutocomplete && window.ActivityAutocomplete.init) {
         window.ActivityAutocomplete.init();
+      }
+      if (window.LocationAutocomplete && window.LocationAutocomplete.init) {
+        window.LocationAutocomplete.init();
       }
     }, 100);
 
@@ -1463,20 +1476,27 @@ export const ItineraryHandler = {
     if (helpBtn && !helpBtn.dataset.handlerAttached) {
       helpBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        alert(`📍 Cómo obtener coordenadas de Google Maps:
+        alert(`📍 Tres formas de agregar ubicación:
 
+✨ FORMA 1 - AUTOCOMPLETADO (Más Fácil):
+1. Escribe el nombre del lugar en el campo "Título"
+2. Aparecerán sugerencias de lugares populares
+3. Haz clic en una sugerencia
+4. ¡Las coordenadas se agregan automáticamente!
+
+Ejemplos: Tokyo Tower, Fushimi Inari, Shibuya Crossing, etc.
+
+📋 FORMA 2 - Google Maps (Manual):
 1. Abre Google Maps (maps.google.com)
-2. Busca el lugar (ej: "Tokyo Tower")
-3. Haz clic derecho en el marcador del lugar
-4. Selecciona la primera opción (aparecen las coordenadas)
-5. Las coordenadas se copian automáticamente al portapapeles
-6. Pega aquí las coordenadas
+2. Busca el lugar
+3. Haz clic derecho en el marcador
+4. Copia las coordenadas que aparecen
+5. Pégalas en los campos Latitud y Longitud
 
-Ejemplo de coordenadas:
+🔢 FORMA 3 - Coordenadas Directas:
+Si ya tienes las coordenadas, simplemente pégalas:
 • Latitud: 35.681236
-• Longitud: 139.767125
-
-Nota: Si copias ambas juntas (ej: "35.681236, 139.767125"), pega la primera parte en Latitud y la segunda en Longitud.`);
+• Longitud: 139.767125`);
       });
       helpBtn.dataset.handlerAttached = 'true';
     }
