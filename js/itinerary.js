@@ -243,20 +243,20 @@ async function loadItinerary(){
       return await loadFallbackTemplate();
     }
 
-    // Log other errors
-    console.error('❌ Error loading itinerary from Firebase:', error);
-
-    // Specific error handling for non-offline errors
+    // Specific error handling for permission-denied (expected when user has no trips)
     if (error.code === 'permission-denied') {
-      console.warn('⚠️ Permission denied - tripId inválido o usuario sin viajes');
+      console.log('ℹ️ No hay viajes accesibles - mostrando pantalla de creación');
 
       // 🚨 SECURITY FIX: Limpiar tripId inválido del localStorage
-      console.warn('🧹 Limpiando tripId inválido del localStorage');
       localStorage.removeItem('currentTripId');
 
-      // NO mostrar notificación de error - es un caso esperado cuando el usuario no tiene viajes
+      // NO mostrar error - es un caso esperado cuando el usuario no tiene viajes
       // En su lugar, el renderEmptyState() mostrará la opción de crear viaje
+      return await loadFallbackTemplate();
     }
+
+    // Log unexpected errors (not offline, not permission-denied)
+    console.error('❌ Error inesperado loading itinerary from Firebase:', error);
 
     return await loadFallbackTemplate();
   }
