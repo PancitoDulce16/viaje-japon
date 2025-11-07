@@ -9,20 +9,18 @@
 // 📦 --- CONFIGURACIÓN DEL CACHÉ ---
 // IMPORTANTE: Cambia este número de versión CADA VEZ que hagas un cambio en los
 // archivos de la aplicación (JS, CSS, HTML) para forzar la actualización.
-const STATIC_CACHE_VERSION = 'japan-trip-planner-static-v3.2';
-const DYNAMIC_CACHE_VERSION = 'japan-trip-planner-dynamic-v3.2';
+const STATIC_CACHE_VERSION = 'japan-trip-planner-static-v10.0-NO-JS-CACHE';
+const DYNAMIC_CACHE_VERSION = 'japan-trip-planner-dynamic-v10.0-NO-JS-CACHE';
 const STATIC_CACHE_NAME = `static-${STATIC_CACHE_VERSION}`;
 const DYNAMIC_CACHE_NAME = `dynamic-${DYNAMIC_CACHE_VERSION}`;
 
-// Lista de archivos base (el "cascarón" de la app) que se guardarán en caché.
-// Estos son los archivos mínimos para que la app se muestre, incluso sin conexión.
+// ⚠️ NUNCA CACHEAR ARCHIVOS .js PARA EVITAR PROBLEMAS DE VERSIONES
+// Solo cachear imágenes, CSS, y HTML estático
 const APP_SHELL_URLS = [
     '/index.html',
     '/manifest.json',
     '/css/main.css',
     '/css/japan-theme.css',
-    '/js/app.js', // El archivo principal que carga todo lo demás
-    '/js/auth.js', // Esencial para la lógica de inicio de sesión
     '/images/icons/icon-192.png',
     '/images/icons/icon-512.png'
 ];
@@ -120,14 +118,22 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // --- REGLA 3: ESTRATEGIA PARA RECURSOS DEL APP SHELL ---
+    // --- REGLA 3: NUNCA CACHEAR ARCHIVOS .js (SIEMPRE RED) ---
+    // ⚠️ CRÍTICO: Los archivos .js SIEMPRE deben venir de la red para evitar problemas de versiones
+    if (url.pathname.endsWith('.js')) {
+        console.log(`[SW] 🚫 NEVER CACHE: ${url.pathname} - Siempre desde la red`);
+        event.respondWith(fetch(request));
+        return;
+    }
+
+    // --- REGLA 4: ESTRATEGIA PARA RECURSOS DEL APP SHELL ---
     // Si la petición es para un recurso que ya debería estar en el caché estático.
     if (APP_SHELL_URLS.includes(url.pathname)) {
         event.respondWith(cacheFirst(request, STATIC_CACHE_NAME));
         return;
     }
 
-    // --- REGLA 4: ESTRATEGIA PARA RECURSOS DINÁMICOS (Imágenes, Fuentes, etc.) ---
+    // --- REGLA 5: ESTRATEGIA PARA RECURSOS DINÁMICOS (Imágenes, Fuentes, etc.) ---
     // Para cualquier otra petición, usamos el caché dinámico.
     event.respondWith(cacheFirst(request, DYNAMIC_CACHE_NAME));
 });

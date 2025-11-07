@@ -125,7 +125,42 @@ window.addEventListener('unhandledrejection', (event) => {
   }
 });
 
+/**
+ * Limpiar Service Worker cache viejo
+ */
+async function clearServiceWorkerCache() {
+  if ('serviceWorker' in navigator) {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        console.log('🔄 Actualizando Service Worker...');
+        await registration.update();
+      }
+    } catch (error) {
+      console.warn('⚠️ No se pudo actualizar Service Worker:', error);
+    }
+  }
+
+  // Limpiar todos los caches del Service Worker
+  if ('caches' in window) {
+    try {
+      const cacheNames = await caches.keys();
+      console.log('🧹 Limpiando', cacheNames.length, 'caches del Service Worker...');
+      await Promise.all(
+        cacheNames.map(cacheName => {
+          console.log('🗑️ Eliminando cache:', cacheName);
+          return caches.delete(cacheName);
+        })
+      );
+      console.log('✅ Caches del Service Worker limpiados');
+    } catch (error) {
+      console.warn('⚠️ No se pudieron limpiar los caches:', error);
+    }
+  }
+}
+
 // Auto-ejecutar al cargar
 checkAndClearCache();
+clearServiceWorkerCache();
 
 console.log('✅ Cache Buster activo - Versión:', APP_VERSION);
