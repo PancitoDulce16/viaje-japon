@@ -16,6 +16,8 @@ export const APP_CONFIG = {
 
   // Se cargará desde config-local.js si existe (no trackeado en git)
   async loadLocalConfig() {
+    // En producción, este archivo no existe y eso está bien
+    // Las API keys ya están configuradas arriba
     try {
       const localConfig = await import('./config-local.js');
       if (localConfig.LOCAL_CONFIG) {
@@ -23,8 +25,8 @@ export const APP_CONFIG = {
         console.log('✅ Configuración local cargada');
       }
     } catch (e) {
-      // config-local.js no existe, usar valores por defecto
-      console.log('ℹ️ No hay configuración local (esto es normal en producción)');
+      // Silently fail - esto es esperado en producción
+      // No logear nada para evitar ruido en la consola
     }
   }
 };

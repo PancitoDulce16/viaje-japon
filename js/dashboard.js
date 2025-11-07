@@ -74,8 +74,13 @@ class DashboardManager {
         try {
             console.log('🚀 Iniciando dashboard...');
 
-            // 🔐 Cargar configuración local (API keys)
-            await APP_CONFIG.loadLocalConfig();
+            // 🔐 Cargar configuración local (API keys) - opcional en producción
+            try {
+                await APP_CONFIG.loadLocalConfig();
+            } catch (error) {
+                // config-local.js no existe en producción - esto es normal
+                console.log('ℹ️ No hay configuración local (normal en producción)');
+            }
 
             // 🔔 Inicializar sistema de notificaciones
             Notifications.init();
