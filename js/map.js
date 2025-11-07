@@ -1,5 +1,6 @@
 // js/map.js - Mapa Interactivo con Leaflet
 import { GooglePlacesAPI } from './google-places.js';
+import { APP_CONFIG } from './config.js';
 
 let map = null;
 let markersLayer = null;
@@ -254,8 +255,8 @@ export const MapHandler = {
                                 id="nearbySearchType"
                                 class="w-full p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500"
                             >
-                                <option value="restaurant">🍽️ Restaurantes</option>
-                                <option value="cafe">☕ Cafés</option>
+                                <option value="japanese_restaurant">🍽️ Restaurantes</option>
+                                <option value="coffee_shop">☕ Cafés</option>
                                 <option value="tourist_attraction">🎯 Atracciones</option>
                                 <option value="shopping_mall">🛍️ Centros Comerciales</option>
                                 <option value="park">🌳 Parques</option>
@@ -276,9 +277,9 @@ export const MapHandler = {
                     </div>
                 </div>
                 ` : `
-                <div class="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border-l-4 border-yellow-500">
+                <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500">
                     <p class="text-sm dark:text-gray-300">
-                        💡 <strong>Tip:</strong> Configura Google Places API key en config.js para buscar restaurantes, cafés y más lugares cercanos.
+                        💡 <strong>Tip:</strong> Usa el buscador para encontrar restaurantes, cafés y lugares cercanos a tus destinos.
                     </p>
                 </div>
                 `}
@@ -362,29 +363,42 @@ export const MapHandler = {
         // Limpiar marcadores existentes
         markersLayer.clearLayers();
 
-        // Añadir marcadores de hoteles
-        HOTEL_LOCATIONS.forEach(hotel => {
-            const marker = L.marker(hotel.coords, {
-                icon: createCustomIcon('🏨', '#3b82f6'),
-                type: 'hotels'
-            }).addTo(markersLayer);
+        // 🏨 Añadir marcadores de hoteles desde el itinerario (dinámico)
+        const itinerary = window.ItineraryHandler?.currentItinerary;
+        if (itinerary && itinerary.hotels) {
+            console.log('🏨 Agregando hoteles del itinerario al mapa:', itinerary.hotels);
 
-            marker.bindPopup(`
-                <div class="p-3 min-w-[200px]">
-                    <h3 class="font-bold text-lg mb-2">${hotel.icon} ${hotel.name}</h3>
-                    <p class="text-sm text-gray-600 mb-1">📍 ${hotel.city}</p>
-                    <p class="text-sm text-gray-600 mb-2">📅 ${hotel.dates}</p>
-                    <a href="https://www.google.com/maps/search/${encodeURIComponent(hotel.name)}"
-                       target="_blank"
-                       class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
-                        Ver en Google Maps →
-                    </a>
-                </div>
-            `);
+            Object.entries(itinerary.hotels).forEach(([city, hotel]) => {
+                if (!hotel.coordinates) {
+                    console.warn(`⚠️ Hotel en ${city} no tiene coordenadas:`, hotel);
+                    return;
+                }
 
-            // Guardar tipo para filtrado
-            marker.markerType = 'hotels';
-        });
+                const marker = L.marker([hotel.coordinates.lat, hotel.coordinates.lng], {
+                    icon: createCustomIcon('🏨', '#3b82f6'),
+                    type: 'hotels'
+                }).addTo(markersLayer);
+
+                marker.bindPopup(`
+                    <div class="p-3 min-w-[200px]">
+                        <h3 class="font-bold text-lg mb-2">🏨 ${hotel.name}</h3>
+                        <p class="text-sm text-gray-600 mb-1">📍 ${city}</p>
+                        ${hotel.address ? `<p class="text-sm text-gray-500 mb-2">${hotel.address}</p>` : ''}
+                        ${hotel.rating ? `<p class="text-sm text-yellow-600 mb-2">⭐ ${hotel.rating}</p>` : ''}
+                        <a href="https://www.google.com/maps/search/${encodeURIComponent(hotel.name)}"
+                           target="_blank"
+                           class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                            Ver en Google Maps →
+                        </a>
+                    </div>
+                `);
+
+                // Guardar tipo para filtrado
+                marker.markerType = 'hotels';
+            });
+        } else {
+            console.log('⚠️ No hay hoteles en el itinerario');
+        }
 
         // Añadir marcadores de atracciones
         TOP_ATTRACTIONS.forEach(attraction => {
@@ -461,11 +475,12 @@ export const MapHandler = {
         `;
 
         try {
-            const result = await GooglePlacesAPI.searchNearby({
+            const result = await GooglePlacesAPI.searchNearbyNew({
                 lat,
                 lng,
                 radius: 2000,
-                type: type
+                includedTypes: [type],
+                maxResults: 20
             });
 
             if (result.success && result.places.length > 0) {
