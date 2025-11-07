@@ -1,4 +1,4 @@
-// js/dashboard.js - Lógica específica para el dashboard
+// js/dashboard.js - Lógica específica para el dashboard v2.1
 import { AppCore } from './core.js';
 
 // CSS se carga via <link> en dashboard.html
@@ -32,6 +32,10 @@ import { BudgetCalculator } from './budget-calculator.js';
 import { RouteOptimizer } from './route-optimizer.js'; // 🗺️ Optimizador de rutas
 import { DayBalancer } from './day-balancer.js'; // ⚖️ Balanceador inteligente de días
 import { DayExperiencePredictor } from './day-experience-predictor.js'; // 🔮 Predictor de experiencia
+import { IntelligentGeocoder } from './intelligent-geocoder.js'; // 🧠 Geocodificación inteligente
+import { APP_CONFIG } from './config.js'; // 🔐 Configuración de la app
+import { HotelBaseSystem } from './hotel-base-system.js'; // 🏨 Sistema de hotel base
+// Smart Suggestions se cargan desde HTML usando dynamic imports
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';
@@ -55,6 +59,7 @@ window.HotelsHandler = HotelsHandler;
 window.PreparationHandler = PreparationHandler;
 window.ItineraryHandler = ItineraryHandler;
 window.EssentialsHandler = EssentialsHandler;
+window.HotelBaseSystem = HotelBaseSystem;
 
 // 🖼️ Image Service imports
 import './image-service.js';
@@ -68,6 +73,9 @@ class DashboardManager {
     async init() {
         try {
             console.log('🚀 Iniciando dashboard...');
+
+            // 🔐 Cargar configuración local (API keys)
+            await APP_CONFIG.loadLocalConfig();
 
             // 🔔 Inicializar sistema de notificaciones
             Notifications.init();

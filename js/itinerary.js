@@ -803,6 +803,18 @@ function renderDayOverview(day){
   else if (tripId){ syncStatus='<span class="text-xs text-green-600 dark:text-green-400">🤝 Modo Colaborativo</span>'; }
   else { syncStatus='<span class="text-xs text-blue-600 dark:text-blue-400">☁️ Sincronizado</span>'; }
 
+  // 🏨 Detectar ciudad y hotel para este día
+  let cityForDay = day.city || day.location || null;
+  if (!cityForDay && window.HotelBaseSystem) {
+    cityForDay = window.HotelBaseSystem.detectCityForDay(day);
+  }
+
+  // Obtener hotel de la ciudad si existe
+  let hotelForCity = null;
+  if (cityForDay && currentItinerary && window.HotelBaseSystem) {
+    hotelForCity = window.HotelBaseSystem.getHotelForCity(currentItinerary, cityForDay);
+  }
+
   // Debug: Log day data to see what fields are available
   console.log('📊 Day data for day', day.day, ':', {
     city: day.city,
@@ -880,12 +892,29 @@ function renderDayOverview(day){
     <div class="space-y-3 text-sm">
       <p class="font-semibold text-base dark:text-gray-100">${day.date}</p>
       <p class="font-bold text-lg text-red-600 dark:text-red-400">${day.title||''}</p>
-      ${day.hotel ? `
+      ${hotelForCity ? `
         <div class="bg-blue-50 dark:bg-blue-800 p-3 rounded-lg border-l-2 border-blue-500 dark:border-blue-400">
-          <p class="text-xs font-semibold text-blue-700 dark:text-blue-100 mb-1">🏨 Hotel Recomendado</p>
-          <p class="text-sm text-gray-700 dark:text-white">${day.hotel}</p>
+          <div class="flex justify-between items-start mb-1">
+            <p class="text-xs font-semibold text-blue-700 dark:text-blue-100">🏨 Hotel Base - ${cityForDay}</p>
+            <button
+              type="button"
+              onclick="ItineraryHandler.showHotelManagementModal('${cityForDay}')"
+              class="text-xs text-blue-600 dark:text-blue-200 hover:underline"
+            >Cambiar</button>
+          </div>
+          <p class="text-sm font-bold text-gray-900 dark:text-white">${hotelForCity.name}</p>
+          ${hotelForCity.address ? `<p class="text-xs text-gray-600 dark:text-gray-300 mt-1">${hotelForCity.address}</p>` : ''}
+          ${hotelForCity.rating ? `<p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">⭐ ${hotelForCity.rating}</p>` : ''}
         </div>
-      `:''}
+      ` : cityForDay ? `
+        <button
+          type="button"
+          onclick="ItineraryHandler.showHotelManagementModal('${cityForDay}')"
+          class="w-full bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800 p-3 rounded-lg border-2 border-dashed border-blue-400 dark:border-blue-500 text-blue-700 dark:text-blue-200 text-sm font-semibold transition"
+        >
+          + Agregar Hotel en ${cityForDay}
+        </button>
+      ` : ''}
       ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-200">📍 ${day.location}</p>`:''}
     </div>
     <!-- ⚖️ Indicador de Carga del Día -->
@@ -1733,6 +1762,251 @@ Si ya tienes las coordenadas, simplemente pégalas:
     }
 
     await saveCurrentItineraryToFirebase();
+  },
+
+  // 🏨 NUEVO: Sistema de Hotel Base
+  async showHotelManagementModal(city) {
+    console.log('🏨 Opening hotel management modal for:', city);
+
+    if (!currentItinerary) {
+      Notifications.show('No hay itinerario activo', 'error');
+      return;
+    }
+
+    // Get current hotel for this city
+    const currentHotel = window.HotelBaseSystem?.getHotelForCity(currentItinerary, city);
+
+    // Create modal
+    const modal = document.createElement('div');
+    modal.id = 'hotelManagementModal';
+    modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-6">
+          <div class="flex justify-between items-center">
+            <h2 class="text-2xl font-bold">🏨 Hotel Base - ${city}</h2>
+            <button onclick="this.closest('#hotelManagementModal').remove()" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+          </div>
+          <p class="text-sm text-white/80 mt-2">El hotel base optimiza las sugerencias de actividades cercanas</p>
+        </div>
+
+        <!-- Current Hotel -->
+        <div class="p-6 border-b dark:border-gray-700">
+          ${currentHotel ? `
+            <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg border-2 border-blue-200 dark:border-blue-700">
+              <div class="flex justify-between items-start mb-2">
+                <div class="flex-1">
+                  <p class="text-sm font-semibold text-blue-700 dark:text-blue-200">Hotel Actual</p>
+                  <p class="text-lg font-bold text-gray-900 dark:text-white mt-1">${currentHotel.name}</p>
+                  ${currentHotel.address ? `<p class="text-sm text-gray-600 dark:text-gray-300 mt-1">${currentHotel.address}</p>` : ''}
+                  ${currentHotel.rating ? `<p class="text-sm text-yellow-600 dark:text-yellow-400 mt-2">⭐ ${currentHotel.rating}</p>` : ''}
+                </div>
+                <button
+                  onclick="ItineraryHandler.removeHotelFromCity('${city}')"
+                  class="ml-4 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-semibold transition"
+                >Eliminar</button>
+              </div>
+            </div>
+          ` : `
+            <p class="text-gray-500 dark:text-gray-400 text-center py-2">No hay hotel configurado para ${city}</p>
+          `}
+        </div>
+
+        <!-- Search -->
+        <div class="p-6 border-b dark:border-gray-700">
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+            Buscar Hotel en ${city}
+          </label>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              id="hotelSearchInput"
+              placeholder="Ej: Hotel Shinjuku, APA Hotel Tokyo"
+              class="flex-1 px-4 py-2 border dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onclick="ItineraryHandler.searchHotelsForCity('${city}')"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition"
+            >Buscar</button>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div class="flex-1 overflow-y-auto p-6">
+          <div id="hotelSearchResults" class="space-y-3">
+            <p class="text-gray-400 dark:text-gray-500 text-center py-8">Busca un hotel para ver resultados</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Auto-search on open if no hotel
+    if (!currentHotel) {
+      setTimeout(() => {
+        this.searchHotelsForCity(city);
+      }, 300);
+    }
+  },
+
+  async searchHotelsForCity(city) {
+    console.log('🔍 Searching hotels for:', city);
+
+    if (!window.HotelBaseSystem) {
+      Notifications.show('Sistema de hoteles no disponible', 'error');
+      return;
+    }
+
+    const resultsContainer = document.getElementById('hotelSearchResults');
+    if (!resultsContainer) return;
+
+    // Show loading
+    resultsContainer.innerHTML = `
+      <div class="text-center py-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <p class="text-gray-600 dark:text-gray-400">Buscando hoteles en ${city}...</p>
+      </div>
+    `;
+
+    try {
+      // Get search query
+      const searchInput = document.getElementById('hotelSearchInput');
+      const query = searchInput?.value || `hotel ${city}`;
+
+      // Get city coordinates for proximity search
+      const cityCoordinates = {
+        'Tokyo': { lat: 35.6762, lng: 139.6503 },
+        'Kyoto': { lat: 35.0116, lng: 135.7681 },
+        'Osaka': { lat: 34.6937, lng: 135.5023 },
+        'Nara': { lat: 34.6851, lng: 135.8048 },
+        'Hiroshima': { lat: 34.3853, lng: 132.4553 },
+        'Nikko': { lat: 36.7199, lng: 139.6982 }
+      };
+
+      const coordinates = cityCoordinates[city] || cityCoordinates['Tokyo'];
+
+      // Search hotels
+      const hotels = await window.HotelBaseSystem.searchHotels(query, coordinates);
+
+      if (hotels.length === 0) {
+        resultsContainer.innerHTML = `
+          <div class="text-center py-8">
+            <p class="text-gray-600 dark:text-gray-400">No se encontraron hoteles</p>
+            <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Intenta con otro término de búsqueda</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Render results
+      resultsContainer.innerHTML = hotels.map(hotel => `
+        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border dark:border-gray-600 hover:shadow-md transition cursor-pointer" onclick="ItineraryHandler.selectHotelForCity(${JSON.stringify(hotel).replace(/"/g, '&quot;')}, '${city}')">
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <p class="font-bold text-gray-900 dark:text-white">${hotel.displayName || hotel.name}</p>
+              ${hotel.formattedAddress ? `<p class="text-sm text-gray-600 dark:text-gray-300 mt-1">${hotel.formattedAddress}</p>` : ''}
+              <div class="flex items-center gap-4 mt-2">
+                ${hotel.rating ? `<span class="text-sm text-yellow-600 dark:text-yellow-400">⭐ ${hotel.rating}</span>` : ''}
+                ${hotel.userRatingCount ? `<span class="text-xs text-gray-500 dark:text-gray-400">(${hotel.userRatingCount} reseñas)</span>` : ''}
+              </div>
+            </div>
+            <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
+              Seleccionar
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      console.log(`✅ Showing ${hotels.length} hotels`);
+
+    } catch (error) {
+      console.error('❌ Error searching hotels:', error);
+      resultsContainer.innerHTML = `
+        <div class="text-center py-8">
+          <p class="text-red-600 dark:text-red-400">Error al buscar hoteles</p>
+          <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">${error.message}</p>
+        </div>
+      `;
+    }
+  },
+
+  async selectHotelForCity(hotel, city) {
+    console.log('✅ Selecting hotel:', hotel.displayName || hotel.name, 'for', city);
+
+    if (!currentItinerary || !window.HotelBaseSystem) {
+      Notifications.show('Error al seleccionar hotel', 'error');
+      return;
+    }
+
+    try {
+      // Add hotel to itinerary
+      window.HotelBaseSystem.addHotelToItinerary(currentItinerary, {
+        id: hotel.id,
+        name: hotel.displayName || hotel.name,
+        address: hotel.formattedAddress || hotel.address,
+        coordinates: hotel.location,
+        rating: hotel.rating
+      }, city);
+
+      // Save to Firebase
+      await saveCurrentItineraryToFirebase();
+
+      Notifications.show(`Hotel agregado en ${city}`, 'success');
+
+      // Close modal
+      const modal = document.getElementById('hotelManagementModal');
+      if (modal) modal.remove();
+
+      // Re-render to show the new hotel
+      render();
+
+    } catch (error) {
+      console.error('❌ Error selecting hotel:', error);
+      Notifications.show('Error al guardar hotel', 'error');
+    }
+  },
+
+  async removeHotelFromCity(city) {
+    console.log('🗑️ Removing hotel from:', city);
+
+    if (!currentItinerary) {
+      Notifications.show('No hay itinerario activo', 'error');
+      return;
+    }
+
+    const confirmed = await window.Dialogs.confirm({
+      title: '🗑️ Eliminar Hotel',
+      message: `¿Eliminar el hotel base de ${city}?`,
+      okText: 'Sí, eliminar',
+      isDestructive: true
+    });
+
+    if (!confirmed) return;
+
+    try {
+      // Remove hotel from itinerary
+      if (currentItinerary.hotels && currentItinerary.hotels[city]) {
+        delete currentItinerary.hotels[city];
+      }
+
+      // Save to Firebase
+      await saveCurrentItineraryToFirebase();
+
+      Notifications.show(`Hotel eliminado de ${city}`, 'success');
+
+      // Close modal
+      const modal = document.getElementById('hotelManagementModal');
+      if (modal) modal.remove();
+
+      // Re-render
+      render();
+
+    } catch (error) {
+      console.error('❌ Error removing hotel:', error);
+      Notifications.show('Error al eliminar hotel', 'error');
+    }
   }
 };
 
