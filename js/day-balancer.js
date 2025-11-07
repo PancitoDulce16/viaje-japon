@@ -253,20 +253,25 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
         overloadedDays.forEach(overloadedDay => {
             const targetDays = [...emptyDays, ...lightDays].filter(d => d.day !== overloadedDay.day);
 
-            if (targetDays.length > 0 && overloadedDay.activities.length > 3) {
+            if (targetDays.length > 0 && overloadedDay.activities.length > 6) {
+                // Solo mover de días REALMENTE sobrecargados (más de 6 actividades)
                 // Encontrar actividades candidatas para mover (las que están más lejos de las demás)
                 const candidates = findMovableCandidates(overloadedDay.activities);
 
-                candidates.slice(0, 2).forEach(activity => {
+                // Limitar a mover máximo 2 actividades por día sobrecargado
+                const toMove = Math.min(2, Math.floor(overloadedDay.activities.length / 3));
+
+                candidates.slice(0, toMove).forEach(activity => {
                     // Buscar el mejor día destino (más cercano temporalmente)
                     const bestTarget = findBestTargetDay(overloadedDay, targetDays, activity);
 
-                    if (bestTarget) {
+                    // ✅ VERIFICAR que el día destino no termine con demasiadas actividades
+                    if (bestTarget && bestTarget.activities.length < 6) {
                         suggestions.push({
                             type: 'move',
                             priority: 'high',
                             description: `Mover "${activity.title || activity.name}" del Día ${overloadedDay.day} al Día ${bestTarget.day}`,
-                            reason: `Aliviará el Día ${overloadedDay.day} (sobrecargado) y llenará el Día ${bestTarget.day} (${bestTarget.analysis.load})`,
+                            reason: `Aliviará el Día ${overloadedDay.day} (${overloadedDay.activities.length} actividades) y llenará el Día ${bestTarget.day} (${bestTarget.activities.length} actividades)`,
                             from: { day: overloadedDay.day, activityId: activity.id },
                             to: { day: bestTarget.day },
                             activity: activity
@@ -390,6 +395,72 @@ function calculateStandardDeviation(values) {
 }
 
 /**
+ * Verifica si una actividad cabe en el día sin solaparse con otras
+ * @param {Object} targetDay - Día destino
+ * @param {Object} activity - Actividad a agregar
+ * @returns {boolean} true si cabe, false si se solaparía
+ */
+function canFitActivity(targetDay, activity) {
+    if (!targetDay.activities || targetDay.activities.length === 0) {
+        return true; // Día vacío, siempre cabe
+    }
+
+    // Si la actividad no tiene horario, no hay conflicto
+    if (!activity.time && !activity.startTime) {
+        return true;
+    }
+
+    const activityStart = parseTime(activity.time || activity.startTime);
+    const activityDuration = activity.duration || 60;
+    const activityEnd = activityStart + activityDuration;
+
+    // Verificar contra todas las actividades del día
+    for (const existing of targetDay.activities) {
+        if (!existing.time && !existing.startTime) continue;
+
+        const existingStart = parseTime(existing.time || existing.startTime);
+        const existingDuration = existing.duration || 60;
+        const existingEnd = existingStart + existingDuration;
+
+        // Verificar solapamiento
+        if (
+            (activityStart >= existingStart && activityStart < existingEnd) ||
+            (activityEnd > existingStart && activityEnd <= existingEnd) ||
+            (activityStart <= existingStart && activityEnd >= existingEnd)
+        ) {
+            return false; // Se solapa
+        }
+    }
+
+    return true; // No hay solapamiento
+}
+
+/**
+ * Convierte tiempo "HH:MM" a minutos desde medianoche
+ */
+function parseTime(timeStr) {
+    if (!timeStr) return 0;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+}
+
+/**
+ * Ordena actividades por hora de inicio
+ */
+function sortActivitiesByTime(activities) {
+    return activities.sort((a, b) => {
+        const timeA = a.time || a.startTime;
+        const timeB = b.time || b.startTime;
+
+        if (!timeA && !timeB) return 0;
+        if (!timeA) return 1;
+        if (!timeB) return -1;
+
+        return parseTime(timeA) - parseTime(timeB);
+    });
+}
+
+/**
  * Aplica una sugerencia de balanceo automáticamente
  * @param {Array} days - Array de días
  * @param {Object} suggestion - Sugerencia a aplicar
@@ -411,7 +482,17 @@ function applySuggestion(days, suggestion) {
 
             if (activityIndex !== -1) {
                 const [activity] = sourceDay.activities.splice(activityIndex, 1);
-                targetDay.activities.push(activity);
+
+                // ✅ VERIFICAR que la actividad no se solape con otras en el día destino
+                if (canFitActivity(targetDay, activity)) {
+                    targetDay.activities.push(activity);
+                    // Reordenar por horario después de agregar
+                    targetDay.activities = sortActivitiesByTime(targetDay.activities);
+                } else {
+                    // Si no cabe, devolver al día original
+                    sourceDay.activities.splice(activityIndex, 0, activity);
+                    console.warn(`⚠️ No se puede mover "${activity.title || activity.name}" - se solaparía con otra actividad`);
+                }
             }
         }
     } else if (suggestion.type === 'reorder') {
@@ -422,7 +503,7 @@ function applySuggestion(days, suggestion) {
             suggestion.clusters.forEach(cluster => {
                 reordered.push(...cluster.activities);
             });
-            day.activities = reordered;
+            day.activities = sortActivitiesByTime(reordered);
         }
     }
 

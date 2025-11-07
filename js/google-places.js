@@ -54,7 +54,105 @@ export const GooglePlacesAPI = {
   },
 
   /**
-   * Buscar lugares cercanos usando Nearby Search
+   * 🆕 Buscar lugares cercanos usando Places API (New) - Sin CORS!
+   * @param {Object} params - {lat, lng, radius, includedTypes, maxResults}
+   * @returns {Promise<Object>} {success, places}
+   */
+  async searchNearbyNew(params) {
+    const {
+      lat,
+      lng,
+      radius = 2000,
+      includedTypes = ['restaurant', 'tourist_attraction', 'cafe'],
+      maxResults = 20,
+      keyword = null
+    } = params;
+
+    const apiKey = this.apiKey || APP_CONFIG?.GOOGLE_PLACES_API_KEY;
+
+    if (!apiKey) {
+      console.warn('⚠️ Google Places API key no configurado');
+      return { success: false, places: [], error: 'No API key' };
+    }
+
+    try {
+      const url = 'https://places.googleapis.com/v1/places:searchNearby';
+
+      const requestBody = {
+        includedTypes: includedTypes,
+        maxResultCount: Math.min(maxResults, 20), // Max 20
+        locationRestriction: {
+          circle: {
+            center: {
+              latitude: lat,
+              longitude: lng
+            },
+            radius: radius
+          }
+        },
+        languageCode: 'es'
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': apiKey,
+          'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.types,places.priceLevel,places.primaryTypeDisplayName'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Google Places API error:', response.status, response.statusText);
+        console.error('📋 Error details:', errorData);
+        console.error('📤 Request body:', requestBody);
+        return { success: false, places: [], error: response.statusText, details: errorData };
+      }
+
+      const data = await response.json();
+
+      if (!data.places || data.places.length === 0) {
+        return { success: true, places: [] };
+      }
+
+      const places = data.places.map(place => ({
+        id: place.id,
+        name: place.displayName?.text || 'Sin nombre',
+        address: place.formattedAddress || '',
+        lat: place.location?.latitude,
+        lng: place.location?.longitude,
+        rating: place.rating || 0,
+        userRatingsTotal: place.userRatingCount || 0,
+        types: place.types || [],
+        category: place.primaryTypeDisplayName?.text || 'Lugar',
+        priceLevel: place.priceLevel || 'PRICE_LEVEL_UNSPECIFIED',
+        coordinates: {
+          lat: place.location?.latitude,
+          lng: place.location?.longitude
+        }
+      }));
+
+      console.log(`✅ Google Places encontró ${places.length} lugares`);
+
+      return {
+        success: true,
+        places: places
+      };
+
+    } catch (error) {
+      console.error('❌ Error en Google Places API:', error);
+      return {
+        success: false,
+        places: [],
+        error: error.message
+      };
+    }
+  },
+
+  /**
+   * Buscar lugares cercanos usando Nearby Search (API antigua - requiere proxy)
    * @param {Object} params - {lat, lng, radius, type, keyword}
    * @returns {Promise<Array>} Lista de lugares
    */
@@ -245,11 +343,12 @@ export const GooglePlacesAPI = {
    * @returns {Promise<Object>} Restaurantes
    */
   async findNearbyRestaurants(lat, lng, radius = 1000) {
-    return this.searchNearby({
+    return this.searchNearbyNew({
       lat,
       lng,
       radius,
-      type: 'restaurant'
+      includedTypes: ['japanese_restaurant', 'ramen_restaurant'],
+      maxResults: 20
     });
   },
 
@@ -261,11 +360,12 @@ export const GooglePlacesAPI = {
    * @returns {Promise<Object>} Cafés
    */
   async findNearbyCafes(lat, lng, radius = 1000) {
-    return this.searchNearby({
+    return this.searchNearbyNew({
       lat,
       lng,
       radius,
-      type: 'cafe'
+      includedTypes: ['coffee_shop', 'cafe'],
+      maxResults: 20
     });
   },
 
@@ -277,11 +377,12 @@ export const GooglePlacesAPI = {
    * @returns {Promise<Object>} Atracciones
    */
   async findNearbyAttractions(lat, lng, radius = 5000) {
-    return this.searchNearby({
+    return this.searchNearbyNew({
       lat,
       lng,
       radius,
-      type: 'tourist_attraction'
+      includedTypes: ['tourist_attraction'],
+      maxResults: 20
     });
   },
 

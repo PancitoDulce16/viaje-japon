@@ -311,7 +311,27 @@
             crossorigin=""></script>
 
     <!-- Firebase Configuration loaded from js/firebase-config.js (not tracked in git) -->
-    <script type="module" src="/js/dashboard.js?v=2025-11-05-06"></script>
+    <script type="module" src="/js/dashboard.js?v=2025-11-06-04"></script>
+
+    <!-- Smart Suggestions Engine - Cargar después de dashboard -->
+    <script type="module">
+        console.log('💡 Cargando Smart Suggestions Engine...');
+
+        // Esperar a que dashboard.js cargue completamente
+        setTimeout(async () => {
+            try {
+                await import('./js/smart-suggestions-engine.js');
+                console.log('✅ smart-suggestions-engine.js cargado');
+
+                await import('./js/smart-suggestions-ui.js');
+                console.log('✅ smart-suggestions-ui.js cargado');
+
+                console.log('✅ SuggestionsEngine disponible:', window.SuggestionsEngine ? 'SÍ' : 'NO');
+            } catch (error) {
+                console.error('❌ Error cargando Smart Suggestions:', error);
+            }
+        }, 2000); // Esperar 2 segundos después de que dashboard.js cargue
+    </script>
     
     <script>
         if ('serviceWorker' in navigator) {

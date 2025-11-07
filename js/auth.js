@@ -1,7 +1,8 @@
 // ====================================================================================
-// AUTH.JS CORREGIDO Y ROBUSTO
+// AUTH.JS CORREGIDO Y ROBUSTO v2.0
 // Descripción: Se ha refactorizado la función 'init' para eliminar la condición de
 // carrera del temporizador, asegurando un flujo de autenticación predecible y fiable.
+// Versión 2.0: Corregido exports y funciones signIn/signUp
 // ====================================================================================
 
 import { auth, googleProvider } from '/js/firebase-config.js';
@@ -90,8 +91,12 @@ export const AuthHandler = {
     if (document.readyState === 'loading') {
         await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve));
     }
-    // Asignar listeners a los botones de la landing page ahora que el DOM está listo.
-    this.setupLandingPage();
+    // Asignar listeners a los botones de la landing page solo si existen los elementos
+    // (No configurar en login.html porque tiene su propio sistema)
+    const landingLoginForm = document.getElementById('landingLoginForm');
+    if (landingLoginForm) {
+        this.setupLandingPage();
+    }
 
     // 3. Configurar listener permanente de autenticación
     return new Promise(async (resolve) => {
@@ -337,6 +342,12 @@ export const AuthHandler = {
       this.currentUser = null;
       console.log('✅ Sesión cerrada');
 
+      // 🚨 SECURITY: Limpiar datos sensibles del localStorage
+      console.log('🧹 Limpiando localStorage por seguridad...');
+      localStorage.removeItem('currentTripId');
+      localStorage.removeItem('checkedActivities');
+      sessionStorage.removeItem('authenticated');
+
       // Disparamos el evento de logout para que otros módulos limpien su estado.
       console.log('📢 Disparando evento auth:loggedOut (logout real)');
       window.dispatchEvent(authLoggedOutEvent);
@@ -365,6 +376,13 @@ export const AuthHandler = {
     this.hideAuthLoading();
     const landingPage = document.getElementById('landingPage');
     const appDashboard = document.getElementById('appDashboard');
+
+    // 🔧 Si no existen los elementos (estamos en login.html), no hacer nada
+    if (!landingPage && !appDashboard) {
+      console.log('ℹ️ Elementos de landing/dashboard no encontrados (probablemente en login.html)');
+      return;
+    }
+
     if (landingPage) {
       landingPage.classList.remove('hidden');
       console.log('👋 Landing page mostrada');
@@ -386,6 +404,14 @@ export const AuthHandler = {
     this.hideAuthLoading();
     const landingPage = document.getElementById('landingPage');
     const appDashboard = document.getElementById('appDashboard');
+
+    // 🔧 Si no existen los elementos (estamos en login.html), no hacer nada
+    // login.js se encargará de redirigir al dashboard
+    if (!landingPage && !appDashboard) {
+      console.log('ℹ️ Elementos de landing/dashboard no encontrados (probablemente en login.html)');
+      return;
+    }
+
     if (landingPage) {
       landingPage.classList.add('hidden');
       console.log('👋 Landing page ocultada');
@@ -404,13 +430,48 @@ export const AuthHandler = {
   },
 
   showError(message, type = 'error') {
-    // Si existe un sistema de notificaciones, lo usamos. Si no, usamos alert.
-    if (window.Notifications && window.Notifications[type]) {
-      window.Notifications[type](message);
-    } else {
-      // Fallback a un alert simple
-      alert(`⚠️ ${message}`);
+    console.error('🔴 Error de auth:', message);
+
+    // Opción 1: Usar sistema de notificaciones si está disponible
+    if (window.Notifications && typeof window.Notifications.show === 'function') {
+      window.Notifications.show(message, type);
+      return;
     }
+
+    // Opción 2: Crear un toast visible en la UI
+    this.showErrorToast(message);
+  },
+
+  showErrorToast(message) {
+    // Crear un toast de error temporal
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-2xl z-[9999] animate__animated animate__fadeInDown';
+    toast.style.maxWidth = '400px';
+    toast.innerHTML = `
+      <div class="flex items-start gap-3">
+        <div class="flex-shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div class="flex-1">
+          <p class="font-semibold text-sm">${message}</p>
+        </div>
+        <button onclick="this.parentElement.parentElement.remove()" class="flex-shrink-0 text-white/80 hover:text-white">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Auto-remover después de 5 segundos
+    setTimeout(() => {
+      toast.classList.add('animate__fadeOutUp');
+      setTimeout(() => toast.remove(), 500);
+    }, 5000);
   },
 
   handleAuthError(error) {
