@@ -109,20 +109,31 @@ export const AppCore = {
             } else {
                 this.notes = '';
             }
-            
+
             // También guardar en localStorage como backup
             localStorage.setItem('travelNotes', this.notes);
-            
+
             // Actualizar textarea si está abierto
             const textarea = document.getElementById('notesTextarea');
             if (textarea && document.getElementById('modal-notes').classList.contains('active')) {
                 textarea.value = this.notes;
             }
-            
+
             console.log('✅ Notas COMPARTIDAS sincronizadas');
         }, (error) => {
-            console.error('❌ Error en sync de notas compartidas:', error);
-            this.notes = localStorage.getItem('travelNotes') || '';
+            // 🚨 SECURITY: Si es permission-denied, el tripId es inválido
+            if (error.code === 'permission-denied') {
+                console.warn('⚠️ Permission denied en notas compartidas - tripId inválido');
+                console.warn('🧹 Limpiando tripId inválido del localStorage');
+                localStorage.removeItem('currentTripId');
+
+                // Fallback a modo individual (sin trip)
+                console.log('♻️ Cambiando a modo individual (sin trip)');
+                this.initNotesSync(); // Re-inicializar en modo individual
+            } else {
+                console.error('❌ Error en sync de notas compartidas:', error);
+                this.notes = localStorage.getItem('travelNotes') || '';
+            }
         });
     },
 

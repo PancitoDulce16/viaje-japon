@@ -248,8 +248,14 @@ async function loadItinerary(){
 
     // Specific error handling for non-offline errors
     if (error.code === 'permission-denied') {
-      console.error('❌ Permission denied: You do not have access to this itinerary');
-      Notifications?.show?.('No tienes permiso para acceder a este itinerario', 'error');
+      console.warn('⚠️ Permission denied - tripId inválido o usuario sin viajes');
+
+      // 🚨 SECURITY FIX: Limpiar tripId inválido del localStorage
+      console.warn('🧹 Limpiando tripId inválido del localStorage');
+      localStorage.removeItem('currentTripId');
+
+      // NO mostrar notificación de error - es un caso esperado cuando el usuario no tiene viajes
+      // En su lugar, el renderEmptyState() mostrará la opción de crear viaje
     }
 
     return await loadFallbackTemplate();
@@ -319,6 +325,24 @@ async function initRealtimeSync(){
             );
           }
 
+          // 🧠 AUTO-CORRECCIÓN: Corregir actividades sin coordenadas
+          if (window.IntelligentGeocoder && currentItinerary?.days) {
+            // Ejecutar en background sin bloquear el render
+            window.IntelligentGeocoder.fixItinerary(currentItinerary, { rateLimit: true })
+              .then(result => {
+                if (result.fixed > 0) {
+                  console.log(`✅ Auto-corrección completada: ${result.fixed} actividades con coordenadas agregadas`);
+                  // Guardar automáticamente si se corrigió algo
+                  saveCurrentItineraryToFirebase().catch(err =>
+                    console.error('❌ Error saving auto-corrected itinerary:', err)
+                  );
+                  // Re-renderizar para mostrar los cambios
+                  render();
+                }
+              })
+              .catch(err => console.error('❌ Error en auto-corrección:', err));
+          }
+
           // Extraer el checklist del itinerario si existe, o usar uno vacío
           checkedActivities = currentItinerary.checklist || {};
           console.log('✅ Itinerario y checklist sincronizados en tiempo real.');
@@ -336,7 +360,13 @@ async function initRealtimeSync(){
         console.error('❌ Error in realtime sync (all retries failed):', error);
 
         if (error.code === 'permission-denied') {
-          Notifications?.show?.('No tienes permiso para acceder a este itinerario', 'error');
+          console.warn('⚠️ Permission denied en sync - tripId inválido');
+          console.warn('🧹 Limpiando tripId inválido del localStorage');
+          localStorage.removeItem('currentTripId');
+
+          // NO mostrar notificación de error - mostrar el empty state
+          renderEmptyState();
+          return;
         }
 
         // Fallback a datos locales si la sincronización falla
@@ -873,6 +903,10 @@ function renderDayOverview(day){
         <span>🗺️</span>
         <span>Optimizar Ruta</span>
       </button>
+      <button type="button" id="suggestionsBtn_${day.day}" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+        <span>💡</span>
+        <span>Ver Sugerencias</span>
+      </button>
       <button type="button" id="addActivityBtn_${day.day}" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition">+ Añadir Actividad</button>
     </div>`;
 }
@@ -1334,6 +1368,7 @@ export const ItineraryHandler = {
         console.log('🖱️ Click detected on:', e.target);
         const addBtn=e.target.closest('[id^="addActivityBtn_"]');
         const optimizeBtn=e.target.closest('[id^="optimizeRouteBtn_"]');
+        const suggestionsBtn=e.target.closest('[id^="suggestionsBtn_"]');
         const analyzeBalanceBtn=e.target.closest('#analyzeBalanceBtn');
         const editBtn=e.target.closest('.activity-edit-btn');
         const deleteBtn=e.target.closest('.activity-delete-btn');
@@ -1348,6 +1383,18 @@ export const ItineraryHandler = {
           console.log('🗺️ Optimize route button clicked');
           const day=parseInt(optimizeBtn.id.split('_')[1]);
           optimizeDayRoute(day);
+        }
+        else if(suggestionsBtn){
+          console.log('💡 Suggestions button clicked');
+          const day=parseInt(suggestionsBtn.id.split('_')[1]);
+          if(window.SuggestionsEngine && window.SuggestionsEngine.showSuggestionsForDay){
+            window.SuggestionsEngine.showSuggestionsForDay(day);
+          } else {
+            console.error('⚠️ SuggestionsEngine not loaded');
+            if(window.Notifications){
+              Notifications.error('Error: Motor de sugerencias no disponible', 3000);
+            }
+          }
         }
         else if(addBtn){
           console.log('➕ Add button clicked');
@@ -1537,16 +1584,36 @@ Si ya tienes las coordenadas, simplemente pégalas:
     }
 
     // 🔍 AUTO-BÚSQUEDA: Si no hay coordenadas, intentar buscarlas automáticamente
-    if ((isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) && window.LocationAutocomplete) {
-      const results = window.LocationAutocomplete.search(title);
-      if (results && results.length > 0) {
-        // Usar el primer resultado (el más relevante)
-        lat = results[0].lat;
-        lng = results[0].lng;
-        console.log(`✅ Auto-detected location for "${title}": ${lat}, ${lng}`);
+    if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
+      // Primero intentar con IntelligentGeocoder (más potente)
+      if (window.IntelligentGeocoder) {
+        try {
+          const dayData = currentItinerary?.days?.find(d => d.day === newDay);
+          const context = {
+            city: dayData?.cities?.[0]?.cityId || dayData?.city
+          };
 
-        // Mostrar notificación al usuario
-        Notifications.show(`📍 Ubicación detectada automáticamente: ${results[0].name}`, 'success', 3000);
+          const result = await window.IntelligentGeocoder.getCoordinates(title, context);
+          if (result) {
+            lat = result.lat;
+            lng = result.lng;
+            console.log(`✅ IntelligentGeocoder: "${title}" -> (${lat}, ${lng}) [${result.source}]`);
+            Notifications.show(`📍 Ubicación detectada: ${result.name} (${result.source})`, 'success', 3000);
+          }
+        } catch (error) {
+          console.error('❌ Error en IntelligentGeocoder:', error);
+        }
+      }
+
+      // Fallback: LocationAutocomplete (búsqueda local)
+      if ((isNaN(lat) || isNaN(lng)) && window.LocationAutocomplete) {
+        const results = window.LocationAutocomplete.search(title);
+        if (results && results.length > 0) {
+          lat = results[0].lat;
+          lng = results[0].lng;
+          console.log(`✅ LocationAutocomplete: "${title}" -> (${lat}, ${lng})`);
+          Notifications.show(`📍 Ubicación detectada: ${results[0].name}`, 'success', 3000);
+        }
       }
     }
 
@@ -1685,4 +1752,14 @@ window.addEventListener('auth:loggedOut', () => {
 });
 
 window.ItineraryHandler = ItineraryHandler;
+
+// Exponer funciones de guardado y render
+window.saveCurrentItineraryToFirebase = saveCurrentItineraryToFirebase;
+window.renderItinerary = render;
+
+// Exponer currentItinerary a través de ItineraryHandler para evitar conflictos
+Object.defineProperty(ItineraryHandler, 'currentItinerary', {
+  get: () => currentItinerary,
+  enumerable: true
+});
 
