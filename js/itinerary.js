@@ -932,6 +932,10 @@ function renderDayOverview(day){
         <span>🗺️</span>
         <span>Optimizar Ruta</span>
       </button>
+      <button type="button" id="mealSuggestionsBtn_${day.day}" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+        <span>🍽️</span>
+        <span>Sugerir Comidas</span>
+      </button>
       <button type="button" id="suggestionsBtn_${day.day}" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2">
         <span>💡</span>
         <span>Ver Sugerencias</span>
@@ -1397,6 +1401,7 @@ export const ItineraryHandler = {
         console.log('🖱️ Click detected on:', e.target);
         const addBtn=e.target.closest('[id^="addActivityBtn_"]');
         const optimizeBtn=e.target.closest('[id^="optimizeRouteBtn_"]');
+        const mealSuggestionsBtn=e.target.closest('[id^="mealSuggestionsBtn_"]');
         const suggestionsBtn=e.target.closest('[id^="suggestionsBtn_"]');
         const analyzeBalanceBtn=e.target.closest('#analyzeBalanceBtn');
         const editBtn=e.target.closest('.activity-edit-btn');
@@ -1412,6 +1417,16 @@ export const ItineraryHandler = {
           console.log('🗺️ Optimize route button clicked');
           const day=parseInt(optimizeBtn.id.split('_')[1]);
           optimizeDayRoute(day);
+        }
+        else if(mealSuggestionsBtn){
+          console.log('🍽️ Meal suggestions button clicked');
+          const day=parseInt(mealSuggestionsBtn.id.split('_')[1]);
+          if(window.MealInsertionSystem && window.MealInsertionSystem.showMealSuggestionsModal){
+            window.MealInsertionSystem.showMealSuggestionsModal(day, currentItinerary);
+          } else {
+            console.error('❌ MealInsertionSystem no disponible');
+            alert('El sistema de sugerencias de comidas no está disponible');
+          }
         }
         else if(suggestionsBtn){
           console.log('💡 Suggestions button clicked');

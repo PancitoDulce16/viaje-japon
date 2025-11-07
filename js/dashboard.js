@@ -35,6 +35,7 @@ import { DayExperiencePredictor } from './day-experience-predictor.js'; // 🔮 
 import { IntelligentGeocoder } from './intelligent-geocoder.js'; // 🧠 Geocodificación inteligente
 import { APP_CONFIG } from './config.js'; // 🔐 Configuración de la app
 import { HotelBaseSystem } from './hotel-base-system.js'; // 🏨 Sistema de hotel base
+import { MealInsertionSystem } from './meal-insertion-system.js'; // 🍽️ Sistema de inserción de comidas
 // Smart Suggestions se cargan desde HTML usando dynamic imports
 
 // 🔥 Firebase imports
@@ -60,6 +61,7 @@ window.PreparationHandler = PreparationHandler;
 window.ItineraryHandler = ItineraryHandler;
 window.EssentialsHandler = EssentialsHandler;
 window.HotelBaseSystem = HotelBaseSystem;
+window.MealInsertionSystem = MealInsertionSystem;
 
 // 🖼️ Image Service imports
 import './image-service.js';
