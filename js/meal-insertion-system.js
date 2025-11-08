@@ -254,14 +254,23 @@ export const MealInsertionSystem = {
     modal.id = 'mealSuggestionsModal';
     modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
 
+    // Store suggestion data globally for access by handlers
+    window.mealSuggestionsData = window.mealSuggestionsData || {};
+
     const suggestionsHTML = await Promise.all(
       mealSuggestions.map(async (suggestion, index) => {
         const restaurants = suggestion.coordinates
           ? await this.suggestRestaurants(suggestion.coordinates, suggestion.type, suggestion.location)
           : [];
 
-        const coords = JSON.stringify(suggestion.coordinates || {});
-        const location = suggestion.location || 'Tokyo';
+        // Store data globally to avoid inline JSON in HTML
+        window.mealSuggestionsData[`suggestion_${dayNumber}_${index}`] = {
+          dayNumber,
+          mealType: suggestion.type,
+          suggestedTime: suggestion.suggestedTime,
+          coordinates: suggestion.coordinates || null,
+          location: suggestion.location || 'Tokyo'
+        };
 
         return `
           <div class="bg-white dark:bg-gray-700 p-4 rounded-lg border-2 border-orange-200 dark:border-orange-700">
@@ -280,14 +289,15 @@ export const MealInsertionSystem = {
                 <input
                   type="text"
                   id="restaurantSearch_${index}"
+                  data-suggestion-key="suggestion_${dayNumber}_${index}"
                   placeholder="🔍 Buscar restaurante (ej: Anakuma cafe)..."
                   class="flex-1 px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-orange-500 dark:bg-gray-600 dark:text-white text-sm"
-                  onkeyup="MealInsertionSystem.handleRestaurantSearch(event, ${dayNumber}, '${suggestion.type}', '${suggestion.suggestedTime}', ${coords}, '${location}', ${index})"
-                  onkeydown="if(event.key==='Enter'){event.preventDefault();MealInsertionSystem.triggerSearch(${dayNumber}, '${suggestion.type}', '${suggestion.suggestedTime}', ${coords}, '${location}', ${index});}"
+                  onkeyup="MealInsertionSystem.handleRestaurantSearchByKey(event, '${dayNumber}', ${index})"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();MealInsertionSystem.triggerSearchByKey('${dayNumber}', ${index});}"
                   autocomplete="off"
                 />
                 <button
-                  onclick="MealInsertionSystem.triggerSearch(${dayNumber}, '${suggestion.type}', '${suggestion.suggestedTime}', ${coords}, '${location}', ${index})"
+                  onclick="MealInsertionSystem.triggerSearchByKey('${dayNumber}', ${index})"
                   class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition text-sm whitespace-nowrap"
                 >
                   Buscar
@@ -345,6 +355,32 @@ export const MealInsertionSystem = {
     `;
 
     document.body.appendChild(modal);
+  },
+
+  /**
+   * Wrapper para handleRestaurantSearch usando key (evita problemas de sintaxis en HTML)
+   */
+  handleRestaurantSearchByKey(event, dayNumber, index) {
+    const key = `suggestion_${dayNumber}_${index}`;
+    const data = window.mealSuggestionsData[key];
+    if (!data) {
+      console.error('No data found for key:', key);
+      return;
+    }
+    this.handleRestaurantSearch(event, data.dayNumber, data.mealType, data.suggestedTime, data.coordinates, data.location, index);
+  },
+
+  /**
+   * Wrapper para triggerSearch usando key
+   */
+  triggerSearchByKey(dayNumber, index) {
+    const key = `suggestion_${dayNumber}_${index}`;
+    const data = window.mealSuggestionsData[key];
+    if (!data) {
+      console.error('No data found for key:', key);
+      return;
+    }
+    this.triggerSearch(data.dayNumber, data.mealType, data.suggestedTime, data.coordinates, data.location, index);
   },
 
   /**
