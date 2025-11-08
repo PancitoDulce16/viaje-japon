@@ -40,7 +40,7 @@ import { MealInsertionSystem } from './meal-insertion-system.js'; // 🍽️ Sis
 
 // 🔥 Firebase imports
 import { AuthHandler } from './auth.js';
-import { TripsManager } from './trips-manager.js';
+import { TripsManager } from './trips-manager.js?v=2025-11-07-V2-FILES';
 import { FCMManager } from './fcm-manager.js';
 import './chat.js';
 import { GroupChat } from './group-chat.js';
