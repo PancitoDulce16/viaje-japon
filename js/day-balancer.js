@@ -243,10 +243,60 @@ function analyzeItineraryBalance(days) {
 }
 
 /**
+ * Detecta actividades duplicadas en el itinerario
+ * @param {Array} days - Días del itinerario
+ * @returns {Array} Lista de duplicados encontrados
+ */
+function detectDuplicateActivities(days) {
+    const duplicates = [];
+    const activitiesSeen = new Map(); // title -> [{day, activity}]
+
+    days.forEach(day => {
+        if (!day.activities) return;
+
+        day.activities.forEach(activity => {
+            const title = (activity.title || activity.name || '').trim().toLowerCase();
+            if (!title) return;
+
+            if (activitiesSeen.has(title)) {
+                const previous = activitiesSeen.get(title);
+                duplicates.push({
+                    title: activity.title || activity.name,
+                    days: [previous[0].day, day.day],
+                    activities: [previous[0].activity, activity]
+                });
+            } else {
+                activitiesSeen.set(title, [{ day: day.day, activity }]);
+            }
+        });
+    });
+
+    return duplicates;
+}
+
+/**
  * Genera sugerencias concretas para balancear el itinerario
  */
 function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays, lightDays }) {
     const suggestions = [];
+
+    // Sugerencia 0: Eliminar actividades duplicadas
+    const duplicates = detectDuplicateActivities(daysAnalysis.map(d => ({
+        day: d.day,
+        activities: d.activities
+    })));
+
+    if (duplicates.length > 0) {
+        duplicates.forEach(dup => {
+            suggestions.push({
+                type: 'remove-duplicate',
+                priority: 'high',
+                description: `Eliminar actividad duplicada: "${dup.title}"`,
+                reason: `Esta actividad aparece en los Días ${dup.days.join(' y ')}`,
+                duplicateInfo: dup
+            });
+        });
+    }
 
     // Sugerencia 1: Mover actividades de días sobrecargados a días vacíos/ligeros
     if (overloadedDays.length > 0 && (emptyDays.length > 0 || lightDays.length > 0)) {
@@ -494,7 +544,26 @@ function applySuggestion(days, suggestion, options = {}) {
 
     const newDays = JSON.parse(JSON.stringify(days)); // Deep clone
 
-    if (suggestion.type === 'move') {
+    if (suggestion.type === 'remove-duplicate') {
+        // Eliminar actividad duplicada
+        const { duplicateInfo } = suggestion;
+
+        // Eliminar de todos los días excepto el primero
+        for (let i = 1; i < duplicateInfo.days.length; i++) {
+            const dayNum = duplicateInfo.days[i];
+            const day = newDays.find(d => d.day === dayNum);
+
+            if (day) {
+                const activityTitle = duplicateInfo.title.toLowerCase();
+                day.activities = day.activities.filter(act => {
+                    const title = (act.title || act.name || '').trim().toLowerCase();
+                    return title !== activityTitle;
+                });
+
+                console.log(`✅ Eliminada actividad duplicada "${duplicateInfo.title}" del Día ${dayNum}`);
+            }
+        }
+    } else if (suggestion.type === 'move') {
         // Mover actividad de un día a otro
         const sourceDay = newDays.find(d => d.day === suggestion.from.day);
         const targetDay = newDays.find(d => d.day === suggestion.to.day);
@@ -598,12 +667,60 @@ function detectTimeOverlaps(activities) {
     return overlaps;
 }
 
+/**
+ * Aplica todas las sugerencias automáticamente
+ * @param {Array} days - Días del itinerario
+ * @param {Array} suggestions - Sugerencias a aplicar
+ * @param {Object} options - Opciones
+ * @returns {Object} {days: Array, applied: number, skipped: number}
+ */
+function applyAllSuggestions(days, suggestions, options = {}) {
+    let currentDays = JSON.parse(JSON.stringify(days));
+    let applied = 0;
+    let skipped = 0;
+
+    // Ordenar sugerencias por prioridad
+    const priorityOrder = { high: 1, medium: 2, low: 3 };
+    const sortedSuggestions = suggestions.sort((a, b) =>
+        (priorityOrder[a.priority] || 4) - (priorityOrder[b.priority] || 4)
+    );
+
+    // Aplicar cada sugerencia
+    for (const suggestion of sortedSuggestions) {
+        try {
+            const result = applySuggestion(currentDays, suggestion, options);
+
+            // Verificar si realmente cambió algo
+            if (JSON.stringify(result) !== JSON.stringify(currentDays)) {
+                currentDays = result;
+                applied++;
+                console.log(`✅ Aplicada: ${suggestion.description}`);
+            } else {
+                skipped++;
+                console.log(`⚠️ Omitida (sin cambios): ${suggestion.description}`);
+            }
+        } catch (error) {
+            skipped++;
+            console.error(`❌ Error aplicando "${suggestion.description}":`, error);
+        }
+    }
+
+    return {
+        days: currentDays,
+        applied,
+        skipped,
+        total: suggestions.length
+    };
+}
+
 // Exportar el sistema
 export const DayBalancer = {
     analyzeDayLoad,
     analyzeItineraryBalance,
     generateBalancingSuggestions,
     applySuggestion,
+    applyAllSuggestions,
+    detectDuplicateActivities,
     detectTimeOverlaps,
     canFitActivity,
     sortActivitiesByTime,
