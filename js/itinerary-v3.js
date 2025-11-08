@@ -1256,6 +1256,12 @@ function parseTime(timeStr) {
   const minutes = parseInt(match[2] || 0);
   const period = match[3];
 
+  // Validate parsed numbers
+  if (isNaN(hours) || isNaN(minutes)) {
+    console.warn(`⚠️ Invalid time format in itinerary: "${timeStr}", using default 09:00`);
+    return 540; // 09:00
+  }
+
   // Convertir a formato 24h si es PM/AM
   if (period === 'pm' && hours < 12) hours += 12;
   if (period === 'am' && hours === 12) hours = 0;
