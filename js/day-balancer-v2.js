@@ -415,21 +415,36 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
         }
     });
 
-    // Sugerencia 3: Distribuir costo uniformemente
+    // Sugerencia 4: Distribuir costo uniformemente - GENERAR SUGERENCIAS CONCRETAS
     const avgCost = daysAnalysis.reduce((sum, d) => sum + d.analysis.factors.totalCost, 0) / daysAnalysis.length;
     const expensiveDays = daysAnalysis.filter(d => d.analysis.factors.totalCost > avgCost * 1.5);
+    const cheapDays = daysAnalysis.filter(d => d.analysis.factors.totalCost < avgCost * 0.7);
 
-    if (expensiveDays.length > 0) {
-        expensiveDays.forEach(day => {
-            suggestions.push({
-                type: 'redistribute-cost',
-                priority: 'low',
-                description: `El Día ${day.day} tiene un costo muy alto (¥${day.analysis.factors.totalCost})`,
-                reason: `Considera mover actividades costosas a otros días para distribuir mejor el presupuesto`,
-                day: day.day,
-                currentCost: day.analysis.factors.totalCost,
-                averageCost: Math.round(avgCost)
-            });
+    if (expensiveDays.length > 0 && cheapDays.length > 0) {
+        expensiveDays.forEach(expensiveDay => {
+            // Encontrar actividad MÁS COSTOSA del día caro
+            const mostExpensiveActivity = expensiveDay.activities
+                .filter(a => a.cost > 0)
+                .sort((a, b) => (b.cost || 0) - (a.cost || 0))[0];
+
+            if (mostExpensiveActivity && mostExpensiveActivity.cost > avgCost * 0.3) {
+                // Encontrar mejor día barato para moverla
+                const targetDay = cheapDays
+                    .filter(d => d.activities.length < 7) // No sobrecargar
+                    .sort((a, b) => a.analysis.factors.totalCost - b.analysis.factors.totalCost)[0];
+
+                if (targetDay) {
+                    suggestions.push({
+                        type: 'move',
+                        priority: 'medium',
+                        description: `Balancear costos: mover "${mostExpensiveActivity.title || mostExpensiveActivity.name}" (¥${mostExpensiveActivity.cost}) del Día ${expensiveDay.day} al Día ${targetDay.day}`,
+                        reason: `El Día ${expensiveDay.day} cuesta ¥${expensiveDay.analysis.factors.totalCost} (promedio: ¥${Math.round(avgCost)}). El Día ${targetDay.day} solo cuesta ¥${targetDay.analysis.factors.totalCost}`,
+                        from: { day: expensiveDay.day, activityId: mostExpensiveActivity.id },
+                        to: { day: targetDay.day },
+                        activity: mostExpensiveActivity
+                    });
+                }
+            }
         });
     }
 
