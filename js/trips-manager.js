@@ -67,8 +67,17 @@ export const TripsManager = {
       this.renderTripsList();
 
       if (!this.currentTrip && this.userTrips.length > 0) {
-        // 🔥 FIX: Intentar cargar el trip guardado en localStorage primero
-        const savedTripId = localStorage.getItem('currentTripId');
+        // 🔥 FIX: Intentar cargar el trip guardado con múltiples fallbacks
+        let savedTripId = localStorage.getItem('currentTripId');
+
+        // 🛡️ FALLBACK 1: Si no hay en localStorage, buscar en sessionStorage
+        if (!savedTripId) {
+          savedTripId = sessionStorage.getItem('backup_currentTripId');
+          if (savedTripId) {
+            console.log('🔄 Restaurando desde sessionStorage backup:', savedTripId);
+            localStorage.setItem('currentTripId', savedTripId);
+          }
+        }
 
         if (savedTripId) {
           const savedTrip = this.userTrips.find(t => t.id === savedTripId);
@@ -77,12 +86,21 @@ export const TripsManager = {
             console.log('✅ Restaurando trip guardado:', savedTripId);
             this.selectTrip(savedTripId);
           } else {
-            console.warn('⚠️ Trip guardado no encontrado, seleccionando el primero');
-            this.selectTrip(this.userTrips[0].id);
+            console.warn('⚠️ Trip guardado no encontrado en trips del usuario');
+            // 🛡️ FALLBACK 2: Seleccionar el más reciente (último modificado)
+            const mostRecent = this.userTrips.sort((a, b) =>
+              new Date(b.info?.lastModified || 0) - new Date(a.info?.lastModified || 0)
+            )[0];
+            console.log('🔄 Seleccionando trip más reciente:', mostRecent.id);
+            this.selectTrip(mostRecent.id);
           }
         } else {
-          console.log('ℹ️ No hay trip guardado, seleccionando el primero');
-          this.selectTrip(this.userTrips[0].id);
+          console.log('ℹ️ No hay trip guardado, seleccionando el más reciente');
+          // 🛡️ FALLBACK 3: Seleccionar el más reciente
+          const mostRecent = this.userTrips.sort((a, b) =>
+            new Date(b.info?.lastModified || 0) - new Date(a.info?.lastModified || 0)
+          )[0];
+          this.selectTrip(mostRecent.id);
         }
       } else if (!this.currentTrip && this.userTrips.length === 0) {
         console.log('⚠️ No hay trips, mostrar mensaje de bienvenida');

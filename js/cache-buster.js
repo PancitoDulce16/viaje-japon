@@ -14,21 +14,29 @@ export function checkAndClearCache() {
     console.warn(`🔄 Nueva versión detectada: ${storedVersion} → ${APP_VERSION}`);
     console.warn('🧹 Limpiando cache y recargando...');
 
-    // Limpiar localStorage excepto datos críticos
-    const criticalKeys = ['currentTripId', 'darkMode'];
+    // 🛡️ PROTECCIÓN CRÍTICA: Hacer backup de TODO localStorage antes de limpiar
     const backup = {};
-    criticalKeys.forEach(key => {
-      if (localStorage.getItem(key)) {
+
+    // Guardar TODAS las keys que empiecen con prefijos críticos
+    const criticalPrefixes = ['currentTripId', 'darkMode', 'backup_', 'firebase:', 'user_'];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && criticalPrefixes.some(prefix => key.startsWith(prefix) || key === prefix)) {
         backup[key] = localStorage.getItem(key);
       }
-    });
+    }
+
+    console.log('🛡️ Backup creado de', Object.keys(backup).length, 'keys críticas');
 
     localStorage.clear();
 
-    // Restaurar datos críticos
+    // Restaurar TODAS las keys críticas
     Object.entries(backup).forEach(([key, value]) => {
       localStorage.setItem(key, value);
     });
+
+    console.log('✅ Datos críticos restaurados');
 
     // Guardar nueva versión
     localStorage.setItem(VERSION_KEY, APP_VERSION);
