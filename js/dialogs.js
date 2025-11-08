@@ -11,7 +11,9 @@ export const Dialogs = {
    * @param {boolean} [options.isDestructive=false] - Si la acción es destructiva (botón rojo).
    * @returns {Promise<boolean>} - Promesa que se resuelve a `true` si se confirma, `false` si se cancela.
    */
-  confirm({ title, message, okText = 'Aceptar', cancelText = 'Cancelar', isDestructive = false }) {
+  confirm({ title, message, okText = 'Aceptar', confirmText, cancelText = 'Cancelar', isDestructive = false, type }) {
+    // Aceptar tanto confirmText como okText para compatibilidad
+    const buttonText = confirmText || okText;
     return new Promise((resolve) => {
       // Remover diálogos existentes para evitar duplicados
       this.removeExisting();
@@ -30,7 +32,7 @@ export const Dialogs = {
                 ${cancelText}
               </button>
               <button id="dialogOkBtn" class="px-6 py-2 ${okButtonClass} rounded-lg transition font-semibold">
-                ${okText}
+                ${buttonText}
               </button>
             </div>
           </div>
