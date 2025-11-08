@@ -67,7 +67,23 @@ export const TripsManager = {
       this.renderTripsList();
 
       if (!this.currentTrip && this.userTrips.length > 0) {
-        this.selectTrip(this.userTrips[0].id);
+        // 🔥 FIX: Intentar cargar el trip guardado en localStorage primero
+        const savedTripId = localStorage.getItem('currentTripId');
+
+        if (savedTripId) {
+          const savedTrip = this.userTrips.find(t => t.id === savedTripId);
+
+          if (savedTrip) {
+            console.log('✅ Restaurando trip guardado:', savedTripId);
+            this.selectTrip(savedTripId);
+          } else {
+            console.warn('⚠️ Trip guardado no encontrado, seleccionando el primero');
+            this.selectTrip(this.userTrips[0].id);
+          }
+        } else {
+          console.log('ℹ️ No hay trip guardado, seleccionando el primero');
+          this.selectTrip(this.userTrips[0].id);
+        }
       } else if (!this.currentTrip && this.userTrips.length === 0) {
         console.log('⚠️ No hay trips, mostrar mensaje de bienvenida');
         this.updateTripHeaderEmpty();
