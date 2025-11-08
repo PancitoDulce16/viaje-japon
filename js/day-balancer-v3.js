@@ -280,11 +280,27 @@ function detectDuplicateActivities(days) {
 
             if (activitiesSeen.has(title)) {
                 const previous = activitiesSeen.get(title);
-                duplicates.push({
-                    title: activity.title || activity.name,
-                    days: [previous[0].day, day.day],
-                    activities: [previous[0].activity, activity]
-                });
+
+                // Si es la primera vez que vemos un duplicado, crear la entrada
+                if (previous.length === 1) {
+                    duplicates.push({
+                        title: activity.title || activity.name,
+                        days: [previous[0].day, day.day],
+                        activities: [previous[0].activity, activity]
+                    });
+                } else {
+                    // Si ya existe, agregar este nuevo día a la lista
+                    const existingDuplicate = duplicates.find(d =>
+                        d.title.toLowerCase() === title
+                    );
+                    if (existingDuplicate) {
+                        existingDuplicate.days.push(day.day);
+                        existingDuplicate.activities.push(activity);
+                    }
+                }
+
+                // Actualizar el Map para rastrear TODAS las ocurrencias
+                activitiesSeen.set(title, [...previous, { day: day.day, activity }]);
             } else {
                 activitiesSeen.set(title, [{ day: day.day, activity }]);
             }
@@ -345,8 +361,11 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
 
             if (donorDays.length > 0) {
                 const donorDay = donorDays[0];
-                // Tomar actividad del medio (más fácil de mover sin romper flujo)
-                const activityToMove = donorDay.activities[Math.floor(donorDay.activities.length / 2)];
+                // Usar selección inteligente para encontrar mejor candidato
+                const candidates = findMovableCandidates(donorDay.activities);
+                const activityToMove = candidates.length > 0
+                    ? candidates[0]
+                    : donorDay.activities[Math.floor(donorDay.activities.length / 2)];
 
                 suggestions.push({
                     type: 'move',
@@ -523,19 +542,19 @@ function findMovableCandidates(activities) {
  * Encuentra el mejor día destino para una actividad
  */
 function findBestTargetDay(sourceDay, targetDays, activity) {
-    // Preferir días cercanos temporalmente
-    const sortedByProximity = targetDays.sort((a, b) => {
+    // Ordenar por carga PRIMERO (más importante) y proximidad SEGUNDO
+    const sorted = [...targetDays].sort((a, b) => {
+        // Sort by load first (primary)
+        const loadDiff = a.analysis.score - b.analysis.score;
+        if (loadDiff !== 0) return loadDiff;
+
+        // Then by proximity (secondary)
         const distA = Math.abs(a.day - sourceDay.day);
         const distB = Math.abs(b.day - sourceDay.day);
         return distA - distB;
     });
 
-    // Preferir días con menos carga
-    const sortedByLoad = sortedByProximity.sort((a, b) => {
-        return a.analysis.score - b.analysis.score;
-    });
-
-    return sortedByLoad[0];
+    return sorted[0];
 }
 
 /**
@@ -654,16 +673,24 @@ function applySuggestion(days, suggestion, options = {}) {
         const targetDay = newDays.find(d => d.day === suggestion.to.day);
 
         if (sourceDay && targetDay) {
-            const activityIndex = sourceDay.activities.findIndex(
-                act => (act.id === suggestion.from.activityId) ||
-                       (act.title === suggestion.activity.title)
-            );
+            const activityIndex = sourceDay.activities.findIndex(act => {
+                // Primary: match by ID if both have IDs
+                if (act.id && suggestion.from.activityId && act.id === suggestion.from.activityId) {
+                    return true;
+                }
+                // Fallback: match by title (case-insensitive) AND check no ID collision
+                const actTitle = (act.title || act.name || '').trim().toLowerCase();
+                const suggestionTitle = (suggestion.activity.title || suggestion.activity.name || '').trim().toLowerCase();
+                return !act.id && actTitle === suggestionTitle;
+            });
 
             if (activityIndex !== -1) {
-                const [activity] = sourceDay.activities.splice(activityIndex, 1);
+                const activity = sourceDay.activities[activityIndex];
 
                 // ✅ VERIFICAR que la actividad no se solape con otras en el día destino
                 if (canFitActivity(targetDay, activity)) {
+                    // Solo si cabe, remover del source
+                    sourceDay.activities.splice(activityIndex, 1);
                     targetDay.activities.push(activity);
 
                     // Reordenar por horario después de agregar
@@ -681,8 +708,7 @@ function applySuggestion(days, suggestion, options = {}) {
                         );
                     }
                 } else {
-                    // Si no cabe, devolver al día original
-                    sourceDay.activities.splice(activityIndex, 0, activity);
+                    // Si no cabe, NO modificar nada
                     console.warn(`⚠️ No se puede mover "${activity.title || activity.name}" - se solaparía con otra actividad`);
                 }
             }
@@ -725,6 +751,10 @@ function applySuggestion(days, suggestion, options = {}) {
                 }
             }
         }
+    } else if (suggestion.type === 'manual-action') {
+        // Manual actions can't be applied automatically - these are informational only
+        console.log(`ℹ️ Manual action (informational only): ${suggestion.description}`);
+        // Return unchanged - this will be properly detected as "no change" by hash comparison
     }
 
     return newDays;
@@ -761,6 +791,16 @@ function detectTimeOverlaps(activities) {
 }
 
 /**
+ * Genera un hash simple del itinerario para detectar cambios
+ * Mucho más rápido y confiable que JSON.stringify
+ */
+function generateItineraryHash(days) {
+    return days.map(d =>
+        `${d.day}:${(d.activities || []).map(a => `${a.id || a.title || a.name}`).join(',')}`
+    ).join('|');
+}
+
+/**
  * Aplica todas las sugerencias automáticamente
  * @param {Array} days - Días del itinerario
  * @param {Array} suggestions - Sugerencias a aplicar
@@ -774,17 +814,20 @@ function applyAllSuggestions(days, suggestions, options = {}) {
 
     // Ordenar sugerencias por prioridad
     const priorityOrder = { high: 1, medium: 2, low: 3 };
-    const sortedSuggestions = suggestions.sort((a, b) =>
+    const sortedSuggestions = [...suggestions].sort((a, b) =>
         (priorityOrder[a.priority] || 4) - (priorityOrder[b.priority] || 4)
     );
 
     // Aplicar cada sugerencia
     for (const suggestion of sortedSuggestions) {
         try {
+            // Generar hash ANTES de aplicar
+            const beforeHash = generateItineraryHash(currentDays);
             const result = applySuggestion(currentDays, suggestion, options);
+            const afterHash = generateItineraryHash(result);
 
-            // Verificar si realmente cambió algo
-            if (JSON.stringify(result) !== JSON.stringify(currentDays)) {
+            // Verificar si realmente cambió algo comparando hashes
+            if (beforeHash !== afterHash) {
                 currentDays = result;
                 applied++;
                 console.log(`✅ Aplicada: ${suggestion.description}`);
