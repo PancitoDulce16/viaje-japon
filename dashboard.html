@@ -337,6 +337,9 @@
     </script>
     
     <script>
+        // Service Worker DISABLED temporarily due to font loading issues
+        // Will re-enable after fixing CORS and caching issues
+        /*
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./service-worker.js')
@@ -348,6 +351,7 @@
                     });
             });
         }
+        */
     </script>
 </body>
 </html>
