@@ -23,7 +23,7 @@ import { HotelsHandler } from './hotels.js';
 import { Notifications } from './notifications.js';
 import { ItineraryBuilder } from './itinerary-builder.js';
 import { ItineraryBuilderExtensions } from './itinerary-builder-part2.js';
-import { Dialogs } from './dialogs.js';
+import { Dialogs } from './dialogs-v2.js'; // Renamed to force cache bypass
 import { RecommendationEngine } from './recommendation-engine.js';
 import { FeedbackTracker } from './feedback-tracker.js';
 import { CostCalculator } from './cost-calculator.js';
