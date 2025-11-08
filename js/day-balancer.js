@@ -282,19 +282,38 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
         });
     }
 
-    // Sugerencia 2: Agrupar actividades por zona
+    // Sugerencia 2: Optimizar rutas y horarios
     daysAnalysis.forEach(dayAnalysis => {
-        if (dayAnalysis.analysis.factors.zonesCount > 2 && dayAnalysis.activities.length > 3) {
-            const clusters = RouteOptimizer.clusterActivities(dayAnalysis.activities, 2);
+        if (dayAnalysis.activities.length > 3) {
+            const longTransfers = RouteOptimizer.detectLongTransfers(dayAnalysis.activities, 3);
 
-            if (clusters.length > 1) {
+            // Si hay traslados largos O muchas zonas, sugerir reorganización
+            if (longTransfers.length > 0 || dayAnalysis.analysis.factors.zonesCount > 2) {
+                // Generar sugerencia con múltiples opciones de modo
                 suggestions.push({
                     type: 'reorder',
-                    priority: 'medium',
-                    description: `Reagrupar actividades del Día ${dayAnalysis.day} por zona`,
-                    reason: `Reducir traslados entre ${dayAnalysis.analysis.factors.zonesCount} zonas diferentes`,
+                    priority: longTransfers.length > 0 ? 'high' : 'medium',
+                    description: `Optimizar ruta del Día ${dayAnalysis.day}`,
+                    reason: longTransfers.length > 0
+                        ? `Hay ${longTransfers.length} traslado(s) largo(s) que se pueden optimizar`
+                        : `${dayAnalysis.analysis.factors.zonesCount} zonas diferentes - se puede mejorar`,
                     day: dayAnalysis.day,
-                    clusters: clusters
+                    longTransfers: longTransfers,
+                    // Opciones de optimización
+                    modes: {
+                        balanced: {
+                            label: 'Balanceado (Recomendado)',
+                            description: 'Optimiza geografía respetando horarios aproximados'
+                        },
+                        geography: {
+                            label: 'Solo Geografía',
+                            description: 'Minimiza distancia total (recalcula todos los horarios)'
+                        },
+                        time: {
+                            label: 'Solo Horarios',
+                            description: 'Mantiene horarios actuales, solo reordena por tiempo'
+                        }
+                    }
                 });
             }
         }
@@ -464,9 +483,15 @@ function sortActivitiesByTime(activities) {
  * Aplica una sugerencia de balanceo automáticamente
  * @param {Array} days - Array de días
  * @param {Object} suggestion - Sugerencia a aplicar
+ * @param {Object} options - Opciones de aplicación
  * @returns {Array} Días modificados
  */
-function applySuggestion(days, suggestion) {
+function applySuggestion(days, suggestion, options = {}) {
+    const {
+        recalculateTimings = true,
+        optimizationMode = 'balanced' // 'time', 'geography', 'balanced'
+    } = options;
+
     const newDays = JSON.parse(JSON.stringify(days)); // Deep clone
 
     if (suggestion.type === 'move') {
@@ -486,8 +511,21 @@ function applySuggestion(days, suggestion) {
                 // ✅ VERIFICAR que la actividad no se solape con otras en el día destino
                 if (canFitActivity(targetDay, activity)) {
                     targetDay.activities.push(activity);
+
                     // Reordenar por horario después de agregar
                     targetDay.activities = sortActivitiesByTime(targetDay.activities);
+
+                    // Recalcular horarios si está habilitado
+                    if (recalculateTimings) {
+                        targetDay.activities = RouteOptimizer.recalculateTimings(
+                            targetDay.activities,
+                            { defaultDuration: 60, transportBuffer: 10 }
+                        );
+                        sourceDay.activities = RouteOptimizer.recalculateTimings(
+                            sourceDay.activities,
+                            { defaultDuration: 60, transportBuffer: 10 }
+                        );
+                    }
                 } else {
                     // Si no cabe, devolver al día original
                     sourceDay.activities.splice(activityIndex, 0, activity);
@@ -496,18 +534,68 @@ function applySuggestion(days, suggestion) {
             }
         }
     } else if (suggestion.type === 'reorder') {
-        // Reordenar actividades por clusters
+        // Reordenar actividades usando el optimizador de rutas
         const day = newDays.find(d => d.day === suggestion.day);
-        if (day && suggestion.clusters) {
-            const reordered = [];
-            suggestion.clusters.forEach(cluster => {
-                reordered.push(...cluster.activities);
+        if (day && day.activities.length > 0) {
+            // Usar el Route Optimizer para reorganizar
+            const optimized = RouteOptimizer.optimizeRoute(day.activities, {
+                optimizationMode: optimizationMode,
+                recalculateTimings: recalculateTimings,
+                considerOpeningHours: true
             });
-            day.activities = sortActivitiesByTime(reordered);
+
+            if (optimized.wasOptimized) {
+                day.activities = optimized.optimizedActivities;
+
+                // ✅ VALIDAR que no haya solapamientos después de reorganizar
+                const hasOverlaps = detectTimeOverlaps(day.activities);
+                if (hasOverlaps.length > 0) {
+                    console.warn(`⚠️ Se detectaron ${hasOverlaps.length} solapamientos después de reorganizar`);
+
+                    // Si hay solapamientos y recalculateTimings está deshabilitado,
+                    // forzar recalculación
+                    if (!recalculateTimings) {
+                        day.activities = RouteOptimizer.recalculateTimings(
+                            day.activities,
+                            { defaultDuration: 60, transportBuffer: 10 }
+                        );
+                    }
+                }
+            }
         }
     }
 
     return newDays;
+}
+
+/**
+ * Detecta solapamientos de horarios en un array de actividades
+ * @param {Array} activities - Actividades a verificar
+ * @returns {Array} Lista de solapamientos detectados
+ */
+function detectTimeOverlaps(activities) {
+    const overlaps = [];
+    const sorted = sortActivitiesByTime(activities);
+
+    for (let i = 0; i < sorted.length - 1; i++) {
+        const current = sorted[i];
+        const next = sorted[i + 1];
+
+        if (!current.time || !next.time) continue;
+
+        const currentEnd = parseTime(current.time) + (current.duration || 60);
+        const nextStart = parseTime(next.time);
+
+        if (currentEnd > nextStart) {
+            overlaps.push({
+                activity1: current.title || current.name,
+                activity2: next.title || next.name,
+                overlapMinutes: currentEnd - nextStart
+            });
+        }
+    }
+
+    return overlaps;
 }
 
 // Exportar el sistema
@@ -515,7 +603,11 @@ export const DayBalancer = {
     analyzeDayLoad,
     analyzeItineraryBalance,
     generateBalancingSuggestions,
-    applySuggestion
+    applySuggestion,
+    detectTimeOverlaps,
+    canFitActivity,
+    sortActivitiesByTime,
+    parseTime
 };
 
 // Exponer globalmente para uso desde HTML

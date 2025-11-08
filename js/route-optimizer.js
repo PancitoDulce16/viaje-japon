@@ -85,7 +85,9 @@ function optimizeRoute(activities, options = {}) {
     const {
         considerOpeningHours = true,
         startPoint = null, // Puede ser coordenadas del hotel
-        endPoint = null
+        endPoint = null,
+        optimizationMode = 'balanced', // 'geography', 'time', 'balanced'
+        recalculateTimings = true // Recalcular horarios después de optimizar
     } = options;
 
     if (!activities || activities.length < 2) {
@@ -117,39 +119,27 @@ function optimizeRoute(activities, options = {}) {
     // Calcular ruta original
     const originalStats = calculateRouteStats(activitiesWithCoords);
 
-    // Implementar Nearest Neighbor Algorithm
-    const unvisited = [...activitiesWithCoords];
-    const optimized = [];
+    // Optimizar según el modo seleccionado
+    let optimized;
+    if (optimizationMode === 'time') {
+        // Solo ordenar por tiempo
+        optimized = sortByTime(activitiesWithCoords);
+    } else if (optimizationMode === 'geography') {
+        // Solo optimizar geográficamente
+        optimized = optimizeByGeography(activitiesWithCoords, { startPoint });
+    } else {
+        // Modo balanceado: considerar tiempo Y geografía
+        optimized = optimizeBalanced(activitiesWithCoords, { startPoint });
+    }
 
-    // Empezar desde el startPoint o la primera actividad
-    let current = startPoint
-        ? findNearestActivity(startPoint, unvisited)
-        : unvisited[0];
-
-    unvisited.splice(unvisited.indexOf(current), 1);
-    optimized.push(current);
-
-    // Mientras haya actividades por visitar
-    while (unvisited.length > 0) {
-        // Encontrar la actividad más cercana
-        const nearest = findNearestActivity(current.coordinates, unvisited);
-
-        // Si consideramos horarios, verificar que sea factible visitarla
-        if (considerOpeningHours && !isVisitFeasible(current, nearest, optimized)) {
-            // Si no es factible, buscar la siguiente más cercana
-            const alternativeIndex = findAlternativeActivity(current.coordinates, unvisited, optimized);
-            if (alternativeIndex !== -1) {
-                const alternative = unvisited[alternativeIndex];
-                unvisited.splice(alternativeIndex, 1);
-                optimized.push(alternative);
-                current = alternative;
-                continue;
-            }
-        }
-
-        unvisited.splice(unvisited.indexOf(nearest), 1);
-        optimized.push(nearest);
-        current = nearest;
+    // Recalcular horarios si está habilitado
+    if (recalculateTimings && optimized.length > 0) {
+        const firstTime = optimized[0].time;
+        optimized = recalculateTimings(optimized, {
+            startTime: firstTime,
+            defaultDuration: 60,
+            transportBuffer: 10
+        });
     }
 
     // Calcular estadísticas de ruta optimizada
@@ -207,9 +197,53 @@ function findNearestActivity(point, activities) {
  * Verifica si es factible visitar una actividad considerando horarios
  */
 function isVisitFeasible(current, next, visitedSoFar) {
-    // TODO: Implementar lógica de horarios cuando tengamos esa data
-    // Por ahora, siempre retorna true
-    return true;
+    // Si no tienen horarios asignados, siempre es factible
+    if (!current.time && !next.time) return true;
+    if (!next.time) return true;
+
+    // Obtener tiempo actual después de completar la actividad actual
+    const currentEndTime = getActivityEndTime(current);
+    const nextStartTime = parseTime(next.time);
+
+    // Calcular tiempo de transporte
+    if (current.coordinates && next.coordinates) {
+        const distance = calculateDistance(current.coordinates, next.coordinates);
+        const transport = estimateTransportTime(distance);
+        const arrivalTime = currentEndTime + transport.minutes;
+
+        // Verificar si llegamos a tiempo (con 15 min de margen)
+        return arrivalTime <= nextStartTime + 15;
+    }
+
+    // Si no hay coordenadas, solo verificar orden temporal
+    return currentEndTime <= nextStartTime;
+}
+
+/**
+ * Obtiene el tiempo de finalización de una actividad en minutos desde medianoche
+ */
+function getActivityEndTime(activity) {
+    const startTime = parseTime(activity.time);
+    const duration = activity.duration || 60;
+    return startTime + duration;
+}
+
+/**
+ * Parsea un tiempo en formato "HH:MM" a minutos desde medianoche
+ */
+function parseTime(timeStr) {
+    if (!timeStr) return 0;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+}
+
+/**
+ * Convierte minutos desde medianoche a formato "HH:MM"
+ */
+function formatTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 }
 
 /**
@@ -346,6 +380,174 @@ function detectLongTransfers(activities, thresholdKm = 5) {
 }
 
 /**
+ * Recalcula los horarios de actividades después de reorganizar
+ * Mantiene el primer horario y recalcula el resto considerando duración + transporte
+ * @param {Array} activities - Actividades reorganizadas
+ * @param {Object} options - {startTime: 'HH:MM', defaultDuration: 60}
+ * @returns {Array} Actividades con horarios recalculados
+ */
+function recalculateTimings(activities, options = {}) {
+    const {
+        startTime = null,
+        defaultDuration = 60,
+        transportBuffer = 10 // Buffer adicional entre actividades
+    } = options;
+
+    if (!activities || activities.length === 0) return activities;
+
+    const result = [...activities];
+
+    // Determinar hora de inicio
+    let currentTime;
+    if (startTime) {
+        currentTime = parseTime(startTime);
+    } else if (result[0].time) {
+        currentTime = parseTime(result[0].time);
+    } else {
+        currentTime = 9 * 60; // Default: 09:00
+    }
+
+    // Recalcular cada actividad
+    for (let i = 0; i < result.length; i++) {
+        const activity = result[i];
+
+        // Asignar nuevo horario
+        activity.time = formatTime(currentTime);
+
+        // Calcular cuándo termina esta actividad
+        const duration = activity.duration || defaultDuration;
+        currentTime += duration;
+
+        // Si hay una siguiente actividad, calcular tiempo de transporte
+        if (i < result.length - 1) {
+            const next = result[i + 1];
+
+            if (activity.coordinates && next.coordinates) {
+                const distance = calculateDistance(activity.coordinates, next.coordinates);
+                const transport = estimateTransportTime(distance);
+
+                // Agregar tiempo de transporte + buffer
+                currentTime += transport.minutes + transportBuffer;
+
+                // Guardar info de transporte para UI
+                activity.transportToNext = {
+                    distance: Math.round(distance * 10) / 10,
+                    time: transport.minutes,
+                    mode: transport.mode,
+                    cost: transport.cost
+                };
+            } else {
+                // Sin coordenadas, solo agregar buffer
+                currentTime += transportBuffer;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Optimiza por modo específico
+ */
+function optimizeByMode(activities, mode, options) {
+    if (mode === 'time') {
+        // Modo tiempo: ordenar solo por horarios existentes
+        return sortByTime(activities);
+    } else if (mode === 'geography') {
+        // Modo geografía: ignorar horarios, solo optimizar distancia
+        return optimizeByGeography(activities, options);
+    } else {
+        // Modo balanceado: considerar ambos
+        return optimizeBalanced(activities, options);
+    }
+}
+
+/**
+ * Ordena actividades solo por tiempo
+ */
+function sortByTime(activities) {
+    const withTime = activities.filter(a => a.time).sort((a, b) =>
+        parseTime(a.time) - parseTime(b.time)
+    );
+    const withoutTime = activities.filter(a => !a.time);
+
+    return [...withTime, ...withoutTime];
+}
+
+/**
+ * Optimiza solo por geografía (ignora horarios)
+ */
+function optimizeByGeography(activities, options) {
+    const { startPoint } = options;
+    const unvisited = [...activities];
+    const optimized = [];
+
+    let current = startPoint
+        ? findNearestActivity(startPoint, unvisited)
+        : unvisited[0];
+
+    unvisited.splice(unvisited.indexOf(current), 1);
+    optimized.push(current);
+
+    while (unvisited.length > 0) {
+        const nearest = findNearestActivity(current.coordinates, unvisited);
+        unvisited.splice(unvisited.indexOf(nearest), 1);
+        optimized.push(nearest);
+        current = nearest;
+    }
+
+    return optimized;
+}
+
+/**
+ * Optimiza de forma balanceada (geografía + tiempo)
+ */
+function optimizeBalanced(activities, options) {
+    // Primero ordenar por tiempo
+    const sortedByTime = sortByTime(activities.filter(a => a.time));
+    const withoutTime = activities.filter(a => !a.time);
+
+    // Agrupar actividades cercanas temporalmente (ventanas de 3 horas)
+    const timeWindows = [];
+    let currentWindow = [];
+
+    sortedByTime.forEach((activity, index) => {
+        if (currentWindow.length === 0) {
+            currentWindow.push(activity);
+        } else {
+            const lastTime = parseTime(currentWindow[currentWindow.length - 1].time);
+            const currentActivityTime = parseTime(activity.time);
+
+            // Si está dentro de la ventana de 3 horas, agregar
+            if (currentActivityTime - lastTime <= 180) {
+                currentWindow.push(activity);
+            } else {
+                // Nueva ventana
+                timeWindows.push(currentWindow);
+                currentWindow = [activity];
+            }
+        }
+    });
+
+    if (currentWindow.length > 0) {
+        timeWindows.push(currentWindow);
+    }
+
+    // Optimizar cada ventana geográficamente
+    const optimized = [];
+    timeWindows.forEach(window => {
+        if (window.length <= 1) {
+            optimized.push(...window);
+        } else {
+            const geoOptimized = optimizeByGeography(window, options);
+            optimized.push(...geoOptimized);
+        }
+    });
+
+    return [...optimized, ...withoutTime];
+}
+
+/**
  * Genera sugerencia de orden óptimo en texto
  */
 function generateOptimizationSuggestion(originalActivities, optimizedResult) {
@@ -382,7 +584,13 @@ export const RouteOptimizer = {
     calculateRouteStats,
     clusterActivities,
     detectLongTransfers,
-    generateOptimizationSuggestion
+    generateOptimizationSuggestion,
+    recalculateTimings,
+    parseTime,
+    formatTime,
+    sortByTime,
+    optimizeByGeography,
+    optimizeBalanced
 };
 
 // También exportar como objeto global para acceso desde HTML
