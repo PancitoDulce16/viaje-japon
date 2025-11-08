@@ -8,7 +8,7 @@ import { APP_CONFIG } from '/js/config.js';
 import { ActivityAutocomplete } from './activity-autocomplete.js';
 import { LocationAutocomplete } from './location-autocomplete.js'; // 📍 Autocompletado de ubicaciones
 import { RouteOptimizer } from './route-optimizer-v2.js'; // 🗺️ Optimizador de rutas
-import { DayBalancer } from './day-balancer-v2.js'; // ⚖️ Balanceador inteligente de días
+import { DayBalancer } from './day-balancer-v3.js'; // ⚖️ Balanceador inteligente de días
 import { DayExperiencePredictor } from './day-experience-predictor.js'; // 🔮 Predictor de experiencia
 
 let checkedActivities = {};
