@@ -298,30 +298,52 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
         });
     }
 
-    // Sugerencia 1: Mover actividades de días sobrecargados a días vacíos/ligeros
-    if (overloadedDays.length > 0 && (emptyDays.length > 0 || lightDays.length > 0)) {
+    // 🔥 PRIORIDAD 1: Llenar días vacíos PRIMERO
+    if (emptyDays.length > 0) {
+        // Encontrar días con actividades para redistribuir
+        const daysWithActivities = daysAnalysis.filter(d => d.activities.length > 0);
+
+        emptyDays.forEach(emptyDay => {
+            // Para cada día vacío, intentar mover actividades de días con muchas actividades
+            const donorDays = daysWithActivities
+                .filter(d => d.activities.length >= 4) // Solo de días con 4+ actividades
+                .sort((a, b) => b.activities.length - a.activities.length); // Más llenos primero
+
+            if (donorDays.length > 0) {
+                const donorDay = donorDays[0];
+                const activityToMove = donorDay.activities[Math.floor(donorDay.activities.length / 2)];
+
+                suggestions.push({
+                    type: 'move',
+                    priority: 'high',
+                    description: `Llenar Día ${emptyDay.day} vacío moviendo "${activityToMove.title || activityToMove.name}"`,
+                    reason: `El Día ${emptyDay.day} está completamente vacío. Moveremos 1 actividad del Día ${donorDay.day} (${donorDay.activities.length} actividades)`,
+                    from: { day: donorDay.day, activityId: activityToMove.id },
+                    to: { day: emptyDay.day },
+                    activity: activityToMove
+                });
+            }
+        });
+    }
+
+    // Sugerencia 2: Balancear días sobrecargados con días ligeros (después de llenar vacíos)
+    if (overloadedDays.length > 0 && lightDays.length > 0) {
         overloadedDays.forEach(overloadedDay => {
-            const targetDays = [...emptyDays, ...lightDays].filter(d => d.day !== overloadedDay.day);
+            const targetDays = lightDays.filter(d => d.day !== overloadedDay.day && d.activities.length < 6);
 
             if (targetDays.length > 0 && overloadedDay.activities.length > 6) {
-                // Solo mover de días REALMENTE sobrecargados (más de 6 actividades)
-                // Encontrar actividades candidatas para mover (las que están más lejos de las demás)
                 const candidates = findMovableCandidates(overloadedDay.activities);
-
-                // Limitar a mover máximo 2 actividades por día sobrecargado
-                const toMove = Math.min(2, Math.floor(overloadedDay.activities.length / 3));
+                const toMove = Math.min(2, Math.floor((overloadedDay.activities.length - 5) / 2));
 
                 candidates.slice(0, toMove).forEach(activity => {
-                    // Buscar el mejor día destino (más cercano temporalmente)
                     const bestTarget = findBestTargetDay(overloadedDay, targetDays, activity);
 
-                    // ✅ VERIFICAR que el día destino no termine con demasiadas actividades
                     if (bestTarget && bestTarget.activities.length < 6) {
                         suggestions.push({
                             type: 'move',
-                            priority: 'high',
-                            description: `Mover "${activity.title || activity.name}" del Día ${overloadedDay.day} al Día ${bestTarget.day}`,
-                            reason: `Aliviará el Día ${overloadedDay.day} (${overloadedDay.activities.length} actividades) y llenará el Día ${bestTarget.day} (${bestTarget.activities.length} actividades)`,
+                            priority: 'medium',
+                            description: `Balancear: mover "${activity.title || activity.name}" del Día ${overloadedDay.day} al Día ${bestTarget.day}`,
+                            reason: `Equilibrar carga: Día ${overloadedDay.day} (${overloadedDay.activities.length}) → Día ${bestTarget.day} (${bestTarget.activities.length})`,
                             from: { day: overloadedDay.day, activityId: activity.id },
                             to: { day: bestTarget.day },
                             activity: activity
