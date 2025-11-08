@@ -230,6 +230,22 @@ async function loadItinerary(){
 
     if (snap.exists()) {
       currentItinerary = snap.data();
+
+      // 🧹 Limpiar datos corruptos (NaN:NaN en tiempos)
+      if (currentItinerary && currentItinerary.days) {
+        currentItinerary.days.forEach(day => {
+          if (day.activities) {
+            day.activities.forEach(activity => {
+              // Limpiar tiempos con NaN
+              if (activity.time && (activity.time === 'NaN:NaN' || activity.time.includes('NaN'))) {
+                console.warn(`🧹 Limpiando tiempo corrupto en actividad: ${activity.title || activity.name}, time was: ${activity.time}`);
+                activity.time = '09:00'; // Default time
+              }
+            });
+          }
+        });
+      }
+
       console.log('✅ Itinerary loaded from Firebase');
       return currentItinerary;
     } else {
@@ -1307,7 +1323,7 @@ function renderActivities(day){
           <div class="flex justify-between items-start">
             <div>
               <div class="flex items-center gap-2 mb-1 flex-wrap">
-                <span class="text-xs font-semibold text-gray-500 dark:text-gray-200">${act.time||''}</span>
+                <span class="text-xs font-semibold text-gray-500 dark:text-gray-200">${act.time && act.time !== 'NaN:NaN' && !act.time.includes('NaN') ? act.time : '09:00'}</span>
                 ${act.cost>0?`<span class="text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-white px-2 py-1 rounded font-semibold">¥${Number(act.cost).toLocaleString()}</span>`:''}
               </div>
               <h3 class="text-lg font-bold dark:text-white mb-1">${activityTitle}</h3>
