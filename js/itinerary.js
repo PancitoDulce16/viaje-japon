@@ -474,8 +474,8 @@ async function showBalanceAnalysis() {
   }
 
   try {
-    // Analizar balance
-    const analysis = DayBalancer.analyzeItineraryBalance(currentItinerary.days);
+    // Analizar balance - PASAR ITINERARIO COMPLETO para obtener hoteles
+    const analysis = DayBalancer.analyzeItineraryBalance(currentItinerary.days, currentItinerary);
 
     console.log('📊 Balance analysis:', analysis);
 
