@@ -11,7 +11,7 @@ import { SafeFirestore } from './firestore-wrapper.js'; // 🛡️ Wrapper segur
 import { MapsHelper } from './maps-helper.js'; // 🗺️ Helper para Google Maps
 import { PackingList } from './packing-list.js';
 import { FavoritesManager } from './favorites-manager.js';
-import { ItineraryHandler } from './itinerary.js?v=2025-11-05-06';
+import { ItineraryHandler } from './itinerary.js?v=2025-11-07-V2-FILES';
 import { TabsHandler } from './tabs.js';
 import { ModalRenderer } from './modals.js';
 import { MapHandler } from './map.js';
