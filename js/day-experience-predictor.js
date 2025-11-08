@@ -1,7 +1,7 @@
 // js/day-experience-predictor.js - Sistema de Predicción de Experiencia del Día
 // Predice cómo será la experiencia de cada día basándose en múltiples factores
 
-import { RouteOptimizer } from './route-optimizer.js';
+import { RouteOptimizer } from './route-optimizer.js?v=2025-11-07-ROUTE-FIX-2';
 
 /**
  * Predice el nivel de energía requerido para un día

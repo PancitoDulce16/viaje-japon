@@ -1,7 +1,7 @@
 // js/day-balancer.js - Sistema de Balance Inteligente de Días
 // Analiza el itinerario y sugiere redistribución de actividades para optimizar la experiencia
 
-import { RouteOptimizer } from './route-optimizer.js';
+import { RouteOptimizer } from './route-optimizer.js?v=2025-11-07-ROUTE-FIX-2';
 
 /**
  * Analiza la "carga" de un día basándose en múltiples factores

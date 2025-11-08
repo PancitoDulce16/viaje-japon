@@ -29,8 +29,8 @@ import { FeedbackTracker } from './feedback-tracker.js';
 import { CostCalculator } from './cost-calculator.js';
 import { EssentialsHandler } from './essentials-handler.js';
 import { BudgetCalculator } from './budget-calculator.js';
-import { RouteOptimizer } from './route-optimizer.js'; // 🗺️ Optimizador de rutas
-import { DayBalancer } from './day-balancer.js'; // ⚖️ Balanceador inteligente de días
+import { RouteOptimizer } from './route-optimizer.js?v=2025-11-07-ROUTE-FIX-2'; // 🗺️ Optimizador de rutas
+import { DayBalancer } from './day-balancer.js?v=2025-11-07-ROUTE-FIX-2'; // ⚖️ Balanceador inteligente de días
 import { DayExperiencePredictor } from './day-experience-predictor.js'; // 🔮 Predictor de experiencia
 import { IntelligentGeocoder } from './intelligent-geocoder.js'; // 🧠 Geocodificación inteligente
 import { APP_CONFIG } from './config.js'; // 🔐 Configuración de la app

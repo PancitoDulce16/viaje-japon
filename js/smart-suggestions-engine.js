@@ -5,7 +5,7 @@ console.log('🔄 [SuggestionsEngine] Iniciando carga del módulo...');
 
 import { ATTRACTIONS_DATA } from '../data/attractions-data.js';
 import { LocationAutocomplete } from './location-autocomplete.js';
-import { RouteOptimizer } from './route-optimizer.js';
+import { RouteOptimizer } from './route-optimizer.js?v=2025-11-07-ROUTE-FIX-2';
 import { GooglePlacesAPI } from './google-places.js';
 import { APP_CONFIG } from './config.js';
 
