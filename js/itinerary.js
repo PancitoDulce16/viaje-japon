@@ -579,28 +579,65 @@ async function showBalanceAnalysis() {
 
     // Sugerencias
     if (analysis.suggestions && analysis.suggestions.length > 0) {
+      // Contar por prioridad
+      const highPriority = analysis.suggestions.filter(s => s.priority === 'high').length;
+      const mediumPriority = analysis.suggestions.filter(s => s.priority === 'medium').length;
+      const lowPriority = analysis.suggestions.filter(s => s.priority === 'low').length;
+
       message += `
-        <div class="bg-yellow-100 dark:bg-yellow-800 p-4 rounded-lg border-2 border-yellow-400 dark:border-yellow-500">
-          <h3 class="font-bold text-yellow-900 dark:text-white mb-2">💡 Sugerencias de Mejora:</h3>
+        <div class="bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-800 dark:to-orange-800 p-4 rounded-lg border-2 border-yellow-400 dark:border-yellow-500">
+          <h3 class="font-bold text-yellow-900 dark:text-white mb-3 text-lg">💡 ${analysis.suggestions.length} Sugerencias de Mejora</h3>
+
+          <div class="flex gap-3 mb-3 text-xs">
+            ${highPriority > 0 ? `<span class="bg-red-500 text-white px-2 py-1 rounded">🔴 ${highPriority} Alta</span>` : ''}
+            ${mediumPriority > 0 ? `<span class="bg-yellow-500 text-white px-2 py-1 rounded">🟡 ${mediumPriority} Media</span>` : ''}
+            ${lowPriority > 0 ? `<span class="bg-green-500 text-white px-2 py-1 rounded">🟢 ${lowPriority} Baja</span>` : ''}
+          </div>
+
           <ul class="space-y-2 text-sm text-yellow-900 dark:text-yellow-100">
       `;
 
-      analysis.suggestions.slice(0, 5).forEach((suggestion, index) => {
+      analysis.suggestions.slice(0, 8).forEach((suggestion, index) => {
         const priorityBadge = suggestion.priority === 'high' ? '🔴' :
                              suggestion.priority === 'medium' ? '🟡' : '🟢';
 
+        const typeBadge = suggestion.type === 'remove-duplicate' ? '🗑️' :
+                         suggestion.type === 'move' ? '↔️' :
+                         suggestion.type === 'reorder' ? '🔄' : '💡';
+
         message += `
-          <li class="flex items-start gap-2">
-            <span class="flex-shrink-0">${priorityBadge}</span>
-            <div>
+          <li class="flex items-start gap-2 bg-white/50 dark:bg-gray-900/30 p-2 rounded">
+            <span class="flex-shrink-0">${priorityBadge}${typeBadge}</span>
+            <div class="flex-1">
               <div class="font-semibold">${suggestion.description}</div>
-              <div class="text-xs opacity-80">${suggestion.reason}</div>
+              <div class="text-xs opacity-80 mt-1">${suggestion.reason}</div>
             </div>
           </li>
         `;
       });
 
-      message += `</ul></div>`;
+      if (analysis.suggestions.length > 8) {
+        message += `
+          <li class="text-xs italic opacity-70 text-center">
+            ... y ${analysis.suggestions.length - 8} sugerencias más
+          </li>
+        `;
+      }
+
+      message += `
+          </ul>
+          <div class="mt-3 p-3 bg-blue-100 dark:bg-blue-900 rounded text-xs text-blue-900 dark:text-blue-100">
+            <strong>ℹ️ Al hacer clic en "Aplicar Todo":</strong>
+            <ul class="list-disc list-inside mt-1 space-y-1">
+              <li>Se aplicarán TODAS las sugerencias automáticamente</li>
+              <li>Se eliminarán actividades duplicadas</li>
+              <li>Se moverán actividades entre días para balancear</li>
+              <li>Se optimizarán rutas donde sea necesario</li>
+              <li>Se recalcularán horarios automáticamente</li>
+            </ul>
+          </div>
+        </div>
+      `;
     }
 
     message += `</div>`;
@@ -609,8 +646,8 @@ async function showBalanceAnalysis() {
     const confirmed = await window.Dialogs.confirm({
       title: '⚖️ Análisis de Balance del Itinerario',
       message: message,
-      confirmText: analysis.suggestions.length > 0 ? 'Aplicar Sugerencias Automáticamente' : 'Cerrar',
-      cancelText: 'Cerrar',
+      confirmText: analysis.suggestions.length > 0 ? '✨ Aplicar Todo Automáticamente' : 'Cerrar',
+      cancelText: 'Solo Ver Análisis',
       type: 'info'
     });
 
@@ -632,26 +669,36 @@ async function applyBalanceSuggestions(suggestions) {
   console.log('🔧 Applying balance suggestions...', suggestions);
 
   try {
-    let modified = false;
-
-    for (const suggestion of suggestions) {
-      if (suggestion.type === 'move' && suggestion.priority === 'high') {
-        // Mover actividad
-        const newDays = DayBalancer.applySuggestion(currentItinerary.days, suggestion);
-        currentItinerary.days = newDays;
-        modified = true;
+    // Usar el nuevo sistema applyAllSuggestions para aplicar TODO
+    const result = DayBalancer.applyAllSuggestions(
+      currentItinerary.days,
+      suggestions,
+      {
+        recalculateTimings: true,
+        optimizationMode: 'balanced'
       }
-    }
+    );
 
-    if (modified) {
+    console.log('📊 Resultado del rebalanceo:', result);
+
+    // Actualizar el itinerario con los días modificados
+    currentItinerary.days = result.days;
+
+    if (result.applied > 0) {
       await saveCurrentItineraryToFirebase();
+
       Notifications.show(
-        `✅ Balance aplicado! Se movieron actividades para mejorar la distribución`,
+        `✅ ¡Rebalanceo completo! Aplicadas ${result.applied} de ${result.total} sugerencias` +
+        (result.skipped > 0 ? ` (${result.skipped} omitidas)` : ''),
         'success'
       );
+
       render();
     } else {
-      Notifications.show('No se aplicaron cambios', 'info');
+      Notifications.show(
+        `ℹ️ No se aplicaron cambios - El itinerario ya está optimizado`,
+        'info'
+      );
     }
 
   } catch (error) {
