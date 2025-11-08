@@ -1,6 +1,7 @@
 // js/route-optimizer.js - Optimizador Inteligente de Rutas
 // Sistema de optimización de rutas usando algoritmo Nearest Neighbor
 // NO requiere APIs pagadas - todo es matemática pura
+// Version: 2025-11-07-FIXED - recalculateTimings defined before use
 
 /**
  * Calcula la distancia entre dos puntos usando la fórmula de Haversine
