@@ -9,7 +9,7 @@
 // 📦 --- CONFIGURACIÓN DEL CACHÉ ---
 // IMPORTANTE: Cambia este número de versión CADA VEZ que hagas un cambio en los
 // archivos de la aplicación (JS, CSS, HTML) para forzar la actualización.
-const STATIC_CACHE_VERSION = 'japan-trip-planner-static-v10.0-NO-JS-CACHE';
+const STATIC_CACHE_VERSION = 'japan-trip-planner-static-v10.1-FIX-FONTS';
 const DYNAMIC_CACHE_VERSION = 'japan-trip-planner-dynamic-v10.0-NO-JS-CACHE';
 const STATIC_CACHE_NAME = `static-${STATIC_CACHE_VERSION}`;
 const DYNAMIC_CACHE_NAME = `dynamic-${DYNAMIC_CACHE_VERSION}`;
@@ -107,9 +107,21 @@ self.addEventListener('fetch', event => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // --- REGLA 1: IGNORAR PETICIONES QUE NO DEBEN SER CACHEADAS (Firebase, etc.) ---
-    if (request.method !== 'GET' || url.protocol.startsWith('chrome-extension') || url.hostname.includes('googleapis.com') || url.hostname.includes('firestore.googleapis.com')) {
-        return;
+    // --- REGLA 1: IGNORAR PETICIONES QUE NO DEBEN SER CACHEADAS (Firebase, CDNs externos, etc.) ---
+    // ⚠️ NO interceptar dominios externos para evitar errores de CORS y carga de fuentes
+    const externalDomains = [
+        'googleapis.com',
+        'firestore.googleapis.com',
+        'gstatic.com',           // Google Fonts
+        'fonts.gstatic.com',      // Google Fonts
+        'fonts.googleapis.com',   // Google Fonts CSS
+        'cdnjs.cloudflare.com'    // Font Awesome y otros CDNs
+    ];
+
+    const isExternalDomain = externalDomains.some(domain => url.hostname.includes(domain));
+
+    if (request.method !== 'GET' || url.protocol.startsWith('chrome-extension') || isExternalDomain) {
+        return; // Dejar que el navegador maneje estas solicitudes directamente
     }
 
     // --- REGLA 2: ESTRATEGIA PARA NAVEGACIÓN (HTML) ---
