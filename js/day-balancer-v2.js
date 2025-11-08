@@ -183,9 +183,10 @@ function analyzeDayLoad(day) {
 /**
  * Analiza todo el itinerario y detecta desequilibrios
  * @param {Array} days - Array de días del itinerario
+ * @param {Object} itinerary - Itinerario completo (para obtener hoteles)
  * @returns {Object} Análisis completo con sugerencias
  */
-function analyzeItineraryBalance(days) {
+function analyzeItineraryBalance(days, itinerary = null) {
     if (!days || days.length === 0) {
         return {
             balanced: false,
@@ -196,13 +197,32 @@ function analyzeItineraryBalance(days) {
         };
     }
 
-    // Analizar cada día
-    const daysAnalysis = days.map(day => ({
-        day: day.day,
-        date: day.date,
-        analysis: analyzeDayLoad(day),
-        activities: day.activities || []
-    }));
+    // Analizar cada día y obtener hotel base si existe
+    const daysAnalysis = days.map(day => {
+        let hotelCoords = null;
+
+        // 🏨 Intentar obtener hotel para este día
+        if (itinerary && itinerary.hotels && window.HotelBaseSystem) {
+            try {
+                const city = window.HotelBaseSystem.detectCityForDay(day);
+                const hotel = window.HotelBaseSystem.getHotelForCity(itinerary, city);
+                if (hotel && hotel.coordinates) {
+                    hotelCoords = hotel.coordinates;
+                    console.log(`🏨 Hotel detectado para Día ${day.day} (${city}):`, hotel.name);
+                }
+            } catch (error) {
+                console.warn(`⚠️ No se pudo obtener hotel para Día ${day.day}:`, error);
+            }
+        }
+
+        return {
+            day: day.day,
+            date: day.date,
+            analysis: analyzeDayLoad(day),
+            activities: day.activities || [],
+            hotelCoordinates: hotelCoords // 🔥 Incluir coordenadas del hotel
+        };
+    });
 
     // Calcular score general
     const totalScore = daysAnalysis.reduce((sum, d) => sum + d.analysis.score, 0);
@@ -354,21 +374,25 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
         });
     }
 
-    // Sugerencia 2: Optimizar rutas y horarios
+    // Sugerencia 3: Optimizar rutas y horarios (CON soporte para hotel base)
     daysAnalysis.forEach(dayAnalysis => {
         if (dayAnalysis.activities.length > 3) {
             const longTransfers = RouteOptimizer.detectLongTransfers(dayAnalysis.activities, 3);
 
             // Si hay traslados largos O muchas zonas, sugerir reorganización
             if (longTransfers.length > 0 || dayAnalysis.analysis.factors.zonesCount > 2) {
+                // 🏨 Detectar hotel para este día
+                const hotelCoords = dayAnalysis.hotelCoordinates || null;
+
                 // Generar sugerencia con múltiples opciones de modo
                 suggestions.push({
                     type: 'reorder',
                     priority: longTransfers.length > 0 ? 'high' : 'medium',
-                    description: `Optimizar ruta del Día ${dayAnalysis.day}`,
+                    description: `Optimizar ruta del Día ${dayAnalysis.day}${hotelCoords ? ' (desde hotel)' : ''}`,
                     reason: longTransfers.length > 0
                         ? `Hay ${longTransfers.length} traslado(s) largo(s) que se pueden optimizar`
                         : `${dayAnalysis.analysis.factors.zonesCount} zonas diferentes - se puede mejorar`,
+                    hotelCoordinates: hotelCoords, // 🔥 Incluir coordenadas del hotel
                     day: dayAnalysis.day,
                     longTransfers: longTransfers,
                     // Opciones de optimización
@@ -628,11 +652,19 @@ function applySuggestion(days, suggestion, options = {}) {
         // Reordenar actividades usando el optimizador de rutas
         const day = newDays.find(d => d.day === suggestion.day);
         if (day && day.activities.length > 0) {
+            // 🏨 Obtener coordenadas del hotel si existe
+            let hotelCoords = null;
+            if (suggestion.hotelCoordinates) {
+                hotelCoords = suggestion.hotelCoordinates;
+                console.log(`🏨 Usando hotel base para optimización:`, hotelCoords);
+            }
+
             // Usar el Route Optimizer para reorganizar
             const optimized = RouteOptimizer.optimizeRoute(day.activities, {
                 optimizationMode: optimizationMode,
-                recalculateTimings: recalculateTimings,
-                considerOpeningHours: true
+                shouldRecalculateTimings: recalculateTimings,
+                considerOpeningHours: true,
+                startPoint: hotelCoords // 🔥 Pasar coordenadas del hotel
             });
 
             if (optimized.wasOptimized) {
