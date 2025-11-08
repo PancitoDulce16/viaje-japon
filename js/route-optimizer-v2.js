@@ -285,7 +285,7 @@ function optimizeRoute(activities, options = {}) {
         startPoint = null, // Puede ser coordenadas del hotel
         endPoint = null,
         optimizationMode = 'balanced', // 'geography', 'time', 'balanced'
-        recalculateTimings = true // Recalcular horarios después de optimizar
+        shouldRecalculateTimings = true // Recalcular horarios después de optimizar
     } = options;
 
     if (!activities || activities.length < 2) {
@@ -331,7 +331,7 @@ function optimizeRoute(activities, options = {}) {
     }
 
     // Recalcular horarios si está habilitado
-    if (recalculateTimings && optimized.length > 0) {
+    if (shouldRecalculateTimings && optimized.length > 0) {
         const firstTime = optimized[0].time;
         optimized = recalculateTimings(optimized, {
             startTime: firstTime,
