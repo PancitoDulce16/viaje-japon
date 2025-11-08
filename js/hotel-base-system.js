@@ -15,42 +15,48 @@ export const HotelBaseSystem = {
    * @returns {Promise<Array>} Lista de hoteles
    */
   async searchHotels(query, coordinates = null) {
-    console.log(`🏨 Buscando hoteles: "${query}"`);
+    console.log(`🏨 Buscando hoteles: "${query}" en`, coordinates);
 
     try {
       let results = [];
 
-      if (coordinates) {
-        // Búsqueda por proximidad
+      // Si hay un query específico (búsqueda manual), usar Text Search
+      if (query && query.trim() && query.toLowerCase() !== 'hotel') {
+        console.log('🔍 Usando Text Search para:', query);
+
+        // Usar textSearch con el query completo
+        const response = await GooglePlacesAPI.textSearch({
+          query: query,
+          lat: coordinates?.lat,
+          lng: coordinates?.lng,
+          radius: coordinates ? 10000 : 50000, // 10km si hay coords, 50km si no
+          includedTypes: ['hotel', 'lodging'],
+          maxResults: 50
+        });
+
+        if (response.success) {
+          results = response.places || [];
+          console.log(`✅ Text Search encontró ${results.length} hoteles`);
+        }
+      }
+      // Si solo hay coordenadas, búsqueda nearby
+      else if (coordinates) {
+        console.log('📍 Usando Nearby Search');
         const response = await GooglePlacesAPI.searchNearbyNew({
           lat: coordinates.lat,
           lng: coordinates.lng,
-          radius: 5000, // 5km
+          radius: 10000, // 10km - más que antes
           includedTypes: ['hotel', 'lodging'],
-          maxResults: 20
+          maxResults: 50
         });
 
         if (response.success) {
-          results = response.places;
-        }
-      } else {
-        // Búsqueda por texto (usar la API de Text Search cuando esté disponible)
-        // Por ahora, usamos búsqueda en coordenadas de Tokyo por defecto
-        const tokyoCenter = { lat: 35.6762, lng: 139.6503 };
-        const response = await GooglePlacesAPI.searchNearbyNew({
-          lat: tokyoCenter.lat,
-          lng: tokyoCenter.lng,
-          radius: 20000, // 20km para cubrir más área
-          includedTypes: ['hotel', 'lodging'],
-          maxResults: 20
-        });
-
-        if (response.success) {
-          results = response.places;
+          results = response.places || [];
+          console.log(`✅ Nearby Search encontró ${results.length} hoteles`);
         }
       }
 
-      console.log(`✅ Encontrados ${results.length} hoteles`);
+      console.log(`✅ Total encontrados: ${results.length} hoteles`);
       return results;
 
     } catch (error) {

@@ -1915,12 +1915,16 @@ Si ya tienes las coordenadas, simplemente pégalas:
         return;
       }
 
+      // Guardar hotels en una variable temporal para acceso seguro
+      window._tempHotels = hotels;
+      window._tempHotelCity = city;
+
       // Render results
-      resultsContainer.innerHTML = hotels.map(hotel => `
-        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border dark:border-gray-600 hover:shadow-md transition cursor-pointer" onclick="ItineraryHandler.selectHotelForCity(${JSON.stringify(hotel).replace(/"/g, '&quot;')}, '${city}')">
+      resultsContainer.innerHTML = hotels.map((hotel, index) => `
+        <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border dark:border-gray-600 hover:shadow-md transition cursor-pointer hotel-result-item" data-hotel-index="${index}">
           <div class="flex justify-between items-start">
             <div class="flex-1">
-              <p class="font-bold text-gray-900 dark:text-white">${hotel.displayName || hotel.name}</p>
+              <p class="font-bold text-gray-900 dark:text-white">${hotel.displayName || hotel.name || 'Hotel sin nombre'}</p>
               ${hotel.formattedAddress ? `<p class="text-sm text-gray-600 dark:text-gray-300 mt-1">${hotel.formattedAddress}</p>` : ''}
               <div class="flex items-center gap-4 mt-2">
                 ${hotel.rating ? `<span class="text-sm text-yellow-600 dark:text-yellow-400">⭐ ${hotel.rating}</span>` : ''}
@@ -1933,6 +1937,16 @@ Si ya tienes las coordenadas, simplemente pégalas:
           </div>
         </div>
       `).join('');
+
+      // Agregar event listeners a los resultados
+      resultsContainer.querySelectorAll('.hotel-result-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const index = parseInt(item.dataset.hotelIndex);
+          const selectedHotel = window._tempHotels[index];
+          const selectedCity = window._tempHotelCity;
+          ItineraryHandler.selectHotelForCity(selectedHotel, selectedCity);
+        });
+      });
 
       console.log(`✅ Showing ${hotels.length} hotels`);
 
@@ -1948,14 +1962,27 @@ Si ya tienes las coordenadas, simplemente pégalas:
   },
 
   async selectHotelForCity(hotel, city) {
-    console.log('✅ Selecting hotel:', hotel.displayName || hotel.name, 'for', city);
+    console.log('🏨 Selecting hotel:', hotel.displayName || hotel.name, 'for', city);
 
-    if (!currentItinerary || !window.HotelBaseSystem) {
-      Notifications.show('Error al seleccionar hotel', 'error');
+    if (!currentItinerary) {
+      console.error('❌ No hay itinerario activo');
+      if (window.Notifications) {
+        window.Notifications.show('No hay itinerario activo', 'error');
+      }
+      return;
+    }
+
+    if (!window.HotelBaseSystem) {
+      console.error('❌ HotelBaseSystem no disponible');
+      if (window.Notifications) {
+        window.Notifications.show('Sistema de hoteles no disponible', 'error');
+      }
       return;
     }
 
     try {
+      console.log('📝 Agregando hotel al itinerario...');
+
       // Add hotel to itinerary
       window.HotelBaseSystem.addHotelToItinerary(currentItinerary, {
         id: hotel.id,
@@ -1965,10 +1992,16 @@ Si ya tienes las coordenadas, simplemente pégalas:
         rating: hotel.rating
       }, city);
 
+      console.log('💾 Guardando en Firebase...');
+
       // Save to Firebase
       await saveCurrentItineraryToFirebase();
 
-      Notifications.show(`Hotel agregado en ${city}`, 'success');
+      console.log('✅ Hotel guardado exitosamente');
+
+      if (window.Notifications) {
+        window.Notifications.show(`Hotel agregado en ${city}`, 'success');
+      }
 
       // Close modal
       const modal = document.getElementById('hotelManagementModal');
@@ -1979,7 +2012,13 @@ Si ya tienes las coordenadas, simplemente pégalas:
 
     } catch (error) {
       console.error('❌ Error selecting hotel:', error);
-      Notifications.show('Error al guardar hotel', 'error');
+      console.error('Stack trace:', error.stack);
+
+      if (window.Notifications) {
+        window.Notifications.show(`Error: ${error.message}`, 'error');
+      } else {
+        alert(`Error al guardar hotel: ${error.message}`);
+      }
     }
   },
 
