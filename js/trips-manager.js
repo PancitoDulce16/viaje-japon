@@ -996,9 +996,24 @@ window.TripsManager = TripsManager;
 // ====================================================================================
 // MANEJO DE EVENTOS DE AUTENTICACIÓN
 // ====================================================================================
+
+// 🔥 CRÍTICO: Inicializar automáticamente si el usuario ya está autenticado
+// (Para casos donde el evento auth:initialized ya se disparó antes de cargar este módulo)
+if (auth.currentUser) {
+    console.log('[TripsManager] 🚀 Usuario ya autenticado al cargar módulo. Inicializando trips...');
+    TripsManager.initUserTrips();
+} else {
+    console.log('[TripsManager] ⏳ Esperando autenticación...');
+}
+
 window.addEventListener('auth:initialized', (event) => {
     console.log('[TripsManager] ✨ Evento auth:initialized recibido. Inicializando viajes...');
-    TripsManager.initUserTrips();
+    // Solo inicializar si no se inicializó antes
+    if (TripsManager.userTrips.length === 0) {
+        TripsManager.initUserTrips();
+    } else {
+        console.log('[TripsManager] ✅ Trips ya inicializados, saltando...');
+    }
 });
 
 window.addEventListener('auth:loggedOut', () => {
