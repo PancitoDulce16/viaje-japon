@@ -613,7 +613,19 @@ function canFitActivity(targetDay, activity) {
  */
 function parseTime(timeStr) {
     if (!timeStr) return 0;
-    const [hours, minutes] = timeStr.split(':').map(Number);
+
+    const parts = String(timeStr).split(':');
+    if (parts.length !== 2) return 0;
+
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+
+    // Validate that they're actually numbers
+    if (isNaN(hours) || isNaN(minutes)) {
+        console.warn(`⚠️ Invalid time format in day-balancer: "${timeStr}", using default 00:00`);
+        return 0;
+    }
+
     return hours * 60 + minutes;
 }
 

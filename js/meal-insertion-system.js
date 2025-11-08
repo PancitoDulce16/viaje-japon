@@ -65,16 +65,23 @@ export const MealInsertionSystem = {
     const keywords = {
       breakfast: ['desayuno', 'breakfast', 'brunch'],
       lunch: ['almuerzo', 'lunch', 'comida'],
-      dinner: ['cena', 'dinner', 'comida']
+      dinner: ['cena', 'dinner']
     };
 
     return day.activities.some(activity => {
       const title = (activity.title || activity.name || '').toLowerCase();
       const category = (activity.category || '').toLowerCase();
+      const isMeal = activity.isMeal === true;
+      const mealTypeMatch = activity.mealType === mealType;
 
-      return keywords[mealType].some(keyword =>
-        title.includes(keyword) || category.includes('restaurante') || category.includes('comida')
-      );
+      // Priority 1: Check if it's explicitly marked as this meal type
+      if (isMeal && mealTypeMatch) return true;
+
+      // Priority 2: Check if category is "Comida" (food) AND title matches meal keywords
+      const isFoodCategory = category === 'comida' || category.includes('restaurante');
+      const titleMatchesMeal = keywords[mealType].some(keyword => title.includes(keyword));
+
+      return isFoodCategory && titleMatchesMeal;
     });
   },
 
@@ -186,6 +193,47 @@ export const MealInsertionSystem = {
   },
 
   /**
+   * Busca restaurantes por nombre usando Google Places Text Search
+   */
+  async searchRestaurantByName(searchQuery, coordinates, city) {
+    if (!window.GooglePlacesAPI) {
+      console.warn('⚠️ Google Places API no disponible');
+      return [];
+    }
+
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      return [];
+    }
+
+    try {
+      const result = await window.GooglePlacesAPI.searchTextNew({
+        textQuery: `${searchQuery} restaurant ${city || 'Tokyo'}`,
+        lat: coordinates?.lat,
+        lng: coordinates?.lng,
+        radius: 5000, // 5km para búsqueda por nombre
+        maxResults: 10
+      });
+
+      if (result.success && result.places) {
+        return result.places.map(place => ({
+          id: place.id,
+          name: place.displayName || place.name,
+          address: place.formattedAddress || place.address,
+          rating: place.rating,
+          coordinates: place.location,
+          priceLevel: place.priceLevel,
+          types: place.types
+        }));
+      }
+
+      return [];
+    } catch (error) {
+      console.error('❌ Error buscando restaurante por nombre:', error);
+      return [];
+    }
+  },
+
+  /**
    * Muestra modal con sugerencias de comidas para un día
    */
   async showMealSuggestionsModal(dayNumber, itinerary) {
@@ -207,10 +255,13 @@ export const MealInsertionSystem = {
     modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
 
     const suggestionsHTML = await Promise.all(
-      mealSuggestions.map(async (suggestion) => {
+      mealSuggestions.map(async (suggestion, index) => {
         const restaurants = suggestion.coordinates
           ? await this.suggestRestaurants(suggestion.coordinates, suggestion.type, suggestion.location)
           : [];
+
+        const coords = JSON.stringify(suggestion.coordinates || {});
+        const location = suggestion.location || 'Tokyo';
 
         return `
           <div class="bg-white dark:bg-gray-700 p-4 rounded-lg border-2 border-orange-200 dark:border-orange-700">
@@ -222,6 +273,23 @@ export const MealInsertionSystem = {
             </p>
             ${suggestion.afterActivity ? `<p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Después de: ${suggestion.afterActivity}</p>` : ''}
             ${suggestion.beforeActivity ? `<p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Antes de: ${suggestion.beforeActivity}</p>` : ''}
+
+            <!-- Search Bar -->
+            <div class="mt-3 mb-3">
+              <div class="relative">
+                <input
+                  type="text"
+                  id="restaurantSearch_${index}"
+                  placeholder="🔍 Buscar restaurante específico (ej: Anakuma cafe)..."
+                  class="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-orange-500 dark:bg-gray-600 dark:text-white text-sm"
+                  onkeyup="MealInsertionSystem.handleRestaurantSearch(event, ${dayNumber}, '${suggestion.type}', '${suggestion.suggestedTime}', ${coords}, '${location}', ${index})"
+                />
+                <div id="searchSpinner_${index}" class="hidden absolute right-3 top-2.5">
+                  <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"></div>
+                </div>
+              </div>
+              <div id="searchResults_${index}" class="mt-2 space-y-2 max-h-48 overflow-y-auto"></div>
+            </div>
 
             ${restaurants.length > 0 ? `
               <div class="mt-3">
@@ -272,6 +340,64 @@ export const MealInsertionSystem = {
   },
 
   /**
+   * Maneja la búsqueda de restaurantes con debounce
+   */
+  handleRestaurantSearch(event, dayNumber, mealType, suggestedTime, coordinates, location, index) {
+    const searchQuery = event.target.value.trim();
+
+    // Clear previous timeout
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+
+    const resultsContainer = document.getElementById(`searchResults_${index}`);
+    const spinner = document.getElementById(`searchSpinner_${index}`);
+
+    // Clear results if search is empty
+    if (searchQuery.length < 2) {
+      resultsContainer.innerHTML = '';
+      return;
+    }
+
+    // Show spinner
+    spinner.classList.remove('hidden');
+
+    // Debounce search by 500ms
+    this.searchTimeout = setTimeout(async () => {
+      try {
+        const restaurants = await this.searchRestaurantByName(searchQuery, coordinates, location);
+
+        spinner.classList.add('hidden');
+
+        if (restaurants.length === 0) {
+          resultsContainer.innerHTML = `
+            <p class="text-sm text-gray-500 dark:text-gray-400 italic">
+              No se encontraron restaurantes con "${searchQuery}"
+            </p>
+          `;
+          return;
+        }
+
+        resultsContainer.innerHTML = restaurants.map(restaurant => `
+          <div class="bg-blue-50 dark:bg-blue-900/30 p-2 rounded cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 transition border-2 border-blue-200 dark:border-blue-700"
+               onclick="MealInsertionSystem.addMealToItinerary(${dayNumber}, '${mealType}', '${suggestedTime}', ${JSON.stringify(restaurant).replace(/"/g, '&quot;')})">
+            <p class="text-sm font-semibold text-gray-900 dark:text-white">🔍 ${restaurant.name}</p>
+            ${restaurant.rating ? `<p class="text-xs text-yellow-600 dark:text-yellow-400">⭐ ${restaurant.rating}</p>` : ''}
+            ${restaurant.address ? `<p class="text-xs text-gray-600 dark:text-gray-300 mt-1">${restaurant.address}</p>` : ''}
+          </div>
+        `).join('');
+      } catch (error) {
+        spinner.classList.add('hidden');
+        resultsContainer.innerHTML = `
+          <p class="text-sm text-red-500 dark:text-red-400">
+            ❌ Error al buscar: ${error.message}
+          </p>
+        `;
+      }
+    }, 500);
+  },
+
+  /**
    * Agrega una comida al itinerario
    */
   async addMealToItinerary(dayNumber, mealType, suggestedTime, restaurant) {
@@ -319,14 +445,33 @@ export const MealInsertionSystem = {
 
   // Helper: Parsear tiempo en formato "HH:MM" a minutos
   parseTime(timeStr) {
-    const [hours, minutes] = timeStr.split(':').map(Number);
+    if (!timeStr) return 540; // Default 09:00
+
+    const parts = String(timeStr).split(':');
+    if (parts.length !== 2) return 540;
+
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+
+    // Validate that they're actually numbers
+    if (isNaN(hours) || isNaN(minutes)) {
+      console.warn(`⚠️ Invalid time format in meal-insertion: "${timeStr}", using default 09:00`);
+      return 540;
+    }
+
     return hours * 60 + minutes;
   },
 
   // Helper: Formatear minutos a "HH:MM"
   formatTime(minutes) {
+    // Validate that minutes is a valid number
+    if (!isFinite(minutes) || isNaN(minutes)) {
+      console.warn(`⚠️ Invalid minutes value in meal-insertion: ${minutes}, using default 09:00`);
+      minutes = 540;
+    }
+
     const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
+    const mins = Math.round(minutes % 60);
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   }
 };
