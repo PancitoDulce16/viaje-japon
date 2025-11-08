@@ -1,6 +1,7 @@
 server.log
 SETUP_API_KEY.md
 js/apis-config.js.local_backup
+js/config-local.js
 functions/node_modules/
 public/
 dist/

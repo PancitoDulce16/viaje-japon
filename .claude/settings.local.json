@@ -13,7 +13,17 @@
       "Read(//c/Users/Noelia/**)",
       "Bash(npm run dev:*)",
       "Bash(dir:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(node validate-dark-mode.js:*)",
+      "Bash(npx eslint:*)",
+      "Bash(node --check:*)",
+      "Bash(git log:*)",
+      "Bash(node validate-imports.js:*)",
+      "Bash(npm run deploy:*)",
+      "WebSearch",
+      "WebFetch(domain:developers.google.com)",
+      "Bash(curl:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []

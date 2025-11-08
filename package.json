@@ -6,7 +6,10 @@
     "dev": "vite",
     "build": "npx vite build",
     "build:alt": "chmod +x build.sh && ./build.sh",
-    "preview": "npx vite preview"
+    "preview": "npx vite preview",
+    "validate": "node validate-imports.js",
+    "predeploy": "npm run validate",
+    "deploy": "firebase deploy --only hosting"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check Firebase Trips</title>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyASyHLeбългарски9JVi7r8lAwJxMuqx9aKKJYk",
+            authDomain: "japan-itin-dev.firebaseapp.com",
+            projectId: "japan-itin-dev",
+            storageBucket: "japan-itin-dev.firebasestorage.app",
+            messagingSenderId: "545081226259",
+            appId: "1:545081226259:web:c8e3c8bc5e0e3e3e3e3e3e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.checkTrips = async function() {
+            const user = auth.currentUser;
+            if (!user) {
+                console.log('❌ No hay usuario autenticado');
+                return;
+            }
+
+            console.log('🔍 Usuario:', user.email, user.uid);
+
+            // Buscar viajes donde el usuario es miembro
+            const tripsRef = collection(db, 'trips');
+            const q = query(tripsRef, where('members', 'array-contains', user.uid));
+
+            try {
+                const snapshot = await getDocs(q);
+                console.log(`✅ Encontrados ${snapshot.size} viajes`);
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    console.log('📄 Viaje:', {
+                        id: doc.id,
+                        nombre: data.info?.tripName,
+                        creador: data.info?.createdBy,
+                        miembros: data.members,
+                        dias: data.days?.length || 0
+                    });
+                });
+
+                if (snapshot.size === 0) {
+                    console.log('⚠️ NO SE ENCONTRARON VIAJES PARA ESTE USUARIO');
+                }
+            } catch (error) {
+                console.error('❌ Error consultando viajes:', error);
+            }
+        };
+
+        console.log('✅ Script cargado. Ejecuta: checkTrips()');
+    </script>
+</head>
+<body>
+    <h1>Firebase Trip Checker</h1>
+    <p>Abre la consola (F12) y ejecuta: checkTrips()</p>
+</body>
+</html>

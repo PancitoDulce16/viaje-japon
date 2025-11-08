@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Suggestions Engine</title>
+</head>
+<body>
+    <h1>Test de Suggestions Engine</h1>
+    <button id="testBtn">Test SuggestionsEngine</button>
+    <div id="output"></div>
+
+    <script type="module">
+        import { SuggestionsEngine } from './js/smart-suggestions-engine.js';
+
+        window.SuggestionsEngine = SuggestionsEngine;
+
+        document.getElementById('testBtn').addEventListener('click', () => {
+            const output = document.getElementById('output');
+            output.innerHTML = `
+                <p>SuggestionsEngine: ${window.SuggestionsEngine ? 'LOADED ✅' : 'NOT LOADED ❌'}</p>
+                <p>Functions: ${window.SuggestionsEngine ? Object.keys(window.SuggestionsEngine).length : 0}</p>
+            `;
+            console.log('SuggestionsEngine:', window.SuggestionsEngine);
+        });
+
+        console.log('✅ Test script loaded');
+        console.log('SuggestionsEngine:', SuggestionsEngine);
+        console.log('window.SuggestionsEngine:', window.SuggestionsEngine);
+    </script>
+</body>
+</html>
