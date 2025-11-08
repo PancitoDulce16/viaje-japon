@@ -276,15 +276,23 @@ export const MealInsertionSystem = {
 
             <!-- Search Bar -->
             <div class="mt-3 mb-3">
-              <div class="relative">
+              <div class="relative flex gap-2">
                 <input
                   type="text"
                   id="restaurantSearch_${index}"
-                  placeholder="🔍 Buscar restaurante específico (ej: Anakuma cafe)..."
-                  class="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-orange-500 dark:bg-gray-600 dark:text-white text-sm"
+                  placeholder="🔍 Buscar restaurante (ej: Anakuma cafe)..."
+                  class="flex-1 px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:border-orange-500 dark:bg-gray-600 dark:text-white text-sm"
                   onkeyup="MealInsertionSystem.handleRestaurantSearch(event, ${dayNumber}, '${suggestion.type}', '${suggestion.suggestedTime}', ${coords}, '${location}', ${index})"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();MealInsertionSystem.triggerSearch(${dayNumber}, '${suggestion.type}', '${suggestion.suggestedTime}', ${coords}, '${location}', ${index});}"
+                  autocomplete="off"
                 />
-                <div id="searchSpinner_${index}" class="hidden absolute right-3 top-2.5">
+                <button
+                  onclick="MealInsertionSystem.triggerSearch(${dayNumber}, '${suggestion.type}', '${suggestion.suggestedTime}', ${coords}, '${location}', ${index})"
+                  class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition text-sm whitespace-nowrap"
+                >
+                  Buscar
+                </button>
+                <div id="searchSpinner_${index}" class="hidden absolute right-20 top-2.5">
                   <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"></div>
                 </div>
               </div>
@@ -340,7 +348,7 @@ export const MealInsertionSystem = {
   },
 
   /**
-   * Maneja la búsqueda de restaurantes con debounce
+   * Maneja la búsqueda de restaurantes con debounce (para typing)
    */
   handleRestaurantSearch(event, dayNumber, mealType, suggestedTime, coordinates, location, index) {
     const searchQuery = event.target.value.trim();
@@ -351,7 +359,6 @@ export const MealInsertionSystem = {
     }
 
     const resultsContainer = document.getElementById(`searchResults_${index}`);
-    const spinner = document.getElementById(`searchSpinner_${index}`);
 
     // Clear results if search is empty
     if (searchQuery.length < 2) {
@@ -359,42 +366,83 @@ export const MealInsertionSystem = {
       return;
     }
 
+    // Debounce search by 800ms while typing
+    this.searchTimeout = setTimeout(() => {
+      this.performSearch(dayNumber, mealType, suggestedTime, coordinates, location, index);
+    }, 800);
+  },
+
+  /**
+   * Ejecuta la búsqueda inmediatamente (para botón y Enter)
+   */
+  triggerSearch(dayNumber, mealType, suggestedTime, coordinates, location, index) {
+    // Clear any pending debounced search
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    this.performSearch(dayNumber, mealType, suggestedTime, coordinates, location, index);
+  },
+
+  /**
+   * Realiza la búsqueda de restaurantes
+   */
+  async performSearch(dayNumber, mealType, suggestedTime, coordinates, location, index) {
+    const searchInput = document.getElementById(`restaurantSearch_${index}`);
+    const searchQuery = searchInput?.value.trim();
+    const resultsContainer = document.getElementById(`searchResults_${index}`);
+    const spinner = document.getElementById(`searchSpinner_${index}`);
+
+    if (!searchQuery || searchQuery.length < 2) {
+      resultsContainer.innerHTML = `
+        <p class="text-sm text-gray-500 dark:text-gray-400 italic">
+          Escribe al menos 2 caracteres para buscar
+        </p>
+      `;
+      return;
+    }
+
     // Show spinner
     spinner.classList.remove('hidden');
+    resultsContainer.innerHTML = `
+      <p class="text-sm text-gray-500 dark:text-gray-400 italic">
+        Buscando "${searchQuery}"...
+      </p>
+    `;
 
-    // Debounce search by 500ms
-    this.searchTimeout = setTimeout(async () => {
-      try {
-        const restaurants = await this.searchRestaurantByName(searchQuery, coordinates, location);
+    try {
+      const restaurants = await this.searchRestaurantByName(searchQuery, coordinates, location);
 
-        spinner.classList.add('hidden');
+      spinner.classList.add('hidden');
 
-        if (restaurants.length === 0) {
-          resultsContainer.innerHTML = `
-            <p class="text-sm text-gray-500 dark:text-gray-400 italic">
-              No se encontraron restaurantes con "${searchQuery}"
-            </p>
-          `;
-          return;
-        }
-
-        resultsContainer.innerHTML = restaurants.map(restaurant => `
-          <div class="bg-blue-50 dark:bg-blue-900/30 p-2 rounded cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 transition border-2 border-blue-200 dark:border-blue-700"
-               onclick="MealInsertionSystem.addMealToItinerary(${dayNumber}, '${mealType}', '${suggestedTime}', ${JSON.stringify(restaurant).replace(/"/g, '&quot;')})">
-            <p class="text-sm font-semibold text-gray-900 dark:text-white">🔍 ${restaurant.name}</p>
-            ${restaurant.rating ? `<p class="text-xs text-yellow-600 dark:text-yellow-400">⭐ ${restaurant.rating}</p>` : ''}
-            ${restaurant.address ? `<p class="text-xs text-gray-600 dark:text-gray-300 mt-1">${restaurant.address}</p>` : ''}
-          </div>
-        `).join('');
-      } catch (error) {
-        spinner.classList.add('hidden');
+      if (restaurants.length === 0) {
         resultsContainer.innerHTML = `
-          <p class="text-sm text-red-500 dark:text-red-400">
-            ❌ Error al buscar: ${error.message}
+          <p class="text-sm text-gray-500 dark:text-gray-400 italic">
+            ❌ No se encontraron restaurantes con "${searchQuery}"
           </p>
         `;
+        return;
       }
-    }, 500);
+
+      resultsContainer.innerHTML = `
+        <p class="text-xs text-gray-600 dark:text-gray-300 mb-2">
+          ✨ ${restaurants.length} resultado(s) encontrado(s):
+        </p>
+      ` + restaurants.map(restaurant => `
+        <div class="bg-blue-50 dark:bg-blue-900/30 p-2 rounded cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50 transition border-2 border-blue-200 dark:border-blue-700"
+             onclick="MealInsertionSystem.addMealToItinerary(${dayNumber}, '${mealType}', '${suggestedTime}', ${JSON.stringify(restaurant).replace(/"/g, '&quot;')})">
+          <p class="text-sm font-semibold text-gray-900 dark:text-white">🔍 ${restaurant.name}</p>
+          ${restaurant.rating ? `<p class="text-xs text-yellow-600 dark:text-yellow-400">⭐ ${restaurant.rating}</p>` : ''}
+          ${restaurant.address ? `<p class="text-xs text-gray-600 dark:text-gray-300 mt-1">${restaurant.address}</p>` : ''}
+        </div>
+      `).join('');
+    } catch (error) {
+      spinner.classList.add('hidden');
+      resultsContainer.innerHTML = `
+        <p class="text-sm text-red-500 dark:text-red-400">
+          ❌ Error al buscar: ${error.message}
+        </p>
+      `;
+    }
   },
 
   /**

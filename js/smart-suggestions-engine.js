@@ -611,13 +611,31 @@ export const SuggestionsEngine = {
 
   parseTime(timeStr) {
     if (!timeStr) return 0;
-    const [hours, minutes] = timeStr.split(':').map(Number);
+
+    const parts = String(timeStr).split(':');
+    if (parts.length !== 2) return 0;
+
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+
+    // Validate that they're actually numbers
+    if (isNaN(hours) || isNaN(minutes)) {
+      console.warn(`⚠️ Invalid time format in smart-suggestions: "${timeStr}", using default 00:00`);
+      return 0;
+    }
+
     return hours * 60 + minutes;
   },
 
   formatTime(minutes) {
+    // Validate that minutes is a valid number
+    if (!isFinite(minutes) || isNaN(minutes)) {
+      console.warn(`⚠️ Invalid minutes value in smart-suggestions: ${minutes}, using default 09:00`);
+      minutes = 540; // 09:00
+    }
+
     const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
+    const mins = Math.round(minutes % 60);
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   },
 
