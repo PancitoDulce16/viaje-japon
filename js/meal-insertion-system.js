@@ -149,11 +149,11 @@ export const MealInsertionSystem = {
     }
 
     try {
-      // Tipos de restaurantes según la comida
+      // Tipos de restaurantes según la comida (incluyendo konbinis 🏪)
       const restaurantTypes = {
-        breakfast: ['cafe', 'bakery', 'breakfast_restaurant'],
-        lunch: ['restaurant', 'ramen_restaurant', 'sushi_restaurant', 'japanese_restaurant'],
-        dinner: ['restaurant', 'japanese_restaurant', 'fine_dining_restaurant', 'izakaya']
+        breakfast: ['cafe', 'bakery', 'breakfast_restaurant', 'convenience_store'],
+        lunch: ['restaurant', 'ramen_restaurant', 'sushi_restaurant', 'japanese_restaurant', 'convenience_store'],
+        dinner: ['restaurant', 'japanese_restaurant', 'fine_dining_restaurant', 'izakaya', 'convenience_store']
       };
 
       const types = restaurantTypes[mealType] || ['restaurant'];
