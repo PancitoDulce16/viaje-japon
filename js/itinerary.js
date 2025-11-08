@@ -2131,6 +2131,7 @@ window.ItineraryHandler = ItineraryHandler;
 // Exponer funciones de guardado y render
 window.saveCurrentItineraryToFirebase = saveCurrentItineraryToFirebase;
 window.renderItinerary = render;
+window.showBalanceAnalysis = showBalanceAnalysis;
 
 // Exponer currentItinerary a través de ItineraryHandler para evitar conflictos
 Object.defineProperty(ItineraryHandler, 'currentItinerary', {
