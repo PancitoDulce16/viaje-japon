@@ -324,13 +324,28 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
         const daysWithActivities = daysAnalysis.filter(d => d.activities.length > 0);
 
         emptyDays.forEach(emptyDay => {
-            // Para cada día vacío, intentar mover actividades de días con muchas actividades
-            const donorDays = daysWithActivities
-                .filter(d => d.activities.length >= 4) // Solo de días con 4+ actividades
-                .sort((a, b) => b.activities.length - a.activities.length); // Más llenos primero
+            // Intentar primero con días con 4+ actividades, luego 3+, luego 2+
+            let donorDays = daysWithActivities
+                .filter(d => d.activities.length >= 4)
+                .sort((a, b) => b.activities.length - a.activities.length);
+
+            // Si no hay días con 4+, intentar con 3+
+            if (donorDays.length === 0) {
+                donorDays = daysWithActivities
+                    .filter(d => d.activities.length >= 3)
+                    .sort((a, b) => b.activities.length - a.activities.length);
+            }
+
+            // Si no hay días con 3+, intentar con 2+
+            if (donorDays.length === 0) {
+                donorDays = daysWithActivities
+                    .filter(d => d.activities.length >= 2)
+                    .sort((a, b) => b.activities.length - a.activities.length);
+            }
 
             if (donorDays.length > 0) {
                 const donorDay = donorDays[0];
+                // Tomar actividad del medio (más fácil de mover sin romper flujo)
                 const activityToMove = donorDay.activities[Math.floor(donorDay.activities.length / 2)];
 
                 suggestions.push({
@@ -341,6 +356,15 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
                     from: { day: donorDay.day, activityId: activityToMove.id },
                     to: { day: emptyDay.day },
                     activity: activityToMove
+                });
+            } else {
+                // Si NO hay días donantes, sugerir al usuario agregar actividades manualmente
+                suggestions.push({
+                    type: 'manual-action',
+                    priority: 'high',
+                    description: `⚠️ Día ${emptyDay.day} vacío - Agrega actividades manualmente`,
+                    reason: `No hay días con suficientes actividades para redistribuir. Por favor agrega actividades al Día ${emptyDay.day} manualmente.`,
+                    day: emptyDay.day
                 });
             }
         });
