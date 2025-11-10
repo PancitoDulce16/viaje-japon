@@ -1,7 +1,7 @@
 // js/cache-buster.js - Sistema de detección y corrección automática de cache
 // Este archivo FUERZA reloads cuando detecta archivos viejos
 
-const APP_VERSION = '2025-11-10-SERVICEWORKER-UNREGISTER-FIX';
+const APP_VERSION = '2025-11-10-DISABLE-AUTORELOAD-FIX';
 const VERSION_KEY = 'app_version';
 
 /**
@@ -53,12 +53,21 @@ export function checkAndClearCache() {
 
 /**
  * Manejador global de errores de módulos
+ * 🔇 TEMPORALMENTE DESHABILITADO para evitar bucles infinitos
  */
 window.addEventListener('error', (event) => {
   try {
     const errorMsg = event.message || '';
     const errorFilename = event.filename || '';
 
+    // 🔇 AUTO-RELOAD DESHABILITADO TEMPORALMENTE
+    // Solo loguear el error sin recargar
+    console.error('💥 Error detectado:', errorMsg);
+    console.error('📍 Archivo:', errorFilename);
+    console.warn('ℹ️ Auto-reload deshabilitado temporalmente. Recarga manualmente si es necesario.');
+
+    // NO RECARGAR - comentado para evitar bucle
+    /*
     // Detectar errores comunes de cache
     const cacheErrors = [
       'is not a function',
@@ -80,34 +89,6 @@ window.addEventListener('error', (event) => {
       // Limpiar versión para forzar limpieza en próximo reload
       localStorage.removeItem(VERSION_KEY);
 
-      // Mostrar mensaje al usuario
-      try {
-        const notification = document.createElement('div');
-        notification.innerHTML = `
-          <div style="
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #dc2626;
-            color: white;
-            padding: 16px 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 99999;
-            font-family: system-ui, -apple-system, sans-serif;
-            font-size: 14px;
-            text-align: center;
-          ">
-            🔄 Detectamos archivos antiguos. Actualizando automáticamente...<br>
-            <small style="opacity: 0.9;">No cierres esta ventana</small>
-          </div>
-        `;
-        document.body.appendChild(notification);
-      } catch (uiError) {
-        console.error('Error mostrando notificación:', uiError);
-      }
-
       // Reload después de 2 segundos
       setTimeout(() => {
         window.location.reload(true);
@@ -117,6 +98,7 @@ window.addEventListener('error', (event) => {
       event.preventDefault();
       return false;
     }
+    */
   } catch (handlerError) {
     console.error('Error en el manejador de errores:', handlerError);
   }
@@ -124,10 +106,19 @@ window.addEventListener('error', (event) => {
 
 /**
  * Detectar errores de carga de módulos (promesas rechazadas)
+ * 🔇 TEMPORALMENTE DESHABILITADO para evitar bucles infinitos
  */
 window.addEventListener('unhandledrejection', (event) => {
   try {
     const reason = event.reason?.message || event.reason || '';
+
+    // 🔇 AUTO-RELOAD DESHABILITADO TEMPORALMENTE
+    // Solo loguear el error sin recargar
+    console.error('💥 Promesa rechazada:', reason);
+    console.warn('ℹ️ Auto-reload deshabilitado temporalmente. Recarga manualmente si es necesario.');
+
+    // NO RECARGAR - comentado para evitar bucle
+    /*
     const reasonStr = String(reason).toLowerCase();
 
     // Detectar errores relacionados con módulos o Service Worker
@@ -147,37 +138,13 @@ window.addEventListener('unhandledrejection', (event) => {
 
       localStorage.removeItem(VERSION_KEY);
 
-      // Mostrar mensaje breve
-      try {
-        const notification = document.createElement('div');
-        notification.innerHTML = `
-          <div style="
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #f59e0b;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            z-index: 99999;
-            font-family: system-ui, -apple-system, sans-serif;
-            font-size: 13px;
-          ">
-            ⚠️ Error de carga. Actualizando...
-          </div>
-        `;
-        document.body.appendChild(notification);
-      } catch (uiError) {
-        console.error('Error mostrando notificación:', uiError);
-      }
-
       setTimeout(() => {
         window.location.reload(true);
       }, 1000);
 
       event.preventDefault();
     }
+    */
   } catch (handlerError) {
     console.error('Error en el manejador de unhandledrejection:', handlerError);
   }
