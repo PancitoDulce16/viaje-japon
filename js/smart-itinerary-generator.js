@@ -332,6 +332,169 @@ const COMPANION_TYPES = {
 };
 
 /**
+ * 🌸 SEASON INTELLIGENCE - Detecta temporadas especiales en Japón
+ */
+const SEASON_INTELLIGENCE = {
+  cherryBlossom: {
+    name: '🌸 Cherry Blossom Season',
+    icon: '🌸',
+    months: [3, 4], // March - April
+    peakDates: { start: { month: 3, day: 25 }, end: { month: 4, day: 10 } },
+    recommendations: ['Ueno Park', 'Shinjuku Gyoen', 'Maruyama Park', 'Arashiyama'],
+    tips: 'Visita parques temprano en la mañana para evitar multitudes',
+    specialEvents: ['Hanami (picnic bajo los cerezos)', 'Night illuminations'],
+    bonus: 20 // Bonus score para actividades relacionadas
+  },
+  autumn: {
+    name: '🍂 Autumn Foliage',
+    icon: '🍂',
+    months: [11], // November
+    peakDates: { start: { month: 11, day: 15 }, end: { month: 11, day: 30 } },
+    recommendations: ['Arashiyama', 'Tofuku-ji Temple', 'Eikando Temple'],
+    tips: 'Los templos en Kyoto son especialmente hermosos en otoño',
+    specialEvents: ['Momiji viewing', 'Autumn light-ups'],
+    bonus: 20
+  },
+  newYear: {
+    name: '🎊 New Year',
+    icon: '🎊',
+    months: [1], // January
+    peakDates: { start: { month: 1, day: 1 }, end: { month: 1, day: 3 } },
+    recommendations: ['Meiji Shrine', 'Senso-ji Temple', 'Fushimi Inari'],
+    tips: 'Muchas tiendas cierran 1-3 de enero. Templos muy concurridos.',
+    specialEvents: ['Hatsumode (primera visita del año al templo)'],
+    bonus: 15
+  },
+  goldenWeek: {
+    name: '🎌 Golden Week',
+    icon: '🎌',
+    months: [5], // May
+    peakDates: { start: { month: 4, day: 29 }, end: { month: 5, day: 5 } },
+    recommendations: [],
+    tips: '⚠️ Todo muy concurrido y caro. Evita si es posible.',
+    specialEvents: [],
+    bonus: -10 // Penalización por multitudes
+  },
+  summer: {
+    name: '☀️ Summer Festivals',
+    icon: '☀️',
+    months: [7, 8], // July - August
+    peakDates: { start: { month: 7, day: 1 }, end: { month: 8, day: 31 } },
+    recommendations: ['Sumida River Fireworks', 'Gion Matsuri'],
+    tips: 'Muy caluroso y húmedo. Lleva agua y busca aire acondicionado.',
+    specialEvents: ['Matsuri (festivales de verano)', 'Fireworks (hanabi)'],
+    bonus: 10
+  },
+  winter: {
+    name: '❄️ Winter Illuminations',
+    icon: '❄️',
+    months: [12], // December
+    peakDates: { start: { month: 12, day: 1 }, end: { month: 12, day: 25 } },
+    recommendations: ['Roppongi Hills', 'Tokyo Station', 'Shibuya Blue Cave'],
+    tips: 'Hermosas iluminaciones navideñas en toda la ciudad',
+    specialEvents: ['Christmas illuminations', 'New Year preparations'],
+    bonus: 15
+  }
+};
+
+/**
+ * 📸 PHOTOGRAPHY INTELLIGENCE - Mejores spots y horarios
+ */
+const PHOTOGRAPHY_SPOTS = {
+  goldenHour: {
+    name: 'Golden Hour Photography',
+    description: 'Mejor luz para fotos (6-7am, 5-6pm)',
+    spots: [
+      'Tokyo Tower',
+      'Shibuya Sky',
+      'Fushimi Inari',
+      'Arashiyama Bamboo',
+      'Tokyo Skytree'
+    ],
+    timeRanges: [
+      { start: 6, end: 7 }, // Morning
+      { start: 17, end: 18 } // Evening
+    ]
+  },
+  blueHour: {
+    name: 'Blue Hour Photography',
+    description: 'Cielo azul profundo, luces encendidas',
+    spots: [
+      'Shibuya Crossing',
+      'Tokyo Tower',
+      'Dotonbori',
+      'Fushimi Inari gates'
+    ],
+    timeRanges: [
+      { start: 18, end: 19 }, // Evening
+      { start: 5, end: 6 } // Dawn
+    ]
+  },
+  nightPhotography: {
+    name: 'Night Photography',
+    description: 'Luces de neón y vida nocturna',
+    spots: [
+      'Shibuya Crossing',
+      'Shinjuku Golden Gai',
+      'Dotonbori',
+      'teamLab Borderless'
+    ],
+    timeRanges: [
+      { start: 19, end: 23 }
+    ]
+  },
+  earlyMorning: {
+    name: 'Early Morning (Avoid Crowds)',
+    description: 'Temprano para evitar multitudes',
+    spots: [
+      'Fushimi Inari',
+      'Meiji Shrine',
+      'Tsukiji Market',
+      'Sensoji Temple'
+    ],
+    timeRanges: [
+      { start: 6, end: 8 }
+    ]
+  }
+};
+
+/**
+ * ⛅ WEATHER CATEGORIES - Actividades según clima
+ */
+const WEATHER_CATEGORIES = {
+  sunny: {
+    name: 'Sunny Day',
+    icon: '☀️',
+    preferred: ['nature', 'outdoor', 'photography', 'parks'],
+    avoid: ['indoor']
+  },
+  rainy: {
+    name: 'Rainy Day',
+    icon: '🌧️',
+    preferred: ['museum', 'shopping', 'indoor', 'food'],
+    avoid: ['nature', 'parks', 'outdoor']
+  },
+  cloudy: {
+    name: 'Cloudy',
+    icon: '☁️',
+    preferred: ['any'],
+    avoid: []
+  },
+  hot: {
+    name: 'Very Hot',
+    icon: '🥵',
+    preferred: ['indoor', 'air-conditioned', 'early-morning'],
+    avoid: ['long-walks']
+  },
+  cold: {
+    name: 'Cold',
+    icon: '🥶',
+    preferred: ['indoor', 'short-outdoor'],
+    avoid: ['long-outdoor']
+  }
+};
+
+/**
  * Smart Itinerary Generator
  */
 export const SmartItineraryGenerator = {
@@ -421,7 +584,8 @@ export const SmartItineraryGenerator = {
       mustSee = [],
       avoid = [],
       companionType = null, // solo, couple, family, seniors, friends
-      themedDays = {} // { 1: 'traditional', 3: 'foodie', ... }
+      themedDays = {}, // { 1: 'traditional', 3: 'foodie', ... }
+      tripStartDate = null // Para detectar temporada
     } = profile;
 
     console.log('🧠 Generando itinerario completo:', profile);
@@ -469,7 +633,8 @@ export const SmartItineraryGenerator = {
           googlePlacesAPI: window.GooglePlacesAPI,
           totalDays: totalDays,
           companionType: companionType,
-          themedDay: themedDay
+          themedDay: themedDay,
+          tripStartDate: tripStartDate
         });
 
         itinerary.days.push(day);
@@ -525,8 +690,18 @@ export const SmartItineraryGenerator = {
       googlePlacesAPI,
       totalDays,
       companionType,
-      themedDay
+      themedDay,
+      tripStartDate
     } = options;
+
+    // 🌸 SEASON INTELLIGENCE: Detectar temporada y ajustar recomendaciones
+    const season = this.detectSeason(tripStartDate);
+    if (season) {
+      console.log(`🌸 Temporada detectada: ${season.name} ${season.inPeak ? '(PEAK!)' : ''}`);
+      if (season.tips) {
+        console.log(`💡 Tip: ${season.tips}`);
+      }
+    }
 
     // ⚡ INTENSITY LEVELS: Determinar número de actividades
     const intensityConfig = INTENSITY_LEVELS[pace] || INTENSITY_LEVELS.moderate;
@@ -579,10 +754,26 @@ export const SmartItineraryGenerator = {
 
     // Filtrar y puntuar actividades
     const scoredActivities = candidateActivities
-      .map(activity => ({
-        ...activity,
-        score: this.scoreActivity(activity, interests, dailyBudget, avoid, hotel, companionType, themedDay)
-      }))
+      .map(activity => {
+        let score = this.scoreActivity(activity, interests, dailyBudget, avoid, hotel, companionType, themedDay);
+
+        // 🌸 SEASON BONUS: Bonus por actividades recomendadas en temporada
+        if (season && season.recommendations) {
+          const isSeasonRecommended = season.recommendations.some(rec =>
+            activity.name.toLowerCase().includes(rec.toLowerCase()) ||
+            activity.area?.toLowerCase().includes(rec.toLowerCase())
+          );
+          if (isSeasonRecommended) {
+            score += season.bonus || 0;
+            console.log(`🌸 Season bonus +${season.bonus} para ${activity.name}`);
+          }
+        }
+
+        return {
+          ...activity,
+          score: score
+        };
+      })
       .filter(a => a.score > 50)
       .sort((a, b) => b.score - a.score);
 
@@ -618,7 +809,7 @@ export const SmartItineraryGenerator = {
     // 4. Insertar comidas
     const withMeals = await this.insertMealsIntoDay(optimizedActivities, hotel, googlePlacesAPI, dailyBudget);
 
-    // 5. Crear estructura del día
+    // 5. Crear estructura del día con ALTERNATIVAS y PHOTO INTELLIGENCE
     const day = {
       day: dayNumber,
       date: '',
@@ -634,19 +825,48 @@ export const SmartItineraryGenerator = {
       energyLevel: energyLevel,
       intensity: pace,
       theme: themedDay,
-      activities: withMeals.map((act, idx) => ({
-        id: `act-${dayNumber}-${idx}`,
-        title: act.name,
-        time: act.time,
-        duration: act.duration,
-        category: act.category,
-        desc: act.desc || act.description || '',
-        cost: act.cost || 0,
-        coordinates: act.lat && act.lng ? { lat: act.lat, lng: act.lng } : null,
-        isMeal: act.isMeal || false,
-        rating: act.rating || null,
-        source: act.source || 'database'
-      }))
+      season: season ? {
+        name: season.name,
+        icon: season.icon,
+        inPeak: season.inPeak,
+        tips: season.tips
+      } : null,
+      activities: withMeals.map((act, idx) => {
+        // 📸 Detectar si es buen momento para fotografía
+        const activityHour = act.time ? parseInt(act.time.split(':')[0]) : dayStartTime;
+        const photoInfo = this.isPhotographyTime(activityHour, act.name);
+
+        // 🎯 Generar alternativas inteligentes
+        const alternatives = !act.isMeal ? this.generateSmartAlternatives(act, candidateActivities) : [];
+
+        return {
+          id: `act-${dayNumber}-${idx}`,
+          title: act.name,
+          time: act.time,
+          duration: act.duration,
+          category: act.category,
+          desc: act.desc || act.description || '',
+          cost: act.cost || 0,
+          coordinates: act.lat && act.lng ? { lat: act.lat, lng: act.lng } : null,
+          isMeal: act.isMeal || false,
+          rating: act.rating || null,
+          source: act.source || 'database',
+          // 🎯 SMART ALTERNATIVES
+          alternatives: alternatives.length > 0 ? alternatives.map(alt => ({
+            name: alt.name,
+            category: alt.category,
+            cost: alt.cost,
+            reason: alt.alternativeReason,
+            coordinates: alt.lat && alt.lng ? { lat: alt.lat, lng: alt.lng } : null
+          })) : undefined,
+          // 📸 PHOTOGRAPHY INTELLIGENCE
+          photographyInfo: photoInfo ? {
+            type: photoInfo.type,
+            name: photoInfo.name,
+            description: photoInfo.description
+          } : undefined
+        };
+      })
     };
 
     return day;
@@ -712,6 +932,272 @@ export const SmartItineraryGenerator = {
 
       return true;
     });
+  },
+
+  /**
+   * 🌸 Detecta la temporada basada en las fechas del viaje
+   */
+  detectSeason(tripStartDate) {
+    if (!tripStartDate) return null;
+
+    const date = new Date(tripStartDate);
+    const month = date.getMonth() + 1; // 1-12
+    const day = date.getDate();
+
+    // Buscar temporada que coincida
+    for (const [key, season] of Object.entries(SEASON_INTELLIGENCE)) {
+      if (season.months.includes(month)) {
+        // Verificar si está en el peak
+        const peakStart = season.peakDates?.start;
+        const peakEnd = season.peakDates?.end;
+
+        let inPeak = false;
+        if (peakStart && peakEnd) {
+          const isAfterStart = month > peakStart.month || (month === peakStart.month && day >= peakStart.day);
+          const isBeforeEnd = month < peakEnd.month || (month === peakEnd.month && day <= peakEnd.day);
+          inPeak = isAfterStart && isBeforeEnd;
+        }
+
+        return {
+          key: key,
+          ...season,
+          inPeak: inPeak
+        };
+      }
+    }
+
+    return null;
+  },
+
+  /**
+   * 📸 Verifica si es buen momento para fotografía
+   */
+  isPhotographyTime(hour, activityName) {
+    for (const [key, photoType] of Object.entries(PHOTOGRAPHY_SPOTS)) {
+      // Check if activity is in recommended spots
+      const isRecommendedSpot = photoType.spots.some(spot =>
+        activityName.toLowerCase().includes(spot.toLowerCase())
+      );
+
+      if (!isRecommendedSpot) continue;
+
+      // Check if time matches
+      const isGoodTime = photoType.timeRanges.some(range =>
+        hour >= range.start && hour <= range.end
+      );
+
+      if (isGoodTime) {
+        return {
+          type: key,
+          name: photoType.name,
+          description: photoType.description,
+          bonus: 15 // Photography bonus
+        };
+      }
+    }
+
+    return null;
+  },
+
+  /**
+   * 🎯 Genera alternativas inteligentes para una actividad
+   */
+  generateSmartAlternatives(activity, allActivities, reason = 'general') {
+    const alternatives = [];
+
+    // Filtrar actividades similares
+    const similar = allActivities.filter(alt => {
+      if (alt.name === activity.name) return false;
+
+      // Similar category
+      if (alt.category === activity.category) return true;
+
+      // Similar interests
+      const sharedInterests = alt.interests?.filter(i => activity.interests?.includes(i)) || [];
+      if (sharedInterests.length > 0) return true;
+
+      // Similar area
+      if (alt.area === activity.area) return true;
+
+      return false;
+    });
+
+    // Score alternatives
+    const scored = similar.map(alt => ({
+      ...alt,
+      alternativeReason: this.getAlternativeReason(activity, alt, reason),
+      score: this.scoreAlternative(activity, alt)
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3); // Top 3 alternatives
+
+    return scored;
+  },
+
+  /**
+   * Helper para scoring de alternativas
+   */
+  scoreAlternative(original, alternative) {
+    let score = 50;
+
+    // Same category = bonus
+    if (original.category === alternative.category) score += 20;
+
+    // Shared interests
+    const sharedInterests = alternative.interests?.filter(i =>
+      original.interests?.includes(i)
+    ) || [];
+    score += sharedInterests.length * 10;
+
+    // Same area = bonus
+    if (original.area === alternative.area) score += 15;
+
+    // Similar cost
+    const costDiff = Math.abs((original.cost || 0) - (alternative.cost || 0));
+    if (costDiff < 500) score += 10;
+
+    return score;
+  },
+
+  /**
+   * Helper para razón de alternativa
+   */
+  getAlternativeReason(original, alternative, reason) {
+    if (reason === 'weather') {
+      if (alternative.category === 'museum' || alternative.category === 'shopping') {
+        return '☔ Alternativa para día lluvioso';
+      }
+    }
+
+    if (alternative.area === original.area) {
+      return `📍 En la misma área (${alternative.area})`;
+    }
+
+    if (alternative.category === original.category) {
+      return `🎯 Similar (${alternative.category})`;
+    }
+
+    return '✨ Alternativa recomendada';
+  },
+
+  /**
+   * 🚇 Calcula tiempo real de tránsito (considera rush hour)
+   */
+  calculateRealTransitTime(origin, destination, departureHour) {
+    const baseTime = this.calculateDistance(origin, destination);
+    const transitMinutes = Math.round(baseTime * 10); // ~10 min per km aprox
+
+    // Rush hour multiplier (7-9am, 5-7pm)
+    let multiplier = 1.0;
+    if ((departureHour >= 7 && departureHour < 9) || (departureHour >= 17 && departureHour < 19)) {
+      multiplier = 1.5; // 50% más tiempo en rush hour
+    }
+
+    // Late night discount (faster transit)
+    if (departureHour >= 22 || departureHour < 6) {
+      multiplier = 0.8; // 20% menos tiempo de noche
+    }
+
+    const realTime = Math.round(transitMinutes * multiplier);
+
+    return {
+      minutes: realTime,
+      baseMinutes: transitMinutes,
+      isRushHour: multiplier > 1.0,
+      warning: multiplier > 1.0 ? '⚠️ Rush hour - considera más tiempo' : null
+    };
+  },
+
+  /**
+   * ⛅ Obtiene recomendaciones según clima (PLACEHOLDER para API)
+   */
+  async getWeatherRecommendations(city, date) {
+    // TODO: Integrar con OpenWeatherMap API (gratis)
+    // Por ahora retornamos null (clima desconocido)
+    // La API key sería: process.env.OPENWEATHER_API_KEY
+
+    // Ejemplo de uso futuro:
+    // const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=API_KEY`);
+    // const weather = await response.json();
+    // return weather.main.temp > 30 ? 'hot' : weather.rain ? 'rainy' : 'sunny';
+
+    return null;
+  },
+
+  /**
+   * 📊 Sistema de aprendizaje: Carga pesos del usuario desde localStorage
+   */
+  loadUserLearningWeights() {
+    try {
+      const saved = localStorage.getItem('smartGenerator_learningWeights');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.warn('No se pudieron cargar learning weights');
+    }
+
+    return {
+      categoryPreferences: {}, // { 'museum': -5, 'food': +10, etc }
+      interestWeights: {},      // { 'cultural': 1.2, 'anime': 0.8, etc }
+      editCount: 0
+    };
+  },
+
+  /**
+   * 📊 Sistema de aprendizaje: Guarda edición del usuario
+   */
+  saveUserEdit(editType, activityData) {
+    const weights = this.loadUserLearningWeights();
+    weights.editCount = (weights.editCount || 0) + 1;
+
+    if (editType === 'removed') {
+      // Usuario eliminó esta actividad - reduce peso de su categoría
+      const category = activityData.category;
+      weights.categoryPreferences[category] = (weights.categoryPreferences[category] || 0) - 2;
+
+      // Reduce peso de sus intereses
+      activityData.interests?.forEach(interest => {
+        weights.interestWeights[interest] = (weights.interestWeights[interest] || 1.0) - 0.1;
+      });
+    } else if (editType === 'added') {
+      // Usuario agregó esta actividad - aumenta peso de su categoría
+      const category = activityData.category;
+      weights.categoryPreferences[category] = (weights.categoryPreferences[category] || 0) + 3;
+
+      // Aumenta peso de sus intereses
+      activityData.interests?.forEach(interest => {
+        weights.interestWeights[interest] = (weights.interestWeights[interest] || 1.0) + 0.15;
+      });
+    }
+
+    try {
+      localStorage.setItem('smartGenerator_learningWeights', JSON.stringify(weights));
+      console.log('📊 Learning weights actualizados:', weights);
+    } catch (e) {
+      console.warn('No se pudieron guardar learning weights');
+    }
+  },
+
+  /**
+   * 📊 Aplica pesos de aprendizaje al scoring
+   */
+  applyLearningWeights(score, activity) {
+    const weights = this.loadUserLearningWeights();
+
+    // Ajustar por categoría
+    if (weights.categoryPreferences[activity.category]) {
+      score += weights.categoryPreferences[activity.category];
+    }
+
+    // Ajustar por intereses
+    activity.interests?.forEach(interest => {
+      if (weights.interestWeights[interest]) {
+        score *= weights.interestWeights[interest];
+      }
+    });
+
+    return Math.round(score);
   },
 
   /**
@@ -795,6 +1281,9 @@ export const SmartItineraryGenerator = {
     if (avoid && avoid.some(a => activity.name.toLowerCase().includes(a.toLowerCase()))) {
       score = 0;
     }
+
+    // 7. 📊 LEARNING WEIGHTS - Aprende de ediciones del usuario
+    score = this.applyLearningWeights(score, activity);
 
     return Math.round(score);
   },
@@ -1123,10 +1612,16 @@ window.SmartItineraryGenerator = SmartItineraryGenerator;
 window.INTENSITY_LEVELS = INTENSITY_LEVELS;
 window.THEMED_DAYS = THEMED_DAYS;
 window.COMPANION_TYPES = COMPANION_TYPES;
+window.SEASON_INTELLIGENCE = SEASON_INTELLIGENCE;
+window.PHOTOGRAPHY_SPOTS = PHOTOGRAPHY_SPOTS;
+window.WEATHER_CATEGORIES = WEATHER_CATEGORIES;
 
-console.log('✅ Smart Itinerary Generator cargado');
+console.log('✅ Smart Itinerary Generator cargado con TODAS las features avanzadas');
 console.log('⚡ Intensity Levels:', Object.keys(INTENSITY_LEVELS));
 console.log('🎨 Themed Days:', Object.keys(THEMED_DAYS));
 console.log('👥 Companion Types:', Object.keys(COMPANION_TYPES));
+console.log('🌸 Season Intelligence:', Object.keys(SEASON_INTELLIGENCE));
+console.log('📸 Photography Spots:', Object.keys(PHOTOGRAPHY_SPOTS));
+console.log('⛅ Weather Categories:', Object.keys(WEATHER_CATEGORIES));
 
 export default SmartItineraryGenerator;
