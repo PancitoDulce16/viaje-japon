@@ -3,6 +3,61 @@
 // NO requiere APIs pagadas - todo es matemática pura
 // Version: 2025-11-07-FIXED - recalculateTimings defined before use
 
+// ⏰ Esperar a que TimeUtils esté disponible
+function waitForTimeUtils() {
+  return new Promise((resolve) => {
+    if (typeof window !== 'undefined' && window.TimeUtils) {
+      resolve();
+    } else {
+      // Esperar hasta que TimeUtils esté disponible
+      const checkInterval = setInterval(() => {
+        if (typeof window !== 'undefined' && window.TimeUtils) {
+          clearInterval(checkInterval);
+          console.log('✅ TimeUtils loaded successfully');
+          resolve();
+        }
+      }, 50); // Check every 50ms
+
+      // Timeout después de 5 segundos
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        console.error('❌ TimeUtils failed to load after 5 seconds');
+        resolve(); // Resolve anyway para no bloquear
+      }, 5000);
+    }
+  });
+}
+
+// Safe wrapper para TimeUtils
+const SafeTimeUtils = {
+  parseTime: (timeStr) => {
+    if (window.TimeUtils) {
+      return window.SafeTimeUtils.parseTime(timeStr);
+    }
+    console.error('TimeUtils not available, using fallback parseTime');
+    // Fallback básico
+    if (!timeStr) return 0;
+    const parts = String(timeStr).split(':');
+    if (parts.length !== 2) return 0;
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+    if (isNaN(hours) || isNaN(minutes)) return 0;
+    return hours * 60 + minutes;
+  },
+
+  formatTime: (minutes) => {
+    if (window.TimeUtils) {
+      return window.SafeTimeUtils.formatTime(minutes);
+    }
+    console.error('TimeUtils not available, using fallback formatTime');
+    // Fallback básico
+    if (!isFinite(minutes) || isNaN(minutes)) minutes = 9 * 60;
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  }
+};
+
 /**
  * Calcula la distancia entre dos puntos usando la fórmula de Haversine
  * @param {Object} point1 - {lat, lng}
@@ -43,7 +98,7 @@ function toRad(degrees) {
  * Obtiene el tiempo de finalización de una actividad en minutos desde medianoche
  */
 function getActivityEndTime(activity) {
-    const startTime = TimeUtils.parseTime(activity.time);
+    const startTime = SafeTimeUtils.parseTime(activity.time);
     const duration = activity.duration || 60;
     return startTime + duration;
 }
@@ -107,9 +162,9 @@ function recalculateTimings(activities, options = {}) {
     // Determinar hora de inicio
     let currentTime;
     if (startTime) {
-        currentTime = TimeUtils.parseTime(startTime);
+        currentTime = SafeTimeUtils.parseTime(startTime);
     } else if (result[0].time) {
-        currentTime = TimeUtils.parseTime(result[0].time);
+        currentTime = SafeTimeUtils.parseTime(result[0].time);
     } else {
         currentTime = 9 * 60; // Default: 09:00
     }
@@ -119,7 +174,7 @@ function recalculateTimings(activities, options = {}) {
         const activity = result[i];
 
         // Asignar nuevo horario
-        activity.time = TimeUtils.formatTime(currentTime);
+        activity.time = SafeTimeUtils.formatTime(currentTime);
 
         // Calcular cuándo termina esta actividad
         const duration = activity.duration || defaultDuration;
@@ -176,7 +231,7 @@ function findNearestActivity(point, activities) {
  */
 function sortByTime(activities) {
     const withTime = activities.filter(a => a.time).sort((a, b) =>
-        TimeUtils.parseTime(a.time) - TimeUtils.parseTime(b.time)
+        SafeTimeUtils.parseTime(a.time) - SafeTimeUtils.parseTime(b.time)
     );
     const withoutTime = activities.filter(a => !a.time);
 
@@ -224,8 +279,8 @@ function optimizeBalanced(activities, options) {
         if (currentWindow.length === 0) {
             currentWindow.push(activity);
         } else {
-            const lastTime = TimeUtils.parseTime(currentWindow[currentWindow.length - 1].time);
-            const currentActivityTime = TimeUtils.parseTime(activity.time);
+            const lastTime = SafeTimeUtils.parseTime(currentWindow[currentWindow.length - 1].time);
+            const currentActivityTime = SafeTimeUtils.parseTime(activity.time);
 
             // Si está dentro de la ventana de 3 horas, agregar
             if (currentActivityTime - lastTime <= 180) {
@@ -367,7 +422,7 @@ function isVisitFeasible(current, next, visitedSoFar) {
 
     // Obtener tiempo actual después de completar la actividad actual
     const currentEndTime = getActivityEndTime(current);
-    const nextStartTime = TimeUtils.parseTime(next.time);
+    const nextStartTime = SafeTimeUtils.parseTime(next.time);
 
     // Calcular tiempo de transporte
     if (current.coordinates && next.coordinates) {
