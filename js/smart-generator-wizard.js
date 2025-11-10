@@ -154,20 +154,23 @@ export const SmartGeneratorWizard = {
         <!-- Ciudades -->
         <div>
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            ¿Qué ciudades quieres visitar?
+            ¿Qué ciudades quieres visitar? <span class="text-red-500">*</span>
           </label>
-          <div class="grid grid-cols-3 gap-3">
+          <div class="grid grid-cols-3 gap-3" id="citiesContainer">
             ${this.renderCityCheckbox('Tokyo', '🗼')}
             ${this.renderCityCheckbox('Kyoto', '⛩️')}
             ${this.renderCityCheckbox('Osaka', '🏯')}
           </div>
           <p class="text-xs text-gray-500 mt-2">Selecciona al menos una ciudad</p>
+          <div id="citiesError" class="hidden mt-2 p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+            <p class="text-sm text-red-600 dark:text-red-400">⚠️ Debes seleccionar al menos una ciudad</p>
+          </div>
         </div>
 
         <!-- Días totales -->
         <div>
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            ¿Cuántos días durará tu viaje?
+            ¿Cuántos días durará tu viaje? <span class="text-red-500">*</span>
           </label>
           <input
             type="number"
@@ -175,16 +178,21 @@ export const SmartGeneratorWizard = {
             min="1"
             max="30"
             value="${this.wizardData.totalDays}"
-            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            onchange="window.SmartGeneratorWizard.validateField('totalDays')"
+            oninput="window.SmartGeneratorWizard.validateField('totalDays')"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition"
             placeholder="Ej: 7"
           >
           <p class="text-xs text-gray-500 mt-1">Recomendamos 5-14 días para un viaje completo</p>
+          <div id="totalDaysError" class="hidden mt-2 p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+            <p class="text-sm text-red-600 dark:text-red-400">⚠️ El viaje debe durar al menos 1 día</p>
+          </div>
         </div>
 
         <!-- Presupuesto diario -->
         <div>
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            ¿Cuál es tu presupuesto diario? (JPY)
+            ¿Cuál es tu presupuesto diario? (JPY) <span class="text-red-500">*</span>
           </label>
           <div class="relative">
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">¥</span>
@@ -195,20 +203,25 @@ export const SmartGeneratorWizard = {
               max="100000"
               step="1000"
               value="${this.wizardData.dailyBudget}"
-              class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              onchange="window.SmartGeneratorWizard.validateField('dailyBudget')"
+              oninput="window.SmartGeneratorWizard.validateField('dailyBudget')"
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition"
               placeholder="Ej: 10000"
             >
           </div>
           <div class="flex gap-2 mt-2">
-            <button onclick="document.getElementById('dailyBudget').value = 5000" class="text-xs px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
+            <button onclick="document.getElementById('dailyBudget').value = 5000; window.SmartGeneratorWizard.validateField('dailyBudget');" class="text-xs px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
               ¥5,000 (Económico)
             </button>
-            <button onclick="document.getElementById('dailyBudget').value = 10000" class="text-xs px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
+            <button onclick="document.getElementById('dailyBudget').value = 10000; window.SmartGeneratorWizard.validateField('dailyBudget');" class="text-xs px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
               ¥10,000 (Moderado)
             </button>
-            <button onclick="document.getElementById('dailyBudget').value = 20000" class="text-xs px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
+            <button onclick="document.getElementById('dailyBudget').value = 20000; window.SmartGeneratorWizard.validateField('dailyBudget');" class="text-xs px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">
               ¥20,000 (Premium)
             </button>
+          </div>
+          <div id="dailyBudgetError" class="hidden mt-2 p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+            <p class="text-sm text-red-600 dark:text-red-400">⚠️ El presupuesto debe ser al menos ¥3,000</p>
           </div>
         </div>
       </div>
@@ -227,12 +240,99 @@ export const SmartGeneratorWizard = {
           type="checkbox"
           class="city-checkbox w-5 h-5"
           data-city="${city}"
+          onchange="window.SmartGeneratorWizard.validateField('cities')"
           ${isChecked ? 'checked' : ''}
         >
         <span class="text-2xl">${icon}</span>
         <span class="font-semibold text-gray-700 dark:text-gray-200">${city}</span>
       </label>
     `;
+  },
+
+  /**
+   * ✅ Inline validation for individual fields
+   */
+  validateField(fieldName) {
+    let isValid = true;
+    let errorElement, inputElement, containerElement;
+
+    switch(fieldName) {
+      case 'cities':
+        // Save data first
+        this.saveStep1Data();
+        errorElement = document.getElementById('citiesError');
+        containerElement = document.getElementById('citiesContainer');
+
+        if (this.wizardData.cities.length === 0) {
+          isValid = false;
+          if (errorElement) errorElement.classList.remove('hidden');
+          if (containerElement) containerElement.classList.add('ring-2', 'ring-red-500', 'rounded-lg');
+        } else {
+          if (errorElement) errorElement.classList.add('hidden');
+          if (containerElement) containerElement.classList.remove('ring-2', 'ring-red-500');
+        }
+        break;
+
+      case 'totalDays':
+        inputElement = document.getElementById('totalDays');
+        errorElement = document.getElementById('totalDaysError');
+        const days = parseInt(inputElement?.value) || 0;
+
+        if (days < 1) {
+          isValid = false;
+          if (errorElement) errorElement.classList.remove('hidden');
+          if (inputElement) {
+            inputElement.classList.remove('border-gray-300', 'dark:border-gray-600');
+            inputElement.classList.add('border-red-500', 'dark:border-red-500');
+          }
+        } else {
+          if (errorElement) errorElement.classList.add('hidden');
+          if (inputElement) {
+            inputElement.classList.remove('border-red-500', 'dark:border-red-500');
+            inputElement.classList.add('border-gray-300', 'dark:border-gray-600');
+          }
+        }
+        break;
+
+      case 'dailyBudget':
+        inputElement = document.getElementById('dailyBudget');
+        errorElement = document.getElementById('dailyBudgetError');
+        const budget = parseInt(inputElement?.value) || 0;
+
+        if (budget < 3000) {
+          isValid = false;
+          if (errorElement) errorElement.classList.remove('hidden');
+          if (inputElement) {
+            inputElement.classList.remove('border-gray-300', 'dark:border-gray-600');
+            inputElement.classList.add('border-red-500', 'dark:border-red-500');
+          }
+        } else {
+          if (errorElement) errorElement.classList.add('hidden');
+          if (inputElement) {
+            inputElement.classList.remove('border-red-500', 'dark:border-red-500');
+            inputElement.classList.add('border-gray-300', 'dark:border-gray-600');
+          }
+        }
+        break;
+
+      case 'interests':
+        // Save data first
+        this.saveStep2Data();
+        errorElement = document.getElementById('interestsError');
+        containerElement = document.getElementById('interestsContainer');
+
+        if (this.wizardData.interests.length === 0) {
+          isValid = false;
+          if (errorElement) errorElement.classList.remove('hidden');
+          if (containerElement) containerElement.classList.add('ring-2', 'ring-red-500', 'rounded-lg', 'p-2');
+        } else {
+          if (errorElement) errorElement.classList.add('hidden');
+          if (containerElement) containerElement.classList.remove('ring-2', 'ring-red-500', 'p-2');
+        }
+        break;
+    }
+
+    return isValid;
   },
 
   /**
@@ -271,10 +371,14 @@ export const SmartGeneratorWizard = {
         <!-- Intereses -->
         <div>
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            ¿Qué te interesa? (Selecciona varios)
+            ¿Qué te interesa? (Selecciona varios) <span class="text-red-500">*</span>
           </label>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-3" id="interestsContainer">
             ${allInterests.map(interest => this.renderInterestCheckbox(interest)).join('')}
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Selecciona al menos un interés para personalizar tu itinerario</p>
+          <div id="interestsError" class="hidden mt-2 p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+            <p class="text-sm text-red-600 dark:text-red-400">⚠️ Debes seleccionar al menos un interés</p>
           </div>
         </div>
 
@@ -401,6 +505,7 @@ export const SmartGeneratorWizard = {
           type="checkbox"
           class="interest-checkbox w-5 h-5"
           data-interest="${interest.id}"
+          onchange="window.SmartGeneratorWizard.validateField('interests')"
           ${isChecked ? 'checked' : ''}
         >
         <span class="text-xl">${interest.icon}</span>
@@ -783,19 +888,94 @@ export const SmartGeneratorWizard = {
 
     console.log('🚀 Generando itinerarios con:', this.wizardData);
 
-    // Mostrar loading
+    // Mostrar loading con pasos detallados
     const modal = document.getElementById('smartGeneratorWizard');
     if (modal) {
       modal.innerHTML = `
         <div class="flex items-center justify-center h-full p-12">
-          <div class="text-center">
-            <div class="animate-spin rounded-full h-20 w-20 border-b-4 border-purple-600 mx-auto mb-6"></div>
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">🎨 Generando 3 variaciones...</h3>
-            <p class="text-gray-600 dark:text-gray-400 mb-2">Creando itinerarios personalizados para ti</p>
-            <p class="text-sm text-gray-500">Esto puede tomar 10-20 segundos</p>
+          <div class="text-center max-w-2xl">
+            <div class="relative mb-8">
+              <div class="animate-spin rounded-full h-24 w-24 border-b-4 border-t-4 border-purple-600 mx-auto"></div>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-4xl">🎨</span>
+              </div>
+            </div>
+
+            <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Generando 3 Variaciones</h3>
+            <p class="text-lg text-gray-600 dark:text-gray-400 mb-6">Creando itinerarios personalizados para ti</p>
+
+            <!-- Pasos de progreso -->
+            <div class="space-y-3 text-left bg-gray-50 dark:bg-gray-800 rounded-xl p-6 mb-4">
+              <div class="flex items-center gap-3 text-blue-600 dark:text-blue-400" id="step1">
+                <div class="animate-pulse">⏳</div>
+                <span class="font-medium">Analizando tus preferencias...</span>
+              </div>
+              <div class="flex items-center gap-3 text-gray-400" id="step2">
+                <div>⏳</div>
+                <span>Buscando coordenadas de hoteles...</span>
+              </div>
+              <div class="flex items-center gap-3 text-gray-400" id="step3">
+                <div>⏳</div>
+                <span>Optimizando rutas y tiempos...</span>
+              </div>
+              <div class="flex items-center gap-3 text-gray-400" id="step4">
+                <div>⏳</div>
+                <span>Generando 3 itinerarios únicos...</span>
+              </div>
+            </div>
+
+            <p class="text-sm text-gray-500">
+              ⏱️ Tiempo estimado: <span class="font-bold">10-20 segundos</span>
+            </p>
           </div>
         </div>
       `;
+
+      // Simular progreso de pasos
+      setTimeout(() => {
+        const step1 = document.getElementById('step1');
+        if (step1) {
+          step1.innerHTML = '<div>✅</div><span class="text-gray-600 dark:text-gray-300">Preferencias analizadas</span>';
+          step1.classList.remove('text-blue-600', 'dark:text-blue-400');
+          step1.classList.add('text-gray-600', 'dark:text-gray-300');
+        }
+        const step2 = document.getElementById('step2');
+        if (step2) {
+          step2.classList.remove('text-gray-400');
+          step2.classList.add('text-blue-600', 'dark:text-blue-400');
+          step2.querySelector('div').classList.add('animate-pulse');
+        }
+      }, 2000);
+
+      setTimeout(() => {
+        const step2 = document.getElementById('step2');
+        if (step2) {
+          step2.innerHTML = '<div>✅</div><span class="text-gray-600 dark:text-gray-300">Coordenadas encontradas</span>';
+          step2.classList.remove('text-blue-600', 'dark:text-blue-400');
+          step2.classList.add('text-gray-600', 'dark:text-gray-300');
+        }
+        const step3 = document.getElementById('step3');
+        if (step3) {
+          step3.classList.remove('text-gray-400');
+          step3.classList.add('text-blue-600', 'dark:text-blue-400');
+          step3.querySelector('div').classList.add('animate-pulse');
+        }
+      }, 5000);
+
+      setTimeout(() => {
+        const step3 = document.getElementById('step3');
+        if (step3) {
+          step3.innerHTML = '<div>✅</div><span class="text-gray-600 dark:text-gray-300">Rutas optimizadas</span>';
+          step3.classList.remove('text-blue-600', 'dark:text-blue-400');
+          step3.classList.add('text-gray-600', 'dark:text-gray-300');
+        }
+        const step4 = document.getElementById('step4');
+        if (step4) {
+          step4.classList.remove('text-gray-400');
+          step4.classList.add('text-blue-600', 'dark:text-blue-400');
+          step4.querySelector('div').classList.add('animate-pulse');
+        }
+      }, 10000);
     }
 
     try {
