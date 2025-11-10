@@ -583,8 +583,8 @@ export const RouteOptimizer = {
     detectLongTransfers,
     generateOptimizationSuggestion,
     recalculateTimings,
-    parseTime,
-    formatTime,
+    parseTime: SafeTimeUtils.parseTime,
+    formatTime: SafeTimeUtils.formatTime,
     sortByTime,
     optimizeByGeography,
     optimizeBalanced
