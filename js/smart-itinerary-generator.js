@@ -165,6 +165,173 @@ const ACTIVITY_DATABASE = {
 };
 
 /**
+ * ⚡ INTENSITY LEVELS - Controla qué tan lleno está cada día
+ */
+const INTENSITY_LEVELS = {
+  light: {
+    label: '🐢 Light',
+    description: 'Relajado, 2-3 actividades/día',
+    activitiesPerDay: { min: 2, max: 3 },
+    startTime: 9,
+    endTime: 18,
+    includeShortActivities: false
+  },
+  moderate: {
+    label: '🚶 Moderate',
+    description: 'Balanceado, 4-5 actividades/día',
+    activitiesPerDay: { min: 4, max: 5 },
+    startTime: 8,
+    endTime: 20,
+    includeShortActivities: false
+  },
+  packed: {
+    label: '🏃 Packed',
+    description: '¡Días llenos! 6-8 actividades/día',
+    activitiesPerDay: { min: 6, max: 8 },
+    startTime: 7,
+    endTime: 21,
+    includeShortActivities: true
+  },
+  extreme: {
+    label: '⚡ Extreme',
+    description: 'Super intenso, 9-11 actividades/día',
+    activitiesPerDay: { min: 9, max: 11 },
+    startTime: 6,
+    endTime: 22,
+    includeShortActivities: true
+  },
+  maximum: {
+    label: '🌪️ Maximum',
+    description: 'TODO el día lleno, 12-15 actividades',
+    activitiesPerDay: { min: 12, max: 15 },
+    startTime: 6,
+    endTime: 23,
+    includeShortActivities: true
+  }
+};
+
+/**
+ * 🎨 THEMED DAYS - Temas específicos para cada día
+ */
+const THEMED_DAYS = {
+  traditional: {
+    name: '⛩️ Traditional Japan',
+    description: 'Templos, jardines, ceremonia de té',
+    interests: ['cultural', 'history'],
+    categories: ['cultural', 'nature'],
+    avoidCategories: ['nightlife', 'shopping']
+  },
+  foodie: {
+    name: '🍜 Ultimate Food Tour',
+    description: 'Mercados, street food, restaurantes',
+    interests: ['food'],
+    categories: ['food', 'market'],
+    avoidCategories: ['museum']
+  },
+  nature: {
+    name: '🌸 Nature & Zen',
+    description: 'Parques, bambú, jardines, onsen',
+    interests: ['nature', 'relax'],
+    categories: ['nature', 'relax'],
+    avoidCategories: ['shopping', 'nightlife']
+  },
+  popculture: {
+    name: '🎌 Anime & Pop Culture',
+    description: 'Akihabara, cafés temáticos, Pokemon',
+    interests: ['anime', 'technology'],
+    categories: ['shopping', 'attraction'],
+    specificPlaces: ['Akihabara', 'Nakano', 'Ikebukuro']
+  },
+  nightlife: {
+    name: '🌃 Tokyo Nightlife',
+    description: 'Bares, karaoke, observatorios nocturnos',
+    interests: ['nightlife'],
+    categories: ['nightlife', 'food'],
+    startTime: 17,
+    endTime: 23
+  },
+  photogenic: {
+    name: '📸 Instagram Perfect',
+    description: 'Lugares ultra photogenic',
+    interests: ['photography'],
+    prioritizePopularity: true
+  },
+  shopping: {
+    name: '🛍️ Shopping Spree',
+    description: 'De Uniqlo a Louis Vuitton',
+    interests: ['shopping', 'fashion'],
+    categories: ['shopping'],
+    avoidCategories: ['museum', 'cultural']
+  },
+  local: {
+    name: '🎎 Local Experience',
+    description: 'Barrios residenciales, mercados locales',
+    interests: ['culture', 'food'],
+    avoidTouristy: true,
+    maxPopularity: 70
+  }
+};
+
+/**
+ * 👥 COMPANION TYPES - Ajusta según con quién viajas
+ */
+const COMPANION_TYPES = {
+  solo: {
+    name: '🧍 Solo Traveler',
+    paceMultiplier: 1.1,
+    preferences: {
+      socialPlaces: true,
+      flexibleSchedule: true
+    }
+  },
+  couple: {
+    name: '❤️ Couple / Honeymoon',
+    paceMultiplier: 0.9,
+    preferences: {
+      romanticSpots: true,
+      fancyRestaurants: true,
+      sunsetViews: true
+    },
+    avoidCategories: ['crowded']
+  },
+  family: {
+    name: '👨‍👩‍👧‍👦 Family with Kids',
+    paceMultiplier: 0.7,
+    preferences: {
+      kidFriendly: true,
+      interactiveMuseums: true,
+      parks: true
+    },
+    categories: ['nature', 'attraction'],
+    avoidCategories: ['nightlife'],
+    maxWalkingTime: 120,
+    includeRestBreaks: true
+  },
+  seniors: {
+    name: '👴👵 Seniors',
+    paceMultiplier: 0.6,
+    preferences: {
+      accessible: true,
+      lessWalking: true,
+      benchBreaks: true
+    },
+    maxWalkingTime: 90,
+    startTime: 9,
+    endTime: 18
+  },
+  friends: {
+    name: '🎉 Group of Friends',
+    paceMultiplier: 1.2,
+    preferences: {
+      nightlife: true,
+      groupActivities: true,
+      foodTours: true
+    },
+    categories: ['nightlife', 'food', 'shopping']
+  }
+};
+
+/**
  * Smart Itinerary Generator
  */
 export const SmartItineraryGenerator = {
@@ -240,6 +407,7 @@ export const SmartItineraryGenerator = {
 
   /**
    * Genera un itinerario completo basado en preferencias
+   * MEJORADO: Con intensity levels, companion-aware, themed days
    */
   async generateCompleteItinerary(profile) {
     const {
@@ -247,14 +415,18 @@ export const SmartItineraryGenerator = {
       totalDays = 7,
       dailyBudget = 10000,
       interests = [],
-      pace = 'moderate', // relaxed, moderate, intense
-      startTime = 9, // hora de inicio típica (9am)
-      hotels = {}, // { tokyo: { name, lat, lng }, kyoto: ... }
+      pace = 'moderate', // light, moderate, packed, extreme, maximum
+      startTime = 9,
+      hotels = {},
       mustSee = [],
-      avoid = []
+      avoid = [],
+      companionType = null, // solo, couple, family, seniors, friends
+      themedDays = {} // { 1: 'traditional', 3: 'foodie', ... }
     } = profile;
 
     console.log('🧠 Generando itinerario completo:', profile);
+    console.log(`👥 Companion: ${companionType || 'none'}`);
+    console.log(`⚡ Intensity: ${pace}`);
 
     // Distribuir días entre ciudades
     const cityDistribution = this.distributeDaysAcrossCities(cities, totalDays);
@@ -278,6 +450,9 @@ export const SmartItineraryGenerator = {
         const isDepartureDay = currentDayNumber === totalDays;
         const isFirstDayInCity = dayInCity === 1 && currentDayNumber > 1;
 
+        // 🎨 Obtener tema del día (si fue asignado)
+        const themedDay = themedDays[currentDayNumber] || null;
+
         const day = await this.generateSingleDay({
           dayNumber: currentDayNumber,
           city: city,
@@ -291,7 +466,10 @@ export const SmartItineraryGenerator = {
           isFirstDayInCity: isFirstDayInCity,
           mustSee: mustSee.filter(m => m.city === city),
           avoid: avoid,
-          googlePlacesAPI: window.GooglePlacesAPI
+          googlePlacesAPI: window.GooglePlacesAPI,
+          totalDays: totalDays,
+          companionType: companionType,
+          themedDay: themedDay
         });
 
         itinerary.days.push(day);
@@ -328,6 +506,7 @@ export const SmartItineraryGenerator = {
 
   /**
    * Genera un día completo del itinerario
+   * NUEVO: Con Intensity Levels, Companion-Aware, Themed Days, Progressive Energy
    */
   async generateSingleDay(options) {
     const {
@@ -343,35 +522,75 @@ export const SmartItineraryGenerator = {
       isFirstDayInCity,
       mustSee,
       avoid,
-      googlePlacesAPI
+      googlePlacesAPI,
+      totalDays,
+      companionType,
+      themedDay
     } = options;
 
-    // Determinar número de actividades según el ritmo
-    let targetActivities;
-    if (isArrivalDay || isDepartureDay) {
-      targetActivities = pace === 'relaxed' ? 2 : 3; // Días de viaje son más ligeros
-    } else {
-      targetActivities = pace === 'relaxed' ? 3 : pace === 'moderate' ? 4 : 5;
+    // ⚡ INTENSITY LEVELS: Determinar número de actividades
+    const intensityConfig = INTENSITY_LEVELS[pace] || INTENSITY_LEVELS.moderate;
+    const { min, max } = intensityConfig.activitiesPerDay;
+
+    // 📈 PROGRESSIVE ENERGY MANAGEMENT
+    const energyLevel = this.calculateEnergyLevel(dayNumber, totalDays, isArrivalDay, isDepartureDay);
+    console.log(`⚡ Día ${dayNumber}: Nivel de energía ${energyLevel}%`);
+
+    // Ajustar target activities según energía
+    let targetActivities = Math.round(min + ((max - min) * (energyLevel / 100)));
+
+    // 👥 COMPANION-AWARE: Ajustar según tipo de compañero
+    if (companionType && COMPANION_TYPES[companionType]) {
+      const companionConfig = COMPANION_TYPES[companionType];
+      targetActivities = Math.round(targetActivities * companionConfig.paceMultiplier);
+      console.log(`👥 Companion: ${companionConfig.name}, Activities ajustadas a ${targetActivities}`);
     }
 
-    // Obtener actividades candidatas de la base de datos
+    // Días especiales
+    if (isArrivalDay || isDepartureDay) {
+      targetActivities = Math.max(2, Math.floor(targetActivities * 0.4));
+    }
+
+    // 🌐 REAL-TIME GOOGLE PLACES: Buscar actividades
+    let candidateActivities = [];
+
+    // PASO 1: Actividades de la base de datos
     const cityKey = city.toLowerCase();
-    const candidateActivities = ACTIVITY_DATABASE[cityKey] || [];
+    const dbActivities = ACTIVITY_DATABASE[cityKey] || [];
+    candidateActivities = [...dbActivities];
+
+    // PASO 2: Buscar en Google Places API (si disponible)
+    if (googlePlacesAPI && window.APP_CONFIG?.GOOGLE_PLACES_API_KEY) {
+      try {
+        const googleActivities = await this.searchGooglePlaces(city, hotel, interests, themedDay);
+        console.log(`🌐 Google Places: ${googleActivities.length} actividades encontradas`);
+        candidateActivities = [...candidateActivities, ...googleActivities];
+      } catch (error) {
+        console.warn('⚠️ Error buscando en Google Places:', error);
+      }
+    }
+
+    // 🎨 THEMED DAYS: Filtrar según tema del día
+    if (themedDay && THEMED_DAYS[themedDay]) {
+      const theme = THEMED_DAYS[themedDay];
+      candidateActivities = this.filterByTheme(candidateActivities, theme);
+      console.log(`🎨 Themed Day: ${theme.name}, ${candidateActivities.length} actividades filtradas`);
+    }
 
     // Filtrar y puntuar actividades
     const scoredActivities = candidateActivities
       .map(activity => ({
         ...activity,
-        score: this.scoreActivity(activity, interests, dailyBudget, avoid, hotel)
+        score: this.scoreActivity(activity, interests, dailyBudget, avoid, hotel, companionType, themedDay)
       }))
-      .filter(a => a.score > 50) // Solo actividades con score > 50%
+      .filter(a => a.score > 50)
       .sort((a, b) => b.score - a.score);
 
-    // Priorizar must-see
+    // Selección de actividades
     const selectedActivities = [];
 
-    // 1. Agregar must-see primero
-    for (const must of mustSee) {
+    // 1. Must-see primero
+    for (const must of mustSee || []) {
       const mustActivity = scoredActivities.find(a =>
         a.name.toLowerCase().includes(must.name.toLowerCase())
       );
@@ -380,11 +599,11 @@ export const SmartItineraryGenerator = {
       }
     }
 
-    // 2. Completar con actividades top-scored
+    // 2. Completar con top-scored
     for (const activity of scoredActivities) {
       if (selectedActivities.length >= targetActivities) break;
       if (!selectedActivities.includes(activity)) {
-        // Evitar duplicar categorías muy seguidas
+        // Diversidad de categorías
         const lastCategory = selectedActivities[selectedActivities.length - 1]?.category;
         if (lastCategory !== activity.category || selectedActivities.length < 2) {
           selectedActivities.push(activity);
@@ -392,8 +611,9 @@ export const SmartItineraryGenerator = {
       }
     }
 
-    // 3. Optimizar orden según ubicación (hotel-aware)
-    const optimizedActivities = this.optimizeActivityOrder(selectedActivities, hotel, startTime);
+    // 3. Optimizar ruta
+    const dayStartTime = intensityConfig.startTime;
+    const optimizedActivities = this.optimizeActivityOrder(selectedActivities, hotel, dayStartTime);
 
     // 4. Insertar comidas
     const withMeals = await this.insertMealsIntoDay(optimizedActivities, hotel, googlePlacesAPI, dailyBudget);
@@ -401,25 +621,31 @@ export const SmartItineraryGenerator = {
     // 5. Crear estructura del día
     const day = {
       day: dayNumber,
-      date: '', // Se puede calcular si se proporciona fecha de inicio
+      date: '',
       title: isArrivalDay ? `Llegada a ${city}` :
              isFirstDayInCity ? `Primer día en ${city}` :
              isDepartureDay ? `Último día - Regreso` :
+             themedDay && THEMED_DAYS[themedDay] ? THEMED_DAYS[themedDay].name :
              `Explorando ${city}`,
       city: city,
       cities: [{ cityId: city }],
       budget: dailyBudget,
       hotel: hotel,
+      energyLevel: energyLevel,
+      intensity: pace,
+      theme: themedDay,
       activities: withMeals.map((act, idx) => ({
         id: `act-${dayNumber}-${idx}`,
         title: act.name,
         time: act.time,
         duration: act.duration,
         category: act.category,
-        desc: act.desc || '',
-        cost: act.cost,
+        desc: act.desc || act.description || '',
+        cost: act.cost || 0,
         coordinates: act.lat && act.lng ? { lat: act.lat, lng: act.lng } : null,
-        isMeal: act.isMeal || false
+        isMeal: act.isMeal || false,
+        rating: act.rating || null,
+        source: act.source || 'database'
       }))
     };
 
@@ -427,39 +653,146 @@ export const SmartItineraryGenerator = {
   },
 
   /**
-   * Puntúa una actividad según preferencias del usuario
+   * 📈 Calcula nivel de energía según día del viaje
    */
-  scoreActivity(activity, interests, dailyBudget, avoid, hotel) {
+  calculateEnergyLevel(dayNumber, totalDays, isArrival, isDeparture) {
+    if (isArrival) return 30; // Jet lag
+    if (isDeparture) return 40; // Cansado, packing
+
+    // Curva de energía: empieza bajo, sube al pico, baja al final
+    if (dayNumber === 2) return 60;
+    if (dayNumber === 3 || dayNumber === 4) return 100; // PEAK!
+    if (dayNumber >= totalDays - 1) return 70; // Cansancio acumulado
+
+    return 90; // Días intermedios
+  },
+
+  /**
+   * 🌐 Busca actividades en Google Places API
+   */
+  async searchGooglePlaces(city, hotel, interests, themedDay) {
+    // Esta función buscaría en Google Places API en tiempo real
+    // Por ahora, retornamos array vacío (se implementará después)
+    // TODO: Implementar búsqueda real con Google Places API
+    return [];
+  },
+
+  /**
+   * 🎨 Filtra actividades según tema del día
+   */
+  filterByTheme(activities, theme) {
+    return activities.filter(activity => {
+      // Filtrar por categorías del tema
+      if (theme.categories && !theme.categories.includes(activity.category)) {
+        return false;
+      }
+
+      // Evitar categorías prohibidas
+      if (theme.avoidCategories && theme.avoidCategories.includes(activity.category)) {
+        return false;
+      }
+
+      // Filtrar por lugares específicos
+      if (theme.specificPlaces) {
+        const matchesPlace = theme.specificPlaces.some(place =>
+          activity.area?.toLowerCase().includes(place.toLowerCase())
+        );
+        if (!matchesPlace) return false;
+      }
+
+      // Evitar lugares muy turísticos (para temas "local")
+      if (theme.avoidTouristy && activity.popularity > 85) {
+        return false;
+      }
+
+      // Max popularidad (para temas locales)
+      if (theme.maxPopularity && activity.popularity > theme.maxPopularity) {
+        return false;
+      }
+
+      return true;
+    });
+  },
+
+  /**
+   * Puntúa una actividad según preferencias del usuario
+   * MEJORADO: Considera companion type y themed day
+   */
+  scoreActivity(activity, interests, dailyBudget, avoid, hotel, companionType, themedDay) {
     let score = 0;
 
-    // 1. Match de intereses (40%)
-    const interestMatch = activity.interests.some(i => interests.includes(i)) ? 1 : 0;
-    score += interestMatch * 40;
+    // 1. Match de intereses (30%)
+    const interestMatch = activity.interests?.some(i => interests.includes(i)) ? 1 : 0;
+    score += interestMatch * 30;
 
-    // 2. Fit de presupuesto (20%)
-    const budgetFit = activity.cost <= dailyBudget * 0.3 ? 1 : // < 30% del presupuesto
-                      activity.cost <= dailyBudget * 0.5 ? 0.7 : // < 50%
+    // 2. Fit de presupuesto (15%)
+    const activityCost = activity.cost || 0;
+    const budgetFit = activityCost <= dailyBudget * 0.3 ? 1 :
+                      activityCost <= dailyBudget * 0.5 ? 0.7 :
                       0.3;
-    score += budgetFit * 20;
+    score += budgetFit * 15;
 
-    // 3. Popularidad (20%)
-    score += (activity.popularity / 100) * 20;
+    // 3. Popularidad (15%)
+    const popularity = activity.popularity || 50;
+    score += (popularity / 100) * 15;
 
-    // 4. Cercanía al hotel si existe (20%)
-    if (hotel && activity.lat && activity.lng) {
+    // 4. Cercanía al hotel (15%)
+    if (hotel && hotel.lat && hotel.lng && activity.lat && activity.lng) {
       const distance = this.calculateDistance(
         { lat: hotel.lat, lng: hotel.lng },
         { lat: activity.lat, lng: activity.lng }
       );
-      // Priorizar actividades dentro de 5km del hotel
       const proximityScore = distance < 2 ? 1 : distance < 5 ? 0.7 : distance < 10 ? 0.4 : 0.2;
-      score += proximityScore * 20;
+      score += proximityScore * 15;
     } else {
-      score += 10; // Score neutral si no hay hotel
+      score += 7.5;
     }
 
-    // Penalizar si está en la lista de "avoid"
-    if (avoid.some(a => activity.name.toLowerCase().includes(a.toLowerCase()))) {
+    // 5. 🎨 THEMED DAY BONUS (15%)
+    if (themedDay && THEMED_DAYS[themedDay]) {
+      const theme = THEMED_DAYS[themedDay];
+
+      // Bonus si coincide con intereses del tema
+      if (theme.interests && activity.interests) {
+        const themeMatch = theme.interests.some(ti => activity.interests.includes(ti));
+        if (themeMatch) score += 15;
+      }
+
+      // Bonus si coincide con categorías del tema
+      if (theme.categories && theme.categories.includes(activity.category)) {
+        score += 10;
+      }
+
+      // Priorizar popularidad para temas photogenic
+      if (theme.prioritizePopularity && popularity > 85) {
+        score += 10;
+      }
+    }
+
+    // 6. 👥 COMPANION-AWARE BONUS (10%)
+    if (companionType && COMPANION_TYPES[companionType]) {
+      const companion = COMPANION_TYPES[companionType];
+
+      // Bonus por categorías preferidas
+      if (companion.categories && companion.categories.includes(activity.category)) {
+        score += 10;
+      }
+
+      // Bonus por preferencias
+      if (companion.preferences) {
+        if (companion.preferences.kidFriendly && activity.category === 'nature') score += 5;
+        if (companion.preferences.romanticSpots && activity.popularity > 80) score += 5;
+        if (companion.preferences.nightlife && activity.category === 'nightlife') score += 10;
+      }
+
+      // Penalty por categorías a evitar
+      if (companion.avoidCategories && companion.avoidCategories.includes(activity.category)) {
+        score -= 20;
+      }
+    }
+
+    // Penalizar si está en lista de "avoid"
+    if (avoid && avoid.some(a => activity.name.toLowerCase().includes(a.toLowerCase()))) {
       score = 0;
     }
 
@@ -787,7 +1120,13 @@ export const SmartItineraryGenerator = {
 
 // Exportar globalmente
 window.SmartItineraryGenerator = SmartItineraryGenerator;
+window.INTENSITY_LEVELS = INTENSITY_LEVELS;
+window.THEMED_DAYS = THEMED_DAYS;
+window.COMPANION_TYPES = COMPANION_TYPES;
 
 console.log('✅ Smart Itinerary Generator cargado');
+console.log('⚡ Intensity Levels:', Object.keys(INTENSITY_LEVELS));
+console.log('🎨 Themed Days:', Object.keys(THEMED_DAYS));
+console.log('👥 Companion Types:', Object.keys(COMPANION_TYPES));
 
 export default SmartItineraryGenerator;

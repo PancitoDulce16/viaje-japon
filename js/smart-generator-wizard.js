@@ -42,8 +42,9 @@ export const SmartGeneratorWizard = {
       totalDays: 7,
       dailyBudget: 10000,
       interests: [],
-      pace: 'moderate',
+      pace: 'moderate', // light, moderate, packed, extreme, maximum
       startTime: 9,
+      companionType: null, // solo, couple, family, seniors, friends
       hotels: {},
       mustSee: [],
       avoid: []
@@ -235,7 +236,8 @@ export const SmartGeneratorWizard = {
   },
 
   /**
-   * STEP 2: Preferencias (Intereses, Ritmo, Hora inicio)
+   * STEP 2: Preferencias (Intereses, Intensity, Companion, Hora inicio)
+   * NUEVO: Con Intensity Levels slider y Companion Type selector
    */
   renderStep2() {
     const allInterests = [
@@ -251,6 +253,17 @@ export const SmartGeneratorWizard = {
       { id: 'photography', label: 'Fotografía', icon: '📸' }
     ];
 
+    // Intensity levels data
+    const intensityLevels = ['light', 'moderate', 'packed', 'extreme', 'maximum'];
+    const intensityLabels = {
+      light: { icon: '🐢', label: 'Light', desc: '2-3/día' },
+      moderate: { icon: '🚶', label: 'Moderate', desc: '4-5/día' },
+      packed: { icon: '🏃', label: 'Packed', desc: '6-8/día' },
+      extreme: { icon: '⚡', label: 'Extreme', desc: '9-11/día' },
+      maximum: { icon: '🌪️', label: 'Maximum', desc: '12-15/día' }
+    };
+    const currentIntensityIndex = intensityLevels.indexOf(this.wizardData.pace);
+
     return `
       <div class="space-y-6">
         <h3 class="text-xl font-bold text-gray-900 dark:text-white">❤️ Tus Preferencias</h3>
@@ -265,15 +278,48 @@ export const SmartGeneratorWizard = {
           </div>
         </div>
 
-        <!-- Ritmo del viaje -->
+        <!-- ⚡ INTENSITY LEVELS SLIDER -->
         <div>
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            ¿Qué ritmo prefieres?
+            ⚡ Intensidad del Viaje: <span class="text-blue-600 dark:text-blue-400 font-bold" id="intensityLabel">${intensityLabels[this.wizardData.pace].icon} ${intensityLabels[this.wizardData.pace].label}</span>
           </label>
-          <div class="grid grid-cols-3 gap-3">
-            ${this.renderPaceOption('relaxed', 'Relajado', '🐢', '2-3 actividades/día')}
-            ${this.renderPaceOption('moderate', 'Moderado', '🚶', '4-5 actividades/día')}
-            ${this.renderPaceOption('intense', 'Intenso', '🏃', '6+ actividades/día')}
+          <div class="px-2">
+            <input
+              type="range"
+              id="intensitySlider"
+              min="0"
+              max="4"
+              step="1"
+              value="${currentIntensityIndex}"
+              class="w-full h-3 bg-gradient-to-r from-green-200 via-yellow-200 to-red-200 dark:from-green-800 dark:via-yellow-800 dark:to-red-800 rounded-lg appearance-none cursor-pointer"
+              style="accent-color: #3b82f6;"
+              onchange="window.SmartGeneratorWizard.updateIntensity(this.value)"
+            >
+            <div class="flex justify-between text-xs text-gray-500 mt-2 px-1">
+              ${intensityLevels.map((level, idx) => `
+                <div class="text-center flex-1">
+                  <div class="text-lg">${intensityLabels[level].icon}</div>
+                  <div class="font-medium">${intensityLabels[level].label}</div>
+                  <div class="text-gray-400">${intensityLabels[level].desc}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">💡 Días más llenos = más actividades y experiencias</p>
+        </div>
+
+        <!-- 👥 COMPANION TYPE SELECTOR -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+            👥 ¿Con quién viajas?
+          </label>
+          <div class="grid grid-cols-2 gap-3">
+            ${this.renderCompanionOption(null, 'Sin especificar', '👤', 'Genérico')}
+            ${this.renderCompanionOption('solo', 'Solo Traveler', '🧍', 'Flexible')}
+            ${this.renderCompanionOption('couple', 'Pareja', '❤️', 'Romántico')}
+            ${this.renderCompanionOption('family', 'Familia', '👨‍👩‍👧‍👦', 'Pausado')}
+            ${this.renderCompanionOption('seniors', 'Seniors', '👴👵', 'Relajado')}
+            ${this.renderCompanionOption('friends', 'Amigos', '🎉', 'Intenso')}
           </div>
         </div>
 
@@ -294,6 +340,52 @@ export const SmartGeneratorWizard = {
           </select>
         </div>
       </div>
+    `;
+  },
+
+  /**
+   * Actualiza la intensidad del viaje
+   */
+  updateIntensity(value) {
+    const intensityLevels = ['light', 'moderate', 'packed', 'extreme', 'maximum'];
+    const intensityLabels = {
+      light: { icon: '🐢', label: 'Light' },
+      moderate: { icon: '🚶', label: 'Moderate' },
+      packed: { icon: '🏃', label: 'Packed (¡Días llenos!)' },
+      extreme: { icon: '⚡', label: 'Extreme' },
+      maximum: { icon: '🌪️', label: 'Maximum' }
+    };
+
+    this.wizardData.pace = intensityLevels[parseInt(value)];
+    const label = intensityLabels[this.wizardData.pace];
+
+    const labelElement = document.getElementById('intensityLabel');
+    if (labelElement) {
+      labelElement.textContent = `${label.icon} ${label.label}`;
+    }
+  },
+
+  /**
+   * Renderiza opción de companion type
+   */
+  renderCompanionOption(type, label, icon, desc) {
+    const isSelected = this.wizardData.companionType === type;
+    return `
+      <label class="flex items-center gap-2 p-3 border-2 ${isSelected ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30' : 'border-gray-300 dark:border-gray-600'}
+                     rounded-lg cursor-pointer hover:border-purple-400 transition">
+        <input
+          type="radio"
+          name="companionType"
+          class="companion-radio"
+          data-companion="${type}"
+          ${isSelected ? 'checked' : ''}
+        >
+        <span class="text-2xl">${icon}</span>
+        <div class="flex-1">
+          <div class="font-semibold text-sm text-gray-700 dark:text-gray-200">${label}</div>
+          <div class="text-xs text-gray-500">${desc}</div>
+        </div>
+      </label>
     `;
   },
 
@@ -515,6 +607,10 @@ export const SmartGeneratorWizard = {
       radio.addEventListener('change', () => this.saveStep2Data());
     });
 
+    document.querySelectorAll('.companion-radio').forEach(radio => {
+      radio.addEventListener('change', () => this.saveStep2Data());
+    });
+
     // Step 3
     document.querySelectorAll('.hotel-name-input, .hotel-area-input').forEach(input => {
       input.addEventListener('input', () => this.saveStep3Data());
@@ -549,6 +645,13 @@ export const SmartGeneratorWizard = {
     const paceRadio = document.querySelector('.pace-radio:checked');
     if (paceRadio) {
       this.wizardData.pace = paceRadio.dataset.pace;
+    }
+
+    // 👥 Guardar companion type
+    const companionRadio = document.querySelector('.companion-radio:checked');
+    if (companionRadio) {
+      const companionValue = companionRadio.dataset.companion;
+      this.wizardData.companionType = companionValue === 'null' ? null : companionValue;
     }
 
     const startTimeSelect = document.getElementById('startTime');
@@ -733,6 +836,7 @@ export const SmartGeneratorWizard = {
         interests: this.wizardData.interests,
         pace: this.wizardData.pace,
         startTime: this.wizardData.startTime,
+        companionType: this.wizardData.companionType, // 👥 Companion-aware generation
         hotels: hotelsWithCoords,
         mustSee: this.wizardData.mustSee,
         avoid: this.wizardData.avoid
