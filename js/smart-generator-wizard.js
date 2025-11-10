@@ -29,7 +29,17 @@ export const SmartGeneratorWizard = {
    */
   open() {
     this.currentStep = 1;
-    this.resetWizardData();
+
+    // Intentar cargar datos guardados
+    const hasStoredData = this.loadFromSessionStorage();
+
+    if (!hasStoredData) {
+      this.resetWizardData();
+    } else {
+      // Mostrar notificación de que se recuperó progreso
+      window.Notifications?.show('✅ Se recuperó tu progreso anterior', 'success');
+    }
+
     this.renderWizard();
   },
 
@@ -738,6 +748,8 @@ export const SmartGeneratorWizard = {
     if (dailyBudgetInput) {
       this.wizardData.dailyBudget = parseInt(dailyBudgetInput.value) || 10000;
     }
+
+    this.saveToSessionStorage(); // 💾 Guardar progreso
   },
 
   /**
@@ -763,6 +775,8 @@ export const SmartGeneratorWizard = {
     if (startTimeSelect) {
       this.wizardData.startTime = parseInt(startTimeSelect.value) || 9;
     }
+
+    this.saveToSessionStorage(); // 💾 Guardar progreso
   },
 
   /**
@@ -802,6 +816,8 @@ export const SmartGeneratorWizard = {
     } else {
       this.wizardData.avoid = [];
     }
+
+    this.saveToSessionStorage(); // 💾 Guardar progreso
   },
 
   /**
@@ -839,6 +855,7 @@ export const SmartGeneratorWizard = {
 
     if (this.currentStep < 3) {
       this.currentStep++;
+      this.saveToSessionStorage(); // 💾 Guardar progreso
       this.renderWizard();
     }
   },
@@ -860,6 +877,67 @@ export const SmartGeneratorWizard = {
     const modal = document.getElementById('smartGeneratorWizard');
     if (modal) {
       modal.remove();
+    }
+    // No borramos el sessionStorage aquí, solo cuando se completa o el usuario lo cancela explícitamente
+  },
+
+  /**
+   * 💾 Guarda el progreso en sessionStorage
+   */
+  saveToSessionStorage() {
+    try {
+      const dataToSave = {
+        currentStep: this.currentStep,
+        wizardData: this.wizardData,
+        timestamp: Date.now()
+      };
+      sessionStorage.setItem('smartGeneratorWizard_progress', JSON.stringify(dataToSave));
+      console.log('💾 Progreso guardado en sessionStorage');
+    } catch (error) {
+      console.error('❌ Error guardando progreso:', error);
+    }
+  },
+
+  /**
+   * 📂 Carga el progreso desde sessionStorage
+   * @returns {boolean} true si se cargaron datos, false si no había datos guardados
+   */
+  loadFromSessionStorage() {
+    try {
+      const saved = sessionStorage.getItem('smartGeneratorWizard_progress');
+      if (!saved) return false;
+
+      const data = JSON.parse(saved);
+
+      // Verificar que los datos no sean muy antiguos (más de 24 horas)
+      const hoursSinceLastSave = (Date.now() - data.timestamp) / (1000 * 60 * 60);
+      if (hoursSinceLastSave > 24) {
+        console.log('⚠️ Progreso guardado muy antiguo, descartando...');
+        this.clearSessionStorage();
+        return false;
+      }
+
+      // Restaurar datos
+      this.currentStep = data.currentStep || 1;
+      this.wizardData = data.wizardData || this.wizardData;
+
+      console.log('📂 Progreso cargado desde sessionStorage:', data);
+      return true;
+    } catch (error) {
+      console.error('❌ Error cargando progreso:', error);
+      return false;
+    }
+  },
+
+  /**
+   * 🗑️ Limpia el progreso guardado
+   */
+  clearSessionStorage() {
+    try {
+      sessionStorage.removeItem('smartGeneratorWizard_progress');
+      console.log('🗑️ Progreso eliminado de sessionStorage');
+    } catch (error) {
+      console.error('❌ Error limpiando progreso:', error);
     }
   },
 
@@ -1150,6 +1228,9 @@ export const SmartGeneratorWizard = {
     try {
       // Guardar itinerario
       await this.saveGeneratedItinerary(itinerary);
+
+      // 🗑️ Limpiar sessionStorage ya que completamos exitosamente
+      this.clearSessionStorage();
 
       // Cerrar modal
       this.close();
