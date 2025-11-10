@@ -673,22 +673,23 @@ export const SmartGeneratorWizard = {
   },
 
   /**
-   * Genera el itinerario usando el SmartItineraryGenerator
+   * Genera MÚLTIPLES VARIACIONES de itinerarios
    */
   async generateItinerary() {
     if (!this.validateCurrentStep()) return;
 
-    console.log('🚀 Generando itinerario con:', this.wizardData);
+    console.log('🚀 Generando itinerarios con:', this.wizardData);
 
     // Mostrar loading
     const modal = document.getElementById('smartGeneratorWizard');
     if (modal) {
       modal.innerHTML = `
-        <div class="flex items-center justify-center h-full">
+        <div class="flex items-center justify-center h-full p-12">
           <div class="text-center">
-            <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">🧠 Generando tu itinerario...</h3>
-            <p class="text-gray-600 dark:text-gray-400">Esto puede tomar unos segundos</p>
+            <div class="animate-spin rounded-full h-20 w-20 border-b-4 border-purple-600 mx-auto mb-6"></div>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">🎨 Generando 3 variaciones...</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-2">Creando itinerarios personalizados para ti</p>
+            <p class="text-sm text-gray-500">Esto puede tomar 10-20 segundos</p>
           </div>
         </div>
       `;
@@ -739,28 +740,147 @@ export const SmartGeneratorWizard = {
 
       console.log('📋 Perfil final:', profile);
 
-      // Generar itinerario
-      const itinerary = await window.SmartItineraryGenerator.generateCompleteItinerary(profile);
+      // Generar MÚLTIPLES VARIACIONES
+      const variations = await window.SmartItineraryGenerator.generateMultipleVariations(profile);
 
-      console.log('✅ Itinerario generado:', itinerary);
+      console.log('✅ 3 variaciones generadas:', variations);
 
-      // Guardar itinerario generado
+      // Mostrar selector de variaciones
+      this.showVariationsSelector(variations);
+
+    } catch (error) {
+      console.error('❌ Error generando itinerario:', error);
+      window.Notifications?.show('❌ Error al generar itinerario: ' + error.message, 'error');
+      this.close();
+    }
+  },
+
+  /**
+   * 🎨 Muestra selector para elegir entre las 3 variaciones
+   */
+  showVariationsSelector(variations) {
+    const modal = document.getElementById('smartGeneratorWizard');
+    if (!modal) return;
+
+    modal.innerHTML = `
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
+          <h2 class="text-2xl font-bold mb-2">🎨 ¡3 Itinerarios Creados!</h2>
+          <p class="text-purple-100">Elige el que más te guste</p>
+        </div>
+
+        <!-- Variations Grid -->
+        <div class="flex-1 overflow-y-auto p-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            ${variations.map(variation => this.renderVariationCard(variation)).join('')}
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-gray-200 dark:border-gray-700 p-6 flex justify-between">
+          <button
+            onclick="window.SmartGeneratorWizard.close()"
+            class="px-6 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Renderiza una tarjeta de variación
+   */
+  renderVariationCard(variation) {
+    const itinerary = variation.itinerary;
+    const totalActivities = itinerary.days.reduce((sum, day) => sum + day.activities.length, 0);
+    const totalBudget = itinerary.totalBudget || 0;
+
+    return `
+      <div class="border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-purple-500 dark:hover:border-purple-400 transition cursor-pointer overflow-hidden"
+           onclick="window.SmartGeneratorWizard.selectVariation('${variation.id}', ${JSON.stringify(variation.itinerary).replace(/"/g, '&quot;')})">
+
+        <!-- Header -->
+        <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 p-6 text-center">
+          <div class="text-5xl mb-3">${variation.icon}</div>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">${variation.name}</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">${variation.description}</p>
+        </div>
+
+        <!-- Tags -->
+        <div class="px-6 py-4 flex flex-wrap gap-2 justify-center bg-white dark:bg-gray-800">
+          ${variation.tags.map(tag => `
+            <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-xs font-semibold">
+              ${tag}
+            </span>
+          `).join('')}
+        </div>
+
+        <!-- Stats -->
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 space-y-2">
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-600 dark:text-gray-400">📅 Días</span>
+            <span class="font-semibold text-gray-900 dark:text-white">${itinerary.days.length}</span>
+          </div>
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-600 dark:text-gray-400">🎯 Actividades</span>
+            <span class="font-semibold text-gray-900 dark:text-white">${totalActivities}</span>
+          </div>
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-gray-600 dark:text-gray-400">💰 Presupuesto</span>
+            <span class="font-semibold text-gray-900 dark:text-white">¥${totalBudget.toLocaleString()}</span>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="p-6 bg-white dark:bg-gray-800">
+          <button class="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg font-semibold transition shadow-md hover:shadow-lg">
+            ✅ Elegir Este Itinerario
+          </button>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Selecciona una variación y la guarda
+   */
+  async selectVariation(variationId, itinerary) {
+    console.log(`✅ Variación seleccionada: ${variationId}`);
+
+    // Mostrar loading
+    const modal = document.getElementById('smartGeneratorWizard');
+    if (modal) {
+      modal.innerHTML = `
+        <div class="flex items-center justify-center h-full p-12">
+          <div class="text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">💾 Guardando itinerario...</h3>
+          </div>
+        </div>
+      `;
+    }
+
+    try {
+      // Guardar itinerario
       await this.saveGeneratedItinerary(itinerary);
 
       // Cerrar modal
       this.close();
 
       // Mostrar éxito
-      window.Notifications?.show('✅ ¡Itinerario generado exitosamente!', 'success');
+      window.Notifications?.show('✅ ¡Itinerario guardado exitosamente!', 'success');
 
-      // Recargar la página para mostrar el nuevo itinerario
+      // Recargar la página
       setTimeout(() => {
         window.location.reload();
       }, 1000);
 
     } catch (error) {
-      console.error('❌ Error generando itinerario:', error);
-      window.Notifications?.show('❌ Error al generar itinerario: ' + error.message, 'error');
+      console.error('❌ Error guardando itinerario:', error);
+      window.Notifications?.show('❌ Error al guardar: ' + error.message, 'error');
       this.close();
     }
   },
