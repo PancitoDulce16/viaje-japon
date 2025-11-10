@@ -242,7 +242,7 @@ function analyzeItineraryBalance(days, itinerary = null) {
     }
 
     // Calcular si está balanceado
-    const stdDev = calculateStandardDeviation(daysAnalysis.map(d => d.analysis.score));
+    const stdDev = TimeUtils.calculateStandardDeviation(daysAnalysis.map(d => d.analysis.score));
     const balanced = stdDev < 15 && emptyDays.length === 0 && overloadedDays.length <= 1;
 
     // Generar sugerencias
@@ -557,15 +557,7 @@ function findBestTargetDay(sourceDay, targetDays, activity) {
     return sorted[0];
 }
 
-/**
- * Calcula desviación estándar
- */
-function calculateStandardDeviation(values) {
-    const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
-    const squaredDiffs = values.map(v => Math.pow(v - avg, 2));
-    const variance = squaredDiffs.reduce((sum, v) => sum + v, 0) / values.length;
-    return Math.sqrt(variance);
-}
+// ⏰ calculateStandardDeviation moved to time-utils.js for consistency across the app
 
 /**
  * Verifica si una actividad cabe en el día sin solaparse con otras
@@ -583,7 +575,7 @@ function canFitActivity(targetDay, activity) {
         return true;
     }
 
-    const activityStart = parseTime(activity.time || activity.startTime);
+    const activityStart = TimeUtils.parseTime(activity.time || activity.startTime);
     const activityDuration = activity.duration || 60;
     const activityEnd = activityStart + activityDuration;
 
@@ -591,7 +583,7 @@ function canFitActivity(targetDay, activity) {
     for (const existing of targetDay.activities) {
         if (!existing.time && !existing.startTime) continue;
 
-        const existingStart = parseTime(existing.time || existing.startTime);
+        const existingStart = TimeUtils.parseTime(existing.time || existing.startTime);
         const existingDuration = existing.duration || 60;
         const existingEnd = existingStart + existingDuration;
 
@@ -608,26 +600,7 @@ function canFitActivity(targetDay, activity) {
     return true; // No hay solapamiento
 }
 
-/**
- * Convierte tiempo "HH:MM" a minutos desde medianoche
- */
-function parseTime(timeStr) {
-    if (!timeStr) return 0;
-
-    const parts = String(timeStr).split(':');
-    if (parts.length !== 2) return 0;
-
-    const hours = parseInt(parts[0], 10);
-    const minutes = parseInt(parts[1], 10);
-
-    // Validate that they're actually numbers
-    if (isNaN(hours) || isNaN(minutes)) {
-        console.warn(`⚠️ Invalid time format in day-balancer: "${timeStr}", using default 00:00`);
-        return 0;
-    }
-
-    return hours * 60 + minutes;
-}
+// ⏰ Time utilities moved to time-utils.js for consistency across the app
 
 /**
  * Ordena actividades por hora de inicio
@@ -641,7 +614,7 @@ function sortActivitiesByTime(activities) {
         if (!timeA) return 1;
         if (!timeB) return -1;
 
-        return parseTime(timeA) - parseTime(timeB);
+        return TimeUtils.TimeUtils.parseTime(timeA) - TimeUtils.TimeUtils.parseTime(timeB);
     });
 }
 
@@ -787,8 +760,8 @@ function detectTimeOverlaps(activities) {
 
         if (!current.time || !next.time) continue;
 
-        const currentEnd = parseTime(current.time) + (current.duration || 60);
-        const nextStart = parseTime(next.time);
+        const currentEnd = TimeUtils.parseTime(current.time) + (current.duration || 60);
+        const nextStart = TimeUtils.parseTime(next.time);
 
         if (currentEnd > nextStart) {
             overlaps.push({

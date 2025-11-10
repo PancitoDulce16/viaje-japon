@@ -37,29 +37,13 @@ function toRad(degrees) {
     return degrees * (Math.PI / 180);
 }
 
-/**
- * Parsea un tiempo en formato "HH:MM" a minutos desde medianoche
- */
-function parseTime(timeStr) {
-    if (!timeStr) return 0;
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    return hours * 60 + minutes;
-}
-
-/**
- * Convierte minutos desde medianoche a formato "HH:MM"
- */
-function formatTime(minutes) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-}
+// ⏰ Time utilities (parseTime, formatTime) moved to time-utils.js for consistency across the app
 
 /**
  * Obtiene el tiempo de finalización de una actividad en minutos desde medianoche
  */
 function getActivityEndTime(activity) {
-    const startTime = parseTime(activity.time);
+    const startTime = TimeUtils.parseTime(activity.time);
     const duration = activity.duration || 60;
     return startTime + duration;
 }
@@ -123,9 +107,9 @@ function recalculateTimings(activities, options = {}) {
     // Determinar hora de inicio
     let currentTime;
     if (startTime) {
-        currentTime = parseTime(startTime);
+        currentTime = TimeUtils.parseTime(startTime);
     } else if (result[0].time) {
-        currentTime = parseTime(result[0].time);
+        currentTime = TimeUtils.parseTime(result[0].time);
     } else {
         currentTime = 9 * 60; // Default: 09:00
     }
@@ -135,7 +119,7 @@ function recalculateTimings(activities, options = {}) {
         const activity = result[i];
 
         // Asignar nuevo horario
-        activity.time = formatTime(currentTime);
+        activity.time = TimeUtils.formatTime(currentTime);
 
         // Calcular cuándo termina esta actividad
         const duration = activity.duration || defaultDuration;
@@ -192,7 +176,7 @@ function findNearestActivity(point, activities) {
  */
 function sortByTime(activities) {
     const withTime = activities.filter(a => a.time).sort((a, b) =>
-        parseTime(a.time) - parseTime(b.time)
+        TimeUtils.parseTime(a.time) - TimeUtils.parseTime(b.time)
     );
     const withoutTime = activities.filter(a => !a.time);
 
@@ -240,8 +224,8 @@ function optimizeBalanced(activities, options) {
         if (currentWindow.length === 0) {
             currentWindow.push(activity);
         } else {
-            const lastTime = parseTime(currentWindow[currentWindow.length - 1].time);
-            const currentActivityTime = parseTime(activity.time);
+            const lastTime = TimeUtils.parseTime(currentWindow[currentWindow.length - 1].time);
+            const currentActivityTime = TimeUtils.parseTime(activity.time);
 
             // Si está dentro de la ventana de 3 horas, agregar
             if (currentActivityTime - lastTime <= 180) {
@@ -383,7 +367,7 @@ function isVisitFeasible(current, next, visitedSoFar) {
 
     // Obtener tiempo actual después de completar la actividad actual
     const currentEndTime = getActivityEndTime(current);
-    const nextStartTime = parseTime(next.time);
+    const nextStartTime = TimeUtils.parseTime(next.time);
 
     // Calcular tiempo de transporte
     if (current.coordinates && next.coordinates) {
