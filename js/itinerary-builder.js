@@ -2123,7 +2123,10 @@ export const ItineraryBuilder = {
    * @returns {Date} Fecha calculada
    */
   calculateDayDate(startDate, dayNumber) {
-    const start = new Date(startDate);
+    // FIX: Evitar timezone offset usando tiempo medio día
+    const start = typeof startDate === 'string' && !startDate.includes('T')
+      ? new Date(startDate + 'T12:00:00')
+      : new Date(startDate);
     const dayDate = new Date(start);
     dayDate.setDate(start.getDate() + (dayNumber - 1)); // dayNumber es 1-based
     return dayDate;

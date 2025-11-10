@@ -1104,7 +1104,7 @@ function renderDayOverview(day){
   // Obtener hotel de la ciudad si existe
   let hotelForCity = null;
   if (cityForDay && currentItinerary && window.HotelBaseSystem) {
-    hotelForCity = window.HotelBaseSystem.getHotelForCity(currentItinerary, cityForDay);
+    hotelForCity = window.HotelBaseSystem.getHotelForCity(currentItinerary, cityForDay, day.day);
   }
 
   // Debug: Log day data to see what fields are available
@@ -2767,14 +2767,14 @@ Si ya tienes las coordenadas, simplemente pégalas:
     try {
       console.log('📝 Agregando hotel al itinerario...');
 
-      // Add hotel to itinerary
+      // Add hotel to itinerary (use currentDay for segment detection)
       window.HotelBaseSystem.addHotelToItinerary(currentItinerary, {
         id: hotel.id,
         name: hotel.displayName || hotel.name,
         address: hotel.formattedAddress || hotel.address,
         coordinates: hotel.location,
         rating: hotel.rating
-      }, city);
+      }, city, currentDay);
 
       console.log('💾 Guardando en Firebase...');
 

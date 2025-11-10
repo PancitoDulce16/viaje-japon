@@ -66,13 +66,57 @@ export const HotelBaseSystem = {
   },
 
   /**
+   * Detecta rangos de días por ciudad (para soportar múltiples visitas a la misma ciudad)
+   * @param {Object} itinerary - Itinerario completo
+   * @returns {Array} Segmentos [{ city, startDay, endDay }]
+   */
+  detectCitySegments(itinerary) {
+    if (!itinerary.days || itinerary.days.length === 0) return [];
+
+    const segments = [];
+    let currentCity = null;
+    let currentStart = null;
+
+    itinerary.days.forEach((day, index) => {
+      const dayCity = this.detectCityForDay(day);
+
+      if (dayCity !== currentCity) {
+        // Nueva ciudad o nuevo segmento
+        if (currentCity !== null) {
+          // Guardar segmento anterior
+          segments.push({
+            city: currentCity,
+            startDay: currentStart,
+            endDay: index // El día anterior
+          });
+        }
+        currentCity = dayCity;
+        currentStart = index + 1; // dayNumber es 1-based
+      }
+    });
+
+    // Guardar último segmento
+    if (currentCity !== null) {
+      segments.push({
+        city: currentCity,
+        startDay: currentStart,
+        endDay: itinerary.days.length
+      });
+    }
+
+    console.log('📊 City segments detected:', segments);
+    return segments;
+  },
+
+  /**
    * Agrega un hotel como base del itinerario
    * @param {Object} itinerary - Itinerario actual
    * @param {Object} hotel - Datos del hotel de Google Places
    * @param {string} city - Ciudad (Tokyo, Kyoto, Osaka)
+   * @param {number} dayNumber - Día actual (para detectar segmento)
    * @returns {Object} Itinerario actualizado
    */
-  addHotelToItinerary(itinerary, hotel, city) {
+  addHotelToItinerary(itinerary, hotel, city, dayNumber = null) {
     if (!itinerary.hotels) {
       itinerary.hotels = {};
     }
@@ -88,23 +132,71 @@ export const HotelBaseSystem = {
       addedAt: new Date().toISOString()
     };
 
-    itinerary.hotels[city] = hotelData;
+    // Detectar segmentos de ciudades para soportar múltiples visitas
+    const segments = this.detectCitySegments(itinerary);
+    const citySegments = segments.filter(s => s.city === city);
 
-    console.log(`✅ Hotel agregado a ${city}:`, hotelData.name);
+    let hotelKey = city;
+
+    if (citySegments.length > 1 && dayNumber) {
+      // Múltiples visitas a la misma ciudad - usar rango de días
+      const segment = citySegments.find(s => dayNumber >= s.startDay && dayNumber <= s.endDay);
+      if (segment) {
+        hotelKey = `${city}_${segment.startDay}-${segment.endDay}`;
+        console.log(`🔑 Using segment key: ${hotelKey} (múltiples visitas a ${city})`);
+      }
+    } else if (citySegments.length > 1) {
+      // Si no sabemos el día, usar el primer segmento por defecto
+      const segment = citySegments[0];
+      hotelKey = `${city}_${segment.startDay}-${segment.endDay}`;
+      console.warn(`⚠️ Múltiples segmentos de ${city} pero sin dayNumber. Usando primer segmento: ${hotelKey}`);
+    }
+
+    itinerary.hotels[hotelKey] = hotelData;
+
+    console.log(`✅ Hotel agregado con key "${hotelKey}":`, hotelData.name);
     return itinerary;
   },
 
   /**
-   * Obtiene el hotel base para una ciudad
+   * Obtiene el hotel base para una ciudad en un día específico
    * @param {Object} itinerary - Itinerario
    * @param {string} city - Ciudad
+   * @param {number} dayNumber - Número del día (opcional, para detectar segmento correcto)
    * @returns {Object|null} Hotel o null
    */
-  getHotelForCity(itinerary, city) {
-    if (!itinerary.hotels || !itinerary.hotels[city]) {
+  getHotelForCity(itinerary, city, dayNumber = null) {
+    if (!itinerary.hotels) {
       return null;
     }
-    return itinerary.hotels[city];
+
+    // Si hay dayNumber, buscar el hotel del segmento correcto
+    if (dayNumber && itinerary.days) {
+      const segments = this.detectCitySegments(itinerary);
+      const segment = segments.find(s => s.city === city && dayNumber >= s.startDay && dayNumber <= s.endDay);
+
+      if (segment) {
+        const segmentKey = `${city}_${segment.startDay}-${segment.endDay}`;
+        if (itinerary.hotels[segmentKey]) {
+          console.log(`🏨 Hotel found for ${city} day ${dayNumber} using segment key: ${segmentKey}`);
+          return itinerary.hotels[segmentKey];
+        }
+      }
+    }
+
+    // Fallback: buscar por nombre de ciudad simple
+    if (itinerary.hotels[city]) {
+      return itinerary.hotels[city];
+    }
+
+    // Fallback 2: buscar cualquier key que empiece con la ciudad
+    const cityKeys = Object.keys(itinerary.hotels).filter(key => key.startsWith(city));
+    if (cityKeys.length > 0) {
+      console.log(`🏨 Using first available hotel for ${city}: ${cityKeys[0]}`);
+      return itinerary.hotels[cityKeys[0]];
+    }
+
+    return null;
   },
 
   /**
