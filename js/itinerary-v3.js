@@ -1184,6 +1184,26 @@ function renderDayOverview(day){
     <div class="space-y-3 text-sm">
       <p class="font-semibold text-base dark:text-gray-100">${day.date}</p>
       <p class="font-bold text-lg text-red-600 dark:text-red-400">${day.title||''}</p>
+      ${day.season ? `
+        <div class="bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/30 dark:to-purple-900/30 p-3 rounded-lg border-l-4 border-pink-500 dark:border-pink-400">
+          <div class="flex items-start gap-2">
+            <span class="text-2xl">${day.season.icon}</span>
+            <div class="flex-1">
+              <p class="font-bold text-pink-700 dark:text-pink-300 text-sm">${day.season.name} ${day.season.inPeak ? '- PEAK TIME! 🌟' : ''}</p>
+              ${day.season.tips ? `<p class="text-xs text-gray-600 dark:text-gray-300 mt-1">💡 ${day.season.tips}</p>` : ''}
+            </div>
+          </div>
+        </div>
+      ` : ''}
+      ${day.energyLevel ? `
+        <div class="flex items-center gap-2 text-xs">
+          <span class="font-semibold dark:text-gray-200">⚡ Energy Level:</span>
+          <div class="flex-1 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+            <div class="bg-gradient-to-r from-yellow-400 to-orange-500 h-2 rounded-full transition-all" style="width:${day.energyLevel}%"></div>
+          </div>
+          <span class="font-bold text-orange-600 dark:text-orange-400">${day.energyLevel}%</span>
+        </div>
+      ` : ''}
       ${hotelForCity ? `
         <div class="bg-blue-50 dark:bg-blue-800 p-3 rounded-lg border-l-2 border-blue-500 dark:border-blue-400">
           <div class="flex justify-between items-start mb-1">
@@ -1980,8 +2000,25 @@ function renderActivities(day){
                 ${act.cost>0?`<span class="text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-white px-2 py-1 rounded font-semibold">¥${Number(act.cost).toLocaleString()}</span>`:''}
               </div>
               <h3 class="text-lg font-bold dark:text-white mb-1">${activityTitle}</h3>
+              ${act.photographyInfo ? `
+                <div class="inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50 rounded-full text-xs font-semibold text-purple-700 dark:text-purple-300">
+                  <span>📸</span>
+                  <span>${act.photographyInfo.name}</span>
+                </div>
+              ` : ''}
             </div>
             <div class="flex gap-2 flex-shrink-0">
+              ${act.alternatives && act.alternatives.length > 0 ? `
+                <button
+                  type="button"
+                  onclick="ItineraryHandler.showAlternativesModal('${act.id}', '${day.day}')"
+                  class="p-2 rounded-full hover:bg-purple-100 dark:hover:bg-purple-800 transition text-purple-600 dark:text-purple-300"
+                  title="Ver ${act.alternatives.length} alternativas"
+                >
+                  <span class="text-sm">🔄</span>
+                  <span class="text-xs font-bold">${act.alternatives.length}</span>
+                </button>
+              ` : ''}
               <button
                 type="button"
                 data-action="vote"
@@ -1998,6 +2035,11 @@ function renderActivities(day){
             </div>
           </div>
           <p class="text-sm text-gray-600 dark:text-gray-200 mt-2">${act.desc||''}</p>
+          ${act.photographyInfo ? `
+            <div class="mt-2 p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg border-l-2 border-purple-400 dark:border-purple-500">
+              <p class="text-xs text-purple-700 dark:text-purple-300">📸 ${act.photographyInfo.description}</p>
+            </div>
+          ` : ''}
           ${act.station?`<p class="text-xs text-gray-500 dark:text-gray-200 mt-2">🚉 ${act.station}</p>`:''}
           ${act.train?`
             <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-800 rounded-lg border-l-2 border-blue-500 dark:border-blue-400">
@@ -2802,6 +2844,154 @@ Si ya tienes las coordenadas, simplemente pégalas:
     } catch (error) {
       console.error('❌ Error removing hotel:', error);
       Notifications.show('Error al eliminar hotel', 'error');
+    }
+  },
+
+  // 🔄 NUEVO: Mostrar alternativas para una actividad
+  showAlternativesModal(activityId, dayNumber) {
+    console.log('🔄 Opening alternatives modal for activity:', activityId, 'on day:', dayNumber);
+
+    if (!currentItinerary) {
+      Notifications.show('No hay itinerario activo', 'error');
+      return;
+    }
+
+    const day = currentItinerary.days.find(d => d.day === parseInt(dayNumber));
+    if (!day) {
+      Notifications.show('Día no encontrado', 'error');
+      return;
+    }
+
+    const activity = day.activities.find(a => a.id === activityId);
+    if (!activity || !activity.alternatives || activity.alternatives.length === 0) {
+      Notifications.show('No hay alternativas disponibles', 'info');
+      return;
+    }
+
+    // Create modal
+    const modal = document.createElement('div');
+    modal.id = 'alternativesModal';
+    modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-scale-in">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-2xl font-bold">🔄 Smart Alternatives</h2>
+              <p class="text-sm text-white/80 mt-1">Alternativas inteligentes para: ${activity.title}</p>
+            </div>
+            <button onclick="this.closest('#alternativesModal').remove()" class="text-white/80 hover:text-white text-3xl leading-none transition">&times;</button>
+          </div>
+        </div>
+
+        <!-- Current Activity -->
+        <div class="p-6 border-b dark:border-gray-700 bg-purple-50 dark:bg-purple-900/20">
+          <p class="text-xs font-semibold text-purple-700 dark:text-purple-300 mb-2">ACTIVIDAD ACTUAL</p>
+          <div class="flex items-center gap-3">
+            <span class="text-3xl">${activity.icon || '📍'}</span>
+            <div class="flex-1">
+              <h3 class="font-bold text-lg dark:text-white">${activity.title}</h3>
+              <div class="flex gap-2 mt-1 flex-wrap">
+                ${activity.time ? `<span class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">${activity.time}</span>` : ''}
+                ${activity.cost > 0 ? `<span class="text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300 px-2 py-1 rounded">¥${activity.cost.toLocaleString()}</span>` : ''}
+                ${activity.category ? `<span class="text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">${activity.category}</span>` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alternatives List -->
+        <div class="flex-1 overflow-y-auto p-6">
+          <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">${activity.alternatives.length} ALTERNATIVAS DISPONIBLES</p>
+          <div class="space-y-3">
+            ${activity.alternatives.map((alt, idx) => `
+              <div class="border-2 dark:border-gray-600 rounded-xl p-4 hover:border-purple-400 dark:hover:border-purple-500 transition cursor-pointer group"
+                   onclick="ItineraryHandler.swapActivityWithAlternative('${activityId}', ${dayNumber}, ${idx})">
+                <div class="flex items-start gap-3">
+                  <div class="text-3xl group-hover:scale-110 transition">📍</div>
+                  <div class="flex-1">
+                    <h4 class="font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition">${alt.name}</h4>
+                    <p class="text-xs text-purple-600 dark:text-purple-400 mt-1">${alt.reason}</p>
+                    <div class="flex gap-2 mt-2 flex-wrap">
+                      ${alt.category ? `<span class="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-2 py-1 rounded">${alt.category}</span>` : ''}
+                      ${alt.cost ? `<span class="text-xs bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-300 px-2 py-1 rounded">¥${alt.cost.toLocaleString()}</span>` : ''}
+                    </div>
+                  </div>
+                  <button class="px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 rounded-lg font-semibold text-sm group-hover:bg-purple-500 group-hover:text-white dark:group-hover:bg-purple-600 transition">
+                    Cambiar →
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/50">
+          <p class="text-xs text-gray-500 dark:text-gray-400 text-center">
+            💡 Las alternativas se generan basándose en categoría, ubicación e intereses similares
+          </p>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+  },
+
+  // 🔄 NUEVO: Swap activity with alternative
+  async swapActivityWithAlternative(activityId, dayNumber, alternativeIndex) {
+    console.log('🔄 Swapping activity:', activityId, 'with alternative:', alternativeIndex);
+
+    if (!currentItinerary) return;
+
+    const day = currentItinerary.days.find(d => d.day === parseInt(dayNumber));
+    if (!day) return;
+
+    const activityIndex = day.activities.findIndex(a => a.id === activityId);
+    if (activityIndex === -1) return;
+
+    const activity = day.activities[activityIndex];
+    const alternative = activity.alternatives[alternativeIndex];
+
+    if (!alternative) return;
+
+    try {
+      // Track learning: user swapped this activity
+      if (window.SmartItineraryGenerator) {
+        window.SmartItineraryGenerator.saveUserEdit('removed', activity);
+        window.SmartItineraryGenerator.saveUserEdit('added', alternative);
+      }
+
+      // Create new activity object from alternative
+      const newActivity = {
+        ...activity,
+        title: alternative.name,
+        category: alternative.category || activity.category,
+        cost: alternative.cost || activity.cost,
+        coordinates: alternative.coordinates || activity.coordinates,
+        desc: `Alternativa sugerida: ${alternative.reason}`,
+        source: 'smart-alternative'
+      };
+
+      // Replace activity
+      day.activities[activityIndex] = newActivity;
+
+      // Save to Firebase
+      await saveCurrentItineraryToFirebase();
+
+      Notifications.show('✅ Actividad cambiada exitosamente', 'success');
+
+      // Close modal
+      const modal = document.getElementById('alternativesModal');
+      if (modal) modal.remove();
+
+      // Re-render
+      render();
+
+    } catch (error) {
+      console.error('❌ Error swapping activity:', error);
+      Notifications.show('Error al cambiar actividad', 'error');
     }
   }
 };
