@@ -834,7 +834,9 @@ function renderTripSelector(){
             <p class="text-xs text-white/80">${new Date(currentTrip.info.dateStart).toLocaleDateString('es')} - ${new Date(currentTrip.info.dateEnd).toLocaleDateString('es')}</p>
           </div>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap">
+          ${currentItinerary ? `<button onclick="showTripIntelligenceModal()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">🧠 Análisis del Viaje</button>`:''}
+          <button onclick="window.SmartGeneratorWizard.open()" class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-4 py-2 rounded-lg transition text-sm font-bold shadow-md">🚀 Generador Inteligente</button>
           ${userTrips.length>1 ? `<button onclick="TripsManager.showTripsListModal()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">🔄 Cambiar Viaje</button>`:''}
           <button onclick="TripsManager.showShareCode()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">🔗 Compartir</button>
           ${!currentItinerary ? `<button onclick="ItineraryBuilder.showCreateItineraryWizard()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition text-sm font-bold shadow-md">✨ Crear Itinerario</button>`:''}
@@ -854,6 +856,233 @@ function renderDaySelector(){
   container.innerHTML = days.map(day => `
     <button data-day="${day.day}" class="day-btn px-5 py-2.5 rounded-xl whitespace-nowrap font-semibold transition-all hover:scale-105 flex-shrink-0 ${ currentDay===day.day ? 'bg-red-600 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-500 shadow-md' }">Día ${day.day}</button>
   `).join('');
+}
+
+/**
+ * 📊 Renderiza estadísticas rápidas del día en una línea compacta
+ */
+function renderQuickStats(day) {
+  if (!day || !day.activities || day.activities.length === 0) {
+    return '';
+  }
+
+  const activitiesCount = day.activities.length;
+
+  // Calcular duración total del día
+  const activitiesWithTime = day.activities.filter(a => a.time);
+  let totalHours = 0;
+  if (activitiesWithTime.length > 0) {
+    const sorted = [...activitiesWithTime].sort((a, b) => {
+      const timeA = a.time || '09:00';
+      const timeB = b.time || '09:00';
+      return timeA.localeCompare(timeB);
+    });
+
+    const firstTime = sorted[0].time || '09:00';
+    const lastActivity = sorted[sorted.length - 1];
+    const lastTime = lastActivity.time || '18:00';
+    const lastDuration = lastActivity.duration || 90;
+
+    const [firstH, firstM] = firstTime.split(':').map(Number);
+    const [lastH, lastM] = lastTime.split(':').map(Number);
+    const firstMinutes = firstH * 60 + firstM;
+    const lastMinutes = lastH * 60 + lastM + lastDuration;
+
+    totalHours = ((lastMinutes - firstMinutes) / 60).toFixed(1);
+  }
+
+  // Calcular costo total
+  const totalCost = calculateDayTotalCost(day);
+
+  // Detectar alertas
+  let alertsCount = 0;
+  let highestSeverity = 'none';
+  if (window.ItineraryIntelligence && activitiesWithTime.length >= 2) {
+    const conflicts = window.ItineraryIntelligence.detectConflicts(day);
+    alertsCount = conflicts.length;
+
+    if (conflicts.some(c => c.severity === 'high')) {
+      highestSeverity = 'high';
+    } else if (conflicts.some(c => c.severity === 'medium')) {
+      highestSeverity = 'medium';
+    } else if (conflicts.length > 0) {
+      highestSeverity = 'low';
+    }
+  }
+
+  const alertColor =
+    highestSeverity === 'high' ? 'text-red-600 dark:text-red-400' :
+    highestSeverity === 'medium' ? 'text-orange-600 dark:text-orange-400' :
+    highestSeverity === 'low' ? 'text-yellow-600 dark:text-yellow-400' :
+    'text-green-600 dark:text-green-400';
+
+  return `
+    <div class="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg p-3 mb-4 border border-purple-200 dark:border-purple-700">
+      <div class="grid grid-cols-4 gap-2 text-center">
+        <div class="flex flex-col items-center">
+          <span class="text-purple-600 dark:text-purple-400 text-xl mb-1">📍</span>
+          <span class="text-xs text-gray-600 dark:text-gray-400">Actividades</span>
+          <span class="font-bold text-gray-900 dark:text-white">${activitiesCount}</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <span class="text-blue-600 dark:text-blue-400 text-xl mb-1">⏱️</span>
+          <span class="text-xs text-gray-600 dark:text-gray-400">Duración</span>
+          <span class="font-bold text-gray-900 dark:text-white">${totalHours}h</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <span class="text-green-600 dark:text-green-400 text-xl mb-1">💰</span>
+          <span class="text-xs text-gray-600 dark:text-gray-400">Costo</span>
+          <span class="font-bold text-gray-900 dark:text-white">¥${(totalCost / 1000).toFixed(1)}k</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <span class="${alertColor} text-xl mb-1">${alertsCount > 0 ? '🚨' : '✅'}</span>
+          <span class="text-xs text-gray-600 dark:text-gray-400">Alertas</span>
+          <span class="font-bold ${alertColor}">${alertsCount}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * 📅 Renderiza un mini timeline visual del día
+ */
+function renderMiniTimeline(day) {
+  if (!day || !day.activities || day.activities.length === 0) {
+    return '';
+  }
+
+  const activitiesWithTime = day.activities.filter(a => a.time);
+
+  if (activitiesWithTime.length === 0) {
+    return '';
+  }
+
+  // Ordenar por tiempo
+  const sorted = [...activitiesWithTime].sort((a, b) => {
+    const timeA = a.time || '09:00';
+    const timeB = b.time || '09:00';
+    return timeA.localeCompare(timeB);
+  });
+
+  // Encontrar rango de horas (06:00 - 23:00 típicamente)
+  const startHour = 6;
+  const endHour = 23;
+  const totalMinutes = (endHour - startHour) * 60;
+
+  // Construir bloques de actividades
+  const blocks = sorted.map(act => {
+    const [h, m] = (act.time || '09:00').split(':').map(Number);
+    const actMinutes = h * 60 + m;
+    const offsetMinutes = actMinutes - (startHour * 60);
+    const leftPercent = Math.max(0, (offsetMinutes / totalMinutes) * 100);
+    const widthPercent = Math.min(5, ((act.duration || 90) / totalMinutes) * 100);
+
+    // Color según tipo de actividad
+    let color = 'bg-purple-500';
+    if (act.isMeal) color = 'bg-orange-500';
+    else if (act.category === 'cultural') color = 'bg-blue-500';
+    else if (act.category === 'shopping') color = 'bg-pink-500';
+
+    return { leftPercent, widthPercent, color, time: act.time, title: act.title };
+  });
+
+  return `
+    <div class="bg-white dark:bg-gray-700 rounded-lg p-3 mb-4 border border-gray-200 dark:border-gray-600">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">Timeline del Día</span>
+        <div class="flex gap-2 text-xs">
+          <span class="text-gray-500 dark:text-gray-400">${sorted[0].time}</span>
+          <span class="text-gray-400 dark:text-gray-500">→</span>
+          <span class="text-gray-500 dark:text-gray-400">${sorted[sorted.length - 1].time}</span>
+        </div>
+      </div>
+
+      <!-- Timeline bar -->
+      <div class="relative h-8 bg-gray-100 dark:bg-gray-600 rounded-full overflow-visible">
+        <!-- Hour markers -->
+        <div class="absolute inset-0 flex justify-between px-1 text-[8px] text-gray-400 dark:text-gray-500 items-center pointer-events-none">
+          <span>6am</span>
+          <span>12pm</span>
+          <span>6pm</span>
+          <span>11pm</span>
+        </div>
+
+        <!-- Activity blocks -->
+        ${blocks.map((block, i) => `
+          <div
+            class="${block.color} absolute top-1 h-6 rounded transition-all hover:scale-110 hover:z-10 group cursor-pointer"
+            style="left: ${block.leftPercent}%; width: ${Math.max(block.widthPercent, 2)}%"
+            title="${block.time} - ${block.title}"
+          >
+            <!-- Tooltip on hover -->
+            <div class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-gray-900 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-20">
+              ${block.time} - ${block.title}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- Legend -->
+      <div class="flex gap-3 mt-2 text-[10px] text-gray-600 dark:text-gray-400 justify-center flex-wrap">
+        <span class="flex items-center gap-1"><span class="w-2 h-2 bg-purple-500 rounded-full"></span>Actividad</span>
+        <span class="flex items-center gap-1"><span class="w-2 h-2 bg-orange-500 rounded-full"></span>Comida</span>
+        <span class="flex items-center gap-1"><span class="w-2 h-2 bg-blue-500 rounded-full"></span>Cultural</span>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * 🎯 Renderiza botones de acción rápida compactos (hover para mostrar)
+ */
+function renderQuickActionButtons(day) {
+  return `
+    <div>
+      <!-- Compact button bar (always visible) -->
+      <div class="flex gap-1 mb-3">
+        <button
+          type="button"
+          onclick="toggleQuickActions(${day.day})"
+          class="flex-1 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-semibold py-2 px-3 rounded-lg transition shadow-md text-sm"
+        >
+          ⚡ Acciones
+        </button>
+        <button
+          type="button"
+          id="addActivityBtn_${day.day}"
+          class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-3 rounded-lg transition text-2xl leading-none"
+          title="Añadir Actividad"
+        >
+          +
+        </button>
+      </div>
+
+      <!-- Expanded actions (hidden by default) -->
+      <div id="quickActionsExpanded_${day.day}" class="hidden space-y-2 mb-3">
+        <button type="button" id="optimizeRouteBtn_${day.day}" class="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2 text-sm">
+          <span>🗺️</span>
+          <span>Optimizar Ruta</span>
+        </button>
+        <button type="button" onclick="showAutoMealSuggestions(${day.day})" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2 text-sm">
+          <span>🍽️</span>
+          <span>Auto-Insertar Comidas</span>
+        </button>
+        <button type="button" onclick="showGapFillerSuggestions(${day.day})" class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2 text-sm">
+          <span>🕳️</span>
+          <span>Llenar Huecos</span>
+        </button>
+        <button type="button" id="suggestionsBtn_${day.day}" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2 text-sm">
+          <span>💡</span>
+          <span>Ver Sugerencias</span>
+        </button>
+        <button type="button" id="analyzeBalanceBtn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2 text-sm">
+          <span>⚖️</span>
+          <span>Analizar Balance</span>
+        </button>
+      </div>
+    </div>
+  `;
 }
 
 function renderDayOverview(day){
@@ -980,31 +1209,451 @@ function renderDayOverview(day){
       ` : ''}
       ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-200">📍 ${day.location}</p>`:''}
     </div>
-    <!-- ⚖️ Indicador de Carga del Día -->
-    ${renderDayLoadIndicator(day)}
 
-    <!-- 🔮 Predicción de Experiencia -->
-    ${renderDayExperiencePrediction(day)}
+    <!-- 📊 Quick Stats del Día -->
+    ${renderQuickStats(day)}
 
-    <div class="mt-6 space-y-2">
-      <button type="button" id="analyzeBalanceBtn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2">
-        <span>⚖️</span>
-        <span>Analizar Balance</span>
+    <!-- 📅 Mini Timeline Visual -->
+    ${renderMiniTimeline(day)}
+
+    <!-- 🎯 Botones de Acción Rápida -->
+    ${renderQuickActionButtons(day)}
+
+    <!-- 💰 Widget de Presupuesto del Día (Colapsable) -->
+    ${renderDayBudgetCollapsible(day)}
+
+    <!-- 🧠 Análisis Inteligente del Día (Colapsable) -->
+    ${renderDayIntelligenceCollapsible(day)}
+
+    <!-- ⚖️ Indicador de Carga del Día (Colapsable) -->
+    ${renderDayLoadIndicatorCollapsible(day)}
+
+    <!-- 🔮 Predicción de Experiencia (Colapsable) -->
+    ${renderDayExperiencePredictionCollapsible(day)}
+    `;
+}
+
+/**
+ * 💰 Renderiza widget de presupuesto COLAPSABLE
+ */
+function renderDayBudgetCollapsible(day) {
+  const totalCost = calculateDayTotalCost(day);
+  const budget = day.budget || 0;
+
+  // Si no hay presupuesto ni gastos, mostrar CTA para establecer presupuesto
+  if (budget === 0 && totalCost === 0) {
+    return `
+      <div class="mt-4">
+        <button
+          type="button"
+          onclick="editDayBudget(${day.day}, 0)"
+          class="w-full bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 border-2 border-dashed border-green-400 dark:border-green-600 rounded-lg p-3 transition flex items-center justify-center gap-2 text-green-700 dark:text-green-300 font-semibold text-sm"
+        >
+          <span>💰</span>
+          <span>Establecer Presupuesto del Día</span>
+        </button>
+      </div>
+    `;
+  }
+
+  const remaining = budget - totalCost;
+  const percentUsed = budget > 0 ? Math.min((totalCost / budget) * 100, 100) : 0;
+
+  // Determinar estilo y badge según porcentaje
+  let badgeClass, budgetIcon, barClass;
+
+  if (percentUsed >= 100) {
+    badgeClass = 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-300 dark:border-red-600';
+    budgetIcon = '🚨';
+    barClass = 'bg-red-600 dark:bg-red-500';
+  } else if (percentUsed >= 80) {
+    badgeClass = 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-600';
+    budgetIcon = '⚠️';
+    barClass = 'bg-orange-600 dark:bg-orange-500';
+  } else if (percentUsed >= 60) {
+    badgeClass = 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-600';
+    budgetIcon = '💡';
+    barClass = 'bg-yellow-600 dark:bg-yellow-500';
+  } else {
+    badgeClass = 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600';
+    budgetIcon = '💰';
+    barClass = 'bg-green-600 dark:bg-green-500';
+  }
+
+  return `
+    <div class="mt-4">
+      <!-- Header colapsable -->
+      <button
+        type="button"
+        onclick="document.getElementById('budgetDetails_${day.day}').classList.toggle('hidden')"
+        class="w-full ${badgeClass} border rounded-lg p-3 flex items-center justify-between transition hover:opacity-80"
+      >
+        <div class="flex items-center gap-2">
+          <span class="text-lg">${budgetIcon}</span>
+          <span class="font-semibold text-sm">Presupuesto</span>
+          <span class="text-xs font-bold">¥${totalCost.toLocaleString()}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          ${budget > 0 ? `<span class="text-xs">${Math.round(percentUsed)}%</span>` : ''}
+          <span class="text-xs">▼</span>
+        </div>
       </button>
-      <button type="button" id="optimizeRouteBtn_${day.day}" class="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2">
-        <span>🗺️</span>
-        <span>Optimizar Ruta</span>
+
+      <!-- Contenido expandido -->
+      <div id="budgetDetails_${day.day}" class="hidden mt-2 bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+        ${budget > 0 ? `
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-600 dark:text-gray-300">Gastado:</span>
+              <span class="font-bold text-gray-900 dark:text-white">¥${totalCost.toLocaleString()}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600 dark:text-gray-300">Presupuesto:</span>
+              <span class="font-bold text-gray-900 dark:text-white">¥${budget.toLocaleString()}</span>
+            </div>
+            <div class="flex justify-between font-bold">
+              <span class="text-gray-600 dark:text-gray-300">Restante:</span>
+              <span class="${remaining >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">
+                ${remaining >= 0 ? '+' : ''}¥${remaining.toLocaleString()}
+              </span>
+            </div>
+            <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 mt-2">
+              <div class="${barClass} h-2 rounded-full transition-all" style="width:${percentUsed}%"></div>
+            </div>
+          </div>
+        ` : `
+          <p class="text-sm text-gray-600 dark:text-gray-300">Solo hay gastos registrados. ¿Quieres establecer un presupuesto?</p>
+        `}
+        <button
+          type="button"
+          onclick="editDayBudget(${day.day}, ${budget})"
+          class="mt-3 w-full text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+        >
+          ${budget > 0 ? 'Editar Presupuesto' : '+ Establecer Presupuesto'}
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * 🧠 Renderiza análisis inteligente COLAPSABLE
+ */
+function renderDayIntelligenceCollapsible(day) {
+  if (!window.ItineraryIntelligence || !day || !day.activities || day.activities.length < 2) {
+    return '';
+  }
+
+  const conflicts = window.ItineraryIntelligence.detectConflicts(day);
+
+  if (conflicts.length === 0) {
+    return `
+      <div class="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-600 rounded-lg p-3 flex items-center gap-2">
+        <span class="text-2xl">✅</span>
+        <span class="text-sm font-semibold text-green-700 dark:text-green-300">Sin conflictos detectados</span>
+      </div>
+    `;
+  }
+
+  const highSeverity = conflicts.filter(c => c.severity === 'high');
+  const mediumSeverity = conflicts.filter(c => c.severity === 'medium');
+  const lowSeverity = conflicts.filter(c => c.severity === 'low');
+
+  const badgeClass = highSeverity.length > 0 ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-300' :
+                     mediumSeverity.length > 0 ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-300' :
+                     'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-300';
+
+  return `
+    <div class="mt-4">
+      <!-- Header colapsable -->
+      <button
+        type="button"
+        onclick="document.getElementById('intelligenceDetails_${day.day}').classList.toggle('hidden')"
+        class="w-full ${badgeClass} border rounded-lg p-3 flex items-center justify-between transition hover:opacity-80"
+      >
+        <div class="flex items-center gap-2">
+          <span class="text-lg">🧠</span>
+          <span class="font-semibold text-sm">Análisis Inteligente</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold">${conflicts.length} alerta${conflicts.length > 1 ? 's' : ''}</span>
+          <span class="text-xs">▼</span>
+        </div>
       </button>
-      <button type="button" id="mealSuggestionsBtn_${day.day}" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2">
-        <span>🍽️</span>
-        <span>Sugerir Comidas</span>
-      </button>
-      <button type="button" id="suggestionsBtn_${day.day}" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2">
-        <span>💡</span>
-        <span>Ver Sugerencias</span>
-      </button>
-      <button type="button" id="addActivityBtn_${day.day}" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition">+ Añadir Actividad</button>
-    </div>`;
+
+      <!-- Contenido expandido -->
+      <div id="intelligenceDetails_${day.day}" class="hidden mt-2 space-y-2">
+        ${highSeverity.map(c => `
+          <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-2 rounded">
+            <div class="flex items-start gap-2">
+              <span class="text-sm">${c.icon}</span>
+              <div class="flex-1">
+                <p class="text-xs font-bold text-red-900 dark:text-red-100">${c.title}</p>
+                <p class="text-xs text-red-700 dark:text-red-200 mt-1">${c.message}</p>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+
+        ${mediumSeverity.map(c => `
+          <div class="bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-500 p-2 rounded">
+            <div class="flex items-start gap-2">
+              <span class="text-sm">${c.icon}</span>
+              <div class="flex-1">
+                <p class="text-xs font-bold text-orange-900 dark:text-orange-100">${c.title}</p>
+                <p class="text-xs text-orange-700 dark:text-orange-200 mt-1">${c.message}</p>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+
+        ${lowSeverity.slice(0, 2).map(c => `
+          <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 p-2 rounded">
+            <div class="flex items-start gap-2">
+              <span class="text-sm">${c.icon}</span>
+              <div class="flex-1">
+                <p class="text-xs font-bold text-yellow-900 dark:text-yellow-100">${c.title}</p>
+                <p class="text-xs text-yellow-700 dark:text-yellow-200">${c.message}</p>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+
+        ${lowSeverity.length > 2 ? `
+          <p class="text-xs text-gray-500 dark:text-gray-400 italic text-center">
+            +${lowSeverity.length - 2} sugerencia(s) más
+          </p>
+        ` : ''}
+
+        <!-- 🤖 Botón Auto-Resolver -->
+        ${(highSeverity.length > 0 || mediumSeverity.length > 0) ? `
+          <button
+            type="button"
+            onclick="autoResolveConflicts(${day.day})"
+            class="w-full mt-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2 text-sm"
+          >
+            <span>🤖</span>
+            <span>Arreglar Automáticamente</span>
+          </button>
+        ` : ''}
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * ⚖️ Renderiza indicador de carga COLAPSABLE
+ */
+function renderDayLoadIndicatorCollapsible(day) {
+  // Esta función ya existe, voy a crear una versión colapsable
+  return ''; // Placeholder por ahora
+}
+
+/**
+ * 🔮 Renderiza predicción de experiencia COLAPSABLE
+ */
+function renderDayExperiencePredictionCollapsible(day) {
+  // Esta función ya existe, voy a crear una versión colapsable
+  return ''; // Placeholder por ahora
+}
+
+/**
+ * Renderiza conflictos y alertas del día usando ItineraryIntelligence
+ */
+function renderDayIntelligence(day) {
+  if (!window.ItineraryIntelligence || !day || !day.activities || day.activities.length < 2) {
+    return '';
+  }
+
+  // Detectar conflictos
+  const conflicts = window.ItineraryIntelligence.detectConflicts(day);
+
+  if (conflicts.length === 0) {
+    return '';
+  }
+
+  // Agrupar por severidad
+  const highSeverity = conflicts.filter(c => c.severity === 'high');
+  const mediumSeverity = conflicts.filter(c => c.severity === 'medium');
+  const lowSeverity = conflicts.filter(c => c.severity === 'low');
+
+  return `
+    <div class="mt-4 space-y-2">
+      <h3 class="text-sm font-bold text-gray-700 dark:text-gray-200 flex items-center gap-2">
+        <span>🧠</span>
+        <span>Análisis Inteligente</span>
+      </h3>
+
+      ${highSeverity.map(c => `
+        <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-3 rounded">
+          <div class="flex items-start gap-2">
+            <span class="text-lg">${c.icon}</span>
+            <div class="flex-1">
+              <p class="text-sm font-bold text-red-900 dark:text-red-100">${c.title}</p>
+              <p class="text-xs text-red-700 dark:text-red-200 mt-1">${c.message}</p>
+              <p class="text-xs text-red-600 dark:text-red-300 mt-1 italic">${c.suggestion}</p>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+
+      ${mediumSeverity.map(c => `
+        <div class="bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-500 p-3 rounded">
+          <div class="flex items-start gap-2">
+            <span class="text-lg">${c.icon}</span>
+            <div class="flex-1">
+              <p class="text-sm font-bold text-orange-900 dark:text-orange-100">${c.title}</p>
+              <p class="text-xs text-orange-700 dark:text-orange-200 mt-1">${c.message}</p>
+              <p class="text-xs text-orange-600 dark:text-orange-300 mt-1 italic">${c.suggestion}</p>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+
+      ${lowSeverity.slice(0, 2).map(c => `
+        <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-2 rounded">
+          <div class="flex items-start gap-2">
+            <span>${c.icon}</span>
+            <div class="flex-1">
+              <p class="text-xs font-bold text-blue-900 dark:text-blue-100">${c.title}</p>
+              <p class="text-xs text-blue-700 dark:text-blue-200">${c.message}</p>
+            </div>
+          </div>
+        </div>
+      `).join('')}
+
+      ${lowSeverity.length > 2 ? `
+        <p class="text-xs text-gray-500 dark:text-gray-400 italic text-center">
+          +${lowSeverity.length - 2} sugerencia(s) más de optimización
+        </p>
+      ` : ''}
+    </div>
+  `;
+}
+
+/**
+ * Calcula el costo total de las actividades del día
+ */
+function calculateDayTotalCost(day) {
+  if (!day || !day.activities) return 0;
+  return day.activities.reduce((total, activity) => {
+    const cost = parseFloat(activity.cost) || 0;
+    return total + cost;
+  }, 0);
+}
+
+/**
+ * Renderiza el widget de presupuesto del día
+ */
+function renderDayBudget(day) {
+  const totalCost = calculateDayTotalCost(day);
+  const budget = day.budget || 0;
+
+  // Si no hay presupuesto ni gastos, no mostrar el widget
+  if (budget === 0 && totalCost === 0) {
+    return '';
+  }
+
+  const remaining = budget - totalCost;
+  const percentUsed = budget > 0 ? Math.min((totalCost / budget) * 100, 100) : 0;
+
+  // Determinar el estilo según el porcentaje usado
+  let containerClass, titleClass, buttonClass, valueClass, barClass, messageClass;
+  let budgetIcon = '💰';
+  let budgetMessage = 'Dentro del presupuesto';
+
+  if (percentUsed >= 100) {
+    containerClass = 'bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-600';
+    titleClass = 'text-red-900 dark:text-red-100';
+    buttonClass = 'text-red-600 dark:text-red-300';
+    valueClass = 'text-red-700 dark:text-red-200';
+    barClass = 'bg-red-600 dark:bg-red-500';
+    messageClass = 'text-red-700 dark:text-red-200';
+    budgetIcon = '🚨';
+    budgetMessage = '¡Presupuesto excedido!';
+  } else if (percentUsed >= 80) {
+    containerClass = 'bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-300 dark:border-orange-600';
+    titleClass = 'text-orange-900 dark:text-orange-100';
+    buttonClass = 'text-orange-600 dark:text-orange-300';
+    valueClass = 'text-orange-700 dark:text-orange-200';
+    barClass = 'bg-orange-600 dark:bg-orange-500';
+    messageClass = 'text-orange-700 dark:text-orange-200';
+    budgetIcon = '⚠️';
+    budgetMessage = 'Cerca del límite';
+  } else if (percentUsed >= 60) {
+    containerClass = 'bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-600';
+    titleClass = 'text-yellow-900 dark:text-yellow-100';
+    buttonClass = 'text-yellow-600 dark:text-yellow-300';
+    valueClass = 'text-yellow-700 dark:text-yellow-200';
+    barClass = 'bg-yellow-600 dark:bg-yellow-500';
+    messageClass = 'text-yellow-700 dark:text-yellow-200';
+    budgetIcon = '💡';
+    budgetMessage = 'Uso moderado';
+  } else {
+    containerClass = 'bg-green-50 dark:bg-green-900/20 border-2 border-green-300 dark:border-green-600';
+    titleClass = 'text-green-900 dark:text-green-100';
+    buttonClass = 'text-green-600 dark:text-green-300';
+    valueClass = 'text-green-700 dark:text-green-200';
+    barClass = 'bg-green-600 dark:bg-green-500';
+    messageClass = 'text-green-700 dark:text-green-200';
+  }
+
+  const remainingClass = remaining >= 0
+    ? 'text-green-700 dark:text-green-200'
+    : 'text-red-700 dark:text-red-200';
+
+  return `
+    <div class="mt-4 ${containerClass} rounded-lg p-4">
+      <div class="flex justify-between items-start mb-2">
+        <h3 class="font-bold ${titleClass} flex items-center gap-2">
+          <span>${budgetIcon}</span>
+          <span>Presupuesto del Día</span>
+        </h3>
+        <button
+          type="button"
+          onclick="editDayBudget(${day.day}, ${budget})"
+          class="text-xs ${buttonClass} hover:underline font-semibold"
+        >
+          ${budget > 0 ? 'Editar' : '+ Establecer'}
+        </button>
+      </div>
+
+      ${budget > 0 ? `
+        <div class="space-y-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-700 dark:text-gray-200">Gastado:</span>
+            <span class="font-bold ${valueClass}">¥${totalCost.toLocaleString()}</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-700 dark:text-gray-200">Presupuesto:</span>
+            <span class="font-bold text-gray-900 dark:text-white">¥${budget.toLocaleString()}</span>
+          </div>
+          <div class="flex justify-between text-sm font-bold">
+            <span class="text-gray-700 dark:text-gray-200">Restante:</span>
+            <span class="${remainingClass}">
+              ${remaining >= 0 ? '+' : ''}¥${remaining.toLocaleString()}
+            </span>
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mt-2">
+            <div class="${barClass} h-3 rounded-full transition-all duration-500 flex items-center justify-end pr-1"
+                 style="width:${percentUsed}%">
+              <span class="text-white text-[10px] font-bold">${Math.round(percentUsed)}%</span>
+            </div>
+          </div>
+          <p class="text-xs ${messageClass} text-center mt-1">
+            ${budgetMessage}
+          </p>
+        </div>
+      ` : `
+        <p class="text-sm text-gray-600 dark:text-gray-300">
+          Gasto actual: <strong>¥${totalCost.toLocaleString()}</strong>
+        </p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
+          Establece un presupuesto para hacer seguimiento
+        </p>
+      `}
+    </div>
+  `;
 }
 
 /**
@@ -1299,7 +1948,10 @@ function renderActivities(day){
   // DEBUG: Log activities data
   console.log('🔍 Rendering activities for day', day.day, ':', sortedActivities.map(a => ({ id: a.id, title: a.title, name: a.name })));
 
-  container.innerHTML = sortedActivities.map((act,i)=> {
+  // Generar HTML de actividades con tiempos de traslado entre ellas
+  const activitiesHTML = [];
+
+  sortedActivities.forEach((act,i)=> {
     const votes = act.votes || {};
     const voteCount = Object.keys(votes).length;
     const userHasVoted = currentUserId && votes[currentUserId];
@@ -1311,7 +1963,8 @@ function renderActivities(day){
     const activityTitle = normalizedTitle || normalizedName || 'Sin título';
     console.log(`📝 Activity ${act.id}: title="${act.title}", name="${act.name}", normalized="${normalizedTitle}", final="${activityTitle}"`);
 
-    return `
+    // Agregar la actividad
+    activitiesHTML.push(`
     <div class="activity-card bg-white dark:bg-gray-700 rounded-xl shadow-md overflow-hidden fade-in transition-all hover:shadow-xl border-l-4 border-red-500 dark:border-red-400 ${checkedActivities[act.id]?'opacity-60':''}" style="animation-delay:${i*0.05}s">
       <div class="p-5 flex items-start gap-4">
         <div class="flex flex-col gap-2 items-center">
@@ -1354,8 +2007,32 @@ function renderActivities(day){
             </div>`:''}
         </div>
       </div>
-    </div>`;
-  }).join('');
+    </div>`);
+
+    // Agregar tiempo de traslado a la siguiente actividad (si existe y tiene coordenadas)
+    if (i < sortedActivities.length - 1 && window.ItineraryIntelligence) {
+      const nextAct = sortedActivities[i + 1];
+      const travelInfo = window.ItineraryIntelligence.estimateTravelTime(act, nextAct);
+
+      if (travelInfo) {
+        const warningClass = travelInfo.warning ? 'border-orange-400 dark:border-orange-500 bg-orange-50 dark:bg-orange-900/20' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
+        activitiesHTML.push(`
+          <div class="travel-time-indicator mx-4 my-2 p-3 border-l-4 ${warningClass} rounded flex items-center justify-between text-sm">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">${travelInfo.transportMode.split(' ')[0]}</span>
+              <div>
+                <p class="font-semibold text-gray-900 dark:text-white">${travelInfo.transportMode}</p>
+                <p class="text-xs text-gray-600 dark:text-gray-300">${travelInfo.distance} km • ${travelInfo.travelMinutes} min • ¥${travelInfo.estimatedCost}</p>
+                ${travelInfo.warning ? `<p class="text-xs text-orange-600 dark:text-orange-300 mt-1">⚠️ ${travelInfo.warning}</p>` : ''}
+              </div>
+            </div>
+          </div>
+        `);
+      }
+    }
+  });
+
+  container.innerHTML = activitiesHTML.join('');
 
   // Initialize drag and drop AFTER rendering activities
   console.log('⏰ Initializing drag & drop...');
@@ -1596,11 +2273,7 @@ export const ItineraryHandler = {
         document.getElementById('activityDesc').value = activity.desc || '';
         document.getElementById('activityCost').value = activity.cost || '';
         document.getElementById('activityStation').value = activity.station || '';
-        // 📍 Load coordinates if they exist
-        if (activity.coordinates) {
-          document.getElementById('activityLat').value = activity.coordinates.lat || '';
-          document.getElementById('activityLng').value = activity.coordinates.lng || '';
-        }
+        // 📍 Las coordenadas ahora se detectan automáticamente via IntelligentGeocoder
       }
     } else {
       title.textContent = 'Añadir Actividad';
@@ -1687,17 +2360,17 @@ Si ya tienes las coordenadas, simplemente pégalas:
     const cost = parseFloat(document.getElementById('activityCost').value) || 0;
     const station = document.getElementById('activityStation').value;
 
-    // 📍 Get coordinates
-    let lat = parseFloat(document.getElementById('activityLat').value);
-    let lng = parseFloat(document.getElementById('activityLng').value);
-
     if (!title) {
       alert('⚠️ El título es obligatorio');
       return;
     }
 
-    // 🔍 AUTO-BÚSQUEDA: Si no hay coordenadas, intentar buscarlas automáticamente
-    if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
+    // 📍 Las coordenadas ahora se detectan SIEMPRE automáticamente
+    let lat = NaN;
+    let lng = NaN;
+
+    // 🔍 AUTO-BÚSQUEDA: Intentar buscar coordenadas automáticamente
+    if (true) { // Siempre buscar automáticamente
       // Primero intentar con IntelligentGeocoder (más potente)
       if (window.IntelligentGeocoder) {
         try {
@@ -2148,12 +2821,725 @@ window.addEventListener('auth:loggedOut', () => {
   renderEmptyState(); // Muestra el estado "No hay viaje seleccionado"
 });
 
+// ====================================================================================
+// FUNCIÓN PARA EDITAR PRESUPUESTO DEL DÍA
+// ====================================================================================
+
+async function editDayBudget(dayNumber, currentBudget) {
+  if (!currentItinerary) return;
+
+  const day = currentItinerary.days.find(d => d.day === dayNumber);
+  if (!day) return;
+
+  // Mostrar prompt para ingresar el nuevo presupuesto
+  const newBudgetStr = prompt(
+    `Presupuesto para el Día ${dayNumber}:\n\nIngresa el presupuesto en yenes (¥)`,
+    currentBudget > 0 ? currentBudget : ''
+  );
+
+  // Si el usuario cancela, no hacer nada
+  if (newBudgetStr === null) return;
+
+  // Parsear el nuevo presupuesto
+  const newBudget = parseFloat(newBudgetStr.replace(/[^\d.]/g, '')) || 0;
+
+  // Actualizar el presupuesto del día
+  day.budget = newBudget;
+
+  // Guardar en Firebase
+  await saveCurrentItineraryToFirebase();
+
+  // Notificar al usuario
+  if (window.Notifications) {
+    if (newBudget > 0) {
+      window.Notifications.show(`Presupuesto del día ${dayNumber} actualizado a ¥${newBudget.toLocaleString()}`, 'success');
+    } else {
+      window.Notifications.show(`Presupuesto del día ${dayNumber} eliminado`, 'info');
+    }
+  }
+
+  // Re-renderizar
+  render();
+}
+
+/**
+ * 🧠 Mostrar Modal de Análisis Inteligente del Viaje Completo
+ */
+function showTripIntelligenceModal() {
+  if (!currentItinerary || !window.ItineraryIntelligence) {
+    window.Notifications?.show('No hay itinerario cargado', 'error');
+    return;
+  }
+
+  // Analizar presupuesto total del viaje
+  const budgetAnalysis = window.ItineraryIntelligence.analyzeTripBudget(currentItinerary);
+
+  // Analizar días sobrecargados
+  const overloadedDays = window.ItineraryIntelligence.analyzeOverloadedDays(currentItinerary);
+
+  // Construir contenido del modal
+  let modalContent = `
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <!-- Header -->
+      <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-700 dark:to-indigo-700 text-white p-6 rounded-t-xl z-10">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="text-4xl">🧠</span>
+            <div>
+              <h2 class="text-2xl font-bold">Análisis Inteligente del Viaje</h2>
+              <p class="text-purple-100 text-sm mt-1">Insights automáticos sobre tu itinerario</p>
+            </div>
+          </div>
+          <button onclick="closeIntelligenceModal()" class="text-white hover:text-purple-200 transition text-3xl leading-none">
+            ×
+          </button>
+        </div>
+      </div>
+
+      <div class="p-6 space-y-6">
+  `;
+
+  // ============================================================================
+  // SECCIÓN 1: ANÁLISIS DE PRESUPUESTO
+  // ============================================================================
+  if (budgetAnalysis && budgetAnalysis.totalBudget > 0) {
+    const percentUsed = (budgetAnalysis.totalSpent / budgetAnalysis.totalBudget) * 100;
+    const isOverBudget = budgetAnalysis.totalSpent > budgetAnalysis.totalBudget;
+
+    modalContent += `
+      <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-5 border border-green-200 dark:border-green-700">
+        <h3 class="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2 mb-4">
+          <span>💰</span>
+          <span>Análisis de Presupuesto</span>
+        </h3>
+
+        <!-- Resumen General -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Presupuesto Total</p>
+            <p class="text-2xl font-bold text-gray-800 dark:text-white mt-1">¥${budgetAnalysis.totalBudget.toLocaleString()}</p>
+          </div>
+          <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Gastado</p>
+            <p class="text-2xl font-bold ${isOverBudget ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'} mt-1">
+              ¥${budgetAnalysis.totalSpent.toLocaleString()}
+            </p>
+          </div>
+          <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+            <p class="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">Restante</p>
+            <p class="text-2xl font-bold ${budgetAnalysis.totalRemaining >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'} mt-1">
+              ¥${budgetAnalysis.totalRemaining.toLocaleString()}
+            </p>
+          </div>
+        </div>
+
+        <!-- Barra de progreso -->
+        <div class="mb-4">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Uso del presupuesto</span>
+            <span class="text-sm font-bold ${isOverBudget ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}">
+              ${percentUsed.toFixed(1)}%
+            </span>
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-4 overflow-hidden">
+            <div class="${isOverBudget ? 'bg-red-500' : percentUsed > 80 ? 'bg-orange-500' : 'bg-green-500'} h-full rounded-full transition-all duration-500"
+                 style="width: ${Math.min(percentUsed, 100)}%"></div>
+          </div>
+        </div>
+
+        <!-- Estadísticas adicionales -->
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded">
+            <p class="text-gray-600 dark:text-gray-300">Promedio por día</p>
+            <p class="font-bold text-gray-800 dark:text-white">¥${budgetAnalysis.avgCostPerDay.toLocaleString()}</p>
+          </div>
+          ${budgetAnalysis.daysOverBudget > 0 ? `
+            <div class="bg-red-50 dark:bg-red-900/20 p-3 rounded">
+              <p class="text-gray-600 dark:text-gray-300">Días sobre presupuesto</p>
+              <p class="font-bold text-red-600 dark:text-red-400">${budgetAnalysis.daysOverBudget} día(s)</p>
+            </div>
+          ` : `
+            <div class="bg-green-50 dark:bg-green-900/20 p-3 rounded">
+              <p class="text-gray-600 dark:text-gray-300">Días sobre presupuesto</p>
+              <p class="font-bold text-green-600 dark:text-green-400">0 días ✓</p>
+            </div>
+          `}
+        </div>
+
+        <!-- Warnings -->
+        ${budgetAnalysis.warnings && budgetAnalysis.warnings.length > 0 ? `
+          <div class="mt-4 space-y-2">
+            ${budgetAnalysis.warnings.map(w => `
+              <div class="bg-${w.severity === 'high' ? 'red' : w.severity === 'medium' ? 'orange' : 'yellow'}-100 dark:bg-${w.severity === 'high' ? 'red' : w.severity === 'medium' ? 'orange' : 'yellow'}-900/20 border-l-4 border-${w.severity === 'high' ? 'red' : w.severity === 'medium' ? 'orange' : 'yellow'}-500 p-3 rounded">
+                <div class="flex items-start gap-2">
+                  <span>${w.icon}</span>
+                  <div class="flex-1">
+                    <p class="text-sm font-bold text-gray-800 dark:text-white">${w.message}</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">${w.suggestion}</p>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        <!-- Día más caro / más barato -->
+        ${budgetAnalysis.mostExpensiveDay ? `
+          <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+            <div class="bg-purple-50 dark:bg-purple-900/20 p-3 rounded border border-purple-200 dark:border-purple-700">
+              <p class="text-gray-600 dark:text-gray-300 flex items-center gap-1">
+                <span>💸</span>
+                <span>Día más caro</span>
+              </p>
+              <p class="font-bold text-gray-800 dark:text-white">Día ${budgetAnalysis.mostExpensiveDay.day}</p>
+              <p class="text-xs text-purple-600 dark:text-purple-400">¥${budgetAnalysis.mostExpensiveDay.totalCost.toLocaleString()}</p>
+            </div>
+            ${budgetAnalysis.cheapestDay && budgetAnalysis.cheapestDay.totalCost > 0 ? `
+              <div class="bg-teal-50 dark:bg-teal-900/20 p-3 rounded border border-teal-200 dark:border-teal-700">
+                <p class="text-gray-600 dark:text-gray-300 flex items-center gap-1">
+                  <span>💵</span>
+                  <span>Día más económico</span>
+                </p>
+                <p class="font-bold text-gray-800 dark:text-white">Día ${budgetAnalysis.cheapestDay.day}</p>
+                <p class="text-xs text-teal-600 dark:text-teal-400">¥${budgetAnalysis.cheapestDay.totalCost.toLocaleString()}</p>
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  // ============================================================================
+  // SECCIÓN 2: DÍAS SOBRECARGADOS
+  // ============================================================================
+  if (overloadedDays && overloadedDays.length > 0) {
+    modalContent += `
+      <div class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg p-5 border border-orange-200 dark:border-orange-700">
+        <h3 class="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2 mb-4">
+          <span>😓</span>
+          <span>Días Sobrecargados Detectados</span>
+        </h3>
+
+        <div class="space-y-3">
+          ${overloadedDays.map(day => `
+            <div class="bg-white dark:bg-gray-700 rounded-lg p-4 border-l-4 ${
+              day.severity === 'high' ? 'border-red-500' :
+              day.severity === 'medium' ? 'border-orange-500' :
+              'border-yellow-500'
+            }">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-start gap-2">
+                  <span class="text-2xl">${day.icon}</span>
+                  <div class="flex-1">
+                    <p class="font-bold text-gray-800 dark:text-white">Día ${day.day}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">${day.message}</p>
+                    <div class="mt-2 flex gap-3 text-xs">
+                      <span class="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+                        ${day.activityCount} actividades
+                      </span>
+                      <span class="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 px-2 py-1 rounded">
+                        ${day.totalHours}h total
+                      </span>
+                      <span class="bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200 px-2 py-1 rounded">
+                        ${day.fatiguePoints} pts fatiga
+                      </span>
+                    </div>
+                    ${day.suggestions && day.suggestions.length > 0 ? `
+                      <div class="mt-3 space-y-1">
+                        <p class="text-xs font-semibold text-gray-700 dark:text-gray-300">💡 Sugerencias:</p>
+                        ${day.suggestions.map(s => `
+                          <p class="text-xs text-gray-600 dark:text-gray-400 ml-4">• ${s}</p>
+                        `).join('')}
+                      </div>
+                    ` : ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } else {
+    modalContent += `
+      <div class="bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 rounded-lg p-5 border border-green-200 dark:border-green-700">
+        <div class="flex items-center gap-3">
+          <span class="text-4xl">✅</span>
+          <div>
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white">Balance Excelente</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">Todos tus días tienen una carga de actividades balanceada</p>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ============================================================================
+  // SECCIÓN 3: RESUMEN GENERAL
+  // ============================================================================
+  const totalActivities = currentItinerary.days.reduce((sum, d) => sum + (d.activities?.length || 0), 0);
+  const avgActivitiesPerDay = (totalActivities / currentItinerary.days.length).toFixed(1);
+
+  modalContent += `
+    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-5 border border-blue-200 dark:border-blue-700">
+      <h3 class="text-lg font-bold text-gray-800 dark:text-white flex items-center gap-2 mb-4">
+        <span>📊</span>
+        <span>Estadísticas del Viaje</span>
+      </h3>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+        <div class="bg-white dark:bg-gray-700 rounded-lg p-3">
+          <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">${currentItinerary.days.length}</p>
+          <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">Días totales</p>
+        </div>
+        <div class="bg-white dark:bg-gray-700 rounded-lg p-3">
+          <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">${totalActivities}</p>
+          <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">Actividades</p>
+        </div>
+        <div class="bg-white dark:bg-gray-700 rounded-lg p-3">
+          <p class="text-2xl font-bold text-green-600 dark:text-green-400">${avgActivitiesPerDay}</p>
+          <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">Promedio/día</p>
+        </div>
+        <div class="bg-white dark:bg-gray-700 rounded-lg p-3">
+          <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">${overloadedDays.length}</p>
+          <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">Días intensos</p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Cerrar modal
+  modalContent += `
+      </div>
+
+      <!-- Footer -->
+      <div class="sticky bottom-0 bg-gray-50 dark:bg-gray-700 p-4 rounded-b-xl border-t border-gray-200 dark:border-gray-600 flex justify-end">
+        <button onclick="closeIntelligenceModal()" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition font-semibold">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Crear y mostrar el modal
+  const modalOverlay = document.createElement('div');
+  modalOverlay.id = 'intelligence-modal';
+  modalOverlay.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4';
+  modalOverlay.innerHTML = modalContent;
+
+  // Cerrar al hacer click en el overlay
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) {
+      closeIntelligenceModal();
+    }
+  });
+
+  document.body.appendChild(modalOverlay);
+
+  console.log('🧠 Modal de Análisis Inteligente abierto');
+}
+
+/**
+ * Cerrar modal de inteligencia
+ */
+function closeIntelligenceModal() {
+  const modal = document.getElementById('intelligence-modal');
+  if (modal) {
+    modal.remove();
+  }
+}
+
+/**
+ * Toggle quick actions panel
+ */
+function toggleQuickActions(dayNumber) {
+  const panel = document.getElementById(`quickActionsExpanded_${dayNumber}`);
+  if (panel) {
+    panel.classList.toggle('hidden');
+  }
+}
+
+/**
+ * 🤖 Auto-Resolver de Conflictos
+ */
+async function autoResolveConflicts(dayNumber) {
+  if (!currentItinerary || !window.ItineraryIntelligenceTier2) {
+    window.Notifications?.show('Sistema no disponible', 'error');
+    return;
+  }
+
+  const day = currentItinerary.days.find(d => d.day === dayNumber);
+  if (!day) {
+    window.Notifications?.show('Día no encontrado', 'error');
+    return;
+  }
+
+  // Mostrar loading
+  window.Notifications?.show('🤖 Analizando y resolviendo conflictos...', 'info');
+
+  try {
+    const result = await window.ItineraryIntelligenceTier2.autoResolveConflicts(
+      day,
+      saveCurrentItineraryToFirebase
+    );
+
+    if (result.success) {
+      window.Notifications?.show(result.message, 'success');
+
+      if (result.warnings && result.warnings.length > 0) {
+        setTimeout(() => {
+          window.Notifications?.show(`⚠️ ${result.warnings.join(', ')}`, 'warning');
+        }, 2000);
+      }
+
+      // Re-renderizar para mostrar cambios
+      render();
+    } else {
+      window.Notifications?.show(result.message, 'info');
+    }
+  } catch (error) {
+    console.error('Error auto-resolviendo conflictos:', error);
+    window.Notifications?.show('Error al resolver conflictos', 'error');
+  }
+}
+
+/**
+ * 🍽️ Mostrar sugerencias de comidas automáticas
+ */
+async function showAutoMealSuggestions(dayNumber) {
+  if (!currentItinerary || !window.ItineraryIntelligenceTier2) {
+    window.Notifications?.show('Sistema no disponible', 'error');
+    return;
+  }
+
+  const day = currentItinerary.days.find(d => d.day === dayNumber);
+  if (!day) {
+    window.Notifications?.show('Día no encontrado', 'error');
+    return;
+  }
+
+  // Mostrar loading
+  window.Notifications?.show('🍽️ Buscando mejores slots para comidas...', 'info');
+
+  try {
+    const result = await window.ItineraryIntelligenceTier2.autoInsertMeals(
+      day,
+      window.GooglePlacesAPI
+    );
+
+    if (!result.success || result.suggestions.length === 0) {
+      window.Notifications?.show(result.message, 'info');
+      return;
+    }
+
+    // Crear modal con sugerencias
+    showMealSuggestionsModal(day, result.suggestions);
+
+  } catch (error) {
+    console.error('Error obteniendo sugerencias de comidas:', error);
+    window.Notifications?.show('Error al buscar comidas', 'error');
+  }
+}
+
+/**
+ * 🕳️ Mostrar sugerencias para llenar huecos
+ */
+async function showGapFillerSuggestions(dayNumber) {
+  if (!currentItinerary || !window.ItineraryIntelligenceTier2) {
+    window.Notifications?.show('Sistema no disponible', 'error');
+    return;
+  }
+
+  const day = currentItinerary.days.find(d => d.day === dayNumber);
+  if (!day) {
+    window.Notifications?.show('Día no encontrado', 'error');
+    return;
+  }
+
+  // Mostrar loading
+  window.Notifications?.show('🕳️ Analizando huecos en el día...', 'info');
+
+  try {
+    const result = await window.ItineraryIntelligenceTier2.findSmartGapFillers(
+      day,
+      window.GooglePlacesAPI,
+      { minGapMinutes: 60, maxGapMinutes: 360, includeMeals: true }
+    );
+
+    if (!result.success || result.gaps.length === 0) {
+      window.Notifications?.show(result.message, 'info');
+      return;
+    }
+
+    // Crear modal con gap fillers
+    showGapFillerModal(day, result.gaps);
+
+  } catch (error) {
+    console.error('Error analizando huecos:', error);
+    window.Notifications?.show('Error al analizar huecos', 'error');
+  }
+}
+
+/**
+ * Modal para mostrar sugerencias de comidas
+ */
+function showMealSuggestionsModal(day, suggestions) {
+  const modalContent = `
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <!-- Header -->
+      <div class="sticky top-0 bg-gradient-to-r from-orange-500 to-red-500 text-white p-6 rounded-t-xl z-10">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="text-4xl">🍽️</span>
+            <div>
+              <h2 class="text-2xl font-bold">Sugerencias de Comidas</h2>
+              <p class="text-orange-100 text-sm mt-1">Día ${day.day} - ${suggestions.length} sugerencia(s)</p>
+            </div>
+          </div>
+          <button onclick="closeMealSuggestionsModal()" class="text-white hover:text-orange-200 transition text-3xl leading-none">×</button>
+        </div>
+      </div>
+
+      <div class="p-6 space-y-4">
+        ${suggestions.map((sug, idx) => `
+          <div class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg p-4 border border-orange-200 dark:border-orange-700">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h3 class="font-bold text-lg text-gray-800 dark:text-white">${sug.label}</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300">Hora sugerida: ${sug.suggestedTime}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${sug.reason}</p>
+              </div>
+            </div>
+
+            ${sug.nearbyPlace ? `
+              <div class="bg-white dark:bg-gray-700 rounded-lg p-3 mt-3 border border-orange-300 dark:border-orange-600">
+                <p class="text-sm font-bold text-gray-800 dark:text-white">${sug.nearbyPlace.name}</p>
+                <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">${sug.nearbyPlace.address || ''}</p>
+                ${sug.nearbyPlace.rating ? `<p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">⭐ ${sug.nearbyPlace.rating} (${sug.nearbyPlace.userRatingsTotal || 0} reseñas)</p>` : ''}
+              </div>
+            ` : ''}
+
+            <button
+              onclick="insertMealSuggestion(${day.day}, ${idx}, ${JSON.stringify(sug).replace(/"/g, '&quot;')})"
+              class="w-full mt-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-2 px-4 rounded-lg transition"
+            >
+              ✅ Insertar ${sug.label}
+            </button>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="sticky bottom-0 bg-gray-50 dark:bg-gray-700 p-4 rounded-b-xl border-t border-gray-200 dark:border-gray-600 flex justify-end">
+        <button onclick="closeMealSuggestionsModal()" class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition font-semibold">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  `;
+
+  const modalOverlay = document.createElement('div');
+  modalOverlay.id = 'meal-suggestions-modal';
+  modalOverlay.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4';
+  modalOverlay.innerHTML = modalContent;
+
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) closeMealSuggestionsModal();
+  });
+
+  document.body.appendChild(modalOverlay);
+}
+
+function closeMealSuggestionsModal() {
+  const modal = document.getElementById('meal-suggestions-modal');
+  if (modal) modal.remove();
+}
+
+/**
+ * Insertar una sugerencia de comida seleccionada
+ */
+async function insertMealSuggestion(dayNumber, suggestionIndex, suggestion) {
+  if (!currentItinerary) return;
+
+  const day = currentItinerary.days.find(d => d.day === dayNumber);
+  if (!day) return;
+
+  // Crear actividad de comida
+  const mealActivity = {
+    id: `meal-${Date.now()}`,
+    title: suggestion.nearbyPlace ? suggestion.nearbyPlace.name : `${suggestion.label} (a definir)`,
+    time: suggestion.suggestedTime,
+    duration: suggestion.mealType === 'breakfast' ? 45 : suggestion.mealType === 'lunch' ? 60 : 90,
+    category: 'meal',
+    isMeal: true,
+    desc: suggestion.nearbyPlace ? suggestion.nearbyPlace.address || '' : '',
+    cost: suggestion.nearbyPlace ? estimateMealCostFromPlace(suggestion.mealType, suggestion.nearbyPlace.priceLevel) : 0,
+    coordinates: suggestion.nearbyPlace?.coordinates || null
+  };
+
+  day.activities.push(mealActivity);
+
+  await saveCurrentItineraryToFirebase();
+  window.Notifications?.show(`✅ ${suggestion.label} agregado al día`, 'success');
+
+  closeMealSuggestionsModal();
+  render();
+}
+
+function estimateMealCostFromPlace(mealType, priceLevel) {
+  const basePrices = {
+    breakfast: 1000,
+    lunch: 1200,
+    dinner: 2500
+  };
+  const multipliers = {
+    'PRICE_LEVEL_INEXPENSIVE': 0.7,
+    'PRICE_LEVEL_MODERATE': 1.0,
+    'PRICE_LEVEL_EXPENSIVE': 1.5,
+    'PRICE_LEVEL_VERY_EXPENSIVE': 2.5
+  };
+  return Math.round((basePrices[mealType] || 1000) * (multipliers[priceLevel] || 1.0));
+}
+
+/**
+ * Modal para mostrar gap fillers
+ */
+function showGapFillerModal(day, gaps) {
+  const modalContent = `
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+      <!-- Header -->
+      <div class="sticky top-0 bg-gradient-to-r from-cyan-500 to-blue-500 text-white p-6 rounded-t-xl z-10">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <span class="text-4xl">🕳️</span>
+            <div>
+              <h2 class="text-2xl font-bold">Huecos Detectados</h2>
+              <p class="text-cyan-100 text-sm mt-1">Día ${day.day} - ${gaps.length} hueco(s) para aprovechar</p>
+            </div>
+          </div>
+          <button onclick="closeGapFillerModal()" class="text-white hover:text-cyan-200 transition text-3xl leading-none">×</button>
+        </div>
+      </div>
+
+      <div class="p-6 space-y-4">
+        ${gaps.map((gap, gapIdx) => `
+          <div class="bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-lg p-4 border border-cyan-200 dark:border-cyan-700">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h3 class="font-bold text-lg text-gray-800 dark:text-white">
+                  ${gap.type === 'short' ? '⏱️ Hueco Corto' : '🕐 Hueco Largo'} (${Math.round(gap.durationMinutes / 60 * 10) / 10}h)
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300">${gap.startTime} - ${gap.endTime}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Entre "${gap.afterActivity}" y "${gap.beforeActivity}"
+                </p>
+              </div>
+            </div>
+
+            ${gap.suggestions && gap.suggestions.length > 0 ? `
+              <div class="space-y-2 mt-3">
+                <p class="text-xs font-semibold text-gray-700 dark:text-gray-300">💡 Sugerencias:</p>
+                ${gap.suggestions.map((sug, sugIdx) => `
+                  <div class="bg-white dark:bg-gray-700 rounded-lg p-3 border border-cyan-300 dark:border-cyan-600">
+                    <div class="flex items-start justify-between">
+                      <div class="flex-1">
+                        <p class="text-sm font-bold text-gray-800 dark:text-white">${sug.name}</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">${sug.category}</p>
+                        ${sug.rating ? `<p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">⭐ ${sug.rating}</p>` : ''}
+                      </div>
+                      <button
+                        onclick="insertGapFiller(${day.day}, ${gapIdx}, ${sugIdx}, ${JSON.stringify(sug).replace(/"/g, '&quot;')}, '${gap.startTime}', ${gap.durationMinutes})"
+                        class="ml-2 bg-cyan-500 hover:bg-cyan-600 text-white px-3 py-1 rounded text-xs font-semibold"
+                      >
+                        + Agregar
+                      </button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : `
+              <p class="text-sm text-gray-600 dark:text-gray-400 italic mt-3">
+                No encontré sugerencias cercanas para este hueco
+              </p>
+            `}
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="sticky bottom-0 bg-gray-50 dark:bg-gray-700 p-4 rounded-b-xl border-t border-gray-200 dark:border-gray-600 flex justify-end">
+        <button onclick="closeGapFillerModal()" class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition font-semibold">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  `;
+
+  const modalOverlay = document.createElement('div');
+  modalOverlay.id = 'gap-filler-modal';
+  modalOverlay.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4';
+  modalOverlay.innerHTML = modalContent;
+
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) closeGapFillerModal();
+  });
+
+  document.body.appendChild(modalOverlay);
+}
+
+function closeGapFillerModal() {
+  const modal = document.getElementById('gap-filler-modal');
+  if (modal) modal.remove();
+}
+
+/**
+ * Insertar una actividad gap filler seleccionada
+ */
+async function insertGapFiller(dayNumber, gapIndex, suggestionIndex, suggestion, startTime, durationMinutes) {
+  if (!currentItinerary) return;
+
+  const day = currentItinerary.days.find(d => d.day === dayNumber);
+  if (!day) return;
+
+  // Crear actividad
+  const activity = {
+    id: `gap-${Date.now()}`,
+    title: suggestion.name,
+    time: startTime,
+    duration: suggestion.estimatedDuration || Math.min(durationMinutes - 30, 120),
+    category: suggestion.category || 'other',
+    desc: suggestion.address || '',
+    cost: 0,
+    coordinates: suggestion.coordinates || null
+  };
+
+  day.activities.push(activity);
+
+  await saveCurrentItineraryToFirebase();
+  window.Notifications?.show(`✅ "${suggestion.name}" agregado al día`, 'success');
+
+  closeGapFillerModal();
+  render();
+}
+
 window.ItineraryHandler = ItineraryHandler;
 
 // Exponer funciones de guardado y render
 window.saveCurrentItineraryToFirebase = saveCurrentItineraryToFirebase;
 window.renderItinerary = render;
 window.showBalanceAnalysis = showBalanceAnalysis;
+window.editDayBudget = editDayBudget;
+window.showTripIntelligenceModal = showTripIntelligenceModal;
+window.closeIntelligenceModal = closeIntelligenceModal;
+window.toggleQuickActions = toggleQuickActions;
+
+// TIER 2 Functions
+window.autoResolveConflicts = autoResolveConflicts;
+window.showAutoMealSuggestions = showAutoMealSuggestions;
+window.showGapFillerSuggestions = showGapFillerSuggestions;
+window.closeMealSuggestionsModal = closeMealSuggestionsModal;
+window.insertMealSuggestion = insertMealSuggestion;
+window.closeGapFillerModal = closeGapFillerModal;
+window.insertGapFiller = insertGapFiller;
 
 // Exponer currentItinerary a través de ItineraryHandler para evitar conflictos
 Object.defineProperty(ItineraryHandler, 'currentItinerary', {

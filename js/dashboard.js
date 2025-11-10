@@ -36,6 +36,10 @@ import { IntelligentGeocoder } from './intelligent-geocoder.js'; // 🧠 Geocodi
 import { APP_CONFIG } from './config.js'; // 🔐 Configuración de la app
 import { HotelBaseSystem } from './hotel-base-system.js'; // 🏨 Sistema de hotel base
 import { MealInsertionSystem } from './meal-insertion-system.js'; // 🍽️ Sistema de inserción de comidas
+import { ItineraryIntelligence } from './itinerary-intelligence.js'; // 🧠 Sistema de inteligencia del itinerario
+import { ItineraryIntelligenceTier2 } from './itinerary-intelligence-tier2.js'; // 🤖 TIER 2 - Automatización avanzada
+import { SmartItineraryGenerator } from './smart-itinerary-generator.js'; // 🧠 Generador inteligente de itinerarios
+import { SmartGeneratorWizard } from './smart-generator-wizard.js'; // 🎯 Wizard de generación
 // Smart Suggestions se cargan desde HTML usando dynamic imports
 
 // 🔥 Firebase imports
@@ -62,6 +66,10 @@ window.ItineraryHandler = ItineraryHandler;
 window.EssentialsHandler = EssentialsHandler;
 window.HotelBaseSystem = HotelBaseSystem;
 window.MealInsertionSystem = MealInsertionSystem;
+window.ItineraryIntelligence = ItineraryIntelligence;
+window.ItineraryIntelligenceTier2 = ItineraryIntelligenceTier2;
+window.SmartItineraryGenerator = SmartItineraryGenerator;
+window.SmartGeneratorWizard = SmartGeneratorWizard;
 
 // 🖼️ Image Service imports
 import './image-service.js';
