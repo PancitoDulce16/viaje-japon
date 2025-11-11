@@ -962,7 +962,8 @@ export const MasterItineraryOptimizer = {
 
         // Determinar cuál actividad está "fuera de lugar"
         // La actividad problemática es la que está MÁS LEJOS del hotel del día
-        const hotel = HotelBaseSystem.getHotelForDay(itinerary, day);
+        const city = HotelBaseSystem.detectCityForDay(day);
+        const hotel = HotelBaseSystem.getHotelForCity(itinerary, city, day.day);
         let problematicActivity = null;
         let otherActivity = null;
 
