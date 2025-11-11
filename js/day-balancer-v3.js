@@ -709,7 +709,7 @@ function sortActivitiesByTime(activities) {
         if (!timeA) return 1;
         if (!timeB) return -1;
 
-        return TimeUtils.SafeTimeUtils.parseTime(timeA) - TimeUtils.SafeTimeUtils.parseTime(timeB);
+        return SafeTimeUtils.parseTime(timeA) - SafeTimeUtils.parseTime(timeB);
     });
 }
 
@@ -795,20 +795,28 @@ function applySuggestion(days, suggestion, options = {}) {
         const activity = sourceDay.activities[activityIndex];
         console.log(`✅ Actividad encontrada en índice ${activityIndex}: "${activity.title || activity.name}"`);
 
-        // ✅ VERIFICAR que la actividad no se solape con otras en el día destino
-        if (canFitActivity(targetDay, activity)) {
-            console.log(`✅ Actividad CABE en día destino`);
-            // Solo si cabe, remover del source
-            sourceDay.activities.splice(activityIndex, 1);
-            targetDay.activities.push(activity);
+        // 🆕 OPTIMIZACIÓN: Si el día destino está vacío o casi vacío, y esto es una sugerencia de alta prioridad
+        // (como llenar días vacíos), limpiar el horario de la actividad para evitar conflictos
+        const isFillingEmptyDay = targetDay.activities.length <= 1 && suggestion.priority === 'high';
 
-            console.log(`✅ MOVIMIENTO EXITOSO: Día ${suggestion.from.day} ahora tiene ${sourceDay.activities.length} act, Día ${suggestion.to.day} ahora tiene ${targetDay.activities.length} act`);
+        if (isFillingEmptyDay) {
+            console.log(`🔄 Día destino vacío/casi vacío - limpiando horario de actividad para recalcular`);
+            // Hacer una copia para no modificar la actividad original en el check
+            const activityCopy = { ...activity, time: null, startTime: null };
 
-            // Reordenar por horario después de agregar
-            targetDay.activities = sortActivitiesByTime(targetDay.activities);
+            // Verificar que no se solape (aunque con time=null debería pasar)
+            if (canFitActivity(targetDay, activityCopy)) {
+                console.log(`✅ Actividad CABE en día destino (sin horario)`);
+                sourceDay.activities.splice(activityIndex, 1);
 
-            // Recalcular horarios si está habilitado
-            if (recalculateTimings) {
+                // Limpiar horario de la actividad real antes de agregar
+                activity.time = null;
+                activity.startTime = null;
+
+                targetDay.activities.push(activity);
+                console.log(`✅ MOVIMIENTO EXITOSO: Día ${suggestion.from.day} ahora tiene ${sourceDay.activities.length} act, Día ${suggestion.to.day} ahora tiene ${targetDay.activities.length} act`);
+
+                // Recalcular horarios SIEMPRE para días que fueron llenados
                 targetDay.activities = RouteOptimizer.recalculateTimings(
                     targetDay.activities,
                     { defaultDuration: 60, transportBuffer: 10 }
@@ -817,10 +825,38 @@ function applySuggestion(days, suggestion, options = {}) {
                     sourceDay.activities,
                     { defaultDuration: 60, transportBuffer: 10 }
                 );
+            } else {
+                console.error(`❌ FALLO: No se puede mover "${activity.title || activity.name}" - error inesperado`);
             }
         } else {
-            // Si no cabe, NO modificar nada
-            console.error(`❌ FALLO: No se puede mover "${activity.title || activity.name}" - se solaparía con otra actividad`);
+            // Lógica normal para días que ya tienen actividades
+            // ✅ VERIFICAR que la actividad no se solape con otras en el día destino
+            if (canFitActivity(targetDay, activity)) {
+                console.log(`✅ Actividad CABE en día destino`);
+                // Solo si cabe, remover del source
+                sourceDay.activities.splice(activityIndex, 1);
+                targetDay.activities.push(activity);
+
+                console.log(`✅ MOVIMIENTO EXITOSO: Día ${suggestion.from.day} ahora tiene ${sourceDay.activities.length} act, Día ${suggestion.to.day} ahora tiene ${targetDay.activities.length} act`);
+
+                // Reordenar por horario después de agregar
+                targetDay.activities = sortActivitiesByTime(targetDay.activities);
+
+                // Recalcular horarios si está habilitado
+                if (recalculateTimings) {
+                    targetDay.activities = RouteOptimizer.recalculateTimings(
+                        targetDay.activities,
+                        { defaultDuration: 60, transportBuffer: 10 }
+                    );
+                    sourceDay.activities = RouteOptimizer.recalculateTimings(
+                        sourceDay.activities,
+                        { defaultDuration: 60, transportBuffer: 10 }
+                    );
+                }
+            } else {
+                // Si no cabe, NO modificar nada
+                console.error(`❌ FALLO: No se puede mover "${activity.title || activity.name}" - se solaparía con otra actividad`);
+            }
         }
     } else if (suggestion.type === 'reorder') {
         // Reordenar actividades usando el optimizador de rutas
