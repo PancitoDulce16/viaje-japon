@@ -1,5 +1,5 @@
 // js/dashboard.js - Lógica específica para el dashboard v2.1
-import { AppCore } from './core.js';
+// AppCore removed - functionality migrated to dashboard.js
 
 // CSS se carga via <link> en dashboard.html
 // No importar CSS aquí para evitar errores de MIME type
@@ -148,8 +148,7 @@ class DashboardManager {
 
     async initializeApp() {
         try {
-            // Inicializar el núcleo de la aplicación
-            await AppCore.init();
+            // AppCore.init() removed - functionality migrated to initializeDashboardComponents()
 
             // Inicializar componentes específicos del dashboard
             await this.initializeDashboardComponents();
