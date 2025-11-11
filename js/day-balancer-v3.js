@@ -1266,19 +1266,34 @@ function applyAllSuggestions(days, suggestions, options = {}) {
 /**
  * NUEVA FUNCIÓN: Balancea el itinerario INTELIGENTEMENTE
  * 1. Primero asigna actividades a días basándose en proximidad al hotel
- * 2. Luego genera sugerencias de mejora
- * 3. NO deja días vacíos
+ * 2. AUTO-COMPLETA actividades faltantes
+ * 3. Luego genera sugerencias de mejora
+ * 4. NO deja días vacíos
  * @param {Object} itinerary - Itinerario completo
- * @returns {Object} {itinerary, report, suggestions}
+ * @returns {Promise<Object>} {itinerary, report, suggestions}
  */
-function smartBalanceItinerary(itinerary) {
+async function smartBalanceItinerary(itinerary) {
     console.log('🎯 INICIANDO BALANCE INTELIGENTE DEL ITINERARIO');
+
+    // Validación inicial
+    if (!itinerary || !itinerary.days || !Array.isArray(itinerary.days)) {
+        console.error('❌ smartBalanceItinerary: Itinerario inválido', itinerary);
+        throw new Error('Itinerario inválido o sin días');
+    }
 
     // 1. Primero, asignar actividades inteligentemente basándose en hoteles
     if (ActivityDayAssignment && typeof ActivityDayAssignment.assignActivitiesOptimally === 'function') {
         console.log('🏨 Paso 1: Asignación inteligente por proximidad al hotel...');
-        itinerary = ActivityDayAssignment.assignActivitiesOptimally(itinerary);
-        console.log('✅ Asignación inteligente completada');
+        const assignedItinerary = await ActivityDayAssignment.assignActivitiesOptimally(itinerary);
+
+        // Validar que la asignación fue exitosa
+        if (assignedItinerary && assignedItinerary.days && Array.isArray(assignedItinerary.days)) {
+            itinerary = assignedItinerary;
+            console.log('✅ Asignación inteligente completada (con auto-completado)');
+        } else {
+            console.error('❌ assignActivitiesOptimally devolvió un itinerario inválido');
+            // Continuar con el itinerario original
+        }
     } else {
         console.warn('⚠️ ActivityDayAssignment no disponible, saltando asignación inteligente');
     }

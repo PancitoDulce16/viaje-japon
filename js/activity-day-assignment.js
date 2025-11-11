@@ -740,6 +740,21 @@ export const ActivityDayAssignment = {
    * @returns {Object} Reporte del estado
    */
   verifyItineraryState(itinerary) {
+    // Validación de seguridad
+    if (!itinerary || !itinerary.days || !Array.isArray(itinerary.days)) {
+      console.warn('⚠️ verifyItineraryState: Itinerario inválido o sin días');
+      return {
+        totalDays: 0,
+        totalActivities: 0,
+        emptyDays: [],
+        overloadedDays: [],
+        wellBalancedDays: [],
+        firstDayActivities: 0,
+        lastDayActivities: 0,
+        error: 'Itinerario inválido'
+      };
+    }
+
     const report = {
       totalDays: itinerary.days.length,
       totalActivities: 0,
