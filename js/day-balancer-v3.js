@@ -390,6 +390,66 @@ function detectDuplicateActivities(days) {
 function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays, lightDays }) {
     const suggestions = [];
 
+    // 🛫 PRIORIDAD -1: Detectar primer día (jetlag) y último día (salida)
+    if (daysAnalysis.length > 0) {
+        const firstDay = daysAnalysis[0];
+        const lastDay = daysAnalysis[daysAnalysis.length - 1];
+
+        // Primer día: debe ser ligero (jetlag-friendly)
+        if (firstDay.activities.length > 3) {
+            console.log(`🛫 Día ${firstDay.day} (PRIMER DÍA/LLEGADA): tiene ${firstDay.activities.length} actividades - debería ser ligero`);
+
+            // Encontrar días con espacio para mover actividades
+            const daysWithSpace = daysAnalysis
+                .filter(d => d.day !== firstDay.day && d.day !== lastDay.day && d.activities.length < 5)
+                .sort((a, b) => a.activities.length - b.activities.length);
+
+            // Mover actividades del primer día a días con espacio
+            const activitiesToMove = firstDay.activities.slice(3); // Dejar solo 3
+            activitiesToMove.forEach(activity => {
+                if (daysWithSpace.length > 0) {
+                    const targetDay = daysWithSpace[0];
+                    suggestions.push({
+                        type: 'move',
+                        priority: 'high',
+                        description: `🛫 Mover "${activity.title || activity.name}" del Día ${firstDay.day} (llegada) al Día ${targetDay.day}`,
+                        reason: `El primer día debe ser ligero (jetlag). Mover a un día posterior.`,
+                        from: { day: firstDay.day, activityId: activity.id },
+                        to: { day: targetDay.day },
+                        activity: activity
+                    });
+                }
+            });
+        }
+
+        // Último día: debe tener solo 1-2 actividades (salida al aeropuerto)
+        if (lastDay.activities.length > 2) {
+            console.log(`🛬 Día ${lastDay.day} (ÚLTIMO DÍA/SALIDA): tiene ${lastDay.activities.length} actividades - debería tener máx 2`);
+
+            // Encontrar días con espacio
+            const daysWithSpace = daysAnalysis
+                .filter(d => d.day !== lastDay.day && d.day !== firstDay.day && d.activities.length < 6)
+                .sort((a, b) => a.activities.length - b.activities.length);
+
+            // Mover actividades del último día a días anteriores
+            const activitiesToMove = lastDay.activities.slice(2); // Dejar solo 2
+            activitiesToMove.forEach(activity => {
+                if (daysWithSpace.length > 0) {
+                    const targetDay = daysWithSpace[0];
+                    suggestions.push({
+                        type: 'move',
+                        priority: 'high',
+                        description: `🛬 Mover "${activity.title || activity.name}" del Día ${lastDay.day} (salida) al Día ${targetDay.day}`,
+                        reason: `El último día debe ser ligero (salida al aeropuerto). Mover a un día anterior.`,
+                        from: { day: lastDay.day, activityId: activity.id },
+                        to: { day: targetDay.day },
+                        activity: activity
+                    });
+                }
+            });
+        }
+    }
+
     // Sugerencia 0: Eliminar actividades duplicadas
     const duplicates = detectDuplicateActivities(daysAnalysis.map(d => ({
         day: d.day,
@@ -645,7 +705,12 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
         }
     });
 
-    // Para cada día, verificar si tiene actividades cerca de OTROS hoteles
+    console.log(`📊 Hotels agrupados: ${hotelGroups.size} hoteles diferentes`);
+    hotelGroups.forEach((info, key) => {
+        console.log(`   Hotel (${key.substring(0, 20)}...): días ${info.days.join(', ')}`);
+    });
+
+    // Para cada día, verificar si tiene actividades que deberían estar en días TEMPRANOS del mismo hotel
     daysAnalysis.forEach(dayAnalysis => {
         if (!dayAnalysis.activities || dayAnalysis.activities.length === 0) return;
 
@@ -653,26 +718,51 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
         if (!currentHotelCoords) return;
 
         const currentHotelKey = `${currentHotelCoords.lat},${currentHotelCoords.lng}`;
+        const currentHotelDays = hotelGroups.get(currentHotelKey)?.days || [];
+
+        console.log(`\n🔍 Analizando Día ${dayAnalysis.day} (hotel días: ${currentHotelDays.join(',')})`);
 
         // Verificar cada actividad del día
         dayAnalysis.activities.forEach(activity => {
             if (!activity.coordinates) {
-                console.log(`   ⚠️ "${activity.title || activity.name}" en Día ${dayAnalysis.day} - NO tiene coordenadas, omitiendo`);
                 return;
             }
 
             // Calcular distancia al hotel actual
-            const distanceToCurrentHotel = RouteOptimizer.calculateDistance(
+            const distanceToHotel = RouteOptimizer.calculateDistance(
                 activity.coordinates,
                 currentHotelCoords
             );
 
-            // Calcular distancia a TODOS los hoteles y encontrar el más cercano
-            let closestOtherHotel = null;
-            let minDistance = Infinity;
+            console.log(`   📍 "${activity.title || activity.name}": ${distanceToHotel.toFixed(2)}km del hotel`);
 
+            // NUEVA LÓGICA: Si está muy cerca del hotel (<2km) pero en un día TARDÍO del rango
+            // sugerir moverla a un día TEMPRANO del rango
+            if (distanceToHotel < 2 && currentHotelDays.length > 1) {
+                const firstDayOfHotel = Math.min(...currentHotelDays);
+                const lastDayOfHotel = Math.max(...currentHotelDays);
+
+                // Si estamos en un día tardío del rango (más allá de la mitad)
+                const midpoint = firstDayOfHotel + Math.floor((lastDayOfHotel - firstDayOfHotel) / 2);
+
+                if (dayAnalysis.day > midpoint) {
+                    console.log(`      ✅ CERCA DEL HOTEL (<2km) pero en día tardío (${dayAnalysis.day} > mitad ${midpoint})`);
+                    console.log(`      → Sugerir mover a día temprano: Día ${firstDayOfHotel}`);
+
+                    suggestions.push({
+                        type: 'move',
+                        priority: 'high',
+                        description: `🏨 Mover "${activity.title || activity.name}" del Día ${dayAnalysis.day} al Día ${firstDayOfHotel}`,
+                        reason: `Esta actividad está a solo ${distanceToHotel.toFixed(1)}km de tu hotel (muy cerca), pero está programada para el Día ${dayAnalysis.day}. Es mejor visitarla al principio de tu estadía en este hotel (Día ${firstDayOfHotel}) para aprovecharlo mejor.`,
+                        from: { day: dayAnalysis.day, activityId: activity.id },
+                        to: { day: firstDayOfHotel },
+                        activity: activity
+                    });
+                }
+            }
+
+            // TAMBIÉN detectar si está cerca de OTROS hoteles
             hotelGroups.forEach((hotelInfo, hotelKey) => {
-                // Saltar si es el hotel actual
                 if (hotelKey === currentHotelKey) return;
 
                 const distanceToOtherHotel = RouteOptimizer.calculateDistance(
@@ -680,44 +770,23 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
                     hotelInfo.coords
                 );
 
-                if (distanceToOtherHotel < minDistance) {
-                    minDistance = distanceToOtherHotel;
-                    closestOtherHotel = { hotelInfo, hotelKey, distance: distanceToOtherHotel };
-                }
-            });
+                if (distanceToOtherHotel < 2) {
+                    const targetDay = hotelInfo.days[0];
 
-            // Si encontramos otro hotel Y la actividad está significativamente más cerca de ese hotel
-            if (closestOtherHotel) {
-                const distanceToOtherHotel = closestOtherHotel.distance;
-                const distanceDiff = distanceToCurrentHotel - distanceToOtherHotel;
-
-                console.log(`   📍 "${activity.title || activity.name}" en Día ${dayAnalysis.day}:`);
-                console.log(`      - Distancia a hotel actual: ${distanceToCurrentHotel.toFixed(2)}km`);
-                console.log(`      - Distancia a hotel más cercano (días ${closestOtherHotel.hotelInfo.days.join(',')}): ${distanceToOtherHotel.toFixed(2)}km`);
-                console.log(`      - Diferencia: ${distanceDiff.toFixed(2)}km`);
-
-                // NUEVA LÓGICA MÁS INTELIGENTE:
-                // Sugerir mover si:
-                // 1. La actividad está a <3km del otro hotel (muy cerca)
-                // 2. Y está al menos 1km MÁS cerca del otro hotel (diferencia significativa)
-                if (distanceToOtherHotel < 3 && distanceDiff > 1) {
-                    const targetDay = closestOtherHotel.hotelInfo.days[0];
-
-                    console.log(`      ✅ SUGERENCIA: Mover a Día ${targetDay}`);
+                    console.log(`      ✅ MUY CERCA de otro hotel (<2km, días ${hotelInfo.days.join(',')})`);
+                    console.log(`      → Sugerir mover a Día ${targetDay}`);
 
                     suggestions.push({
                         type: 'move',
                         priority: 'high',
                         description: `🏨 Mover "${activity.title || activity.name}" del Día ${dayAnalysis.day} al Día ${targetDay}`,
-                        reason: `Esta actividad está a solo ${distanceToOtherHotel.toFixed(1)}km del hotel donde te quedas los días ${closestOtherHotel.hotelInfo.days.join(', ')}, pero está programada para el Día ${dayAnalysis.day} (${distanceToCurrentHotel.toFixed(1)}km del hotel de ese día). Será ${distanceDiff.toFixed(1)}km más conveniente visitarla cuando estés cerca de ese hotel.`,
+                        reason: `Esta actividad está a solo ${distanceToOtherHotel.toFixed(1)}km del hotel donde te quedas los días ${hotelInfo.days.join(', ')}, pero está programada para el Día ${dayAnalysis.day}. Será mucho más conveniente visitarla cuando estés en ese hotel.`,
                         from: { day: dayAnalysis.day, activityId: activity.id },
                         to: { day: targetDay },
                         activity: activity
                     });
-                } else {
-                    console.log(`      ❌ No cumple criterios para sugerir movimiento`);
                 }
-            }
+            });
         });
     });
 
@@ -902,17 +971,28 @@ function applySuggestion(days, suggestion, options = {}) {
         console.log(`✅ Días encontrados: Origen (${sourceDay.activities.length} act) → Destino (${targetDay.activities.length} act)`);
 
         const activityIndex = sourceDay.activities.findIndex(act => {
-            // Primary: match by ID if both have valid IDs
-            if (act.id && suggestion.from.activityId) {
-                return act.id === suggestion.from.activityId;
-            }
-            // Fallback: match by title (case-insensitive) when IDs are not available
+            // 1. Match by title ALWAYS (más confiable)
             const actTitle = (act.title || act.name || '').trim().toLowerCase();
             const suggestionTitle = (suggestion.activity.title || suggestion.activity.name || '').trim().toLowerCase();
-            // Match by title if titles match (regardless of ID presence)
+
             if (actTitle && suggestionTitle && actTitle === suggestionTitle) {
                 return true;
             }
+
+            // 2. Fallback: match by ID
+            if (act.id && suggestion.from.activityId && act.id === suggestion.from.activityId) {
+                return true;
+            }
+
+            // 3. Last resort: match by coordinates (if available)
+            if (act.coordinates && suggestion.activity.coordinates) {
+                const latMatch = Math.abs(act.coordinates.lat - suggestion.activity.coordinates.lat) < 0.0001;
+                const lngMatch = Math.abs(act.coordinates.lng - suggestion.activity.coordinates.lng) < 0.0001;
+                if (latMatch && lngMatch) {
+                    return true;
+                }
+            }
+
             return false;
         });
 
