@@ -3,6 +3,7 @@
 
 import { RouteOptimizer } from './route-optimizer-v2.js';
 import { HotelBaseSystem } from './hotel-base-system.js';
+import { MasterValidator, DistanceValidator } from './itinerary-intelligence-validator.js';
 
 /**
  * 1️⃣ TRIP CONTEXT ANALYZER
@@ -335,13 +336,21 @@ export const GeographicClusteringSystem = {
   getKnownZones(city) {
     const zones = {
       'Tokyo': [
-        { id: 'asakusa', name: 'Asakusa', center: { lat: 35.7148, lng: 139.7967 }, radius: 1.5 },
-        { id: 'shibuya', name: 'Shibuya', center: { lat: 35.6595, lng: 139.7004 }, radius: 1.2 },
-        { id: 'shinjuku', name: 'Shinjuku', center: { lat: 35.6938, lng: 139.7034 }, radius: 1.5 },
-        { id: 'harajuku', name: 'Harajuku', center: { lat: 35.6702, lng: 139.7029 }, radius: 1.0 },
-        { id: 'akihabara', name: 'Akihabara', center: { lat: 35.7022, lng: 139.7745 }, radius: 0.8 },
-        { id: 'ginza', name: 'Ginza', center: { lat: 35.6717, lng: 139.7647 }, radius: 1.0 },
-        { id: 'ueno', name: 'Ueno', center: { lat: 35.7148, lng: 139.7744 }, radius: 1.2 }
+        // Zonas MÁS ESTRICTAS (radius reducido para mejor agrupación)
+        { id: 'asakusa', name: 'Asakusa', center: { lat: 35.7148, lng: 139.7967 }, radius: 1.0,
+          shoppingType: 'traditional', day1Appropriate: true, intensity: 'low' },
+        { id: 'shibuya', name: 'Shibuya', center: { lat: 35.6595, lng: 139.7004 }, radius: 0.8,
+          shoppingType: 'fashion', day1Appropriate: false, intensity: 'high' },
+        { id: 'shinjuku', name: 'Shinjuku', center: { lat: 35.6938, lng: 139.7034 }, radius: 1.0,
+          shoppingType: 'department', day1Appropriate: true, intensity: 'medium' },
+        { id: 'harajuku', name: 'Harajuku', center: { lat: 35.6702, lng: 139.7029 }, radius: 0.7,
+          shoppingType: 'fashion', day1Appropriate: false, intensity: 'high' },
+        { id: 'akihabara', name: 'Akihabara', center: { lat: 35.7022, lng: 139.7745 }, radius: 0.6,
+          shoppingType: 'anime_electronics', day1Appropriate: false, intensity: 'very_high' },
+        { id: 'ginza', name: 'Ginza', center: { lat: 35.6717, lng: 139.7647 }, radius: 0.8,
+          shoppingType: 'luxury', day1Appropriate: true, intensity: 'low' },
+        { id: 'ueno', name: 'Ueno', center: { lat: 35.7148, lng: 139.7744 }, radius: 1.0,
+          shoppingType: 'general', day1Appropriate: true, intensity: 'medium' }
       ],
       'Kyoto': [
         { id: 'gion', name: 'Gion', center: { lat: 35.0036, lng: 135.7778 }, radius: 1.0 },
@@ -834,20 +843,32 @@ export const MasterItineraryOptimizer = {
         }
       });
 
+      // PASO 8: VALIDAR el itinerario resultante
+      console.log('\n📍 PASO 8: Validando itinerario resultante...');
+      const validation = MasterValidator.validateCompleteItinerary(itinerary);
+
       const endTime = Date.now();
       const duration = ((endTime - startTime) / 1000).toFixed(2);
 
       console.log('\n🚀 ═══════════════════════════════════════');
-      console.log(`🚀 OPTIMIZACIÓN COMPLETADA EN ${duration}s`);
+      if (validation.valid) {
+        console.log(`🚀 OPTIMIZACIÓN COMPLETADA EN ${duration}s ✅`);
+      } else {
+        console.error(`🚀 OPTIMIZACIÓN COMPLETADA CON ERRORES EN ${duration}s ❌`);
+        console.error(`   ${validation.summary.totalErrors} errores críticos encontrados`);
+      }
       console.log('🚀 ═══════════════════════════════════════\n');
 
       return {
-        success: true,
+        success: validation.valid,
         itinerary: itinerary,
         context: context,
         energyReport: energyReport,
+        validation: validation,  // 🔥 NUEVO: Reporte de validación
         duration: duration,
-        metrics: this.calculateMetrics(itinerary, context)
+        metrics: this.calculateMetrics(itinerary, context),
+        warnings: validation.summary.totalWarnings,
+        errors: validation.summary.totalErrors
       };
 
     } catch (error) {
