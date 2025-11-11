@@ -845,7 +845,24 @@ export const MasterItineraryOptimizer = {
 
       // PASO 8: VALIDAR el itinerario resultante
       console.log('\n📍 PASO 8: Validando itinerario resultante...');
-      const validation = MasterValidator.validateCompleteItinerary(itinerary);
+      let validation = MasterValidator.validateCompleteItinerary(itinerary);
+
+      // PASO 9: AUTO-CORRECCIÓN de errores de distancia (si existen)
+      if (!validation.valid && validation.validations.distances && !validation.validations.distances.valid) {
+        console.log('\n🔧 PASO 9: Auto-corrección de errores de distancia...');
+        const correctionResult = await this.autoCorrectDistanceErrors(itinerary, validation.validations.distances);
+
+        if (correctionResult.corrected) {
+          itinerary = correctionResult.itinerary;
+          console.log(`   ✅ ${correctionResult.correctionsMade} correcciones aplicadas`);
+
+          // Re-validar después de correcciones
+          console.log('   🔄 Re-validando itinerario corregido...');
+          validation = MasterValidator.validateCompleteItinerary(itinerary);
+        } else {
+          console.warn('   ⚠️ No se pudieron aplicar todas las correcciones automáticas');
+        }
+      }
 
       const endTime = Date.now();
       const duration = ((endTime - startTime) / 1000).toFixed(2);
@@ -913,6 +930,174 @@ export const MasterItineraryOptimizer = {
       cities: context.cityFlow.length,
       transitions: context.transitions.length
     };
+  },
+
+  /**
+   * AUTO-CORRECCIÓN de errores de distancia
+   * Mueve actividades problemáticas a días más apropiados
+   * @param {Object} itinerary
+   * @param {Object} distanceValidation - Resultado de DistanceValidator
+   * @returns {Object} { corrected: boolean, itinerary, correctionsMade }
+   */
+  async autoCorrectDistanceErrors(itinerary, distanceValidation) {
+    console.log('   🔧 Analizando errores de distancia para corrección automática...');
+
+    let correctionsMade = 0;
+    const affectedDays = new Set();
+
+    // Iterar sobre cada día con errores de distancia
+    for (const dayError of distanceValidation.daysWithErrors) {
+      const dayNumber = dayError.day;
+      const day = itinerary.days.find(d => d.day === dayNumber);
+
+      if (!day || !day.activities) continue;
+
+      console.log(`   📍 Día ${dayNumber}: ${dayError.errors.length} errores de distancia`);
+
+      // Procesar cada error de distancia en este día
+      for (const error of dayError.errors) {
+        if (!error.activities || error.activities.length < 2) continue;
+
+        const [act1, act2] = error.activities;
+
+        // Determinar cuál actividad está "fuera de lugar"
+        // La actividad problemática es la que está MÁS LEJOS del hotel del día
+        const hotel = HotelBaseSystem.getHotelForDay(itinerary, day);
+        let problematicActivity = null;
+        let otherActivity = null;
+
+        if (hotel && hotel.coordinates) {
+          const dist1 = RouteOptimizer.calculateDistance(hotel.coordinates, act1.coordinates);
+          const dist2 = RouteOptimizer.calculateDistance(hotel.coordinates, act2.coordinates);
+
+          // La actividad más lejana del hotel es probablemente la problemática
+          if (dist1 > dist2) {
+            problematicActivity = act1;
+            otherActivity = act2;
+          } else {
+            problematicActivity = act2;
+            otherActivity = act1;
+          }
+        } else {
+          // Si no hay hotel, usar la segunda actividad como problemática
+          problematicActivity = act2;
+          otherActivity = act1;
+        }
+
+        console.log(`      🎯 Actividad problemática: ${problematicActivity.title || problematicActivity.name}`);
+
+        // Buscar un día mejor para esta actividad
+        const betterDay = this.findBetterDayForActivity(itinerary, problematicActivity, dayNumber);
+
+        if (betterDay && betterDay !== dayNumber) {
+          console.log(`      ➡️  Moviendo a día ${betterDay}`);
+
+          // Remover de día actual
+          const activityIndex = day.activities.findIndex(a =>
+            (a.title || a.name) === (problematicActivity.title || problematicActivity.name)
+          );
+
+          if (activityIndex !== -1) {
+            const [removed] = day.activities.splice(activityIndex, 1);
+
+            // Agregar al día mejor
+            const targetDay = itinerary.days.find(d => d.day === betterDay);
+            if (targetDay) {
+              if (!targetDay.activities) targetDay.activities = [];
+              targetDay.activities.push(removed);
+
+              affectedDays.add(dayNumber);
+              affectedDays.add(betterDay);
+              correctionsMade++;
+
+              console.log(`      ✅ Movida exitosamente`);
+            }
+          }
+        } else {
+          console.log(`      ⚠️  No se encontró un día mejor para esta actividad`);
+        }
+      }
+    }
+
+    // Re-optimizar rutas de días afectados
+    if (affectedDays.size > 0) {
+      console.log(`   🔄 Re-optimizando ${affectedDays.size} días afectados...`);
+
+      for (const dayNum of affectedDays) {
+        const day = itinerary.days.find(d => d.day === dayNum);
+        if (!day || !day.activities || day.activities.length < 2) continue;
+
+        const city = HotelBaseSystem.detectCityForDay(day);
+        const hotel = HotelBaseSystem.getHotelForCity(itinerary, city, day.day);
+
+        if (hotel && hotel.coordinates) {
+          const result = RouteOptimizer.optimizeRoute(day.activities, {
+            startPoint: hotel.coordinates,
+            optimizationMode: 'balanced',
+            shouldRecalculateTimings: true
+          });
+
+          if (result.wasOptimized) {
+            day.activities = result.optimizedActivities;
+            console.log(`      ✅ Día ${dayNum}: Ruta re-optimizada`);
+          }
+        }
+      }
+    }
+
+    return {
+      corrected: correctionsMade > 0,
+      itinerary: itinerary,
+      correctionsMade: correctionsMade,
+      affectedDays: Array.from(affectedDays)
+    };
+  },
+
+  /**
+   * Encuentra el mejor día para una actividad basado en proximidad a hoteles
+   * @param {Object} itinerary
+   * @param {Object} activity
+   * @param {number} currentDay - Día actual (para excluir)
+   * @returns {number|null} Número del día mejor, o null si no se encuentra
+   */
+  findBetterDayForActivity(itinerary, activity, currentDay) {
+    if (!activity.coordinates) return null;
+
+    let bestDay = null;
+    let minDistance = Infinity;
+
+    // Evaluar cada día
+    for (const day of itinerary.days) {
+      if (day.day === currentDay) continue; // Skip día actual
+      if (!day.activities) continue;
+
+      // Obtener hotel del día
+      const city = HotelBaseSystem.detectCityForDay(day);
+      const hotel = HotelBaseSystem.getHotelForCity(itinerary, city, day.day);
+
+      if (!hotel || !hotel.coordinates) continue;
+
+      // Calcular distancia del hotel a la actividad
+      const distance = RouteOptimizer.calculateDistance(hotel.coordinates, activity.coordinates);
+
+      // También considerar la capacidad del día (no sobrecargar)
+      const dayCapacity = day.activities.length;
+      const capacityPenalty = dayCapacity > 5 ? dayCapacity * 2 : 0; // Penalizar días sobrecargados
+
+      const score = distance + capacityPenalty;
+
+      if (score < minDistance) {
+        minDistance = score;
+        bestDay = day.day;
+      }
+    }
+
+    // Solo recomendar si la distancia es razonable (<20km)
+    if (minDistance < 20) {
+      return bestDay;
+    }
+
+    return null;
   }
 };
 
