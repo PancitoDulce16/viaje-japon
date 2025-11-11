@@ -408,6 +408,47 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
         });
     }
 
+    // 🚨 PRIORIDAD 0: Detectar y mover actividades que NO CABEN en el día (overLimit)
+    console.log('🚨 DETECTANDO ACTIVIDADES QUE NO CABEN...');
+    daysAnalysis.forEach(dayAnalysis => {
+        const overLimitActivities = dayAnalysis.activities.filter(act => act.overLimit === true);
+
+        if (overLimitActivities.length > 0) {
+            console.log(`🚨 Día ${dayAnalysis.day}: ${overLimitActivities.length} actividades NO caben (sobrepasan 23:00)`);
+
+            // Encontrar días con espacio (días ligeros o vacíos)
+            const daysWithSpace = daysAnalysis
+                .filter(d => d.day !== dayAnalysis.day && d.activities.length < 6 && !d.activities.some(a => a.overLimit))
+                .sort((a, b) => a.activities.length - b.activities.length);
+
+            overLimitActivities.forEach(activity => {
+                if (daysWithSpace.length > 0) {
+                    const targetDay = daysWithSpace[0];
+                    console.log(`   → Sugerencia: Mover "${activity.title || activity.name}" a Día ${targetDay.day}`);
+
+                    suggestions.push({
+                        type: 'move',
+                        priority: 'critical', // MÁS ALTA PRIORIDAD
+                        description: `⚠️ URGENTE: Mover "${activity.title || activity.name}" del Día ${dayAnalysis.day} al Día ${targetDay.day}`,
+                        reason: `Esta actividad NO CABE en el Día ${dayAnalysis.day} (sobrepasa las 23:00). Debe moverse a otro día.`,
+                        from: { day: dayAnalysis.day, activityId: activity.id },
+                        to: { day: targetDay.day },
+                        activity: activity
+                    });
+                } else {
+                    console.warn(`   ⚠️ No hay días con espacio para mover "${activity.title || activity.name}"`);
+                    suggestions.push({
+                        type: 'manual-action',
+                        priority: 'critical',
+                        description: `⚠️ URGENTE: "${activity.title || activity.name}" no cabe en el Día ${dayAnalysis.day}`,
+                        reason: `Esta actividad sobrepasa las 23:00 en el Día ${dayAnalysis.day}. Por favor reduce la duración o muévela manualmente a otro día.`,
+                        day: dayAnalysis.day
+                    });
+                }
+            });
+        }
+    });
+
     // 🔥 PRIORIDAD 1: Llenar días vacíos PRIMERO
     if (emptyDays.length > 0) {
         console.log(`🚨 DÍAS VACÍOS DETECTADOS: ${emptyDays.length}`);
@@ -585,6 +626,72 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
             }
         });
     }
+
+    // 🏨 PRIORIDAD ALTA: Detectar actividades cerca de hoteles pero en días incorrectos
+    console.log('🏨 DETECTANDO ACTIVIDADES CERCA DE HOTELES EN DÍAS INCORRECTOS...');
+
+    // Agrupar días por hotel
+    const hotelGroups = new Map(); // hotel.name -> {days: [], coords: {}}
+    daysAnalysis.forEach(dayAnalysis => {
+        if (dayAnalysis.hotelCoordinates) {
+            const hotelKey = `${dayAnalysis.hotelCoordinates.lat},${dayAnalysis.hotelCoordinates.lng}`;
+            if (!hotelGroups.has(hotelKey)) {
+                hotelGroups.set(hotelKey, {
+                    days: [],
+                    coords: dayAnalysis.hotelCoordinates
+                });
+            }
+            hotelGroups.get(hotelKey).days.push(dayAnalysis.day);
+        }
+    });
+
+    // Para cada día, verificar si tiene actividades cerca de OTROS hoteles
+    daysAnalysis.forEach(dayAnalysis => {
+        if (!dayAnalysis.activities || dayAnalysis.activities.length === 0) return;
+
+        const currentHotelCoords = dayAnalysis.hotelCoordinates;
+        if (!currentHotelCoords) return;
+
+        const currentHotelKey = `${currentHotelCoords.lat},${currentHotelCoords.lng}`;
+
+        // Verificar cada actividad del día
+        dayAnalysis.activities.forEach(activity => {
+            if (!activity.coordinates) return;
+
+            // Calcular distancia a TODOS los hoteles
+            hotelGroups.forEach((hotelInfo, hotelKey) => {
+                // Saltar si es el hotel actual
+                if (hotelKey === currentHotelKey) return;
+
+                const distanceToOtherHotel = RouteOptimizer.calculateDistance(
+                    activity.coordinates,
+                    hotelInfo.coords
+                );
+                const distanceToCurrentHotel = RouteOptimizer.calculateDistance(
+                    activity.coordinates,
+                    currentHotelCoords
+                );
+
+                // Si la actividad está MUCHO más cerca del otro hotel (>3km de diferencia)
+                if (distanceToOtherHotel < distanceToCurrentHotel - 3 && distanceToOtherHotel < 2) {
+                    // Encontrar el primer día donde te quedas en ese hotel
+                    const targetDay = hotelInfo.days[0];
+
+                    console.log(`🏨 DETECTADO: "${activity.title || activity.name}" en Día ${dayAnalysis.day} está a ${distanceToOtherHotel.toFixed(2)}km del hotel de días ${hotelInfo.days.join(',')}, pero está programada en Día ${dayAnalysis.day}`);
+
+                    suggestions.push({
+                        type: 'move',
+                        priority: 'high',
+                        description: `🏨 Mover "${activity.title || activity.name}" del Día ${dayAnalysis.day} al Día ${targetDay}`,
+                        reason: `Esta actividad está a solo ${distanceToOtherHotel.toFixed(1)}km del hotel donde te quedas los días ${hotelInfo.days.join(', ')}, pero está programada para el Día ${dayAnalysis.day} (${distanceToCurrentHotel.toFixed(1)}km del hotel de ese día). Será mucho más conveniente visitarla cuando estés cerca.`,
+                        from: { day: dayAnalysis.day, activityId: activity.id },
+                        to: { day: targetDay },
+                        activity: activity
+                    });
+                }
+            });
+        });
+    });
 
     return suggestions;
 }
@@ -941,11 +1048,17 @@ function applyAllSuggestions(days, suggestions, options = {}) {
     let applied = 0;
     let skipped = 0;
 
-    // Ordenar sugerencias por prioridad
-    const priorityOrder = { high: 1, medium: 2, low: 3 };
+    // Ordenar sugerencias por prioridad (critical es MÁXIMA prioridad)
+    const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
     const sortedSuggestions = [...suggestions].sort((a, b) =>
         (priorityOrder[a.priority] || 4) - (priorityOrder[b.priority] || 4)
     );
+
+    console.log(`📋 Aplicando ${sortedSuggestions.length} sugerencias ordenadas por prioridad...`);
+    const criticalCount = sortedSuggestions.filter(s => s.priority === 'critical').length;
+    const highCount = sortedSuggestions.filter(s => s.priority === 'high').length;
+    if (criticalCount > 0) console.log(`   🚨 ${criticalCount} sugerencias CRÍTICAS (actividades que no caben)`);
+    if (highCount > 0) console.log(`   ⚠️ ${highCount} sugerencias de alta prioridad`);
 
     // Aplicar cada sugerencia
     for (const suggestion of sortedSuggestions) {
