@@ -7,7 +7,7 @@ import { RouteOptimizer } from './route-optimizer-v2.js';
 const SafeTimeUtils = {
   parseTime: (timeStr) => {
     if (window.TimeUtils) {
-      return window.SafeTimeUtils.parseTime(timeStr);
+      return window.TimeUtils.parseTime(timeStr);
     }
     // Fallback básico
     if (!timeStr) return 0;
@@ -21,7 +21,7 @@ const SafeTimeUtils = {
 
   calculateStandardDeviation: (values) => {
     if (window.TimeUtils) {
-      return window.SafeTimeUtils.calculateStandardDeviation(values);
+      return window.TimeUtils.calculateStandardDeviation(values);
     }
     // Fallback básico
     if (!values || values.length === 0) return 0;

@@ -32,7 +32,7 @@ function waitForTimeUtils() {
 const SafeTimeUtils = {
   parseTime: (timeStr) => {
     if (window.TimeUtils) {
-      return window.SafeTimeUtils.parseTime(timeStr);
+      return window.TimeUtils.parseTime(timeStr);
     }
     console.error('TimeUtils not available, using fallback parseTime');
     // Fallback básico
@@ -47,7 +47,7 @@ const SafeTimeUtils = {
 
   formatTime: (minutes) => {
     if (window.TimeUtils) {
-      return window.SafeTimeUtils.formatTime(minutes);
+      return window.TimeUtils.formatTime(minutes);
     }
     console.error('TimeUtils not available, using fallback formatTime');
     // Fallback básico
