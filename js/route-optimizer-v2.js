@@ -289,17 +289,33 @@ function optimizeByGeography(activities, options) {
 function optimizeBalanced(activities, options) {
     const { startPoint } = options;
 
-    // 🏨 Si hay un punto de inicio (hotel), la primera actividad DEBE ser la más cercana
+    // 🏨 PRIORIDAD ABSOLUTA AL PUNTO DE PARTIDA (HOTEL)
+    // La primera actividad SIEMPRE debe ser la más cercana al hotel
+    // NO importa si hay "grupos" más eficientes - la lógica humana es empezar por lo más cercano
     if (startPoint) {
-        console.log('🏨 HOTEL DETECTED - Optimizando desde hotel:', startPoint);
+        console.log('🏨 HOTEL DETECTED - PRIORIDAD ABSOLUTA al punto de partida');
         console.log(`📍 Analizando ${activities.length} actividades para encontrar la más cercana al hotel`);
+        console.log(`🏨 Hotel: lat ${startPoint.lat}, lng ${startPoint.lng}`);
 
         // Encontrar la actividad más cercana al hotel
         const nearestToHotel = findNearestActivity(startPoint, activities);
 
         if (nearestToHotel) {
+            const distanceToHotel = calculateDistance(startPoint, nearestToHotel.coordinates);
             console.log(`✅ PRIMERA ACTIVIDAD (más cercana al hotel): "${nearestToHotel.title || nearestToHotel.name}"`);
-            console.log(`📏 Distancia al hotel: ${calculateDistance(startPoint, nearestToHotel.coordinates).toFixed(2)} km`);
+            console.log(`📏 Distancia al hotel: ${distanceToHotel.toFixed(2)} km`);
+
+            // 🚨 VALIDACIÓN: Asegurar que realmente es la más cercana
+            const allDistances = activities.map(a => ({
+                activity: a,
+                distance: calculateDistance(startPoint, a.coordinates)
+            })).sort((a, b) => a.distance - b.distance);
+
+            if (allDistances[0].activity !== nearestToHotel) {
+                console.error('❌ ERROR: findNearestActivity no devolvió la actividad más cercana!');
+                console.error('   Se esperaba:', allDistances[0].activity.title || allDistances[0].activity.name);
+                console.error('   Se obtuvo:', nearestToHotel.title || nearestToHotel.name);
+            }
 
             // Remover esa actividad de la lista
             const remainingActivities = activities.filter(a => a !== nearestToHotel);
@@ -318,6 +334,12 @@ function optimizeBalanced(activities, options) {
             }
 
             console.log('✅ Orden final de actividades:', optimized.map((a, i) => `${i + 1}. ${a.title || a.name}`));
+
+            // 🚨 VALIDACIÓN FINAL: Verificar que la primera actividad sigue siendo la más cercana
+            const finalFirst = optimized[0];
+            const finalFirstDistance = calculateDistance(startPoint, finalFirst.coordinates);
+            console.log(`🎯 VALIDACIÓN FINAL: Primera actividad "${finalFirst.title || finalFirst.name}" a ${finalFirstDistance.toFixed(2)}km del hotel`);
+
             return optimized;
         } else {
             console.warn('⚠️ No se encontró actividad más cercana al hotel (esto no debería pasar)');
