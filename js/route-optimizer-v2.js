@@ -222,7 +222,7 @@ function recalculateTimings(activities, options = {}) {
 
     // 🚨 Si hay actividades que no caben, loguear advertencia
     if (activitiesOverLimit > 0) {
-        console.error(`🚨 ${activitiesOverLimit} actividades NO caben en el día. Considera moverlas a otro día o reducir duraciones.`);
+        console.warn(`⚠️ ${activitiesOverLimit} actividades NO caben en el día. Considera moverlas a otro día o reducir duraciones.`);
     }
 
     return result;

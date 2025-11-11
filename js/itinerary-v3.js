@@ -507,10 +507,16 @@ async function showBalanceAnalysis() {
   }
 
   try {
-    // Analizar balance - PASAR ITINERARIO COMPLETO para obtener hoteles
-    const analysis = DayBalancer.analyzeItineraryBalance(currentItinerary.days, currentItinerary);
+    // 🎯 USAR BALANCE INTELIGENTE en vez de solo análisis
+    // Esto hace asignación por proximidad + reglas especiales + análisis
+    const result = DayBalancer.smartBalanceItinerary(currentItinerary);
 
-    console.log('📊 Balance analysis:', analysis);
+    // Actualizar itinerario con los cambios
+    currentItinerary = result.itinerary;
+    await saveCurrentItineraryToFirebase();
+
+    const analysis = result.analysis;
+    console.log('📊 Smart balance result:', result);
 
     // 🚨 AUTO-APLICAR SUGERENCIAS CRÍTICAS INMEDIATAMENTE (sin preguntar)
     const criticalSuggestions = analysis.suggestions.filter(s => s.priority === 'critical');

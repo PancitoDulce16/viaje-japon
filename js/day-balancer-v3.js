@@ -2,6 +2,7 @@
 // Analiza el itinerario y sugiere redistribución de actividades para optimizar la experiencia
 
 import { RouteOptimizer } from './route-optimizer-v2.js';
+import { ActivityDayAssignment } from './activity-day-assignment.js';
 
 // Safe wrapper para TimeUtils
 const SafeTimeUtils = {
@@ -1037,6 +1038,16 @@ function applySuggestion(days, suggestion, options = {}) {
         if (isHighPriority || isTargetDayEmpty) {
             console.log(`🚀 MOVIMIENTO FORZADO (${isHighPriority ? 'alta prioridad' : 'día vacío'}) - omitiendo verificación de conflictos`);
 
+            // 🚨 VALIDACIÓN CRÍTICA: NUNCA dejar el día origen vacío (a menos que sea el último día)
+            const wouldLeaveSourceEmpty = sourceDay.activities.length === 1;
+            const isLastDay = sourceDay.day === newDays[newDays.length - 1].day;
+            const isFirstDay = sourceDay.day === 1;
+
+            if (wouldLeaveSourceEmpty && !isLastDay && !isFirstDay && suggestion.priority !== 'critical') {
+                console.warn(`⚠️ BLOQUEADO: Mover esta actividad dejaría el Día ${sourceDay.day} vacío. Rechazando movimiento.`);
+                return newDays; // NO hacer el movimiento
+            }
+
             // Limpiar horario para recalcular después
             activity.time = null;
             activity.startTime = null;
@@ -1074,6 +1085,16 @@ function applySuggestion(days, suggestion, options = {}) {
             }
 
             if (canFit) {
+                // 🚨 VALIDACIÓN CRÍTICA: NUNCA dejar el día origen vacío
+                const wouldLeaveSourceEmpty = sourceDay.activities.length === 1;
+                const isLastDay = sourceDay.day === newDays[newDays.length - 1].day;
+                const isFirstDay = sourceDay.day === 1;
+
+                if (wouldLeaveSourceEmpty && !isLastDay && !isFirstDay) {
+                    console.warn(`⚠️ BLOQUEADO: Mover esta actividad dejaría el Día ${sourceDay.day} vacío. Rechazando movimiento.`);
+                    return newDays; // NO hacer el movimiento
+                }
+
                 if (clearedTime) {
                     console.log(`✅ Actividad CABE después de limpiar horario`);
                     activity.time = null;
@@ -1242,6 +1263,51 @@ function applyAllSuggestions(days, suggestions, options = {}) {
     };
 }
 
+/**
+ * NUEVA FUNCIÓN: Balancea el itinerario INTELIGENTEMENTE
+ * 1. Primero asigna actividades a días basándose en proximidad al hotel
+ * 2. Luego genera sugerencias de mejora
+ * 3. NO deja días vacíos
+ * @param {Object} itinerary - Itinerario completo
+ * @returns {Object} {itinerary, report, suggestions}
+ */
+function smartBalanceItinerary(itinerary) {
+    console.log('🎯 INICIANDO BALANCE INTELIGENTE DEL ITINERARIO');
+
+    // 1. Primero, asignar actividades inteligentemente basándose en hoteles
+    if (ActivityDayAssignment && typeof ActivityDayAssignment.assignActivitiesOptimally === 'function') {
+        console.log('🏨 Paso 1: Asignación inteligente por proximidad al hotel...');
+        itinerary = ActivityDayAssignment.assignActivitiesOptimally(itinerary);
+        console.log('✅ Asignación inteligente completada');
+    } else {
+        console.warn('⚠️ ActivityDayAssignment no disponible, saltando asignación inteligente');
+    }
+
+    // 2. Verificar estado después de la asignación
+    if (ActivityDayAssignment && typeof ActivityDayAssignment.verifyItineraryState === 'function') {
+        const report = ActivityDayAssignment.verifyItineraryState(itinerary);
+        console.log('📊 Estado del itinerario:', report);
+
+        // Si todavía hay días vacíos, advertir
+        if (report.emptyDays.length > 0) {
+            console.warn(`⚠️ Todavía hay ${report.emptyDays.length} días vacíos:`, report.emptyDays);
+        }
+    }
+
+    // 3. Analizar balance y generar sugerencias adicionales
+    console.log('📊 Paso 2: Analizando balance del itinerario...');
+    const analysis = analyzeItineraryBalance(itinerary.days, itinerary);
+
+    console.log('✅ BALANCE INTELIGENTE COMPLETADO');
+
+    return {
+        itinerary: itinerary,
+        analysis: analysis,
+        balanced: analysis.balanced,
+        suggestions: analysis.suggestions
+    };
+}
+
 // Exportar el sistema
 export const DayBalancer = {
     analyzeDayLoad,
@@ -1253,6 +1319,7 @@ export const DayBalancer = {
     detectTimeOverlaps,
     canFitActivity,
     sortActivitiesByTime,
+    smartBalanceItinerary, // 🔥 NUEVA FUNCIÓN
     parseTime: SafeTimeUtils.parseTime,
     calculateStandardDeviation: SafeTimeUtils.calculateStandardDeviation
 };
