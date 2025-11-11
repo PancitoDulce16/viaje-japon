@@ -103,6 +103,7 @@ export const ActivityDayAssignment = {
 
   /**
    * Asigna cada actividad al día cuyo hotel esté más cerca
+   * PRIORIDAD CRÍTICA: Actividades MUY cercanas al hotel (< 1km) van SIEMPRE a ese día
    * @param {Array} activities - Lista de actividades
    * @param {Array} days - Días del itinerario
    * @param {Object} hotelsByDay - Mapa de hoteles
@@ -112,17 +113,64 @@ export const ActivityDayAssignment = {
     let assigned = 0;
     let unassigned = 0;
 
+    // 🔥 PASO 1: Asignar actividades MUY CERCANAS al hotel primero (< 1km)
+    console.log('🎯 PRIORIDAD: Asignando actividades MUY cercanas al hotel...');
+    const veryCloseActivities = [];
+    const remainingActivities = [];
+
     activities.forEach(activity => {
       if (!activity.coordinates || !activity.coordinates.lat) {
-        // Sin coordenadas, no podemos asignar por proximidad
-        // Dejar en el día original o primer día disponible
+        remainingActivities.push(activity);
+        return;
+      }
+
+      let closestDistance = Infinity;
+      let closestDay = null;
+
+      Object.entries(hotelsByDay).forEach(([dayNum, hotel]) => {
+        const distance = RouteOptimizer.calculateDistance(
+          activity.coordinates,
+          hotel.coordinates
+        );
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestDay = parseInt(dayNum);
+        }
+      });
+
+      // Si está MUY cerca (< 1km), asignar inmediatamente
+      if (closestDistance < 1.0 && closestDay !== null) {
+        veryCloseActivities.push({
+          activity,
+          day: closestDay,
+          distance: closestDistance
+        });
+        console.log(`🎯 "${activity.title || activity.name}" MUY CERCA del hotel día ${closestDay} (${closestDistance.toFixed(2)}km) - ASIGNADA`);
+      } else {
+        remainingActivities.push(activity);
+      }
+    });
+
+    // Asignar actividades muy cercanas
+    veryCloseActivities.forEach(({ activity, day: dayNum }) => {
+      const day = days.find(d => d.day === dayNum);
+      if (day) {
+        day.activities.push(activity);
+        assigned++;
+      }
+    });
+
+    // 🔥 PASO 2: Asignar resto de actividades por proximidad
+    console.log('📍 Asignando actividades restantes por proximidad...');
+    remainingActivities.forEach(activity => {
+      if (!activity.coordinates || !activity.coordinates.lat) {
         const targetDay = days.find(d => d.day === activity.originalDay) || days[0];
         targetDay.activities.push(activity);
         assigned++;
         return;
       }
 
-      // Encontrar el día cuyo hotel esté más cerca
       let bestDay = null;
       let minDistance = Infinity;
 
@@ -143,16 +191,13 @@ export const ActivityDayAssignment = {
         if (day) {
           day.activities.push(activity);
           assigned++;
-          console.log(`✅ "${activity.title || activity.name}" asignada a Día ${bestDay} (${minDistance.toFixed(2)}km del hotel)`);
+          console.log(`✅ "${activity.title || activity.name}" → Día ${bestDay} (${minDistance.toFixed(2)}km)`);
         } else {
           unassigned++;
-          console.error(`❌ No se encontró Día ${bestDay} para "${activity.title || activity.name}"`);
         }
       } else {
-        // Si no hay hoteles, asignar al primer día disponible
         days[0].activities.push(activity);
         unassigned++;
-        console.warn(`⚠️ "${activity.title || activity.name}" asignada al Día 1 (sin hotel disponible)`);
       }
     });
 
@@ -247,6 +292,33 @@ export const ActivityDayAssignment = {
     const lastDay = itinerary.days[itinerary.days.length - 1];
 
     console.log('🛫 Aplicando reglas especiales para días 1 y último...');
+
+    // 🛬 ÚLTIMO DÍA: DEBE ESTAR COMPLETAMENTE VACÍO (solo aeropuerto)
+    if (lastDay && lastDay.activities && lastDay.activities.length > 0) {
+      console.log(`🛬 ÚLTIMO DÍA (${lastDay.day}): Vaciando completamente (${lastDay.activities.length} actividades a mover)`);
+
+      const movedActivities = [...lastDay.activities];
+      lastDay.activities = []; // ❗ VACIAR COMPLETAMENTE
+
+      // Mover TODAS las actividades a días anteriores
+      movedActivities.forEach(activity => {
+        // Encontrar día con menos actividades (pero no día 1 ni último)
+        const targetDays = itinerary.days
+          .slice(1, -1) // Excluir día 1 y último
+          .sort((a, b) => a.activities.length - b.activities.length);
+
+        if (targetDays.length > 0) {
+          targetDays[0].activities.push(activity);
+          console.log(`   ↪ "${activity.title || activity.name}" movida a Día ${targetDays[0].day}`);
+        } else {
+          // Si no hay días intermedios, mover a día 1 como último recurso
+          firstDay.activities.push(activity);
+          console.warn(`   ⚠️ "${activity.title || activity.name}" movida a Día 1 (no hay días intermedios)`);
+        }
+      });
+
+      console.log(`✅ Último día ${lastDay.day} ahora VACÍO (reservado para aeropuerto)`);
+    }
 
     // 🛫 DÍA 1: Máximo 3 actividades (jetlag-friendly)
     if (firstDay && firstDay.activities.length > 0) {
@@ -352,26 +424,34 @@ export const ActivityDayAssignment = {
   },
 
   /**
-   * Balance para asegurar que TODOS los días tengan al menos 3 actividades
+   * Balance para asegurar que TODOS los días tengan actividades suficientes
    * @param {Object} itinerary
    */
   balanceEmptyDays(itinerary) {
-    console.log('⚖️ Balanceando días para asegurar mínimo 3 actividades por día...');
+    console.log('⚖️ Balanceando días para asegurar actividades suficientes...');
 
-    const MIN_ACTIVITIES = 3;
+    // Día 1: 3 actividades máx (jetlag)
+    // Días 2-penúltimo: MÍNIMO 4-5 actividades (días normales)
+    // Último día: 0 actividades (aeropuerto)
+
+    const MIN_ACTIVITIES_DAY1 = 2;
+    const MAX_ACTIVITIES_DAY1 = 3;
+    const MIN_ACTIVITIES_NORMAL = 4;  // 🔥 AUMENTADO de 3 a 4
     const MAX_ACTIVITIES = 6;
 
-    // Encontrar días con pocas actividades (menos de 3)
-    const lightDays = itinerary.days.filter(d => d.activities.length < MIN_ACTIVITIES && d.activities.length > 0);
-    const emptyDays = itinerary.days.filter(d => d.activities.length === 0);
-    const fullDays = itinerary.days.filter(d => d.activities.length >= MIN_ACTIVITIES && d.activities.length <= MAX_ACTIVITIES);
-    const overloadedDays = itinerary.days.filter(d => d.activities.length > MAX_ACTIVITIES);
+    // Encontrar días con pocas actividades (excluir día 1 y último)
+    const normalDays = itinerary.days.slice(1, -1); // Días 2 al penúltimo
 
-    console.log(`📊 Estado actual:
+    const lightDays = normalDays.filter(d => d.activities.length < MIN_ACTIVITIES_NORMAL && d.activities.length > 0);
+    const emptyDays = normalDays.filter(d => d.activities.length === 0);
+    const fullDays = normalDays.filter(d => d.activities.length >= MIN_ACTIVITIES_NORMAL && d.activities.length <= MAX_ACTIVITIES);
+    const overloadedDays = normalDays.filter(d => d.activities.length > MAX_ACTIVITIES);
+
+    console.log(`📊 Estado actual (días 2-${itinerary.days.length - 1}):
       - Días vacíos (0): ${emptyDays.length}
-      - Días ligeros (1-2): ${lightDays.length}
-      - Días balanceados (3-6): ${fullDays.length}
-      - Días sobrecargados (7+): ${overloadedDays.length}`);
+      - Días ligeros (< ${MIN_ACTIVITIES_NORMAL}): ${lightDays.length}
+      - Días balanceados (${MIN_ACTIVITIES_NORMAL}-${MAX_ACTIVITIES}): ${fullDays.length}
+      - Días sobrecargados (${MAX_ACTIVITIES}+): ${overloadedDays.length}`);
 
     // PASO 1: Redistribuir desde días sobrecargados
     overloadedDays.forEach(overloadedDay => {
@@ -403,21 +483,21 @@ export const ActivityDayAssignment = {
       }
     });
 
-    // PASO 2: Llenar días vacíos redistribuyendo de días normales
+    // PASO 2: Llenar días vacíos/ligeros redistribuyendo de días normales
     const allDaysNeedingActivities = [...emptyDays, ...lightDays];
 
     allDaysNeedingActivities.forEach(needyDay => {
-      const needed = MIN_ACTIVITIES - needyDay.activities.length;
+      const needed = MIN_ACTIVITIES_NORMAL - needyDay.activities.length;
       if (needed <= 0) return;
 
-      console.log(`📥 Día ${needyDay.day} necesita ${needed} actividades más`);
+      console.log(`📥 Día ${needyDay.day} necesita ${needed} actividades más (mín ${MIN_ACTIVITIES_NORMAL})`);
 
-      // Buscar días donantes (que tengan MÁS de MIN_ACTIVITIES)
+      // Buscar días donantes (que tengan MÁS de MIN_ACTIVITIES_NORMAL)
       const donorDays = itinerary.days
         .filter(d => d.day !== needyDay.day &&
                      d.day !== 1 && // No quitar del día 1
                      d.day !== itinerary.days.length && // No quitar del último día
-                     d.activities.length > MIN_ACTIVITIES)
+                     d.activities.length > MIN_ACTIVITIES_NORMAL)
         .sort((a, b) => b.activities.length - a.activities.length);
 
       let filled = 0;
@@ -425,7 +505,7 @@ export const ActivityDayAssignment = {
         if (filled >= needed) break;
 
         // Mover 1 actividad del donante al necesitado
-        if (donorDay.activities.length > MIN_ACTIVITIES) {
+        if (donorDay.activities.length > MIN_ACTIVITIES_NORMAL) {
           const activity = donorDay.activities.pop();
           needyDay.activities.push(activity);
           console.log(`   ↪ "${activity.title || activity.name}" del Día ${donorDay.day} → Día ${needyDay.day}`);
@@ -434,33 +514,47 @@ export const ActivityDayAssignment = {
       }
 
       if (filled < needed) {
-        console.warn(`⚠️ Día ${needyDay.day} solo se llenó con ${filled} de ${needed} actividades necesarias`);
-        console.warn(`💡 SUGERENCIA: Agrega más actividades al itinerario para llenar este día`);
+        console.error(`❌ Día ${needyDay.day} solo tiene ${needyDay.activities.length} actividades (necesita ${MIN_ACTIVITIES_NORMAL})`);
+        console.error(`💡 CRÍTICO: El itinerario NO tiene suficientes actividades. Necesitas agregar más actividades a tu base de datos.`);
+        console.error(`💡 SUGERENCIA: Usa el botón "🕳️ Llenar Huecos" o "➕ Agregar Actividad" para este día.`);
       }
     });
 
-    // Resumen final
-    const finalEmpty = itinerary.days.filter(d => d.activities.length === 0).length;
-    const finalLight = itinerary.days.filter(d => d.activities.length < MIN_ACTIVITIES && d.activities.length > 0).length;
-    const finalBalanced = itinerary.days.filter(d => d.activities.length >= MIN_ACTIVITIES && d.activities.length <= MAX_ACTIVITIES).length;
+    // Resumen final (excluir día 1 y último día del conteo)
+    const normalDaysFinal = itinerary.days.slice(1, -1);
+    const finalEmpty = normalDaysFinal.filter(d => d.activities.length === 0).length;
+    const finalLight = normalDaysFinal.filter(d => d.activities.length < MIN_ACTIVITIES_NORMAL && d.activities.length > 0).length;
+    const finalBalanced = normalDaysFinal.filter(d => d.activities.length >= MIN_ACTIVITIES_NORMAL && d.activities.length <= MAX_ACTIVITIES).length;
+
+    // Verificar día 1
+    const day1Count = itinerary.days[0].activities.length;
+    const day1Status = day1Count >= MIN_ACTIVITIES_DAY1 && day1Count <= MAX_ACTIVITIES_DAY1 ? '✅' : '⚠️';
+
+    // Verificar último día
+    const lastDay = itinerary.days[itinerary.days.length - 1];
+    const lastDayStatus = lastDay.activities.length === 0 ? '✅ VACÍO (aeropuerto)' : '❌ TIENE ACTIVIDADES (debe estar vacío)';
 
     console.log(`✅ Balance final:
-      - Días vacíos: ${finalEmpty}
-      - Días ligeros (1-2): ${finalLight}
-      - Días balanceados (3-6): ${finalBalanced}
-      ${finalEmpty > 0 || finalLight > 0 ? '⚠️ Aún hay días con pocas actividades - considera agregar más al itinerario' : '✨ Todos los días están balanceados'}`);
+      - Día 1: ${day1Count} actividades ${day1Status} (debe tener ${MIN_ACTIVITIES_DAY1}-${MAX_ACTIVITIES_DAY1})
+      - Días normales (2-${itinerary.days.length - 1}):
+        * Vacíos (0): ${finalEmpty}
+        * Ligeros (< ${MIN_ACTIVITIES_NORMAL}): ${finalLight}
+        * Balanceados (${MIN_ACTIVITIES_NORMAL}-${MAX_ACTIVITIES}): ${finalBalanced}
+      - Último día: ${lastDayStatus}
+
+      ${finalEmpty > 0 || finalLight > 0 ? '❌ CRÍTICO: Días insuficientes - AGREGA MÁS ACTIVIDADES' : '✨ Todos los días están balanceados'}`);
 
     // 🎯 MOSTRAR NOTIFICACIÓN si hay días que necesitan más actividades
     if ((finalEmpty > 0 || finalLight > 0) && typeof window !== 'undefined' && window.Notifications) {
-      const daysNeedingActivities = itinerary.days
-        .filter(d => d.activities.length < MIN_ACTIVITIES)
-        .map(d => `Día ${d.day}`)
+      const daysNeedingActivities = normalDaysFinal
+        .filter(d => d.activities.length < MIN_ACTIVITIES_NORMAL)
+        .map(d => `Día ${d.day} (${d.activities.length}/${MIN_ACTIVITIES_NORMAL})`)
         .join(', ');
 
       window.Notifications.show(
-        `⚠️ Algunos días tienen pocas actividades (${daysNeedingActivities}). Usa el botón "🕳️ Llenar Huecos" para agregar actividades sugeridas.`,
-        'warning',
-        8000
+        `❌ CRÍTICO: Días con pocas actividades: ${daysNeedingActivities}. El itinerario necesita MÁS actividades. Usa "🕳️ Llenar Huecos" o "➕ Agregar Actividad".`,
+        'error',
+        10000
       );
     }
   },
