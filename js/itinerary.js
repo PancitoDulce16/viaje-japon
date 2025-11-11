@@ -765,9 +765,21 @@ async function optimizeDayRoute(dayNumber) {
     // Mostrar loading
     Notifications.show('Optimizando ruta...', 'info');
 
-    // Optimizar usando el RouteOptimizer
+    // 🏨 Obtener coordenadas del hotel para este día
+    let hotelCoords = null;
+    if (window.HotelBaseSystem && currentItinerary.hotels) {
+      const city = window.HotelBaseSystem.detectCityForDay(dayData);
+      const hotel = window.HotelBaseSystem.getHotelForCity(currentItinerary, city);
+      if (hotel && hotel.coordinates) {
+        hotelCoords = hotel.coordinates;
+        console.log(`🏨 Usando hotel en ${city} como punto de inicio:`, hotelCoords);
+      }
+    }
+
+    // Optimizar usando el RouteOptimizer con el hotel como punto de partida
     const result = RouteOptimizer.optimizeRoute(dayData.activities, {
-      considerOpeningHours: true
+      considerOpeningHours: true,
+      startPoint: hotelCoords  // 🏨 Comienza desde el hotel si existe
     });
 
     if (!result.wasOptimized) {

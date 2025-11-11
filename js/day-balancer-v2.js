@@ -108,39 +108,84 @@ function analyzeDayLoad(day) {
     let score = 0;
     const issues = [];
 
+    // 🛫 JETLAG: Detectar si es el primer día del viaje
+    const isFirstDay = day.day === 1;
+    if (isFirstDay) {
+        issues.push('⚠️ Primer día - considera el jetlag');
+    }
+
     // 1. Cantidad de actividades (peso: 30%)
     if (activityCount === 0) {
         score = 0;
         issues.push('Día vacío - sin actividades');
     } else if (activityCount <= 2) {
         score += 10;
-        issues.push('Día ligero - pocas actividades');
+        if (isFirstDay) {
+            issues.push('✅ Día ligero - PERFECTO para el primer día con jetlag');
+        } else {
+            issues.push('Día ligero - pocas actividades');
+        }
     } else if (activityCount <= 4) {
-        score += 20; // Ideal
+        score += 20; // Ideal para días normales
+        if (isFirstDay) {
+            score += 5; // Penalización leve por jetlag
+            issues.push('⚠️ Día normal - puede ser pesado para el primer día con jetlag');
+        }
     } else if (activityCount <= 6) {
         score += 25;
+        if (isFirstDay) {
+            score += 10; // Penalización moderada por jetlag
+            issues.push('⚠️ Día cargado - NO recomendado para el primer día (jetlag)');
+        }
     } else if (activityCount <= 8) {
         score += 28;
         issues.push('Día cargado - muchas actividades');
+        if (isFirstDay) {
+            score += 15; // Penalización fuerte por jetlag
+            issues.push('🚨 DEMASIADAS actividades para el primer día - reduce al menos a 4');
+        }
     } else {
         score += 30;
         issues.push('Día sobrecargado - demasiadas actividades');
+        if (isFirstDay) {
+            score += 20; // Penalización muy fuerte por jetlag
+            issues.push('🚨 SOBRECARGA CRÍTICA en día 1 - tu cuerpo necesita adaptarse al jetlag');
+        }
     }
 
     // 2. Duración total (peso: 25%)
     const totalHours = factors.totalDuration / 60;
     if (totalHours <= 4) {
         score += 10;
+        if (isFirstDay && activityCount > 0) {
+            issues.push('✅ Duración corta - ideal para adaptarse al jetlag');
+        }
     } else if (totalHours <= 8) {
         score += 20; // Ideal
+        if (isFirstDay) {
+            score += 5; // Penalización leve
+            issues.push('⚠️ Día completo - puede cansar con jetlag');
+        }
     } else if (totalHours <= 10) {
         score += 23;
+        if (isFirstDay) {
+            score += 8; // Penalización moderada
+            issues.push('⚠️ Día largo - difícil con jetlag el primer día');
+        }
     } else if (totalHours <= 12) {
         score += 25;
         issues.push('Día largo - más de 10 horas de actividades');
+        if (isFirstDay) {
+            score += 12; // Penalización fuerte
+            issues.push('🚨 MUY LARGO para el primer día - reduce duración');
+        }
     } else {
         score += 25;
         issues.push('Día extremadamente largo - agotador');
+        if (isFirstDay) {
+            score += 15; // Penalización muy fuerte
+            issues.push('🚨 INSOSTENIBLE con jetlag - recorta actividades');
+        }
     }
 
     // 3. Tiempo de transporte (peso: 20%)
@@ -647,10 +692,20 @@ function applySuggestion(days, suggestion, options = {}) {
         const targetDay = newDays.find(d => d.day === suggestion.to.day);
 
         if (sourceDay && targetDay) {
-            const activityIndex = sourceDay.activities.findIndex(
-                act => (act.id === suggestion.from.activityId) ||
-                       (act.title === suggestion.activity.title)
-            );
+            const activityIndex = sourceDay.activities.findIndex(act => {
+                // Primary: match by ID if both have valid IDs
+                if (act.id && suggestion.from.activityId) {
+                    return act.id === suggestion.from.activityId;
+                }
+                // Fallback: match by title (case-insensitive) when IDs are not available
+                const actTitle = (act.title || act.name || '').trim().toLowerCase();
+                const suggestionTitle = (suggestion.activity.title || suggestion.activity.name || '').trim().toLowerCase();
+                // Match by title if titles match (regardless of ID presence)
+                if (actTitle && suggestionTitle && actTitle === suggestionTitle) {
+                    return true;
+                }
+                return false;
+            });
 
             if (activityIndex !== -1) {
                 const [activity] = sourceDay.activities.splice(activityIndex, 1);
