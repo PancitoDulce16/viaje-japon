@@ -930,34 +930,23 @@ function applySuggestion(days, suggestion, options = {}) {
         const activity = sourceDay.activities[activityIndex];
         console.log(`✅ Actividad encontrada en índice ${activityIndex}: "${activity.title || activity.name}"`);
         console.log(`   Horario original: ${activity.time || activity.startTime || 'sin horario'}`);
+        console.log(`   Priority: ${suggestion.priority}`);
 
-        // 🧠 ESTRATEGIA INTELIGENTE: Intentar mover actividad
-        // 1. Primero intentar con horario original
-        // 2. Si hay conflicto, limpiar horario y reintentar
-        // 3. Los horarios se recalcularán después
+        // 🚨 NUEVA ESTRATEGIA MÁS AGRESIVA:
+        // Para sugerencias HIGH o CRITICAL, SIEMPRE MOVER sin verificar canFit
+        // Los horarios se recalcularán después de todas formas
+        const isHighPriority = suggestion.priority === 'critical' || suggestion.priority === 'high';
+        const isTargetDayEmpty = targetDay.activities.length === 0;
 
-        let canFit = canFitActivity(targetDay, activity);
-        let clearedTime = false;
+        if (isHighPriority || isTargetDayEmpty) {
+            console.log(`🚀 MOVIMIENTO FORZADO (${isHighPriority ? 'alta prioridad' : 'día vacío'}) - omitiendo verificación de conflictos`);
 
-        if (!canFit) {
-            console.log(`⚠️ Conflicto de horario detectado - intentando limpiar horario...`);
-            // Hacer copia sin horario para verificar
-            const activityCopy = { ...activity, time: null, startTime: null };
-            canFit = canFitActivity(targetDay, activityCopy);
-            clearedTime = true;
-        }
+            // Limpiar horario para recalcular después
+            activity.time = null;
+            activity.startTime = null;
+            activity.overLimit = false; // Limpiar flag de overLimit
 
-        if (canFit) {
-            if (clearedTime) {
-                console.log(`✅ Actividad CABE después de limpiar horario`);
-                // Limpiar horario de la actividad real
-                activity.time = null;
-                activity.startTime = null;
-            } else {
-                console.log(`✅ Actividad CABE con horario original`);
-            }
-
-            // Mover la actividad
+            // Mover la actividad SIN verificar canFit
             sourceDay.activities.splice(activityIndex, 1);
             targetDay.activities.push(activity);
 
@@ -975,7 +964,45 @@ function applySuggestion(days, suggestion, options = {}) {
             );
             console.log(`✅ Horarios recalculados`);
         } else {
-            console.error(`❌ FALLO: No se puede mover "${activity.title || activity.name}" - conflicto irresolvible`);
+            // Para prioridad baja/media, verificar conflictos primero
+            console.log(`📋 Verificando conflictos de horario...`);
+
+            let canFit = canFitActivity(targetDay, activity);
+            let clearedTime = false;
+
+            if (!canFit) {
+                console.log(`⚠️ Conflicto detectado - intentando limpiar horario...`);
+                const activityCopy = { ...activity, time: null, startTime: null };
+                canFit = canFitActivity(targetDay, activityCopy);
+                clearedTime = true;
+            }
+
+            if (canFit) {
+                if (clearedTime) {
+                    console.log(`✅ Actividad CABE después de limpiar horario`);
+                    activity.time = null;
+                    activity.startTime = null;
+                } else {
+                    console.log(`✅ Actividad CABE con horario original`);
+                }
+
+                sourceDay.activities.splice(activityIndex, 1);
+                targetDay.activities.push(activity);
+
+                console.log(`✅ MOVIMIENTO EXITOSO`);
+
+                targetDay.activities = RouteOptimizer.recalculateTimings(
+                    targetDay.activities,
+                    { defaultDuration: 60, transportBuffer: 10 }
+                );
+                sourceDay.activities = RouteOptimizer.recalculateTimings(
+                    sourceDay.activities,
+                    { defaultDuration: 60, transportBuffer: 10 }
+                );
+                console.log(`✅ Horarios recalculados`);
+            } else {
+                console.error(`❌ FALLO: No se puede mover "${activity.title || activity.name}" - conflicto irresolvible`);
+            }
         }
     } else if (suggestion.type === 'reorder') {
         // Reordenar actividades usando el optimizador de rutas

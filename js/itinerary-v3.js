@@ -512,6 +512,37 @@ async function showBalanceAnalysis() {
 
     console.log('📊 Balance analysis:', analysis);
 
+    // 🚨 AUTO-APLICAR SUGERENCIAS CRÍTICAS INMEDIATAMENTE (sin preguntar)
+    const criticalSuggestions = analysis.suggestions.filter(s => s.priority === 'critical');
+    if (criticalSuggestions.length > 0) {
+      console.log(`🚨 AUTO-APLICANDO ${criticalSuggestions.length} sugerencias CRÍTICAS...`);
+
+      const criticalResult = DayBalancer.applyAllSuggestions(
+        currentItinerary.days,
+        criticalSuggestions,
+        {
+          recalculateTimings: true,
+          optimizationMode: 'balanced'
+        }
+      );
+
+      if (criticalResult.applied > 0) {
+        currentItinerary.days = criticalResult.days;
+        await saveCurrentItineraryToFirebase();
+
+        Notifications.show(
+          `🚨 ${criticalResult.applied} actividades críticas redistribuidas automáticamente (no cabían en sus días)`,
+          'warning',
+          5000
+        );
+
+        // Re-analizar después de aplicar críticos
+        const reanalysis = DayBalancer.analyzeItineraryBalance(currentItinerary.days, currentItinerary);
+        analysis.suggestions = reanalysis.suggestions;
+        analysis.overallScore = reanalysis.overallScore;
+      }
+    }
+
     // Construir mensaje del modal
     let message = `<div class="space-y-4">`;
 
@@ -827,16 +858,54 @@ async function optimizeDayRoute(dayNumber) {
       return;
     }
 
-    // 🚨 VERIFICAR si hay actividades que no caben en el día
+    // 🚨 AUTO-FIX: Si hay actividades que no caben, moverlas AUTOMÁTICAMENTE
     if (result.activitiesOverLimit > 0) {
+      console.log(`🚨 ${result.activitiesOverLimit} actividades NO CABEN - Auto-redistribuyendo...`);
+
+      // Actualizar el día con las actividades optimizadas (incluyendo flags overLimit)
+      dayData.activities = result.optimizedActivities;
+      await saveCurrentItineraryToFirebase();
+
+      // Forzar análisis de balance y auto-aplicar fixes
+      const analysis = DayBalancer.analyzeItineraryBalance(currentItinerary.days, currentItinerary);
+      const criticalSuggestions = analysis.suggestions.filter(s => s.priority === 'critical');
+
+      if (criticalSuggestions.length > 0) {
+        console.log(`🔧 Auto-aplicando ${criticalSuggestions.length} fixes críticos...`);
+
+        const fixResult = DayBalancer.applyAllSuggestions(
+          currentItinerary.days,
+          criticalSuggestions,
+          {
+            recalculateTimings: true,
+            optimizationMode: 'balanced'
+          }
+        );
+
+        if (fixResult.applied > 0) {
+          currentItinerary.days = fixResult.days;
+          await saveCurrentItineraryToFirebase();
+
+          Notifications.show(
+            `🔧 ${fixResult.applied} actividades redistribuidas automáticamente a otros días (no cabían en este día)`,
+            'success',
+            5000
+          );
+
+          render();
+          return; // Terminar aquí para evitar mostrar el diálogo de confirmación
+        }
+      }
+
+      // Si no se pudieron auto-fijar, mostrar advertencia
       const overLimitNames = result.overLimitActivities
         .map(act => `• ${act.title || act.name}`)
         .join('\n');
 
       Notifications.show(
-        `⚠️ ATENCIÓN: ${result.activitiesOverLimit} actividad(es) NO caben en el día (sobrepasan las 23:00):\n\n${overLimitNames}\n\n💡 Considera:\n- Mover estas actividades a otro día\n- Reducir la duración de algunas actividades\n- Eliminar actividades menos prioritarias`,
+        `⚠️ ${result.activitiesOverLimit} actividad(es) NO caben en el día:\n\n${overLimitNames}\n\n💡 Reduce duraciones o muévelas manualmente`,
         'warning',
-        10000
+        8000
       );
     }
 

@@ -98,33 +98,6 @@ export const ModalRenderer = {
                                 <input type="text" id="activityStation" placeholder="Shinjuku Station" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             </div>
                         </div>
-                        <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-800 rounded-lg border border-blue-200 dark:border-blue-500">
-                            <div class="flex items-center gap-2 mb-3">
-                                <label class="block text-sm font-semibold text-gray-700 dark:text-white">
-                                    📍 Ubicación (para optimizador de rutas)
-                                </label>
-                                <button type="button" id="helpLocationBtn" class="text-blue-600 dark:text-blue-200 hover:text-blue-800 dark:hover:text-white text-xs font-semibold">
-                                    📖 Ver guía
-                                </button>
-                            </div>
-                            <div class="mb-3 p-2 bg-green-50 dark:bg-green-800 border border-green-200 dark:border-green-500 rounded text-xs">
-                                <span class="font-semibold text-green-800 dark:text-white">✨ Tip:</span>
-                                <span class="text-green-700 dark:text-green-100"> Escribe el nombre del lugar arriba (ej: "Tokyo Tower") y aparecerán sugerencias con coordenadas automáticas</span>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="activityLat" class="block text-xs font-semibold text-gray-600 dark:text-gray-200 mb-1">Latitud</label>
-                                    <input type="number" id="activityLat" step="0.000001" placeholder="35.681236" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm">
-                                </div>
-                                <div>
-                                    <label for="activityLng" class="block text-xs font-semibold text-gray-600 dark:text-gray-200 mb-1">Longitud</label>
-                                    <input type="number" id="activityLng" step="0.000001" placeholder="139.767125" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm">
-                                </div>
-                            </div>
-                            <p class="text-xs text-gray-600 dark:text-gray-200 mt-2">
-                                💡 Opcional: Necesario para calcular rutas óptimas y tiempos de traslado
-                            </p>
-                        </div>
                         <div class="mt-6 flex justify-end gap-4">
                             <button type="button" onclick="ItineraryHandler.closeActivityModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition">Cancelar</button>
                             <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition">Guardar</button>

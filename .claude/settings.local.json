@@ -23,7 +23,10 @@
       "WebSearch",
       "WebFetch(domain:developers.google.com)",
       "Bash(curl:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(git add:*)",
+      "Bash(find:*)",
+      "Bash(powershell -Command \"Get-Content ''C:\\Users\\Noelia\\Documents\\GitHub\\viaje-japon\\dashboard.html'' | Select-Object -Last 100\")"
     ],
     "deny": [],
     "ask": []
