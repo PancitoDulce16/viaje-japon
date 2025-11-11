@@ -240,6 +240,34 @@ function optimizeByGeography(activities, options) {
  * Optimiza de forma balanceada (geografía + tiempo)
  */
 function optimizeBalanced(activities, options) {
+    const { startPoint } = options;
+
+    // 🏨 Si hay un punto de inicio (hotel), la primera actividad DEBE ser la más cercana
+    if (startPoint) {
+        // Encontrar la actividad más cercana al hotel
+        const nearestToHotel = findNearestActivity(startPoint, activities);
+
+        if (nearestToHotel) {
+            // Remover esa actividad de la lista
+            const remainingActivities = activities.filter(a => a !== nearestToHotel);
+
+            // Optimizar el resto normalmente
+            const optimized = [nearestToHotel];
+
+            if (remainingActivities.length > 0) {
+                // Ahora optimizar desde la primera actividad (la más cercana al hotel)
+                const restOptimized = optimizeByGeography(remainingActivities, {
+                    ...options,
+                    startPoint: nearestToHotel.coordinates // Empezar desde la primera actividad
+                });
+                optimized.push(...restOptimized);
+            }
+
+            return optimized;
+        }
+    }
+
+    // Si no hay startPoint, usar la lógica original
     // Primero ordenar por tiempo
     const sortedByTime = sortByTime(activities.filter(a => a.time));
     const withoutTime = activities.filter(a => !a.time);
