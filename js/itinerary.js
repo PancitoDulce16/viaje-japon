@@ -680,6 +680,179 @@ async function showBalanceAnalysis() {
 }
 
 /**
+ * 🚀 OPTIMIZACIÓN MAESTRA DEL VIAJE COMPLETO
+ * Usa el MasterItineraryOptimizer para reestructurar todo el itinerario de forma inteligente
+ */
+async function runMasterOptimization() {
+  console.log('🚀 Starting master optimization...');
+
+  if (!currentItinerary || !currentItinerary.days || currentItinerary.days.length === 0) {
+    Notifications.show('No hay días en el itinerario para optimizar', 'info');
+    return;
+  }
+
+  // Verificar que MasterItineraryOptimizer esté disponible
+  if (!window.MasterItineraryOptimizer) {
+    Notifications.show('❌ Sistema de optimización no disponible', 'error');
+    console.error('MasterItineraryOptimizer no está cargado');
+    return;
+  }
+
+  try {
+    // Mostrar notificación de inicio
+    Notifications.info('🚀 Iniciando optimización inteligente del viaje...');
+
+    // Ejecutar optimización maestra
+    const result = await MasterItineraryOptimizer.optimizeCompleteItinerary(currentItinerary);
+
+    if (!result.success) {
+      Notifications.error('❌ Error en la optimización: ' + (result.error || 'Desconocido'));
+      return;
+    }
+
+    // Actualizar itinerario con el resultado optimizado
+    currentItinerary = result.itinerary;
+
+    // Construir mensaje del modal con resultados
+    let message = `<div class="space-y-4">`;
+
+    // Resumen general
+    message += `
+      <div class="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 p-4 rounded-lg border-2 border-purple-400 dark:border-purple-500">
+        <h3 class="font-bold text-lg mb-3 text-purple-900 dark:text-white">🎯 Optimización Completada</h3>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <span class="text-gray-700 dark:text-gray-100">Tiempo:</span>
+            <span class="font-bold text-gray-900 dark:text-white ml-2">${result.duration}s</span>
+          </div>
+          <div>
+            <span class="text-gray-700 dark:text-gray-100">Total Actividades:</span>
+            <span class="font-bold text-gray-900 dark:text-white ml-2">${result.metrics.totalActivities}</span>
+          </div>
+          <div>
+            <span class="text-gray-700 dark:text-gray-100">Promedio por Día:</span>
+            <span class="font-bold text-gray-900 dark:text-white ml-2">${result.metrics.averageActivitiesPerDay}</span>
+          </div>
+          <div>
+            <span class="text-gray-700 dark:text-gray-100">Distancia Total:</span>
+            <span class="font-bold text-gray-900 dark:text-white ml-2">${result.metrics.totalDistance}km</span>
+          </div>
+          <div>
+            <span class="text-gray-700 dark:text-gray-100">Ciudades:</span>
+            <span class="font-bold text-gray-900 dark:text-white ml-2">${result.metrics.cities}</span>
+          </div>
+          <div>
+            <span class="text-gray-700 dark:text-gray-100">Transiciones:</span>
+            <span class="font-bold text-gray-900 dark:text-white ml-2">${result.metrics.transitions}</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Validación
+    if (result.validation) {
+      const validationColor = result.validation.valid ? 'green' : 'red';
+      message += `
+        <div class="bg-${validationColor}-100 dark:bg-${validationColor}-900 p-4 rounded-lg border-2 border-${validationColor}-400 dark:border-${validationColor}-500">
+          <h3 class="font-bold text-lg mb-2 text-${validationColor}-900 dark:text-white">
+            ${result.validation.valid ? '✅ Validación Exitosa' : '⚠️ Validación con Advertencias'}
+          </h3>
+          <div class="text-sm space-y-1">
+            <div>
+              <span class="text-gray-700 dark:text-gray-100">Errores:</span>
+              <span class="font-bold text-${validationColor}-900 dark:text-white ml-2">${result.errors || 0}</span>
+            </div>
+            <div>
+              <span class="text-gray-700 dark:text-gray-100">Advertencias:</span>
+              <span class="font-bold text-${validationColor}-900 dark:text-white ml-2">${result.warnings || 0}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Contexto del viaje
+    if (result.context) {
+      message += `
+        <div class="bg-blue-100 dark:bg-blue-900 p-4 rounded-lg border-2 border-blue-400 dark:border-blue-500">
+          <h3 class="font-bold text-lg mb-2 text-blue-900 dark:text-white">📖 Narrativa del Viaje</h3>
+          <div class="text-sm space-y-2">
+            ${result.context.phases.map(phase => `
+              <div class="flex items-start gap-2">
+                <span class="font-semibold text-blue-900 dark:text-blue-100">${phase.label}:</span>
+                <span class="text-gray-700 dark:text-gray-300">Días ${phase.days.join(', ')}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Balance de energía
+    if (result.energyReport) {
+      message += `
+        <div class="bg-yellow-100 dark:bg-yellow-900 p-4 rounded-lg border-2 border-yellow-400 dark:border-yellow-500">
+          <h3 class="font-bold text-lg mb-2 text-yellow-900 dark:text-white">💪 Balance de Energía</h3>
+          <div class="text-sm">
+            <div class="flex items-center gap-2 mb-2">
+              ${result.energyReport.pattern.map(level => '⚫'.repeat(level)).join(' ')}
+            </div>
+            <span class="${result.energyReport.balanced ? 'text-green-700 dark:text-green-300' : 'text-orange-700 dark:text-orange-300'}">
+              ${result.energyReport.balanced ? '✅ Balance óptimo' : '⚠️ Considera ajustar intensidad'}
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Mejoras aplicadas
+    message += `
+      <div class="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-lg border border-indigo-400 dark:border-indigo-500">
+        <h4 class="font-bold text-sm mb-2 text-indigo-900 dark:text-white">✨ Mejoras Aplicadas:</h4>
+        <ul class="text-xs text-indigo-800 dark:text-indigo-100 space-y-1 list-disc list-inside">
+          <li>🛬 Día 1 optimizado para jetlag (actividades cercanas al hotel)</li>
+          <li>✈️ Último día vacío (reservado para aeropuerto)</li>
+          <li>📍 Actividades agrupadas por zonas geográficas</li>
+          <li>🗺️ Rutas optimizadas desde el hotel cada día</li>
+          <li>🔄 Transiciones entre ciudades planificadas</li>
+          <li>💪 Balance de intensidad calculado por fase</li>
+          <li>✅ Validación de distancias y coherencia</li>
+        </ul>
+      </div>
+    `;
+
+    message += `</div>`;
+
+    // Mostrar modal
+    const confirmed = await window.Dialogs.confirm({
+      title: '🚀 Optimización Inteligente Completada',
+      message: message,
+      confirmText: '💾 Guardar Cambios',
+      cancelText: 'Descartar',
+      type: 'success'
+    });
+
+    if (confirmed) {
+      // Guardar en Firebase
+      await saveCurrentItineraryToFirebase();
+
+      // Renderizar itinerario actualizado
+      renderItinerary();
+
+      Notifications.success('✅ Itinerario optimizado y guardado');
+    } else {
+      Notifications.info('Cambios descartados');
+      // Recargar itinerario original
+      await loadItinerary();
+    }
+
+  } catch (error) {
+    console.error('❌ Error in master optimization:', error);
+    Notifications.error('❌ Error en la optimización: ' + error.message);
+  }
+}
+
+/**
  * Aplica las sugerencias de balance automáticamente
  */
 async function applyBalanceSuggestions(suggestions) {
@@ -1019,9 +1192,14 @@ function renderDayOverview(day){
         <span>⚖️</span>
         <span>Analizar Balance</span>
       </button>
+      <button type="button" id="masterOptimizeBtn" class="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2 relative overflow-hidden">
+        <span class="text-xl">🚀</span>
+        <span>Optimización Inteligente de Viaje</span>
+        <span class="absolute top-0 right-0 bg-yellow-400 text-black text-xs font-bold px-2 py-0.5 rounded-bl-lg">✨ NUEVO</span>
+      </button>
       <button type="button" id="optimizeRouteBtn_${day.day}" class="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2">
         <span>🗺️</span>
-        <span>Optimizar Ruta</span>
+        <span>Optimizar Ruta del Día</span>
       </button>
       <button type="button" id="mealSuggestionsBtn_${day.day}" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2">
         <span>🍽️</span>
@@ -1475,6 +1653,7 @@ export const ItineraryHandler = {
         const mealSuggestionsBtn=e.target.closest('[id^="mealSuggestionsBtn_"]');
         const suggestionsBtn=e.target.closest('[id^="suggestionsBtn_"]');
         const analyzeBalanceBtn=e.target.closest('#analyzeBalanceBtn');
+        const masterOptimizeBtn=e.target.closest('#masterOptimizeBtn');
         const editBtn=e.target.closest('.activity-edit-btn');
         const deleteBtn=e.target.closest('.activity-delete-btn');
         const voteBtn = e.target.closest('.activity-vote-btn');
@@ -1483,6 +1662,10 @@ export const ItineraryHandler = {
         if(analyzeBalanceBtn){
           console.log('⚖️ Analyze balance button clicked');
           showBalanceAnalysis();
+        }
+        else if(masterOptimizeBtn){
+          console.log('🚀 Master optimize button clicked');
+          runMasterOptimization();
         }
         else if(optimizeBtn){
           console.log('🗺️ Optimize route button clicked');

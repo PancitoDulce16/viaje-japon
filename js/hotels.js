@@ -3,6 +3,7 @@ import { db, auth } from '/js/firebase-config.js';
 import { collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { APIsIntegration } from './apis-integration.js';
 import { Notifications } from './notifications.js';
+import { IntelligentGeocoder } from './intelligent-geocoder.js';
 
 export const HotelsHandler = {
   currentTripId: null,
@@ -650,7 +651,7 @@ export const HotelsHandler = {
   async saveHotel() {
     const checkIn = document.getElementById('hotelCheckIn').value;
     const checkOut = document.getElementById('hotelCheckOut').value;
-    
+
     // Calculate nights
     const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
 
@@ -670,15 +671,55 @@ export const HotelsHandler = {
     };
 
     try {
+      // 🧠 GEOCODIFICACIÓN AUTOMÁTICA
+      // Si hay dirección, intentar obtener coordenadas
+      if (hotelData.address) {
+        console.log(`🔍 Geocodificando hotel "${hotelData.name}"...`);
+        Notifications.info('🔍 Obteniendo coordenadas del hotel...');
+
+        const query = `${hotelData.name}, ${hotelData.address}, ${hotelData.city}, Japan`;
+        const geocodeResult = await IntelligentGeocoder.getCoordinates(query, {
+          city: hotelData.city
+        });
+
+        if (geocodeResult) {
+          hotelData.coordinates = {
+            lat: geocodeResult.lat,
+            lng: geocodeResult.lng
+          };
+          console.log(`✅ Coordenadas obtenidas: (${geocodeResult.lat}, ${geocodeResult.lng})`);
+        } else {
+          console.warn(`⚠️ No se pudieron obtener coordenadas para el hotel`);
+        }
+      } else if (hotelData.city) {
+        // Si no hay dirección pero sí ciudad, usar coordenadas de la ciudad
+        const cityInfo = this.japanCities[Object.keys(this.japanCities).find(
+          key => this.japanCities[key].name === hotelData.city
+        )];
+
+        if (cityInfo) {
+          hotelData.coordinates = {
+            lat: cityInfo.lat,
+            lng: cityInfo.lng
+          };
+          console.log(`📍 Usando coordenadas de ciudad: ${hotelData.city}`);
+        }
+      }
+
       this.myHotels.push(hotelData);
-      
+
       const hotelsRef = doc(db, 'trips', this.currentTripId, 'modules', 'hotels');
       await setDoc(hotelsRef, {
         hotels: this.myHotels,
         updatedAt: new Date().toISOString()
       }, { merge: true });
 
-      Notifications.success('✅ Hotel guardado correctamente');
+      if (hotelData.coordinates) {
+        Notifications.success('✅ Hotel guardado con coordenadas');
+      } else {
+        Notifications.success('✅ Hotel guardado (sin coordenadas)');
+      }
+
       this.hideAddHotelForm();
     } catch (error) {
       console.error('Error guardando hotel:', error);

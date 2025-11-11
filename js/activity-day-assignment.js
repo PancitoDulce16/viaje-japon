@@ -13,9 +13,9 @@ export const ActivityDayAssignment = {
    * Asigna todas las actividades del itinerario a los días óptimos
    * basándose en la ubicación de los hoteles
    * @param {Object} itinerary - Itinerario completo con days[] y hotels{}
-   * @returns {Object} Itinerario con actividades reasignadas
+   * @returns {Promise<Object>} Itinerario con actividades reasignadas
    */
-  assignActivitiesOptimally(itinerary) {
+  async assignActivitiesOptimally(itinerary) {
     if (!itinerary || !itinerary.days || itinerary.days.length === 0) {
       console.warn('⚠️ No hay días en el itinerario');
       return itinerary;
@@ -67,7 +67,13 @@ export const ActivityDayAssignment = {
     // 6. Balance final para evitar días vacíos
     this.balanceEmptyDays(itinerary);
 
-    // 7. Optimizar rutas de cada día desde el hotel
+    // 7. AUTO-COMPLETAR actividades si faltan
+    const autoResult = await this.autoCompleteActivities(itinerary);
+    if (autoResult.added > 0) {
+      console.log(`🤖 ${autoResult.added} actividades agregadas automáticamente`);
+    }
+
+    // 8. Optimizar rutas de cada día desde el hotel
     this.optimizeAllDaysFromHotel(itinerary, hotelsByDay);
 
     console.log('🎉 ASIGNACIÓN INTELIGENTE COMPLETADA');
@@ -514,9 +520,8 @@ export const ActivityDayAssignment = {
       }
 
       if (filled < needed) {
-        console.error(`❌ Día ${needyDay.day} solo tiene ${needyDay.activities.length} actividades (necesita ${MIN_ACTIVITIES_NORMAL})`);
-        console.error(`💡 CRÍTICO: El itinerario NO tiene suficientes actividades. Necesitas agregar más actividades a tu base de datos.`);
-        console.error(`💡 SUGERENCIA: Usa el botón "🕳️ Llenar Huecos" o "➕ Agregar Actividad" para este día.`);
+        console.log(`ℹ️ Día ${needyDay.day} tiene ${needyDay.activities.length} actividades (objetivo: ${MIN_ACTIVITIES_NORMAL})`);
+        // NO hacer nada más - será manejado por el sistema de auto-sugerencias
       }
     });
 
@@ -544,19 +549,156 @@ export const ActivityDayAssignment = {
 
       ${finalEmpty > 0 || finalLight > 0 ? '❌ CRÍTICO: Días insuficientes - AGREGA MÁS ACTIVIDADES' : '✨ Todos los días están balanceados'}`);
 
-    // 🎯 MOSTRAR NOTIFICACIÓN si hay días que necesitan más actividades
-    if ((finalEmpty > 0 || finalLight > 0) && typeof window !== 'undefined' && window.Notifications) {
-      const daysNeedingActivities = normalDaysFinal
-        .filter(d => d.activities.length < MIN_ACTIVITIES_NORMAL)
-        .map(d => `Día ${d.day} (${d.activities.length}/${MIN_ACTIVITIES_NORMAL})`)
-        .join(', ');
+    // 🎯 AUTO-SUGERIR y AGREGAR actividades automáticamente
+    if ((finalEmpty > 0 || finalLight > 0)) {
+      const daysNeedingActivities = normalDaysFinal.filter(d => d.activities.length < MIN_ACTIVITIES_NORMAL);
 
-      window.Notifications.show(
-        `❌ CRÍTICO: Días con pocas actividades: ${daysNeedingActivities}. El itinerario necesita MÁS actividades. Usa "🕳️ Llenar Huecos" o "➕ Agregar Actividad".`,
-        'error',
-        10000
-      );
+      console.log(`🤖 AUTO-COMPLETANDO ${daysNeedingActivities.length} días con pocas actividades...`);
+
+      // Auto-completar cada día
+      daysNeedingActivities.forEach(day => {
+        const needed = MIN_ACTIVITIES_NORMAL - day.activities.length;
+        if (needed > 0) {
+          console.log(`   Día ${day.day}: agregando ${needed} actividades automáticamente...`);
+          // La función autoSuggestActivities se ejecutará después
+          day._needsActivities = needed; // Marcar para auto-sugerencia
+        }
+      });
+
+      // Mostrar notificación informativa (no error)
+      if (typeof window !== 'undefined' && window.Notifications) {
+        const count = daysNeedingActivities.length;
+        window.Notifications.show(
+          `🤖 Auto-completando ${count} días con actividades sugeridas...`,
+          'info',
+          3000
+        );
+      }
     }
+  },
+
+  /**
+   * 🤖 AUTO-SUGIERE Y AGREGA actividades a días con pocas actividades
+   * @param {Object} itinerary
+   * @returns {Object} Resultado con actividades agregadas
+   */
+  async autoCompleteActivities(itinerary) {
+    if (!itinerary || !itinerary.days) return { added: 0 };
+
+    console.log('🤖 SISTEMA DE AUTO-COMPLETADO DE ACTIVIDADES');
+
+    // Obtener base de datos de actividades
+    const availableActivities = await this.getAvailableActivities();
+    if (!availableActivities || availableActivities.length === 0) {
+      console.warn('⚠️ No hay actividades disponibles en la base de datos');
+      return { added: 0 };
+    }
+
+    // IDs de actividades ya en el itinerario
+    const usedActivityIds = new Set();
+    itinerary.days.forEach(day => {
+      if (day.activities) {
+        day.activities.forEach(act => {
+          if (act.id) usedActivityIds.add(act.id);
+        });
+      }
+    });
+
+    let totalAdded = 0;
+
+    // Procesar cada día que necesita actividades
+    itinerary.days.forEach(day => {
+      if (!day._needsActivities || day._needsActivities === 0) return;
+
+      const needed = day._needsActivities;
+      const city = HotelBaseSystem.detectCityForDay(day);
+      const hotel = HotelBaseSystem.getHotelForCity(itinerary, city, day.day);
+
+      console.log(`   Día ${day.day} (${city}): buscando ${needed} actividades cercanas...`);
+
+      // Filtrar actividades disponibles para esta ciudad
+      const cityActivities = availableActivities.filter(act => {
+        // No usar actividades ya agregadas
+        if (usedActivityIds.has(act.id)) return false;
+
+        // Verificar que sea de la ciudad correcta
+        const actCity = act.city || act.area;
+        if (!actCity) return false;
+
+        return actCity.toLowerCase().includes(city.toLowerCase()) ||
+               city.toLowerCase().includes(actCity.toLowerCase());
+      });
+
+      if (cityActivities.length === 0) {
+        console.warn(`   ⚠️ No hay actividades disponibles para ${city}`);
+        return;
+      }
+
+      // Ordenar por proximidad al hotel
+      if (hotel && hotel.coordinates) {
+        cityActivities.sort((a, b) => {
+          if (!a.coordinates || !b.coordinates) return 0;
+
+          const distA = RouteOptimizer.calculateDistance(a.coordinates, hotel.coordinates);
+          const distB = RouteOptimizer.calculateDistance(b.coordinates, hotel.coordinates);
+          return distA - distB;
+        });
+      }
+
+      // Agregar las N más cercanas
+      const toAdd = cityActivities.slice(0, needed);
+      toAdd.forEach(activity => {
+        day.activities.push(activity);
+        usedActivityIds.add(activity.id);
+        totalAdded++;
+        console.log(`      ✅ "${activity.title || activity.name}" agregada`);
+      });
+
+      delete day._needsActivities; // Limpiar flag
+    });
+
+    console.log(`🎉 AUTO-COMPLETADO: ${totalAdded} actividades agregadas`);
+
+    return { added: totalAdded };
+  },
+
+  /**
+   * Obtiene actividades disponibles de la base de datos
+   * @returns {Promise<Array>} Lista de actividades
+   */
+  async getAvailableActivities() {
+    // Intentar obtener de window.UNIFIED_DATABASE
+    if (typeof window !== 'undefined' && window.UNIFIED_DATABASE) {
+      const activities = Object.values(window.UNIFIED_DATABASE);
+      console.log(`📦 Actividades cargadas desde UNIFIED_DATABASE: ${activities.length}`);
+      return activities;
+    }
+
+    // Intentar obtener de database.js
+    try {
+      const { UNIFIED_DATABASE } = await import('../database.js');
+      if (UNIFIED_DATABASE) {
+        const activities = Object.values(UNIFIED_DATABASE);
+        console.log(`📦 Actividades cargadas desde database.js: ${activities.length}`);
+        return activities;
+      }
+    } catch (error) {
+      console.warn('⚠️ No se pudo cargar database.js');
+    }
+
+    // Intentar obtener de activities-database.js
+    try {
+      const { activities } = await import('../data/activities-database.js');
+      if (activities) {
+        console.log(`📦 Actividades cargadas desde activities-database.js: ${activities.length}`);
+        return activities;
+      }
+    } catch (error) {
+      console.warn('⚠️ No se pudo cargar activities-database.js');
+    }
+
+    console.error('❌ No se encontró ninguna base de datos de actividades');
+    return [];
   },
 
   /**
