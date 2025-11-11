@@ -847,8 +847,17 @@ export const MasterItineraryOptimizer = {
       console.log('\n📍 PASO 8: Validando itinerario resultante...');
       let validation = MasterValidator.validateCompleteItinerary(itinerary);
 
+      // 🔍 DEBUG: Verificar estructura de validación
+      console.log('🔍 DEBUG validation:', {
+        valid: validation.valid,
+        hasValidations: !!validation.validations,
+        hasDistances: !!validation.validations?.distances,
+        distancesValid: validation.validations?.distances?.valid,
+        distancesErrors: validation.validations?.distances?.totalErrors
+      });
+
       // PASO 9: AUTO-CORRECCIÓN de errores de distancia (si existen)
-      if (!validation.valid && validation.validations.distances && !validation.validations.distances.valid) {
+      if (!validation.valid && validation.validations?.distances && !validation.validations.distances.valid) {
         console.log('\n🔧 PASO 9: Auto-corrección de errores de distancia...');
         const correctionResult = await this.autoCorrectDistanceErrors(itinerary, validation.validations.distances);
 
