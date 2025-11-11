@@ -431,13 +431,29 @@ function optimizeRoute(activities, options = {}) {
 
     // Recalcular horarios si está habilitado
     if (shouldRecalculateTimings && optimized.length > 0) {
-        // 🌅 SIEMPRE empezar temprano en la mañana cuando optimizamos
-        // No usar el horario de la primera actividad porque puede ser tardío
-        const earlyStartTime = '09:00'; // Forzar inicio a las 9am
-        console.log(`🌅 Recalculando horarios desde las ${earlyStartTime} (inicio forzado para día completo)`);
+        // 🌅 Determinar hora de inicio INTELIGENTE
+        // Opción 1: Si las actividades ya tienen horarios, usar el MÁS TEMPRANO
+        // Opción 2: Si no, usar default (09:00)
+
+        let startTime = '09:00'; // Default
+
+        // Buscar el horario más temprano entre las actividades
+        const activitiesWithTime = optimized.filter(a => a.time);
+        if (activitiesWithTime.length > 0) {
+            const earliestTime = activitiesWithTime
+                .map(a => SafeTimeUtils.parseTime(a.time))
+                .sort((a, b) => a - b)[0];
+
+            startTime = SafeTimeUtils.formatTime(earliestTime);
+            console.log(`⏰ Usando hora más temprana de las actividades existentes: ${startTime}`);
+        } else {
+            console.log(`⏰ No hay horarios previos, usando default: ${startTime}`);
+        }
+
+        console.log(`🌅 Recalculando horarios desde las ${startTime}`);
 
         optimized = recalculateTimings(optimized, {
-            startTime: earlyStartTime,  // 🔥 SIEMPRE 09:00
+            startTime: startTime,
             defaultDuration: 60,
             transportBuffer: 10
         });
