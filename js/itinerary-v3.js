@@ -741,7 +741,9 @@ async function applyBalanceSuggestions(suggestions) {
 }
 
 async function optimizeDayRoute(dayNumber) {
-  console.log('🗺️ Optimizing route for day', dayNumber);
+  console.log('═════════════════════════════════════════════════');
+  console.log('🗺️ OPTIMIZAR RUTA CLICKED - Día', dayNumber);
+  console.log('═════════════════════════════════════════════════');
 
   if (!currentItinerary || !currentItinerary.days) {
     Notifications.show('No hay itinerario para optimizar', 'error');
@@ -783,22 +785,42 @@ async function optimizeDayRoute(dayNumber) {
 
     // 🏨 Obtener coordenadas del hotel para este día
     let hotelCoords = null;
+    console.log('🔍 Buscando hotel para el día...');
+    console.log('   - HotelBaseSystem existe?', !!window.HotelBaseSystem);
+    console.log('   - currentItinerary.hotels existe?', !!currentItinerary.hotels);
+
     if (window.HotelBaseSystem && currentItinerary.hotels) {
       const city = window.HotelBaseSystem.detectCityForDay(dayData);
+      console.log(`   - Ciudad detectada: ${city}`);
+
       const hotel = window.HotelBaseSystem.getHotelForCity(currentItinerary, city, dayNumber);
+      console.log(`   - Hotel encontrado?`, !!hotel);
+
       if (hotel && hotel.coordinates) {
         hotelCoords = hotel.coordinates;
-        console.log(`🏨 Usando hotel en ${city} (día ${dayNumber}) como punto de inicio:`, hotelCoords);
+        console.log(`✅ HOTEL COORDS FOUND:`, hotelCoords);
+        console.log(`   Lat: ${hotelCoords.lat}, Lng: ${hotelCoords.lng}`);
       } else {
-        console.warn(`⚠️ No se encontró hotel para ${city} en día ${dayNumber}. Hotels disponibles:`, Object.keys(currentItinerary.hotels));
+        console.warn(`⚠️ No se encontró hotel para ${city} en día ${dayNumber}`);
+        console.warn(`Hotels disponibles:`, Object.keys(currentItinerary.hotels));
       }
+    } else {
+      console.warn('⚠️ HotelBaseSystem o hotels no disponible');
     }
+
+    console.log('🚀 Llamando RouteOptimizer.optimizeRoute...');
+    console.log('   - Actividades:', dayData.activities.length);
+    console.log('   - startPoint (hotelCoords):', hotelCoords);
 
     // Optimizar usando el RouteOptimizer con el hotel como punto de partida
     const result = RouteOptimizer.optimizeRoute(dayData.activities, {
       considerOpeningHours: true,
       startPoint: hotelCoords  // 🏨 Comienza desde el hotel si existe
     });
+
+    console.log('✅ RouteOptimizer.optimizeRoute completado');
+    console.log('   - wasOptimized:', result.wasOptimized);
+    console.log('   - activitiesOverLimit:', result.activitiesOverLimit || 0);
 
     if (!result.wasOptimized) {
       Notifications.show('No se pudo optimizar. Error interno.', 'error');
@@ -2220,8 +2242,11 @@ export const ItineraryHandler = {
           showBalanceAnalysis();
         }
         else if(optimizeBtn){
-          console.log('🗺️ Optimize route button clicked');
+          console.log('═════════════════════════════════════════════════');
+          console.log('🖱️ BUTTON CLICK DETECTED: Optimizar Ruta');
+          console.log('═════════════════════════════════════════════════');
           const day=parseInt(optimizeBtn.id.split('_')[1]);
+          console.log('📅 Día a optimizar:', day);
           optimizeDayRoute(day);
         }
         else if(mealSuggestionsBtn){
