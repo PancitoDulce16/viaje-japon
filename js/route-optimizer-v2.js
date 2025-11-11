@@ -291,10 +291,16 @@ function optimizeBalanced(activities, options) {
 
     // 🏨 Si hay un punto de inicio (hotel), la primera actividad DEBE ser la más cercana
     if (startPoint) {
+        console.log('🏨 HOTEL DETECTED - Optimizando desde hotel:', startPoint);
+        console.log(`📍 Analizando ${activities.length} actividades para encontrar la más cercana al hotel`);
+
         // Encontrar la actividad más cercana al hotel
         const nearestToHotel = findNearestActivity(startPoint, activities);
 
         if (nearestToHotel) {
+            console.log(`✅ PRIMERA ACTIVIDAD (más cercana al hotel): "${nearestToHotel.title || nearestToHotel.name}"`);
+            console.log(`📏 Distancia al hotel: ${calculateDistance(startPoint, nearestToHotel.coordinates).toFixed(2)} km`);
+
             // Remover esa actividad de la lista
             const remainingActivities = activities.filter(a => a !== nearestToHotel);
 
@@ -302,6 +308,7 @@ function optimizeBalanced(activities, options) {
             const optimized = [nearestToHotel];
 
             if (remainingActivities.length > 0) {
+                console.log(`🔄 Optimizando las ${remainingActivities.length} actividades restantes desde "${nearestToHotel.title || nearestToHotel.name}"`);
                 // Ahora optimizar desde la primera actividad (la más cercana al hotel)
                 const restOptimized = optimizeByGeography(remainingActivities, {
                     ...options,
@@ -310,8 +317,13 @@ function optimizeBalanced(activities, options) {
                 optimized.push(...restOptimized);
             }
 
+            console.log('✅ Orden final de actividades:', optimized.map((a, i) => `${i + 1}. ${a.title || a.name}`));
             return optimized;
+        } else {
+            console.warn('⚠️ No se encontró actividad más cercana al hotel (esto no debería pasar)');
         }
+    } else {
+        console.log('⚠️ NO hay hotel (startPoint) - usando optimización sin hotel');
     }
 
     // Si no hay startPoint, usar la lógica original
@@ -419,9 +431,13 @@ function optimizeRoute(activities, options = {}) {
 
     // Recalcular horarios si está habilitado
     if (shouldRecalculateTimings && optimized.length > 0) {
-        const firstTime = optimized[0].time;
+        // 🌅 SIEMPRE empezar temprano en la mañana cuando optimizamos
+        // No usar el horario de la primera actividad porque puede ser tardío
+        const earlyStartTime = '09:00'; // Forzar inicio a las 9am
+        console.log(`🌅 Recalculando horarios desde las ${earlyStartTime} (inicio forzado para día completo)`);
+
         optimized = recalculateTimings(optimized, {
-            startTime: firstTime,
+            startTime: earlyStartTime,  // 🔥 SIEMPRE 09:00
             defaultDuration: 60,
             transportBuffer: 10
         });
