@@ -410,10 +410,17 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
 
     // 🔥 PRIORIDAD 1: Llenar días vacíos PRIMERO
     if (emptyDays.length > 0) {
+        console.log(`🚨 DÍAS VACÍOS DETECTADOS: ${emptyDays.length}`);
+        console.log('📋 Días vacíos:', emptyDays.map(d => `Día ${d.day}`).join(', '));
+
         // Encontrar días con actividades para redistribuir
         const daysWithActivities = daysAnalysis.filter(d => d.activities.length > 0);
+        console.log(`📊 Días con actividades: ${daysWithActivities.length}`);
+        console.log('📊 Distribución:', daysWithActivities.map(d => `Día ${d.day}: ${d.activities.length} actividades`).join(', '));
 
         emptyDays.forEach(emptyDay => {
+            console.log(`\n🔍 Procesando Día ${emptyDay.day} (vacío)`);
+
             // Intentar primero con días con 4+ actividades, luego 3+, luego 2+
             let donorDays = daysWithActivities
                 .filter(d => d.activities.length >= 4)
@@ -433,13 +440,25 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
                     .sort((a, b) => b.activities.length - a.activities.length);
             }
 
+            // 🆕 Si no hay días con 2+, intentar con días con AL MENOS 1 actividad
+            if (donorDays.length === 0) {
+                donorDays = daysWithActivities
+                    .filter(d => d.activities.length >= 1)
+                    .sort((a, b) => b.activities.length - a.activities.length);
+                console.log(`⚠️ No hay días con 2+ actividades. Intentando con días con 1+ actividades: ${donorDays.length} días encontrados`);
+            }
+
             if (donorDays.length > 0) {
                 const donorDay = donorDays[0];
+                console.log(`✅ Día donante encontrado: Día ${donorDay.day} con ${donorDay.activities.length} actividades`);
+
                 // Usar selección inteligente para encontrar mejor candidato
                 const candidates = findMovableCandidates(donorDay.activities);
                 const activityToMove = candidates.length > 0
                     ? candidates[0]
                     : donorDay.activities[Math.floor(donorDay.activities.length / 2)];
+
+                console.log(`📦 Actividad a mover: "${activityToMove.title || activityToMove.name}" (ID: ${activityToMove.id})`);
 
                 suggestions.push({
                     type: 'move',
@@ -450,7 +469,9 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
                     to: { day: emptyDay.day },
                     activity: activityToMove
                 });
+                console.log(`✅ Sugerencia creada: Mover de Día ${donorDay.day} → Día ${emptyDay.day}`);
             } else {
+                console.error(`❌ NO hay días donantes para Día ${emptyDay.day}. Todos los días tienen 0 actividades.`);
                 // Si NO hay días donantes, sugerir al usuario agregar actividades manualmente
                 suggestions.push({
                     type: 'manual-action',
@@ -727,54 +748,79 @@ function applySuggestion(days, suggestion, options = {}) {
             }
         }
     } else if (suggestion.type === 'move') {
+        console.log(`\n🔄 APLICANDO MOVE: De Día ${suggestion.from.day} → Día ${suggestion.to.day}`);
+        console.log(`📦 Actividad: "${suggestion.activity.title || suggestion.activity.name}" (ID: ${suggestion.from.activityId})`);
+
         // Mover actividad de un día a otro
         const sourceDay = newDays.find(d => d.day === suggestion.from.day);
         const targetDay = newDays.find(d => d.day === suggestion.to.day);
 
-        if (sourceDay && targetDay) {
-            const activityIndex = sourceDay.activities.findIndex(act => {
-                // Primary: match by ID if both have valid IDs
-                if (act.id && suggestion.from.activityId) {
-                    return act.id === suggestion.from.activityId;
-                }
-                // Fallback: match by title (case-insensitive) when IDs are not available
-                const actTitle = (act.title || act.name || '').trim().toLowerCase();
-                const suggestionTitle = (suggestion.activity.title || suggestion.activity.name || '').trim().toLowerCase();
-                // Match by title if titles match (regardless of ID presence)
-                if (actTitle && suggestionTitle && actTitle === suggestionTitle) {
-                    return true;
-                }
-                return false;
-            });
+        if (!sourceDay) {
+            console.error(`❌ ERROR: No se encontró día origen ${suggestion.from.day}`);
+            return newDays;
+        }
+        if (!targetDay) {
+            console.error(`❌ ERROR: No se encontró día destino ${suggestion.to.day}`);
+            return newDays;
+        }
 
-            if (activityIndex !== -1) {
-                const activity = sourceDay.activities[activityIndex];
+        console.log(`✅ Días encontrados: Origen (${sourceDay.activities.length} act) → Destino (${targetDay.activities.length} act)`);
 
-                // ✅ VERIFICAR que la actividad no se solape con otras en el día destino
-                if (canFitActivity(targetDay, activity)) {
-                    // Solo si cabe, remover del source
-                    sourceDay.activities.splice(activityIndex, 1);
-                    targetDay.activities.push(activity);
-
-                    // Reordenar por horario después de agregar
-                    targetDay.activities = sortActivitiesByTime(targetDay.activities);
-
-                    // Recalcular horarios si está habilitado
-                    if (recalculateTimings) {
-                        targetDay.activities = RouteOptimizer.recalculateTimings(
-                            targetDay.activities,
-                            { defaultDuration: 60, transportBuffer: 10 }
-                        );
-                        sourceDay.activities = RouteOptimizer.recalculateTimings(
-                            sourceDay.activities,
-                            { defaultDuration: 60, transportBuffer: 10 }
-                        );
-                    }
-                } else {
-                    // Si no cabe, NO modificar nada
-                    console.warn(`⚠️ No se puede mover "${activity.title || activity.name}" - se solaparía con otra actividad`);
-                }
+        const activityIndex = sourceDay.activities.findIndex(act => {
+            // Primary: match by ID if both have valid IDs
+            if (act.id && suggestion.from.activityId) {
+                return act.id === suggestion.from.activityId;
             }
+            // Fallback: match by title (case-insensitive) when IDs are not available
+            const actTitle = (act.title || act.name || '').trim().toLowerCase();
+            const suggestionTitle = (suggestion.activity.title || suggestion.activity.name || '').trim().toLowerCase();
+            // Match by title if titles match (regardless of ID presence)
+            if (actTitle && suggestionTitle && actTitle === suggestionTitle) {
+                return true;
+            }
+            return false;
+        });
+
+        if (activityIndex === -1) {
+            console.error(`❌ ERROR: Actividad NO encontrada en día origen`);
+            console.error(`Buscando ID: ${suggestion.from.activityId}`);
+            console.error(`Buscando título: ${suggestion.activity.title || suggestion.activity.name}`);
+            console.error(`Actividades disponibles:`, sourceDay.activities.map(a => ({
+                id: a.id,
+                title: a.title || a.name
+            })));
+            return newDays;
+        }
+
+        const activity = sourceDay.activities[activityIndex];
+        console.log(`✅ Actividad encontrada en índice ${activityIndex}: "${activity.title || activity.name}"`);
+
+        // ✅ VERIFICAR que la actividad no se solape con otras en el día destino
+        if (canFitActivity(targetDay, activity)) {
+            console.log(`✅ Actividad CABE en día destino`);
+            // Solo si cabe, remover del source
+            sourceDay.activities.splice(activityIndex, 1);
+            targetDay.activities.push(activity);
+
+            console.log(`✅ MOVIMIENTO EXITOSO: Día ${suggestion.from.day} ahora tiene ${sourceDay.activities.length} act, Día ${suggestion.to.day} ahora tiene ${targetDay.activities.length} act`);
+
+            // Reordenar por horario después de agregar
+            targetDay.activities = sortActivitiesByTime(targetDay.activities);
+
+            // Recalcular horarios si está habilitado
+            if (recalculateTimings) {
+                targetDay.activities = RouteOptimizer.recalculateTimings(
+                    targetDay.activities,
+                    { defaultDuration: 60, transportBuffer: 10 }
+                );
+                sourceDay.activities = RouteOptimizer.recalculateTimings(
+                    sourceDay.activities,
+                    { defaultDuration: 60, transportBuffer: 10 }
+                );
+            }
+        } else {
+            // Si no cabe, NO modificar nada
+            console.error(`❌ FALLO: No se puede mover "${activity.title || activity.name}" - se solaparía con otra actividad`);
         }
     } else if (suggestion.type === 'reorder') {
         // Reordenar actividades usando el optimizador de rutas
