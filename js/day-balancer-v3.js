@@ -790,7 +790,28 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
         });
     });
 
-    return suggestions;
+    // 🔧 DEDUPLICACIÓN: Eliminar sugerencias duplicadas para la misma actividad
+    const seen = new Set();
+    const deduplicated = suggestions.filter(suggestion => {
+        if (suggestion.type !== 'move') return true; // No deduplicar otros tipos
+
+        // Crear clave única: from.day + activityId/title
+        const key = `${suggestion.from.day}-${suggestion.from.activityId || (suggestion.activity.title || suggestion.activity.name)}`;
+
+        if (seen.has(key)) {
+            console.log(`🔄 SKIP duplicado: "${suggestion.activity.title || suggestion.activity.name}" de Día ${suggestion.from.day}`);
+            return false; // Skip duplicado
+        }
+
+        seen.add(key);
+        return true;
+    });
+
+    if (deduplicated.length < suggestions.length) {
+        console.log(`🔧 Eliminadas ${suggestions.length - deduplicated.length} sugerencias duplicadas`);
+    }
+
+    return deduplicated;
 }
 
 /**
@@ -997,14 +1018,9 @@ function applySuggestion(days, suggestion, options = {}) {
         });
 
         if (activityIndex === -1) {
-            console.error(`❌ ERROR: Actividad NO encontrada en día origen`);
-            console.error(`Buscando ID: ${suggestion.from.activityId}`);
-            console.error(`Buscando título: ${suggestion.activity.title || suggestion.activity.name}`);
-            console.error(`Actividades disponibles:`, sourceDay.activities.map(a => ({
-                id: a.id,
-                title: a.title || a.name
-            })));
-            return newDays;
+            console.warn(`⚠️ SKIP: Actividad "${suggestion.activity.title || suggestion.activity.name}" ya no está en Día ${suggestion.from.day}`);
+            console.warn(`   Posiblemente ya fue movida. Actividades disponibles:`, sourceDay.activities.map(a => a.title || a.name).join(', '));
+            return newDays; // Simplemente skip, no es un error fatal
         }
 
         const activity = sourceDay.activities[activityIndex];
