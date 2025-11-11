@@ -508,8 +508,15 @@ async function showBalanceAnalysis() {
 
   try {
     // 🎯 USAR BALANCE INTELIGENTE en vez de solo análisis
-    // Esto hace asignación por proximidad + reglas especiales + análisis
-    const result = DayBalancer.smartBalanceItinerary(currentItinerary);
+    // Esto hace asignación por proximidad + auto-completado + análisis
+    const result = await DayBalancer.smartBalanceItinerary(currentItinerary);
+
+    // ✅ VALIDAR RESULTADO
+    if (!result || !result.analysis) {
+      console.error('❌ smartBalanceItinerary no devolvió un resultado válido:', result);
+      Notifications.error('❌ Error al analizar el itinerario');
+      return;
+    }
 
     // Actualizar itinerario con los cambios
     currentItinerary = result.itinerary;
@@ -517,6 +524,12 @@ async function showBalanceAnalysis() {
 
     const analysis = result.analysis;
     console.log('📊 Smart balance result:', result);
+
+    // ✅ VALIDAR QUE ANALYSIS TIENE SUGGESTIONS
+    if (!analysis.suggestions || !Array.isArray(analysis.suggestions)) {
+      console.warn('⚠️ analysis no tiene suggestions válidas, inicializando array vacío');
+      analysis.suggestions = [];
+    }
 
     // 🚨 AUTO-APLICAR SUGERENCIAS CRÍTICAS INMEDIATAMENTE (sin preguntar)
     const criticalSuggestions = analysis.suggestions.filter(s => s.priority === 'critical');
@@ -733,6 +746,179 @@ async function showBalanceAnalysis() {
 }
 
 /**
+ * 🚀 OPTIMIZACIÓN MAESTRA DEL VIAJE COMPLETO
+ * Usa el MasterItineraryOptimizer para reestructurar todo el itinerario de forma inteligente
+ */
+async function runMasterOptimization() {
+  console.log('🚀 Starting master optimization...');
+
+  if (!currentItinerary || !currentItinerary.days || currentItinerary.days.length === 0) {
+    Notifications.show('No hay días en el itinerario para optimizar', 'info');
+    return;
+  }
+
+  // Verificar que MasterItineraryOptimizer esté disponible
+  if (!window.MasterItineraryOptimizer) {
+    Notifications.show('❌ Sistema de optimización no disponible', 'error');
+    console.error('MasterItineraryOptimizer no está cargado');
+    return;
+  }
+
+  try {
+    // Mostrar notificación de inicio
+    Notifications.info('🚀 Iniciando optimización inteligente del viaje...');
+
+    // Ejecutar optimización maestra
+    const result = await MasterItineraryOptimizer.optimizeCompleteItinerary(currentItinerary);
+
+    if (!result.success) {
+      Notifications.error('❌ Error en la optimización: ' + (result.error || 'Desconocido'));
+      return;
+    }
+
+    // Actualizar itinerario con el resultado optimizado
+    currentItinerary = result.itinerary;
+
+    // Construir mensaje del modal con resultados
+    let message = `<div class="space-y-4">`;
+
+    // Resumen general
+    message += `
+      <div class="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 p-4 rounded-lg border-2 border-purple-400 dark:border-purple-500">
+        <h3 class="font-bold text-lg mb-3 text-purple-900 dark:text-white">🎯 Optimización Completada</h3>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <span class="text-gray-700 dark:text-gray-100">Tiempo:</span>
+            <span class="font-bold text-gray-900 dark:text-white ml-2">${result.duration}s</span>
+          </div>
+          <div>
+            <span class="text-gray-700 dark:text-gray-100">Total Actividades:</span>
+            <span class="font-bold text-gray-900 dark:text-white ml-2">${result.metrics.totalActivities}</span>
+          </div>
+          <div>
+            <span class="text-gray-700 dark:text-gray-100">Promedio por Día:</span>
+            <span class="font-bold text-gray-900 dark:text-white ml-2">${result.metrics.averageActivitiesPerDay}</span>
+          </div>
+          <div>
+            <span class="text-gray-700 dark:text-gray-100">Distancia Total:</span>
+            <span class="font-bold text-gray-900 dark:text-white ml-2">${result.metrics.totalDistance}km</span>
+          </div>
+          <div>
+            <span class="text-gray-700 dark:text-gray-100">Ciudades:</span>
+            <span class="font-bold text-gray-900 dark:text-white ml-2">${result.metrics.cities}</span>
+          </div>
+          <div>
+            <span class="text-gray-700 dark:text-gray-100">Transiciones:</span>
+            <span class="font-bold text-gray-900 dark:text-white ml-2">${result.metrics.transitions}</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Validación
+    if (result.validation) {
+      const validationColor = result.validation.valid ? 'green' : 'red';
+      message += `
+        <div class="bg-${validationColor}-100 dark:bg-${validationColor}-900 p-4 rounded-lg border-2 border-${validationColor}-400 dark:border-${validationColor}-500">
+          <h3 class="font-bold text-lg mb-2 text-${validationColor}-900 dark:text-white">
+            ${result.validation.valid ? '✅ Validación Exitosa' : '⚠️ Validación con Advertencias'}
+          </h3>
+          <div class="text-sm space-y-1">
+            <div>
+              <span class="text-gray-700 dark:text-gray-100">Errores:</span>
+              <span class="font-bold text-${validationColor}-900 dark:text-white ml-2">${result.errors || 0}</span>
+            </div>
+            <div>
+              <span class="text-gray-700 dark:text-gray-100">Advertencias:</span>
+              <span class="font-bold text-${validationColor}-900 dark:text-white ml-2">${result.warnings || 0}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Contexto del viaje
+    if (result.context) {
+      message += `
+        <div class="bg-blue-100 dark:bg-blue-900 p-4 rounded-lg border-2 border-blue-400 dark:border-blue-500">
+          <h3 class="font-bold text-lg mb-2 text-blue-900 dark:text-white">📖 Narrativa del Viaje</h3>
+          <div class="text-sm space-y-2">
+            ${result.context.phases.map(phase => `
+              <div class="flex items-start gap-2">
+                <span class="font-semibold text-blue-900 dark:text-blue-100">${phase.label}:</span>
+                <span class="text-gray-700 dark:text-gray-300">Días ${phase.days.join(', ')}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Balance de energía
+    if (result.energyReport) {
+      message += `
+        <div class="bg-yellow-100 dark:bg-yellow-900 p-4 rounded-lg border-2 border-yellow-400 dark:border-yellow-500">
+          <h3 class="font-bold text-lg mb-2 text-yellow-900 dark:text-white">💪 Balance de Energía</h3>
+          <div class="text-sm">
+            <div class="flex items-center gap-2 mb-2">
+              ${result.energyReport.pattern.map(level => '⚫'.repeat(level)).join(' ')}
+            </div>
+            <span class="${result.energyReport.balanced ? 'text-green-700 dark:text-green-300' : 'text-orange-700 dark:text-orange-300'}">
+              ${result.energyReport.balanced ? '✅ Balance óptimo' : '⚠️ Considera ajustar intensidad'}
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Mejoras aplicadas
+    message += `
+      <div class="bg-indigo-100 dark:bg-indigo-900 p-3 rounded-lg border border-indigo-400 dark:border-indigo-500">
+        <h4 class="font-bold text-sm mb-2 text-indigo-900 dark:text-white">✨ Mejoras Aplicadas:</h4>
+        <ul class="text-xs text-indigo-800 dark:text-indigo-100 space-y-1 list-disc list-inside">
+          <li>🛬 Día 1 optimizado para jetlag (actividades cercanas al hotel)</li>
+          <li>✈️ Último día vacío (reservado para aeropuerto)</li>
+          <li>📍 Actividades agrupadas por zonas geográficas</li>
+          <li>🗺️ Rutas optimizadas desde el hotel cada día</li>
+          <li>🔄 Transiciones entre ciudades planificadas</li>
+          <li>💪 Balance de intensidad calculado por fase</li>
+          <li>✅ Validación de distancias y coherencia</li>
+        </ul>
+      </div>
+    `;
+
+    message += `</div>`;
+
+    // Mostrar modal
+    const confirmed = await window.Dialogs.confirm({
+      title: '🚀 Optimización Inteligente Completada',
+      message: message,
+      confirmText: '💾 Guardar Cambios',
+      cancelText: 'Descartar',
+      type: 'success'
+    });
+
+    if (confirmed) {
+      // Guardar en Firebase
+      await saveCurrentItineraryToFirebase();
+
+      // Renderizar itinerario actualizado
+      renderItinerary();
+
+      Notifications.success('✅ Itinerario optimizado y guardado');
+    } else {
+      Notifications.info('Cambios descartados');
+      // Recargar itinerario original
+      await loadItinerary();
+    }
+
+  } catch (error) {
+    console.error('❌ Error in master optimization:', error);
+    Notifications.error('❌ Error en la optimización: ' + error.message);
+  }
+}
+
+/**
  * Aplica las sugerencias de balance automáticamente
  */
 async function applyBalanceSuggestions(suggestions) {
@@ -779,7 +965,7 @@ async function applyBalanceSuggestions(suggestions) {
 
 async function optimizeDayRoute(dayNumber) {
   console.log('═════════════════════════════════════════════════');
-  console.log('🗺️ OPTIMIZAR RUTA CLICKED - Día', dayNumber);
+  console.log('🗺️ SMART OPTIMIZE ROUTE CLICKED - Día', dayNumber);
   console.log('═════════════════════════════════════════════════');
 
   if (!currentItinerary || !currentItinerary.days) {
@@ -788,141 +974,88 @@ async function optimizeDayRoute(dayNumber) {
   }
 
   const dayData = currentItinerary.days.find(d => d.day === dayNumber);
-  if (!dayData || !dayData.activities || dayData.activities.length < 2) {
-    Notifications.show('Necesitas al menos 2 actividades para optimizar la ruta', 'info');
+  if (!dayData || !dayData.activities || dayData.activities.length === 0) {
+    Notifications.show('No hay actividades en este día para optimizar', 'info');
     return;
   }
 
+  // --- Requisitos Previos ---
+  // 1. Verificar hotel
+  const city = window.HotelBaseSystem ? window.HotelBaseSystem.detectCityForDay(dayData) : dayData.city;
+  const hotel = window.HotelBaseSystem ? window.HotelBaseSystem.getHotelForCity(currentItinerary, city, dayNumber) : null;
+  if (!hotel || !hotel.coordinates) {
+    Notifications.show(`Registra tu hotel en ${city} para una optimización inteligente basada en ubicación.`, 'warning', 6000);
+    // Continuar con la optimización simple si no hay hotel
+  }
+
+  // 2. Verificar coordenadas en actividades
+  const activitiesWithCoords = dayData.activities.filter(act => act.coordinates && act.coordinates.lat && act.coordinates.lng);
+  if (activitiesWithCoords.length < dayData.activities.length) {
+    Notifications.show(`Algunas actividades no tienen ubicación. La optimización puede no ser precisa.`, 'info', 5000);
+  }
+
+  Notifications.show('🧠 Analizando optimizaciones inteligentes...', 'info');
+  await new Promise(resolve => setTimeout(resolve, 100)); // Dar tiempo a la UI para actualizar
+
   try {
-    // 🛡️ IMPORTANTE: Verificar que las actividades tienen coordenadas
-    const activitiesWithCoords = dayData.activities.filter(act =>
-      act.coordinates && act.coordinates.lat && act.coordinates.lng
-    );
+    // --- Lógica de Optimización Inteligente ---
+    const analysis = DayBalancer.analyzeItineraryBalance(currentItinerary.days, currentItinerary);
+    const allSuggestions = analysis.suggestions;
 
-    if (activitiesWithCoords.length < 2) {
-      const activitiesWithoutCoords = dayData.activities.filter(act =>
-        !act.coordinates || !act.coordinates.lat || !act.coordinates.lng
-      );
+    // Filtrar sugerencias geográficas de ALTA prioridad para el día actual
+    const relevantSuggestions = allSuggestions.filter(s => {
+      const isHighPriority = s.priority === 'high' || s.priority === 'critical';
+      const isGeographic = s.reason && (s.reason.includes('km de tu hotel') || s.reason.includes('traslado(s) largo(s)'));
 
-      const activityNames = activitiesWithoutCoords.map(act => `• ${act.title || act.name}`).join('\n');
-
-      Notifications.show(
-        `⚠️ Necesitas agregar ubicaciones a las actividades.\n\n` +
-        `${activitiesWithCoords.length} de ${dayData.activities.length} tienen ubicación.\n\n` +
-        `Actividades sin ubicación:\n${activityNames}\n\n` +
-        `💡 Tip: Al editar una actividad, escribe el nombre del lugar (ej: "Tokyo Tower") y aparecerán sugerencias con coordenadas automáticas. ¡Es súper fácil!`,
-        'warning',
-        8000
-      );
-      return;
-    }
-
-    // Mostrar loading
-    Notifications.show('Optimizando ruta...', 'info');
-
-    // 🏨 Obtener coordenadas del hotel para este día
-    let hotelCoords = null;
-    console.log('🔍 Buscando hotel para el día...');
-    console.log('   - HotelBaseSystem existe?', !!window.HotelBaseSystem);
-    console.log('   - currentItinerary.hotels existe?', !!currentItinerary.hotels);
-
-    if (window.HotelBaseSystem && currentItinerary.hotels) {
-      const city = window.HotelBaseSystem.detectCityForDay(dayData);
-      console.log(`   - Ciudad detectada: ${city}`);
-
-      const hotel = window.HotelBaseSystem.getHotelForCity(currentItinerary, city, dayNumber);
-      console.log(`   - Hotel encontrado?`, !!hotel);
-
-      if (hotel && hotel.coordinates) {
-        hotelCoords = hotel.coordinates;
-        console.log(`✅ HOTEL COORDS FOUND:`, hotelCoords);
-        console.log(`   Lat: ${hotelCoords.lat}, Lng: ${hotelCoords.lng}`);
-      } else {
-        console.warn(`⚠️ No se encontró hotel para ${city} en día ${dayNumber}`);
-        console.warn(`Hotels disponibles:`, Object.keys(currentItinerary.hotels));
+      // Sugerencia de reordenar para este día
+      if (s.type === 'reorder' && s.day === dayNumber) {
+        return true;
       }
-    } else {
-      console.warn('⚠️ HotelBaseSystem o hotels no disponible');
-    }
-
-    console.log('🚀 Llamando RouteOptimizer.optimizeRoute...');
-    console.log('   - Actividades:', dayData.activities.length);
-    console.log('   - startPoint (hotelCoords):', hotelCoords);
-
-    // Optimizar usando el RouteOptimizer con el hotel como punto de partida
-    const result = RouteOptimizer.optimizeRoute(dayData.activities, {
-      considerOpeningHours: true,
-      startPoint: hotelCoords  // 🏨 Comienza desde el hotel si existe
+      // Sugerencia de mover una actividad A este día por cercanía
+      if (s.type === 'move' && s.to.day === dayNumber && isHighPriority && isGeographic) {
+        return true;
+      }
+      // Sugerencia de mover una actividad DESDE este día por ser un outlier geográfico
+      if (s.type === 'move' && s.from.day === dayNumber && isHighPriority && isGeographic) {
+        return true;
+      }
+      return false;
     });
 
-    console.log('✅ RouteOptimizer.optimizeRoute completado');
-    console.log('   - wasOptimized:', result.wasOptimized);
-    console.log('   - activitiesOverLimit:', result.activitiesOverLimit || 0);
+    if (relevantSuggestions.length > 0) {
+      // --- APLICAR OPTIMIZACIÓN INTELIGENTE ---
+      console.log(`🧠 Encontradas ${relevantSuggestions.length} optimizaciones inteligentes para el Día ${dayNumber}. Aplicando...`);
 
-    if (!result.wasOptimized) {
-      Notifications.show('No se pudo optimizar. Error interno.', 'error');
+      const result = DayBalancer.applyAllSuggestions(currentItinerary.days, relevantSuggestions);
+
+      if (result.applied > 0) {
+        currentItinerary.days = result.days;
+        await saveCurrentItineraryToFirebase();
+        Notifications.show(`✅ ¡Día ${dayNumber} optimizado inteligentemente! Se aplicaron ${result.applied} mejoras.`, 'success', 5000);
+        render(); // Re-render para mostrar los cambios
+      } else {
+        Notifications.show(`No se aplicaron cambios inteligentes. El día ya parece estar bien organizado.`, 'info');
+      }
       return;
     }
 
-    // 🚨 AUTO-FIX: Si hay actividades que no caben, moverlas AUTOMÁTICAMENTE
-    if (result.activitiesOverLimit > 0) {
-      console.log(`🚨 ${result.activitiesOverLimit} actividades NO CABEN - Auto-redistribuyendo...`);
+    // --- FALLBACK: Optimización Simple (si no hay sugerencias inteligentes) ---
+    console.log(`No se encontraron optimizaciones inteligentes. Usando optimizador de ruta simple.`);
+    Notifications.show('No se encontraron movimientos inteligentes. Optimizando ruta del día...', 'info');
 
-      // Actualizar el día con las actividades optimizadas (incluyendo flags overLimit)
-      dayData.activities = result.optimizedActivities;
-      await saveCurrentItineraryToFirebase();
+    const simpleResult = RouteOptimizer.optimizeRoute(dayData.activities, {
+      considerOpeningHours: true,
+      startPoint: hotel ? hotel.coordinates : null
+    });
 
-      // Forzar análisis de balance y auto-aplicar fixes
-      const analysis = DayBalancer.analyzeItineraryBalance(currentItinerary.days, currentItinerary);
-      const criticalSuggestions = analysis.suggestions.filter(s => s.priority === 'critical');
-
-      if (criticalSuggestions.length > 0) {
-        console.log(`🔧 Auto-aplicando ${criticalSuggestions.length} fixes críticos...`);
-
-        const fixResult = DayBalancer.applyAllSuggestions(
-          currentItinerary.days,
-          criticalSuggestions,
-          {
-            recalculateTimings: true,
-            optimizationMode: 'balanced'
-          }
-        );
-
-        if (fixResult.applied > 0) {
-          currentItinerary.days = fixResult.days;
-          await saveCurrentItineraryToFirebase();
-
-          Notifications.show(
-            `🔧 ${fixResult.applied} actividades redistribuidas automáticamente a otros días (no cabían en este día)`,
-            'success',
-            5000
-          );
-
-          render();
-          return; // Terminar aquí para evitar mostrar el diálogo de confirmación
-        }
-      }
-
-      // Si no se pudieron auto-fijar, mostrar advertencia
-      const overLimitNames = result.overLimitActivities
-        .map(act => `• ${act.title || act.name}`)
-        .join('\n');
-
-      Notifications.show(
-        `⚠️ ${result.activitiesOverLimit} actividad(es) NO caben en el día:\n\n${overLimitNames}\n\n💡 Reduce duraciones o muévelas manualmente`,
-        'warning',
-        8000
-      );
+    if (!simpleResult.wasOptimized) {
+      Notifications.show('La ruta de este día ya está optimizada.', 'info');
+      return;
     }
 
-    // Mostrar resultados en un diálogo
-    const savingsText = RouteOptimizer.generateOptimizationSuggestion(
-      dayData.activities,
-      result
-    );
-
+    const savingsText = RouteOptimizer.generateOptimizationSuggestion(dayData.activities, simpleResult);
     const confirmed = await window.Dialogs.confirm({
-      title: '🗺️ Optimización de Ruta',
+      title: '🗺️ Optimización de Ruta Simple',
       message: savingsText,
       confirmText: 'Aplicar Optimización',
       cancelText: 'Cancelar',
@@ -930,23 +1063,15 @@ async function optimizeDayRoute(dayNumber) {
     });
 
     if (confirmed) {
-      // Actualizar el itinerario con la ruta optimizada
-      dayData.activities = result.optimizedActivities;
-
-      // Guardar en Firebase
+      dayData.activities = simpleResult.optimizedActivities;
       await saveCurrentItineraryToFirebase();
-
-      Notifications.show(
-        `¡Ruta optimizada! Ahorro: ${result.savings.time} min, ¥${result.savings.cost}`,
-        'success'
-      );
-
-      // Re-render
+      Notifications.show(`¡Ruta del día optimizada! Ahorro: ${simpleResult.savings.time} min, ¥${simpleResult.savings.cost}`, 'success');
       render();
     }
+
   } catch (error) {
-    console.error('❌ Error optimizing route:', error);
-    Notifications.show('Error al optimizar ruta', 'error');
+    console.error('❌ Error en la optimización inteligente de ruta:', error);
+    Notifications.show('Ocurrió un error durante la optimización.', 'error');
   }
 }
 
@@ -1220,6 +1345,11 @@ function renderQuickActionButtons(day) {
         <button type="button" id="analyzeBalanceBtn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2 text-sm">
           <span>⚖️</span>
           <span>Analizar Balance</span>
+        </button>
+        <button type="button" id="masterOptimizeBtn" class="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2 relative overflow-hidden text-sm">
+          <span class="text-xl">🚀</span>
+          <span>Optimización Inteligente de Viaje</span>
+          <span class="absolute top-0 right-0 bg-yellow-400 text-black text-xs font-bold px-2 py-0.5 rounded-bl-lg">✨ NUEVO</span>
         </button>
       </div>
     </div>
@@ -2307,6 +2437,7 @@ export const ItineraryHandler = {
         const mealSuggestionsBtn=e.target.closest('[id^="mealSuggestionsBtn_"]');
         const suggestionsBtn=e.target.closest('[id^="suggestionsBtn_"]');
         const analyzeBalanceBtn=e.target.closest('#analyzeBalanceBtn');
+        const masterOptimizeBtn=e.target.closest('#masterOptimizeBtn');
         const editBtn=e.target.closest('.activity-edit-btn');
         const deleteBtn=e.target.closest('.activity-delete-btn');
         const voteBtn = e.target.closest('.activity-vote-btn');
@@ -2315,6 +2446,10 @@ export const ItineraryHandler = {
         if(analyzeBalanceBtn){
           console.log('⚖️ Analyze balance button clicked');
           showBalanceAnalysis();
+        }
+        else if(masterOptimizeBtn){
+          console.log('🚀 Master optimize button clicked');
+          runMasterOptimization();
         }
         else if(optimizeBtn){
           console.log('═════════════════════════════════════════════════');
