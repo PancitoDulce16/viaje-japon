@@ -169,12 +169,27 @@ function recalculateTimings(activities, options = {}) {
         currentTime = 9 * 60; // Default: 09:00
     }
 
+    // 🛡️ LÍMITE MÁXIMO: 23:00 (1380 minutos) para dejar margen
+    const MAX_TIME = 23 * 60; // 23:00
+    let activitiesOverLimit = 0;
+
     // Recalcular cada actividad
     for (let i = 0; i < result.length; i++) {
         const activity = result[i];
 
+        // 🛡️ VERIFICAR si ya sobrepasamos el límite del día
+        if (currentTime >= MAX_TIME) {
+            // Marcar actividad como "no cabe en el día"
+            activity.time = '23:59';
+            activity.overLimit = true;
+            activitiesOverLimit++;
+            console.warn(`⚠️ Actividad "${activity.title || activity.name}" no cabe en el día (${activitiesOverLimit})`);
+            continue;
+        }
+
         // Asignar nuevo horario
         activity.time = SafeTimeUtils.formatTime(currentTime);
+        activity.overLimit = false;
 
         // Calcular cuándo termina esta actividad
         const duration = activity.duration || defaultDuration;
@@ -203,6 +218,11 @@ function recalculateTimings(activities, options = {}) {
                 currentTime += transportBuffer;
             }
         }
+    }
+
+    // 🚨 Si hay actividades que no caben, loguear advertencia
+    if (activitiesOverLimit > 0) {
+        console.error(`🚨 ${activitiesOverLimit} actividades NO caben en el día. Considera moverlas a otro día o reducir duraciones.`);
     }
 
     return result;
@@ -407,6 +427,9 @@ function optimizeRoute(activities, options = {}) {
         });
     }
 
+    // 🚨 Contar actividades que sobrepasan el límite del día
+    const activitiesOverLimit = optimized.filter(act => act.overLimit === true);
+
     // Calcular estadísticas de ruta optimizada
     const optimizedStats = calculateRouteStats(optimized);
 
@@ -428,7 +451,8 @@ function optimizeRoute(activities, options = {}) {
     console.log('✅ Route optimized:', {
         original: originalStats,
         optimized: optimizedStats,
-        savings
+        savings,
+        activitiesOverLimit: activitiesOverLimit.length
     });
 
     return {
@@ -436,7 +460,9 @@ function optimizeRoute(activities, options = {}) {
         savings,
         stats: optimizedStats,
         originalStats,
-        wasOptimized: true
+        wasOptimized: true,
+        activitiesOverLimit: activitiesOverLimit.length,  // 🚨 Número de actividades que no caben
+        overLimitActivities: activitiesOverLimit  // 🚨 Lista de actividades que no caben
     };
 }
 

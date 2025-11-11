@@ -805,6 +805,19 @@ async function optimizeDayRoute(dayNumber) {
       return;
     }
 
+    // 🚨 VERIFICAR si hay actividades que no caben en el día
+    if (result.activitiesOverLimit > 0) {
+      const overLimitNames = result.overLimitActivities
+        .map(act => `• ${act.title || act.name}`)
+        .join('\n');
+
+      Notifications.show(
+        `⚠️ ATENCIÓN: ${result.activitiesOverLimit} actividad(es) NO caben en el día (sobrepasan las 23:00):\n\n${overLimitNames}\n\n💡 Considera:\n- Mover estas actividades a otro día\n- Reducir la duración de algunas actividades\n- Eliminar actividades menos prioritarias`,
+        'warning',
+        10000
+      );
+    }
+
     // Mostrar resultados en un diálogo
     const savingsText = RouteOptimizer.generateOptimizationSuggestion(
       dayData.activities,
