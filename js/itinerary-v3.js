@@ -785,10 +785,12 @@ async function optimizeDayRoute(dayNumber) {
     let hotelCoords = null;
     if (window.HotelBaseSystem && currentItinerary.hotels) {
       const city = window.HotelBaseSystem.detectCityForDay(dayData);
-      const hotel = window.HotelBaseSystem.getHotelForCity(currentItinerary, city);
+      const hotel = window.HotelBaseSystem.getHotelForCity(currentItinerary, city, dayNumber);
       if (hotel && hotel.coordinates) {
         hotelCoords = hotel.coordinates;
-        console.log(`🏨 Usando hotel en ${city} como punto de inicio:`, hotelCoords);
+        console.log(`🏨 Usando hotel en ${city} (día ${dayNumber}) como punto de inicio:`, hotelCoords);
+      } else {
+        console.warn(`⚠️ No se encontró hotel para ${city} en día ${dayNumber}. Hotels disponibles:`, Object.keys(currentItinerary.hotels));
       }
     }
 
