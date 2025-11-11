@@ -11,6 +11,23 @@ import { RouteOptimizer } from './route-optimizer-v2.js'; // 🗺️ Optimizador
 import { DayBalancer } from './day-balancer-v3.js'; // ⚖️ Balanceador inteligente de días
 import { DayExperiencePredictor } from './day-experience-predictor.js'; // 🔮 Predictor de experiencia
 
+// 🛡️ Safe wrapper para TimeUtils con fallback
+const SafeTimeUtils = {
+  parseTime: (timeStr) => {
+    if (window.TimeUtils) {
+      return window.TimeUtils.parseTime(timeStr);
+    }
+    // Fallback básico
+    if (!timeStr) return 0;
+    const parts = String(timeStr).split(':');
+    if (parts.length !== 2) return 0;
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+    if (isNaN(hours) || isNaN(minutes)) return 0;
+    return hours * 60 + minutes;
+  }
+};
+
 let checkedActivities = {};
 let currentDay = 1;
 let unsubscribe = null;
@@ -1936,7 +1953,7 @@ function renderActivities(day){
 
   // Ordenar actividades por hora antes de renderizar
   const sortedActivities = (day.activities||[]).slice().sort((a, b) => {
-    return TimeUtils.parseTime(a.time) - TimeUtils.parseTime(b.time);
+    return SafeTimeUtils.parseTime(a.time) - SafeTimeUtils.parseTime(b.time);
   });
 
   // DEBUG: Log activities data
