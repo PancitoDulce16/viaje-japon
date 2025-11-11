@@ -758,7 +758,7 @@ export const MasterItineraryOptimizer = {
    * @param {Object} itinerary
    * @returns {Object} Resultado con itinerario optimizado y métricas
    */
-  optimizeCompleteItinerary(itinerary) {
+  async optimizeCompleteItinerary(itinerary) {
     console.log('🚀 ═══════════════════════════════════════');
     console.log('🚀 INICIANDO OPTIMIZACIÓN MAESTRA');
     console.log('🚀 ═══════════════════════════════════════\n');
