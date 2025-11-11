@@ -656,9 +656,21 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
 
         // Verificar cada actividad del día
         dayAnalysis.activities.forEach(activity => {
-            if (!activity.coordinates) return;
+            if (!activity.coordinates) {
+                console.log(`   ⚠️ "${activity.title || activity.name}" en Día ${dayAnalysis.day} - NO tiene coordenadas, omitiendo`);
+                return;
+            }
 
-            // Calcular distancia a TODOS los hoteles
+            // Calcular distancia al hotel actual
+            const distanceToCurrentHotel = RouteOptimizer.calculateDistance(
+                activity.coordinates,
+                currentHotelCoords
+            );
+
+            // Calcular distancia a TODOS los hoteles y encontrar el más cercano
+            let closestOtherHotel = null;
+            let minDistance = Infinity;
+
             hotelGroups.forEach((hotelInfo, hotelKey) => {
                 // Saltar si es el hotel actual
                 if (hotelKey === currentHotelKey) return;
@@ -667,29 +679,45 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
                     activity.coordinates,
                     hotelInfo.coords
                 );
-                const distanceToCurrentHotel = RouteOptimizer.calculateDistance(
-                    activity.coordinates,
-                    currentHotelCoords
-                );
 
-                // Si la actividad está MUCHO más cerca del otro hotel (>3km de diferencia)
-                if (distanceToOtherHotel < distanceToCurrentHotel - 3 && distanceToOtherHotel < 2) {
-                    // Encontrar el primer día donde te quedas en ese hotel
-                    const targetDay = hotelInfo.days[0];
+                if (distanceToOtherHotel < minDistance) {
+                    minDistance = distanceToOtherHotel;
+                    closestOtherHotel = { hotelInfo, hotelKey, distance: distanceToOtherHotel };
+                }
+            });
 
-                    console.log(`🏨 DETECTADO: "${activity.title || activity.name}" en Día ${dayAnalysis.day} está a ${distanceToOtherHotel.toFixed(2)}km del hotel de días ${hotelInfo.days.join(',')}, pero está programada en Día ${dayAnalysis.day}`);
+            // Si encontramos otro hotel Y la actividad está significativamente más cerca de ese hotel
+            if (closestOtherHotel) {
+                const distanceToOtherHotel = closestOtherHotel.distance;
+                const distanceDiff = distanceToCurrentHotel - distanceToOtherHotel;
+
+                console.log(`   📍 "${activity.title || activity.name}" en Día ${dayAnalysis.day}:`);
+                console.log(`      - Distancia a hotel actual: ${distanceToCurrentHotel.toFixed(2)}km`);
+                console.log(`      - Distancia a hotel más cercano (días ${closestOtherHotel.hotelInfo.days.join(',')}): ${distanceToOtherHotel.toFixed(2)}km`);
+                console.log(`      - Diferencia: ${distanceDiff.toFixed(2)}km`);
+
+                // NUEVA LÓGICA MÁS INTELIGENTE:
+                // Sugerir mover si:
+                // 1. La actividad está a <3km del otro hotel (muy cerca)
+                // 2. Y está al menos 1km MÁS cerca del otro hotel (diferencia significativa)
+                if (distanceToOtherHotel < 3 && distanceDiff > 1) {
+                    const targetDay = closestOtherHotel.hotelInfo.days[0];
+
+                    console.log(`      ✅ SUGERENCIA: Mover a Día ${targetDay}`);
 
                     suggestions.push({
                         type: 'move',
                         priority: 'high',
                         description: `🏨 Mover "${activity.title || activity.name}" del Día ${dayAnalysis.day} al Día ${targetDay}`,
-                        reason: `Esta actividad está a solo ${distanceToOtherHotel.toFixed(1)}km del hotel donde te quedas los días ${hotelInfo.days.join(', ')}, pero está programada para el Día ${dayAnalysis.day} (${distanceToCurrentHotel.toFixed(1)}km del hotel de ese día). Será mucho más conveniente visitarla cuando estés cerca.`,
+                        reason: `Esta actividad está a solo ${distanceToOtherHotel.toFixed(1)}km del hotel donde te quedas los días ${closestOtherHotel.hotelInfo.days.join(', ')}, pero está programada para el Día ${dayAnalysis.day} (${distanceToCurrentHotel.toFixed(1)}km del hotel de ese día). Será ${distanceDiff.toFixed(1)}km más conveniente visitarla cuando estés cerca de ese hotel.`,
                         from: { day: dayAnalysis.day, activityId: activity.id },
                         to: { day: targetDay },
                         activity: activity
                     });
+                } else {
+                    console.log(`      ❌ No cumple criterios para sugerir movimiento`);
                 }
-            });
+            }
         });
     });
 
