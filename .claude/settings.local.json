@@ -26,7 +26,12 @@
       "Bash(git rm:*)",
       "Bash(git add:*)",
       "Bash(find:*)",
-      "Bash(powershell -Command \"Get-Content ''C:\\Users\\Noelia\\Documents\\GitHub\\viaje-japon\\dashboard.html'' | Select-Object -Last 100\")"
+      "Bash(powershell -Command \"Get-Content ''C:\\Users\\Noelia\\Documents\\GitHub\\viaje-japon\\dashboard.html'' | Select-Object -Last 100\")",
+      "Bash(powershell -Command \"Get-Content ''C:\\Users\\Noelia\\Documents\\GitHub\\viaje-japon\\dashboard.html'' | Select-String -Pattern ''Gyoen|día 10|day 10'' -Context 2,2\")",
+      "Bash(powershell:*)",
+      "Bash(de viaje coherente, balanceada y memorable que entienda el)",
+      "Bash(contexto completo del viaje y las necesidades del viajero)",
+      "Bash(en cada fase\"\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

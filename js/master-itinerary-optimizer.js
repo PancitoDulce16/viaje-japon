@@ -1,5 +1,9 @@
 // js/master-itinerary-optimizer.js - Sistema Maestro de Optimización Inteligente
 // Arquitectura modular que entiende el viaje como una narrativa completa
+// VERSION: 2025-11-11-182500-ULTRA-DEBUG-WITH-AUTO-CORRECTION
+
+console.log('🚀🚀🚀 MASTER ITINERARY OPTIMIZER LOADED - VERSION 2025-11-11-182500 🚀🚀🚀');
+console.log('✅ This version includes PASO 9 auto-correction with extensive debug logging');
 
 import { RouteOptimizer } from './route-optimizer-v2.js';
 import { HotelBaseSystem } from './hotel-base-system.js';
@@ -845,16 +849,21 @@ export const MasterItineraryOptimizer = {
 
       // PASO 8: VALIDAR el itinerario resultante
       console.log('\n📍 PASO 8: Validando itinerario resultante...');
+      console.log('🔍 DEBUG: ANTES DE VALIDACIÓN - Verificando que este código se ejecuta');
       let validation = MasterValidator.validateCompleteItinerary(itinerary);
+      console.log('🔍 DEBUG: DESPUÉS DE VALIDACIÓN');
 
       // 🔍 DEBUG: Verificar estructura de validación
-      console.log('🔍 DEBUG validation:', {
-        valid: validation.valid,
-        hasValidations: !!validation.validations,
-        hasDistances: !!validation.validations?.distances,
-        distancesValid: validation.validations?.distances?.valid,
-        distancesErrors: validation.validations?.distances?.totalErrors
-      });
+      console.log('🔍 DEBUG validation object:', validation);
+      console.log('🔍 DEBUG validation.validations:', validation.validations);
+      console.log('🔍 DEBUG validation.validations?.distances:', validation.validations?.distances);
+      console.log('🔍 DEBUG - Checking condition components:');
+      console.log('  - validation.valid:', validation.valid);
+      console.log('  - has validations:', !!validation.validations);
+      console.log('  - has distances:', !!validation.validations?.distances);
+      console.log('  - distances.valid:', validation.validations?.distances?.valid);
+      console.log('  - distances.totalErrors:', validation.validations?.distances?.totalErrors);
+      console.log('  - CONDITION RESULT:', !validation.valid && validation.validations?.distances && !validation.validations.distances.valid);
 
       // PASO 9: AUTO-CORRECCIÓN de errores de distancia (si existen)
       if (!validation.valid && validation.validations?.distances && !validation.validations.distances.valid) {
