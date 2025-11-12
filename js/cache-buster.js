@@ -1,7 +1,7 @@
 // js/cache-buster.js - Sistema de detección y corrección automática de cache
 // Este archivo FUERZA reloads cuando detecta archivos viejos
 
-const APP_VERSION = '2025-11-11-1830-PRELOAD-OPTIMIZER';
+const APP_VERSION = '2025-11-11-NEW-FILENAME-master-optimizer-v2025';
 const VERSION_KEY = 'app_version';
 
 /**
