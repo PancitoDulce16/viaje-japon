@@ -1,20 +1,20 @@
 // js/itinerary-orchestrator.js - Orquestador Inteligente del Itinerario
-// "Cerebro" que coordina automáticamente todos los módulos de inteligencia
+// "Cerebro" que coordina automï¿½ticamente todos los mï¿½dulos de inteligencia
 
 import { eventBus } from './event-bus.js';
 import { DayBalancer } from './day-balancer-v3.js';
 import { RouteOptimizer } from './route-optimizer-v2.js';
 import { ActivityDayAssignment } from './activity-day-assignment.js';
-import { MasterItineraryOptimizer } from './master-itinerary-optimizer.js';
+import { MasterItineraryOptimizer } from './master-itinerary-optimizer-v2025.js'; // ðŸš€ UPDATED to use new file with DEBUG
 import { HotelBaseSystem } from './hotel-base-system.js';
 
 /**
- * >à ITINERARY ORCHESTRATOR
- * Sistema de orquestación automático que reacciona a cambios en el itinerario
+ * >ï¿½ ITINERARY ORCHESTRATOR
+ * Sistema de orquestaciï¿½n automï¿½tico que reacciona a cambios en el itinerario
  *
- * Escucha eventos y ejecuta automáticamente:
- * - Balance de días
- * - Optimización de rutas
+ * Escucha eventos y ejecuta automï¿½ticamente:
+ * - Balance de dï¿½as
+ * - Optimizaciï¿½n de rutas
  * - Validaciones
  * - Sugerencias inteligentes
  */
@@ -24,7 +24,7 @@ export const ItineraryOrchestrator = {
   pendingChanges: [],
   debounceTimer: null,
   config: {
-    debounceDelay: 1000, // Esperar 1s después del último cambio
+    debounceDelay: 1000, // Esperar 1s despuï¿½s del ï¿½ltimo cambio
     autoOptimize: true,
     autoBalance: true,
     autoValidate: true,
@@ -35,20 +35,20 @@ export const ItineraryOrchestrator = {
    * Inicializa el orquestador y registra listeners
    */
   init() {
-    console.log('>à Inicializando ItineraryOrchestrator...');
+    console.log('>ï¿½ Inicializando ItineraryOrchestrator...');
 
     // Escuchar eventos del itinerario
     this.registerEventListeners();
 
     console.log(' ItineraryOrchestrator inicializado');
-    console.log('=Ê Configuración:', this.config);
+    console.log('=ï¿½ Configuraciï¿½n:', this.config);
   },
 
   /**
    * Registra todos los event listeners necesarios
    */
   registerEventListeners() {
-    // Eventos de modificación del itinerario
+    // Eventos de modificaciï¿½n del itinerario
     eventBus.on('itinerary:activity:added', (data) => this.onItineraryChanged('activity_added', data));
     eventBus.on('itinerary:activity:updated', (data) => this.onItineraryChanged('activity_updated', data));
     eventBus.on('itinerary:activity:deleted', (data) => this.onItineraryChanged('activity_deleted', data));
@@ -56,7 +56,7 @@ export const ItineraryOrchestrator = {
     eventBus.on('itinerary:day:modified', (data) => this.onItineraryChanged('day_modified', data));
     eventBus.on('itinerary:loaded', (data) => this.onItineraryLoaded(data));
 
-    // Eventos de hoteles (importante para optimización)
+    // Eventos de hoteles (importante para optimizaciï¿½n)
     eventBus.on('hotel:added', (data) => this.onHotelChanged('hotel_added', data));
     eventBus.on('hotel:updated', (data) => this.onHotelChanged('hotel_updated', data));
     eventBus.on('hotel:deleted', (data) => this.onHotelChanged('hotel_deleted', data));
@@ -68,9 +68,9 @@ export const ItineraryOrchestrator = {
    * Handler: Itinerario cargado
    */
   async onItineraryLoaded(data) {
-    console.log('=Ö Itinerario cargado:', data.tripId);
+    console.log('=ï¿½ Itinerario cargado:', data.tripId);
 
-    // No hacer optimización automática al cargar
+    // No hacer optimizaciï¿½n automï¿½tica al cargar
     // Solo validar
     if (this.config.autoValidate && data.itinerary) {
       await this.validateItinerary(data.itinerary);
@@ -81,7 +81,7 @@ export const ItineraryOrchestrator = {
    * Handler: Itinerario modificado
    */
   async onItineraryChanged(changeType, data) {
-    console.log(`=Ý Cambio detectado: ${changeType}`, data);
+    console.log(`=ï¿½ Cambio detectado: ${changeType}`, data);
 
     // Agregar a cola de cambios pendientes
     this.pendingChanges.push({
@@ -98,10 +98,10 @@ export const ItineraryOrchestrator = {
   },
 
   /**
-   * Handler: Hotel modificado (importante para optimización geográfica)
+   * Handler: Hotel modificado (importante para optimizaciï¿½n geogrï¿½fica)
    */
   async onHotelChanged(changeType, data) {
-    console.log(`<è Hotel modificado: ${changeType}`, data);
+    console.log(`<ï¿½ Hotel modificado: ${changeType}`, data);
 
     // Si se agrega/modifica un hotel, re-optimizar proximidad
     if (changeType === 'hotel_added' || changeType === 'hotel_updated') {
@@ -123,17 +123,17 @@ export const ItineraryOrchestrator = {
    */
   async processChanges(itinerary) {
     if (this.isProcessing) {
-      console.log('ó Ya hay un proceso en ejecución, saltando...');
+      console.log('ï¿½ Ya hay un proceso en ejecuciï¿½n, saltando...');
       return;
     }
 
     if (!itinerary || !itinerary.days || itinerary.days.length === 0) {
-      console.log('  No hay itinerario válido para procesar');
+      console.log('ï¿½ No hay itinerario vï¿½lido para procesar');
       return;
     }
 
     this.isProcessing = true;
-    console.log('=€ Procesando cambios pendientes:', this.pendingChanges.length);
+    console.log('=ï¿½ Procesando cambios pendientes:', this.pendingChanges.length);
 
     try {
       // Analizar tipo de cambios
@@ -144,20 +144,20 @@ export const ItineraryOrchestrator = {
         c.type.includes('hotel')
       );
 
-      // FLUJO AUTOMÁTICO
+      // FLUJO AUTOMï¿½TICO
       let result = { itinerary };
 
       // 1. Si hay cambios de hotel, re-asignar actividades por proximidad
       if (hasHotelChanges && this.config.autoOptimize) {
-        console.log('<è Paso 1: Re-asignando actividades por proximidad al hotel...');
+        console.log('<ï¿½ Paso 1: Re-asignando actividades por proximidad al hotel...');
         if (ActivityDayAssignment && ActivityDayAssignment.assignActivitiesOptimally) {
           result.itinerary = await ActivityDayAssignment.assignActivitiesOptimally(itinerary);
         }
       }
 
-      // 2. Balance automático de días
+      // 2. Balance automï¿½tico de dï¿½as
       if (hasActivityChanges && this.config.autoBalance) {
-        console.log('– Paso 2: Balanceando días automáticamente...');
+        console.log('ï¿½ Paso 2: Balanceando dï¿½as automï¿½ticamente...');
         if (DayBalancer && DayBalancer.smartBalanceItinerary) {
           const balanceResult = await DayBalancer.smartBalanceItinerary(result.itinerary);
           result.itinerary = balanceResult.itinerary;
@@ -165,42 +165,42 @@ export const ItineraryOrchestrator = {
         }
       }
 
-      // 3. Optimización de rutas por día
+      // 3. Optimizaciï¿½n de rutas por dï¿½a
       if (hasActivityChanges && this.config.autoOptimize) {
-        console.log('=ú Paso 3: Optimizando rutas...');
+        console.log('=ï¿½ Paso 3: Optimizando rutas...');
         await this.optimizeAllDayRoutes(result.itinerary);
       }
 
-      // 4. Validación final
+      // 4. Validaciï¿½n final
       if (this.config.autoValidate) {
         console.log(' Paso 4: Validando itinerario...');
         await this.validateItinerary(result.itinerary);
       }
 
-      // Emitir evento de optimización completada
+      // Emitir evento de optimizaciï¿½n completada
       await eventBus.emit('itinerary:optimized', {
         itinerary: result.itinerary,
         analysis: result.analysis,
         changesProcessed: this.pendingChanges.length
       });
 
-      // Mostrar notificación sutil
+      // Mostrar notificaciï¿½n sutil
       if (this.config.showNotifications && typeof window !== 'undefined' && window.Notifications) {
         window.Notifications.show(
-          `( Itinerario optimizado automáticamente (${this.pendingChanges.length} cambios procesados)`,
+          `( Itinerario optimizado automï¿½ticamente (${this.pendingChanges.length} cambios procesados)`,
           'success',
           3000
         );
       }
 
-      console.log(' Optimización automática completada');
+      console.log(' Optimizaciï¿½n automï¿½tica completada');
 
     } catch (error) {
-      console.error('L Error en orquestación automática:', error);
+      console.error('L Error en orquestaciï¿½n automï¿½tica:', error);
 
       if (this.config.showNotifications && typeof window !== 'undefined' && window.Notifications) {
         window.Notifications.show(
-          '  Error en optimización automática',
+          'ï¿½ Error en optimizaciï¿½n automï¿½tica',
           'warning',
           3000
         );
@@ -213,7 +213,7 @@ export const ItineraryOrchestrator = {
   },
 
   /**
-   * Optimiza rutas de todos los días afectados
+   * Optimiza rutas de todos los dï¿½as afectados
    */
   async optimizeAllDayRoutes(itinerary) {
     if (!RouteOptimizer || !HotelBaseSystem) return;
@@ -236,11 +236,11 @@ export const ItineraryOrchestrator = {
 
           if (result.wasOptimized) {
             day.activities = result.optimizedActivities;
-            console.log(`    Día ${day.day}: Ruta optimizada`);
+            console.log(`    Dï¿½a ${day.day}: Ruta optimizada`);
           }
         }
       } catch (error) {
-        console.warn(`     Error optimizando día ${day.day}:`, error.message);
+        console.warn(`   ï¿½ Error optimizando dï¿½a ${day.day}:`, error.message);
       }
     }
   },
@@ -255,53 +255,53 @@ export const ItineraryOrchestrator = {
       const validation = window.MasterValidator.validateCompleteItinerary(itinerary);
 
       if (!validation.valid) {
-        console.warn('  Validación encontró problemas:', {
+        console.warn('ï¿½ Validaciï¿½n encontrï¿½ problemas:', {
           errors: validation.summary.totalErrors,
           warnings: validation.summary.totalWarnings
         });
 
-        // Emitir evento de problemas de validación
+        // Emitir evento de problemas de validaciï¿½n
         await eventBus.emit('itinerary:validation:issues', {
           validation,
           itinerary
         });
       } else {
-        console.log(' Validación exitosa');
+        console.log(' Validaciï¿½n exitosa');
       }
 
       return validation;
     } catch (error) {
-      console.error('L Error en validación:', error);
+      console.error('L Error en validaciï¿½n:', error);
       return null;
     }
   },
 
   /**
-   * Actualiza la configuración del orquestador
+   * Actualiza la configuraciï¿½n del orquestador
    */
   updateConfig(newConfig) {
     Object.assign(this.config, newConfig);
-    console.log('™ Configuración actualizada:', this.config);
+    console.log('ï¿½ Configuraciï¿½n actualizada:', this.config);
   },
 
   /**
-   * Activa/desactiva la optimización automática
+   * Activa/desactiva la optimizaciï¿½n automï¿½tica
    */
   setAutoOptimize(enabled) {
     this.config.autoOptimize = enabled;
-    console.log(`> Auto-optimización: ${enabled ? 'ACTIVADA' : 'DESACTIVADA'}`);
+    console.log(`> Auto-optimizaciï¿½n: ${enabled ? 'ACTIVADA' : 'DESACTIVADA'}`);
   },
 
   /**
-   * Activa/desactiva el balance automático
+   * Activa/desactiva el balance automï¿½tico
    */
   setAutoBalance(enabled) {
     this.config.autoBalance = enabled;
-    console.log(`– Auto-balance: ${enabled ? 'ACTIVADO' : 'DESACTIVADO'}`);
+    console.log(`ï¿½ Auto-balance: ${enabled ? 'ACTIVADO' : 'DESACTIVADO'}`);
   },
 
   /**
-   * Obtiene estadísticas del orquestador
+   * Obtiene estadï¿½sticas del orquestador
    */
   getStats() {
     return {

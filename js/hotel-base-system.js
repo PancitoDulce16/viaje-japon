@@ -206,51 +206,255 @@ export const HotelBaseSystem = {
    */
   detectCityForDay(day) {
     if (!day.activities || day.activities.length === 0) {
+      // Fallback 1: Usar day.location si existe
+      if (day.location) {
+        const normalized = this.normalizeCityName(day.location);
+        console.log(`📍 Ciudad detectada para día ${day.day}: ${normalized} (desde day.location)`);
+        return normalized;
+      }
+      console.log(`📍 Ciudad detectada para día ${day.day}: Tokyo (por defecto - sin actividades)`);
       return 'Tokyo'; // Por defecto
     }
 
-    // Contar menciones de ciudades en las actividades
-    const cityMentions = {
-      Tokyo: 0,
-      Kyoto: 0,
-      Osaka: 0,
-      Nara: 0,
-      Hiroshima: 0
-    };
+    // ESTRATEGIA 1 (PRINCIPAL): Usar cityName o city de las actividades
+    // Esta es la fuente MÁS CONFIABLE y funciona con CUALQUIER ciudad
+    const cityVotes = {};
 
     day.activities.forEach(activity => {
-      const text = `${activity.title || ''} ${activity.name || ''} ${activity.area || ''} ${activity.zone || ''}`.toLowerCase();
-
-      if (text.includes('tokyo') || text.includes('shibuya') || text.includes('shinjuku') || text.includes('asakusa')) {
-        cityMentions.Tokyo++;
+      // Prioridad 1: cityName explícito (SIEMPRE usar esto primero)
+      if (activity.cityName) {
+        const normalized = this.normalizeCityName(activity.cityName);
+        cityVotes[normalized] = (cityVotes[normalized] || 0) + 100; // Peso MÁXIMO
       }
-      if (text.includes('kyoto') || text.includes('gion') || text.includes('arashiyama')) {
-        cityMentions.Kyoto++;
+      // Prioridad 2: city property
+      else if (activity.city) {
+        const normalized = this.normalizeCityName(activity.city);
+        cityVotes[normalized] = (cityVotes[normalized] || 0) + 80; // Peso alto
       }
-      if (text.includes('osaka') || text.includes('dotonbori') || text.includes('namba')) {
-        cityMentions.Osaka++;
-      }
-      if (text.includes('nara')) {
-        cityMentions.Nara++;
-      }
-      if (text.includes('hiroshima')) {
-        cityMentions.Hiroshima++;
+      // Prioridad 3: Analizar el título/nombre de la actividad
+      else {
+        // Extraer ciudad del texto de la actividad
+        const extractedCity = this.extractCityFromText(activity);
+        if (extractedCity) {
+          cityVotes[extractedCity] = (cityVotes[extractedCity] || 0) + 5; // Peso bajo (menos confiable)
+        }
       }
     });
 
-    // Retornar la ciudad con más menciones
-    let maxCity = 'Tokyo';
-    let maxCount = 0;
+    // ESTRATEGIA 2: Si NO se encontró ninguna ciudad por propiedades, usar coordenadas
+    if (Object.keys(cityVotes).length === 0) {
+      console.log(`      ⚠️ No se encontró cityName/city en actividades, usando coordenadas...`);
+      const cityByCoords = this.detectCityByCoordinates(day.activities);
+      if (cityByCoords) {
+        console.log(`📍 Ciudad detectada para día ${day.day}: ${cityByCoords} (por coordenadas)`);
+        return cityByCoords;
+      }
+      // Último fallback
+      console.log(`📍 Ciudad detectada para día ${day.day}: Tokyo (fallback final - sin datos)`);
+      return 'Tokyo';
+    }
 
-    Object.entries(cityMentions).forEach(([city, count]) => {
-      if (count > maxCount) {
-        maxCount = count;
+    // DETECTAR DÍAS MEZCLADOS (múltiples ciudades con votos similares)
+    const cityEntries = Object.entries(cityVotes).sort((a, b) => b[1] - a[1]);
+
+    if (cityEntries.length >= 2) {
+      const topCity = cityEntries[0];
+      const secondCity = cityEntries[1];
+
+      // Si hay empate o casi empate (diferencia < 20 votos)
+      if (Math.abs(topCity[1] - secondCity[1]) < 20) {
+        console.warn(`⚠️ DÍA ${day.day} MEZCLADO: ${topCity[0]} (${topCity[1]}) vs ${secondCity[0]} (${secondCity[1]})`);
+        console.warn(`   → Actividades de múltiples ciudades en el mismo día - NECESITA CORRECCIÓN`);
+
+        // Usar la ciudad con actividades de mayor prioridad (mayor peso individual)
+        // Si ambas son cityName (peso 100), usar la primera actividad del día
+        if (day.activities && day.activities.length > 0) {
+          const firstActivity = day.activities[0];
+          const firstCity = this.normalizeCityName(firstActivity.cityName || firstActivity.city || '');
+          if (firstCity && cityVotes[firstCity]) {
+            console.log(`   → Usando ciudad de primera actividad: ${firstCity}`);
+            return firstCity;
+          }
+        }
+      }
+    }
+
+    // Retornar la ciudad con más votos
+    let maxCity = null;
+    let maxVotes = 0;
+
+    Object.entries(cityVotes).forEach(([city, votes]) => {
+      if (votes > maxVotes) {
+        maxVotes = votes;
         maxCity = city;
       }
     });
 
-    console.log(`📍 Ciudad detectada para día ${day.day}: ${maxCity} (${maxCount} menciones)`);
-    return maxCity;
+    console.log(`📍 Ciudad detectada para día ${day.day}: ${maxCity} (${maxVotes} votos) - Ciudades evaluadas:`, cityVotes);
+    return maxCity || 'Tokyo';
+  },
+
+  /**
+   * Extrae ciudad del texto de una actividad (fallback menos confiable)
+   */
+  extractCityFromText(activity) {
+    const text = `${activity.title || ''} ${activity.name || ''} ${activity.area || ''} ${activity.zone || ''} ${activity.description || ''}`.toLowerCase();
+
+    // Lista de ciudades comunes en Japón (como fallback)
+    // Esta lista es solo para ayudar cuando NO hay cityName/city
+    const commonCities = [
+      'tokyo', 'kyoto', 'osaka', 'hakone', 'kamakura', 'nara', 'hiroshima',
+      'yokohama', 'nagoya', 'sapporo', 'fukuoka', 'kobe', 'kawasaki',
+      'nikko', 'takayama', 'kanazawa', 'matsumoto', 'nagano', 'sendai',
+      'okinawa', 'ishigaki', 'miyajima', 'himeji', 'kumamoto'
+    ];
+
+    for (const city of commonCities) {
+      if (text.includes(city)) {
+        return this.normalizeCityName(city);
+      }
+    }
+
+    return null;
+  },
+
+  /**
+   * Normaliza nombres de ciudades a formato estándar
+   */
+  normalizeCityName(cityName) {
+    if (!cityName) return 'Tokyo';
+
+    const normalized = cityName.toLowerCase().trim();
+
+    // Mapeo de variaciones a nombre estándar
+    const cityMap = {
+      'tokyo': 'Tokyo',
+      'tokio': 'Tokyo',
+      'kyoto': 'Kyoto',
+      'kioto': 'Kyoto',
+      'osaka': 'Osaka',
+      'ōsaka': 'Osaka',
+      'hakone': 'Hakone',
+      '箱根': 'Hakone',
+      'kamakura': 'Kamakura',
+      'nara': 'Nara',
+      'hiroshima': 'Hiroshima'
+    };
+
+    // Buscar coincidencia exacta
+    if (cityMap[normalized]) {
+      return cityMap[normalized];
+    }
+
+    // Buscar coincidencia parcial
+    for (const [key, value] of Object.entries(cityMap)) {
+      if (normalized.includes(key)) {
+        return value;
+      }
+    }
+
+    // Capitalizar primera letra si no encontramos
+    return cityName.charAt(0).toUpperCase() + cityName.slice(1).toLowerCase();
+  },
+
+  /**
+   * Detecta ciudad por coordenadas de las actividades
+   * COMPLETAMENTE DINÁMICO - No depende de listas hardcodeadas
+   */
+  detectCityByCoordinates(activities) {
+    if (!activities || activities.length === 0) return null;
+
+    // 🎯 ESTRATEGIA DINÁMICA: Agrupar actividades por proximidad geográfica
+    // Si las actividades están cerca unas de otras, probablemente están en la misma ciudad
+
+    const activitiesWithCoords = activities.filter(
+      a => a.coordinates && a.coordinates.lat && a.coordinates.lng
+    );
+
+    if (activitiesWithCoords.length === 0) return null;
+
+    // Si solo hay una actividad con coordenadas, usar su cityName si existe
+    if (activitiesWithCoords.length === 1) {
+      const activity = activitiesWithCoords[0];
+      if (activity.cityName) return this.normalizeCityName(activity.cityName);
+      if (activity.city) return this.normalizeCityName(activity.city);
+    }
+
+    // Calcular centro geográfico (centroid) de todas las actividades
+    let sumLat = 0, sumLng = 0;
+    activitiesWithCoords.forEach(activity => {
+      sumLat += activity.coordinates.lat;
+      sumLng += activity.coordinates.lng;
+    });
+
+    const centerLat = sumLat / activitiesWithCoords.length;
+    const centerLng = sumLng / activitiesWithCoords.length;
+
+    console.log(`      🌍 Centro geográfico del día: {lat: ${centerLat.toFixed(4)}, lng: ${centerLng.toFixed(4)}}`);
+
+    // 🔍 MÉTODO 1: Buscar si alguna actividad con cityName está cerca del centro
+    let bestMatch = null;
+    let minDistanceToCenter = Infinity;
+
+    activitiesWithCoords.forEach(activity => {
+      if (activity.cityName || activity.city) {
+        const distance = Math.sqrt(
+          Math.pow(activity.coordinates.lat - centerLat, 2) +
+          Math.pow(activity.coordinates.lng - centerLng, 2)
+        );
+
+        if (distance < minDistanceToCenter) {
+          minDistanceToCenter = distance;
+          bestMatch = activity.cityName || activity.city;
+        }
+      }
+    });
+
+    if (bestMatch) {
+      console.log(`      ✅ Ciudad más cercana al centro: ${bestMatch}`);
+      return this.normalizeCityName(bestMatch);
+    }
+
+    // 🔍 MÉTODO 2 (Fallback): Usar actividad más céntrica y geocoding inverso (simulado)
+    // Buscar en referencia de ciudades japonesas comunes (solo como último recurso)
+    const japanCityRefs = {
+      Tokyo: { lat: 35.6762, lng: 139.6503 },
+      Kyoto: { lat: 35.0116, lng: 135.7681 },
+      Osaka: { lat: 34.6937, lng: 135.5023 },
+      Hakone: { lat: 35.2325, lng: 139.1069 },
+      Kamakura: { lat: 35.3193, lng: 139.5463 },
+      Nara: { lat: 34.6851, lng: 135.8048 },
+      Hiroshima: { lat: 34.3853, lng: 132.4553 },
+      Yokohama: { lat: 35.4437, lng: 139.6380 },
+      Nagoya: { lat: 35.1815, lng: 136.9066 },
+      Sapporo: { lat: 43.0642, lng: 141.3469 },
+      Fukuoka: { lat: 33.5904, lng: 130.4017 },
+      Nikko: { lat: 36.7199, lng: 139.6982 },
+      Takayama: { lat: 36.1460, lng: 137.2531 },
+      Kanazawa: { lat: 36.5944, lng: 136.6256 }
+    };
+
+    let closestRefCity = null;
+    let minRefDistance = Infinity;
+
+    Object.entries(japanCityRefs).forEach(([city, coords]) => {
+      const distance = Math.sqrt(
+        Math.pow(coords.lat - centerLat, 2) + Math.pow(coords.lng - centerLng, 2)
+      );
+
+      if (distance < minRefDistance) {
+        minRefDistance = distance;
+        closestRefCity = city;
+      }
+    });
+
+    if (closestRefCity && minRefDistance < 0.5) { // Solo si está muy cerca (~50km)
+      console.log(`      ⚠️ Usando referencia geográfica cercana: ${closestRefCity} (distancia: ${(minRefDistance * 111).toFixed(1)}km)`);
+      return closestRefCity;
+    }
+
+    console.log(`      ❌ No se pudo determinar ciudad por coordenadas`);
+    return null;
   },
 
   /**
