@@ -189,11 +189,28 @@ export const CityDetectionV2 = {
    * @returns {Object} Mapa de ciudades a días
    */
   analyzeCityDistribution(itinerary) {
+    // 🔒 VALIDACIÓN: Verificar que el itinerario es válido
+    if (!itinerary || !itinerary.days || !Array.isArray(itinerary.days)) {
+      console.error('❌ Itinerario inválido en analyzeCityDistribution');
+      return {
+        cityToDays: {},
+        mixedDays: [],
+        lowConfidenceDays: [],
+        totalDays: 0,
+        citiesDetected: []
+      };
+    }
+
     const cityToDays = {}; // { 'Tokyo': [1, 2, 3], 'Kyoto': [4, 5] }
     const mixedDays = [];
     const lowConfidenceDays = [];
 
     itinerary.days.forEach(day => {
+      // 🔒 Validar que el día tiene estructura válida
+      if (!day || typeof day.day !== 'number') {
+        console.warn('⚠️ Día inválido encontrado en itinerario');
+        return;
+      }
       const detection = this.detectDayCity(day);
 
       if (detection.city) {
@@ -258,16 +275,28 @@ export const CityDetectionV2 = {
     }
 
     // Elegir el día con MENOS actividades (para balancear)
-    let bestDay = availableDays[0];
+    let bestDay = null;
     let minActivities = Infinity;
 
     availableDays.forEach(dayNum => {
       const day = itinerary.days.find(d => d.day === dayNum);
-      if (day && day.activities) {
-        if (day.activities.length < minActivities) {
-          minActivities = day.activities.length;
-          bestDay = dayNum;
-        }
+
+      // 🔒 VALIDACIÓN DEFENSIVA: Verificar que el día existe y tiene array de actividades
+      if (!day) {
+        console.warn(`⚠️ Día ${dayNum} no encontrado en itinerario`);
+        return;
+      }
+
+      // Inicializar activities si no existe
+      if (!day.activities) {
+        day.activities = [];
+      }
+
+      const activityCount = day.activities.length;
+
+      if (activityCount < minActivities) {
+        minActivities = activityCount;
+        bestDay = dayNum;
       }
     });
 

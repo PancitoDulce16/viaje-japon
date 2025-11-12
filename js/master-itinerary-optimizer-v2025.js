@@ -1029,6 +1029,18 @@ export const MasterItineraryOptimizer = {
   async autoCorrectDistanceErrors(itinerary, distanceValidation) {
     console.log('   🔧 Usando AutoCorrectionV2 para corregir días mezclados...');
 
+    // 🔒 VALIDACIÓN: Verificar que tenemos un itinerario válido
+    if (!itinerary || !itinerary.days || !Array.isArray(itinerary.days)) {
+      console.error('   ❌ Itinerario inválido o sin días');
+      return {
+        corrected: false,
+        itinerary: itinerary,
+        correctionsMade: 0,
+        correctionsFailed: distanceValidation?.daysWithErrors?.length || 0,
+        error: 'Itinerario inválido'
+      };
+    }
+
     try {
       // Delegar TODA la lógica de corrección al módulo V2
       const result = await AutoCorrectionV2.correctMixedDays(itinerary);
@@ -1048,27 +1060,41 @@ export const MasterItineraryOptimizer = {
       if (result.corrected && result.stats.activitiesMoved > 0) {
         console.log(`\n   🔄 Re-optimizando días afectados...`);
 
+        let reoptimizedCount = 0;
+        let reoptimizationErrors = 0;
+
         // Re-optimizar TODOS los días (es más seguro)
         itinerary.days.forEach(day => {
           if (!day.activities || day.activities.length < 2) return;
 
-          const detection = CityDetectionV2.detectDayCity(day);
-          if (!detection.city) return;
+          try {
+            const detection = CityDetectionV2.detectDayCity(day);
+            if (!detection.city) return;
 
-          const hotel = HotelBaseSystem.getHotelForCity(itinerary, detection.city, day.day);
+            const hotel = HotelBaseSystem.getHotelForCity(itinerary, detection.city, day.day);
 
-          if (hotel && hotel.coordinates) {
-            const routeResult = RouteOptimizer.optimizeRoute(day.activities, {
-              startPoint: hotel.coordinates,
-              optimizationMode: 'balanced',
-              shouldRecalculateTimings: true
-            });
+            if (hotel && hotel.coordinates) {
+              const routeResult = RouteOptimizer.optimizeRoute(day.activities, {
+                startPoint: hotel.coordinates,
+                optimizationMode: 'balanced',
+                shouldRecalculateTimings: true
+              });
 
-            if (routeResult.wasOptimized) {
-              day.activities = routeResult.optimizedActivities;
+              if (routeResult && routeResult.wasOptimized) {
+                day.activities = routeResult.optimizedActivities;
+                reoptimizedCount++;
+              }
             }
+          } catch (routeError) {
+            console.error(`      ⚠️ Error re-optimizando día ${day.day}:`, routeError.message);
+            reoptimizationErrors++;
           }
         });
+
+        console.log(`      ✅ ${reoptimizedCount} días re-optimizados`);
+        if (reoptimizationErrors > 0) {
+          console.warn(`      ⚠️ ${reoptimizationErrors} errores en re-optimización`);
+        }
       }
 
       // Retornar en el formato esperado

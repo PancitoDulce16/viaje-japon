@@ -19,6 +19,34 @@ export const AutoCorrectionV2 = {
     console.log('🔧 AUTO-CORRECCIÓN DE DÍAS MEZCLADOS');
     console.log('🔧 ═══════════════════════════════════════\n');
 
+    // 🔒 VALIDACIÓN: Verificar que el itinerario es válido
+    if (!itinerary || !itinerary.days || !Array.isArray(itinerary.days)) {
+      console.error('❌ Itinerario inválido - no se puede corregir');
+      return {
+        success: false,
+        error: 'Itinerario inválido o sin días',
+        stats: {
+          activitiesMoved: 0,
+          daysCorrected: 0,
+          failed: 0,
+          details: []
+        }
+      };
+    }
+
+    if (itinerary.days.length === 0) {
+      console.warn('⚠️ Itinerario vacío - no hay nada que corregir');
+      return {
+        success: true,
+        stats: {
+          activitiesMoved: 0,
+          daysCorrected: 0,
+          failed: 0,
+          details: []
+        }
+      };
+    }
+
     const stats = {
       activitiesMoved: 0,
       daysCorrected: 0,
@@ -66,8 +94,12 @@ export const AutoCorrectionV2 = {
 
         console.log(`   Actividades a mover: ${activitiesToMove.length}`);
 
+        // 🔥 FIX CRÍTICO: Ordenar por índice DESCENDENTE sin modificar array original
+        // Esto asegura que splice() elimine las actividades correctas
+        const sortedToMove = [...activitiesToMove].sort((a, b) => b.index - a.index);
+
         // Mover cada actividad a su ciudad correcta
-        for (const { activity, index, city } of activitiesToMove.reverse()) { // Reverse para no cambiar índices
+        for (const { activity, index, city } of sortedToMove) {
           const activityName = activity.title || activity.name || 'Sin nombre';
 
           // Encontrar mejor día para esta actividad
@@ -79,25 +111,51 @@ export const AutoCorrectionV2 = {
           );
 
           if (bestDay) {
-            // Remover del día actual
-            day.activities.splice(index, 1);
-
-            // Agregar al día correcto
+            // 🔒 VALIDACIÓN: Verificar que el día destino existe
             const targetDay = itinerary.days.find(d => d.day === bestDay);
-            if (targetDay) {
-              if (!targetDay.activities) targetDay.activities = [];
-              targetDay.activities.push(activity);
 
-              stats.activitiesMoved++;
-              console.log(`      ✅ "${activityName}" (${city}) → Día ${bestDay}`);
-
+            if (!targetDay) {
+              console.error(`      ❌ Día ${bestDay} no existe en itinerario`);
+              stats.failed++;
               stats.details.push({
                 activity: activityName,
                 from: mixedDay.day,
                 to: bestDay,
-                city: city
+                city: city,
+                failed: true,
+                reason: `Día ${bestDay} no encontrado`
               });
+              continue;
             }
+
+            // Inicializar activities si no existe
+            if (!targetDay.activities) {
+              targetDay.activities = [];
+            }
+
+            // 🔒 VALIDACIÓN: Verificar que el índice es válido
+            if (index < 0 || index >= day.activities.length) {
+              console.error(`      ❌ Índice ${index} fuera de rango (array size: ${day.activities.length})`);
+              stats.failed++;
+              continue;
+            }
+
+            // Remover del día actual (splice devuelve array de elementos removidos)
+            const [removed] = day.activities.splice(index, 1);
+
+            // Agregar al día correcto
+            targetDay.activities.push(removed);
+
+            stats.activitiesMoved++;
+            console.log(`      ✅ "${activityName}" (${city}) → Día ${bestDay}`);
+
+            stats.details.push({
+              activity: activityName,
+              from: mixedDay.day,
+              to: bestDay,
+              city: city
+            });
+
           } else {
             stats.failed++;
             console.log(`      ⚠️ "${activityName}" (${city}) - No hay días de ${city} disponibles`);
