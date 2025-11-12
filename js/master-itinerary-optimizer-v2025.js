@@ -880,7 +880,7 @@ export const MasterItineraryOptimizer = {
       console.log('\n📍 PASO 8: Validando itinerario resultante...');
       let validation = MasterValidator.validateCompleteItinerary(itinerary);
 
-      // 🔍 DEBUG: Mostrar estructura completa de validación
+      // 🔍 DEBUG: Mostrar estructura completa de validación (sin imprimir objetos grandes)
       console.log('\n🔍 DEBUG - Estructura de validación recibida:');
       console.log('   validation.valid:', validation.valid);
       console.log('   validation.summary.totalErrors:', validation.summary?.totalErrors);
@@ -889,8 +889,7 @@ export const MasterItineraryOptimizer = {
       const distanceValidation = validation.validations?.distances;
       if (distanceValidation) {
         console.log('   distanceValidation.valid:', distanceValidation.valid);
-        console.log('   distanceValidation.daysWithErrors:', distanceValidation.daysWithErrors);
-        console.log('   distanceValidation.daysWithErrors?.length:', distanceValidation.daysWithErrors?.length);
+        console.log('   distanceValidation.daysWithErrors count:', distanceValidation.daysWithErrors?.length || 0);
         console.log('   distanceValidation.totalErrors:', distanceValidation.totalErrors);
       }
 
@@ -899,13 +898,13 @@ export const MasterItineraryOptimizer = {
       const check1 = distanceValidation?.daysWithErrors?.length > 0;
       const check2 = distanceValidation?.totalErrors > 0;
       const check3 = distanceValidation?.valid === false;
-      const check4 = validation.summary?.totalErrors > 0 && distanceValidation;
+      const check4 = validation.summary?.totalErrors > 0 && !!distanceValidation;
 
       console.log('\n🔍 PASO 9 - Checks de activación:');
       console.log('   ✓ Check 1 (daysWithErrors.length > 0):', check1);
       console.log('   ✓ Check 2 (totalErrors > 0):', check2);
       console.log('   ✓ Check 3 (valid === false):', check3);
-      console.log('   ✓ Check 4 (summary.totalErrors > 0):', check4);
+      console.log('   ✓ Check 4 (summary.totalErrors > 0 && distanceValidation exists):', check4);
 
       const hasDistanceErrors = check1 || check2 || check3;
 

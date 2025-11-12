@@ -1,7 +1,7 @@
 // js/cache-buster.js - Sistema de detección y corrección automática de cache
 // Este archivo FUERZA reloads cuando detecta archivos viejos
 
-const APP_VERSION = '2025-11-12-V2-CLEAN-ARCHITECTURE';
+const APP_VERSION = '2025-11-12-V2-FIX-CONSOLE-LOGS';
 const VERSION_KEY = 'app_version';
 
 /**

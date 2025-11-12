@@ -1,37 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(gh pr list:*)",
-      "Bash(git checkout:*)",
-      "Bash(git merge:*)",
-      "Bash(git ls-tree:*)",
-      "Bash(firebase deploy:*)",
-      "Read(//c/Users/Noelia/Desktop/**)",
-      "Bash(cat:*)",
-      "Read(//c/Users/Noelia/**)",
-      "Bash(npm run dev:*)",
-      "Bash(dir:*)",
-      "Bash(findstr:*)",
-      "Bash(node validate-dark-mode.js:*)",
-      "Bash(npx eslint:*)",
-      "Bash(node --check:*)",
-      "Bash(git log:*)",
-      "Bash(node validate-imports.js:*)",
-      "Bash(npm run deploy:*)",
-      "WebSearch",
-      "WebFetch(domain:developers.google.com)",
-      "Bash(curl:*)",
-      "Bash(git rm:*)",
-      "Bash(git add:*)",
-      "Bash(find:*)",
-      "Bash(powershell -Command \"Get-Content ''C:\\Users\\Noelia\\Documents\\GitHub\\viaje-japon\\dashboard.html'' | Select-Object -Last 100\")",
-      "Bash(powershell -Command \"Get-Content ''C:\\Users\\Noelia\\Documents\\GitHub\\viaje-japon\\dashboard.html'' | Select-String -Pattern ''Gyoen|día 10|day 10'' -Context 2,2\")",
-      "Bash(powershell:*)",
-      "Bash(de viaje coherente, balanceada y memorable que entienda el)",
-      "Bash(contexto completo del viaje y las necesidades del viajero)",
-      "Bash(en cada fase\"\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "WebFetch(domain:dpaste.com)"
     ],
     "deny": [],
     "ask": []
