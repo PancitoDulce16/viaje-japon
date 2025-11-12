@@ -1,9 +1,8 @@
 // js/master-itinerary-optimizer.js - Sistema Maestro de Optimización Inteligente
 // Arquitectura modular que entiende el viaje como una narrativa completa
-// VERSION: 2025-11-11-182500-ULTRA-DEBUG-WITH-AUTO-CORRECTION
+// VERSION: 2025-11-11-SIMPLIFIED-CONDITION
 
-console.log('🚀🚀🚀 MASTER ITINERARY OPTIMIZER LOADED - VERSION 2025-11-11-182500 🚀🚀🚀');
-console.log('✅ This version includes PASO 9 auto-correction with extensive debug logging');
+console.log('🚀 MASTER OPTIMIZER v2025-11-11-SIMPLIFIED - PASO 9 Auto-Correction ACTIVE');
 
 import { RouteOptimizer } from './route-optimizer-v2.js';
 import { HotelBaseSystem } from './hotel-base-system.js';
@@ -849,26 +848,19 @@ export const MasterItineraryOptimizer = {
 
       // PASO 8: VALIDAR el itinerario resultante
       console.log('\n📍 PASO 8: Validando itinerario resultante...');
-      console.log('🔍 DEBUG: ANTES DE VALIDACIÓN - Verificando que este código se ejecuta');
       let validation = MasterValidator.validateCompleteItinerary(itinerary);
-      console.log('🔍 DEBUG: DESPUÉS DE VALIDACIÓN');
-
-      // 🔍 DEBUG: Verificar estructura de validación
-      console.log('🔍 DEBUG validation object:', validation);
-      console.log('🔍 DEBUG validation.validations:', validation.validations);
-      console.log('🔍 DEBUG validation.validations?.distances:', validation.validations?.distances);
-      console.log('🔍 DEBUG - Checking condition components:');
-      console.log('  - validation.valid:', validation.valid);
-      console.log('  - has validations:', !!validation.validations);
-      console.log('  - has distances:', !!validation.validations?.distances);
-      console.log('  - distances.valid:', validation.validations?.distances?.valid);
-      console.log('  - distances.totalErrors:', validation.validations?.distances?.totalErrors);
-      console.log('  - CONDITION RESULT:', !validation.valid && validation.validations?.distances && !validation.validations.distances.valid);
 
       // PASO 9: AUTO-CORRECCIÓN de errores de distancia (si existen)
-      if (!validation.valid && validation.validations?.distances && !validation.validations.distances.valid) {
-        console.log('\n🔧 PASO 9: Auto-corrección de errores de distancia...');
-        const correctionResult = await this.autoCorrectDistanceErrors(itinerary, validation.validations.distances);
+      // Condición SIMPLIFICADA: Si hay errores de distancia (daysWithErrors > 0), corregir
+      const distanceValidation = validation.validations?.distances;
+      const hasDistanceErrors = distanceValidation &&
+                                distanceValidation.daysWithErrors &&
+                                distanceValidation.daysWithErrors.length > 0;
+
+      if (hasDistanceErrors) {
+        console.log(`\n🔧 PASO 9: Auto-corrección de ${distanceValidation.daysWithErrors.length} días con errores de distancia...`);
+
+        const correctionResult = await this.autoCorrectDistanceErrors(itinerary, distanceValidation);
 
         if (correctionResult.corrected) {
           itinerary = correctionResult.itinerary;
@@ -877,9 +869,17 @@ export const MasterItineraryOptimizer = {
           // Re-validar después de correcciones
           console.log('   🔄 Re-validando itinerario corregido...');
           validation = MasterValidator.validateCompleteItinerary(itinerary);
+
+          if (validation.validations?.distances?.daysWithErrors?.length === 0) {
+            console.log('   ✅ ¡Todos los errores de distancia fueron corregidos!');
+          } else {
+            console.warn(`   ⚠️ Quedan ${validation.validations.distances.daysWithErrors.length} días con errores`);
+          }
         } else {
-          console.warn('   ⚠️ No se pudieron aplicar todas las correcciones automáticas');
+          console.warn('   ⚠️ No se pudieron aplicar correcciones automáticas');
         }
+      } else {
+        console.log('✅ No hay errores de distancia que corregir');
       }
 
       const endTime = Date.now();
