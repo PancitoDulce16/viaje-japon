@@ -16,7 +16,7 @@ export const CityDetectionV2 = {
    * @param {Object} day - Día del itinerario
    * @returns {Object} { city: string, confidence: 'high'|'medium'|'low', mixed: boolean, breakdown: {} }
    */
-  detectDayCity(day) {
+  detectDayCity(day, debug = false) {
     // Validación básica
     if (!day) {
       return { city: null, confidence: 'none', mixed: false, breakdown: {} };
@@ -38,6 +38,11 @@ export const CityDetectionV2 = {
       return { city: null, confidence: 'none', mixed: false, breakdown: {} };
     }
 
+    if (debug) {
+      console.log(`\n🔍 DEBUG detectDayCity - Día ${day.day}:`);
+      console.log(`   Total actividades: ${day.activities.length}`);
+    }
+
     // Contar actividades por ciudad
     const cityCounts = {};
     const activitiesWithCity = [];
@@ -45,12 +50,20 @@ export const CityDetectionV2 = {
 
     day.activities.forEach(activity => {
       const city = this.extractCityFromActivity(activity);
+      const activityName = activity.title || activity.name || 'Sin nombre';
+
+      if (debug) {
+        console.log(`   - "${activityName}": ${city || 'NO DETECTADA'}`);
+        if (!city && activity.coordinates) {
+          console.log(`     Coords: ${activity.coordinates.lat}, ${activity.coordinates.lng}`);
+        }
+      }
 
       if (city) {
         cityCounts[city] = (cityCounts[city] || 0) + 1;
-        activitiesWithCity.push({ activity: activity.title || activity.name, city });
+        activitiesWithCity.push({ activity: activityName, city });
       } else {
-        activitiesWithoutCity.push(activity.title || activity.name);
+        activitiesWithoutCity.push(activityName);
       }
     });
 
@@ -86,6 +99,16 @@ export const CityDetectionV2 = {
       confidence = 'medium'; // 60-79%
     } else {
       confidence = 'low'; // <60%
+    }
+
+    if (debug) {
+      console.log(`   📊 Resultado:`);
+      console.log(`      Ciudad dominante: ${dominantCity} (${dominantCount}/${day.activities.length} actividades)`);
+      console.log(`      ¿Mezclado?: ${isMixed ? 'SÍ' : 'NO'}`);
+      if (isMixed) {
+        console.log(`      Otras ciudades: ${sortedCities.slice(1).map(([c, n]) => `${c}(${n})`).join(', ')}`);
+      }
+      console.log(`      Confianza: ${confidence} (${percentage.toFixed(0)}%)`);
     }
 
     return {
@@ -254,7 +277,10 @@ export const CityDetectionV2 = {
         console.warn('⚠️ Día inválido encontrado en itinerario');
         return;
       }
-      const detection = this.detectDayCity(day);
+
+      // 🔍 DEBUG: Activar debug para días que históricamente han tenido problemas (11-15)
+      const debugThis = day.day >= 11 && day.day <= 15;
+      const detection = this.detectDayCity(day, debugThis);
 
       if (detection.city) {
         if (!cityToDays[detection.city]) {
