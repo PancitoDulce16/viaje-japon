@@ -1,5 +1,10 @@
 // js/city-detection-v2.js - Sistema de Detección de Ciudades SIMPLIFICADO Y ROBUSTO
 // Reescritura completa desde cero con lógica clara y sin bugs
+// VERSION: 2025-11-15-CRITICAL-FIX - Ya NO confía ciegamente en day.location
+
+console.log('🔥 CityDetectionV2 cargado - VERSION: 2025-11-15-CRITICAL-FIX');
+console.log('   ✅ FIX: Ahora analiza actividades SIEMPRE (no solo cuando day.location falta)');
+console.log('   ✅ FIX: Detecta días mezclados correctamente');
 
 /**
  * Sistema de Detección de Ciudades V2
@@ -8,6 +13,7 @@
  * 2. ROBUSTO: Maneja todos los casos edge
  * 3. CONSISTENTE: Trata TODAS las ciudades igual (incluyendo Tokyo)
  * 4. TRANSPARENTE: Log claro de cada decisión
+ * 5. NO CONFÍA EN day.location: Siempre valida contra actividades reales (FIX 2025-11-15)
  */
 export const CityDetectionV2 = {
 
