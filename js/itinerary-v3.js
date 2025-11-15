@@ -1101,8 +1101,8 @@ function renderTripSelector(){
           </div>
         </div>
         <div class="flex gap-2 flex-wrap">
-          ${currentItinerary ? `<button onclick="showTripIntelligenceModal()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">🧠 Análisis del Viaje</button>`:''}
-          <button onclick="window.SmartGeneratorWizard.open()" class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-4 py-2 rounded-lg transition text-sm font-bold shadow-md">🚀 Generador Inteligente</button>
+          <!-- ❌ ELIMINADO: Análisis del Viaje (feature semi-roto) -->
+          <!-- ❌ ELIMINADO: Generador Inteligente (frustrante, no funciona bien) -->
           ${userTrips.length>1 ? `<button onclick="TripsManager.showTripsListModal()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">🔄 Cambiar Viaje</button>`:''}
           <button onclick="TripsManager.showShareCode()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">🔗 Compartir</button>
           ${!currentItinerary ? `<button onclick="ItineraryBuilder.showCreateItineraryWizard()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition text-sm font-bold shadow-md">✨ Crear Itinerario</button>`:''}

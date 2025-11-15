@@ -6,7 +6,7 @@
  * Formato: YYYY-MM-DD-HH-MM
  * Se incrementa con cada deploy importante
  */
-export const APP_VERSION = '2025-11-15-22-00-SIMPLE';
+export const APP_VERSION = '2025-11-15-ULTRACLEAN-v3';
 
 /**
  * Changelog de versiones
