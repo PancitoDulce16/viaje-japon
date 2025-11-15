@@ -855,26 +855,52 @@ export const MasterItineraryOptimizer = {
       console.log('\n📍 PASO 6: Balanceando niveles de energía...');
       const energyReport = EnergyManagementSystem.balanceEnergyLevels(itinerary);
 
-      // PASO 7: Optimizar rutas de cada día
-      console.log('\n📍 PASO 7: Optimizando rutas individuales...');
-      itinerary.days.forEach(day => {
-        if (day.activities && day.activities.length > 1) {
-          const city = HotelBaseSystem.detectCityForDay(day);
-          const hotel = HotelBaseSystem.getHotelForCity(itinerary, city, day.day);
+      // ❌ PASO 7: Optimización Automática de Rutas - DESACTIVADO
+      //
+      // RAZÓN: Reorganiza actividades sin permiso del usuario
+      //
+      // PROBLEMA:
+      // - Cambia el orden que el usuario estableció intencionalmente
+      // - Recalcula horarios automáticamente (puede no ser deseado)
+      // - A veces "optimiza" pero empeora la experiencia real
+      // - No hay preview ni confirmación
+      //
+      // DECISIÓN: DESACTIVADO - El usuario controla el orden manualmente
+      //
+      // ALTERNATIVA:
+      // - Agregar botón "Optimizar día X" (opcional, por día)
+      // - Mostrar preview antes de aplicar
+      // - Usuario tiene control total
+      //
+      console.log('\n📍 PASO 7: Optimización de rutas (DESACTIVADO)');
+      console.log('   💡 TIP: Usa drag & drop para organizar el orden de actividades');
+      console.log('   📏 Las distancias entre actividades se muestran en el validador');
 
-          if (hotel && hotel.coordinates) {
-            const result = RouteOptimizer.optimizeRoute(day.activities, {
-              startPoint: hotel.coordinates,
-              optimizationMode: 'balanced',
-              shouldRecalculateTimings: true
-            });
-
-            if (result.wasOptimized) {
-              day.activities = result.optimizedActivities;
-            }
-          }
-        }
-      });
+      /* ═══════════════════════════════════════════════════════════════
+       * CÓDIGO DESACTIVADO - Mantener para referencia
+       * ═══════════════════════════════════════════════════════════════
+       *
+       * itinerary.days.forEach(day => {
+       *   if (day.activities && day.activities.length > 1) {
+       *     const city = HotelBaseSystem.detectCityForDay(day);
+       *     const hotel = HotelBaseSystem.getHotelForCity(itinerary, city, day.day);
+       *
+       *     if (hotel && hotel.coordinates) {
+       *       const result = RouteOptimizer.optimizeRoute(day.activities, {
+       *         startPoint: hotel.coordinates,
+       *         optimizationMode: 'balanced',
+       *         shouldRecalculateTimings: true
+       *       });
+       *
+       *       if (result.wasOptimized) {
+       *         day.activities = result.optimizedActivities;
+       *       }
+       *     }
+       *   }
+       * });
+       *
+       * ═══════════════════════════════════════════════════════════════
+       */
 
       // PASO 8: VALIDAR el itinerario resultante
       console.log('\n📍 PASO 8: Validando itinerario resultante...');
@@ -893,63 +919,49 @@ export const MasterItineraryOptimizer = {
         console.log('   distanceValidation.totalErrors:', distanceValidation.totalErrors);
       }
 
-      // PASO 9: AUTO-CORRECCIÓN de errores de distancia (si existen)
-      // 🔥 CONDICIÓN ULTRA-ROBUSTA: Múltiples checks para asegurar que se ejecute
-      const check1 = distanceValidation?.daysWithErrors?.length > 0;
-      const check2 = distanceValidation?.totalErrors > 0;
-      const check3 = distanceValidation?.valid === false;
-      const check4 = validation.summary?.totalErrors > 0 && !!distanceValidation;
+      // ❌ PASO 9: AUTO-CORRECCIÓN - DESACTIVADO
+      //
+      // RAZÓN: Feature semi-roto que genera falsas expectativas
+      //
+      // PROBLEMA:
+      // - Solo puede mover actividades si YA existen días puros disponibles
+      // - Si no hay días disponibles → falla silenciosamente
+      // - Genera confusión: "dice que arreglará pero no lo hace"
+      // - Gastó muchas sesiones de debugging sin valor real
+      //
+      // DECISIÓN: DESACTIVADO hasta que se reimplemente correctamente
+      //
+      // ALTERNATIVA ACTUAL:
+      // - El validador muestra errores de distancia claramente
+      // - El usuario decide cómo resolverlos (manual)
+      // - Más transparente y predecible
+      //
+      console.log('\n📍 PASO 9: Auto-corrección (DESACTIVADO)');
 
-      console.log('\n🔍 PASO 9 - Checks de activación:');
-      console.log('   ✓ Check 1 (daysWithErrors.length > 0):', check1);
-      console.log('   ✓ Check 2 (totalErrors > 0):', check2);
-      console.log('   ✓ Check 3 (valid === false):', check3);
-      console.log('   ✓ Check 4 (summary.totalErrors > 0 && distanceValidation exists):', check4);
-
-      const hasDistanceErrors = check1 || check2 || check3;
-
-      console.log('   🎯 DECISIÓN FINAL: hasDistanceErrors =', hasDistanceErrors);
-
-      if (hasDistanceErrors) {
-        const errorCount = distanceValidation.daysWithErrors?.length ||
-                          distanceValidation.totalErrors ||
-                          validation.summary.totalErrors;
-
-        console.log(`\n🔧 ═══════════════════════════════════════`);
-        console.log(`🔧 PASO 9: AUTO-CORRECCIÓN ACTIVADA`);
-        console.log(`🔧 Errores detectados: ${errorCount}`);
-        console.log(`🔧 ═══════════════════════════════════════\n`);
-
-        try {
-          const correctionResult = await this.autoCorrectDistanceErrors(itinerary, distanceValidation);
-
-          if (correctionResult.error) {
-            console.error(`   ❌ Error en auto-corrección: ${correctionResult.error}`);
-          } else if (correctionResult.corrected) {
-            itinerary = correctionResult.itinerary;
-
-            // Re-validar después de correcciones
-            console.log('\n   🔄 Re-validando itinerario corregido...');
-            validation = MasterValidator.validateCompleteItinerary(itinerary);
-
-            const remainingErrors = validation.validations?.distances?.daysWithErrors?.length || 0;
-
-            if (remainingErrors === 0) {
-              console.log('   🎉 ¡Todos los errores de distancia fueron corregidos!');
-            } else if (correctionResult.correctionsMade > 0) {
-              console.log(`   ✅ Se corrigieron ${correctionResult.correctionsMade} errores`);
-              console.warn(`   ⚠️  Quedan ${remainingErrors} días con errores que no se pudieron corregir`);
-            }
-          } else {
-            console.warn(`   ⚠️ No se pudieron aplicar correcciones automáticas (${correctionResult.correctionsFailed} intentos fallidos)`);
-          }
-        } catch (paso9Error) {
-          console.error('   ❌ EXCEPCIÓN EN PASO 9:', paso9Error);
-          console.error('   Stack:', paso9Error.stack);
-        }
+      if (distanceValidation && !distanceValidation.valid) {
+        const errorCount = distanceValidation.daysWithErrors?.length || 0;
+        console.log(`   ⚠️  ${errorCount} días con errores de distancia detectados`);
+        console.log('   💡 Revisa manualmente estos días en el reporte de validación');
+        console.log('   📝 TIP: Arrastra actividades entre días para organizarlas mejor');
       } else {
-        console.log('\n✅ PASO 9: No hay errores de distancia que corregir');
+        console.log('   ✅ No hay errores de distancia');
       }
+
+      /* ═══════════════════════════════════════════════════════════════
+       * CÓDIGO DESACTIVADO - No borrar (puede ser útil como referencia)
+       * ═══════════════════════════════════════════════════════════════
+       *
+       * const check1 = distanceValidation?.daysWithErrors?.length > 0;
+       * const check2 = distanceValidation?.totalErrors > 0;
+       * const check3 = distanceValidation?.valid === false;
+       *
+       * if (check1 || check2 || check3) {
+       *   const correctionResult = await this.autoCorrectDistanceErrors(itinerary, distanceValidation);
+       *   // ... resto del código
+       * }
+       *
+       * ═══════════════════════════════════════════════════════════════
+       */
 
       const endTime = Date.now();
       const duration = ((endTime - startTime) / 1000).toFixed(2);

@@ -6,12 +6,24 @@
  * Formato: YYYY-MM-DD-HH-MM
  * Se incrementa con cada deploy importante
  */
-export const APP_VERSION = '2025-11-15-20-30';
+export const APP_VERSION = '2025-11-15-22-00-SIMPLE';
 
 /**
  * Changelog de versiones
  */
 export const VERSION_HISTORY = {
+  '2025-11-15-22-00-SIMPLE': {
+    date: '2025-11-15',
+    changes: [
+      '🧹 LIMPIEZA RADICAL: Features semi-rotos DESACTIVADOS',
+      '❌ Auto-corrección automática (PASO 9) - desactivada',
+      '❌ Optimización automática de rutas (PASO 7) - desactivada',
+      '✅ Validaciones simplificadas - solo errores críticos',
+      '🎯 Filosofía: Usuario tiene control total, app solo sugiere'
+    ],
+    breaking: true,
+    philosophy: 'Menos features, todos funcionando 100%'
+  },
   '2025-11-15-20-30': {
     date: '2025-11-15',
     changes: [

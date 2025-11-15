@@ -514,9 +514,12 @@ export const MasterValidator = {
    * @param {Object} itinerary
    * @returns {Object} Reporte completo
    */
-  validateCompleteItinerary(itinerary) {
+  validateCompleteItinerary(itinerary, options = {}) {
+    // 🔥 MODO SIMPLIFICADO (default): Solo errores críticos
+    const verbose = options.verbose || false;
+
     console.log('🔍 ═══════════════════════════════════════');
-    console.log('🔍 VALIDACIÓN MAESTRA DEL ITINERARIO');
+    console.log('🔍 VALIDACIÓN DE ITINERARIO (MODO SIMPLE)');
     console.log('🔍 ═══════════════════════════════════════\n');
 
     const report = {
@@ -530,43 +533,48 @@ export const MasterValidator = {
       }
     };
 
-    // 1. Validar distancias
-    console.log('📏 Validación 1: Distancias...');
+    // ✅ VALIDACIÓN CRÍTICA 1: Distancias imposibles
+    console.log('📏 Validando distancias entre actividades...');
     report.validations.distances = DistanceValidator.validateItinerary(itinerary);
     if (!report.validations.distances.valid) {
       report.valid = false;
       report.summary.totalErrors += report.validations.distances.totalErrors;
       report.summary.criticalIssues.push('Distancias excesivas entre actividades');
     }
-    report.summary.totalWarnings += report.validations.distances.totalWarnings || 0;
+    // Solo contar warnings críticos (>10km), no los de 5-10km
+    const criticalWarnings = report.validations.distances.daysWithWarnings?.filter(
+      d => d.maxDistance > 10
+    ).length || 0;
+    report.summary.totalWarnings += criticalWarnings;
 
-    // 2. Validar coherencia
-    console.log('\n🎯 Validación 2: Coherencia de días...');
-    report.validations.coherence = DayCoherenceValidator.validateItineraryCoherence(itinerary);
-    if (!report.validations.coherence.valid) {
-      report.valid = false;
-      report.summary.totalErrors += report.validations.coherence.daysWithErrors.length;
-      report.summary.criticalIssues.push('Falta de coherencia en días (actividades inapropiadas)');
+    // ❌ VALIDACIONES OPCIONALES DESACTIVADAS (pueden activarse con verbose:true)
+    if (verbose) {
+      // Solo ejecutar si el usuario lo pide explícitamente
+      console.log('\n🎯 Validación 2: Coherencia de días...');
+      report.validations.coherence = DayCoherenceValidator.validateItineraryCoherence(itinerary);
+
+      console.log('\n🛍️ Análisis 3: Experiencias de shopping...');
+      report.validations.shopping = ShoppingExperienceSystem.analyzeShoppingBalance(itinerary);
+    } else {
+      // Modo simple: Skip estas validaciones
+      report.validations.coherence = { valid: true, daysWithErrors: [], daysWithWarnings: [], skipped: true };
+      report.validations.shopping = { recommendations: [], skipped: true };
     }
-    report.summary.totalWarnings += report.validations.coherence.daysWithWarnings.length;
 
-    // 3. Analizar shopping
-    console.log('\n🛍️ Análisis 3: Experiencias de shopping...');
-    report.validations.shopping = ShoppingExperienceSystem.analyzeShoppingBalance(itinerary);
-    report.summary.totalWarnings += report.validations.shopping.recommendations.length;
-
-    // Resumen final
+    // Resumen final - SOLO errores críticos
     console.log('\n🔍 ═══════════════════════════════════════');
     if (report.valid) {
       console.log('✅ ITINERARIO VÁLIDO');
     } else {
-      console.error('❌ ITINERARIO INVÁLIDO');
-      console.error(`   Errores críticos: ${report.summary.totalErrors}`);
+      console.error('❌ ERRORES CRÍTICOS ENCONTRADOS');
+      console.error(`   Total: ${report.summary.totalErrors} errores`);
       report.summary.criticalIssues.forEach(issue => {
-        console.error(`   - ${issue}`);
+        console.error(`   • ${issue}`);
       });
     }
-    console.log(`   Advertencias: ${report.summary.totalWarnings}`);
+    if (report.summary.totalWarnings > 0) {
+      console.warn(`   ⚠️  ${report.summary.totalWarnings} advertencias`);
+    }
     console.log('🔍 ═══════════════════════════════════════\n');
 
     return report;
