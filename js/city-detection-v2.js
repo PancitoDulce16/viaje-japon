@@ -22,24 +22,28 @@ export const CityDetectionV2 = {
       return { city: null, confidence: 'none', mixed: false, breakdown: {} };
     }
 
-    // Si el día tiene location explícito, úsalo
-    if (day.location) {
-      return {
-        city: this.normalizeCity(day.location),
-        confidence: 'high',
-        mixed: false,
-        breakdown: { [this.normalizeCity(day.location)]: day.activities?.length || 0 },
-        source: 'day.location'
-      };
-    }
-
     // Si no hay actividades
     if (!day.activities || day.activities.length === 0) {
+      // Si tiene location pero no actividades, confiar en location
+      if (day.location) {
+        return {
+          city: this.normalizeCity(day.location),
+          confidence: 'high',
+          mixed: false,
+          breakdown: { [this.normalizeCity(day.location)]: 0 },
+          source: 'day.location'
+        };
+      }
       return { city: null, confidence: 'none', mixed: false, breakdown: {} };
     }
 
+    // 🔥 FIX: Ya NO confiamos ciegamente en day.location
+    // Siempre analizamos las actividades para detectar días mezclados
+    const declaredCity = day.location ? this.normalizeCity(day.location) : null;
+
     if (debug) {
       console.log(`\n🔍 DEBUG detectDayCity - Día ${day.day}:`);
+      console.log(`   day.location declarado: ${declaredCity || 'NINGUNO'}`);
       console.log(`   Total actividades: ${day.activities.length}`);
     }
 
@@ -86,8 +90,19 @@ export const CityDetectionV2 = {
     const dominantCount = sortedCities[0][1];
     const totalActivitiesWithCity = activitiesWithCity.length;
 
-    // Determinar si es un día mezclado
-    const isMixed = sortedCities.length > 1;
+    // 🔥 FIX: Determinar si es un día mezclado
+    // Un día está mezclado si:
+    // 1. Hay actividades de múltiples ciudades, O
+    // 2. El day.location declarado NO coincide con la ciudad dominante de las actividades
+    let isMixed = sortedCities.length > 1;
+
+    // Verificar discrepancia con day.location
+    if (declaredCity && declaredCity !== dominantCity) {
+      isMixed = true;
+      if (debug) {
+        console.log(`   ⚠️ DISCREPANCIA: day.location="${declaredCity}" pero actividades son de "${dominantCity}"`);
+      }
+    }
 
     // Calcular confianza
     const percentage = (dominantCount / day.activities.length) * 100;
@@ -103,9 +118,9 @@ export const CityDetectionV2 = {
 
     if (debug) {
       console.log(`   📊 Resultado:`);
-      console.log(`      Ciudad dominante: ${dominantCity} (${dominantCount}/${day.activities.length} actividades)`);
+      console.log(`      Ciudad dominante (por actividades): ${dominantCity} (${dominantCount}/${day.activities.length})`);
       console.log(`      ¿Mezclado?: ${isMixed ? 'SÍ' : 'NO'}`);
-      if (isMixed) {
+      if (isMixed && sortedCities.length > 1) {
         console.log(`      Otras ciudades: ${sortedCities.slice(1).map(([c, n]) => `${c}(${n})`).join(', ')}`);
       }
       console.log(`      Confianza: ${confidence} (${percentage.toFixed(0)}%)`);
