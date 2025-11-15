@@ -1,4 +1,7 @@
 // js/itinerary.js — VERSIÓN MEJORADA con Creación Dinámica + AI Insights Button
+console.log('%c🔥🔥🔥 ITINERARY-V3.JS LOADED - VERSION: v1763241633 🔥🔥🔥', 'background: #ff0000; color: #fff; font-size: 20px; padding: 10px;');
+console.log('%cSi ves este mensaje, la NUEVA versión se cargó correctamente', 'background: #00ff00; color: #000; font-size: 16px; padding: 5px;');
+
 import { db, auth } from '/js/firebase-config.js';
 import { Notifications } from './notifications.js';
 import { doc, setDoc, getDoc, onSnapshot, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
