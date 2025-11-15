@@ -1324,33 +1324,26 @@ function renderQuickActionButtons(day) {
         </button>
       </div>
 
-      <!-- Expanded actions (hidden by default) -->
+      <!-- ❌ FEATURES DESACTIVADOS - Botones eliminados (2025-11-15)
+
+           Botones eliminados porque NO funcionan al 100%:
+           - 🗺️ Optimizar Ruta (reorganiza sin permiso)
+           - 🍽️ Auto-Insertar Comidas (semi-roto)
+           - 🕳️ Llenar Huecos (no implementado correctamente)
+           - 💡 Ver Sugerencias (sugerencias genéricas poco útiles)
+           - ⚖️ Analizar Balance (solo genera ruido)
+           - 🚀 Optimización Inteligente de Viaje (promete pero no cumple)
+
+           FILOSOFÍA: Menos features, todos funcionando 100%
+
+           Funcionalidad core que SÍ funciona:
+           - ✅ Agregar actividad (+)
+           - ✅ Drag & drop para organizar
+           - ✅ Editar/eliminar actividades
+           - ✅ Ver en mapa
+      -->
       <div id="quickActionsExpanded_${day.day}" class="hidden space-y-2 mb-3">
-        <button type="button" id="optimizeRouteBtn_${day.day}" class="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2 text-sm">
-          <span>🗺️</span>
-          <span>Optimizar Ruta</span>
-        </button>
-        <button type="button" onclick="showAutoMealSuggestions(${day.day})" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2 text-sm">
-          <span>🍽️</span>
-          <span>Auto-Insertar Comidas</span>
-        </button>
-        <button type="button" onclick="showGapFillerSuggestions(${day.day})" class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2 text-sm">
-          <span>🕳️</span>
-          <span>Llenar Huecos</span>
-        </button>
-        <button type="button" id="suggestionsBtn_${day.day}" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2 text-sm">
-          <span>💡</span>
-          <span>Ver Sugerencias</span>
-        </button>
-        <button type="button" id="analyzeBalanceBtn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2 text-sm">
-          <span>⚖️</span>
-          <span>Analizar Balance</span>
-        </button>
-        <button type="button" id="masterOptimizeBtn" class="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex items-center justify-center gap-2 relative overflow-hidden text-sm">
-          <span class="text-xl">🚀</span>
-          <span>Optimización Inteligente de Viaje</span>
-          <span class="absolute top-0 right-0 bg-yellow-400 text-black text-xs font-bold px-2 py-0.5 rounded-bl-lg">✨ NUEVO</span>
-        </button>
+        <!-- LIMPIADO - Solo features core -->
       </div>
     </div>
   `;
@@ -2436,30 +2429,22 @@ export const ItineraryHandler = {
         const optimizeBtn=e.target.closest('[id^="optimizeRouteBtn_"]');
         const mealSuggestionsBtn=e.target.closest('[id^="mealSuggestionsBtn_"]');
         const suggestionsBtn=e.target.closest('[id^="suggestionsBtn_"]');
-        const analyzeBalanceBtn=e.target.closest('#analyzeBalanceBtn');
-        const masterOptimizeBtn=e.target.closest('#masterOptimizeBtn');
+        // ❌ BOTONES ELIMINADOS - Event handlers desactivados (2025-11-15)
+        // const analyzeBalanceBtn=e.target.closest('#analyzeBalanceBtn');  // ELIMINADO
+        // const masterOptimizeBtn=e.target.closest('#masterOptimizeBtn');  // ELIMINADO
+        // const optimizeBtn=e.target.closest('#optimizeRouteBtn');          // ELIMINADO
+
         const editBtn=e.target.closest('.activity-edit-btn');
         const deleteBtn=e.target.closest('.activity-delete-btn');
         const voteBtn = e.target.closest('.activity-vote-btn');
         const dayBtn=e.target.closest('.day-btn');
 
-        if(analyzeBalanceBtn){
-          console.log('⚖️ Analyze balance button clicked');
-          showBalanceAnalysis();
-        }
-        else if(masterOptimizeBtn){
-          console.log('🚀 Master optimize button clicked');
-          runMasterOptimization();
-        }
-        else if(optimizeBtn){
-          console.log('═════════════════════════════════════════════════');
-          console.log('🖱️ BUTTON CLICK DETECTED: Optimizar Ruta');
-          console.log('═════════════════════════════════════════════════');
-          const day=parseInt(optimizeBtn.id.split('_')[1]);
-          console.log('📅 Día a optimizar:', day);
-          optimizeDayRoute(day);
-        }
-        else if(mealSuggestionsBtn){
+        // ❌ Event handlers desactivados - botones eliminados
+        // if(analyzeBalanceBtn){ showBalanceAnalysis(); }
+        // else if(masterOptimizeBtn){ runMasterOptimization(); }
+        // else if(optimizeBtn){ optimizeDayRoute(parseInt(optimizeBtn.id.split('_')[1])); }
+
+        if(mealSuggestionsBtn){
           console.log('🍽️ Meal suggestions button clicked');
           const day=parseInt(mealSuggestionsBtn.id.split('_')[1]);
           if(window.MealInsertionSystem && window.MealInsertionSystem.showMealSuggestionsModal){
