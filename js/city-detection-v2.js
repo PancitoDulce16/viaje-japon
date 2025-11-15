@@ -125,7 +125,7 @@ export const CityDetectionV2 = {
       'Kyoto': ['kyoto', 'gion', 'arashiyama', 'kiyomizu', 'fushimi'],
       'Osaka': ['osaka', 'dotonbori', 'namba', 'umeda', 'shinsekai'],
       'Hakone': ['hakone', 'ashi', 'owakudani'],
-      'Kamakura': ['kamakura', 'enoshima', 'daibutsu'],
+      'Kamakura': ['kamakura', 'enoshima', 'daibutsu', 'hase'],
       'Nara': ['nara', 'todaiji', 'deer park'],
       'Hiroshima': ['hiroshima', 'miyajima'],
       'Yokohama': ['yokohama'],
@@ -141,8 +141,51 @@ export const CityDetectionV2 = {
       }
     }
 
-    // Prioridad 4: TODO - Usar coordenadas (futuro)
-    // if (activity.coordinates) { ... }
+    // Prioridad 4: Usar coordenadas para detectar ciudad
+    if (activity.coordinates && activity.coordinates.lat && activity.coordinates.lng) {
+      const cityFromCoords = this.detectCityFromCoordinates(activity.coordinates);
+      if (cityFromCoords) {
+        return cityFromCoords;
+      }
+    }
+
+    return null;
+  },
+
+  /**
+   * Detecta ciudad basándose en coordenadas geográficas
+   * Usa bounding boxes para las ciudades más comunes de Japón
+   * @param {Object} coordinates - { lat, lng }
+   * @returns {string|null} - Nombre de la ciudad
+   */
+  detectCityFromCoordinates(coordinates) {
+    if (!coordinates || !coordinates.lat || !coordinates.lng) {
+      return null;
+    }
+
+    const { lat, lng } = coordinates;
+
+    // Bounding boxes de ciudades principales de Japón
+    // Formato: [latMin, latMax, lngMin, lngMax]
+    const cityBounds = {
+      'Tokyo': [35.5, 35.85, 139.5, 139.95],
+      'Kyoto': [34.9, 35.15, 135.6, 135.85],
+      'Osaka': [34.6, 34.75, 135.4, 135.6],
+      'Hakone': [35.1, 35.35, 138.95, 139.15],
+      'Kamakura': [35.25, 35.35, 139.5, 139.6],
+      'Nara': [34.6, 34.75, 135.75, 135.9],
+      'Hiroshima': [34.35, 34.45, 132.4, 132.5],
+      'Yokohama': [35.3, 35.55, 139.55, 139.7],
+      'Nagoya': [35.1, 35.25, 136.85, 137.0],
+      'Nikko': [36.7, 36.85, 139.55, 139.65]
+    };
+
+    // Buscar ciudad que contenga estas coordenadas
+    for (const [city, [latMin, latMax, lngMin, lngMax]] of Object.entries(cityBounds)) {
+      if (lat >= latMin && lat <= latMax && lng >= lngMin && lng <= lngMax) {
+        return city;
+      }
+    }
 
     return null;
   },

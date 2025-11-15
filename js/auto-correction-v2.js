@@ -86,8 +86,13 @@ export const AutoCorrectionV2 = {
 
         day.activities.forEach((activity, index) => {
           const activityCity = CityDetectionV2.extractCityFromActivity(activity);
+          const activityName = activity.title || activity.name || 'Sin nombre';
+
+          // 🔍 DEBUG: Mostrar detección de ciudad para cada actividad
+          console.log(`      Actividad "${activityName}": ciudad detectada = ${activityCity || 'NINGUNA'}`);
 
           if (activityCity && activityCity !== mainCity) {
+            console.log(`         ⚠️ MOVIMIENTO REQUERIDO: ${activityCity} ≠ ${mainCity}`);
             activitiesToMove.push({ activity, index, city: activityCity });
           }
         });
