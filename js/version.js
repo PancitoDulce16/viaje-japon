@@ -6,12 +6,23 @@
  * Formato: YYYY-MM-DD-HH-MM
  * Se incrementa con cada deploy importante
  */
-export const APP_VERSION = 'v1763241633';
+export const APP_VERSION = 'v1763263656';
 
 /**
  * Changelog de versiones
  */
 export const VERSION_HISTORY = {
+  'v1763263656': {
+    date: '2025-11-15',
+    changes: [
+      '🔧 FIX CRÍTICO: Botones de tabs (Hoteles, Transporte, etc.) ahora funcionan',
+      '➕ Event listeners agregados para navegación entre tabs',
+      '✅ Método switchTab() implementado correctamente',
+      '🐛 Bug: Faltaban los click handlers completamente'
+    ],
+    breaking: false,
+    fix: 'Tab navigation was completely broken - missing event listeners'
+  },
   '2025-11-15-22-00-SIMPLE': {
     date: '2025-11-15',
     changes: [

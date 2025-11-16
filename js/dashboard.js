@@ -280,6 +280,17 @@ class DashboardManager {
     }
 
     setupDashboardEvents() {
+        // ========================================
+        // TAB NAVIGATION - Event listeners for tab buttons
+        // ========================================
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabName = button.getAttribute('data-tab');
+                this.switchTab(tabName);
+            });
+        });
+
         // Evento de logout (Desktop y Mobile)
         const logoutBtn = document.getElementById('logoutBtn');
         const logoutBtnMobile = document.getElementById('logoutBtnMobile');
@@ -384,6 +395,32 @@ class DashboardManager {
                 closeMenu();
             }
         });
+    }
+
+    switchTab(tabName) {
+        console.log(`🔄 Switching to tab: ${tabName}`);
+
+        // Remove active class from all tab buttons
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+
+        // Add active class to clicked button
+        const activeButton = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+        if (activeButton) {
+            activeButton.classList.add('active');
+        }
+
+        // Hide all tab content sections
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabContents.forEach(content => content.classList.add('hidden'));
+
+        // Show the selected tab content
+        const activeContent = document.getElementById(`content-${tabName}`);
+        if (activeContent) {
+            activeContent.classList.remove('hidden');
+        } else {
+            console.error(`❌ Tab content not found: content-${tabName}`);
+        }
     }
 
     closeMobileMenu() {
