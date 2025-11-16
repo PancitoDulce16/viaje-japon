@@ -1308,28 +1308,22 @@ function renderMiniTimeline(day) {
 function renderQuickActionButtons(day) {
   return `
     <div>
-      <!-- Compact button bar (always visible) -->
-      <div class="flex gap-1 mb-3">
-        <button
-          type="button"
-          onclick="toggleQuickActions(${day.day})"
-          class="flex-1 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-semibold py-2 px-3 rounded-lg transition shadow-md text-sm"
-        >
-          ⚡ Acciones
-        </button>
+      <!-- Simple add button (always visible) -->
+      <div class="mb-3">
         <button
           type="button"
           id="addActivityBtn_${day.day}"
-          class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-3 rounded-lg transition text-2xl leading-none"
+          class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition"
           title="Añadir Actividad"
         >
-          +
+          + Agregar Actividad
         </button>
       </div>
 
       <!-- ❌ FEATURES DESACTIVADOS - Botones eliminados (2025-11-15)
 
            Botones eliminados porque NO funcionan al 100%:
+           - ⚡ Acciones (panel vacío sin contenido útil)
            - 🗺️ Optimizar Ruta (reorganiza sin permiso)
            - 🍽️ Auto-Insertar Comidas (semi-roto)
            - 🕳️ Llenar Huecos (no implementado correctamente)
@@ -1345,9 +1339,6 @@ function renderQuickActionButtons(day) {
            - ✅ Editar/eliminar actividades
            - ✅ Ver en mapa
       -->
-      <div id="quickActionsExpanded_${day.day}" class="hidden space-y-2 mb-3">
-        <!-- LIMPIADO - Solo features core -->
-      </div>
     </div>
   `;
 }
@@ -3578,16 +3569,6 @@ function closeIntelligenceModal() {
   const modal = document.getElementById('intelligence-modal');
   if (modal) {
     modal.remove();
-  }
-}
-
-/**
- * Toggle quick actions panel
- */
-function toggleQuickActions(dayNumber) {
-  const panel = document.getElementById(`quickActionsExpanded_${dayNumber}`);
-  if (panel) {
-    panel.classList.toggle('hidden');
   }
 }
 

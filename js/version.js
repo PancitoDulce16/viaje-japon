@@ -6,12 +6,23 @@
  * Formato: YYYY-MM-DD-HH-MM
  * Se incrementa con cada deploy importante
  */
-export const APP_VERSION = 'v1763263656';
+export const APP_VERSION = 'v1763264017';
 
 /**
  * Changelog de versiones
  */
 export const VERSION_HISTORY = {
+  'v1763264017': {
+    date: '2025-11-15',
+    changes: [
+      '🧹 LIMPIEZA: Botón "Acciones" eliminado (panel vacío sin utilidad)',
+      '✨ Botón "+ Agregar Actividad" ahora más visible y claro',
+      '❌ Función toggleQuickActions() eliminada (código muerto)',
+      '🎯 UI más simple y directa - solo features que funcionan'
+    ],
+    breaking: false,
+    cleanup: 'Removed useless Actions button with empty panel'
+  },
   'v1763263656': {
     date: '2025-11-15',
     changes: [
