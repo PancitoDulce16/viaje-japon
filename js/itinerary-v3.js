@@ -3942,7 +3942,6 @@ window.showBalanceAnalysis = showBalanceAnalysis;
 window.editDayBudget = editDayBudget;
 window.showTripIntelligenceModal = showTripIntelligenceModal;
 window.closeIntelligenceModal = closeIntelligenceModal;
-window.toggleQuickActions = toggleQuickActions;
 
 // TIER 2 Functions
 window.autoResolveConflicts = autoResolveConflicts;
