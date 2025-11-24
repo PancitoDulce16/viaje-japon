@@ -298,5 +298,20 @@
         // Iniciar animación cuando carga la página
         startSakuraAnimation();
     </script>
+
+    <!-- 📱 PWA Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(registration => {
+                        console.log('✅ PWA: Service Worker registrado:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('❌ PWA: Error al registrar Service Worker:', error);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>
