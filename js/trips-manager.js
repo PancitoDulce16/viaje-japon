@@ -601,10 +601,16 @@ export const TripsManager = {
     setTimeout(() => {
       const simpleForm = document.getElementById('createTripFormSimple');
       if (simpleForm) {
-        simpleForm.addEventListener('submit', async (e) => {
+        // 🔥 FIX: Remover listeners anteriores clonando el form
+        const newForm = simpleForm.cloneNode(true);
+        simpleForm.parentNode.replaceChild(newForm, simpleForm);
+
+        newForm.addEventListener('submit', async (e) => {
           e.preventDefault();
 
           const templateId = document.getElementById('simpleTripTemplate')?.value || '';
+
+          console.log('🔥 DEBUG: Form submitted with templateId:', templateId);
 
           const formData = {
             name: document.getElementById('simpleTripName').value,
@@ -612,8 +618,10 @@ export const TripsManager = {
             dateStart: document.getElementById('simpleTripDateStart').value,
             dateEnd: document.getElementById('simpleTripDateEnd').value,
             templateId: templateId, // 🔥 NUEVO: Template seleccionado
-            useTemplate: templateId !== '' // true si hay template
+            useTemplate: templateId !== '' && templateId !== null // true si hay template
           };
+
+          console.log('🔥 DEBUG: formData:', formData);
 
           if (!formData.name || !formData.dateStart || !formData.dateEnd) {
             alert('⚠️ Por favor completa todos los campos');
