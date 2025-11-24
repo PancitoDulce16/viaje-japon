@@ -223,9 +223,12 @@ async function loadItinerary(){
   // Helper function to load fallback template
   const loadFallbackTemplate = async () => {
     try {
-      const r = await fetch('/data/attractions.json');
+      // 🔥 Cache buster para forzar actualización
+      const cacheBuster = `?v=${Date.now()}`;
+      const r = await fetch(`/data/attractions.json${cacheBuster}`);
       const data = await r.json();
       currentItinerary = { days: data.suggestedItinerary };
+      console.log('✅ Template loaded with', currentItinerary.days?.length, 'days');
       return currentItinerary;
     } catch (e) {
       console.error('❌ Error loading fallback template:', e);
