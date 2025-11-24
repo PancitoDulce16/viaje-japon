@@ -170,7 +170,9 @@ const createCustomIcon = (emoji, color = '#dc2626') => {
 export const MapHandler = {
     mapInitialized: false,
     itineraryMarkersLayer: null, // 🔥 Nueva capa para marcadores del itinerario
+    routeLinesLayer: null, // 🔥 Capa para líneas de ruta
     selectedDay: 'all', // Día seleccionado para mostrar
+    showRouteLines: true, // Mostrar líneas de ruta por defecto
 
     renderMap() {
         const container = document.getElementById('content-map');
@@ -188,20 +190,42 @@ export const MapHandler = {
                     <p class="text-white/90">Explora todas las ubicaciones de tu aventura por Japón</p>
                 </div>
 
-                <!-- 🔥 NUEVO: Selector de Día -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
-                    <div class="flex items-center gap-4">
-                        <label class="font-bold dark:text-white">📅 Ver actividades de:</label>
-                        <select
-                            id="mapDaySelector"
-                            onchange="MapHandler.onDayChange(this.value)"
-                            class="flex-1 p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500"
+                <!-- 🔥 NUEVO: Selector de Día Mejorado -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold dark:text-white flex items-center gap-2">
+                            📅 Filtrar por Día
+                        </h3>
+                        <button
+                            onclick="MapHandler.toggleRouteLines()"
+                            id="toggleRouteLinesBtn"
+                            class="text-sm bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg transition font-semibold"
+                            title="Mostrar/ocultar líneas de ruta"
                         >
-                            ${daysOptions}
-                        </select>
+                            🛣️ Ruta
+                        </button>
                     </div>
-                    <div id="mapDayInfo" class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+
+                    <select
+                        id="mapDaySelector"
+                        onchange="MapHandler.onDayChange(this.value)"
+                        class="w-full p-3 border-2 border-purple-300 dark:border-purple-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 font-semibold text-base mb-3"
+                    >
+                        ${daysOptions}
+                    </select>
+
+                    <div id="mapDayInfo" class="text-sm text-gray-600 dark:text-gray-400">
                         <!-- Info del día seleccionado aparecerá aquí -->
+                    </div>
+
+                    <!-- 🔥 Lista de actividades del día -->
+                    <div id="mapDayActivitiesList" class="mt-4 hidden">
+                        <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                            <h4 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">Actividades en este día:</h4>
+                            <div id="mapDayActivitiesContent" class="space-y-2 max-h-64 overflow-y-auto">
+                                <!-- Se llenará dinámicamente -->
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -477,8 +501,16 @@ export const MapHandler = {
             this.itineraryMarkersLayer.clearLayers();
         }
 
+        // Crear capa para líneas de ruta
+        if (!this.routeLinesLayer) {
+            this.routeLinesLayer = L.layerGroup().addTo(map);
+        } else {
+            this.routeLinesLayer.clearLayers();
+        }
+
         let activityCount = 0;
         const selectedDay = this.selectedDay;
+        const activitiesList = [];
 
         // Filtrar días según selección
         const daysToShow = selectedDay === 'all'
@@ -490,6 +522,8 @@ export const MapHandler = {
         daysToShow.forEach(day => {
             if (!day.activities) return;
 
+            const dayCoordinates = []; // Para dibujar líneas de ruta
+
             day.activities.forEach((activity, index) => {
                 // Solo mostrar actividades con coordenadas
                 if (!activity.coordinates || !activity.coordinates.lat || !activity.coordinates.lng) {
@@ -497,9 +531,21 @@ export const MapHandler = {
                 }
 
                 activityCount++;
+                const coords = [activity.coordinates.lat, activity.coordinates.lng];
+                dayCoordinates.push(coords);
+
+                // Guardar para la lista
+                activitiesList.push({
+                    day: day.day,
+                    index: index + 1,
+                    name: activity.title || activity.name || activity.activity || 'Sin nombre',
+                    time: activity.time || 'Sin hora',
+                    location: activity.location || '',
+                    coords: coords
+                });
 
                 // Crear marcador con número de orden
-                const marker = L.marker([activity.coordinates.lat, activity.coordinates.lng], {
+                const marker = L.marker(coords, {
                     icon: createCustomIcon(`${index + 1}`, '#10b981'), // Verde para itinerario
                     type: 'itinerary'
                 }).addTo(this.itineraryMarkersLayer);
@@ -514,7 +560,7 @@ export const MapHandler = {
                     <div class="p-3 min-w-[220px]">
                         <div class="flex items-center gap-2 mb-2">
                             <span class="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
-                                Día ${day.day}
+                                Día ${day.day} - #${index + 1}
                             </span>
                             <span class="text-sm text-gray-600">⏰ ${activityTime}</span>
                         </div>
@@ -542,12 +588,24 @@ export const MapHandler = {
                 marker.markerType = 'itinerary';
                 marker.dayNumber = day.day;
             });
+
+            // 🔥 Dibujar líneas de ruta entre actividades del mismo día
+            if (dayCoordinates.length > 1 && this.showRouteLines) {
+                L.polyline(dayCoordinates, {
+                    color: '#10b981',
+                    weight: 4,
+                    opacity: 0.6,
+                    dashArray: '10, 5',
+                    lineJoin: 'round',
+                    lineCap: 'round'
+                }).addTo(this.routeLinesLayer);
+            }
         });
 
         console.log(`✅ ${activityCount} actividades del itinerario agregadas al mapa`);
 
-        // Actualizar info del día
-        this.updateDayInfo(activityCount);
+        // Actualizar info del día con lista de actividades
+        this.updateDayInfo(activityCount, activitiesList, daysToShow);
 
         // Si hay actividades, centrar el mapa en ellas
         if (activityCount > 0 && this.itineraryMarkersLayer.getLayers().length > 0) {
@@ -585,26 +643,101 @@ export const MapHandler = {
         this.addItineraryMarkers();
     },
 
-    // 🔥 NUEVO: Actualizar info del día
-    updateDayInfo(activityCount) {
+    // 🔥 NUEVO: Actualizar info del día con lista
+    updateDayInfo(activityCount, activitiesList, daysToShow) {
         const infoDiv = document.getElementById('mapDayInfo');
+        const listDiv = document.getElementById('mapDayActivitiesList');
+        const listContent = document.getElementById('mapDayActivitiesContent');
+
         if (!infoDiv) return;
 
         if (activityCount === 0) {
             infoDiv.innerHTML = `
-                <div class="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
-                    <span>⚠️</span>
-                    <span>No hay actividades con ubicación para este día. Agrega coordenadas a tus actividades en el Itinerario.</span>
+                <div class="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border-l-4 border-yellow-500">
+                    <span class="text-2xl">⚠️</span>
+                    <div>
+                        <p class="font-semibold text-yellow-700 dark:text-yellow-400">Sin ubicaciones</p>
+                        <p class="text-xs text-yellow-600 dark:text-yellow-500">Agrega coordenadas a tus actividades en el Itinerario</p>
+                    </div>
                 </div>
             `;
+            if (listDiv) listDiv.classList.add('hidden');
         } else {
             infoDiv.innerHTML = `
-                <div class="flex items-center gap-2 text-green-600 dark:text-green-400">
-                    <span>✅</span>
-                    <span><strong>${activityCount}</strong> ${activityCount === 1 ? 'lugar marcado' : 'lugares marcados'} en el mapa</span>
+                <div class="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border-l-4 border-green-500">
+                    <span class="text-2xl">✅</span>
+                    <div>
+                        <p class="font-semibold text-green-700 dark:text-green-400">
+                            ${activityCount} ${activityCount === 1 ? 'lugar marcado' : 'lugares marcados'}
+                        </p>
+                        <p class="text-xs text-green-600 dark:text-green-500">
+                            ${this.selectedDay === 'all' ? `En ${daysToShow.length} ${daysToShow.length === 1 ? 'día' : 'días'}` : `Día ${this.selectedDay}`}
+                        </p>
+                    </div>
                 </div>
             `;
+
+            // Mostrar lista de actividades
+            if (listDiv && listContent && activitiesList.length > 0) {
+                listDiv.classList.remove('hidden');
+                listContent.innerHTML = activitiesList.map((act, idx) => `
+                    <div class="flex items-start gap-3 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer"
+                         onclick="MapHandler.focusOnActivity(${act.coords[0]}, ${act.coords[1]})">
+                        <div class="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                            ${act.index}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-sm text-gray-800 dark:text-white truncate">${act.name}</p>
+                            <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                <span>⏰ ${act.time}</span>
+                                ${this.selectedDay === 'all' ? `<span>• Día ${act.day}</span>` : ''}
+                            </div>
+                        </div>
+                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                `).join('');
+            } else if (listDiv) {
+                listDiv.classList.add('hidden');
+            }
         }
+    },
+
+    // 🔥 NUEVO: Enfocar mapa en una actividad específica
+    focusOnActivity(lat, lng) {
+        if (map) {
+            map.setView([lat, lng], 16);
+
+            // Buscar y abrir el popup del marcador
+            this.itineraryMarkersLayer.eachLayer(marker => {
+                const markerLatLng = marker.getLatLng();
+                if (Math.abs(markerLatLng.lat - lat) < 0.0001 && Math.abs(markerLatLng.lng - lng) < 0.0001) {
+                    marker.openPopup();
+                }
+            });
+        }
+    },
+
+    // 🔥 NUEVO: Alternar líneas de ruta
+    toggleRouteLines() {
+        this.showRouteLines = !this.showRouteLines;
+
+        const btn = document.getElementById('toggleRouteLinesBtn');
+        if (btn) {
+            if (this.showRouteLines) {
+                btn.innerHTML = '🛣️ Ruta';
+                btn.classList.remove('bg-gray-500', 'hover:bg-gray-600');
+                btn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+            } else {
+                btn.innerHTML = '🚫 Ruta';
+                btn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                btn.classList.add('bg-gray-500', 'hover:bg-gray-600');
+            }
+        }
+
+        // Re-renderizar para aplicar cambios
+        this.addItineraryMarkers();
     },
 
     // 🔥 NUEVO: Ir al itinerario y seleccionar un día
