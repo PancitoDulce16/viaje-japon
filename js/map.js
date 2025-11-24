@@ -169,10 +169,16 @@ const createCustomIcon = (emoji, color = '#dc2626') => {
 
 export const MapHandler = {
     mapInitialized: false,
+    itineraryMarkersLayer: null, // 🔥 Nueva capa para marcadores del itinerario
+    selectedDay: 'all', // Día seleccionado para mostrar
 
     renderMap() {
         const container = document.getElementById('content-map');
         if (!container) return;
+
+        // Obtener días del itinerario para el selector
+        const itinerary = window.ItineraryHandler?.currentItinerary || window.currentItinerary;
+        const daysOptions = this.generateDaysOptions(itinerary);
 
         container.innerHTML = `
             <div class="max-w-7xl mx-auto p-4 md:p-6">
@@ -180,6 +186,23 @@ export const MapHandler = {
                 <div class="bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl p-6 mb-6 shadow-lg">
                     <h1 class="text-3xl font-bold mb-2">🗺️ Mapa Interactivo del Viaje</h1>
                     <p class="text-white/90">Explora todas las ubicaciones de tu aventura por Japón</p>
+                </div>
+
+                <!-- 🔥 NUEVO: Selector de Día -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
+                    <div class="flex items-center gap-4">
+                        <label class="font-bold dark:text-white">📅 Ver actividades de:</label>
+                        <select
+                            id="mapDaySelector"
+                            onchange="MapHandler.onDayChange(this.value)"
+                            class="flex-1 p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500"
+                        >
+                            ${daysOptions}
+                        </select>
+                    </div>
+                    <div id="mapDayInfo" class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                        <!-- Info del día seleccionado aparecerá aquí -->
+                    </div>
                 </div>
 
                 <!-- Map Container -->
@@ -193,6 +216,9 @@ export const MapHandler = {
                     <div class="grid md:grid-cols-3 gap-4">
                         <button onclick="MapHandler.filterMarkers('all')" class="map-filter-btn active" data-filter="all">
                             🗺️ Ver Todo
+                        </button>
+                        <button onclick="MapHandler.filterMarkers('itinerary')" class="map-filter-btn" data-filter="itinerary">
+                            ✅ Mi Itinerario
                         </button>
                         <button onclick="MapHandler.filterMarkers('hotels')" class="map-filter-btn" data-filter="hotels">
                             🏨 Hoteles
@@ -364,7 +390,7 @@ export const MapHandler = {
         markersLayer.clearLayers();
 
         // 🏨 Añadir marcadores de hoteles desde el itinerario (dinámico)
-        const itinerary = window.ItineraryHandler?.currentItinerary;
+        const itinerary = window.ItineraryHandler?.currentItinerary || window.currentItinerary;
         if (itinerary && itinerary.hotels) {
             console.log('🏨 Agregando hoteles del itinerario al mapa:', itinerary.hotels);
 
@@ -431,6 +457,188 @@ export const MapHandler = {
             marker.markerType = 'attractions';
             marker.markerCategory = attraction.category;
         });
+
+        // 🔥 NUEVO: Añadir marcadores de actividades del itinerario
+        this.addItineraryMarkers();
+    },
+
+    // 🔥 NUEVO: Añadir marcadores de actividades del itinerario
+    addItineraryMarkers() {
+        const itinerary = window.ItineraryHandler?.currentItinerary || window.currentItinerary;
+        if (!itinerary || !itinerary.days) {
+            console.log('⚠️ No hay itinerario para mostrar en el mapa');
+            return;
+        }
+
+        // Crear capa separada para actividades del itinerario si no existe
+        if (!this.itineraryMarkersLayer) {
+            this.itineraryMarkersLayer = L.layerGroup().addTo(map);
+        } else {
+            this.itineraryMarkersLayer.clearLayers();
+        }
+
+        let activityCount = 0;
+        const selectedDay = this.selectedDay;
+
+        // Filtrar días según selección
+        const daysToShow = selectedDay === 'all'
+            ? itinerary.days
+            : itinerary.days.filter(day => day.day === parseInt(selectedDay));
+
+        console.log(`🗺️ Mostrando actividades del día: ${selectedDay}`, daysToShow);
+
+        daysToShow.forEach(day => {
+            if (!day.activities) return;
+
+            day.activities.forEach((activity, index) => {
+                // Solo mostrar actividades con coordenadas
+                if (!activity.coordinates || !activity.coordinates.lat || !activity.coordinates.lng) {
+                    return;
+                }
+
+                activityCount++;
+
+                // Crear marcador con número de orden
+                const marker = L.marker([activity.coordinates.lat, activity.coordinates.lng], {
+                    icon: createCustomIcon(`${index + 1}`, '#10b981'), // Verde para itinerario
+                    type: 'itinerary'
+                }).addTo(this.itineraryMarkersLayer);
+
+                // Crear popup con info de la actividad
+                const activityName = activity.title || activity.name || activity.activity || 'Sin nombre';
+                const activityTime = activity.time || 'Sin hora';
+                const activityDuration = activity.duration || 60;
+                const activityNotes = activity.notes || '';
+
+                marker.bindPopup(`
+                    <div class="p-3 min-w-[220px]">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
+                                Día ${day.day}
+                            </span>
+                            <span class="text-sm text-gray-600">⏰ ${activityTime}</span>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">✅ ${activityName}</h3>
+                        ${activity.location ? `<p class="text-sm text-gray-600 mb-2">📍 ${activity.location}</p>` : ''}
+                        <p class="text-sm text-gray-500 mb-2">⏱️ ${activityDuration} minutos</p>
+                        ${activityNotes ? `<p class="text-sm text-gray-600 italic mb-2">"${activityNotes}"</p>` : ''}
+                        <div class="flex flex-col gap-2 mt-3">
+                            <button
+                                onclick="MapHandler.goToItineraryDay(${day.day})"
+                                class="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-sm font-bold py-2 px-4 rounded-lg transition transform hover:scale-105"
+                            >
+                                📅 Ver Día ${day.day} completo
+                            </button>
+                            <a href="https://www.google.com/maps/search/?api=1&query=${activity.coordinates.lat},${activity.coordinates.lng}"
+                               target="_blank"
+                               class="text-center text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                                Ver en Google Maps →
+                            </a>
+                        </div>
+                    </div>
+                `);
+
+                // Guardar tipo para filtrado
+                marker.markerType = 'itinerary';
+                marker.dayNumber = day.day;
+            });
+        });
+
+        console.log(`✅ ${activityCount} actividades del itinerario agregadas al mapa`);
+
+        // Actualizar info del día
+        this.updateDayInfo(activityCount);
+
+        // Si hay actividades, centrar el mapa en ellas
+        if (activityCount > 0 && this.itineraryMarkersLayer.getLayers().length > 0) {
+            const bounds = this.itineraryMarkersLayer.getBounds();
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+        }
+    },
+
+    // 🔥 NUEVO: Generar opciones del selector de días
+    generateDaysOptions(itinerary) {
+        if (!itinerary || !itinerary.days || itinerary.days.length === 0) {
+            return '<option value="all">Todos los días</option>';
+        }
+
+        let options = '<option value="all">🗺️ Todos los días</option>';
+
+        itinerary.days.forEach(day => {
+            const dayNumber = day.day;
+            const dayDate = day.date ? ` - ${new Date(day.date).toLocaleDateString('es', { month: 'short', day: 'numeric' })}` : '';
+            const cityName = day.city || day.cityName || '';
+            const activityCount = day.activities ? day.activities.filter(a => a.coordinates).length : 0;
+
+            options += `<option value="${dayNumber}">Día ${dayNumber}${dayDate} ${cityName ? `(${cityName})` : ''} - ${activityCount} lugares</option>`;
+        });
+
+        return options;
+    },
+
+    // 🔥 NUEVO: Manejar cambio de día
+    onDayChange(dayValue) {
+        this.selectedDay = dayValue;
+        console.log(`📅 Día seleccionado: ${dayValue}`);
+
+        // Re-renderizar marcadores del itinerario
+        this.addItineraryMarkers();
+    },
+
+    // 🔥 NUEVO: Actualizar info del día
+    updateDayInfo(activityCount) {
+        const infoDiv = document.getElementById('mapDayInfo');
+        if (!infoDiv) return;
+
+        if (activityCount === 0) {
+            infoDiv.innerHTML = `
+                <div class="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
+                    <span>⚠️</span>
+                    <span>No hay actividades con ubicación para este día. Agrega coordenadas a tus actividades en el Itinerario.</span>
+                </div>
+            `;
+        } else {
+            infoDiv.innerHTML = `
+                <div class="flex items-center gap-2 text-green-600 dark:text-green-400">
+                    <span>✅</span>
+                    <span><strong>${activityCount}</strong> ${activityCount === 1 ? 'lugar marcado' : 'lugares marcados'} en el mapa</span>
+                </div>
+            `;
+        }
+    },
+
+    // 🔥 NUEVO: Ir al itinerario y seleccionar un día
+    goToItineraryDay(dayNumber) {
+        // Cambiar al tab del itinerario
+        const itineraryTab = document.querySelector('[data-tab="itinerary"]');
+        if (itineraryTab) {
+            itineraryTab.click();
+        }
+
+        // Seleccionar el día en el itinerario
+        setTimeout(() => {
+            const dayButton = document.querySelector(`[data-day="${dayNumber}"]`);
+            if (dayButton) {
+                dayButton.click();
+                dayButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 300);
+    },
+
+    // 🔥 ACTUALIZADO: Sincronizar con itinerario cuando cambie
+    syncWithItinerary() {
+        console.log('🔄 Sincronizando mapa con itinerario...');
+
+        // Re-generar opciones del selector de días
+        const selector = document.getElementById('mapDaySelector');
+        if (selector) {
+            const itinerary = window.ItineraryHandler?.currentItinerary || window.currentItinerary;
+            selector.innerHTML = this.generateDaysOptions(itinerary);
+            selector.value = this.selectedDay;
+        }
+
+        // Re-renderizar marcadores
+        this.addItineraryMarkers();
     },
 
     filterMarkers(filterType) {
@@ -444,17 +652,30 @@ export const MapHandler = {
             }
         });
 
-        // Filtrar marcadores
+        // Filtrar marcadores de atracciones/hoteles
         markersLayer.eachLayer(marker => {
             if (filterType === 'all') {
                 marker.setOpacity(1);
             } else if (filterType === 'hotels' || filterType === 'attractions') {
                 marker.setOpacity(marker.markerType === filterType ? 1 : 0.2);
+            } else if (filterType === 'itinerary') {
+                marker.setOpacity(0.2); // Ocultar atracciones cuando se selecciona itinerario
             } else {
                 // Filtro por categoría de atracción
                 marker.setOpacity(marker.markerCategory === filterType ? 1 : 0.2);
             }
         });
+
+        // Filtrar marcadores del itinerario
+        if (this.itineraryMarkersLayer) {
+            this.itineraryMarkersLayer.eachLayer(marker => {
+                if (filterType === 'all' || filterType === 'itinerary') {
+                    marker.setOpacity(1);
+                } else {
+                    marker.setOpacity(0.2);
+                }
+            });
+        }
     },
 
     // 🔥 Buscar lugares cercanos con Google Places
@@ -642,3 +863,13 @@ export const MapHandler = {
 
 // Exportar para uso global
 window.MapHandler = MapHandler;
+
+// 🔥 Escuchar eventos globales del itinerario
+window.addEventListener('itinerary:updated', () => {
+    console.log('🗺️ Mapa: Evento itinerary:updated recibido, sincronizando...');
+    if (MapHandler.mapInitialized) {
+        MapHandler.syncWithItinerary();
+    }
+});
+
+console.log('✅ MapHandler loaded and ready for itinerary sync');

@@ -421,6 +421,16 @@ class DashboardManager {
         } else {
             console.error(`❌ Tab content not found: content-${tabName}`);
         }
+
+        // 🔥 NUEVO: Sincronizar el mapa con el itinerario cuando se cambie al tab del mapa
+        if (tabName === 'map' && window.MapHandler) {
+            console.log('🗺️ Sincronizando mapa con itinerario...');
+            // Pequeño delay para asegurar que el mapa se haya renderizado
+            setTimeout(() => {
+                window.MapHandler.fixMapSize();
+                window.MapHandler.syncWithItinerary();
+            }, 100);
+        }
     }
 
     closeMobileMenu() {
