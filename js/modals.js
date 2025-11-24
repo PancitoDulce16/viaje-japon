@@ -515,6 +515,32 @@ export const ModalRenderer = {
                                     </div>
                                 </div>
 
+                                <!-- 🔥 NUEVO: Selector de Template -->
+                                <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-6">
+                                    <h3 class="font-bold text-xl mb-4 dark:text-white flex items-center gap-2">
+                                        ✨ Plantilla de Itinerario
+                                    </h3>
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                                                ¿Quieres usar una plantilla pre-hecha?
+                                            </label>
+                                            <select
+                                                id="simpleTripTemplate"
+                                                class="w-full p-3 border-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-purple-500 focus:outline-none font-semibold"
+                                            >
+                                                <option value="">🔲 Sin Plantilla (Itinerario vacío)</option>
+                                                <option value="otaku-paradise">🎮 Otaku Paradise - Gaming & Culture (16 días)</option>
+                                            </select>
+                                        </div>
+                                        <div class="bg-purple-100 dark:bg-purple-900/30 rounded-lg p-4 text-sm">
+                                            <p class="text-purple-900 dark:text-purple-200 font-semibold">
+                                                💡 <strong>Tip:</strong> Las plantillas incluyen itinerarios completos con actividades, horarios, ubicaciones y coordenadas para el mapa. Puedes editarlo después.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="flex gap-4">
                                     <button
                                         type="button"

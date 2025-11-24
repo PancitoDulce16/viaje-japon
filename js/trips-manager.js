@@ -141,7 +141,8 @@ export const TripsManager = {
           createdBy: userId,
           createdAt: new Date().toISOString(),
           shareCode: shareCode, // Código compartible
-          creatorEmail: auth.currentUser.email
+          creatorEmail: auth.currentUser.email,
+          templateUsed: tripData.templateId || null // Track template usado
         },
         members: [userId],
         memberEmails: [auth.currentUser.email],
@@ -159,25 +160,83 @@ export const TripsManager = {
 
       await setDoc(doc(db, 'trips', tripId), newTrip);
 
-      // 🔥 CAMBIO: Ya NO copiamos plantillas genéricas
-      // El itinerario se creará con el wizard inteligente
+      // 🔥 NUEVO: Si hay template, cargar itinerario
+      if (tripData.useTemplate && tripData.templateId) {
+        console.log(`📋 Cargando template: ${tripData.templateId}`);
+        await this.loadTemplateItinerary(tripId, tripData.templateId);
+      }
+
       Notifications.success(
-        `🎉 Viaje "${tripData.name}" creado exitosamente!\n🔗 Código: ${shareCode}`,
+        `🎉 Viaje "${tripData.name}" creado exitosamente!\n🔗 Código: ${shareCode}${tripData.useTemplate ? '\n✨ Itinerario cargado del template' : ''}`,
         6000
       );
-      
+
       console.log('✅ Viaje creado:', tripId, 'Código:', shareCode);
-      
+
       // 🔥 IMPORTANTE: Esperar un poco para que Firebase propague
       setTimeout(() => {
         this.selectTrip(tripId);
       }, 500);
-      
+
       return tripId;
     } catch (error) {
       console.error('❌ Error creando viaje:', error);
       Notifications.error('Error al crear el viaje. Inténtalo de nuevo.');
       throw error;
+    }
+  },
+
+  // 🔥 NUEVO: Cargar itinerario desde template
+  async loadTemplateItinerary(tripId, templateId) {
+    try {
+      console.log(`🔥 Cargando template "${templateId}" para trip ${tripId}`);
+
+      // Cargar template desde attractions.json
+      const response = await fetch(`/data/attractions.json?v=${Date.now()}`);
+      const data = await response.json();
+
+      if (!data.suggestedItinerary) {
+        console.error('❌ Template no tiene suggestedItinerary');
+        return;
+      }
+
+      // Crear estructura de itinerario para Firestore
+      const itineraryData = {
+        days: data.suggestedItinerary.map(day => ({
+          day: day.day,
+          date: day.date,
+          title: day.title,
+          city: day.city || day.location,
+          cityId: day.cityId || 'tokyo',
+          location: day.location,
+          budget: day.budget || 0,
+          hotel: day.hotel || '',
+          activities: day.activities.map(act => ({
+            id: act.id,
+            time: act.time,
+            duration: act.duration || 60,
+            activity: act.activity || act.title,
+            name: act.name || act.title,
+            title: act.title,
+            location: act.location,
+            notes: act.notes || '',
+            category: act.category || 'other',
+            coordinates: act.coordinates || null
+          }))
+        })),
+        hotels: {}, // Se puede agregar después
+        version: 'v3'
+      };
+
+      // Guardar en Firestore
+      const itineraryRef = doc(db, 'trips', tripId, 'itinerary', 'current');
+      await setDoc(itineraryRef, itineraryData);
+
+      console.log(`✅ Template cargado: ${data.suggestedItinerary.length} días`);
+
+    } catch (error) {
+      console.error('❌ Error cargando template:', error);
+      Notifications.error('El viaje se creó pero hubo un error cargando el template.');
     }
   },
 
@@ -537,20 +596,23 @@ export const TripsManager = {
   showSimpleTripForm() {
     document.getElementById('tripTypeSelection').classList.add('hidden');
     document.getElementById('simpleTripForm').classList.remove('hidden');
-    
+
     // Setup del formulario simple
     setTimeout(() => {
       const simpleForm = document.getElementById('createTripFormSimple');
       if (simpleForm) {
         simpleForm.addEventListener('submit', async (e) => {
           e.preventDefault();
-          
+
+          const templateId = document.getElementById('simpleTripTemplate')?.value || '';
+
           const formData = {
             name: document.getElementById('simpleTripName').value,
             destination: 'Japón',
             dateStart: document.getElementById('simpleTripDateStart').value,
             dateEnd: document.getElementById('simpleTripDateEnd').value,
-            useTemplate: false // Viaje simple NO usa plantilla
+            templateId: templateId, // 🔥 NUEVO: Template seleccionado
+            useTemplate: templateId !== '' // true si hay template
           };
 
           if (!formData.name || !formData.dateStart || !formData.dateEnd) {
