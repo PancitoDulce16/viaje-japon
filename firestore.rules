@@ -114,6 +114,12 @@ service cloud.firestore {
         allow read: if isTripMember(tripId);
         allow write: if isTripMember(tripId);
       }
+
+      // --- Sub-colección de Itinerario ---
+      match /itinerary/{docId} {
+        allow read: if isTripMember(tripId);
+        allow write: if isTripMember(tripId);
+      }
     }
   }
 }

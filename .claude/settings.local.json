@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:dpaste.com)"
+      "WebFetch(domain:dpaste.com)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(cat:*)",
+      "Bash(firebase deploy:*)",
+      "Bash(node -c:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
