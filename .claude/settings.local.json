@@ -7,7 +7,12 @@
       "Bash(cat:*)",
       "Bash(firebase deploy:*)",
       "Bash(node -c:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npm install:*)",
+      "Bash(functions/index.js.bak)",
+      "Bash(functions/package.json.bak)",
+      "Bash(dashboard.html.bak)",
+      "Bash(npm uninstall:*)"
     ],
     "deny": [],
     "ask": []

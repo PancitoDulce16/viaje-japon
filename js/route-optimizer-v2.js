@@ -232,16 +232,31 @@ function recalculateTimings(activities, options = {}) {
  * Encuentra la actividad más cercana a un punto
  */
 function findNearestActivity(point, activities) {
-    let nearest = activities[0];
+    // 🛡️ Robustness: handle empty or invalid input
+    if (!activities || activities.length === 0 || !point) {
+        console.warn('⚠️ findNearestActivity recibió datos inválidos', { point, activities });
+        return null;
+    }
+
+    let nearest = null;
     let minDistance = Infinity;
 
+    console.log('--- DEBUG: Inside findNearestActivity ---');
     for (const activity of activities) {
-        const distance = calculateDistance(point, activity.coordinates);
-        if (distance < minDistance) {
-            minDistance = distance;
-            nearest = activity;
+        // 🛡️ Asegurarse de que la actividad tenga coordenadas válidas
+        if (activity.coordinates && typeof activity.coordinates.lat === 'number' && typeof activity.coordinates.lng === 'number') {
+            const distance = calculateDistance(point, activity.coordinates);
+            console.log(`  - Checking: ${activity.title || activity.name}, Distance: ${distance.toFixed(2)}km`);
+            if (distance < minDistance) {
+                console.log(`    New nearest found: ${activity.title || activity.name} (was ${nearest ? (nearest.title || nearest.name) : 'null'})`);
+                minDistance = distance;
+                nearest = activity;
+            }
+        } else {
+            console.warn(`️⚠️ Actividad sin coordenadas válidas en findNearestActivity: "${activity.title || activity.name}"`);
         }
     }
+    console.log(`--- DEBUG: Exiting findNearestActivity, Nearest: ${nearest ? (nearest.title || nearest.name) : 'null'} ---`);
 
     return nearest;
 }
@@ -281,6 +296,52 @@ function optimizeByGeography(activities, options) {
     }
 
     return optimized;
+}
+
+/**
+ * Inserta actividades flexibles (sin horario) en una ruta existente de la forma más eficiente.
+ * @param {Array} route - La ruta de actividades con horarios.
+ * @param {Array} flexibleActivities - Las actividades sin horarios a insertar.
+ * @returns {Array} La nueva ruta con las actividades insertadas.
+ */
+function insertFlexibleActivities(route, flexibleActivities) {
+    const activitiesToInsert = flexibleActivities.filter(a => a.coordinates && a.coordinates.lat);
+    const activitiesWithoutCoords = flexibleActivities.filter(a => !a.coordinates || !a.coordinates.lat);
+
+    if (activitiesToInsert.length === 0) {
+        return [...route, ...activitiesWithoutCoords];
+    }
+
+    let currentRoute;
+    if (route.length === 0) {
+        // If route is empty, just optimize the flexible ones geographically
+        currentRoute = optimizeByGeography(activitiesToInsert, {});
+    } else {
+        // Start with the existing route and insert into it.
+        currentRoute = [...route];
+        activitiesToInsert.forEach(activityToInsert => {
+            let bestRoute = [];
+            let minTotalLength = Infinity;
+
+            for (let i = 0; i <= currentRoute.length; i++) {
+                const tempRoute = [...currentRoute];
+                tempRoute.splice(i, 0, activityToInsert);
+                
+                let currentLength = 0;
+                for (let j = 0; j < tempRoute.length - 1; j++) {
+                    currentLength += calculateDistance(tempRoute[j].coordinates, tempRoute[j+1].coordinates);
+                }
+
+                if (currentLength < minTotalLength) {
+                    minTotalLength = currentLength;
+                    bestRoute = tempRoute;
+                }
+            }
+            currentRoute = bestRoute;
+        });
+    }
+    
+    return [...currentRoute, ...activitiesWithoutCoords];
 }
 
 /**

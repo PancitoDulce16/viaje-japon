@@ -322,9 +322,6 @@
     <!-- 📝 LOG EXPORTER - Captura TODOS los logs automáticamente -->
     <script type="module" src="/js/log-exporter.js?v=1763264017"></script>
 
-    <!-- 🤖 CLAUDE AI ASSISTANT - Asistente de viaje en tiempo real -->
-    <script type="module" src="/js/claude-assistant.js?v=1763264017"></script>
-
     <!-- 🔥 CACHE BUSTER - Detecta y corrige automáticamente problemas de cache -->
     <script type="module" src="/js/cache-buster.js?v=1763264017"></script>
 
@@ -418,24 +415,6 @@
             document.body.appendChild(installButton);
         }
     </script>
-
-    <!-- 🤖 Botón flotante para Claude Assistant -->
-    <button
-        id="claude-assistant-button"
-        onclick="window.ClaudeAssistant?.open()"
-        style="position: fixed; bottom: 100px; right: 20px; z-index: 999998;
-               background: linear-gradient(135deg, #9333ea 0%, #3b82f6 100%);
-               color: white; border: none; border-radius: 50%;
-               width: 60px; height: 60px; font-size: 24px;
-               cursor: pointer; box-shadow: 0 4px 12px rgba(147, 51, 234, 0.4);
-               transition: all 0.3s ease; display: flex; align-items: center;
-               justify-content: center; font-family: system-ui, -apple-system;"
-        onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 16px rgba(147, 51, 234, 0.6)';"
-        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 12px rgba(147, 51, 234, 0.4)';"
-        title="Abrir Claude AI Assistant - Tu asistente de viaje"
-    >
-        🤖
-    </button>
 
     <!-- 📝 Botón flotante para exportar logs -->
     <button
