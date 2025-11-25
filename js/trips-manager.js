@@ -228,8 +228,8 @@ export const TripsManager = {
         version: 'v3'
       };
 
-      // Guardar en Firestore
-      const itineraryRef = doc(db, 'trips', tripId, 'itinerary', 'current');
+      // Guardar en Firestore (en la ruta correcta donde se lee)
+      const itineraryRef = doc(db, 'trips', tripId, 'data', 'itinerary');
       await setDoc(itineraryRef, itineraryData);
 
       console.log(`✅ Template cargado: ${data.suggestedItinerary.length} días`);
