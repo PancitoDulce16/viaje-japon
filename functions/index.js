@@ -1,7 +1,9 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const { onDocumentDeleted, onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onRequest } = require("firebase-functions/v2/https");
 const fetch = require("node-fetch");
+const Anthropic = require("@anthropic-ai/sdk");
 
 admin.initializeApp();
 
@@ -76,4 +78,99 @@ exports.onNewExpenseAdded = onDocumentCreated('trips/{tripId}/expenses/{expenseI
 
     console.log(`📤 Enviando notificación a ${tokens.length} token(s).`);
     return admin.messaging().sendToDevice(tokens, payload);
+});
+
+/**
+ * Claude AI Assistant - Ayuda en tiempo real con el itinerario
+ * POST endpoint que recibe contexto del itinerario y retorna sugerencias de Claude
+ */
+exports.claudeAssistant = onRequest({
+    cors: true,
+    secrets: ["CLAUDE_API_KEY"]
+}, async (req, res) => {
+    // Solo aceptar POST requests
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    try {
+        const { message, context } = req.body;
+
+        if (!message) {
+            return res.status(400).json({ error: 'Message is required' });
+        }
+
+        // Verificar autenticación del usuario
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const idToken = authHeader.split('Bearer ')[1];
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        const userId = decodedToken.uid;
+
+        console.log(`🤖 Claude Assistant request from user: ${userId}`);
+
+        // Inicializar Claude API
+        const apiKey = process.env.CLAUDE_API_KEY;
+        if (!apiKey) {
+            console.error('❌ CLAUDE_API_KEY not configured');
+            return res.status(500).json({ error: 'Claude API not configured' });
+        }
+
+        const anthropic = new Anthropic({
+            apiKey: apiKey
+        });
+
+        // Construir el sistema prompt con contexto
+        const systemPrompt = `Eres un asistente de viaje especializado en Japón. Ayudas a los viajeros con su itinerario en tiempo real.
+
+CONTEXTO DEL ITINERARIO:
+${context ? JSON.stringify(context, null, 2) : 'Sin contexto proporcionado'}
+
+INSTRUCCIONES:
+- Da respuestas concisas y útiles (máximo 3-4 párrafos)
+- Si sugiere lugares, incluye información práctica: horarios, costos, cómo llegar
+- Si optimizas rutas, explica por qué es mejor
+- Usa emojis relevantes para hacer las respuestas más visuales
+- Si el usuario menciona un lugar específico, intenta dar consejos locales
+- Responde en español`;
+
+        // Llamar a Claude API
+        const completion = await anthropic.messages.create({
+            model: "claude-3-5-sonnet-20241022",
+            max_tokens: 1024,
+            system: systemPrompt,
+            messages: [{
+                role: "user",
+                content: message
+            }]
+        });
+
+        const response = completion.content[0].text;
+
+        console.log(`✅ Claude response generated (${response.length} chars)`);
+
+        return res.status(200).json({
+            success: true,
+            response: response,
+            usage: {
+                inputTokens: completion.usage.input_tokens,
+                outputTokens: completion.usage.output_tokens
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error in Claude Assistant:', error);
+
+        if (error.status === 401) {
+            return res.status(401).json({ error: 'Invalid Claude API key' });
+        }
+
+        return res.status(500).json({
+            error: 'Internal server error',
+            message: error.message
+        });
+    }
 });
