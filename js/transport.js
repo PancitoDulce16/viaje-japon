@@ -27,33 +27,146 @@ export const TransportHandler = {
             <div class="max-w-6xl mx-auto p-4 md:p-6">
                 <h2 class="text-4xl font-bold mb-6 text-gray-800 dark:text-white">🚆 Guía de Transporte</h2>
 
-                <!-- Hero Section: Tu Recomendación -->
+                <!-- Hero Section: Tu Recomendación (siempre visible) -->
                 ${this.renderRecommendation(totalIndividual, jrPass14, savings)}
 
-                <!-- Tu Itinerario Específico -->
-                ${this.renderYourRoutes(totalIndividual)}
+                <!-- Accordions Menu -->
+                <div class="space-y-4 mt-6">
 
-                <div class="grid lg:grid-cols-2 gap-6 mt-6">
-                    <!-- Calculadora JR Pass -->
-                    ${this.renderJRPassCalculator()}
+                    <!-- Tus Rutas Accordion -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <button onclick="TransportHandler.toggleTransportSection('routes')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">🎫</span>
+                                <div class="text-left">
+                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Tus 5 Rutas Principales</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Rutas de tren de larga distancia para tu itinerario</p>
+                                </div>
+                            </div>
+                            <svg id="routes-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="routes-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
+                            ${this.renderYourRoutes(totalIndividual)}
+                        </div>
+                    </div>
 
-                    <!-- IC Cards (Suica/Pasmo) -->
-                    ${this.renderICCards()}
+                    <!-- Calculadora JR Pass Accordion -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <button onclick="TransportHandler.toggleTransportSection('calculator')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">🧮</span>
+                                <div class="text-left">
+                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Calculadora JR Pass</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Compara tus rutas vs JR Pass interactivamente</p>
+                                </div>
+                            </div>
+                            <svg id="calculator-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="calculator-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
+                            ${this.renderJRPassCalculator()}
+                        </div>
+                    </div>
+
+                    <!-- IC Cards Accordion -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <button onclick="TransportHandler.toggleTransportSection('iccards')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">💳</span>
+                                <div class="text-left">
+                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Suica & Pasmo Cards</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Tarjetas para transporte local (metro, buses)</p>
+                                </div>
+                            </div>
+                            <svg id="iccards-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="iccards-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
+                            ${this.renderICCards()}
+                        </div>
+                    </div>
+
+                    <!-- Apps de Transporte Accordion -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <button onclick="TransportHandler.toggleTransportSection('apps')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">📱</span>
+                                <div class="text-left">
+                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Apps Esenciales</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Descarga estas apps antes de viajar</p>
+                                </div>
+                            </div>
+                            <svg id="apps-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="apps-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
+                            ${this.renderTransportApps()}
+                        </div>
+                    </div>
+
+                    <!-- Guía de Asientos Accordion -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <button onclick="TransportHandler.toggleTransportSection('seats')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">🪑</span>
+                                <div class="text-left">
+                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Reserved vs Unreserved</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Diferencias entre asientos reservados y libres</p>
+                                </div>
+                            </div>
+                            <svg id="seats-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="seats-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
+                            ${this.renderSeatsGuide()}
+                        </div>
+                    </div>
+
+                    <!-- Dónde Comprar Accordion -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <button onclick="TransportHandler.toggleTransportSection('purchase')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">🏪</span>
+                                <div class="text-left">
+                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Dónde Comprar Tickets</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Taquillas, máquinas automáticas y apps</p>
+                                </div>
+                            </div>
+                            <svg id="purchase-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="purchase-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
+                            ${this.renderTicketPurchase()}
+                        </div>
+                    </div>
+
+                    <!-- Tips & Tricks Accordion -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <button onclick="TransportHandler.toggleTransportSection('tips')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">💡</span>
+                                <div class="text-left">
+                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Tips & Tricks</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Consejos útiles para viajar en tren</p>
+                                </div>
+                            </div>
+                            <svg id="tips-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="tips-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
+                            ${this.renderTips()}
+                        </div>
+                    </div>
+
                 </div>
-
-                <!-- Apps de Transporte -->
-                ${this.renderTransportApps()}
-
-                <div class="grid lg:grid-cols-2 gap-6 mt-6">
-                    <!-- Reserved vs Unreserved -->
-                    ${this.renderSeatsGuide()}
-
-                    <!-- Dónde Comprar Tickets -->
-                    ${this.renderTicketPurchase()}
-                </div>
-
-                <!-- Tips & Tricks -->
-                ${this.renderTips()}
             </div>
         `;
 
@@ -357,7 +470,7 @@ export const TransportHandler = {
         ];
 
         return `
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mt-6">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <h3 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">📱 Apps Esenciales de Transporte</h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     Descarga ANTES del viaje. Algunas funcionan offline.
@@ -507,7 +620,7 @@ export const TransportHandler = {
         ];
 
         return `
-            <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl shadow-lg p-6 mt-6">
+            <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl shadow-lg p-6">
                 <h3 class="text-2xl font-bold mb-4">💡 Tips & Tricks de Transporte</h3>
                 
                 <div class="grid md:grid-cols-2 gap-4">
@@ -721,6 +834,28 @@ export const TransportHandler = {
                     </div>
                 </div>
             `;
+        }
+    },
+
+    /**
+     * Toggle accordion sections in Transport tab
+     */
+    toggleTransportSection(sectionName) {
+        const content = document.getElementById(`${sectionName}-content`);
+        const chevron = document.getElementById(`${sectionName}-chevron`);
+
+        if (!content || !chevron) return;
+
+        const isHidden = content.classList.contains('hidden');
+
+        if (isHidden) {
+            // Abrir esta sección
+            content.classList.remove('hidden');
+            chevron.style.transform = 'rotate(180deg)';
+        } else {
+            // Cerrar esta sección
+            content.classList.add('hidden');
+            chevron.style.transform = 'rotate(0deg)';
         }
     }
 };
