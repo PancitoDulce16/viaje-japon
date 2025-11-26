@@ -1445,6 +1445,15 @@ function renderDayOverview(day){
     </div>
     <div class="space-y-3 text-sm">
       <p class="font-semibold text-base dark:text-gray-100">${day.date}</p>
+
+      <!-- Weather Widget -->
+      <div id="weather-day-${day.day}" class="bg-gradient-to-r from-sky-50 to-blue-50 dark:from-sky-900/30 dark:to-blue-900/30 p-3 rounded-lg border-l-4 border-sky-500 dark:border-sky-400">
+        <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <span class="animate-pulse">⏳</span>
+          <span>Cargando clima...</span>
+        </div>
+      </div>
+
       <p class="font-bold text-lg text-red-600 dark:text-red-400">${day.title||''}</p>
       ${day.season ? `
         <div class="bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/30 dark:to-purple-900/30 p-3 rounded-lg border-l-4 border-pink-500 dark:border-pink-400">
@@ -1513,6 +1522,84 @@ function renderDayOverview(day){
     <!-- 🔮 Predicción de Experiencia (Colapsable) -->
     ${renderDayExperiencePredictionCollapsible(day)}
     `;
+
+  // 🌤️ Cargar clima asíncronamente
+  loadWeatherForDay(day);
+}
+
+/**
+ * 🌤️ Carga el clima para el día actual usando la API de OpenWeather
+ */
+async function loadWeatherForDay(day) {
+  const weatherContainer = document.getElementById(`weather-day-${day.day}`);
+  if (!weatherContainer) return;
+
+  // Obtener ciudad del día
+  const city = day.city || day.location || 'Tokyo';
+
+  // Verificar que AppUtils esté disponible
+  if (!window.AppUtils || !window.AppUtils.fetchWeather) {
+    console.warn('🌤️ AppUtils.fetchWeather not available');
+    weatherContainer.innerHTML = `
+      <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+        <span>🌤️</span>
+        <span>Clima no disponible</span>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    const weather = await window.AppUtils.fetchWeather(city);
+
+    if (weather) {
+      const emoji = window.AppUtils.getWeatherEmoji(weather.icon);
+
+      // Determinar sugerencias según el clima
+      let suggestion = '';
+      if (weather.description.includes('lluvia') || weather.description.includes('rain')) {
+        suggestion = '<p class="text-xs text-blue-700 dark:text-blue-300 mt-1">☂️ Lleva paraguas</p>';
+      } else if (weather.temp > 25) {
+        suggestion = '<p class="text-xs text-orange-700 dark:text-orange-300 mt-1">🧴 Usa protector solar</p>';
+      } else if (weather.temp < 10) {
+        suggestion = '<p class="text-xs text-blue-700 dark:text-blue-300 mt-1">🧥 Lleva abrigo</p>';
+      }
+
+      weatherContainer.innerHTML = `
+        <div class="flex items-start gap-2">
+          <span class="text-2xl">${emoji}</span>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <p class="font-bold text-sky-700 dark:text-sky-300 text-sm">${weather.temp}°C</p>
+              <p class="text-xs text-gray-600 dark:text-gray-400 capitalize">${weather.description}</p>
+            </div>
+            <div class="flex gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <span>💧 ${weather.humidity}%</span>
+              <span>💨 ${weather.wind.toFixed(1)} m/s</span>
+              <span>🌡️ Sensación: ${weather.feels_like}°C</span>
+            </div>
+            ${suggestion}
+          </div>
+        </div>
+      `;
+    } else {
+      // Fallback si no hay datos
+      weatherContainer.innerHTML = `
+        <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <span>🌤️</span>
+          <span>${city} - Clima no disponible</span>
+        </div>
+      `;
+    }
+  } catch (error) {
+    console.error('🌤️ Error loading weather:', error);
+    weatherContainer.innerHTML = `
+      <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+        <span>🌤️</span>
+        <span>Error al cargar clima</span>
+      </div>
+    `;
+  }
 }
 
 /**

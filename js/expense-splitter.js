@@ -211,9 +211,40 @@ export const ExpenseSplitter = {
                     </div>
 
                     <!-- Quién debe a quién -->
-                    <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800 mb-4">
                         <h5 class="font-bold mb-3">🔄 Quién Debe a Quién</h5>
                         ${this.renderDebts(summary)}
+                    </div>
+
+                    <!-- 📊 Gráficos Visuales -->
+                    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 mb-4">
+                        <h5 class="font-bold mb-4">📊 Análisis Visual</h5>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Gráfico de Pagos por Persona -->
+                            <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                                <p class="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2 text-center">💳 Pagos por Persona</p>
+                                <div class="h-48">
+                                    <canvas id="chartPaymentsByPerson"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Gráfico de Balance -->
+                            <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                                <p class="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2 text-center">⚖️ Balance (Quién debe / Pagaron más)</p>
+                                <div class="h-48">
+                                    <canvas id="chartBalance"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Gráfico de Distribución -->
+                            <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                                <p class="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2 text-center">🔄 Distribución de Deudas</p>
+                                <div class="h-48 flex items-center justify-center">
+                                    <canvas id="chartDebtsDistribution" class="max-h-full"></canvas>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -242,6 +273,47 @@ export const ExpenseSplitter = {
 
         container.innerHTML = html;
         this.attachEventListeners();
+        this.renderCharts(summary);
+    },
+
+    /**
+     * Renderizar gráficos visuales
+     */
+    renderCharts(summary) {
+        // Verificar que ExpenseCharts esté disponible
+        if (!window.ExpenseCharts) {
+            console.warn('⚠️ ExpenseCharts not loaded');
+            return;
+        }
+
+        // Solo renderizar si hay datos
+        if (Object.keys(summary.paymentsByMember).length === 0) {
+            return;
+        }
+
+        // Renderizar gráficos con un pequeño delay para que el DOM esté listo
+        setTimeout(() => {
+            // Gráfico de pagos por persona (Bar Chart)
+            window.ExpenseCharts.renderPaymentsByPersonChart(
+                'chartPaymentsByPerson',
+                summary.paymentsByMember,
+                this.membersInfo
+            );
+
+            // Gráfico de balance (Horizontal Bar)
+            window.ExpenseCharts.renderBalanceChart(
+                'chartBalance',
+                summary.paymentsByMember,
+                summary.perPerson,
+                this.membersInfo
+            );
+
+            // Gráfico de distribución de deudas (Doughnut)
+            window.ExpenseCharts.renderDebtsDistributionChart(
+                'chartDebtsDistribution',
+                summary
+            );
+        }, 100);
     },
 
     renderMemberOptions() {
@@ -649,6 +721,12 @@ export const ExpenseSplitter = {
             this.unsubscribe();
             this.unsubscribe = null;
         }
+
+        // Destruir gráficos
+        if (window.ExpenseCharts) {
+            window.ExpenseCharts.destroyAll();
+        }
+
         Logger.info('🧹 ExpenseSplitter: Cleaned up');
     }
 };
