@@ -95,7 +95,19 @@
         },
         {
           "id": "2-3",
-          "time": "11:00",
+          "time": "10:45",
+          "duration": 60,
+          "activity": "Artnia Square Enix Café",
+          "name": "⚔️ Artnia Café",
+          "title": "Artnia Square Enix",
+          "location": "Artnia Square Enix Café & Shop",
+          "notes": "¡IMPERDIBLE! Café oficial de Square Enix. Final Fantasy, Dragon Quest merch. Bebidas temáticas. Cerca de Shinjuku East Exit.",
+          "category": "entertainment",
+          "coordinates": { "lat": 35.6909, "lng": 139.7026 }
+        },
+        {
+          "id": "2-4",
+          "time": "12:00",
           "duration": 60,
           "activity": "Tokyo Metropolitan Building",
           "name": "🏢 Tokyo Metropolitan",
@@ -106,8 +118,8 @@
           "coordinates": { "lat": 35.6896, "lng": 139.6917 }
         },
         {
-          "id": "2-4",
-          "time": "13:00",
+          "id": "2-5",
+          "time": "13:30",
           "duration": 90,
           "activity": "Almuerzo Kizuna Sushi",
           "name": "🍣 Kizuna Sushi",
@@ -118,8 +130,8 @@
           "coordinates": { "lat": 35.6938, "lng": 139.7005 }
         },
         {
-          "id": "2-5",
-          "time": "15:30",
+          "id": "2-6",
+          "time": "16:00",
           "duration": 30,
           "activity": "Estatua Hachiko",
           "name": "🐶 Hachiko",
@@ -130,8 +142,8 @@
           "coordinates": { "lat": 35.6590, "lng": 139.7005 }
         },
         {
-          "id": "2-6",
-          "time": "16:00",
+          "id": "2-7",
+          "time": "16:30",
           "duration": 30,
           "activity": "Shibuya Crossing",
           "name": "🚶 Shibuya Crossing",
@@ -142,7 +154,7 @@
           "coordinates": { "lat": 35.6595, "lng": 139.7004 }
         },
         {
-          "id": "2-7",
+          "id": "2-8",
           "time": "17:00",
           "duration": 120,
           "activity": "Shibuya 109",
@@ -154,7 +166,7 @@
           "coordinates": { "lat": 35.6608, "lng": 139.6982 }
         },
         {
-          "id": "2-8",
+          "id": "2-9",
           "time": "19:00",
           "duration": 120,
           "activity": "Shibuya Sky",
