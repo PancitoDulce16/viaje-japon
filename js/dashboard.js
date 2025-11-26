@@ -464,6 +464,16 @@ class DashboardManager {
                 }
             }, 100);
         }
+
+        // 🆕 Inicializar Essentials cuando se cambie al tab
+        if (tabName === 'essentials') {
+            console.log('🏪 Inicializando Essentials Handler...');
+            setTimeout(() => {
+                if (window.EssentialsHandler) {
+                    window.EssentialsHandler.init();
+                }
+            }, 100);
+        }
     }
 
     getCurrentTripId() {

@@ -116,32 +116,64 @@ export const TabsHandler = {
         container.innerHTML = `
             <div class="max-w-6xl mx-auto p-4 md:p-6">
                 <h2 class="text-3xl font-bold mb-6 text-gray-800 dark:text-white">🛠️ Utilidades</h2>
+                <p class="text-gray-600 dark:text-gray-400 mb-6">Herramientas útiles para tu viaje. Click para expandir cada sección.</p>
 
-                <!-- Budget & Reservations Section -->
-                <div class="grid md:grid-cols-2 gap-6 mb-8">
-                    <!-- Budget Section -->
-                    <div id="budgetSection" class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl shadow-lg p-6 border-2 border-green-500">
-                        <h3 class="text-xl font-bold mb-4 text-green-700 dark:text-green-300 flex items-center gap-2">
-                            💰 División de Gastos
-                        </h3>
-                        <div id="expenseSplitterContent"></div>
+                <!-- Accordions Menu -->
+                <div class="space-y-4">
+
+                    <!-- Budget Accordion -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <button onclick="TabsHandler.toggleUtilSection('budget')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">💰</span>
+                                <div class="text-left">
+                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">División de Gastos</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Divide gastos entre miembros del grupo</p>
+                                </div>
+                            </div>
+                            <svg id="budget-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="budget-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
+                            <div id="expenseSplitterContent"></div>
+                        </div>
                     </div>
 
-                    <!-- Reservations Section -->
-                    <div id="reservationsSection" class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl shadow-lg p-6 border-2 border-purple-500">
-                        <h3 class="text-xl font-bold mb-4 text-purple-700 dark:text-purple-300 flex items-center gap-2">
-                            🎫 Mis Reservas
-                        </h3>
-                        <div id="reservationsContent"></div>
+                    <!-- Reservations Accordion -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <button onclick="TabsHandler.toggleUtilSection('reservations')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">🎫</span>
+                                <div class="text-left">
+                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Mis Reservas</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Gestiona reservas de hoteles, restaurantes y actividades</p>
+                                </div>
+                            </div>
+                            <svg id="reservations-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="reservations-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
+                            <div id="reservationsContent"></div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="grid md:grid-cols-2 gap-6">
-                    <!-- Conversor de Moneda -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-2 border-emerald-500 dark:border-emerald-400">
-                        <h3 class="text-xl font-bold mb-4 text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
-                            💸 Conversor de Moneda
-                        </h3>
+                    <!-- Currency Converter Accordion -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <button onclick="TabsHandler.toggleUtilSection('currency')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">💸</span>
+                                <div class="text-left">
+                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Conversor de Moneda</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Convierte entre USD y JPY en tiempo real</p>
+                                </div>
+                            </div>
+                            <svg id="currency-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="currency-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
                         <div class="space-y-3">
                             <div class="flex gap-2">
                                 <div class="flex-1">
@@ -189,13 +221,24 @@ export const TabsHandler = {
                                 </button>
                             </div>
                         </div>
+                        </div>
                     </div>
 
-                    <!-- Clima en Japón -->
-                    <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 border dark:border-gray-600">
-                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
-                            🌤️ Clima en Tiempo Real
-                        </h3>
+                    <!-- Weather Accordion -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <button onclick="TabsHandler.toggleUtilSection('weather')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">🌤️</span>
+                                <div class="text-left">
+                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Clima en Tiempo Real</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Pronóstico del clima en Tokyo, Kyoto y Osaka</p>
+                                </div>
+                            </div>
+                            <svg id="weather-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="weather-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
                         <div class="space-y-3">
                             <div id="weather-tokyo" class="p-3 bg-blue-50 dark:bg-blue-900/40 rounded-lg border dark:border-blue-700">
                                 <div class="animate-pulse">
@@ -225,13 +268,24 @@ export const TabsHandler = {
                                 </ul>
                             </div>
                         </div>
+                        </div>
                     </div>
 
-                    <!-- Zona Horaria -->
-                    <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 border dark:border-gray-600">
-                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
-                            🕐 Zona Horaria
-                        </h3>
+                    <!-- TimeZone Accordion -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                        <button onclick="TabsHandler.toggleUtilSection('timezone')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <div class="flex items-center gap-3">
+                                <span class="text-3xl">🕐</span>
+                                <div class="text-left">
+                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Zona Horaria</h3>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">Hora actual en Costa Rica y Japón</p>
+                                </div>
+                            </div>
+                            <svg id="timezone-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div id="timezone-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
                         <div class="space-y-4">
                             <div class="p-4 bg-blue-50 dark:bg-blue-900/40 rounded-lg border dark:border-blue-700">
                                 <p class="text-sm text-gray-600 dark:text-gray-200 mb-1 font-semibold">Costa Rica (GMT-6)</p>
@@ -245,32 +299,9 @@ export const TabsHandler = {
                                 📍 Diferencia: <strong class="dark:text-white">15 horas</strong> adelante
                             </p>
                         </div>
-                    </div>
-
-                    <!-- Acciones Rápidas -->
-                    <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 border dark:border-gray-600">
-                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
-                            ⚡ Acciones Rápidas
-                        </h3>
-                        <div class="grid grid-cols-2 gap-3">
-                            <button data-modal="phrases" class="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition shadow-md">
-                                <div class="text-2xl mb-1">🗣️</div>
-                                <div class="text-sm font-semibold">Frases</div>
-                            </button>
-                            <button data-modal="emergency" class="p-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition shadow-md">
-                                <div class="text-2xl mb-1">🚨</div>
-                                <div class="text-sm font-semibold">SOS</div>
-                            </button>
-                            <button data-modal="budget" class="p-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition shadow-md">
-                                <div class="text-2xl mb-1">💰</div>
-                                <div class="text-sm font-semibold">Budget</div>
-                            </button>
-                            <button data-modal="notes" class="p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition shadow-md">
-                                <div class="text-2xl mb-1">📝</div>
-                                <div class="text-sm font-semibold">Notas</div>
-                            </button>
                         </div>
                     </div>
+
                 </div>
             </div>
         `;
@@ -278,5 +309,42 @@ export const TabsHandler = {
         AppUtils.setupCurrencyConverter();
         AppUtils.startClocks();
         AppUtils.loadWeatherData(); // ← NUEVO: Cargar clima en tiempo real
+    },
+
+    /**
+     * Toggle accordion sections in Utils tab
+     */
+    toggleUtilSection(sectionName) {
+        const content = document.getElementById(`${sectionName}-content`);
+        const chevron = document.getElementById(`${sectionName}-chevron`);
+
+        if (!content || !chevron) return;
+
+        const isHidden = content.classList.contains('hidden');
+
+        if (isHidden) {
+            // Abrir esta sección
+            content.classList.remove('hidden');
+            chevron.style.transform = 'rotate(180deg)';
+
+            // Inicializar módulos si es necesario
+            if (sectionName === 'budget' && window.ExpenseSplitter && !window.ExpenseSplitter.currentTrip) {
+                const tripId = window.currentTripId || localStorage.getItem('currentTripId');
+                if (tripId) {
+                    setTimeout(() => window.ExpenseSplitter.init(tripId), 100);
+                }
+            }
+
+            if (sectionName === 'reservations' && window.ReservationsManager && !window.ReservationsManager.currentTrip) {
+                const tripId = window.currentTripId || localStorage.getItem('currentTripId');
+                if (tripId) {
+                    setTimeout(() => window.ReservationsManager.init(tripId), 100);
+                }
+            }
+        } else {
+            // Cerrar esta sección
+            content.classList.add('hidden');
+            chevron.style.transform = 'rotate(0deg)';
+        }
     }
 };
