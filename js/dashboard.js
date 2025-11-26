@@ -349,6 +349,17 @@ class DashboardManager {
             });
         }
 
+        // ========================================
+        // FLOATING BUTTONS - Event listeners for floating action buttons
+        // ========================================
+        const floatingButtons = document.querySelectorAll('.floating-btn[data-modal]');
+        floatingButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const modalType = button.getAttribute('data-modal');
+                this.openFloatingModal(modalType);
+            });
+        });
+
         // Sincronizar email del usuario en ambos lugares
         this.syncUserEmail();
 
@@ -441,6 +452,42 @@ class DashboardManager {
             setTimeout(() => {
                 mobileMenu.classList.add('hidden');
             }, 300);
+        }
+    }
+
+    /**
+     * Abrir modal flotante según el tipo
+     */
+    openFloatingModal(modalType) {
+        console.log('🎯 Opening floating modal:', modalType);
+
+        // Mapeo de modales a tabs/acciones
+        const modalMapping = {
+            'budget': 'essentials',      // Budget Tracker → Essentials tab
+            'packing': 'preparation',    // Packing Checklist → Preparation tab
+            'favorites': 'attractions',  // Favorites → Attractions tab
+            'phrases': 'essentials',     // Phrases → Essentials tab
+            'notes': 'essentials',       // Notes → Essentials tab
+            'chat': 'essentials',        // Chat → Essentials tab
+            'emergency': 'essentials'    // Emergency → Essentials tab
+        };
+
+        const targetTab = modalMapping[modalType];
+
+        if (targetTab) {
+            // Cambiar a la tab correspondiente
+            this.switchTab(targetTab);
+
+            // Scroll suave a la sección específica si existe
+            setTimeout(() => {
+                const sectionId = `${modalType}Section`;
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 300);
+        } else {
+            console.warn('⚠️ No mapping found for modal type:', modalType);
         }
     }
 
