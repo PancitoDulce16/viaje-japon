@@ -289,11 +289,11 @@
     {
       "day": 5,
       "date": "2026-02-20",
-      "title": "Fushimi Inari + Kyoto",
+      "title": "Fushimi Inari + Manga Museum + Gion",
       "city": "Kyoto",
       "cityId": "kyoto",
       "location": "Kyoto",
-      "budget": 5000,
+      "budget": 6000,
       "hotel": "Hotel Kyoto Tune Stay",
       "activities": [
         {
@@ -310,7 +310,19 @@
         },
         {
           "id": "5-2",
-          "time": "12:00",
+          "time": "11:00",
+          "duration": 150,
+          "activity": "Kyoto International Manga Museum",
+          "name": "📚 Manga Museum",
+          "title": "Kyoto Manga Museum",
+          "location": "Kyoto International Manga Museum",
+          "notes": "¡IMPERDIBLE! Colección de 300,000+ mangas. Puedes leer en el césped. Entrada ¥900. Cerrado miércoles.",
+          "category": "entertainment",
+          "coordinates": { "lat": 35.0116, "lng": 135.7592 }
+        },
+        {
+          "id": "5-3",
+          "time": "14:00",
           "duration": 120,
           "activity": "Explorar Gion",
           "name": "🏮 Gion District",
@@ -321,8 +333,8 @@
           "coordinates": { "lat": 35.0037, "lng": 135.7751 }
         },
         {
-          "id": "5-3",
-          "time": "15:00",
+          "id": "5-4",
+          "time": "17:00",
           "duration": 90,
           "activity": "Kyoto Downtown Shopping",
           "name": "🛍️ Downtown Kyoto",
