@@ -1,0 +1,343 @@
+/* mobile-optimizations.css - Mejoras específicas para dispositivos móviles */
+
+/* ========================================
+   MEJORAS PARA TABS EN MÓVIL
+   ======================================== */
+@media (max-width: 768px) {
+    /* Tabs más grandes y táctiles */
+    .tab-btn {
+        min-width: 60px !important;
+        padding: 12px 16px !important;
+        font-size: 14px !important;
+    }
+
+    .tab-btn i {
+        font-size: 20px !important;
+    }
+
+    /* Mejor scroll en tabs */
+    #tabSelector {
+        padding: 12px 16px !important;
+        gap: 8px !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Indicador visual de que hay más tabs */
+    #tabSelector::after {
+        content: '→';
+        position: sticky;
+        right: 0;
+        padding: 0 12px;
+        background: linear-gradient(to left, white, transparent);
+        color: #9ca3af;
+        font-size: 20px;
+        pointer-events: none;
+    }
+
+    .dark #tabSelector::after {
+        background: linear-gradient(to left, #1f2937, transparent);
+    }
+}
+
+/* ========================================
+   MEJORAS PARA FLOATING BUTTONS EN MÓVIL
+   ======================================== */
+@media (max-width: 768px) {
+    .floating-btn-container {
+        bottom: 20px !important;
+        right: 16px !important;
+        gap: 12px !important;
+    }
+
+    .floating-btn {
+        width: 52px !important;
+        height: 52px !important;
+        font-size: 18px !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    /* Hacer tooltips más visibles en móvil */
+    .floating-btn::before {
+        font-size: 11px !important;
+        padding: 6px 10px !important;
+        white-space: nowrap !important;
+        max-width: 150px !important;
+    }
+}
+
+/* ========================================
+   MEJORAS PARA HEADER EN MÓVIL
+   ======================================== */
+@media (max-width: 768px) {
+    .japan-header {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 50 !important;
+    }
+
+    .japan-header h1 {
+        font-size: 18px !important;
+    }
+
+    .japan-header h1 i {
+        font-size: 20px !important;
+    }
+
+    /* Botón de menú más grande */
+    #menuToggle {
+        min-width: 48px !important;
+        min-height: 48px !important;
+    }
+}
+
+/* ========================================
+   MEJORAS PARA ACORDEONES EN MÓVIL
+   ======================================== */
+@media (max-width: 768px) {
+    /* Botones de acordeón más grandes */
+    .bg-white.dark\\:bg-gray-800.rounded-xl button {
+        padding: 16px !important;
+        min-height: 72px !important;
+    }
+
+    /* Iconos de acordeón más grandes */
+    .bg-white.dark\\:bg-gray-800.rounded-xl button span:first-child {
+        font-size: 28px !important;
+    }
+
+    /* Textos de acordeón más legibles */
+    .bg-white.dark\\:bg-gray-800.rounded-xl button h3 {
+        font-size: 16px !important;
+    }
+
+    .bg-white.dark\\:bg-gray-800.rounded-xl button p {
+        font-size: 12px !important;
+    }
+
+    /* Mejor espaciado entre acordeones */
+    .space-y-4 > * + * {
+        margin-top: 12px !important;
+    }
+}
+
+/* ========================================
+   MEJORAS PARA ITINERARIO EN MÓVIL
+   ======================================== */
+@media (max-width: 768px) {
+    /* Cards de día más compactas pero legibles */
+    .day-card {
+        padding: 16px !important;
+        margin-bottom: 16px !important;
+    }
+
+    /* Actividades más espaciadas */
+    .activity-item {
+        padding: 12px !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* Botones de actividad más grandes */
+    .activity-item button {
+        min-width: 40px !important;
+        min-height: 40px !important;
+        padding: 8px !important;
+    }
+
+    /* Tiempo más visible */
+    .activity-time {
+        font-size: 14px !important;
+        font-weight: 600 !important;
+    }
+}
+
+/* ========================================
+   MEJORAS PARA FORMULARIOS EN MÓVIL
+   ======================================== */
+@media (max-width: 768px) {
+    /* Inputs más grandes para facilitar el toque */
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    select,
+    textarea {
+        min-height: 48px !important;
+        font-size: 16px !important; /* Evita zoom automático en iOS */
+        padding: 12px !important;
+    }
+
+    /* Botones más grandes */
+    button:not(.floating-btn):not(.tab-btn) {
+        min-height: 48px !important;
+        padding: 12px 20px !important;
+        font-size: 15px !important;
+    }
+}
+
+/* ========================================
+   MEJORAS PARA MODALES EN MÓVIL
+   ======================================== */
+@media (max-width: 768px) {
+    .modal > div {
+        max-width: calc(100% - 32px) !important;
+        margin: 16px !important;
+        max-height: calc(100vh - 32px) !important;
+    }
+
+    /* Header de modal más espacioso */
+    .modal h2 {
+        font-size: 20px !important;
+    }
+
+    /* Botón de cerrar más grande */
+    .modal-close {
+        min-width: 48px !important;
+        min-height: 48px !important;
+        font-size: 28px !important;
+    }
+}
+
+/* ========================================
+   MEJORAS PARA TRANSPORTE TAB EN MÓVIL
+   ======================================== */
+@media (max-width: 768px) {
+    /* Hero recommendation más compacto */
+    .bg-gradient-to-r.from-green-500 {
+        padding: 16px !important;
+    }
+
+    /* Rutas de transporte en columna */
+    .grid.grid-cols-3.gap-4 {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+}
+
+/* ========================================
+   MEJORAS PARA MAPA EN MÓVIL
+   ======================================== */
+@media (max-width: 768px) {
+    #map {
+        height: 400px !important;
+    }
+
+    /* Controles del mapa más grandes */
+    .leaflet-control-zoom a {
+        width: 40px !important;
+        height: 40px !important;
+        line-height: 40px !important;
+        font-size: 22px !important;
+    }
+
+    /* Popup más legible */
+    .leaflet-popup-content {
+        font-size: 14px !important;
+        line-height: 1.5 !important;
+    }
+}
+
+/* ========================================
+   SAFE AREA INSETS (iPhone notch, etc)
+   ======================================== */
+@supports (padding: max(0px)) {
+    .japan-header {
+        padding-left: max(16px, env(safe-area-inset-left)) !important;
+        padding-right: max(16px, env(safe-area-inset-right)) !important;
+        padding-top: max(16px, env(safe-area-inset-top)) !important;
+    }
+
+    .floating-btn-container {
+        bottom: max(20px, env(safe-area-inset-bottom)) !important;
+        right: max(16px, env(safe-area-inset-right)) !important;
+    }
+
+    .japan-nav {
+        padding-left: max(16px, env(safe-area-inset-left)) !important;
+        padding-right: max(16px, env(safe-area-inset-right)) !important;
+    }
+}
+
+/* ========================================
+   MEJORAS PARA TEXTOS LEGIBLES
+   ======================================== */
+@media (max-width: 768px) {
+    /* Aumentar tamaño mínimo de texto */
+    body {
+        font-size: 15px !important;
+        line-height: 1.6 !important;
+    }
+
+    h1 { font-size: 24px !important; }
+    h2 { font-size: 20px !important; }
+    h3 { font-size: 18px !important; }
+    h4 { font-size: 16px !important; }
+
+    /* Mejorar contraste */
+    .text-gray-600 {
+        color: #4b5563 !important;
+    }
+
+    .dark .text-gray-400 {
+        color: #d1d5db !important;
+    }
+}
+
+/* ========================================
+   PREVENIR ZOOM NO DESEADO
+   ======================================== */
+@media (max-width: 768px) {
+    /* Evitar zoom automático en focus */
+    input,
+    select,
+    textarea {
+        font-size: 16px !important; /* 16px mínimo para evitar zoom en iOS */
+    }
+}
+
+/* ========================================
+   MEJORAS PARA SCROLL
+   ======================================== */
+@media (max-width: 768px) {
+    /* Scroll suave */
+    html {
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Ocultar scrollbar horizontal innecesaria */
+    body {
+        overflow-x: hidden !important;
+    }
+}
+
+/* ========================================
+   ANIMACIONES MÁS RÁPIDAS EN MÓVIL
+   ======================================== */
+@media (max-width: 768px) {
+    * {
+        transition-duration: 200ms !important;
+    }
+
+    /* Reducir animaciones complejas */
+    @media (prefers-reduced-motion: reduce) {
+        * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+}
+
+/* ========================================
+   PWA SPLASH SCREEN STYLES
+   ======================================== */
+@media (display-mode: standalone) {
+    /* Ocultar ciertos elementos cuando se ejecuta como PWA */
+    .pwa-hide {
+        display: none !important;
+    }
+
+    /* Agregar padding extra para pantallas sin barra de navegación */
+    body {
+        padding-bottom: env(safe-area-inset-bottom) !important;
+    }
+}
