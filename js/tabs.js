@@ -112,11 +112,30 @@ export const TabsHandler = {
     renderUtilsTab() {
         const container = document.getElementById('content-utils');
         if (!container) return;
-        
+
         container.innerHTML = `
             <div class="max-w-6xl mx-auto p-4 md:p-6">
                 <h2 class="text-3xl font-bold mb-6 text-gray-800 dark:text-white">🛠️ Utilidades</h2>
-                
+
+                <!-- Budget & Reservations Section -->
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <!-- Budget Section -->
+                    <div id="budgetSection" class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl shadow-lg p-6 border-2 border-green-500">
+                        <h3 class="text-xl font-bold mb-4 text-green-700 dark:text-green-300 flex items-center gap-2">
+                            💰 División de Gastos
+                        </h3>
+                        <div id="expenseSplitterContent"></div>
+                    </div>
+
+                    <!-- Reservations Section -->
+                    <div id="reservationsSection" class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl shadow-lg p-6 border-2 border-purple-500">
+                        <h3 class="text-xl font-bold mb-4 text-purple-700 dark:text-purple-300 flex items-center gap-2">
+                            🎫 Mis Reservas
+                        </h3>
+                        <div id="reservationsContent"></div>
+                    </div>
+                </div>
+
                 <div class="grid md:grid-cols-2 gap-6">
                     <!-- Conversor de Moneda -->
                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-2 border-emerald-500 dark:border-emerald-400">

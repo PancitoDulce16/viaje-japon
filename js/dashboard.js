@@ -442,6 +442,33 @@ class DashboardManager {
                 window.MapHandler.syncWithItinerary();
             }, 100);
         }
+
+        // 🆕 Inicializar módulos de Utils cuando se cambie al tab
+        if (tabName === 'utils') {
+            console.log('🛠️ Inicializando módulos de Utilidades...');
+            setTimeout(() => {
+                // Inicializar ExpenseSplitter si existe
+                if (window.ExpenseSplitter && !window.ExpenseSplitter.currentTrip) {
+                    const tripId = this.getCurrentTripId();
+                    if (tripId) {
+                        window.ExpenseSplitter.init(tripId);
+                    }
+                }
+
+                // Inicializar ReservationsManager si existe
+                if (window.ReservationsManager && !window.ReservationsManager.currentTrip) {
+                    const tripId = this.getCurrentTripId();
+                    if (tripId) {
+                        window.ReservationsManager.init(tripId);
+                    }
+                }
+            }, 100);
+        }
+    }
+
+    getCurrentTripId() {
+        // Obtener el tripId del estado actual
+        return window.currentTripId || localStorage.getItem('currentTripId') || null;
     }
 
     closeMobileMenu() {
@@ -461,31 +488,38 @@ class DashboardManager {
     openFloatingModal(modalType) {
         console.log('🎯 Opening floating modal:', modalType);
 
-        // Mapeo de modales a tabs/acciones
+        // Mapeo de modales a tabs y secciones
         const modalMapping = {
-            'budget': 'essentials',      // Budget Tracker → Essentials tab
-            'packing': 'preparation',    // Packing Checklist → Preparation tab
-            'favorites': 'attractions',  // Favorites → Attractions tab
-            'phrases': 'essentials',     // Phrases → Essentials tab
-            'notes': 'essentials',       // Notes → Essentials tab
-            'chat': 'essentials',        // Chat → Essentials tab
-            'emergency': 'essentials'    // Emergency → Essentials tab
+            'budget': { tab: 'utils', section: 'budgetSection' },          // 💰 Budget → Utils tab
+            'packing': { tab: 'preparation', section: null },              // 🎒 Packing → Preparation tab
+            'favorites': { tab: 'attractions', section: null },            // ⭐ Favorites → Attractions tab
+            'phrases': { tab: 'essentials', section: null },               // 🗣️ Phrases → Essentials tab
+            'notes': { tab: 'utils', section: null },                      // 📝 Notes → Utils tab
+            'chat': { tab: 'utils', section: null },                       // 💬 Chat → Utils tab
+            'emergency': { tab: 'essentials', section: null },             // 🚨 Emergency → Essentials tab
+            'reservations': { tab: 'utils', section: 'reservationsSection' } // 🎫 Reservations → Utils tab (backup)
         };
 
-        const targetTab = modalMapping[modalType];
+        const mapping = modalMapping[modalType];
 
-        if (targetTab) {
+        if (mapping) {
             // Cambiar a la tab correspondiente
-            this.switchTab(targetTab);
+            this.switchTab(mapping.tab);
 
             // Scroll suave a la sección específica si existe
-            setTimeout(() => {
-                const sectionId = `${modalType}Section`;
-                const section = document.getElementById(sectionId);
-                if (section) {
-                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            }, 300);
+            if (mapping.section) {
+                setTimeout(() => {
+                    const section = document.getElementById(mapping.section);
+                    if (section) {
+                        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        // Highlight temporal
+                        section.classList.add('ring-4', 'ring-yellow-400', 'dark:ring-yellow-600');
+                        setTimeout(() => {
+                            section.classList.remove('ring-4', 'ring-yellow-400', 'dark:ring-yellow-600');
+                        }, 2000);
+                    }
+                }, 300);
+            }
         } else {
             console.warn('⚠️ No mapping found for modal type:', modalType);
         }
