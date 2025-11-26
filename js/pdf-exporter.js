@@ -33,7 +33,7 @@ export const PDFExporter = {
       // === HEADER ===
       doc.setFontSize(22);
       doc.setTextColor(147, 51, 234); // Purple
-      doc.text('🇯🇵 Viaje a Japón - Itinerario', margin, yPos);
+      doc.text('VIAJE A JAPON - ITINERARIO', margin, yPos);
 
       yPos += 10;
       doc.setFontSize(10);
@@ -42,7 +42,7 @@ export const PDFExporter = {
       // Información del viaje
       const firstDay = itinerary.days[0];
       const lastDay = itinerary.days[itinerary.days.length - 1];
-      const tripInfo = `${firstDay.date} al ${lastDay.date} • ${itinerary.days.length} días`;
+      const tripInfo = `${firstDay.date} al ${lastDay.date} - ${itinerary.days.length} dias`;
 
       doc.text(tripInfo, margin, yPos);
       yPos += 5;
@@ -107,24 +107,36 @@ export const PDFExporter = {
             }
 
             const time = activity.time || '--:--';
-            const title = activity.title || activity.activity || activity.name || 'Sin título';
-            const location = activity.location || '';
-            const emoji = this.getCategoryEmoji(activity.category);
+            const rawTitle = activity.title || activity.activity || activity.name || 'Sin título';
+            const title = this.removeEmojis(rawTitle);
+            const rawLocation = activity.location || '';
+            const location = this.removeEmojis(rawLocation);
+            const categoryLabel = this.getCategoryLabel(activity.category);
 
             // Actividad
             doc.setFont(undefined, 'bold');
-            doc.text(`${emoji} ${time}`, margin + 5, yPos);
+            doc.text(`[${time}]`, margin + 5, yPos);
 
             doc.setFont(undefined, 'normal');
             const activityText = `${title}`;
             doc.text(activityText, margin + 25, yPos);
             yPos += 5;
 
+            // Categoría
+            if (categoryLabel) {
+              doc.setTextColor(100, 100, 100);
+              doc.setFontSize(7);
+              doc.text(`(${categoryLabel})`, margin + 25, yPos);
+              yPos += 3;
+              doc.setFontSize(9);
+              doc.setTextColor(0, 0, 0);
+            }
+
             // Ubicación
             if (location) {
               doc.setTextColor(120, 120, 120);
               doc.setFontSize(8);
-              doc.text(`📍 ${location}`, margin + 25, yPos);
+              doc.text(`Ubicacion: ${location}`, margin + 25, yPos);
               doc.setFontSize(9);
               doc.setTextColor(0, 0, 0);
               yPos += 4;
@@ -134,7 +146,9 @@ export const PDFExporter = {
             if (activity.notes) {
               doc.setTextColor(100, 100, 100);
               doc.setFontSize(8);
-              const notes = activity.notes.substring(0, 80) + (activity.notes.length > 80 ? '...' : '');
+              // Remover emojis de las notas para evitar caracteres extraños
+              const cleanNotes = this.removeEmojis(activity.notes);
+              const notes = cleanNotes.substring(0, 80) + (cleanNotes.length > 80 ? '...' : '');
               const splitNotes = doc.splitTextToSize(notes, pageWidth - margin * 2 - 30);
               doc.text(splitNotes, margin + 25, yPos);
               yPos += splitNotes.length * 4;
@@ -198,7 +212,7 @@ export const PDFExporter = {
   },
 
   /**
-   * Obtener emoji según categoría
+   * Obtener emoji según categoría (DEPRECADO - usar getCategoryLabel para PDF)
    */
   getCategoryEmoji(category) {
     const emojis = {
@@ -215,6 +229,48 @@ export const PDFExporter = {
     };
 
     return emojis[category] || '📌';
+  },
+
+  /**
+   * Obtener label de texto según categoría (para PDF sin emojis)
+   */
+  getCategoryLabel(category) {
+    const labels = {
+      transport: 'Transporte',
+      food: 'Comida',
+      shopping: 'Compras',
+      culture: 'Cultura',
+      nature: 'Naturaleza',
+      entertainment: 'Entretenimiento',
+      sightseeing: 'Turismo',
+      hotel: 'Hotel',
+      nightlife: 'Vida Nocturna',
+      other: 'Otro'
+    };
+
+    return labels[category] || '';
+  },
+
+  /**
+   * Remover emojis y caracteres especiales del texto
+   */
+  removeEmojis(text) {
+    if (!text) return '';
+
+    // Regex para remover emojis y caracteres especiales
+    return text
+      .replace(/[\u{1F600}-\u{1F64F}]/gu, '') // Emoticons
+      .replace(/[\u{1F300}-\u{1F5FF}]/gu, '') // Symbols & Pictographs
+      .replace(/[\u{1F680}-\u{1F6FF}]/gu, '') // Transport & Map
+      .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, '') // Flags
+      .replace(/[\u{2600}-\u{26FF}]/gu, '')   // Misc symbols
+      .replace(/[\u{2700}-\u{27BF}]/gu, '')   // Dingbats
+      .replace(/[\u{FE00}-\u{FE0F}]/gu, '')   // Variation Selectors
+      .replace(/[\u{1F900}-\u{1F9FF}]/gu, '') // Supplemental Symbols
+      .replace(/[\u{1FA70}-\u{1FAFF}]/gu, '') // Extended symbols
+      .replace(/¡/g, '')                       // Exclamación invertida
+      .replace(/•/g, '-')                      // Bullet point
+      .trim();
   }
 };
 
