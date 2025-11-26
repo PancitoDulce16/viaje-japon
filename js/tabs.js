@@ -136,7 +136,17 @@ export const TabsHandler = {
                             </svg>
                         </button>
                         <div id="budget-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
-                            <div id="expenseSplitterContent"></div>
+                            <!-- Budget Tracker Section -->
+                            <div id="budgetTrackerContent" class="mb-6"></div>
+
+                            <!-- Expense Splitter Section -->
+                            <div class="border-t border-gray-300 dark:border-gray-600 pt-6">
+                                <h4 class="text-lg font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                                    <span>👥</span>
+                                    <span>División de Gastos entre Miembros</span>
+                                </h4>
+                                <div id="expenseSplitterContent"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -328,10 +338,20 @@ export const TabsHandler = {
             chevron.style.transform = 'rotate(180deg)';
 
             // Inicializar módulos si es necesario
-            if (sectionName === 'budget' && window.ExpenseSplitter && !window.ExpenseSplitter.currentTrip) {
+            if (sectionName === 'budget') {
                 const tripId = window.currentTripId || localStorage.getItem('currentTripId');
-                if (tripId) {
-                    setTimeout(() => window.ExpenseSplitter.init(tripId), 100);
+
+                // Inicializar BudgetTracker
+                if (window.BudgetTracker) {
+                    setTimeout(() => {
+                        window.BudgetTracker.initRealtimeSync();
+                        window.BudgetTracker.renderInTab();
+                    }, 100);
+                }
+
+                // Inicializar ExpenseSplitter
+                if (window.ExpenseSplitter && !window.ExpenseSplitter.currentTrip && tripId) {
+                    setTimeout(() => window.ExpenseSplitter.init(tripId), 150);
                 }
             }
 

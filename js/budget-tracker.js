@@ -36,6 +36,7 @@ export const BudgetTracker = {
       console.log('⚠️ Budget: No hay usuario autenticado, usando localStorage');
       this.expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
       this.updateModal();
+      this.renderInTab();
       return;
     }
 
@@ -54,6 +55,7 @@ export const BudgetTracker = {
       // No crear listener de Firestore, solo usar localStorage
       this.expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
       this.updateModal();
+      this.renderInTab();
       return;
     }
 
@@ -70,20 +72,216 @@ export const BudgetTracker = {
           ...doc.data()
         });
       });
-      
+
       // También guardar en localStorage como backup
       localStorage.setItem('expenses', JSON.stringify(this.expenses));
-      
-      // Re-renderizar
+
+      // Re-renderizar ambas vistas
       this.updateModal();
-      
+      this.renderInTab();
+
       console.log('✅ Gastos COMPARTIDOS sincronizados:', this.expenses.length, 'gastos');
     }, (error) => {
       console.error('❌ Error en sync de gastos compartidos:', error);
       // Fallback a localStorage si falla
       this.expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
       this.updateModal();
+      this.renderInTab();
     });
+  },
+
+  renderInTab() {
+    const container = document.getElementById('budgetTrackerContent');
+    if (!container) return;
+
+    const total = this.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const tripId = this.getCurrentTripId();
+
+    // Calcular gastos por categoría
+    const byCategory = this.expenses.reduce((acc, exp) => {
+      const cat = exp.category || 'Otros';
+      acc[cat] = (acc[cat] || 0) + exp.amount;
+      return acc;
+    }, {});
+
+    const categories = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
+
+    container.innerHTML = `
+      <!-- Total Card compacto -->
+      <div class="mb-4 p-4 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 text-white rounded-xl shadow-lg">
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="text-sm opacity-90 mb-1">Total Gastado</p>
+            <p class="text-3xl font-bold">¥${total.toLocaleString()}</p>
+            <p class="text-xs opacity-90">~$${Math.round(total / 145)} USD • ${this.expenses.length} gastos</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs opacity-75 mb-1">${tripId ? '🤝 Colaborativo' : '📱 Local'}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario compacto -->
+      <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <h4 class="font-bold mb-2 text-gray-800 dark:text-white text-sm">➕ Agregar Gasto</h4>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <input id="expenseDescTab" type="text" class="col-span-2 p-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Descripción">
+          <select id="expenseCategoryTab" class="p-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+            <option value="Comida">🍜 Comida</option>
+            <option value="Transporte">🚇 Transporte</option>
+            <option value="Alojamiento">🏨 Alojamiento</option>
+            <option value="Entretenimiento">🎮 Entretenimiento</option>
+            <option value="Compras">🛍️ Compras</option>
+            <option value="Otros">📦 Otros</option>
+          </select>
+          <input id="expenseAmountTab" type="number" class="p-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="¥ JPY">
+        </div>
+        <button id="addExpenseBtnTab" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-2 rounded-lg transition text-sm">
+          ➕ Agregar
+        </button>
+      </div>
+
+      <!-- Categorías si hay gastos -->
+      ${categories.length > 0 ? `
+        <div class="mb-4 p-3 bg-white dark:bg-gray-800 rounded-lg shadow">
+          <h4 class="font-bold text-sm mb-3 dark:text-white">📊 Por Categoría</h4>
+          <div class="space-y-2">
+            ${categories.map(([cat, amount]) => {
+              const percent = (amount / total * 100).toFixed(1);
+              const icon = this.getCategoryIcon(cat);
+              const color = this.getCategoryColor(cat);
+              return `
+                <div>
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="dark:text-white">${icon} ${cat}</span>
+                    <span class="font-semibold dark:text-white">¥${amount.toLocaleString()} (${percent}%)</span>
+                  </div>
+                  <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div class="${color} h-2 rounded-full" style="width: ${percent}%"></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Lista de gastos compacta -->
+      <div class="space-y-2 max-h-96 overflow-y-auto">
+        ${this.expenses.length === 0 ? `
+          <div class="text-center py-8">
+            <div class="text-4xl mb-2">💰</div>
+            <p class="text-gray-500 dark:text-gray-400 text-sm">No hay gastos registrados</p>
+          </div>
+        ` : this.expenses.map((exp) => {
+          const icon = this.getCategoryIcon(exp.category || 'Otros');
+          const color = this.getCategoryColorClass(exp.category || 'Otros');
+          return `
+            <div class="group p-2 bg-white dark:bg-gray-700 rounded-lg border-l-4 ${color} hover:shadow-md transition">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span>${icon}</span>
+                    <span class="dark:text-white font-semibold text-sm">${this.escapeHtml(exp.desc)}</span>
+                  </div>
+                  <div class="flex gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    ${exp.category ? `<span>${exp.category}</span>` : ''}
+                    ${exp.date ? `<span>${new Date(exp.date).toLocaleDateString('es')}</span>` : ''}
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-green-600 dark:text-green-400 font-bold text-sm">¥${exp.amount.toLocaleString()}</span>
+                  <button data-expense-id="${exp.id || exp.timestamp}" class="delete-expense-tab opacity-0 group-hover:opacity-100 text-red-600 text-sm">🗑️</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    // Event listeners
+    const addBtn = document.getElementById('addExpenseBtnTab');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => this.addExpenseFromTab());
+    }
+
+    const descInput = document.getElementById('expenseDescTab');
+    const amountInput = document.getElementById('expenseAmountTab');
+
+    if (descInput) {
+      descInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') this.addExpenseFromTab();
+      });
+    }
+
+    if (amountInput) {
+      amountInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') this.addExpenseFromTab();
+      });
+    }
+
+    container.querySelectorAll('.delete-expense-tab').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const expenseId = e.currentTarget.dataset.expenseId;
+        this.deleteExpense(expenseId);
+      });
+    });
+  },
+
+  async addExpenseFromTab() {
+    const descInput = document.getElementById('expenseDescTab');
+    const amountInput = document.getElementById('expenseAmountTab');
+    const categorySelect = document.getElementById('expenseCategoryTab');
+
+    if (!descInput || !amountInput) return;
+
+    const desc = descInput.value.trim();
+    const amount = parseFloat(amountInput.value);
+    const category = categorySelect ? categorySelect.value : 'Otros';
+
+    if (!desc || !amount || amount <= 0) {
+      window.Notifications.warning('⚠️ Por favor completa la descripción y monto');
+      return;
+    }
+
+    const expense = {
+      desc,
+      amount,
+      category,
+      timestamp: Date.now(),
+      date: new Date().toISOString(),
+      addedBy: auth.currentUser ? auth.currentUser.email : 'Usuario local'
+    };
+
+    try {
+      if (!auth.currentUser) {
+        this.expenses.push(expense);
+        localStorage.setItem('expenses', JSON.stringify(this.expenses));
+        this.renderInTab();
+        descInput.value = '';
+        amountInput.value = '';
+        descInput.focus();
+        return;
+      }
+
+      const tripId = this.getCurrentTripId();
+
+      if (!tripId) {
+        this.expenses.push(expense);
+        localStorage.setItem('expenses', JSON.stringify(this.expenses));
+        this.renderInTab();
+      } else {
+        await addDoc(collection(db, `trips/${tripId}/expenses`), expense);
+      }
+
+      descInput.value = '';
+      amountInput.value = '';
+      descInput.focus();
+    } catch (error) {
+      console.error('❌ Error guardando gasto:', error);
+      window.Notifications.error('Error al guardar. Intenta de nuevo.');
+    }
   },
 
   updateModal() {
@@ -500,6 +698,7 @@ export const BudgetTracker = {
     this.expenses = [];
     localStorage.removeItem('expenses');
     this.updateModal();
+    this.renderInTab();
     console.log('[BudgetTracker] 🧹 Estado de gastos limpiado.');
   },
 
