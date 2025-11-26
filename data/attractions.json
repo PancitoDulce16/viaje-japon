@@ -634,11 +634,11 @@
     {
       "day": 13,
       "date": "2026-02-28",
-      "title": "Akihabara COMPRAS + Ginza",
+      "title": "Akihabara + Ginza + AGE",
       "city": "Tokyo",
       "cityId": "tokyo",
       "location": "Akihabara & Ginza",
-      "budget": 20000,
+      "budget": 25000,
       "hotel": "APA Hotel Yamanote Otsuka",
       "activities": [
         {
@@ -656,7 +656,7 @@
         {
           "id": "13-2",
           "time": "15:00",
-          "duration": 120,
+          "duration": 90,
           "activity": "Ginza Shopping",
           "name": "🏬 Ginza",
           "title": "Ginza",
@@ -667,7 +667,19 @@
         },
         {
           "id": "13-3",
-          "time": "17:00",
+          "time": "16:30",
+          "duration": 60,
+          "activity": "AGE Ginza (Animate)",
+          "name": "🎌 AGE Ginza",
+          "title": "AGE (Animate Ginza)",
+          "location": "AGE Ginza Store",
+          "notes": "¡IMPERDIBLE! 8 pisos de anime merchandise, figures, manga, cosplay. Tienda flagship de Animate.",
+          "category": "shopping",
+          "coordinates": { "lat": 35.6719, "lng": 139.7648 }
+        },
+        {
+          "id": "13-4",
+          "time": "17:30",
           "duration": 60,
           "activity": "Jins - Hacer lentes",
           "name": "👓 Jins Eyewear",
