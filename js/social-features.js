@@ -1,7 +1,7 @@
 // js/social-features.js - Funcionalidades sociales y colaborativas
 
-import { auth, db } from './firebase-init.js';
-import { collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, onSnapshot, orderBy, serverTimestamp, increment } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+import { auth, db } from './firebase-config.js';
+import { collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where, onSnapshot, orderBy, serverTimestamp, increment } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 export const SocialFeatures = {
     currentTripId: null,
@@ -106,15 +106,32 @@ export const SocialFeatures = {
 
     async loadAchievements() {
         const tripId = window.currentTripId || localStorage.getItem('currentTripId');
-        if (!tripId || !auth.currentUser) {
-            alert('Debes estar autenticado y tener un viaje activo');
+        const grid = document.getElementById('achievementsGrid');
+        if (!grid) return;
+
+        if (!auth.currentUser) {
+            grid.innerHTML = `
+                <div class="col-span-full text-center py-8">
+                    <p class="text-4xl mb-3">🔒</p>
+                    <p class="text-gray-600 dark:text-gray-400">Debes estar autenticado</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Inicia sesión para ver tus logros</p>
+                </div>
+            `;
+            return;
+        }
+
+        if (!tripId) {
+            grid.innerHTML = `
+                <div class="col-span-full text-center py-8">
+                    <p class="text-4xl mb-3">✈️</p>
+                    <p class="text-gray-600 dark:text-gray-400">No hay viaje activo</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Selecciona o crea un viaje primero</p>
+                </div>
+            `;
             return;
         }
 
         const achievements = await this.checkAndUpdateAchievements(tripId);
-
-        const grid = document.getElementById('achievementsGrid');
-        if (!grid) return;
 
         if (achievements.length === 0) {
             grid.innerHTML = `
@@ -170,7 +187,31 @@ export const SocialFeatures = {
 
     async loadDailyChallenge() {
         const tripId = window.currentTripId || localStorage.getItem('currentTripId');
-        if (!tripId) return;
+        const card = document.getElementById('dailyChallengeCard');
+
+        if (!card) return;
+
+        if (!auth.currentUser) {
+            card.innerHTML = `
+                <div class="text-center py-8">
+                    <p class="text-4xl mb-3">🔒</p>
+                    <p class="text-gray-600 dark:text-gray-400">Debes estar autenticado</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Inicia sesión para ver el desafío del día</p>
+                </div>
+            `;
+            return;
+        }
+
+        if (!tripId) {
+            card.innerHTML = `
+                <div class="text-center py-8">
+                    <p class="text-4xl mb-3">✈️</p>
+                    <p class="text-gray-600 dark:text-gray-400">No hay viaje activo</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Selecciona o crea un viaje primero</p>
+                </div>
+            `;
+            return;
+        }
 
         try {
             const today = new Date().toISOString().split('T')[0];
@@ -410,7 +451,31 @@ export const SocialFeatures = {
 
     async loadPolls() {
         const tripId = window.currentTripId || localStorage.getItem('currentTripId');
-        if (!tripId) return;
+        const container = document.getElementById('activePollsList');
+
+        if (!container) return;
+
+        if (!auth.currentUser) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <p class="text-4xl mb-3">🔒</p>
+                    <p class="text-gray-600 dark:text-gray-400">Debes estar autenticado</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Inicia sesión para ver y crear votaciones</p>
+                </div>
+            `;
+            return;
+        }
+
+        if (!tripId) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <p class="text-4xl mb-3">✈️</p>
+                    <p class="text-gray-600 dark:text-gray-400">No hay viaje activo</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Selecciona o crea un viaje primero</p>
+                </div>
+            `;
+            return;
+        }
 
         try {
             const pollsRef = collection(db, `trips/${tripId}/polls`);
@@ -661,7 +726,31 @@ export const SocialFeatures = {
 
     async loadJournal() {
         const tripId = window.currentTripId || localStorage.getItem('currentTripId');
-        if (!tripId) return;
+        const container = document.getElementById('journalEntries');
+
+        if (!container) return;
+
+        if (!auth.currentUser) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <p class="text-4xl mb-3">🔒</p>
+                    <p class="text-gray-600 dark:text-gray-400">Debes estar autenticado</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Inicia sesión para ver y escribir en el diario</p>
+                </div>
+            `;
+            return;
+        }
+
+        if (!tripId) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <p class="text-4xl mb-3">✈️</p>
+                    <p class="text-gray-600 dark:text-gray-400">No hay viaje activo</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Selecciona o crea un viaje primero</p>
+                </div>
+            `;
+            return;
+        }
 
         try {
             const journalRef = collection(db, `trips/${tripId}/journal`);
