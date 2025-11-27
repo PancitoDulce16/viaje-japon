@@ -475,7 +475,7 @@
             fabOverlay.addEventListener('click', closeFabMenu);
 
             // Cuando se hace click en un item, abrir el modal correspondiente
-            fabItems.forEach(item => {
+            fabItems.forEach((item, index) => {
                 item.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const modalType = item.getAttribute('data-modal');
@@ -484,27 +484,36 @@
                     console.log('🔧 DEBUG FAB CLICK: window.DashboardApp existe?', !!window.DashboardApp);
                     console.log('🔧 DEBUG FAB CLICK: openFloatingModal existe?', !!window.DashboardApp?.openFloatingModal);
 
+                    // ALERTA TEMPORAL para debugging
+                    alert(`🔧 Tocaste: ${modalType}\nDashboardApp: ${!!window.DashboardApp}\nopenFloatingModal: ${!!window.DashboardApp?.openFloatingModal}`);
+
                     // Usar la misma función que los floating buttons de desktop
                     if (window.DashboardApp?.openFloatingModal) {
                         console.log('✅ DEBUG FAB CLICK: Llamando openFloatingModal con', modalType);
                         window.DashboardApp.openFloatingModal(modalType);
+                        alert(`✅ Abriendo modal: ${modalType}`);
                     } else {
                         console.error('❌ DEBUG FAB CLICK: DashboardApp o openFloatingModal NO disponible');
                         console.log('🔧 DEBUG FAB CLICK: Esperando 500ms y reintentando...');
+                        alert('⚠️ DashboardApp no disponible, reintentando en 500ms...');
 
                         // Reintentar después de un delay
                         setTimeout(() => {
                             if (window.DashboardApp?.openFloatingModal) {
                                 console.log('✅ DEBUG FAB CLICK: Retry exitoso, abriendo modal');
                                 window.DashboardApp.openFloatingModal(modalType);
+                                alert(`✅ Retry exitoso: ${modalType}`);
                             } else {
                                 console.error('❌ DEBUG FAB CLICK: Retry falló, DashboardApp aún no disponible');
+                                alert('❌ Retry falló, DashboardApp no disponible');
                             }
                         }, 500);
                     }
 
                     closeFabMenu();
                 });
+
+                console.log(`🔧 DEBUG FAB: Event listener agregado al item ${index + 1} (${item.getAttribute('data-modal')})`);
             });
 
             // Cerrar al hacer scroll
@@ -723,19 +732,44 @@
         }
     </script>
 
-    <!-- 📝 Botón flotante para exportar logs -->
+    <!-- 📝 Botón flotante para exportar logs (SOLO DESKTOP) -->
+    <style>
+        #log-export-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 999998;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: system-ui, -apple-system;
+        }
+
+        #log-export-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+        }
+
+        /* OCULTAR en móvil */
+        @media (max-width: 768px) {
+            #log-export-button {
+                display: none !important;
+            }
+        }
+    </style>
     <button
         id="log-export-button"
         onclick="uploadLogs()"
-        style="position: fixed; top: 20px; left: 20px; z-index: 999998;
-               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-               color: white; border: none; border-radius: 50%;
-               width: 60px; height: 60px; font-size: 24px;
-               cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-               transition: all 0.3s ease; display: flex; align-items: center;
-               justify-content: center; font-family: system-ui, -apple-system;"
-        onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.4)';"
-        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)';"
         title="Subir logs a dpaste.com para compartir con Claude"
     >
         📤
