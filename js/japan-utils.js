@@ -29,12 +29,9 @@ export const JapanUtils = {
                             placeholder="5000"
                         >
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <button onclick="JapanUtils.calculateTip(0)" class="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg font-bold shadow-md transition">
-                            ✅ Pagar solo la cuenta
-                        </button>
-                        <button onclick="JapanUtils.calculateTip(10)" class="bg-gray-400 hover:bg-gray-500 text-white p-3 rounded-lg font-bold shadow-md transition opacity-50 cursor-not-allowed" disabled>
-                            ❌ No agregar propina
+                    <div class="grid grid-cols-1 gap-3">
+                        <button onclick="JapanUtils.calculateTip()" class="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg font-bold shadow-md transition">
+                            ✅ Calcular Total (Sin Propina)
                         </button>
                     </div>
                     <div id="tipResult" class="p-4 bg-gray-50 dark:bg-gray-600 rounded-lg text-center hidden">
@@ -47,12 +44,17 @@ export const JapanUtils = {
         `;
     },
 
-    calculateTip(tipPercent) {
-        const billAmount = parseFloat(document.getElementById('billAmount').value) || 0;
+    calculateTip() {
+        const billAmount = parseFloat(document.getElementById('billAmount')?.value) || 0;
         const total = billAmount; // Siempre 0% de propina en Japón
 
-        document.getElementById('totalAmount').textContent = `¥${total.toLocaleString('ja-JP')}`;
-        document.getElementById('tipResult').classList.remove('hidden');
+        const resultDiv = document.getElementById('tipResult');
+        const totalDiv = document.getElementById('totalAmount');
+
+        if (resultDiv && totalDiv) {
+            totalDiv.textContent = `¥${total.toLocaleString('ja-JP')}`;
+            resultDiv.classList.remove('hidden');
+        }
     },
 
     // 2. CONTADOR DE DÍAS RESTANTES
@@ -654,6 +656,240 @@ export const JapanUtils = {
                 </div>
             </div>
         `;
+    },
+
+    // 11. RESTAURANTE ALEATORIO
+    renderRandomRestaurant() {
+        return `
+            <div class="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl p-6 border-l-4 border-orange-500">
+                <h4 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                    🍜 ¿Dónde Comemos?
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">No puedes decidir? Deja que el azar elija por ti</p>
+
+                <button onclick="JapanUtils.pickRandomRestaurant()" class="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white p-4 rounded-lg font-bold shadow-lg transition transform hover:scale-105 mb-4">
+                    🎲 Elegir Restaurante Aleatorio
+                </button>
+
+                <div id="randomRestaurantResult" class="hidden">
+                    <div class="bg-white dark:bg-gray-700 p-6 rounded-lg border-2 border-orange-400 text-center">
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Hoy comes en:</p>
+                        <p class="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-2" id="restaurantName"></p>
+                        <p class="text-lg text-gray-700 dark:text-gray-300 mb-1" id="restaurantType"></p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400" id="restaurantPrice"></p>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    restaurants: [
+        { name: 'Ichiran Ramen', type: '🍜 Ramen', price: '¥1000-1500' },
+        { name: 'Sukiyabashi Jiro', type: '🍣 Sushi Premium', price: '¥30000+' },
+        { name: 'Yoshinoya', type: '🍚 Gyudon (Bowl de Carne)', price: '¥400-800' },
+        { name: 'CoCo Ichibanya', type: '🍛 Curry Japonés', price: '¥800-1200' },
+        { name: 'Katsuya', type: '🥩 Tonkatsu', price: '¥1000-1500' },
+        { name: 'Conveyor Belt Sushi', type: '🍣 Sushi Rotatorio', price: '¥2000-3000' },
+        { name: 'Tempura Tsunahachi', type: '🍤 Tempura', price: '¥2000-3000' },
+        { name: 'Yakiniku-ya', type: '🥓 Barbacoa Coreana', price: '¥3000-5000' },
+        { name: 'Izakaya Local', type: '🍻 Pub Japonés', price: '¥2000-4000' },
+        { name: 'Udon Restaurant', type: '🍜 Udon', price: '¥600-1000' },
+        { name: 'Okonomiyaki', type: '🥞 Panqueque Japonés', price: '¥1000-1500' },
+        { name: 'Takoyaki Stand', type: '🐙 Bolitas de Pulpo', price: '¥500-800' }
+    ],
+
+    pickRandomRestaurant() {
+        const random = this.restaurants[Math.floor(Math.random() * this.restaurants.length)];
+        document.getElementById('restaurantName').textContent = random.name;
+        document.getElementById('restaurantType').textContent = random.type;
+        document.getElementById('restaurantPrice').textContent = random.price;
+        document.getElementById('randomRestaurantResult').classList.remove('hidden');
+    },
+
+    // 12. RASTREADOR DE COMIDAS
+    renderFoodTracker() {
+        return `
+            <div class="bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 rounded-xl p-6 border-l-4 border-pink-500">
+                <h4 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                    🍱 Rastreador de Comidas Japonesas
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Marca las comidas típicas que ya probaste</p>
+
+                <div id="foodTrackerGrid" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+
+                <div class="mt-4 p-4 bg-gradient-to-r from-pink-100 to-rose-100 dark:from-pink-900/40 dark:to-rose-900/40 rounded-lg text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Has probado:</p>
+                    <p class="text-3xl font-bold text-pink-600 dark:text-pink-400"><span id="foodCount">0</span> / <span id="foodTotal">0</span></p>
+                </div>
+            </div>
+        `;
+    },
+
+    foods: [
+        { id: 'ramen', name: 'Ramen', emoji: '🍜' },
+        { id: 'sushi', name: 'Sushi', emoji: '🍣' },
+        { id: 'tempura', name: 'Tempura', emoji: '🍤' },
+        { id: 'tonkatsu', name: 'Tonkatsu', emoji: '🥩' },
+        { id: 'okonomiyaki', name: 'Okonomiyaki', emoji: '🥞' },
+        { id: 'takoyaki', name: 'Takoyaki', emoji: '🐙' },
+        { id: 'udon', name: 'Udon', emoji: '🍜' },
+        { id: 'soba', name: 'Soba', emoji: '🍜' },
+        { id: 'yakitori', name: 'Yakitori', emoji: '🍗' },
+        { id: 'onigiri', name: 'Onigiri', emoji: '🍙' },
+        { id: 'mochi', name: 'Mochi', emoji: '🍡' },
+        { id: 'matcha', name: 'Matcha', emoji: '🍵' },
+        { id: 'sake', name: 'Sake', emoji: '🍶' },
+        { id: 'curry', name: 'Curry Japonés', emoji: '🍛' },
+        { id: 'gyoza', name: 'Gyoza', emoji: '🥟' },
+        { id: 'taiyaki', name: 'Taiyaki', emoji: '🐟' }
+    ],
+
+    loadFoodTracker() {
+        const trackedFoods = JSON.parse(localStorage.getItem('trackedFoods') || '[]');
+        const grid = document.getElementById('foodTrackerGrid');
+
+        if (grid) {
+            grid.innerHTML = this.foods.map(food => {
+                const checked = trackedFoods.includes(food.id);
+                return `
+                    <button onclick="JapanUtils.toggleFood('${food.id}')"
+                            class="food-item p-4 rounded-lg border-2 transition transform hover:scale-105 ${
+                                checked
+                                    ? 'bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 border-green-400 dark:border-green-600'
+                                    : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600'
+                            }"
+                            data-food-id="${food.id}">
+                        <div class="text-4xl mb-2">${food.emoji}</div>
+                        <div class="text-sm font-semibold text-gray-800 dark:text-white">${food.name}</div>
+                        ${checked ? '<div class="text-green-600 dark:text-green-400 text-xs mt-1">✓ Probado</div>' : ''}
+                    </button>
+                `;
+            }).join('');
+
+            this.updateFoodCount();
+        }
+    },
+
+    toggleFood(foodId) {
+        let trackedFoods = JSON.parse(localStorage.getItem('trackedFoods') || '[]');
+
+        if (trackedFoods.includes(foodId)) {
+            trackedFoods = trackedFoods.filter(id => id !== foodId);
+        } else {
+            trackedFoods.push(foodId);
+        }
+
+        localStorage.setItem('trackedFoods', JSON.stringify(trackedFoods));
+        this.loadFoodTracker();
+    },
+
+    updateFoodCount() {
+        const trackedFoods = JSON.parse(localStorage.getItem('trackedFoods') || '[]');
+        const countEl = document.getElementById('foodCount');
+        const totalEl = document.getElementById('foodTotal');
+
+        if (countEl) countEl.textContent = trackedFoods.length;
+        if (totalEl) totalEl.textContent = this.foods.length;
+    },
+
+    // 13. BINGO DE VIAJE
+    renderTravelBingo() {
+        return `
+            <div class="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-6 border-l-4 border-purple-500">
+                <h4 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                    🎯 Bingo de Viaje - Experiencias en Japón
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Completa estas experiencias típicas durante tu viaje</p>
+
+                <div id="bingoGrid" class="grid grid-cols-3 md:grid-cols-5 gap-2 mb-4">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+
+                <div class="flex gap-2">
+                    <button onclick="JapanUtils.resetBingo()" class="flex-1 bg-red-500 hover:bg-red-600 text-white p-3 rounded-lg font-bold transition">
+                        🔄 Reiniciar
+                    </button>
+                    <div class="flex-1 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 p-3 rounded-lg text-center">
+                        <p class="text-sm text-gray-600 dark:text-gray-300">Completadas:</p>
+                        <p class="text-2xl font-bold text-purple-600 dark:text-purple-400"><span id="bingoCount">0</span> / 16</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    bingoItems: [
+        { id: 'shrine', emoji: '⛩️', text: 'Visitar un santuario' },
+        { id: 'fuji', emoji: '🗻', text: 'Ver el Monte Fuji' },
+        { id: 'konbini', emoji: '🏪', text: 'Comprar en konbini' },
+        { id: 'bow', emoji: '🙇', text: 'Hacer una reverencia' },
+        { id: 'chopsticks', emoji: '🥢', text: 'Usar palillos' },
+        { id: 'train', emoji: '🚄', text: 'Viajar en Shinkansen' },
+        { id: 'sakura', emoji: '🌸', text: 'Ver sakura' },
+        { id: 'cosplay', emoji: '👘', text: 'Ver cosplayers' },
+        { id: 'arcade', emoji: '🎮', text: 'Ir a un arcade' },
+        { id: 'karaoke', emoji: '🎤', text: 'Hacer karaoke' },
+        { id: 'vending', emoji: '🥤', text: 'Usar máquina expendedora' },
+        { id: 'deer', emoji: '🦌', text: 'Alimentar ciervos en Nara' },
+        { id: 'capsule', emoji: '🏨', text: 'Dormir en hotel cápsula' },
+        { id: 'photo', emoji: '📸', text: 'Selfie con Hachiko' },
+        { id: 'neon', emoji: '💡', text: 'Foto en Shibuya de noche' },
+        { id: 'sumo', emoji: '🥋', text: 'Ver algo de sumo' }
+    ],
+
+    loadBingo() {
+        const completedItems = JSON.parse(localStorage.getItem('bingoCompleted') || '[]');
+        const grid = document.getElementById('bingoGrid');
+
+        if (grid) {
+            grid.innerHTML = this.bingoItems.map(item => {
+                const completed = completedItems.includes(item.id);
+                return `
+                    <button onclick="JapanUtils.toggleBingo('${item.id}')"
+                            class="bingo-cell aspect-square p-3 rounded-lg border-2 transition transform hover:scale-105 flex flex-col items-center justify-center text-center ${
+                                completed
+                                    ? 'bg-gradient-to-br from-green-400 to-emerald-500 dark:from-green-600 dark:to-emerald-700 border-green-500 dark:border-green-400'
+                                    : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600'
+                            }"
+                            data-bingo-id="${item.id}">
+                        <div class="text-3xl mb-1">${item.emoji}</div>
+                        <div class="text-xs font-semibold text-gray-800 dark:text-white leading-tight">${item.text}</div>
+                        ${completed ? '<div class="text-white text-xl mt-1">✓</div>' : ''}
+                    </button>
+                `;
+            }).join('');
+
+            this.updateBingoCount();
+        }
+    },
+
+    toggleBingo(itemId) {
+        let completedItems = JSON.parse(localStorage.getItem('bingoCompleted') || '[]');
+
+        if (completedItems.includes(itemId)) {
+            completedItems = completedItems.filter(id => id !== itemId);
+        } else {
+            completedItems.push(itemId);
+        }
+
+        localStorage.setItem('bingoCompleted', JSON.stringify(completedItems));
+        this.loadBingo();
+    },
+
+    resetBingo() {
+        if (confirm('¿Seguro que quieres reiniciar el bingo?')) {
+            localStorage.removeItem('bingoCompleted');
+            this.loadBingo();
+        }
+    },
+
+    updateBingoCount() {
+        const completedItems = JSON.parse(localStorage.getItem('bingoCompleted') || '[]');
+        const countEl = document.getElementById('bingoCount');
+
+        if (countEl) countEl.textContent = completedItems.length;
     },
 
     // Inicializar todo

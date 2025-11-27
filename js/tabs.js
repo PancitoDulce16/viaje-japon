@@ -5,7 +5,10 @@ import { AppUtils } from './utils.js';
 
 export const TabsHandler = {
     renderAllTabs() {
-        this.renderUtilsTab();
+        // Utils tab ahora usa UtilsHandler
+        if (window.UtilsHandler) {
+            window.UtilsHandler.init();
+        }
         MapHandler.renderMap();
     },
 
@@ -109,7 +112,11 @@ export const TabsHandler = {
         `;
     },
 
-    renderUtilsTab() {
+    // NOTA: renderUtilsTab ahora lo maneja utils-handler.js
+
+    renderUtilsTab_OLD() {
+        // DEPRECATED - ahora usa UtilsHandler.init()
+        // Método mantenido por compatibilidad, pero no se usa
         const container = document.getElementById('content-utils');
         if (!container) return;
 
@@ -120,177 +127,6 @@ export const TabsHandler = {
 
                 <!-- Accordions Menu -->
                 <div class="space-y-4">
-
-                    <!-- Countdown Accordion -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <button onclick="TabsHandler.toggleUtilSection('countdown')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl">⏳</span>
-                                <div class="text-left">
-                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Contador de Días</h3>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">¿Cuánto falta para tu aventura?</p>
-                                </div>
-                            </div>
-                            <svg id="countdown-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div id="countdown-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
-                            <div id="countdownSection"></div>
-                        </div>
-                    </div>
-
-                    <!-- Tip Calculator Accordion -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <button onclick="TabsHandler.toggleUtilSection('tips')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl">💴</span>
-                                <div class="text-left">
-                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Calculadora de Propinas</h3>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">Info importante sobre propinas en Japón</p>
-                                </div>
-                            </div>
-                            <svg id="tips-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div id="tips-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
-                            <div id="tipsSection"></div>
-                        </div>
-                    </div>
-
-                    <!-- Etiquette Guide Accordion -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <button onclick="TabsHandler.toggleUtilSection('etiquette')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl">🙇</span>
-                                <div class="text-left">
-                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Guía de Etiqueta</h3>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">Reglas de cortesía japonesa</p>
-                                </div>
-                            </div>
-                            <svg id="etiquette-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div id="etiquette-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
-                            <div id="etiquetteSection"></div>
-                        </div>
-                    </div>
-
-                    <!-- Name Generator Accordion -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <button onclick="TabsHandler.toggleUtilSection('namegen')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl">🏯</span>
-                                <div class="text-left">
-                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Tu Nombre en Japonés</h3>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">Convierte tu nombre a Katakana</p>
-                                </div>
-                            </div>
-                            <svg id="namegen-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div id="namegen-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
-                            <div id="namegenSection"></div>
-                        </div>
-                    </div>
-
-                    <!-- Size Converter Accordion -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <button onclick="TabsHandler.toggleUtilSection('sizes')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl">👔</span>
-                                <div class="text-left">
-                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Conversor de Tallas</h3>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">Equivalencias de ropa y zapatos</p>
-                                </div>
-                            </div>
-                            <svg id="sizes-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div id="sizes-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
-                            <div id="sizesSection"></div>
-                        </div>
-                    </div>
-
-                    <!-- Cultural Quiz Accordion -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <button onclick="TabsHandler.toggleUtilSection('quiz')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl">🎌</span>
-                                <div class="text-left">
-                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Quiz Cultural</h3>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">Pon a prueba tu conocimiento de Japón</p>
-                                </div>
-                            </div>
-                            <svg id="quiz-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div id="quiz-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
-                            <div id="quizSection"></div>
-                        </div>
-                    </div>
-
-                    <!-- Daily Phrases Accordion -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <button onclick="TabsHandler.toggleUtilSection('phrases')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl">🗣️</span>
-                                <div class="text-left">
-                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Frases Útiles</h3>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">Aprende japonés básico</p>
-                                </div>
-                            </div>
-                            <svg id="phrases-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div id="phrases-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
-                            <div id="phrasesSection"></div>
-                        </div>
-                    </div>
-
-                    <!-- Allergy Cards Accordion -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <button onclick="TabsHandler.toggleUtilSection('allergies')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl">⚠️</span>
-                                <div class="text-left">
-                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Tarjetas de Alergias</h3>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">Comunica restricciones alimentarias</p>
-                                </div>
-                            </div>
-                            <svg id="allergies-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div id="allergies-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
-                            <div id="allergiesSection"></div>
-                        </div>
-                    </div>
-
-                    <!-- Onsen Guide Accordion -->
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <button onclick="TabsHandler.toggleUtilSection('onsen')" class="w-full p-5 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
-                            <div class="flex items-center gap-3">
-                                <span class="text-3xl">♨️</span>
-                                <div class="text-left">
-                                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Guía de Onsen</h3>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">Cómo usar baños termales japoneses</p>
-                                </div>
-                            </div>
-                            <svg id="onsen-chevron" class="w-6 h-6 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div id="onsen-content" class="hidden p-6 pt-0 border-t border-gray-200 dark:border-gray-700">
-                            <div id="onsenSection"></div>
-                        </div>
-                    </div>
 
                     <!-- Budget Accordion -->
                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
@@ -490,86 +326,7 @@ export const TabsHandler = {
         AppUtils.setupCurrencyConverter();
         AppUtils.startClocks();
         AppUtils.loadWeatherData(); // ← NUEVO: Cargar clima en tiempo real
-    },
-
-    /**
-     * Toggle accordion sections in Utils tab
-     */
-    toggleUtilSection(sectionName) {
-        const content = document.getElementById(`${sectionName}-content`);
-        const chevron = document.getElementById(`${sectionName}-chevron`);
-
-        if (!content || !chevron) return;
-
-        const isHidden = content.classList.contains('hidden');
-
-        if (isHidden) {
-            // Abrir esta sección
-            content.classList.remove('hidden');
-            chevron.style.transform = 'rotate(180deg)';
-
-            // Inicializar nuevas secciones de JapanUtils
-            if (window.JapanUtils) {
-                if (sectionName === 'countdown') {
-                    document.getElementById('countdownSection').innerHTML = window.JapanUtils.renderCountdown();
-                    window.JapanUtils.updateCountdown();
-                }
-                if (sectionName === 'tips') {
-                    document.getElementById('tipsSection').innerHTML = window.JapanUtils.renderTipCalculator();
-                }
-                if (sectionName === 'etiquette') {
-                    document.getElementById('etiquetteSection').innerHTML = window.JapanUtils.renderEtiquetteGuide();
-                }
-                if (sectionName === 'namegen') {
-                    document.getElementById('namegenSection').innerHTML = window.JapanUtils.renderNameGenerator();
-                }
-                if (sectionName === 'sizes') {
-                    document.getElementById('sizesSection').innerHTML = window.JapanUtils.renderSizeConverter();
-                }
-                if (sectionName === 'quiz') {
-                    document.getElementById('quizSection').innerHTML = window.JapanUtils.renderCulturalQuiz();
-                    window.JapanUtils.startQuiz();
-                }
-                if (sectionName === 'phrases') {
-                    document.getElementById('phrasesSection').innerHTML = window.JapanUtils.renderDailyPhrases();
-                    window.JapanUtils.showDailyPhrases();
-                }
-                if (sectionName === 'allergies') {
-                    document.getElementById('allergiesSection').innerHTML = window.JapanUtils.renderAllergyCards();
-                }
-                if (sectionName === 'onsen') {
-                    document.getElementById('onsenSection').innerHTML = window.JapanUtils.renderOnsenGuide();
-                }
-            }
-
-            // Inicializar módulos existentes si es necesario
-            if (sectionName === 'budget') {
-                const tripId = window.currentTripId || localStorage.getItem('currentTripId');
-
-                // Inicializar BudgetTracker
-                if (window.BudgetTracker) {
-                    setTimeout(() => {
-                        window.BudgetTracker.initRealtimeSync();
-                        window.BudgetTracker.renderInTab();
-                    }, 100);
-                }
-
-                // Inicializar ExpenseSplitter
-                if (window.ExpenseSplitter && !window.ExpenseSplitter.currentTrip && tripId) {
-                    setTimeout(() => window.ExpenseSplitter.init(tripId), 150);
-                }
-            }
-
-            if (sectionName === 'reservations' && window.ReservationsManager && !window.ReservationsManager.currentTrip) {
-                const tripId = window.currentTripId || localStorage.getItem('currentTripId');
-                if (tripId) {
-                    setTimeout(() => window.ReservationsManager.init(tripId), 100);
-                }
-            }
-        } else {
-            // Cerrar esta sección
-            content.classList.add('hidden');
-            chevron.style.transform = 'rotate(0deg)';
-        }
     }
+
+    // NOTA: toggleUtilSection ahora lo maneja UtilsHandler.toggleSection
 };
