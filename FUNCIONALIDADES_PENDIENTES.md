@@ -1,10 +1,11 @@
 # 📋 Funcionalidades Pendientes - Japan Trip Planner
 
-## ✅ COMPLETADAS (23/49 = 47%)
+## ✅ COMPLETADAS (24/49 = 49%)
 **MUY FÁCILES (1-10):** Todas completadas ✅
 **FÁCILES (11-18):** Todas completadas excepto Playlist ✅
 **MEDIAS (20-22, 29):** Sistema de Logros, Desafíos Diarios, Votaciones, Diario ✅
 **MEDIAS-DIFÍCILES (33):** Memorias Compartidas ✅
+**EXTRA:** Sistema de Perfiles de Usuario ✅
 
 ### Desglose:
 1-10: ✅ Funcionalidades culturales básicas
@@ -21,6 +22,7 @@
 22. ✅ Sistema de Votaciones (Crear polls + votar + porcentajes + Firebase)
 29. ✅ Diario de Viaje Colaborativo (Entradas por fecha/usuario + likes + Firebase)
 33. ✅ Memorias Compartidas (Upload fotos + Storage + comentarios + likes + Firebase)
+**NEW:** ✅ Sistema de Perfiles (Foto, bio, país, ciudad favorita, estilo, stats completas)
 
 ---
 
