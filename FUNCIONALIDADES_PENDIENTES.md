@@ -1,11 +1,11 @@
 # 📋 Funcionalidades Pendientes - Japan Trip Planner
 
-## ✅ COMPLETADAS (25/49 = 51%)
+## ✅ COMPLETADAS (26/49 = 53%)
 **MUY FÁCILES (1-10):** Todas completadas ✅
 **FÁCILES (11-18):** Todas completadas excepto Playlist ✅
-**MEDIAS (20-22, 29):** Sistema de Logros, Desafíos Diarios, Votaciones, Diario ✅
+**MEDIAS (20-22, 29, 30):** Logros, Desafíos, Votaciones, Diario, Festivales ✅
 **MEDIAS-DIFÍCILES (32, 33):** Timeline Compartido, Memorias Compartidas ✅
-**EXTRAS:** Sistema de Perfiles + Menú Hamburguesa ✅
+**EXTRAS:** Perfiles + Menú Hamburguesa + Branding Japitin ✅
 
 ### Desglose:
 1-10: ✅ Funcionalidades culturales básicas
@@ -21,11 +21,13 @@
 21. ✅ Desafíos Diarios (10 tipos de retos + participantes + Firebase)
 22. ✅ Sistema de Votaciones (Crear polls + votar + porcentajes + Firebase)
 29. ✅ Diario de Viaje Colaborativo (Entradas por fecha/usuario + likes + Firebase)
+30. ✅ Festivales Locales (30+ matsuri por mes/ciudad + filtros + tipos + descripciones)
 32. ✅ Timeline Compartido (Feed de actividad en tiempo real + filtros + tracking automático)
 33. ✅ Memorias Compartidas (Upload fotos + Storage + comentarios + likes + Firebase)
 **EXTRAS:**
 - ✅ Sistema de Perfiles (Foto, bio, país, ciudad favorita, estilo, stats completas)
 - ✅ Menú Hamburguesa (Con perfil, dark mode toggle, configuración, logout)
+- ✅ Branding Japitin (Logo + Banner + Metadata + Header limpio)
 
 ---
 
@@ -33,7 +35,7 @@
 
 19. **Playlist de Viaje** - Lista embebida de Spotify/YouTube [SKIP por ahora]
 
-## 🟠 MEDIAS (Firebase + lógica moderada) - Pendientes (8/12)
+## 🟠 MEDIAS (Firebase + lógica moderada) - Pendientes (7/12)
 
 23. **Sistema de Encuestas** - Crear preguntas, recoger respuestas
 24. **Favoritos de Comida del Grupo** - Rating colaborativo de restaurantes
@@ -41,7 +43,6 @@
 26. **Historial de Gastos por Categoría** - Gráficos de gastos existentes
 27. **Alertas de Presupuesto** - Trigger cuando gastos > X% del budget
 28. **Modo Ahorro** - Filtrar/sugerir actividades gratuitas
-30. **Festivales Locales** - API o JSON estático de matsuri por fecha
 31. **Clima por Ciudad** - OpenWeather API para ciudades del itinerario
 
 ## 🔴 MEDIAS-DIFÍCILES (APIs complejas, lógica avanzada) - Pendientes (9/11)
