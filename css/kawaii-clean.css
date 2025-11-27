@@ -1,0 +1,532 @@
+/*
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *  🌸💖 JAPITIN - Kawaii Clean Design
+ *  Colores vibrantes, limpio, cute y energético
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ */
+
+/* ========================================
+   PALETA KAWAII VIBRANTE
+   ======================================== */
+
+:root {
+    /* === COLORES CUTE Y ENERGÉTICOS === */
+    --kawaii-pink: #FFB3D9;        /* Rosa chicle */
+    --kawaii-lavender: #D4BDFF;    /* Lavanda suave */
+    --kawaii-mint: #A8F5E5;        /* Menta fresca */
+    --kawaii-lemon: #FFF176;       /* Limón brillante */
+    --kawaii-peach: #FFCCB3;       /* Durazno */
+    --kawaii-sky: #B3E5FC;         /* Cielo */
+    --kawaii-lime: #CDDC39;        /* Lima vibrante */
+
+    /* Fondos y superficies */
+    --bg-pink: #FFF0F5;            /* Fondo rosa muy suave */
+    --bg-white: #FFFFFF;           /* Blanco puro */
+    --surface: #FFFBFE;            /* Superficie cremosa */
+
+    /* Textos */
+    --text-primary: #6B4E71;       /* Morado oscuro suave */
+    --text-secondary: #9575CD;     /* Lavanda medio */
+    --text-cute: #EC407A;          /* Rosa fuerte */
+
+    /* === SOMBRAS SUAVES === */
+    --shadow-cute: 0 4px 12px rgba(236, 64, 122, 0.12);
+    --shadow-float: 0 8px 20px rgba(236, 64, 122, 0.15);
+
+    /* === ESPACIADO === */
+    --space-xs: 8px;
+    --space-sm: 12px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+    --space-3xl: 64px;
+}
+
+/* ========================================
+   BODY - FONDO ROSA PASTEL COMPLETO
+   ======================================== */
+
+body {
+    background: linear-gradient(135deg, #FFE8F0 0%, #FFF0F5 50%, #FFE8F5 100%) !important;
+    font-family: 'Nunito', 'Quicksand', sans-serif !important;
+    color: var(--text-primary) !important;
+}
+
+/* ELIMINAR fondo oscuro */
+body::before,
+body::after {
+    display: none !important;
+}
+
+/* ========================================
+   HEADER - BANNER CENTRADO Y GRANDE
+   ======================================== */
+
+.japan-header {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: var(--space-xl) var(--space-lg) !important;
+    text-align: center !important;
+}
+
+.japan-header .max-w-7xl {
+    max-width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: var(--space-lg) !important;
+}
+
+/* Banner CENTRADO y GRANDE */
+.header-brand {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: var(--space-md) !important;
+    margin: 0 auto !important;
+    padding: var(--space-xl) !important;
+    background: var(--bg-white) !important;
+    border-radius: 24px !important;
+    box-shadow: var(--shadow-float) !important;
+    position: relative !important;
+    overflow: visible !important;
+    border: 4px solid var(--kawaii-pink) !important;
+}
+
+/* Decoraciones Kawaii - Dangos y Sakuras */
+.header-brand::before {
+    content: '🍡';
+    position: absolute;
+    top: -20px;
+    left: 20px;
+    font-size: 3rem;
+    animation: float 3s ease-in-out infinite;
+}
+
+.header-brand::after {
+    content: '🌸';
+    position: absolute;
+    top: -15px;
+    right: 20px;
+    font-size: 2.5rem;
+    animation: float 3.5s ease-in-out infinite;
+}
+
+/* Logo OCULTO o MUY PEQUEÑO */
+.header-icon {
+    display: none !important;
+}
+
+/* Banner GRANDE en el centro */
+.header-banner {
+    height: 80px !important;
+    width: auto !important;
+    filter: none !important;
+    margin: 0 auto !important;
+}
+
+/* Decoraciones adicionales alrededor del banner */
+.japan-header::before {
+    content: '🌸 🍡 ⭐ 🎀 🌸';
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.5rem;
+    opacity: 0.6;
+    letter-spacing: var(--space-lg);
+}
+
+/* ========================================
+   TÍTULO DEL VIAJE - Limpio y Simple
+   ======================================== */
+
+#currentTripHeader h1,
+.trip-title {
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    color: var(--text-cute) !important;
+    text-align: center !important;
+    margin: var(--space-lg) 0 !important;
+    background: none !important;
+    -webkit-text-fill-color: var(--text-cute) !important;
+}
+
+#currentTripHeader {
+    text-align: center !important;
+    background: var(--bg-white) !important;
+    padding: var(--space-lg) !important;
+    border-radius: 20px !important;
+    box-shadow: var(--shadow-cute) !important;
+    margin-bottom: var(--space-xl) !important;
+}
+
+/* ========================================
+   STATS CARDS - PEQUEÑOS COMO BLOCKS
+   ======================================== */
+
+.stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: var(--space-md) !important;
+    max-width: 900px !important;
+    margin: 0 auto var(--space-2xl) auto !important;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: var(--space-sm) !important;
+    }
+}
+
+/* Stats cards PEQUEÑAS como tu mockup */
+.stat-card-kawaii,
+.stat-card-japitin,
+[class*="stat-card"] {
+    background: var(--bg-white) !important;
+    border: none !important;
+    border-radius: 16px !important;
+    padding: var(--space-md) var(--space-sm) !important;
+    box-shadow: var(--shadow-cute) !important;
+    min-height: 90px !important;
+    max-height: 100px !important;
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Colores VIBRANTES por categoría */
+.stat-card-kawaii:nth-child(1),
+[class*="stat-card"]:nth-child(1) {
+    background: var(--kawaii-lime) !important;
+    color: #33691E !important;
+}
+
+.stat-card-kawaii:nth-child(2),
+[class*="stat-card"]:nth-child(2) {
+    background: var(--kawaii-lavender) !important;
+    color: #4A148C !important;
+}
+
+.stat-card-kawaii:nth-child(3),
+[class*="stat-card"]:nth-child(3) {
+    background: var(--kawaii-mint) !important;
+    color: #004D40 !important;
+}
+
+.stat-card-kawaii:nth-child(4),
+[class*="stat-card"]:nth-child(4) {
+    background: var(--kawaii-lemon) !important;
+    color: #F57F17 !important;
+}
+
+.stat-card-kawaii:hover {
+    transform: translateY(-4px) scale(1.02) !important;
+    box-shadow: var(--shadow-float) !important;
+}
+
+/* Valores PEQUEÑOS */
+.stat-value-kawaii,
+.stat-value {
+    font-size: 1.5rem !important;
+    font-weight: 900 !important;
+    margin: 4px 0 !important;
+    line-height: 1 !important;
+    background: none !important;
+    -webkit-text-fill-color: inherit !important;
+}
+
+/* Labels PEQUEÑOS */
+.stat-label-kawaii,
+.stat-label {
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Iconos MUY PEQUEÑOS o ninguno */
+.stat-icon-kawaii,
+.stat-card-kawaii .stat-icon {
+    font-size: 1.25rem !important;
+    margin-bottom: 2px !important;
+}
+
+/* ========================================
+   NAVEGACIÓN - Limpia y Cute
+   ======================================== */
+
+.japan-nav {
+    background: var(--bg-white) !important;
+    border: none !important;
+    box-shadow: var(--shadow-cute) !important;
+    border-radius: 20px !important;
+    margin: 0 var(--space-lg) var(--space-xl) !important;
+    padding: var(--space-sm) !important;
+}
+
+.tab-btn {
+    background: transparent !important;
+    color: var(--text-secondary) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: var(--space-sm) var(--space-md) !important;
+    font-weight: 700 !important;
+    transition: all 0.3s ease !important;
+}
+
+.tab-btn:hover {
+    background: var(--kawaii-pink) !important;
+    color: white !important;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, var(--kawaii-pink), var(--kawaii-lavender)) !important;
+    color: white !important;
+}
+
+/* ========================================
+   BOTONES - Sin Negro, Solo Colores Cute
+   ======================================== */
+
+.btn-kawaii,
+button:not(.tab-btn) {
+    background: var(--kawaii-pink) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 20px !important;
+    padding: var(--space-sm) var(--space-lg) !important;
+    font-weight: 700 !important;
+    box-shadow: var(--shadow-cute) !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-kawaii:hover,
+button:not(.tab-btn):hover {
+    background: var(--text-cute) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: var(--shadow-float) !important;
+}
+
+/* Botón SOS - Rosa intenso */
+button[data-modal="emergency"] {
+    background: var(--text-cute) !important;
+}
+
+/* Badge del usuario - Color pastel */
+.badge-kawaii-purple,
+[id*="userEmail"] {
+    background: var(--kawaii-lavender) !important;
+    color: #4A148C !important;
+    border: none !important;
+}
+
+/* ========================================
+   CARDS GENERALES - Blancas y Limpias
+   ======================================== */
+
+.kawaii-card,
+.card,
+.feature-card {
+    background: var(--bg-white) !important;
+    border: none !important;
+    border-radius: 20px !important;
+    padding: var(--space-lg) !important;
+    box-shadow: var(--shadow-cute) !important;
+}
+
+.kawaii-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: var(--shadow-float) !important;
+}
+
+/* ========================================
+   CONTENIDO PRINCIPAL - Espaciado
+   ======================================== */
+
+#main-content {
+    background: transparent !important;
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: var(--space-xl) var(--space-lg) !important;
+}
+
+.tab-content {
+    background: var(--bg-white) !important;
+    border-radius: 24px !important;
+    padding: var(--space-2xl) !important;
+    box-shadow: var(--shadow-cute) !important;
+    margin-bottom: var(--space-2xl) !important;
+}
+
+/* ========================================
+   OCULTAR ELEMENTOS OSCUROS/NEGROS
+   ======================================== */
+
+/* Quitar botones flotantes que añaden desorden */
+.floating-btn-container {
+    display: none !important;
+}
+
+/* Simplificar FAB */
+#fabContainer {
+    bottom: 2rem !important;
+    right: 2rem !important;
+}
+
+.fab-kawaii,
+#fab-menu-toggle {
+    background: var(--kawaii-pink) !important;
+    border: 4px solid white !important;
+    box-shadow: var(--shadow-float) !important;
+}
+
+/* ========================================
+   ANIMACIONES SUAVES
+   ======================================== */
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-10px) rotate(5deg);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   CONTROLES DEL HEADER - Simplificados
+   ======================================== */
+
+.header-controls,
+.hidden.lg\\:flex {
+    display: flex !important;
+    gap: var(--space-sm) !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+}
+
+/* ========================================
+   INPUTS - Colores Suaves
+   ======================================== */
+
+input, textarea, select {
+    background: var(--surface) !important;
+    border: 2px solid var(--kawaii-pink) !important;
+    border-radius: 12px !important;
+    padding: var(--space-sm) var(--space-md) !important;
+    color: var(--text-primary) !important;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none !important;
+    border-color: var(--text-cute) !important;
+    box-shadow: 0 0 0 3px rgba(236, 64, 122, 0.1) !important;
+}
+
+/* ========================================
+   BADGES - Colores Pastel
+   ======================================== */
+
+.badge-kawaii {
+    background: var(--kawaii-peach) !important;
+    color: #D84315 !important;
+    border: none !important;
+    padding: var(--space-xs) var(--space-md) !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+}
+
+/* ========================================
+   SCROLLBAR - Rosa Cute
+   ======================================== */
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-pink);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--kawaii-pink);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-cute);
+}
+
+/* ========================================
+   MOBILE RESPONSIVE
+   ======================================== */
+
+@media (max-width: 768px) {
+    .header-banner {
+        height: 60px !important;
+    }
+
+    .header-brand {
+        padding: var(--space-lg) !important;
+    }
+
+    .stat-card-kawaii {
+        min-height: 80px !important;
+    }
+
+    .stat-value-kawaii {
+        font-size: 1.25rem !important;
+    }
+}
+
+/* ========================================
+   QUITAR TODOS LOS FONDOS NEGROS
+   ======================================== */
+
+.bg-gray-800,
+.bg-gray-900,
+.dark\\:bg-gray-800,
+.dark\\:bg-gray-900,
+[class*="bg-black"],
+[class*="bg-gray-8"],
+[class*="bg-gray-9"] {
+    background: var(--bg-white) !important;
+    color: var(--text-primary) !important;
+}
+
+/* ========================================
+   ELIMINAR EFECTOS DARK MODE
+   ======================================== */
+
+.dark {
+    --bg-pink: #FFF0F5 !important;
+    --bg-white: #FFFFFF !important;
+    --text-primary: #6B4E71 !important;
+}
+
+/* Forzar modo claro */
+html.dark {
+    color-scheme: light !important;
+}
