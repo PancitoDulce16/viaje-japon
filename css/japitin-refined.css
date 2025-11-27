@@ -1,0 +1,618 @@
+/*
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *  💖 JAPITIN REFINED - Diseño Kawaii Perfeccionado
+ *  Ternura, Orden y Emoción por tu Viaje a Japón
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ */
+
+/* ========================================
+   GOOGLE FONTS - Tipografía Redondeada
+   ======================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&family=Quicksand:wght@400;500;600;700&family=Poppins:wght@400;600;700;800&display=swap');
+
+/* ========================================
+   PALETA DE COLORES REFINADA
+   ======================================== */
+
+:root {
+    /* === PALETA KAWAII ARMONIOSA === */
+    --rosado-pastel: #FADADD;
+    --rojo-cereza: #E63946;
+    --blanco-puro: #FFFFFF;
+    --verde-matcha: #A8D5BA;
+    --gris-claro: #F2F2F2;
+
+    /* Variantes adicionales */
+    --rosado-suave: #FFE4E9;
+    --rosado-medio: #FFB3C1;
+    --rojo-suave: #FF6B7A;
+    --verde-menta: #C8E6D0;
+    --gris-medio: #E0E0E0;
+    --gris-texto: #5A5A5A;
+
+    /* === TIPOGRAFÍA === */
+    --font-primary: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-headings: 'Poppins', 'Nunito', sans-serif;
+    --font-accent: 'Quicksand', sans-serif;
+
+    /* === SOMBRAS SUAVES === */
+    --shadow-soft: 0 4px 12px rgba(230, 57, 70, 0.08);
+    --shadow-medium: 0 8px 20px rgba(230, 57, 70, 0.12);
+    --shadow-hover: 0 12px 28px rgba(230, 57, 70, 0.16);
+
+    /* === BORDER RADIUS === */
+    --radius-sm: 12px;
+    --radius-md: 16px;
+    --radius-lg: 20px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+
+    /* === SPACING === */
+    --space-xs: 8px;
+    --space-sm: 12px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+
+    /* === TRANSICIONES === */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Dark mode - Mantener legibilidad */
+.dark {
+    --rosado-pastel: #4A3538;
+    --blanco-puro: #2A2A2A;
+    --gris-claro: #3A3A3A;
+    --gris-medio: #4A4A4A;
+    --gris-texto: #D0D0D0;
+}
+
+/* ========================================
+   TIPOGRAFÍA - Redondeada y Amigable
+   ======================================== */
+
+* {
+    font-family: var(--font-primary);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-headings);
+    font-weight: 700;
+    color: var(--gris-texto);
+    line-height: 1.3;
+}
+
+h1 {
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
+    font-weight: 800;
+    color: var(--rojo-cereza);
+}
+
+h2 {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-weight: 700;
+}
+
+h3 {
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    font-weight: 700;
+}
+
+p, span, div {
+    color: var(--gris-texto);
+    line-height: 1.7;
+}
+
+/* ========================================
+   HEADER/BANNER - Con Ilustraciones
+   ======================================== */
+
+.japan-header {
+    background: linear-gradient(135deg, var(--rosado-pastel) 0%, var(--rosado-suave) 100%) !important;
+    border-bottom: none !important;
+    padding: var(--space-lg) var(--space-xl) !important;
+    box-shadow: var(--shadow-soft) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Patrón de nubes japonés */
+.japan-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.4) 0%, transparent 40%),
+        radial-gradient(circle at 60% 20%, rgba(255, 255, 255, 0.3) 0%, transparent 35%),
+        radial-gradient(circle at 80% 60%, rgba(255, 255, 255, 0.35) 0%, transparent 38%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Contenido del header */
+.japan-header .max-w-7xl {
+    position: relative;
+    z-index: 1;
+}
+
+/* Banner con Torii y Dango integrados */
+.header-brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: var(--space-md) !important;
+}
+
+.header-icon {
+    width: 48px !important;
+    height: 48px !important;
+    background: var(--blanco-puro) !important;
+    padding: 8px !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-soft) !important;
+    border: 3px solid var(--rosado-medio) !important;
+    transition: var(--transition-bounce) !important;
+}
+
+.header-icon:hover {
+    transform: scale(1.05) rotate(-5deg) !important;
+    box-shadow: var(--shadow-hover) !important;
+}
+
+.header-banner {
+    height: 44px !important;
+    filter: drop-shadow(0 2px 8px rgba(230, 57, 70, 0.2)) !important;
+    transition: var(--transition-smooth) !important;
+}
+
+.header-banner:hover {
+    transform: scale(1.02) !important;
+    filter: drop-shadow(0 4px 12px rgba(230, 57, 70, 0.3)) !important;
+}
+
+/* ========================================
+   TÍTULO DEL VIAJE - Kawaii Simple
+   ======================================== */
+
+#currentTripHeader h1,
+.trip-title {
+    color: var(--rojo-cereza) !important;
+    font-family: var(--font-headings) !important;
+    font-weight: 800 !important;
+    font-size: clamp(1.5rem, 4vw, 2rem) !important;
+    text-shadow: none !important;
+    background: none !important;
+    -webkit-text-fill-color: var(--rojo-cereza) !important;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+/* Ícono kawaii junto al título */
+.trip-title::before {
+    content: '✈️';
+    font-size: 1.5em;
+    display: inline-block;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+/* ========================================
+   STATS CARDS - Compactos y en Fila
+   ======================================== */
+
+.stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+    gap: var(--space-md) !important;
+    margin-bottom: var(--space-xl) !important;
+}
+
+@media (min-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+
+.stat-card-kawaii,
+.stat-card-japitin,
+[class*="stat-card"] {
+    background: var(--blanco-puro) !important;
+    border: 2px solid var(--gris-medio) !important;
+    border-radius: var(--radius-md) !important;
+    padding: var(--space-md) !important;
+    box-shadow: var(--shadow-soft) !important;
+    transition: var(--transition-smooth) !important;
+    text-align: center !important;
+    min-height: 120px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.stat-card-kawaii:hover,
+.stat-card-japitin:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: var(--shadow-hover) !important;
+    border-color: var(--rosado-medio) !important;
+}
+
+/* Iconos pequeños en stats */
+.stat-icon-kawaii,
+.stat-card-kawaii .stat-icon {
+    font-size: 2rem !important;
+    margin-bottom: var(--space-xs) !important;
+    filter: none !important;
+}
+
+/* Valores de stats */
+.stat-value-kawaii,
+.stat-value {
+    font-family: var(--font-headings) !important;
+    font-size: 1.75rem !important;
+    font-weight: 800 !important;
+    color: var(--rojo-cereza) !important;
+    margin: var(--space-xs) 0 !important;
+    line-height: 1 !important;
+    background: none !important;
+    -webkit-text-fill-color: var(--rojo-cereza) !important;
+}
+
+/* Labels de stats */
+.stat-label-kawaii,
+.stat-label {
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    color: var(--gris-texto) !important;
+    text-transform: none !important;
+}
+
+/* Colores suaves por categoría */
+.stat-card-kawaii:nth-child(1) { border-color: #A8D5BA; } /* Verde matcha */
+.stat-card-kawaii:nth-child(2) { border-color: #FADADD; } /* Rosado */
+.stat-card-kawaii:nth-child(3) { border-color: #FFE4B5; } /* Melocotón */
+.stat-card-kawaii:nth-child(4) { border-color: #E0C3FC; } /* Lavanda */
+
+/* ========================================
+   BOTONES - Blanco/Rosado con Buen Contraste
+   ======================================== */
+
+.btn-kawaii,
+.btn-japitin,
+button:not(.tab-btn):not(.floating-btn):not([data-modal]) {
+    background: var(--blanco-puro) !important;
+    color: var(--rojo-cereza) !important;
+    border: 2px solid var(--rojo-cereza) !important;
+    border-radius: var(--radius-full) !important;
+    padding: var(--space-sm) var(--space-lg) !important;
+    font-family: var(--font-primary) !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    box-shadow: var(--shadow-soft) !important;
+    transition: var(--transition-smooth) !important;
+    cursor: pointer;
+}
+
+.btn-kawaii:hover,
+.btn-japitin:hover {
+    background: var(--rojo-cereza) !important;
+    color: var(--blanco-puro) !important;
+    box-shadow: var(--shadow-hover) !important;
+    transform: translateY(-2px) !important;
+}
+
+.btn-kawaii:active,
+.btn-japitin:active {
+    transform: translateY(0) !important;
+}
+
+/* Botón primario rosado */
+.btn-kawaii-primary,
+.btn-primary {
+    background: var(--rosado-medio) !important;
+    color: var(--blanco-puro) !important;
+    border-color: var(--rosado-medio) !important;
+}
+
+.btn-kawaii-primary:hover,
+.btn-primary:hover {
+    background: var(--rojo-cereza) !important;
+    border-color: var(--rojo-cereza) !important;
+}
+
+/* Botón secundario verde matcha */
+.btn-kawaii-secondary,
+.btn-secondary {
+    background: var(--blanco-puro) !important;
+    color: var(--verde-matcha) !important;
+    border-color: var(--verde-matcha) !important;
+}
+
+.btn-kawaii-secondary:hover,
+.btn-secondary:hover {
+    background: var(--verde-matcha) !important;
+    color: var(--blanco-puro) !important;
+}
+
+/* Botón SOS - Mantener identidad */
+button[data-modal="emergency"] {
+    background: var(--rojo-cereza) !important;
+    color: var(--blanco-puro) !important;
+    border: none !important;
+}
+
+button[data-modal="emergency"]:hover {
+    background: var(--rojo-suave) !important;
+    transform: scale(1.05) !important;
+}
+
+/* ========================================
+   NAVEGACIÓN TABS - Mejores Contrastes
+   ======================================== */
+
+.japan-nav {
+    background: var(--blanco-puro) !important;
+    border-bottom: 3px solid var(--gris-claro) !important;
+    box-shadow: var(--shadow-soft) !important;
+}
+
+.tab-btn {
+    background: transparent !important;
+    color: var(--gris-texto) !important;
+    border: none !important;
+    border-bottom: 3px solid transparent !important;
+    border-radius: 0 !important;
+    padding: var(--space-md) var(--space-lg) !important;
+    font-weight: 700 !important;
+    transition: var(--transition-smooth) !important;
+}
+
+.tab-btn:hover {
+    background: var(--rosado-suave) !important;
+    color: var(--rojo-cereza) !important;
+    border-bottom-color: var(--rosado-medio) !important;
+}
+
+.tab-btn.active {
+    background: var(--rosado-pastel) !important;
+    color: var(--rojo-cereza) !important;
+    border-bottom-color: var(--rojo-cereza) !important;
+}
+
+/* ========================================
+   CARDS GENERALES - Más Suaves
+   ======================================== */
+
+.kawaii-card,
+.card,
+.feature-card {
+    background: var(--blanco-puro) !important;
+    border: 2px solid var(--gris-claro) !important;
+    border-radius: var(--radius-lg) !important;
+    padding: var(--space-lg) !important;
+    box-shadow: var(--shadow-soft) !important;
+    transition: var(--transition-smooth) !important;
+}
+
+.kawaii-card:hover,
+.card:hover,
+.feature-card:hover {
+    border-color: var(--rosado-medio) !important;
+    box-shadow: var(--shadow-hover) !important;
+    transform: translateY(-4px) !important;
+}
+
+/* ========================================
+   BADGES - Colores Suaves
+   ======================================== */
+
+.badge-kawaii,
+.badge {
+    background: var(--rosado-pastel) !important;
+    color: var(--rojo-cereza) !important;
+    border: 2px solid var(--rosado-medio) !important;
+    padding: var(--space-xs) var(--space-md) !important;
+    border-radius: var(--radius-full) !important;
+    font-weight: 700 !important;
+    font-size: 0.875rem !important;
+}
+
+.badge-kawaii-purple,
+.badge-purple {
+    background: #F3E8FF !important;
+    color: #7C3AED !important;
+    border-color: #C4B5FD !important;
+}
+
+.badge-kawaii-mint,
+.badge-success {
+    background: var(--verde-menta) !important;
+    color: #059669 !important;
+    border-color: var(--verde-matcha) !important;
+}
+
+/* ========================================
+   INPUTS - Legibles y Suaves
+   ======================================== */
+
+.input-kawaii,
+input[type="text"],
+input[type="email"],
+input[type="number"],
+textarea,
+select {
+    background: var(--blanco-puro) !important;
+    border: 2px solid var(--gris-medio) !important;
+    border-radius: var(--radius-md) !important;
+    padding: var(--space-sm) var(--space-md) !important;
+    color: var(--gris-texto) !important;
+    font-family: var(--font-primary) !important;
+    transition: var(--transition-smooth) !important;
+}
+
+.input-kawaii:focus,
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none !important;
+    border-color: var(--rojo-cereza) !important;
+    box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.1) !important;
+}
+
+/* ========================================
+   MICRO-INTERACCIONES
+   ======================================== */
+
+/* Hover suave en elementos interactivos */
+a, button, .clickable {
+    transition: var(--transition-smooth);
+}
+
+a:hover, button:hover, .clickable:hover {
+    opacity: 0.9;
+}
+
+/* Animación de entrada suave */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Stagger para listas */
+.stagger-kawaii > * {
+    animation: fadeInUp 0.4s ease-out backwards;
+}
+
+.stagger-kawaii > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-kawaii > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-kawaii > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-kawaii > *:nth-child(4) { animation-delay: 0.2s; }
+
+/* Pulse suave en elementos importantes */
+@keyframes pulse-soft {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+}
+
+.pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* ========================================
+   ILUSTRACIONES Y DECORACIONES
+   ======================================== */
+
+/* Decoración kawaii en esquinas */
+.corner-decoration {
+    position: relative;
+}
+
+.corner-decoration::before {
+    content: '🌸';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    font-size: 1.5rem;
+    opacity: 0.6;
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Separador decorativo */
+.divider-kawaii {
+    height: 2px;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--rosado-medio),
+        transparent
+    );
+    margin: var(--space-xl) 0;
+}
+
+/* ========================================
+   SCROLLBAR REFINADA
+   ======================================== */
+
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--gris-claro);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--rosado-medio);
+    border: 2px solid var(--gris-claro);
+    border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--rojo-cereza);
+}
+
+/* ========================================
+   RESPONSIVE REFINEMENTS
+   ======================================== */
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: var(--space-sm) !important;
+    }
+
+    .stat-card-kawaii {
+        min-height: 100px !important;
+        padding: var(--space-sm) !important;
+    }
+
+    .stat-value-kawaii {
+        font-size: 1.5rem !important;
+    }
+
+    .stat-label-kawaii {
+        font-size: 0.75rem !important;
+    }
+}
+
+/* ========================================
+   BODY BACKGROUND - Suave y Limpio
+   ======================================== */
+
+body {
+    background: var(--gris-claro) !important;
+}
+
+/* Fondo con patrón kawaii sutil */
+body::before {
+    background-image:
+        radial-gradient(circle at 20% 50%, rgba(250, 218, 221, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(168, 213, 186, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(255, 228, 233, 0.12) 0%, transparent 50%) !important;
+}
+
+/* Eliminar partículas flotantes excesivas */
+body::after {
+    display: none !important;
+}
