@@ -414,7 +414,14 @@
             console.log('🔧 DEBUG FAB: fabContainer encontrado?', fabContainer ? 'SÍ' : 'NO');
             console.log('🔧 DEBUG FAB: fabToggle encontrado?', fabToggle ? 'SÍ' : 'NO');
             console.log('🔧 DEBUG FAB: fabItems count:', fabItems.length);
+            console.log('🔧 DEBUG FAB: fabOverlay encontrado?', fabOverlay ? 'SÍ' : 'NO');
             console.log('🔧 DEBUG FAB: Window width:', window.innerWidth);
+
+            // Listar todos los data-modal attributes
+            fabItems.forEach((item, idx) => {
+                const modalType = item.getAttribute('data-modal');
+                console.log(`🔧 DEBUG FAB: Item ${idx + 1} -> data-modal="${modalType}"`);
+            });
 
             // Verificar estilos computados del FAB
             if (fabToggle) {
@@ -473,9 +480,27 @@
                     e.stopPropagation();
                     const modalType = item.getAttribute('data-modal');
 
+                    console.log('🔧 DEBUG FAB CLICK: Item clickeado, modal type:', modalType);
+                    console.log('🔧 DEBUG FAB CLICK: window.DashboardApp existe?', !!window.DashboardApp);
+                    console.log('🔧 DEBUG FAB CLICK: openFloatingModal existe?', !!window.DashboardApp?.openFloatingModal);
+
                     // Usar la misma función que los floating buttons de desktop
                     if (window.DashboardApp?.openFloatingModal) {
+                        console.log('✅ DEBUG FAB CLICK: Llamando openFloatingModal con', modalType);
                         window.DashboardApp.openFloatingModal(modalType);
+                    } else {
+                        console.error('❌ DEBUG FAB CLICK: DashboardApp o openFloatingModal NO disponible');
+                        console.log('🔧 DEBUG FAB CLICK: Esperando 500ms y reintentando...');
+
+                        // Reintentar después de un delay
+                        setTimeout(() => {
+                            if (window.DashboardApp?.openFloatingModal) {
+                                console.log('✅ DEBUG FAB CLICK: Retry exitoso, abriendo modal');
+                                window.DashboardApp.openFloatingModal(modalType);
+                            } else {
+                                console.error('❌ DEBUG FAB CLICK: Retry falló, DashboardApp aún no disponible');
+                            }
+                        }, 500);
                     }
 
                     closeFabMenu();
@@ -539,12 +564,16 @@
             }
         }, 5000);
 
-        // Solo mostrar el botón si NO está instalada ya
-        if (!isStandalone) {
-            console.log('🔧 DEBUG PWA: App NO instalada, configurando botón install');
+        // Solo mostrar el botón si NO está instalada ya Y es móvil
+        const isMobile = window.innerWidth <= 768;
+        console.log('🔧 DEBUG PWA: isMobile?', isMobile, '(width:', window.innerWidth + ')');
+
+        if (!isStandalone && isMobile) {
+            console.log('🔧 DEBUG PWA: App NO instalada y es móvil, configurando botón install');
             installButton = document.createElement('button');
             installButton.id = 'pwa-install-button';
-            installButton.className = 'fixed bottom-4 left-4 md:bottom-8 md:left-8 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-full shadow-2xl hover:shadow-3xl transition-all transform hover:scale-105 flex items-center gap-2 font-bold z-50';
+            // Clase inicial: hidden, se mostrará cuando beforeinstallprompt se dispare o en iOS
+            installButton.className = 'fixed bottom-4 left-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-full shadow-2xl hover:shadow-3xl transition-all transform hover:scale-105 hidden items-center gap-2 font-bold z-50';
             installButton.innerHTML = `
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
@@ -558,7 +587,9 @@
                 console.log('📲 PWA: Evento beforeinstallprompt detectado (Android)');
                 e.preventDefault();
                 deferredPrompt = e;
-                installButton.style.display = 'flex';
+                // Mostrar botón
+                installButton.classList.remove('hidden');
+                installButton.classList.add('flex');
 
                 // Agregar bounce animation
                 setTimeout(() => {
@@ -574,7 +605,8 @@
                     console.log(`📲 PWA: Usuario ${outcome === 'accepted' ? 'aceptó' : 'rechazó'} la instalación`);
 
                     if (outcome === 'accepted') {
-                        installButton.style.display = 'none';
+                        installButton.classList.add('hidden');
+                        installButton.classList.remove('flex');
                     }
                     deferredPrompt = null;
                 } else {
@@ -585,7 +617,8 @@
 
             window.addEventListener('appinstalled', () => {
                 console.log('✅ PWA: App instalada exitosamente');
-                installButton.style.display = 'none';
+                installButton.classList.add('hidden');
+                installButton.classList.remove('flex');
                 if (window.Notifications) {
                     window.Notifications.success('🎉 ¡App instalada! Ahora puedes usarla offline.');
                 }
@@ -594,7 +627,8 @@
             // Para iOS - mostrar el botón siempre porque no hay beforeinstallprompt
             if (isIOS) {
                 setTimeout(() => {
-                    installButton.style.display = 'flex';
+                    installButton.classList.remove('hidden');
+                    installButton.classList.add('flex');
                     installButton.classList.add('animate-bounce');
                 }, 2000);
             }
@@ -693,7 +727,7 @@
     <button
         id="log-export-button"
         onclick="uploadLogs()"
-        style="position: fixed; bottom: 20px; left: 20px; z-index: 999998;
+        style="position: fixed; top: 20px; left: 20px; z-index: 999998;
                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                color: white; border: none; border-radius: 50%;
                width: 60px; height: 60px; font-size: 24px;
