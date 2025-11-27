@@ -114,6 +114,10 @@ export const UtilsHandler = {
     renderFunView() {
         return `
             <div class="space-y-4">
+                ${this.renderAccordion('achievements', '🏆', 'Sistema de Logros', 'Desbloquea badges completando actividades')}
+                ${this.renderAccordion('challenges', '⚡', 'Desafíos Diarios', 'Reto del día para todo el grupo')}
+                ${this.renderAccordion('polls', '🗳️', 'Sistema de Votaciones', 'Decide en grupo: restaurantes, actividades, etc.')}
+                ${this.renderAccordion('journal', '📔', 'Diario de Viaje', 'Comparte tus experiencias diarias')}
                 ${this.renderAccordion('quiz', '🎌', 'Quiz Cultural', 'Pon a prueba tu conocimiento')}
                 ${this.renderAccordion('namegen', '🏯', 'Tu Nombre en Japonés', 'Convierte a Katakana')}
                 ${this.renderAccordion('randomFood', '🍜', 'Restaurante Aleatorio', '¿Dónde comemos hoy?')}
@@ -243,6 +247,28 @@ export const UtilsHandler = {
                     break;
                 case 'tags':
                     sectionDiv.innerHTML = window.JapanUtils.renderFavoriteTags();
+                    break;
+            }
+        }
+
+        // SocialFeatures sections
+        if (window.SocialFeatures) {
+            switch(sectionName) {
+                case 'achievements':
+                    sectionDiv.innerHTML = window.SocialFeatures.renderAchievements();
+                    window.SocialFeatures.loadAchievements();
+                    break;
+                case 'challenges':
+                    sectionDiv.innerHTML = window.SocialFeatures.renderDailyChallenges();
+                    window.SocialFeatures.loadDailyChallenge();
+                    break;
+                case 'polls':
+                    sectionDiv.innerHTML = window.SocialFeatures.renderVotingSystem();
+                    window.SocialFeatures.loadPolls();
+                    break;
+                case 'journal':
+                    sectionDiv.innerHTML = window.SocialFeatures.renderJournal();
+                    window.SocialFeatures.loadJournal();
                     break;
             }
         }
