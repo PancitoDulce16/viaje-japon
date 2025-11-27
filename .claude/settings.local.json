@@ -14,7 +14,8 @@
       "Bash(dashboard.html.bak)",
       "Bash(npm uninstall:*)",
       "Bash(python3:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Skill(frontend-design)"
     ],
     "deny": [],
     "ask": []
