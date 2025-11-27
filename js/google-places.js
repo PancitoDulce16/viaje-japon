@@ -13,6 +13,11 @@ export const GooglePlacesAPI = {
    * Inicializar la API de Google Places
    */
   async init() {
+    // DESHABILITADO TEMPORALMENTE - No usar Google Places API por ahora
+    console.info('ℹ️ Google Places API deshabilitado temporalmente');
+    this.isLoaded = false;
+    return false;
+
     // Intentar cargar API key desde config o runtime
     this.apiKey = APP_CONFIG?.GOOGLE_PLACES_API_KEY ||
                   window.RUNTIME_API_KEYS?.googlePlaces?.apiKey ||

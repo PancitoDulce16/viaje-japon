@@ -609,8 +609,13 @@ export const MapHandler = {
 
         // Si hay actividades, centrar el mapa en ellas
         if (activityCount > 0 && this.itineraryMarkersLayer.getLayers().length > 0) {
-            const bounds = this.itineraryMarkersLayer.getBounds();
-            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+            try {
+                const group = L.featureGroup(this.itineraryMarkersLayer.getLayers());
+                const bounds = group.getBounds();
+                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+            } catch (error) {
+                console.warn('No se pudo centrar el mapa en las actividades:', error);
+            }
         }
     },
 
