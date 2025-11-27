@@ -114,6 +114,7 @@ export const UtilsHandler = {
     renderFunView() {
         return `
             <div class="space-y-4">
+                ${this.renderAccordion('photogallery', '📸', 'Memorias Compartidas', 'Galería de fotos con comentarios y likes')}
                 ${this.renderAccordion('achievements', '🏆', 'Sistema de Logros', 'Desbloquea badges completando actividades')}
                 ${this.renderAccordion('challenges', '⚡', 'Desafíos Diarios', 'Reto del día para todo el grupo')}
                 ${this.renderAccordion('polls', '🗳️', 'Sistema de Votaciones', 'Decide en grupo: restaurantes, actividades, etc.')}
@@ -271,6 +272,12 @@ export const UtilsHandler = {
                     window.SocialFeatures.loadJournal();
                     break;
             }
+        }
+
+        // PhotoGallery section
+        if (window.PhotoGallery && sectionName === 'photogallery') {
+            sectionDiv.innerHTML = window.PhotoGallery.render();
+            window.PhotoGallery.loadGallery();
         }
 
         // Currency converter (from utils.js)
