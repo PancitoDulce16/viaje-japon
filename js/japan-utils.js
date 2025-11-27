@@ -188,58 +188,121 @@ export const JapanUtils = {
     },
 
     generateJapaneseName() {
-        const katakanaMap = {
+        const name = document.getElementById('nameInput').value.toLowerCase().trim();
+        if (!name) {
+            alert('Por favor ingresa un nombre');
+            return;
+        }
+
+        // Mapa completo de conversión a Katakana
+        const conversions = {
+            // Vocales
             'a': 'ア', 'i': 'イ', 'u': 'ウ', 'e': 'エ', 'o': 'オ',
+
+            // K
             'ka': 'カ', 'ki': 'キ', 'ku': 'ク', 'ke': 'ケ', 'ko': 'コ',
-            'sa': 'サ', 'shi': 'シ', 'su': 'ス', 'se': 'セ', 'so': 'ソ',
-            'ta': 'タ', 'chi': 'チ', 'tsu': 'ツ', 'te': 'テ', 'to': 'ト',
-            'na': 'ナ', 'ni': 'ニ', 'nu': 'ヌ', 'ne': 'ネ', 'no': 'ノ',
-            'ha': 'ハ', 'hi': 'ヒ', 'fu': 'フ', 'he': 'ヘ', 'ho': 'ホ',
+
+            // S
+            'sa': 'サ', 'shi': 'シ', 'si': 'シ', 'su': 'ス', 'se': 'セ', 'so': 'ソ',
+
+            // T
+            'ta': 'タ', 'chi': 'チ', 'ti': 'チ', 'tsu': 'ツ', 'tu': 'ツ', 'te': 'テ', 'to': 'ト',
+
+            // N
+            'na': 'ナ', 'ni': 'ニ', 'nu': 'ヌ', 'ne': 'ネ', 'no': 'ノ', 'n': 'ン',
+
+            // H
+            'ha': 'ハ', 'hi': 'ヒ', 'fu': 'フ', 'hu': 'フ', 'he': 'ヘ', 'ho': 'ホ',
+
+            // M
             'ma': 'マ', 'mi': 'ミ', 'mu': 'ム', 'me': 'メ', 'mo': 'モ',
+
+            // Y
             'ya': 'ヤ', 'yu': 'ユ', 'yo': 'ヨ',
+
+            // R/L (en japonés suenan igual)
             'ra': 'ラ', 'ri': 'リ', 'ru': 'ル', 're': 'レ', 'ro': 'ロ',
-            'wa': 'ワ', 'wo': 'ヲ', 'n': 'ン',
+            'la': 'ラ', 'li': 'リ', 'lu': 'ル', 'le': 'レ', 'lo': 'ロ',
+
+            // W
+            'wa': 'ワ', 'wi': 'ウィ', 'we': 'ウェ', 'wo': 'ヲ',
+
+            // G
             'ga': 'ガ', 'gi': 'ギ', 'gu': 'グ', 'ge': 'ゲ', 'go': 'ゴ',
-            'za': 'ザ', 'ji': 'ジ', 'zu': 'ズ', 'ze': 'ゼ', 'zo': 'ゾ',
+
+            // Z
+            'za': 'ザ', 'ji': 'ジ', 'zi': 'ジ', 'zu': 'ズ', 'ze': 'ゼ', 'zo': 'ゾ',
+
+            // D
             'da': 'ダ', 'di': 'ヂ', 'du': 'ヅ', 'de': 'デ', 'do': 'ド',
+
+            // B
             'ba': 'バ', 'bi': 'ビ', 'bu': 'ブ', 'be': 'ベ', 'bo': 'ボ',
-            'pa': 'パ', 'pi': 'ピ', 'pu': 'プ', 'pe': 'ペ', 'po': 'ポ'
+
+            // P
+            'pa': 'パ', 'pi': 'ピ', 'pu': 'プ', 'pe': 'ペ', 'po': 'ポ',
+
+            // V (aproximación con B)
+            'va': 'ヴァ', 'vi': 'ヴィ', 'vu': 'ヴ', 've': 'ヴェ', 'vo': 'ヴォ',
+
+            // Combinaciones especiales
+            'kya': 'キャ', 'kyu': 'キュ', 'kyo': 'キョ',
+            'sha': 'シャ', 'shu': 'シュ', 'sho': 'ショ',
+            'cha': 'チャ', 'chu': 'チュ', 'cho': 'チョ',
+            'nya': 'ニャ', 'nyu': 'ニュ', 'nyo': 'ニョ',
+            'hya': 'ヒャ', 'hyu': 'ヒュ', 'hyo': 'ヒョ',
+            'mya': 'ミャ', 'myu': 'ミュ', 'myo': 'ミョ',
+            'rya': 'リャ', 'ryu': 'リュ', 'ryo': 'リョ',
+            'gya': 'ギャ', 'gyu': 'ギュ', 'gyo': 'ギョ',
+            'ja': 'ジャ', 'ju': 'ジュ', 'jo': 'ジョ',
+            'bya': 'ビャ', 'byu': 'ビュ', 'byo': 'ビョ',
+            'pya': 'ピャ', 'pyu': 'ピュ', 'pyo': 'ピョ',
+
+            // Consonantes dobles
+            'kk': 'ッ', 'ss': 'ッ', 'tt': 'ッ', 'pp': 'ッ',
+
+            // Letras individuales que necesitan vocal
+            'b': 'ブ', 'c': 'ク', 'd': 'ド', 'f': 'フ', 'g': 'グ',
+            'h': 'フ', 'j': 'ジ', 'k': 'ク', 'l': 'ル', 'm': 'ム',
+            'p': 'プ', 'q': 'ク', 'r': 'ル', 's': 'ス', 't': 'ト',
+            'v': 'ヴ', 'w': 'ウ', 'x': 'クス', 'y': 'イ', 'z': 'ズ'
         };
 
-        const name = document.getElementById('nameInput').value.toLowerCase().trim();
-        if (!name) return;
-
-        // Conversión simplificada
         let result = '';
         let i = 0;
+
         while (i < name.length) {
             let found = false;
-            // Intentar coincidencia de 3 caracteres
-            if (i + 2 < name.length) {
-                const three = name.substring(i, i + 3);
-                if (katakanaMap[three]) {
-                    result += katakanaMap[three];
+
+            // Intentar con 3 caracteres
+            if (i + 3 <= name.length) {
+                const substr3 = name.substring(i, i + 3);
+                if (conversions[substr3]) {
+                    result += conversions[substr3];
                     i += 3;
                     found = true;
                 }
             }
-            // Intentar coincidencia de 2 caracteres
-            if (!found && i + 1 < name.length) {
-                const two = name.substring(i, i + 2);
-                if (katakanaMap[two]) {
-                    result += katakanaMap[two];
+
+            // Intentar con 2 caracteres
+            if (!found && i + 2 <= name.length) {
+                const substr2 = name.substring(i, i + 2);
+                if (conversions[substr2]) {
+                    result += conversions[substr2];
                     i += 2;
                     found = true;
                 }
             }
-            // Intentar coincidencia de 1 caracter
+
+            // Intentar con 1 caracter
             if (!found) {
-                const one = name[i];
-                if (katakanaMap[one]) {
-                    result += katakanaMap[one];
+                const char = name[i];
+                if (conversions[char]) {
+                    result += conversions[char];
+                } else if (char === ' ' || char === '-') {
+                    result += '・'; // Separador japonés
                 } else {
-                    // Si no hay coincidencia, usar el carácter original
-                    result += one.toUpperCase();
+                    result += char.toUpperCase(); // Dejar como está si no se puede convertir
                 }
                 i++;
             }
