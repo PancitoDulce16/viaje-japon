@@ -404,12 +404,39 @@
     <script>
         // FAB Menu para móvil
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('🔧 DEBUG FAB: Iniciando script FAB menu');
+
+            const fabContainer = document.getElementById('fabContainer');
             const fabToggle = document.getElementById('fab-menu-toggle');
             const fabItems = document.querySelectorAll('.fab-menu-item');
             const fabOverlay = document.getElementById('fabOverlay');
+
+            console.log('🔧 DEBUG FAB: fabContainer encontrado?', fabContainer ? 'SÍ' : 'NO');
+            console.log('🔧 DEBUG FAB: fabToggle encontrado?', fabToggle ? 'SÍ' : 'NO');
+            console.log('🔧 DEBUG FAB: fabItems count:', fabItems.length);
+            console.log('🔧 DEBUG FAB: Window width:', window.innerWidth);
+
+            // Verificar estilos computados del FAB
+            if (fabToggle) {
+                const styles = window.getComputedStyle(fabToggle);
+                console.log('🔧 DEBUG FAB: display:', styles.display);
+                console.log('🔧 DEBUG FAB: position:', styles.position);
+                console.log('🔧 DEBUG FAB: bottom:', styles.bottom);
+                console.log('🔧 DEBUG FAB: right:', styles.right);
+                console.log('🔧 DEBUG FAB: z-index:', styles.zIndex);
+            }
+
+            if (fabContainer) {
+                const containerStyles = window.getComputedStyle(fabContainer);
+                console.log('🔧 DEBUG FAB CONTAINER: display:', containerStyles.display);
+            }
+
             let isOpen = false;
 
-            if (!fabToggle) return;
+            if (!fabToggle) {
+                console.error('❌ DEBUG FAB: fabToggle NO encontrado!');
+                return;
+            }
 
             function toggleFabMenu() {
                 isOpen = !isOpen;
@@ -468,11 +495,17 @@
 
     <!-- 📱 PWA Service Worker -->
     <script>
+        console.log('🔧 DEBUG PWA: Iniciando configuración PWA');
+        console.log('🔧 DEBUG PWA: Service Worker soportado?', 'serviceWorker' in navigator);
+        console.log('🔧 DEBUG PWA: URL actual:', window.location.href);
+        console.log('🔧 DEBUG PWA: Protocol:', window.location.protocol);
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./service-worker.js')
                     .then(registration => {
                         console.log('✅ PWA: Service Worker registrado:', registration.scope);
+                        console.log('🔧 DEBUG PWA: Registration state:', registration.active?.state);
                     })
                     .catch(error => {
                         console.error('❌ PWA: Error al registrar Service Worker:', error);
@@ -486,10 +519,29 @@
 
         // Detectar si es iOS
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isAndroid = /Android/.test(navigator.userAgent);
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+
+        console.log('🔧 DEBUG PWA: isIOS?', isIOS);
+        console.log('🔧 DEBUG PWA: isAndroid?', isAndroid);
+        console.log('🔧 DEBUG PWA: isStandalone?', isStandalone);
+        console.log('🔧 DEBUG PWA: User Agent:', navigator.userAgent);
+
+        // Timeout para verificar si beforeinstallprompt NO se dispara
+        setTimeout(() => {
+            if (!deferredPrompt && !isIOS && !isStandalone) {
+                console.warn('⚠️ DEBUG PWA: beforeinstallprompt NO se disparó después de 5 segundos');
+                console.warn('⚠️ DEBUG PWA: Posibles razones:');
+                console.warn('  1. La app ya está instalada');
+                console.warn('  2. No cumple criterios PWA (manifest, service worker, HTTPS, icons)');
+                console.warn('  3. El usuario ya rechazó la instalación anteriormente');
+                console.warn('  4. Chrome no reconoce el manifest.json correctamente');
+            }
+        }, 5000);
 
         // Solo mostrar el botón si NO está instalada ya
         if (!isStandalone) {
+            console.log('🔧 DEBUG PWA: App NO instalada, configurando botón install');
             installButton = document.createElement('button');
             installButton.id = 'pwa-install-button';
             installButton.className = 'fixed bottom-4 left-4 md:bottom-8 md:left-8 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-full shadow-2xl hover:shadow-3xl transition-all transform hover:scale-105 flex items-center gap-2 font-bold z-50';
@@ -502,6 +554,7 @@
 
             // Para Android Chrome - usar el evento nativo
             window.addEventListener('beforeinstallprompt', (e) => {
+                console.log('✅ DEBUG PWA: ¡beforeinstallprompt DISPARADO! Chrome reconoce la app como instalable');
                 console.log('📲 PWA: Evento beforeinstallprompt detectado (Android)');
                 e.preventDefault();
                 deferredPrompt = e;
@@ -640,7 +693,7 @@
     <button
         id="log-export-button"
         onclick="uploadLogs()"
-        style="position: fixed; bottom: 20px; right: 20px; z-index: 999998;
+        style="position: fixed; bottom: 20px; left: 20px; z-index: 999998;
                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                color: white; border: none; border-radius: 50%;
                width: 60px; height: 60px; font-size: 24px;
