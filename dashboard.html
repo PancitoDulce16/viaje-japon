@@ -54,6 +54,7 @@
     <link rel="stylesheet" href="/css/ui-improvements.css">
     <link rel="stylesheet" href="/css/visual-redesign.css">
     <link rel="stylesheet" href="/css/japitin-identity.css">
+    <link rel="stylesheet" href="/css/kawaii-design.css">
 
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/png" href="/images/icons/icon-192.png">
@@ -62,7 +63,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="./images/icons/icon-192.png">
 </head>
-<body class="crt-effect">
+<body>
     <!-- APP DASHBOARD -->
     <div id="appDashboard">
         <!-- Botones Flotantes - Mejorado espaciado -->
@@ -118,49 +119,49 @@
             </button>
         </div>
 
-        <!-- Header Mejorado con más espacio -->
-        <header class="japan-header text-white shadow-lg sticky top-0 z-40">
-            <div class="max-w-7xl mx-auto px-6 py-4">
-                <!-- Primera fila: Logo y controles principales -->
-                <div class="flex justify-between items-center">
-                    <!-- Logo Japitin -->
-                    <div class="flex items-center">
-                        <a href="/dashboard.html" class="flex items-center gap-3 hover:opacity-90 transition">
-                            <img src="/images/icons/japitin%20logo.png" alt="Japitin Logo" class="h-10 md:h-12">
-                            <img src="/images/icons/japitin%20banner.png" alt="Japitin" class="hidden sm:block h-8 md:h-10">
+        <!-- Header Kawaii con Banner Prominente -->
+        <header class="japan-header sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-6 py-6">
+                <!-- Fila Principal: Logo como Favicon + Banner Grande -->
+                <div class="flex justify-between items-center mb-4">
+                    <!-- Branding: Logo pequeño + Banner prominente -->
+                    <div class="header-brand">
+                        <a href="/dashboard.html" class="flex items-center gap-4 hover:opacity-90 transition">
+                            <!-- Logo pequeño como favicon -->
+                            <img src="/images/icons/japitin%20logo.png" alt="Japitin" class="header-icon">
+                            <!-- Banner GRANDE y prominente -->
+                            <img src="/images/icons/japitin%20banner.png" alt="Japitin - Tu Compañero de Viaje" class="header-banner" style="height: 56px;">
                         </a>
                     </div>
 
-                    <!-- Controles Desktop con mejor espaciado -->
-                    <div class="hidden lg:flex items-center gap-4">
-                        <!-- User info con más padding -->
-                        <div class="flex items-center gap-3 bg-white/10 px-4 py-2.5 rounded-xl backdrop-blur-sm">
+                    <!-- Controles Desktop -->
+                    <div class="hidden lg:flex items-center gap-3">
+                        <!-- User info kawaii -->
+                        <div class="badge-kawaii badge-kawaii-purple" style="padding: 0.75rem 1.25rem;">
                             <i class="fas fa-user"></i>
                             <span id="userEmailDisplay" class="font-medium"></span>
                         </div>
 
-                        <!-- Divisor visual -->
-                        <div class="h-8 w-px bg-white/20"></div>
+                        <!-- Botones kawaii -->
+                        <button
+                            id="enableNotificationsBtn"
+                            class="btn-kawaii btn-kawaii-sm btn-kawaii-outline"
+                            aria-label="Notificaciones"
+                            title="Notificaciones"
+                            style="background: white; color: #FFB3D9; border-color: #FFB3D9;"
+                        >
+                            <i class="fas fa-bell"></i>
+                        </button>
 
-                        <!-- Botones de acción simplificados -->
-                        <div class="flex items-center gap-3">
-                            <button
-                                id="enableNotificationsBtn"
-                                class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all hover:scale-105"
-                                aria-label="Notificaciones"
-                                title="Notificaciones"
-                            >
-                                <i class="fas fa-bell text-lg"></i>
-                            </button>
-
-                            <button
-                                data-modal="emergency"
-                                class="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 transition-all hover:scale-105 font-semibold shadow-md"
-                                aria-label="Emergencias"
-                            >
-                                <i class="fas fa-exclamation-triangle mr-2"></i>SOS
-                            </button>
-                        </div>
+                        <button
+                            data-modal="emergency"
+                            class="btn-kawaii btn-kawaii-sm"
+                            aria-label="Emergencias"
+                            style="background: linear-gradient(135deg, #FF9999 0%, #FF6B6B 100%);"
+                        >
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>SOS</span>
+                        </button>
                     </div>
 
                     <!-- Menú Hamburguesa Mobile/Tablet -->
