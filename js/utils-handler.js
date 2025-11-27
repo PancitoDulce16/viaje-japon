@@ -82,6 +82,7 @@ export const UtilsHandler = {
     renderCulturalView() {
         return `
             <div class="space-y-4">
+                ${this.renderAccordion('festivals', '🎊', 'Festivales Locales', 'Matsuri y eventos por mes y ciudad')}
                 ${this.renderAccordion('etiquette', '🙇', 'Guía de Etiqueta', 'Reglas de cortesía japonesa')}
                 ${this.renderAccordion('phrases', '🗣️', 'Frases Útiles', 'Aprende japonés básico')}
                 ${this.renderAccordion('onsen', '♨️', 'Guía de Onsen', 'Cómo usar baños termales')}
@@ -186,6 +187,11 @@ export const UtilsHandler = {
     loadSectionContent(sectionName) {
         const sectionDiv = document.getElementById(`${sectionName}Section`);
         if (!sectionDiv) return;
+
+        // Festivals section
+        if (window.Festivals && sectionName === 'festivals') {
+            sectionDiv.innerHTML = window.Festivals.render();
+        }
 
         // JapanUtils sections
         if (window.JapanUtils) {
