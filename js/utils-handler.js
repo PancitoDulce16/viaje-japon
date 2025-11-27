@@ -97,6 +97,7 @@ export const UtilsHandler = {
     renderPracticalView() {
         return `
             <div class="space-y-4">
+                ${this.renderAccordion('profile', '👤', 'Mi Perfil', 'Foto de perfil, bio y estadísticas del viaje')}
                 ${this.renderAccordion('countdown', '⏳', 'Contador de Días', '¿Cuánto falta para tu aventura?')}
                 ${this.renderAccordion('currency', '💸', 'Conversor de Moneda', 'JPY ↔ USD en tiempo real')}
                 ${this.renderAccordion('timezone', '🕐', 'Zona Horaria', 'Hora en Japón vs tu país')}
@@ -278,6 +279,12 @@ export const UtilsHandler = {
         if (window.PhotoGallery && sectionName === 'photogallery') {
             sectionDiv.innerHTML = window.PhotoGallery.render();
             window.PhotoGallery.loadGallery();
+        }
+
+        // UserProfile section
+        if (window.UserProfile && sectionName === 'profile') {
+            sectionDiv.innerHTML = window.UserProfile.render();
+            window.UserProfile.loadProfile();
         }
 
         // Currency converter (from utils.js)
