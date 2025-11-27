@@ -117,8 +117,13 @@ export const UtilsHandler = {
                 ${this.renderAccordion('quiz', '🎌', 'Quiz Cultural', 'Pon a prueba tu conocimiento')}
                 ${this.renderAccordion('namegen', '🏯', 'Tu Nombre en Japonés', 'Convierte a Katakana')}
                 ${this.renderAccordion('randomFood', '🍜', 'Restaurante Aleatorio', '¿Dónde comemos hoy?')}
+                ${this.renderAccordion('foodDict', '📖', 'Diccionario de Comida', 'Nombres en japonés con fotos')}
                 ${this.renderAccordion('foodTracker', '🍱', 'Rastreador de Comidas', 'Marca las comidas que probaste')}
                 ${this.renderAccordion('bingo', '🎯', 'Bingo de Viaje', 'Completa experiencias típicas')}
+                ${this.renderAccordion('stamps', '🎫', 'Colección de Sellos', 'Sella cada lugar que visitas')}
+                ${this.renderAccordion('counter', '📊', 'Contador de Experiencias', 'Estadísticas de tu viaje')}
+                ${this.renderAccordion('streaks', '🔥', 'Racha de Actividades', 'Mantén tu racha diaria')}
+                ${this.renderAccordion('tags', '🏷️', 'Tags de Favoritos', 'Organiza lugares guardados')}
             </div>
         `;
     },
@@ -219,6 +224,24 @@ export const UtilsHandler = {
                 case 'bingo':
                     sectionDiv.innerHTML = window.JapanUtils.renderTravelBingo();
                     window.JapanUtils.loadBingo();
+                    break;
+                case 'foodDict':
+                    sectionDiv.innerHTML = window.JapanUtils.renderFoodDictionary();
+                    break;
+                case 'stamps':
+                    sectionDiv.innerHTML = window.JapanUtils.renderStampCollection();
+                    window.JapanUtils.loadStamps();
+                    break;
+                case 'counter':
+                    sectionDiv.innerHTML = window.JapanUtils.renderExperienceCounter();
+                    window.JapanUtils.refreshExperienceCounter();
+                    break;
+                case 'streaks':
+                    sectionDiv.innerHTML = window.JapanUtils.renderActivityStreak();
+                    window.JapanUtils.loadStreaks();
+                    break;
+                case 'tags':
+                    sectionDiv.innerHTML = window.JapanUtils.renderFavoriteTags();
                     break;
             }
         }

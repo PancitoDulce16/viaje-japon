@@ -892,6 +892,352 @@ export const JapanUtils = {
         if (countEl) countEl.textContent = completedItems.length;
     },
 
+    // 14. DICCIONARIO VISUAL DE COMIDA
+    renderFoodDictionary() {
+        return `
+            <div class="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-xl p-6 border-l-4 border-amber-500">
+                <h4 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                    📖 Diccionario Visual de Comida Japonesa
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Guía visual con nombres en japonés y español</p>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    ${this.foodDictionary.map(food => `
+                        <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-md hover:shadow-lg transition">
+                            <div class="text-5xl text-center mb-2">${food.emoji}</div>
+                            <div class="text-center">
+                                <p class="font-bold text-gray-800 dark:text-white text-sm mb-1">${food.nameEs}</p>
+                                <p class="text-lg text-gray-700 dark:text-gray-300 mb-1">${food.nameJa}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 italic">${food.romaji}</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-300 mt-2">${food.description}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    },
+
+    foodDictionary: [
+        { emoji: '🍜', nameEs: 'Ramen', nameJa: 'ラーメン', romaji: 'Rāmen', description: 'Sopa de fideos con caldo' },
+        { emoji: '🍣', nameEs: 'Sushi', nameJa: '寿司', romaji: 'Sushi', description: 'Arroz con pescado crudo' },
+        { emoji: '🍱', nameEs: 'Bento', nameJa: '弁当', romaji: 'Bentō', description: 'Caja de comida variada' },
+        { emoji: '🍤', nameEs: 'Tempura', nameJa: '天ぷら', romaji: 'Tempura', description: 'Mariscos/vegetales fritos' },
+        { emoji: '🥟', nameEs: 'Gyoza', nameJa: '餃子', romaji: 'Gyōza', description: 'Empanadillas japonesas' },
+        { emoji: '🍙', nameEs: 'Onigiri', nameJa: 'おにぎり', romaji: 'Onigiri', description: 'Bola de arroz rellena' },
+        { emoji: '🍛', nameEs: 'Curry', nameJa: 'カレー', romaji: 'Karē', description: 'Curry japonés con arroz' },
+        { emoji: '🥩', nameEs: 'Tonkatsu', nameJa: 'とんかつ', romaji: 'Tonkatsu', description: 'Chuleta de cerdo frita' },
+        { emoji: '🐙', nameEs: 'Takoyaki', nameJa: 'たこ焼き', romaji: 'Takoyaki', description: 'Bolitas de pulpo' },
+        { emoji: '🥞', nameEs: 'Okonomiyaki', nameJa: 'お好み焼き', romaji: 'Okonomiyaki', description: 'Panqueque japonés' },
+        { emoji: '🍗', nameEs: 'Yakitori', nameJa: '焼き鳥', romaji: 'Yakitori', description: 'Brochetas de pollo' },
+        { emoji: '🍵', nameEs: 'Matcha', nameJa: '抹茶', romaji: 'Matcha', description: 'Té verde en polvo' },
+        { emoji: '🍡', nameEs: 'Mochi', nameJa: '餅', romaji: 'Mochi', description: 'Pastel de arroz dulce' },
+        { emoji: '🍶', nameEs: 'Sake', nameJa: '日本酒', romaji: 'Nihonshu', description: 'Vino de arroz' },
+        { emoji: '🍚', nameEs: 'Donburi', nameJa: '丼', romaji: 'Donburi', description: 'Bowl de arroz con topping' },
+        { emoji: '🥘', nameEs: 'Nabemono', nameJa: '鍋物', romaji: 'Nabemono', description: 'Guiso en olla caliente' }
+    ],
+
+    // 15. CONTADOR DE EXPERIENCIAS
+    renderExperienceCounter() {
+        return `
+            <div class="bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 rounded-xl p-6 border-l-4 border-green-500">
+                <h4 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                    📊 Contador de Experiencias
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Resumen de tu viaje hasta ahora</p>
+
+                <div id="experienceStats" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+
+                <button onclick="JapanUtils.refreshExperienceCounter()" class="mt-4 w-full bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg font-bold transition">
+                    🔄 Actualizar Estadísticas
+                </button>
+            </div>
+        `;
+    },
+
+    refreshExperienceCounter() {
+        const trackedFoods = JSON.parse(localStorage.getItem('trackedFoods') || '[]');
+        const bingoCompleted = JSON.parse(localStorage.getItem('bingoCompleted') || '[]');
+        const visitedPlaces = JSON.parse(localStorage.getItem('visitedPlaces') || '[]');
+        const collectedStamps = JSON.parse(localStorage.getItem('stamps') || '[]');
+
+        const stats = [
+            { icon: '🍱', label: 'Comidas Probadas', value: trackedFoods.length, total: this.foods.length, color: 'pink' },
+            { icon: '🎯', label: 'Experiencias Bingo', value: bingoCompleted.length, total: 16, color: 'purple' },
+            { icon: '📍', label: 'Lugares Visitados', value: visitedPlaces.length, total: '∞', color: 'blue' },
+            { icon: '🎫', label: 'Sellos Colectados', value: collectedStamps.length, total: '∞', color: 'orange' }
+        ];
+
+        const statsDiv = document.getElementById('experienceStats');
+        if (statsDiv) {
+            statsDiv.innerHTML = stats.map(stat => `
+                <div class="bg-white dark:bg-gray-700 rounded-lg p-4 text-center shadow-md">
+                    <div class="text-4xl mb-2">${stat.icon}</div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">${stat.label}</p>
+                    <p class="text-3xl font-bold text-${stat.color}-600 dark:text-${stat.color}-400">
+                        ${stat.value}
+                    </p>
+                    ${stat.total !== '∞' ? `<p class="text-xs text-gray-500 dark:text-gray-400">de ${stat.total}</p>` : ''}
+                </div>
+            `).join('');
+        }
+    },
+
+    // 16. MÁQUINA DE SELLOS VIRTUAL
+    renderStampCollection() {
+        return `
+            <div class="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl p-6 border-l-4 border-red-500">
+                <h4 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                    🎫 Máquina de Sellos Virtual
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Colecciona sellos de lugares que visitas (como en Japón)</p>
+
+                <div class="mb-4 flex gap-2">
+                    <input
+                        type="text"
+                        id="stampPlaceName"
+                        placeholder="Nombre del lugar"
+                        class="flex-1 p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    >
+                    <button onclick="JapanUtils.addStamp()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-bold transition">
+                        ➕ Agregar
+                    </button>
+                </div>
+
+                <div id="stampCollection" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+
+                <div class="mt-4 p-3 bg-gradient-to-r from-red-100 to-orange-100 dark:from-red-900/40 dark:to-orange-900/40 rounded-lg text-center">
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Total de sellos:</p>
+                    <p class="text-3xl font-bold text-red-600 dark:text-red-400"><span id="stampCount">0</span></p>
+                </div>
+            </div>
+        `;
+    },
+
+    stampEmojis: ['⛩️', '🗻', '🏯', '🌸', '🎋', '🎎', '🏮', '🎌', '🗼', '⛰️', '🌊', '🦌', '🐟', '🎴', '🥋', '🎭'],
+
+    loadStamps() {
+        const stamps = JSON.parse(localStorage.getItem('stamps') || '[]');
+        const grid = document.getElementById('stampCollection');
+        const countEl = document.getElementById('stampCount');
+
+        if (grid) {
+            if (stamps.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center p-8 text-gray-500 dark:text-gray-400">
+                        <p class="text-4xl mb-2">🎫</p>
+                        <p>Aún no tienes sellos. ¡Visita lugares y colecciónalos!</p>
+                    </div>
+                `;
+            } else {
+                grid.innerHTML = stamps.map((stamp, idx) => `
+                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-md relative group">
+                        <button onclick="JapanUtils.removeStamp(${idx})"
+                                class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 text-xs opacity-0 group-hover:opacity-100 transition">
+                            ×
+                        </button>
+                        <div class="text-5xl text-center mb-2">${stamp.emoji}</div>
+                        <p class="text-sm font-bold text-gray-800 dark:text-white text-center truncate">${stamp.place}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 text-center">${stamp.date}</p>
+                    </div>
+                `).join('');
+            }
+        }
+
+        if (countEl) countEl.textContent = stamps.length;
+    },
+
+    addStamp() {
+        const input = document.getElementById('stampPlaceName');
+        const placeName = input?.value.trim();
+
+        if (!placeName) {
+            alert('Por favor ingresa el nombre del lugar');
+            return;
+        }
+
+        const stamps = JSON.parse(localStorage.getItem('stamps') || '[]');
+        const randomEmoji = this.stampEmojis[Math.floor(Math.random() * this.stampEmojis.length)];
+
+        stamps.push({
+            place: placeName,
+            emoji: randomEmoji,
+            date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
+        });
+
+        localStorage.setItem('stamps', JSON.stringify(stamps));
+
+        if (input) input.value = '';
+        this.loadStamps();
+    },
+
+    removeStamp(index) {
+        if (confirm('¿Eliminar este sello?')) {
+            const stamps = JSON.parse(localStorage.getItem('stamps') || '[]');
+            stamps.splice(index, 1);
+            localStorage.setItem('stamps', JSON.stringify(stamps));
+            this.loadStamps();
+        }
+    },
+
+    // 17. TAGS EN FAVORITOS (placeholder - requiere integración con sistema existente)
+    renderFavoriteTags() {
+        return `
+            <div class="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 rounded-xl p-6 border-l-4 border-yellow-500">
+                <h4 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                    🏷️ Organiza tus Favoritos con Tags
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Categoriza lugares guardados para encontrarlos fácilmente</p>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    ${this.favoriteTags.map(tag => `
+                        <button onclick="JapanUtils.filterFavoritesByTag('${tag.id}')"
+                                class="bg-white dark:bg-gray-700 p-4 rounded-lg hover:shadow-lg transition text-center">
+                            <div class="text-3xl mb-2">${tag.emoji}</div>
+                            <p class="text-sm font-bold text-gray-800 dark:text-white">${tag.name}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400" id="tagCount-${tag.id}">0 lugares</p>
+                        </button>
+                    `).join('')}
+                </div>
+
+                <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                    <p class="text-sm text-gray-700 dark:text-gray-300">
+                        💡 <strong>Tip:</strong> Usa el modal de Favoritos para asignar tags a tus lugares guardados
+                    </p>
+                </div>
+            </div>
+        `;
+    },
+
+    favoriteTags: [
+        { id: 'food', emoji: '🍜', name: 'Restaurantes' },
+        { id: 'temple', emoji: '⛩️', name: 'Templos' },
+        { id: 'shopping', emoji: '🛍️', name: 'Tiendas' },
+        { id: 'nature', emoji: '🌸', name: 'Naturaleza' },
+        { id: 'museum', emoji: '🏛️', name: 'Museos' },
+        { id: 'nightlife', emoji: '🌃', name: 'Vida Nocturna' }
+    ],
+
+    filterFavoritesByTag(tagId) {
+        // Placeholder - se integrará con sistema de favoritos existente
+        alert(`Filtro por tag: ${tagId}\n\nEsta función se integrará con tu sistema de favoritos existente.`);
+    },
+
+    // 18. RACHA DE ACTIVIDADES
+    renderActivityStreak() {
+        return `
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-6 border-l-4 border-indigo-500">
+                <h4 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
+                    🔥 Racha de Actividades
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Mantén tu racha diaria activa</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    ${this.streakActivities.map(activity => `
+                        <div class="bg-white dark:bg-gray-700 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-2xl">${activity.emoji}</span>
+                                    <span class="font-bold text-gray-800 dark:text-white text-sm">${activity.name}</span>
+                                </div>
+                            </div>
+                            <div class="text-center py-3">
+                                <p class="text-4xl font-bold text-indigo-600 dark:text-indigo-400" id="streak-${activity.id}">0</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">días seguidos</p>
+                            </div>
+                            <button onclick="JapanUtils.logActivity('${activity.id}')"
+                                    class="w-full bg-indigo-500 hover:bg-indigo-600 text-white p-2 rounded-lg font-bold text-sm transition">
+                                ✓ Hecho Hoy
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="p-4 bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/40 dark:to-purple-900/40 rounded-lg">
+                    <p class="text-sm text-gray-700 dark:text-gray-300 text-center">
+                        🎯 <strong>¡Mantén tus rachas activas!</strong> Marca cada día que completes estas actividades
+                    </p>
+                </div>
+            </div>
+        `;
+    },
+
+    streakActivities: [
+        { id: 'food', emoji: '🍜', name: 'Probar comida local' },
+        { id: 'photo', emoji: '📸', name: 'Tomar fotos' },
+        { id: 'learn', emoji: '📝', name: 'Aprender japonés' }
+    ],
+
+    loadStreaks() {
+        const streaks = JSON.parse(localStorage.getItem('streaks') || '{}');
+
+        this.streakActivities.forEach(activity => {
+            const streakData = streaks[activity.id] || { count: 0, lastDate: null };
+            const streakEl = document.getElementById(`streak-${activity.id}`);
+
+            // Verificar si la racha está rota (más de 1 día sin actividad)
+            if (streakData.lastDate) {
+                const lastDate = new Date(streakData.lastDate);
+                const today = new Date();
+                const diffDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
+
+                if (diffDays > 1) {
+                    streakData.count = 0; // Racha rota
+                }
+            }
+
+            if (streakEl) {
+                streakEl.textContent = streakData.count;
+            }
+        });
+    },
+
+    logActivity(activityId) {
+        const streaks = JSON.parse(localStorage.getItem('streaks') || '{}');
+        const today = new Date().toDateString();
+
+        const streakData = streaks[activityId] || { count: 0, lastDate: null };
+
+        // Verificar si ya se logueó hoy
+        if (streakData.lastDate === today) {
+            alert('¡Ya marcaste esta actividad hoy! 🎉');
+            return;
+        }
+
+        // Verificar si es día consecutivo
+        const lastDate = streakData.lastDate ? new Date(streakData.lastDate) : null;
+        const todayDate = new Date();
+
+        if (lastDate) {
+            const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 1) {
+                // Día consecutivo
+                streakData.count += 1;
+            } else if (diffDays > 1) {
+                // Racha rota, reiniciar
+                streakData.count = 1;
+            }
+        } else {
+            // Primera vez
+            streakData.count = 1;
+        }
+
+        streakData.lastDate = today;
+        streaks[activityId] = streakData;
+
+        localStorage.setItem('streaks', JSON.stringify(streaks));
+
+        // Mostrar celebración
+        alert(`🎉 ¡${streakData.count} día${streakData.count > 1 ? 's' : ''} seguido${streakData.count > 1 ? 's' : ''}! ¡Sigue así!`);
+
+        this.loadStreaks();
+    },
+
     // Inicializar todo
     init() {
         // Se llamará cuando se cargue el tab de utils
