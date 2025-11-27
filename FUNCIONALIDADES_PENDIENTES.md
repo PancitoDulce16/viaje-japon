@@ -1,21 +1,25 @@
 # 📋 Funcionalidades Pendientes - Japan Trip Planner
 
-## ✅ COMPLETADAS (13/49)
-1-10: Funcionalidades MUY FÁCILES (Cultural)
+## ✅ COMPLETADAS (18/49 = 37%)
+**MUY FÁCILES (1-10):** Todas completadas
+**FÁCILES (11-18):** Todas completadas excepto Playlist
+
+### Desglose:
+1-10: ✅ Funcionalidades culturales básicas
 11. ✅ Restaurante Aleatorio
-12. ✅ Rastreador de Comidas (16 comidas japonesas)
-13. ✅ Bingo de Viaje (16 experiencias)
+12. ✅ Rastreador de Comidas (16 comidas japonesas + localStorage)
+13. ✅ Bingo de Viaje (16 experiencias + localStorage)
+14. ✅ Diccionario Visual de Comida (16 platos con nombres en japonés)
+15. ✅ Contador de Experiencias (Dashboard de estadísticas)
+16. ✅ Máquina de Sellos Virtual (Colección con emojis + localStorage)
+17. ✅ Tags de Favoritos (6 categorías + placeholder para integración)
+18. ✅ Racha de Actividades (3 actividades diarias + localStorage)
 
 ---
 
-## 🟡 FÁCILES (LocalStorage/Firestore básico)
+## 🟡 FÁCILES - Pendientes (1/9)
 
-14. **Diccionario Visual de Comida** - Grid de fotos con nombres
-15. **Contador de Experiencias** - Sumar actividades completadas del itinerario
-16. **Máquina de Sellos Virtual** - Colección de stamps por lugar visitado
-17. **Playlist de Viaje** - Lista embebida de Spotify/YouTube
-18. **Lugares Guardados en Categorías** - Tags en favoritos existentes
-19. **Racha de Actividades** - Contar días consecutivos haciendo X
+19. **Playlist de Viaje** - Lista embebida de Spotify/YouTube [SKIP por ahora]
 
 ## 🟠 MEDIAS (Firebase + lógica moderada)
 
