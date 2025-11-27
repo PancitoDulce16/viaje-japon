@@ -1,8 +1,9 @@
 # 📋 Funcionalidades Pendientes - Japan Trip Planner
 
-## ✅ COMPLETADAS (18/49 = 37%)
-**MUY FÁCILES (1-10):** Todas completadas
-**FÁCILES (11-18):** Todas completadas excepto Playlist
+## ✅ COMPLETADAS (22/49 = 45%)
+**MUY FÁCILES (1-10):** Todas completadas ✅
+**FÁCILES (11-18):** Todas completadas excepto Playlist ✅
+**MEDIAS (20-22, 29):** Sistema de Logros, Desafíos Diarios, Votaciones, Diario ✅
 
 ### Desglose:
 1-10: ✅ Funcionalidades culturales básicas
@@ -14,6 +15,10 @@
 16. ✅ Máquina de Sellos Virtual (Colección con emojis + localStorage)
 17. ✅ Tags de Favoritos (6 categorías + placeholder para integración)
 18. ✅ Racha de Actividades (3 actividades diarias + localStorage)
+20. ✅ Sistema de Logros (12 badges desbloqueables + Firebase)
+21. ✅ Desafíos Diarios (10 tipos de retos + participantes + Firebase)
+22. ✅ Sistema de Votaciones (Crear polls + votar + porcentajes + Firebase)
+29. ✅ Diario de Viaje Colaborativo (Entradas por fecha/usuario + likes + Firebase)
 
 ---
 
@@ -21,18 +26,14 @@
 
 19. **Playlist de Viaje** - Lista embebida de Spotify/YouTube [SKIP por ahora]
 
-## 🟠 MEDIAS (Firebase + lógica moderada)
+## 🟠 MEDIAS (Firebase + lógica moderada) - Pendientes (8/12)
 
-20. **Sistema de Logros** - Badges según condiciones (X templos, Y comidas)
-21. **Desafíos Diarios** - Random challenge del día para todos
-22. **Sistema de Votaciones** - Poll simple con opciones y votos
 23. **Sistema de Encuestas** - Crear preguntas, recoger respuestas
 24. **Favoritos de Comida del Grupo** - Rating colaborativo de restaurantes
 25. **Comparador de Precios** - Input manual de precios por categoría
 26. **Historial de Gastos por Categoría** - Gráficos de gastos existentes
 27. **Alertas de Presupuesto** - Trigger cuando gastos > X% del budget
 28. **Modo Ahorro** - Filtrar/sugerir actividades gratuitas
-29. **Diario de Viaje Colaborativo** - Posts por día por usuario
 30. **Festivales Locales** - API o JSON estático de matsuri por fecha
 31. **Clima por Ciudad** - OpenWeather API para ciudades del itinerario
 
