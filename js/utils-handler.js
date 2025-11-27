@@ -190,6 +190,7 @@ export const UtilsHandler = {
                     break;
                 case 'tips':
                     sectionDiv.innerHTML = window.JapanUtils.renderTipCalculator();
+                    setTimeout(() => window.JapanUtils.initTipCalculator(), 100);
                     break;
                 case 'etiquette':
                     sectionDiv.innerHTML = window.JapanUtils.renderEtiquetteGuide();
@@ -258,7 +259,9 @@ export const UtilsHandler = {
         if (sectionName === 'timezone') {
             sectionDiv.innerHTML = this.renderTimezone();
             if (window.AppUtils) {
-                window.AppUtils.startClocks();
+                setTimeout(() => {
+                    window.AppUtils.startClocks();
+                }, 100);
             }
         }
 

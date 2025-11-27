@@ -24,19 +24,20 @@ export const JapanUtils = {
                         <label class="text-sm font-semibold text-gray-700 dark:text-gray-300 block mb-2">💵 Monto de la cuenta (JPY)</label>
                         <input
                             type="number"
-                            id="billAmount"
+                            id="billAmountInput"
                             class="w-full p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                             placeholder="5000"
+                            onkeypress="if(event.key === 'Enter') window.JapanUtils.calculateTip()"
                         >
                     </div>
                     <div class="grid grid-cols-1 gap-3">
-                        <button onclick="JapanUtils.calculateTip()" class="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg font-bold shadow-md transition">
+                        <button id="calculateTipBtn" class="bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg font-bold shadow-md transition">
                             ✅ Calcular Total (Sin Propina)
                         </button>
                     </div>
-                    <div id="tipResult" class="p-4 bg-gray-50 dark:bg-gray-600 rounded-lg text-center hidden">
+                    <div id="tipResultDisplay" class="p-4 bg-gray-50 dark:bg-gray-600 rounded-lg text-center hidden">
                         <p class="text-sm text-gray-600 dark:text-gray-300 mb-1">Total a pagar:</p>
-                        <p class="text-3xl font-bold text-green-600 dark:text-green-400" id="totalAmount">¥0</p>
+                        <p class="text-3xl font-bold text-green-600 dark:text-green-400" id="totalAmountDisplay">¥0</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">🎌 En Japón, solo pagas lo que dice la cuenta</p>
                     </div>
                 </div>
@@ -44,12 +45,26 @@ export const JapanUtils = {
         `;
     },
 
+    initTipCalculator() {
+        const btn = document.getElementById('calculateTipBtn');
+        if (btn) {
+            btn.onclick = () => this.calculateTip();
+        }
+    },
+
     calculateTip() {
-        const billAmount = parseFloat(document.getElementById('billAmount')?.value) || 0;
+        const input = document.getElementById('billAmountInput');
+        const billAmount = parseFloat(input?.value) || 0;
+
+        if (billAmount <= 0) {
+            alert('Por favor ingresa un monto válido');
+            return;
+        }
+
         const total = billAmount; // Siempre 0% de propina en Japón
 
-        const resultDiv = document.getElementById('tipResult');
-        const totalDiv = document.getElementById('totalAmount');
+        const resultDiv = document.getElementById('tipResultDisplay');
+        const totalDiv = document.getElementById('totalAmountDisplay');
 
         if (resultDiv && totalDiv) {
             totalDiv.textContent = `¥${total.toLocaleString('ja-JP')}`;
