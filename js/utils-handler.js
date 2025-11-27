@@ -97,7 +97,6 @@ export const UtilsHandler = {
     renderPracticalView() {
         return `
             <div class="space-y-4">
-                ${this.renderAccordion('profile', '👤', 'Mi Perfil', 'Foto de perfil, bio y estadísticas del viaje')}
                 ${this.renderAccordion('countdown', '⏳', 'Contador de Días', '¿Cuánto falta para tu aventura?')}
                 ${this.renderAccordion('currency', '💸', 'Conversor de Moneda', 'JPY ↔ USD en tiempo real')}
                 ${this.renderAccordion('timezone', '🕐', 'Zona Horaria', 'Hora en Japón vs tu país')}
@@ -115,6 +114,7 @@ export const UtilsHandler = {
     renderFunView() {
         return `
             <div class="space-y-4">
+                ${this.renderAccordion('timeline', '📱', 'Timeline Compartido', 'Feed de actividad del grupo en tiempo real')}
                 ${this.renderAccordion('photogallery', '📸', 'Memorias Compartidas', 'Galería de fotos con comentarios y likes')}
                 ${this.renderAccordion('achievements', '🏆', 'Sistema de Logros', 'Desbloquea badges completando actividades')}
                 ${this.renderAccordion('challenges', '⚡', 'Desafíos Diarios', 'Reto del día para todo el grupo')}
@@ -285,6 +285,12 @@ export const UtilsHandler = {
         if (window.UserProfile && sectionName === 'profile') {
             sectionDiv.innerHTML = window.UserProfile.render();
             window.UserProfile.loadProfile();
+        }
+
+        // ActivityTimeline section
+        if (window.ActivityTimeline && sectionName === 'timeline') {
+            sectionDiv.innerHTML = window.ActivityTimeline.render();
+            window.ActivityTimeline.loadTimeline();
         }
 
         // Currency converter (from utils.js)

@@ -433,6 +433,16 @@ export const SocialFeatures = {
                 active: true
             });
 
+            // Log to timeline
+            if (window.logTimelineActivity) {
+                window.logTimelineActivity('poll', {
+                    description: 'creó una votación',
+                    question,
+                    optionsCount: options.length,
+                    votesCount: 0
+                });
+            }
+
             alert('¡Votación creada! 🗳️');
 
             // Limpiar formulario
@@ -710,6 +720,14 @@ export const SocialFeatures = {
                 createdAt: serverTimestamp(),
                 likes: []
             });
+
+            // Log to timeline
+            if (window.logTimelineActivity) {
+                window.logTimelineActivity('journal', {
+                    description: 'escribió en el diario',
+                    preview: content.substring(0, 100) + (content.length > 100 ? '...' : '')
+                });
+            }
 
             alert('¡Entrada guardada! 📝');
             contentInput.value = '';

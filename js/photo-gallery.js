@@ -249,6 +249,15 @@ export const PhotoGallery = {
                 comments: []
             });
 
+            // Log to timeline
+            if (window.logTimelineActivity) {
+                window.logTimelineActivity('photo', {
+                    description: 'subió una nueva foto',
+                    photoURL,
+                    caption
+                });
+            }
+
             if (progressBar) progressBar.style.width = '100%';
             if (progressText) progressText.textContent = '¡Foto subida! ✓';
 
