@@ -1,0 +1,562 @@
+/*
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *  🌸 LAYOUT IMPROVEMENTS - Espaciado y Organización
+ *  Menos packed, más respirable, mejor en móvil
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ */
+
+/* ========================================
+   HEADER - Más Compacto y Limpio
+   ======================================== */
+
+.japan-header {
+    padding: var(--space-md) var(--space-xl) !important;
+}
+
+.japan-header .max-w-7xl {
+    padding: 0 !important;
+}
+
+/* Header brand - Más compacto */
+.header-brand {
+    margin-bottom: 0 !important;
+}
+
+.header-icon {
+    width: 44px !important;
+    height: 44px !important;
+}
+
+.header-banner {
+    height: 40px !important;
+}
+
+/* Ocultar email en desktop para ahorrar espacio */
+@media (min-width: 1024px) {
+    #userEmailDisplay {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+/* Info del viaje - Más compacto */
+#currentTripHeader {
+    margin-top: var(--space-sm) !important;
+    padding-top: var(--space-sm) !important;
+}
+
+/* ========================================
+   NAVEGACIÓN TABS - Más Grande y Espaciosa
+   ======================================== */
+
+.japan-nav {
+    padding: var(--space-lg) var(--space-xl) !important;
+}
+
+#tabSelector {
+    gap: var(--space-md) !important;
+    padding: var(--space-sm) 0 !important;
+}
+
+.tab-btn {
+    padding: var(--space-md) var(--space-xl) !important;
+    font-size: 0.95rem !important;
+    min-height: 48px;
+}
+
+/* Tabs en móvil - Más grande para touch */
+@media (max-width: 768px) {
+    .tab-btn {
+        padding: var(--space-md) var(--space-lg) !important;
+        min-width: 48px;
+    }
+}
+
+/* ========================================
+   CONTENIDO PRINCIPAL - Más Espaciado
+   ======================================== */
+
+#main-content {
+    padding: var(--space-2xl) var(--space-lg);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.tab-content {
+    padding: var(--space-xl) 0;
+}
+
+/* Espaciado entre secciones */
+.tab-content > * + * {
+    margin-top: var(--space-3xl);
+}
+
+/* ========================================
+   CARDS DE STATS - Responsive Grid Mejorado
+   ======================================== */
+
+/* Grid para stats - Max 3 columnas en desktop */
+.stats-grid {
+    display: grid;
+    gap: var(--space-xl);
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    max-width: 100%;
+}
+
+/* En desktop grande, max 3 columnas */
+@media (min-width: 1200px) {
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* En tablets, 2 columnas */
+@media (min-width: 768px) and (max-width: 1199px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* En móvil, 1 columna */
+@media (max-width: 767px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-lg);
+    }
+}
+
+/* ========================================
+   BOTONES FLOTANTES - Menos Abarrotado
+   ======================================== */
+
+/* Reducir cantidad de botones flotantes visibles */
+.floating-btn-container {
+    gap: var(--space-md) !important;
+}
+
+.floating-btn {
+    width: 52px !important;
+    height: 52px !important;
+}
+
+/* Ocultar algunos botones en móvil */
+@media (max-width: 768px) {
+    .floating-btn-container .floating-btn:nth-child(n+4) {
+        display: none;
+    }
+}
+
+/* ========================================
+   FAB MENU - Mejor Organización
+   ======================================== */
+
+#fabContainer {
+    bottom: 2rem !important;
+    right: 2rem !important;
+}
+
+.fab-menu-item {
+    width: 52px !important;
+    height: 52px !important;
+}
+
+#fab-menu-toggle {
+    width: 64px !important;
+    height: 64px !important;
+}
+
+/* ========================================
+   TRIP HEADER INFO - Más Compacto
+   ======================================== */
+
+#currentTripHeader .flex {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+}
+
+#currentTripHeader button {
+    padding: var(--space-sm) var(--space-md) !important;
+    font-size: 0.875rem !important;
+}
+
+/* ========================================
+   SECCIONES INTERNAS - Mejor Espaciado
+   ======================================== */
+
+/* Headers de sección */
+.section-header,
+.section-title {
+    margin-bottom: var(--space-xl);
+}
+
+/* Grids genéricos */
+.grid-cols-2,
+.grid-cols-3,
+.grid-cols-4 {
+    gap: var(--space-xl);
+}
+
+/* En móvil, todo a 1 columna con menos gap */
+@media (max-width: 768px) {
+    .grid-cols-2,
+    .grid-cols-3,
+    .grid-cols-4 {
+        grid-template-columns: 1fr !important;
+        gap: var(--space-lg);
+    }
+}
+
+/* ========================================
+   CARDS - Más Padding y Espacio
+   ======================================== */
+
+.card,
+.feature-card,
+.activity-card,
+.kawaii-card,
+.japitin-card {
+    padding: var(--space-xl) !important;
+    margin-bottom: var(--space-lg);
+}
+
+@media (max-width: 768px) {
+    .card,
+    .feature-card,
+    .activity-card,
+    .kawaii-card,
+    .japitin-card {
+        padding: var(--space-lg) !important;
+    }
+}
+
+/* ========================================
+   ITINERARIO - Layout Mejorado
+   ======================================== */
+
+/* Sidebar del itinerario */
+.itinerary-sidebar {
+    padding: var(--space-xl);
+    position: sticky;
+    top: 100px;
+}
+
+/* Lista de actividades */
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.activity-item {
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+}
+
+/* Timeline más espaciosa */
+.timeline-kawaii .timeline-item-kawaii {
+    margin-bottom: var(--space-2xl) !important;
+}
+
+/* ========================================
+   MODALES - Mejor Espaciado
+   ======================================== */
+
+.modal-content,
+.modal-content-kawaii,
+.modal-content-japitin {
+    padding: var(--space-2xl);
+}
+
+.modal-header {
+    margin-bottom: var(--space-xl);
+}
+
+.modal-body {
+    padding: var(--space-xl) 0;
+}
+
+.modal-footer {
+    margin-top: var(--space-xl);
+    padding-top: var(--space-xl);
+    border-top: 2px solid var(--warm-gray);
+}
+
+/* ========================================
+   FORMULARIOS - Mejor Espaciado
+   ======================================== */
+
+.form-group {
+    margin-bottom: var(--space-xl);
+}
+
+.form-label {
+    margin-bottom: var(--space-sm);
+    display: block;
+    font-weight: 600;
+}
+
+.form-input,
+.input-kawaii,
+.input-japitin,
+.input-redesign {
+    margin-bottom: var(--space-md);
+}
+
+/* ========================================
+   LISTAS - Más Respirable
+   ======================================== */
+
+ul, ol {
+    padding-left: var(--space-xl);
+}
+
+li {
+    margin-bottom: var(--space-sm);
+    line-height: 1.8;
+}
+
+/* ========================================
+   RESPONSIVE - Mobile First
+   ======================================== */
+
+/* Reducir padding general en móvil */
+@media (max-width: 768px) {
+    #main-content {
+        padding: var(--space-lg) var(--space-md);
+    }
+
+    .tab-content {
+        padding: var(--space-md) 0;
+    }
+
+    .tab-content > * + * {
+        margin-top: var(--space-2xl);
+    }
+
+    /* Header más compacto */
+    .japan-header {
+        padding: var(--space-sm) var(--space-md) !important;
+    }
+
+    .header-brand {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    /* Ocultar texto largo en móvil */
+    .hidden-mobile {
+        display: none !important;
+    }
+}
+
+/* Tablet */
+@media (min-width: 769px) and (max-width: 1023px) {
+    #main-content {
+        padding: var(--space-xl) var(--space-lg);
+    }
+}
+
+/* Desktop grande */
+@media (min-width: 1440px) {
+    #main-content {
+        max-width: 1600px;
+    }
+}
+
+/* ========================================
+   CONTAINERS - Max Width Responsivo
+   ======================================== */
+
+.container-fluid {
+    padding: 0 var(--space-xl);
+    max-width: 100%;
+}
+
+.container-lg {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-xl);
+}
+
+.container-md {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 var(--space-lg);
+}
+
+.container-sm {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 var(--space-md);
+}
+
+/* ========================================
+   SPACING UTILITIES - Helpers
+   ======================================== */
+
+.mb-0 { margin-bottom: 0 !important; }
+.mb-1 { margin-bottom: var(--space-xs) !important; }
+.mb-2 { margin-bottom: var(--space-sm) !important; }
+.mb-3 { margin-bottom: var(--space-md) !important; }
+.mb-4 { margin-bottom: var(--space-lg) !important; }
+.mb-5 { margin-bottom: var(--space-xl) !important; }
+.mb-6 { margin-bottom: var(--space-2xl) !important; }
+.mb-7 { margin-bottom: var(--space-3xl) !important; }
+
+.mt-0 { margin-top: 0 !important; }
+.mt-1 { margin-top: var(--space-xs) !important; }
+.mt-2 { margin-top: var(--space-sm) !important; }
+.mt-3 { margin-top: var(--space-md) !important; }
+.mt-4 { margin-top: var(--space-lg) !important; }
+.mt-5 { margin-top: var(--space-xl) !important; }
+.mt-6 { margin-top: var(--space-2xl) !important; }
+.mt-7 { margin-top: var(--space-3xl) !important; }
+
+.p-0 { padding: 0 !important; }
+.p-1 { padding: var(--space-xs) !important; }
+.p-2 { padding: var(--space-sm) !important; }
+.p-3 { padding: var(--space-md) !important; }
+.p-4 { padding: var(--space-lg) !important; }
+.p-5 { padding: var(--space-xl) !important; }
+.p-6 { padding: var(--space-2xl) !important; }
+
+/* ========================================
+   GAPS - Flexbox y Grid
+   ======================================== */
+
+.gap-1 { gap: var(--space-xs) !important; }
+.gap-2 { gap: var(--space-sm) !important; }
+.gap-3 { gap: var(--space-md) !important; }
+.gap-4 { gap: var(--space-lg) !important; }
+.gap-5 { gap: var(--space-xl) !important; }
+.gap-6 { gap: var(--space-2xl) !important; }
+
+/* ========================================
+   HIDE/SHOW UTILITIES
+   ======================================== */
+
+/* Ocultar en móvil */
+@media (max-width: 767px) {
+    .hide-mobile {
+        display: none !important;
+    }
+}
+
+/* Ocultar en desktop */
+@media (min-width: 768px) {
+    .hide-desktop {
+        display: none !important;
+    }
+}
+
+/* Mostrar solo en móvil */
+@media (min-width: 768px) {
+    .show-mobile-only {
+        display: none !important;
+    }
+}
+
+/* ========================================
+   OVERFLOW - Evitar Desbordamiento
+   ======================================== */
+
+body {
+    overflow-x: hidden;
+}
+
+.overflow-hidden {
+    overflow: hidden !important;
+}
+
+.overflow-auto {
+    overflow: auto !important;
+}
+
+.overflow-x-auto {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+}
+
+/* ========================================
+   FLEXBOX HELPERS - Mejores Layouts
+   ======================================== */
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.flex-start {
+    display: flex;
+    align-items: flex-start;
+}
+
+.flex-wrap {
+    flex-wrap: wrap !important;
+}
+
+.flex-column {
+    flex-direction: column !important;
+}
+
+/* ========================================
+   WIDTH UTILITIES
+   ======================================== */
+
+.w-full { width: 100% !important; }
+.w-auto { width: auto !important; }
+.w-fit { width: fit-content !important; }
+
+/* ========================================
+   MEJORAS ESPECÍFICAS PARA JAPITIN
+   ======================================== */
+
+/* Stats cards - Más grandes y espaciadas */
+.stat-card-kawaii,
+.stat-card-japitin {
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+/* Botones de acción - Más espaciados */
+.action-buttons {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    margin-top: var(--space-lg);
+}
+
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .action-buttons button,
+    .action-buttons a {
+        width: 100%;
+    }
+}
+
+/* Timeline más limpia */
+.timeline-kawaii {
+    padding-left: var(--space-2xl);
+}
+
+/* Footer espacioso */
+.japan-footer {
+    padding: var(--space-3xl) var(--space-xl);
+    margin-top: var(--space-3xl);
+}
