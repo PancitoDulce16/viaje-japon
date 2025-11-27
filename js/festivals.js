@@ -102,7 +102,7 @@ export const Festivals = {
         return months.map(month => `
             <button
                 onclick="Festivals.loadMonth(${month.num})"
-                class="festival-month-btn px-4 py-2 rounded-lg font-semibold whitespace-nowrap bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-500 hover:text-white transition"
+                class="festival-month-btn px-4 py-2 rounded-lg font-semibold whitespace-nowrap bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-500 hover:text-white transition smooth-scale btn-press"
                 data-month="${month.num}"
             >
                 <span class="hidden md:inline">${month.name}</span>
@@ -156,7 +156,7 @@ export const Festivals = {
                 : `${festival.day}`;
 
             return `
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border-2 ${gradient.split(' ')[1]} hover:shadow-lg transition">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border-2 ${gradient.split(' ')[1]} card-lift">
                     <div class="flex">
                         <!-- Icon Section -->
                         <div class="w-20 bg-gradient-to-br ${gradient.split(' ')[0]} flex items-center justify-center text-4xl">

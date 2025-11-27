@@ -20,7 +20,7 @@ export const UserMenu = {
                 <!-- Menu Button -->
                 <button
                     id="userMenuBtn"
-                    class="bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all transform hover:scale-110"
+                    class="bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all transform hover:scale-110 smooth-scale btn-press"
                     aria-label="Menú de usuario"
                 >
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -31,7 +31,7 @@ export const UserMenu = {
                 <!-- Dropdown Menu -->
                 <div
                     id="userMenuDropdown"
-                    class="hidden absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+                    class="hidden absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden animate-scale-in glass"
                 >
                     <!-- User Header -->
                     <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-4 text-white">
@@ -50,7 +50,7 @@ export const UserMenu = {
                     <div class="py-2">
                         <button
                             onclick="UserMenu.openProfile()"
-                            class="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-3 text-left"
+                            class="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition smooth-hover flex items-center gap-3 text-left"
                         >
                             <span class="text-2xl">👤</span>
                             <div>
@@ -61,7 +61,7 @@ export const UserMenu = {
 
                         <button
                             onclick="UserMenu.openSettings()"
-                            class="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-3 text-left"
+                            class="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition smooth-hover flex items-center gap-3 text-left"
                         >
                             <span class="text-2xl">⚙️</span>
                             <div>
@@ -72,7 +72,7 @@ export const UserMenu = {
 
                         <button
                             onclick="UserMenu.toggleDarkMode()"
-                            class="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition flex items-center gap-3 text-left"
+                            class="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition smooth-hover flex items-center gap-3 text-left"
                         >
                             <span class="text-2xl">🌓</span>
                             <div>
@@ -85,7 +85,7 @@ export const UserMenu = {
 
                         <button
                             onclick="UserMenu.logout()"
-                            class="w-full px-4 py-3 hover:bg-red-50 dark:hover:bg-red-900/20 transition flex items-center gap-3 text-left text-red-600 dark:text-red-400"
+                            class="w-full px-4 py-3 hover:bg-red-50 dark:hover:bg-red-900/20 transition smooth-hover flex items-center gap-3 text-left text-red-600 dark:text-red-400"
                         >
                             <span class="text-2xl">🚪</span>
                             <div>

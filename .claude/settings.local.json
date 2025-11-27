@@ -12,7 +12,9 @@
       "Bash(functions/index.js.bak)",
       "Bash(functions/package.json.bak)",
       "Bash(dashboard.html.bak)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(python3:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []
