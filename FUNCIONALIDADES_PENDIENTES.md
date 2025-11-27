@@ -1,11 +1,11 @@
 # 📋 Funcionalidades Pendientes - Japan Trip Planner
 
-## ✅ COMPLETADAS (24/49 = 49%)
+## ✅ COMPLETADAS (25/49 = 51%)
 **MUY FÁCILES (1-10):** Todas completadas ✅
 **FÁCILES (11-18):** Todas completadas excepto Playlist ✅
 **MEDIAS (20-22, 29):** Sistema de Logros, Desafíos Diarios, Votaciones, Diario ✅
-**MEDIAS-DIFÍCILES (33):** Memorias Compartidas ✅
-**EXTRA:** Sistema de Perfiles de Usuario ✅
+**MEDIAS-DIFÍCILES (32, 33):** Timeline Compartido, Memorias Compartidas ✅
+**EXTRAS:** Sistema de Perfiles + Menú Hamburguesa ✅
 
 ### Desglose:
 1-10: ✅ Funcionalidades culturales básicas
@@ -21,8 +21,11 @@
 21. ✅ Desafíos Diarios (10 tipos de retos + participantes + Firebase)
 22. ✅ Sistema de Votaciones (Crear polls + votar + porcentajes + Firebase)
 29. ✅ Diario de Viaje Colaborativo (Entradas por fecha/usuario + likes + Firebase)
+32. ✅ Timeline Compartido (Feed de actividad en tiempo real + filtros + tracking automático)
 33. ✅ Memorias Compartidas (Upload fotos + Storage + comentarios + likes + Firebase)
-**NEW:** ✅ Sistema de Perfiles (Foto, bio, país, ciudad favorita, estilo, stats completas)
+**EXTRAS:**
+- ✅ Sistema de Perfiles (Foto, bio, país, ciudad favorita, estilo, stats completas)
+- ✅ Menú Hamburguesa (Con perfil, dark mode toggle, configuración, logout)
 
 ---
 
@@ -41,9 +44,8 @@
 30. **Festivales Locales** - API o JSON estático de matsuri por fecha
 31. **Clima por Ciudad** - OpenWeather API para ciudades del itinerario
 
-## 🔴 MEDIAS-DIFÍCILES (APIs complejas, lógica avanzada) - Pendientes (10/11)
+## 🔴 MEDIAS-DIFÍCILES (APIs complejas, lógica avanzada) - Pendientes (9/11)
 
-32. **Timeline Compartido** - Feed en tiempo real de acciones del grupo
 34. **División de Gastos Inteligente** - Algoritmo "quién debe a quién"
 35. **Puntos de Interés Cercanos** - Google Places API + geolocalización
 36. **Generador de Stories** - Canvas API para crear imágenes custom
