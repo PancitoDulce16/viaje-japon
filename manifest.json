@@ -1,13 +1,14 @@
 {
-  "name": "Japan Trip Planner - Viaje a Japón 2026",
+  "name": "Japan Trip Planner",
   "short_name": "Japan Trip",
   "description": "Planifica tu viaje a Japón - Itinerario, gastos, mapas y más",
-  "start_url": "/dashboard.html",
+  "start_url": "/dashboard.html?source=pwa",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#9333ea",
   "orientation": "any",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/images/icons/icon-192.png",
