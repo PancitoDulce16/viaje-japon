@@ -1,0 +1,45 @@
+/*
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *  🎨 JAPITIN - Wallpaper Backgrounds
+ *  Solo agrega fondos de wallpaper, SIN romper funcionalidad
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ */
+
+/* ==========================================
+   LIGHT MODE - Asanoha Pattern Background
+   ========================================== */
+
+body {
+    background-image: url('/images/iconos/Wallpaper/asanoha1.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+/* Agregar overlay sutil para mejorar legibilidad */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.85);
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* ==========================================
+   DARK MODE - Oscuro Pattern Background
+   ========================================== */
+
+body.dark,
+html[data-theme="dark"] body {
+    background-image: url('/images/iconos/Wallpaper/Osucuro1.png');
+}
+
+body.dark::before,
+html[data-theme="dark"] body::before {
+    background: rgba(15, 15, 18, 0.75);
+}

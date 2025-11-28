@@ -15,7 +15,8 @@
       "Bash(npm uninstall:*)",
       "Bash(python3:*)",
       "Bash(node:*)",
-      "Skill(frontend-design)"
+      "Skill(frontend-design)",
+      "Bash(git revert:*)"
     ],
     "deny": [],
     "ask": []
