@@ -1,0 +1,243 @@
+/*
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *  ⚠️ JAPITIN - NUCLEAR FIX
+ *  ELIMINA COMPLETAMENTE EL MODO OSCURO Y FUERZA COLORES VIBRANTES
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ */
+
+/* ELIMINAR FONDO NEGRO COMPLETAMENTE */
+html,
+body,
+body.dark,
+html[data-theme="dark"],
+html[data-theme="dark"] body,
+.dark,
+#appDashboard {
+    background-color: #FFF0F5 !important;
+    background-image: url('/images/iconos/Wallpaper/asanoha1.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+    color: #6B4E71 !important;
+}
+
+/* Overlay rosa suave */
+html::before,
+body::before {
+    content: '' !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(255, 240, 245, 0.90) !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
+}
+
+/* STATS CARDS - COLORES VIBRANTES ABSOLUTOS */
+.stats-grid,
+.stats-container,
+div[class*="stats"] {
+    display: grid !important;
+    gap: 24px !important;
+    padding: 24px 0 !important;
+}
+
+/* CADA CARD CON SU COLOR */
+.stats-grid > div:nth-child(1),
+.stats-card:nth-child(1) {
+    background: linear-gradient(135deg, #FF9999 0%, #FF7B7B 100%) !important;
+    border: none !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    box-shadow: 0 4px 16px rgba(255, 123, 123, 0.3) !important;
+}
+
+.stats-grid > div:nth-child(1),
+.stats-grid > div:nth-child(1) *,
+.stats-card:nth-child(1),
+.stats-card:nth-child(1) * {
+    color: white !important;
+}
+
+.stats-grid > div:nth-child(2),
+.stats-card:nth-child(2) {
+    background: linear-gradient(135deg, #66E3E8 0%, #4DD4D9 100%) !important;
+    border: none !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    box-shadow: 0 4px 16px rgba(77, 212, 217, 0.3) !important;
+}
+
+.stats-grid > div:nth-child(2),
+.stats-grid > div:nth-child(2) *,
+.stats-card:nth-child(2),
+.stats-card:nth-child(2) * {
+    color: white !important;
+}
+
+.stats-grid > div:nth-child(3),
+.stats-card:nth-child(3) {
+    background: linear-gradient(135deg, #FFE699 0%, #FFD966 100%) !important;
+    border: none !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    box-shadow: 0 4px 16px rgba(255, 217, 102, 0.3) !important;
+}
+
+.stats-grid > div:nth-child(3),
+.stats-grid > div:nth-child(3) *,
+.stats-card:nth-child(3),
+.stats-card:nth-child(3) * {
+    color: #6B4E71 !important;
+}
+
+.stats-grid > div:nth-child(4),
+.stats-card:nth-child(4) {
+    background: linear-gradient(135deg, #FFC999 0%, #FFB366 100%) !important;
+    border: none !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    box-shadow: 0 4px 16px rgba(255, 179, 102, 0.3) !important;
+}
+
+.stats-grid > div:nth-child(4),
+.stats-grid > div:nth-child(4) *,
+.stats-card:nth-child(4),
+.stats-card:nth-child(4) * {
+    color: white !important;
+}
+
+.stats-grid > div:nth-child(5),
+.stats-card:nth-child(5) {
+    background: linear-gradient(135deg, #FFC999 0%, #FFB366 100%) !important;
+    border: none !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    box-shadow: 0 4px 16px rgba(255, 179, 102, 0.3) !important;
+}
+
+.stats-grid > div:nth-child(5),
+.stats-grid > div:nth-child(5) *,
+.stats-card:nth-child(5),
+.stats-card:nth-child(5) * {
+    color: white !important;
+}
+
+/* ELIMINAR FONDOS OSCUROS EN TODO */
+section,
+.section,
+div,
+.card,
+.trip-card,
+main,
+header,
+nav {
+    background-color: transparent !important;
+}
+
+/* Secciones con fondo blanco */
+section[class],
+.card[class],
+.trip-card[class] {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-radius: 16px !important;
+    padding: 24px !important;
+    margin-bottom: 24px !important;
+}
+
+/* HEADER BANNER */
+.header-brand,
+.japan-header {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border: 3px solid #FFB3D9 !important;
+    border-radius: 20px !important;
+    padding: 24px !important;
+    box-shadow: 0 4px 16px rgba(255, 179, 217, 0.3) !important;
+}
+
+/* BOTONES ROSA VIBRANTE */
+.btn-kawaii,
+.btn-primary,
+button[class*="btn"] {
+    background: linear-gradient(135deg, #FFB3D9 0%, #FF99CC 100%) !important;
+    border: 2px solid white !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    padding: 12px 24px !important;
+    box-shadow: 0 4px 12px rgba(255, 179, 217, 0.3) !important;
+}
+
+/* Botones oscuros a rosa también */
+button[style*="background"],
+button[class*="dark"] {
+    background: linear-gradient(135deg, #FFB3D9 0%, #FF99CC 100%) !important;
+    border: 2px solid white !important;
+    color: white !important;
+}
+
+/* TEXTOS LEGIBLES */
+h1, h2, h3, h4, h5, h6 {
+    color: #6B4E71 !important;
+}
+
+p, span, div, label {
+    color: #6B4E71 !important;
+}
+
+/* TABS COLORIDOS */
+.tab-item,
+button[class*="tab"] {
+    background: white !important;
+    border: 2px solid #E6E8EC !important;
+    border-radius: 12px !important;
+    padding: 12px 20px !important;
+    margin: 4px !important;
+    color: #6B4E71 !important;
+}
+
+.tab-item.active,
+button.tab-item.active {
+    background: linear-gradient(135deg, #FF9999 0%, #FF7B7B 100%) !important;
+    color: white !important;
+    border-color: white !important;
+}
+
+.tab-item.active *,
+button.tab-item.active * {
+    color: white !important;
+}
+
+/* ESPACIADO CORRECTO */
+.container,
+.max-w-7xl {
+    padding: 24px !important;
+    margin: 0 auto !important;
+}
+
+.stats-grid {
+    margin: 24px 0 !important;
+}
+
+/* FUENTE POPPINS */
+* {
+    font-family: 'Poppins', -apple-system, sans-serif !important;
+}
+
+/* ELIMINAR SOMBRAS OSCURAS */
+* {
+    box-shadow: none;
+}
+
+.stats-card,
+.card,
+.btn {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* DESACTIVAR DARK MODE COMPLETAMENTE */
+.dark,
+[data-theme="dark"],
+html.dark,
+body.dark {
+    filter: none !important;
+}
