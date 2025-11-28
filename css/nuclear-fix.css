@@ -5,13 +5,11 @@
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  */
 
-/* ELIMINAR FONDO NEGRO COMPLETAMENTE */
+/* ==========================================
+   LIGHT MODE - FONDO ROSA CON ASANOHA
+   ========================================== */
 html,
 body,
-body.dark,
-html[data-theme="dark"],
-html[data-theme="dark"] body,
-.dark,
 #appDashboard {
     background-color: #FFF0F5 !important;
     background-image: url('/images/iconos/Wallpaper/asanoha1.png') !important;
@@ -21,13 +19,41 @@ html[data-theme="dark"] body,
     color: #6B4E71 !important;
 }
 
-/* Overlay rosa suave */
+/* Overlay rosa suave para light mode */
 html::before,
 body::before {
     content: '' !important;
     position: fixed !important;
     inset: 0 !important;
     background: rgba(255, 240, 245, 0.90) !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
+}
+
+/* ==========================================
+   DARK MODE - FONDO OSCURO CON WALLPAPER CORRECTO
+   ========================================== */
+html.dark,
+html[data-theme="dark"],
+body.dark,
+html[data-theme="dark"] body {
+    background-color: #1a1a2e !important;
+    background-image: url('/images/iconos/Wallpaper/Osucuro1.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+    color: #f0f0f0 !important;
+}
+
+/* Overlay oscuro para dark mode */
+html.dark::before,
+html[data-theme="dark"]::before,
+body.dark::before,
+html[data-theme="dark"] body::before {
+    content: '' !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(26, 26, 46, 0.85) !important;
     z-index: -1 !important;
     pointer-events: none !important;
 }
@@ -144,14 +170,52 @@ section[class],
     margin-bottom: 24px !important;
 }
 
-/* HEADER BANNER */
-.header-brand,
+/* ==========================================
+   HEADER - ESPACIADO CORRECTO
+   ========================================== */
 .japan-header {
+    padding: 24px !important;
+    margin-bottom: 24px !important;
+}
+
+.header-content,
+.japan-header .max-w-7xl {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 24px !important;
+    flex-wrap: wrap !important;
+}
+
+.header-brand {
     background: rgba(255, 255, 255, 0.98) !important;
     border: 3px solid #FFB3D9 !important;
     border-radius: 20px !important;
     padding: 24px !important;
+    margin: 0 !important;
     box-shadow: 0 4px 16px rgba(255, 179, 217, 0.3) !important;
+}
+
+/* Email y controles con espacio */
+.header-actions {
+    display: flex !important;
+    gap: 16px !important;
+    align-items: center !important;
+}
+
+#userEmailDisplay {
+    padding: 12px 20px !important;
+    background: rgba(255, 179, 217, 0.2) !important;
+    border-radius: 12px !important;
+    margin-right: 16px !important;
+}
+
+/* Dark mode header */
+.dark .header-brand,
+html[data-theme="dark"] .header-brand {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 179, 217, 0.6) !important;
+    backdrop-filter: blur(10px) !important;
 }
 
 /* BOTONES ROSA VIBRANTE */
@@ -234,10 +298,110 @@ button.tab-item.active * {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* DESACTIVAR DARK MODE COMPLETAMENTE */
-.dark,
-[data-theme="dark"],
-html.dark,
-body.dark {
-    filter: none !important;
+/* ==========================================
+   DARK MODE - CARDS VIBRANTES OSCURAS (NO NEGRAS)
+   ========================================== */
+
+/* Dark mode - Card 1 CORAL OSCURO */
+.dark .stats-grid > div:nth-child(1),
+html[data-theme="dark"] .stats-grid > div:nth-child(1),
+.dark .stats-card:nth-child(1),
+html[data-theme="dark"] .stats-card:nth-child(1) {
+    background: linear-gradient(135deg, #D64545 0%, #C23636 100%) !important;
+    box-shadow: 0 4px 16px rgba(214, 69, 69, 0.4) !important;
+}
+
+/* Dark mode - Card 2 CYAN OSCURO */
+.dark .stats-grid > div:nth-child(2),
+html[data-theme="dark"] .stats-grid > div:nth-child(2),
+.dark .stats-card:nth-child(2),
+html[data-theme="dark"] .stats-card:nth-child(2) {
+    background: linear-gradient(135deg, #2A9D8F 0%, #238276 100%) !important;
+    box-shadow: 0 4px 16px rgba(42, 157, 143, 0.4) !important;
+}
+
+/* Dark mode - Card 3 YELLOW OSCURO */
+.dark .stats-grid > div:nth-child(3),
+html[data-theme="dark"] .stats-grid > div:nth-child(3),
+.dark .stats-card:nth-child(3),
+html[data-theme="dark"] .stats-card:nth-child(3) {
+    background: linear-gradient(135deg, #E5C152 0%, #D4B23F 100%) !important;
+    box-shadow: 0 4px 16px rgba(229, 193, 82, 0.4) !important;
+    color: #2d2d2d !important;
+}
+
+.dark .stats-grid > div:nth-child(3) *,
+html[data-theme="dark"] .stats-grid > div:nth-child(3) * {
+    color: #2d2d2d !important;
+}
+
+/* Dark mode - Card 4-5 ORANGE OSCURO */
+.dark .stats-grid > div:nth-child(4),
+.dark .stats-grid > div:nth-child(5),
+html[data-theme="dark"] .stats-grid > div:nth-child(4),
+html[data-theme="dark"] .stats-grid > div:nth-child(5),
+.dark .stats-card:nth-child(4),
+.dark .stats-card:nth-child(5),
+html[data-theme="dark"] .stats-card:nth-child(4),
+html[data-theme="dark"] .stats-card:nth-child(5) {
+    background: linear-gradient(135deg, #E89B52 0%, #D98840 100%) !important;
+    box-shadow: 0 4px 16px rgba(232, 155, 82, 0.4) !important;
+}
+
+/* Dark mode - Textos en cards */
+.dark .stats-grid > div:nth-child(1) *,
+.dark .stats-grid > div:nth-child(2) *,
+.dark .stats-grid > div:nth-child(4) *,
+.dark .stats-grid > div:nth-child(5) *,
+html[data-theme="dark"] .stats-grid > div:nth-child(1) *,
+html[data-theme="dark"] .stats-grid > div:nth-child(2) *,
+html[data-theme="dark"] .stats-grid > div:nth-child(4) *,
+html[data-theme="dark"] .stats-grid > div:nth-child(5) * {
+    color: white !important;
+}
+
+/* Dark mode - Secciones y cards NO NEGRAS */
+.dark section[class],
+.dark .card[class],
+.dark .trip-card[class],
+html[data-theme="dark"] section[class],
+html[data-theme="dark"] .card[class],
+html[data-theme="dark"] .trip-card[class] {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 179, 217, 0.2) !important;
+}
+
+/* Dark mode - Textos legibles */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6,
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6 {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+}
+
+.dark p, .dark span, .dark div, .dark label,
+html[data-theme="dark"] p,
+html[data-theme="dark"] span,
+html[data-theme="dark"] div,
+html[data-theme="dark"] label {
+    color: #e0e0e0 !important;
+}
+
+/* Dark mode - Botones rosa más intenso */
+.dark .btn-kawaii,
+.dark .btn-primary,
+html[data-theme="dark"] .btn-kawaii,
+html[data-theme="dark"] .btn-primary {
+    background: linear-gradient(135deg, #FF99CC 0%, #FF6BB3 100%) !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 179, 0.5) !important;
+}
+
+/* Dark mode - Tabs activo más vibrante */
+.dark .tab-item.active,
+html[data-theme="dark"] .tab-item.active {
+    background: linear-gradient(135deg, #D64545 0%, #C23636 100%) !important;
 }
