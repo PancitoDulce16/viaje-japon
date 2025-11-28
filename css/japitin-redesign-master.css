@@ -1,0 +1,725 @@
+/*
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *  🎨 JAPITIN - MASTER REDESIGN
+ *  Sistema de Diseño Profesional Kawaii Adventure Geek
+ *  Autor: Frontend Design Specialist
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ */
+
+/* ==========================================
+   DESIGN TOKENS - Sistema de Diseño Base
+   ========================================== */
+
+:root {
+    /* Paleta Principal - Kawaii Adventure */
+    --color-primary: #FF6B9D;
+    --color-primary-light: #FFB3D9;
+    --color-primary-dark: #E91E63;
+
+    /* Paleta Secundaria - Confianza */
+    --color-secondary: #1E3A8A;
+    --color-secondary-light: #3B82F6;
+    --color-secondary-dark: #1E40AF;
+
+    /* Acentos - Emoción */
+    --color-accent-yellow: #FBBF24;
+    --color-accent-green: #10B981;
+    --color-accent-purple: #8B5CF6;
+    --color-accent-orange: #F59E0B;
+
+    /* Neutros - Fondos y textos */
+    --color-neutral-50: #F8FAFC;
+    --color-neutral-100: #F1F5F9;
+    --color-neutral-200: #E2E8F0;
+    --color-neutral-300: #CBD5E1;
+    --color-neutral-700: #334155;
+    --color-neutral-800: #1E293B;
+    --color-neutral-900: #0F172A;
+
+    /* Espaciado - Sistema 8px */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+    --space-3xl: 64px;
+
+    /* Tipografía */
+    --font-display: 'Poppins', -apple-system, sans-serif;
+    --font-body: 'Poppins', -apple-system, sans-serif;
+
+    /* Tamaños de fuente - Escala modular */
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+
+    /* Bordes y sombras */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+
+    /* Transiciones */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark Mode Tokens */
+html.dark {
+    --color-neutral-50: #0F172A;
+    --color-neutral-100: #1E293B;
+    --color-neutral-200: #334155;
+    --color-neutral-300: #475569;
+    --color-neutral-700: #CBD5E1;
+    --color-neutral-800: #E2E8F0;
+    --color-neutral-900: #F8FAFC;
+}
+
+/* ==========================================
+   RESET Y BASE
+   ========================================== */
+
+* {
+    font-family: var(--font-body) !important;
+}
+
+/* ==========================================
+   DARK MODE - WALLPAPER Y FONDO COHESIVO
+   ========================================== */
+
+html.dark,
+html.dark body,
+html[data-theme="dark"],
+html[data-theme="dark"] body {
+    background-color: var(--color-neutral-900) !important;
+    background-image: url('/images/iconos/Wallpaper/Osucuro1.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+}
+
+html.dark body::before,
+html[data-theme="dark"] body::before {
+    content: '' !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: linear-gradient(135deg,
+        rgba(15, 23, 42, 0.92) 0%,
+        rgba(30, 41, 59, 0.88) 50%,
+        rgba(15, 23, 42, 0.92) 100%) !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
+}
+
+/* ==========================================
+   STATS CARDS - PALETA ARMÓNICA COHESIVA
+   ========================================== */
+
+/* OCULTAR TODOS LOS EMOJIS Y ICONOS ROTOS */
+html.dark .stat-card .text-3xl,
+html.dark .stat-card .text-2xl,
+html.dark .stat-card > div:first-child > div:last-child,
+html[data-theme="dark"] .stat-card .text-3xl,
+html[data-theme="dark"] .stat-card .text-2xl,
+html[data-theme="dark"] .stat-card > div:first-child > div:last-child {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    font-size: 0 !important;
+}
+
+/* Card 1 - CORAL PRINCIPAL (Adventure) */
+html.dark .stat-card:nth-child(1),
+html[data-theme="dark"] .stat-card:nth-child(1) {
+    background: linear-gradient(135deg,
+        var(--color-primary-dark) 0%,
+        var(--color-primary) 100%) !important;
+    border: 2px solid rgba(255, 107, 157, 0.3) !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow: 0 8px 32px rgba(233, 30, 99, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+    position: relative !important;
+    overflow: visible !important;
+}
+
+html.dark .stat-card:nth-child(1),
+html.dark .stat-card:nth-child(1) * {
+    color: #ffffff !important;
+}
+
+/* Icono kawaii Card 1 */
+html.dark .stat-card:nth-child(1)::after {
+    content: '' !important;
+    position: absolute !important;
+    top: var(--space-lg) !important;
+    right: var(--space-lg) !important;
+    width: 72px !important;
+    height: 72px !important;
+    background-image: url('/images/iconos/Dango/Dango1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2)) !important;
+    animation: float-gentle 3s ease-in-out infinite !important;
+}
+
+/* Card 2 - AZUL SECUNDARIO (Planning) */
+html.dark .stat-card:nth-child(2),
+html[data-theme="dark"] .stat-card:nth-child(2) {
+    background: linear-gradient(135deg,
+        var(--color-secondary-dark) 0%,
+        var(--color-secondary-light) 100%) !important;
+    border: 2px solid rgba(59, 130, 246, 0.3) !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow: 0 8px 32px rgba(30, 58, 138, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+    position: relative !important;
+    overflow: visible !important;
+}
+
+html.dark .stat-card:nth-child(2),
+html.dark .stat-card:nth-child(2) * {
+    color: #ffffff !important;
+}
+
+html.dark .stat-card:nth-child(2)::after {
+    content: '' !important;
+    position: absolute !important;
+    top: var(--space-lg) !important;
+    right: var(--space-lg) !important;
+    width: 72px !important;
+    height: 72px !important;
+    background-image: url('/images/iconos/Checklist e itinerario/Itinerario1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2)) !important;
+    animation: float-gentle 3.5s ease-in-out infinite !important;
+}
+
+/* Card 3 - AMARILLO ACENTO (Discovery) */
+html.dark .stat-card:nth-child(3),
+html[data-theme="dark"] .stat-card:nth-child(3) {
+    background: linear-gradient(135deg,
+        #D97706 0%,
+        var(--color-accent-yellow) 100%) !important;
+    border: 2px solid rgba(251, 191, 36, 0.3) !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow: 0 8px 32px rgba(217, 119, 6, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+    position: relative !important;
+    overflow: visible !important;
+}
+
+html.dark .stat-card:nth-child(3),
+html.dark .stat-card:nth-child(3) * {
+    color: var(--color-neutral-900) !important;
+}
+
+/* Card 4 - VERDE ACENTO (Progress) */
+html.dark .stat-card:nth-child(4),
+html[data-theme="dark"] .stat-card:nth-child(4) {
+    background: linear-gradient(135deg,
+        #059669 0%,
+        var(--color-accent-green) 100%) !important;
+    border: 2px solid rgba(16, 185, 129, 0.3) !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow: 0 8px 32px rgba(5, 150, 105, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+    position: relative !important;
+    overflow: visible !important;
+}
+
+html.dark .stat-card:nth-child(4),
+html.dark .stat-card:nth-child(4) * {
+    color: #ffffff !important;
+}
+
+html.dark .stat-card:nth-child(4)::after {
+    content: '' !important;
+    position: absolute !important;
+    top: var(--space-lg) !important;
+    right: var(--space-lg) !important;
+    width: 72px !important;
+    height: 72px !important;
+    background-image: url('/images/iconos/Avion/Avion1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2)) !important;
+    animation: float-gentle 4s ease-in-out infinite !important;
+}
+
+/* Animación suave de flotación */
+@keyframes float-gentle {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-8px) rotate(2deg);
+    }
+}
+
+/* Hover effect en stats cards */
+html.dark .stat-card:hover,
+html[data-theme="dark"] .stat-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3),
+                0 0 0 2px rgba(255, 255, 255, 0.15) !important;
+    transition: all var(--transition-base) !important;
+}
+
+/* ==========================================
+   CONTENEDORES - JERARQUÍA VISUAL CLARA
+   ========================================== */
+
+/* Contenedor principal de stats */
+html.dark #currentTripHeader,
+html[data-theme="dark"] #currentTripHeader {
+    background: rgba(15, 23, 42, 0.60) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: var(--radius-xl) !important;
+    padding: var(--space-xl) !important;
+    box-shadow: var(--shadow-xl) !important;
+}
+
+/* Grid de stats - Layout claro */
+#statsContainer,
+.stats-container {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+    gap: var(--space-lg) !important;
+    margin: var(--space-xl) 0 !important;
+}
+
+/* ==========================================
+   HEADER - LIMPIO Y ESPACIOSO
+   ========================================== */
+
+html.dark .japan-header,
+html[data-theme="dark"] .japan-header {
+    padding: var(--space-xl) 0 !important;
+    margin-bottom: var(--space-xl) !important;
+}
+
+html.dark .header-brand,
+html[data-theme="dark"] .header-brand {
+    background: rgba(15, 23, 42, 0.70) !important;
+    backdrop-filter: blur(16px) !important;
+    border: 2px solid rgba(255, 107, 157, 0.3) !important;
+    border-radius: var(--radius-xl) !important;
+    padding: var(--space-lg) var(--space-2xl) !important;
+    box-shadow: 0 8px 32px rgba(233, 30, 99, 0.2) !important;
+}
+
+/* Decoraciones laterales (dangos) */
+.header-brand::before {
+    left: calc(-1 * var(--space-2xl) - 12px) !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 48px !important;
+    height: 48px !important;
+}
+
+.header-brand::after {
+    right: calc(-1 * var(--space-2xl) - 12px) !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 42px !important;
+    height: 42px !important;
+}
+
+/* ==========================================
+   TABS - ICONOGRAFÍA CONSISTENTE
+   ========================================== */
+
+/* Ocultar FontAwesome icons */
+html.dark .tab-btn i,
+html[data-theme="dark"] .tab-btn i {
+    display: none !important;
+}
+
+/* Estilos de tabs armoniosos */
+html.dark .tab-btn,
+html[data-theme="dark"] .tab-btn {
+    background: rgba(30, 41, 59, 0.60) !important;
+    backdrop-filter: blur(8px) !important;
+    border: 2px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: var(--radius-md) !important;
+    padding: var(--space-md) var(--space-lg) !important;
+    color: var(--color-neutral-300) !important;
+    font-weight: 600 !important;
+    transition: all var(--transition-base) !important;
+}
+
+html.dark .tab-btn:hover,
+html[data-theme="dark"] .tab-btn:hover {
+    background: rgba(51, 65, 85, 0.80) !important;
+    border-color: rgba(255, 107, 157, 0.3) !important;
+    color: #ffffff !important;
+    transform: translateY(-2px) !important;
+}
+
+html.dark .tab-btn.active,
+html[data-theme="dark"] .tab-btn.active {
+    background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary)) !important;
+    border-color: rgba(255, 107, 157, 0.5) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 16px rgba(233, 30, 99, 0.3) !important;
+}
+
+/* Iconos kawaii en tabs con ::before */
+html.dark .tab-btn[data-tab="itinerary"]::before,
+html[data-theme="dark"] .tab-btn[data-tab="itinerary"]::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 24px !important;
+    height: 24px !important;
+    background-image: url('/images/iconos/Checklist e itinerario/Itinerario1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    margin-right: var(--space-sm) !important;
+    vertical-align: middle !important;
+    filter: brightness(1.3) !important;
+}
+
+html.dark .tab-btn[data-tab="preparation"]::before,
+html[data-theme="dark"] .tab-btn[data-tab="preparation"]::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 24px !important;
+    height: 24px !important;
+    background-image: url('/images/iconos/Checklist e itinerario/Checklist1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    margin-right: var(--space-sm) !important;
+    vertical-align: middle !important;
+    filter: brightness(1.3) !important;
+}
+
+html.dark .tab-btn[data-tab="flights"]::before,
+html[data-theme="dark"] .tab-btn[data-tab="flights"]::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 24px !important;
+    height: 24px !important;
+    background-image: url('/images/iconos/Avion/Avion1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    margin-right: var(--space-sm) !important;
+    vertical-align: middle !important;
+    filter: brightness(1.3) !important;
+}
+
+html.dark .tab-btn[data-tab="hotels"]::before,
+html[data-theme="dark"] .tab-btn[data-tab="hotels"]::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 24px !important;
+    height: 24px !important;
+    background-image: url('/images/iconos/Hotel/Hotel.1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    margin-right: var(--space-sm) !important;
+    vertical-align: middle !important;
+    filter: brightness(1.3) !important;
+}
+
+html.dark .tab-btn[data-tab="transport"]::before,
+html[data-theme="dark"] .tab-btn[data-tab="transport"]::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 24px !important;
+    height: 24px !important;
+    background-image: url('/images/iconos/Transporte/Trenbala1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    margin-right: var(--space-sm) !important;
+    vertical-align: middle !important;
+    filter: brightness(1.3) !important;
+}
+
+html.dark .tab-btn[data-tab="map"]::before,
+html[data-theme="dark"] .tab-btn[data-tab="map"]::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 24px !important;
+    height: 24px !important;
+    background-image: url('/images/iconos/Mapa/mapa1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    margin-right: var(--space-sm) !important;
+    vertical-align: middle !important;
+    filter: brightness(1.3) !important;
+}
+
+html.dark .tab-btn[data-tab="attractions"]::before,
+html[data-theme="dark"] .tab-btn[data-tab="attractions"]::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 24px !important;
+    height: 24px !important;
+    background-image: url('/images/iconos/Atracciones/atracciones 1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    margin-right: var(--space-sm) !important;
+    vertical-align: middle !important;
+    filter: brightness(1.3) !important;
+}
+
+html.dark .tab-btn[data-tab="essentials"]::before,
+html[data-theme="dark"] .tab-btn[data-tab="essentials"]::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 24px !important;
+    height: 24px !important;
+    background-image: url('/images/iconos/Utilidades/tuerca1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    margin-right: var(--space-sm) !important;
+    vertical-align: middle !important;
+    filter: brightness(1.3) !important;
+}
+
+html.dark .tab-btn[data-tab="utils"]::before,
+html[data-theme="dark"] .tab-btn[data-tab="utils"]::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 24px !important;
+    height: 24px !important;
+    background-image: url('/images/iconos/Game geek/controlvideojuego.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    margin-right: var(--space-sm) !important;
+    vertical-align: middle !important;
+    filter: brightness(1.3) !important;
+}
+
+/* ==========================================
+   ITINERARIO - ESTRUCTURA Y ESPACIADO
+   ========================================== */
+
+/* Fondo azul profundo para itinerario */
+html.dark #content-itinerary,
+html[data-theme="dark"] #content-itinerary {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%) !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+    border-radius: var(--radius-xl) !important;
+    padding: var(--space-xl) !important;
+}
+
+/* Header del itinerario con gradiente cohesivo */
+html.dark #content-itinerary > div:first-child,
+html[data-theme="dark"] #content-itinerary > div:first-child {
+    background: linear-gradient(135deg,
+        var(--color-primary-dark) 0%,
+        var(--color-secondary-light) 100%) !important;
+    padding: var(--space-xl) !important;
+    border-radius: var(--radius-lg) !important;
+    margin-bottom: var(--space-xl) !important;
+    box-shadow: 0 8px 24px rgba(233, 30, 99, 0.25) !important;
+}
+
+/* Imagen de ciudad - GRANDE y visible */
+html.dark #content-itinerary img[src*="iconos/City"],
+html[data-theme="dark"] #content-itinerary img[src*="iconos/City"] {
+    width: 100% !important;
+    max-width: 360px !important;
+    height: auto !important;
+    min-height: 260px !important;
+    object-fit: cover !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+    margin-bottom: var(--space-lg) !important;
+}
+
+/* Activity cards con espaciado */
+html.dark .activity-card,
+html[data-theme="dark"] .activity-card {
+    background: rgba(30, 41, 59, 0.70) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: var(--radius-md) !important;
+    padding: var(--space-lg) !important;
+    margin-bottom: var(--space-md) !important;
+}
+
+/* Tabla de actividades - Headers separados */
+html.dark .activity-card table th,
+html[data-theme="dark"] .activity-card table th {
+    padding: var(--space-md) var(--space-lg) !important;
+    text-align: left !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: var(--text-xs) !important;
+    letter-spacing: 0.05em !important;
+    color: var(--color-neutral-400) !important;
+}
+
+html.dark .activity-card table td,
+html[data-theme="dark"] .activity-card table td {
+    padding: var(--space-md) var(--space-lg) !important;
+}
+
+/* ==========================================
+   BOTÓN SOS - PROMINENTE Y EMOCIONAL
+   ========================================== */
+
+html.dark button[data-modal="emergency"],
+html[data-theme="dark"] button[data-modal="emergency"] {
+    background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%) !important;
+    border: 2px solid rgba(220, 38, 38, 0.5) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: var(--text-lg) !important;
+    padding: var(--space-md) var(--space-xl) !important;
+    border-radius: var(--radius-full) !important;
+    box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4),
+                0 0 0 0 rgba(220, 38, 38, 0.7) !important;
+    animation: pulse-sos 2s ease-in-out infinite !important;
+    transition: all var(--transition-base) !important;
+}
+
+html.dark button[data-modal="emergency"]:hover,
+html[data-theme="dark"] button[data-modal="emergency"]:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 12px 32px rgba(220, 38, 38, 0.5) !important;
+}
+
+@keyframes pulse-sos {
+    0%, 100% {
+        box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4),
+                    0 0 0 0 rgba(220, 38, 38, 0.7);
+    }
+    50% {
+        box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4),
+                    0 0 0 12px rgba(220, 38, 38, 0);
+    }
+}
+
+/* ==========================================
+   RESPONSIVE - MOBILE OPTIMIZADO
+   ========================================== */
+
+@media (max-width: 768px) {
+    /* Stats en columna */
+    #statsContainer,
+    .stats-container {
+        grid-template-columns: 1fr !important;
+        gap: var(--space-md) !important;
+        padding: 0 var(--space-md) !important;
+    }
+
+    /* Iconos más pequeños en mobile */
+    html.dark .stat-card:nth-child(1)::after,
+    html.dark .stat-card:nth-child(2)::after,
+    html.dark .stat-card:nth-child(4)::after {
+        width: 56px !important;
+        height: 56px !important;
+        top: var(--space-md) !important;
+        right: var(--space-md) !important;
+    }
+
+    /* Imagen ciudad responsive */
+    html.dark #content-itinerary img[src*="iconos/City"],
+    html[data-theme="dark"] #content-itinerary img[src*="iconos/City"] {
+        max-width: 100% !important;
+        min-height: 200px !important;
+    }
+
+    /* Tabs scroll */
+    #tabSelector {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: thin !important;
+    }
+
+    .tab-btn {
+        flex-shrink: 0 !important;
+    }
+}
+
+/* ==========================================
+   TIPOGRAFÍA - JERARQUÍA CLARA
+   ========================================== */
+
+html.dark h1, html[data-theme="dark"] h1 {
+    font-size: var(--text-4xl) !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    letter-spacing: -0.02em !important;
+}
+
+html.dark h2, html[data-theme="dark"] h2 {
+    font-size: var(--text-3xl) !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+}
+
+html.dark h3, html[data-theme="dark"] h3 {
+    font-size: var(--text-2xl) !important;
+    font-weight: 600 !important;
+    color: var(--color-neutral-100) !important;
+}
+
+html.dark p, html[data-theme="dark"] p {
+    font-size: var(--text-base) !important;
+    line-height: 1.6 !important;
+    color: var(--color-neutral-300) !important;
+}
+
+/* ==========================================
+   MICROINTERACCIONES - PERSONALIDAD
+   ========================================== */
+
+/* Todas las cards con transición suave */
+.stat-card,
+.activity-card,
+.tab-btn,
+button {
+    transition: all var(--transition-base) !important;
+}
+
+/* Efecto ripple en botones */
+button:active {
+    transform: scale(0.98) !important;
+}
+
+/* ==========================================
+   SCROLLBAR COHESIVO
+   ========================================== */
+
+html.dark ::-webkit-scrollbar,
+html[data-theme="dark"] ::-webkit-scrollbar {
+    width: 12px !important;
+    height: 12px !important;
+}
+
+html.dark ::-webkit-scrollbar-track,
+html[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border-radius: var(--radius-sm) !important;
+}
+
+html.dark ::-webkit-scrollbar-thumb,
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary-light)) !important;
+    border-radius: var(--radius-sm) !important;
+    border: 2px solid rgba(15, 23, 42, 0.6) !important;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover,
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, var(--color-primary-light), var(--color-secondary)) !important;
+}
