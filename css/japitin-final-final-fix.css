@@ -1,0 +1,446 @@
+/*
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *  🎨 JAPITIN FINAL FINAL FIX
+ *  Corrección DEFINITIVA - Dark Mode Correcto + Iconos + Layout
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ */
+
+/* ==========================================
+   DARK MODE - WALLPAPER OSCURO CORRECTO
+   ========================================== */
+
+/* FORZAR wallpaper oscuro en dark mode */
+html.dark,
+html.dark body,
+html[data-theme="dark"],
+html[data-theme="dark"] body {
+    background-color: #0a0a0a !important;
+    background-image: url('/images/iconos/Wallpaper/Osucuro1.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+}
+
+/* Overlay oscuro para dark mode */
+html.dark body::before,
+html[data-theme="dark"] body::before {
+    content: '' !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(10, 10, 10, 0.75) !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
+}
+
+/* ==========================================
+   DARK MODE - STATS CARDS MÁS OSCURAS
+   ========================================== */
+
+/* Card 1 - CORAL MUY OSCURO */
+html.dark .stat-card:nth-child(1),
+html[data-theme="dark"] .stat-card:nth-child(1),
+.dark .stat-card:nth-child(1) {
+    background: linear-gradient(135deg, #8B2525 0%, #6B1A1A 100%) !important;
+    box-shadow: 0 8px 24px rgba(139, 37, 37, 0.5) !important;
+}
+
+/* Card 2 - CYAN MUY OSCURO */
+html.dark .stat-card:nth-child(2),
+html[data-theme="dark"] .stat-card:nth-child(2),
+.dark .stat-card:nth-child(2) {
+    background: linear-gradient(135deg, #1A5C56 0%, #0F3D39 100%) !important;
+    box-shadow: 0 8px 24px rgba(26, 92, 86, 0.5) !important;
+}
+
+/* Card 3 - YELLOW MUY OSCURO */
+html.dark .stat-card:nth-child(3),
+html[data-theme="dark"] .stat-card:nth-child(3),
+.dark .stat-card:nth-child(3) {
+    background: linear-gradient(135deg, #8B7424 0%, #6B5A1A 100%) !important;
+    box-shadow: 0 8px 24px rgba(139, 116, 36, 0.5) !important;
+}
+
+html.dark .stat-card:nth-child(3) *,
+html[data-theme="dark"] .stat-card:nth-child(3) *,
+.dark .stat-card:nth-child(3) * {
+    color: #FFE699 !important;
+}
+
+/* Card 4 - ORANGE MUY OSCURO */
+html.dark .stat-card:nth-child(4),
+html[data-theme="dark"] .stat-card:nth-child(4),
+.dark .stat-card:nth-child(4) {
+    background: linear-gradient(135deg, #8B5A2B 0%, #6B4420 100%) !important;
+    box-shadow: 0 8px 24px rgba(139, 90, 43, 0.5) !important;
+}
+
+/* ==========================================
+   DECORACIONES - A LOS LADOS NO ARRIBA
+   ========================================== */
+
+/* RESETEAR decoraciones anteriores */
+.header-brand::before,
+.header-brand::after {
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+}
+
+/* Dango IZQUIERDA del banner */
+.header-brand::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: -50px !important;
+    transform: translateY(-50%) !important;
+    width: 42px !important;
+    height: 42px !important;
+    background-image: url('/images/iconos/Dango/DangoTori3.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    animation: float-side 3s ease-in-out infinite !important;
+    z-index: 10 !important;
+}
+
+/* Dango DERECHA del banner */
+.header-brand::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    right: -45px !important;
+    transform: translateY(-50%) !important;
+    width: 38px !important;
+    height: 38px !important;
+    background-image: url('/images/iconos/Dango/Dango2.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    animation: float-side 3.5s ease-in-out infinite !important;
+    z-index: 10 !important;
+}
+
+@keyframes float-side {
+    0%, 100% {
+        transform: translateY(-50%) translateX(0);
+    }
+    50% {
+        transform: translateY(-50%) translateX(5px);
+    }
+}
+
+/* ==========================================
+   HEADER - MÁS ESPACIADO
+   ========================================== */
+
+.japan-header {
+    padding: 32px 0 !important;
+    margin-bottom: 40px !important;
+}
+
+.japan-header .max-w-7xl {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 24px !important;
+}
+
+.japan-header .flex.justify-between {
+    gap: 24px !important;
+}
+
+.header-brand {
+    margin-right: 24px !important;
+}
+
+/* ==========================================
+   ICONOS KAWAII - MÉTODO DIFERENTE
+   ========================================== */
+
+/* Ocultar emojis completamente */
+.stat-card:nth-child(1) > div:first-child > div:last-child,
+.stat-card:nth-child(2) > div:first-child > div:last-child,
+.stat-card:nth-child(4) > div:first-child > div:last-child {
+    display: none !important;
+}
+
+/* Crear nuevos contenedores para iconos */
+.stat-card:nth-child(1) > div:first-child::after {
+    content: '' !important;
+    width: 56px !important;
+    height: 56px !important;
+    background-image: url('/images/iconos/Dango/Dango1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    display: block !important;
+}
+
+.stat-card:nth-child(2) > div:first-child::after {
+    content: '' !important;
+    width: 56px !important;
+    height: 56px !important;
+    background-image: url('/images/iconos/Checklist e itinerario/Itinerario1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    display: block !important;
+}
+
+.stat-card:nth-child(4) > div:first-child::after {
+    content: '' !important;
+    width: 56px !important;
+    height: 56px !important;
+    background-image: url('/images/iconos/Avion/Avion1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    display: block !important;
+}
+
+/* ==========================================
+   STATS GRID - LAYOUT CORRECTO
+   ========================================== */
+
+/* Asegurar que el grid esté bien alineado */
+#statsContainer,
+.stats-container {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+    gap: 20px !important;
+    margin-bottom: 32px !important;
+}
+
+/* Las cards deben tener altura consistente */
+.stat-card {
+    min-height: 160px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+}
+
+/* ==========================================
+   TABS - ICONOS KAWAII (con ::before)
+   ========================================== */
+
+/* Ocultar iconos FontAwesome de tabs */
+.tab-btn[data-tab="itinerary"] i,
+.tab-btn[data-tab="preparation"] i,
+.tab-btn[data-tab="flights"] i,
+.tab-btn[data-tab="hotels"] i,
+.tab-btn[data-tab="transport"] i,
+.tab-btn[data-tab="map"] i,
+.tab-btn[data-tab="attractions"] i,
+.tab-btn[data-tab="essentials"] i,
+.tab-btn[data-tab="utils"] i {
+    display: none !important;
+}
+
+/* Tab Itinerario - Icono Kawaii */
+.tab-btn[data-tab="itinerary"]::before {
+    content: '' !important;
+    width: 20px !important;
+    height: 20px !important;
+    background-image: url('/images/iconos/Checklist e itinerario/Itinerario1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    display: inline-block !important;
+    margin-right: 8px !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Preparación - Icono Kawaii */
+.tab-btn[data-tab="preparation"]::before {
+    content: '' !important;
+    width: 20px !important;
+    height: 20px !important;
+    background-image: url('/images/iconos/Checklist e itinerario/Checklist1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    display: inline-block !important;
+    margin-right: 8px !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Vuelos - Icono Kawaii */
+.tab-btn[data-tab="flights"]::before {
+    content: '' !important;
+    width: 20px !important;
+    height: 20px !important;
+    background-image: url('/images/iconos/Avion/Avion1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    display: inline-block !important;
+    margin-right: 8px !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Hoteles - Icono Kawaii */
+.tab-btn[data-tab="hotels"]::before {
+    content: '' !important;
+    width: 20px !important;
+    height: 20px !important;
+    background-image: url('/images/iconos/Hotel/Hotel.1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    display: inline-block !important;
+    margin-right: 8px !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Transporte - Icono Kawaii */
+.tab-btn[data-tab="transport"]::before {
+    content: '' !important;
+    width: 20px !important;
+    height: 20px !important;
+    background-image: url('/images/iconos/Transporte/Trenbala1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    display: inline-block !important;
+    margin-right: 8px !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Mapa - Icono Kawaii */
+.tab-btn[data-tab="map"]::before {
+    content: '' !important;
+    width: 20px !important;
+    height: 20px !important;
+    background-image: url('/images/iconos/Mapa/mapa1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    display: inline-block !important;
+    margin-right: 8px !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Atracciones - Icono Kawaii */
+.tab-btn[data-tab="attractions"]::before {
+    content: '' !important;
+    width: 20px !important;
+    height: 20px !important;
+    background-image: url('/images/iconos/Atracciones/atracciones 1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    display: inline-block !important;
+    margin-right: 8px !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Esenciales - Icono Kawaii */
+.tab-btn[data-tab="essentials"]::before {
+    content: '' !important;
+    width: 20px !important;
+    height: 20px !important;
+    background-image: url('/images/iconos/Utilidades/tuerca1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    display: inline-block !important;
+    margin-right: 8px !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Utilidades - Icono Kawaii */
+.tab-btn[data-tab="utils"]::before {
+    content: '' !important;
+    width: 20px !important;
+    height: 20px !important;
+    background-image: url('/images/iconos/Game geek/controlvideojuego.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    display: inline-block !important;
+    margin-right: 8px !important;
+    vertical-align: middle !important;
+}
+
+/* ==========================================
+   DARK MODE - TEXTOS CLAROS
+   ========================================== */
+
+html.dark .stat-card,
+html.dark .stat-card *,
+html[data-theme="dark"] .stat-card,
+html[data-theme="dark"] .stat-card * {
+    color: #ffffff !important;
+}
+
+html.dark h1, html.dark h2, html.dark h3,
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3 {
+    color: #ffffff !important;
+}
+
+html.dark p, html.dark span, html.dark div,
+html[data-theme="dark"] p,
+html[data-theme="dark"] span,
+html[data-theme="dark"] div {
+    color: #e0e0e0 !important;
+}
+
+/* ==========================================
+   DARK MODE - SECCIONES
+   ========================================== */
+
+html.dark section[class],
+html.dark .card[class],
+html[data-theme="dark"] section[class],
+html[data-theme="dark"] .card[class] {
+    background: rgba(20, 20, 30, 0.85) !important;
+    border: 1px solid rgba(255, 179, 217, 0.2) !important;
+}
+
+html.dark .header-brand,
+html[data-theme="dark"] .header-brand {
+    background: rgba(255, 255, 255, 0.10) !important;
+    border-color: rgba(255, 179, 217, 0.5) !important;
+    backdrop-filter: blur(12px) !important;
+}
+
+/* ==========================================
+   DARK MODE - TABS
+   ========================================== */
+
+html.dark .tab-btn,
+html[data-theme="dark"] .tab-btn {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 179, 217, 0.3) !important;
+    color: #ffffff !important;
+}
+
+html.dark .tab-btn.active,
+html[data-theme="dark"] .tab-btn.active {
+    background: linear-gradient(135deg, #8B2525 0%, #6B1A1A 100%) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* ==========================================
+   RESPONSIVE - MOBILE
+   ========================================== */
+
+@media (max-width: 768px) {
+    .header-brand::before {
+        left: -35px !important;
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    .header-brand::after {
+        right: -35px !important;
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    #statsContainer,
+    .stats-container {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+}
