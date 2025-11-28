@@ -22,38 +22,42 @@ body {
 /* Stats cards - colores vibrantes del concepto */
 .stats-grid > div:nth-child(1),
 .stats-grid .stats-card:first-child {
-    background: linear-gradient(135deg, #FF9999 0%, #FF7B7B 100%);
-    color: white;
+    background: linear-gradient(135deg, #FF9999 0%, #FF7B7B 100%) !important;
+    color: white !important;
+    border: none !important;
 }
 
 .stats-grid > div:nth-child(2),
 .stats-grid .stats-card:nth-child(2) {
-    background: linear-gradient(135deg, #66E3E8 0%, #4DD4D9 100%);
-    color: white;
+    background: linear-gradient(135deg, #66E3E8 0%, #4DD4D9 100%) !important;
+    color: white !important;
+    border: none !important;
 }
 
 .stats-grid > div:nth-child(3),
 .stats-grid .stats-card:nth-child(3) {
-    background: linear-gradient(135deg, #FFE699 0%, #FFD966 100%);
-    color: #6B4E71;
+    background: linear-gradient(135deg, #FFE699 0%, #FFD966 100%) !important;
+    color: #6B4E71 !important;
+    border: none !important;
 }
 
 .stats-grid > div:nth-child(4),
 .stats-grid .stats-card:nth-child(4) {
-    background: linear-gradient(135deg, #FFC999 0%, #FFB366 100%);
-    color: white;
+    background: linear-gradient(135deg, #FFC999 0%, #FFB366 100%) !important;
+    color: white !important;
+    border: none !important;
 }
 
 /* Forzar color blanco en textos de cards coral, cyan, orange */
 .stats-grid > div:nth-child(1) *,
 .stats-grid > div:nth-child(2) *,
 .stats-grid > div:nth-child(4) * {
-    color: white;
+    color: white !important;
 }
 
 /* Color morado en card amarilla */
 .stats-grid > div:nth-child(3) * {
-    color: #6B4E71;
+    color: #6B4E71 !important;
 }
 
 /* ==========================================
@@ -122,22 +126,41 @@ button.tab-item.active {
 
 .dark .stats-grid > div:nth-child(1),
 html[data-theme="dark"] .stats-grid > div:nth-child(1) {
-    background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%);
+    background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%) !important;
+    color: white !important;
 }
 
 .dark .stats-grid > div:nth-child(2),
 html[data-theme="dark"] .stats-grid > div:nth-child(2) {
-    background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+    background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%) !important;
+    color: white !important;
 }
 
 .dark .stats-grid > div:nth-child(3),
 html[data-theme="dark"] .stats-grid > div:nth-child(3) {
-    background: linear-gradient(135deg, #F7DC6F 0%, #F4D03F 100%);
+    background: linear-gradient(135deg, #F7DC6F 0%, #F4D03F 100%) !important;
+    color: #2d2d2d !important;
 }
 
 .dark .stats-grid > div:nth-child(4),
 html[data-theme="dark"] .stats-grid > div:nth-child(4) {
-    background: linear-gradient(135deg, #FAA05A 0%, #F48024 100%);
+    background: linear-gradient(135deg, #FAA05A 0%, #F48024 100%) !important;
+    color: white !important;
+}
+
+/* Dark mode - textos en cards */
+.dark .stats-grid > div:nth-child(1) *,
+.dark .stats-grid > div:nth-child(2) *,
+.dark .stats-grid > div:nth-child(4) *,
+html[data-theme="dark"] .stats-grid > div:nth-child(1) *,
+html[data-theme="dark"] .stats-grid > div:nth-child(2) *,
+html[data-theme="dark"] .stats-grid > div:nth-child(4) * {
+    color: white !important;
+}
+
+.dark .stats-grid > div:nth-child(3) *,
+html[data-theme="dark"] .stats-grid > div:nth-child(3) * {
+    color: #2d2d2d !important;
 }
 
 /* Banner en dark mode */
