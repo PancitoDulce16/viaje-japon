@@ -25,7 +25,7 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 240, 245, 0.90);
     z-index: -1;
     pointer-events: none;
 }
@@ -37,9 +37,45 @@ body::before {
 body.dark,
 html[data-theme="dark"] body {
     background-image: url('/images/iconos/Wallpaper/Osucuro1.png');
+    background-color: #1a1a2e;
 }
 
 body.dark::before,
 html[data-theme="dark"] body::before {
-    background: rgba(15, 15, 18, 0.75);
+    background: rgba(26, 26, 46, 0.85);
+}
+
+/* Mejorar colores en dark mode */
+body.dark,
+html[data-theme="dark"] body {
+    color: #f0f0f0;
+}
+
+/* Cards en dark mode más visibles */
+.dark .stats-card,
+.dark .trip-card,
+.dark .card,
+html[data-theme="dark"] .stats-card,
+html[data-theme="dark"] .trip-card,
+html[data-theme="dark"] .card {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 179, 217, 0.3);
+}
+
+/* Textos más legibles en dark */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6,
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6 {
+    color: #ffffff;
+}
+
+.dark p, .dark span, .dark div,
+html[data-theme="dark"] p,
+html[data-theme="dark"] span,
+html[data-theme="dark"] div {
+    color: #e0e0e0;
 }

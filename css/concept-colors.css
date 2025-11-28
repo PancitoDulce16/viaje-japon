@@ -1,0 +1,158 @@
+/*
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *  🎨 JAPITIN - Concept Colors & Poppins
+ *  Colores del concepto + Fuente Poppins, sin romper funcionalidad
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ */
+
+/* ==========================================
+   FUENTE POPPINS
+   ========================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ==========================================
+   COLORES DEL CONCEPTO
+   ========================================== */
+
+/* Stats cards - colores vibrantes del concepto */
+.stats-grid > div:nth-child(1),
+.stats-grid .stats-card:first-child {
+    background: linear-gradient(135deg, #FF9999 0%, #FF7B7B 100%);
+    color: white;
+}
+
+.stats-grid > div:nth-child(2),
+.stats-grid .stats-card:nth-child(2) {
+    background: linear-gradient(135deg, #66E3E8 0%, #4DD4D9 100%);
+    color: white;
+}
+
+.stats-grid > div:nth-child(3),
+.stats-grid .stats-card:nth-child(3) {
+    background: linear-gradient(135deg, #FFE699 0%, #FFD966 100%);
+    color: #6B4E71;
+}
+
+.stats-grid > div:nth-child(4),
+.stats-grid .stats-card:nth-child(4) {
+    background: linear-gradient(135deg, #FFC999 0%, #FFB366 100%);
+    color: white;
+}
+
+/* Forzar color blanco en textos de cards coral, cyan, orange */
+.stats-grid > div:nth-child(1) *,
+.stats-grid > div:nth-child(2) *,
+.stats-grid > div:nth-child(4) * {
+    color: white;
+}
+
+/* Color morado en card amarilla */
+.stats-grid > div:nth-child(3) * {
+    color: #6B4E71;
+}
+
+/* ==========================================
+   BANNER - MÁS LIMPIO Y ORDENADO
+   ========================================== */
+
+.header-brand {
+    padding: 1.5rem;
+    background: white;
+    border-radius: 20px;
+    border: 3px solid #FFB3D9;
+    box-shadow: 0 4px 16px rgba(255, 179, 217, 0.3);
+}
+
+.header-banner {
+    height: 60px;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+/* Remover decoraciones excesivas del banner si las hay */
+.header-brand::before,
+.header-brand::after {
+    font-size: 2rem;
+    opacity: 0.6;
+}
+
+/* ==========================================
+   BOTONES ROSA DEL CONCEPTO
+   ========================================== */
+
+.btn-kawaii,
+.btn-primary,
+button.btn-kawaii {
+    background: linear-gradient(135deg, #FFB3D9 0%, #FF99CC 100%);
+    border: 2px solid white;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(255, 179, 217, 0.3);
+}
+
+.btn-kawaii:hover,
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 179, 217, 0.4);
+}
+
+/* ==========================================
+   TABS - MÁS COLORIDOS
+   ========================================== */
+
+.tab-item.active,
+button.tab-item.active {
+    background: linear-gradient(135deg, #FF9999 0%, #FF7B7B 100%);
+    color: white;
+    border-color: white;
+}
+
+.tab-item.active * {
+    color: white;
+}
+
+/* ==========================================
+   DARK MODE - COLORES MEJORADOS
+   ========================================== */
+
+.dark .stats-grid > div:nth-child(1),
+html[data-theme="dark"] .stats-grid > div:nth-child(1) {
+    background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%);
+}
+
+.dark .stats-grid > div:nth-child(2),
+html[data-theme="dark"] .stats-grid > div:nth-child(2) {
+    background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+}
+
+.dark .stats-grid > div:nth-child(3),
+html[data-theme="dark"] .stats-grid > div:nth-child(3) {
+    background: linear-gradient(135deg, #F7DC6F 0%, #F4D03F 100%);
+}
+
+.dark .stats-grid > div:nth-child(4),
+html[data-theme="dark"] .stats-grid > div:nth-child(4) {
+    background: linear-gradient(135deg, #FAA05A 0%, #F48024 100%);
+}
+
+/* Banner en dark mode */
+.dark .header-brand,
+html[data-theme="dark"] .header-brand {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 179, 217, 0.5);
+    backdrop-filter: blur(10px);
+}
+
+/* Botones en dark mode */
+.dark .btn-kawaii,
+.dark .btn-primary,
+html[data-theme="dark"] .btn-kawaii,
+html[data-theme="dark"] .btn-primary {
+    background: linear-gradient(135deg, #FF99CC 0%, #FF6BB3 100%);
+    box-shadow: 0 4px 12px rgba(255, 107, 179, 0.4);
+}
