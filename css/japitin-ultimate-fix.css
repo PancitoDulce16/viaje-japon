@@ -1,0 +1,619 @@
+/*
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *  🎨 JAPITIN ULTIMATE FIX
+ *  Diseño Kawaii-Geek Definitivo - Iconos + Gradientes + Layout
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ */
+
+/* ==========================================
+   FUENTE PRINCIPAL - Poppins
+   ========================================== */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+
+* {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* ==========================================
+   WALLPAPERS - Light & Dark Mode
+   ========================================== */
+html,
+body,
+#appDashboard {
+    background-color: #FFF0F5 !important;
+    background-image: url('/images/iconos/Wallpaper/asanoha1.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+}
+
+/* Overlay rosa suave para light mode */
+body::before {
+    content: '' !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(255, 240, 245, 0.85) !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
+}
+
+/* Dark Mode Wallpaper */
+html.dark,
+html[data-theme="dark"],
+html.dark body,
+html[data-theme="dark"] body {
+    background-color: #1a1a2e !important;
+    background-image: url('/images/iconos/Wallpaper/Osucuro1.png') !important;
+}
+
+html.dark body::before,
+html[data-theme="dark"] body::before {
+    background: rgba(26, 26, 46, 0.80) !important;
+}
+
+/* ==========================================
+   STATS CARDS - GRADIENTES VIBRANTES KAWAII
+   ========================================== */
+
+/* RESETEAR los estilos anteriores */
+.stat-card {
+    border: none !important;
+    backdrop-filter: none !important;
+}
+
+/* Card 1 - CORAL VIBRANTE (15 días) */
+.stat-card:nth-child(1) {
+    background: linear-gradient(135deg, #FF9999 0%, #FF7B7B 100%) !important;
+    border-radius: 20px !important;
+    padding: 28px !important;
+    box-shadow: 0 8px 24px rgba(255, 123, 123, 0.35) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.stat-card:nth-child(1):hover {
+    transform: translateY(-6px) !important;
+    box-shadow: 0 16px 40px rgba(255, 123, 123, 0.45) !important;
+}
+
+.stat-card:nth-child(1),
+.stat-card:nth-child(1) * {
+    color: white !important;
+}
+
+/* Card 2 - CYAN VIBRANTE (52 actividades) */
+.stat-card:nth-child(2) {
+    background: linear-gradient(135deg, #66E3E8 0%, #4DD4D9 100%) !important;
+    border-radius: 20px !important;
+    padding: 28px !important;
+    box-shadow: 0 8px 24px rgba(77, 212, 217, 0.35) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.stat-card:nth-child(2):hover {
+    transform: translateY(-6px) !important;
+    box-shadow: 0 16px 40px rgba(77, 212, 217, 0.45) !important;
+}
+
+.stat-card:nth-child(2),
+.stat-card:nth-child(2) * {
+    color: white !important;
+}
+
+/* Card 3 - AMARILLO VIBRANTE (Presupuesto) */
+.stat-card:nth-child(3) {
+    background: linear-gradient(135deg, #FFE699 0%, #FFD966 100%) !important;
+    border-radius: 20px !important;
+    padding: 28px !important;
+    box-shadow: 0 8px 24px rgba(255, 217, 102, 0.35) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.stat-card:nth-child(3):hover {
+    transform: translateY(-6px) !important;
+    box-shadow: 0 16px 40px rgba(255, 217, 102, 0.45) !important;
+}
+
+.stat-card:nth-child(3),
+.stat-card:nth-child(3) * {
+    color: #6B4E71 !important;
+}
+
+/* Card 4 - NARANJA VIBRANTE (Reservas) */
+.stat-card:nth-child(4) {
+    background: linear-gradient(135deg, #FFC999 0%, #FFB366 100%) !important;
+    border-radius: 20px !important;
+    padding: 28px !important;
+    box-shadow: 0 8px 24px rgba(255, 179, 102, 0.35) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.stat-card:nth-child(4):hover {
+    transform: translateY(-6px) !important;
+    box-shadow: 0 16px 40px rgba(255, 179, 102, 0.45) !important;
+}
+
+.stat-card:nth-child(4),
+.stat-card:nth-child(4) * {
+    color: white !important;
+}
+
+/* ==========================================
+   DARK MODE - STATS CARDS VIBRANT DARK
+   ========================================== */
+
+/* Dark Mode - Card 1 CORAL OSCURO */
+.dark .stat-card:nth-child(1),
+html[data-theme="dark"] .stat-card:nth-child(1) {
+    background: linear-gradient(135deg, #D64545 0%, #C23636 100%) !important;
+    box-shadow: 0 8px 24px rgba(214, 69, 69, 0.45) !important;
+}
+
+/* Dark Mode - Card 2 CYAN OSCURO */
+.dark .stat-card:nth-child(2),
+html[data-theme="dark"] .stat-card:nth-child(2) {
+    background: linear-gradient(135deg, #2A9D8F 0%, #238276 100%) !important;
+    box-shadow: 0 8px 24px rgba(42, 157, 143, 0.45) !important;
+}
+
+/* Dark Mode - Card 3 YELLOW OSCURO */
+.dark .stat-card:nth-child(3),
+html[data-theme="dark"] .stat-card:nth-child(3) {
+    background: linear-gradient(135deg, #E5C152 0%, #D4B23F 100%) !important;
+    box-shadow: 0 8px 24px rgba(229, 193, 82, 0.45) !important;
+    color: #2d2d2d !important;
+}
+
+.dark .stat-card:nth-child(3) *,
+html[data-theme="dark"] .stat-card:nth-child(3) * {
+    color: #2d2d2d !important;
+}
+
+/* Dark Mode - Card 4 ORANGE OSCURO */
+.dark .stat-card:nth-child(4),
+html[data-theme="dark"] .stat-card:nth-child(4) {
+    background: linear-gradient(135deg, #E89B52 0%, #D98840 100%) !important;
+    box-shadow: 0 8px 24px rgba(232, 155, 82, 0.45) !important;
+}
+
+/* ==========================================
+   ICONOS KAWAII - REEMPLAZAR EMOJIS
+   ========================================== */
+
+/* Card 1 - Icono Dango (reemplaza 🗓️) */
+.stat-card:nth-child(1) .text-3xl {
+    font-size: 0 !important;
+    width: 56px !important;
+    height: 56px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Dango/Dango1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Card 2 - Icono Itinerario (reemplaza 📍) */
+.stat-card:nth-child(2) .text-3xl {
+    font-size: 0 !important;
+    width: 56px !important;
+    height: 56px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Checklist e itinerario/Itinerario1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Card 3 - Icono Yen (mantener 💰 pero ajustar tamaño) */
+.stat-card:nth-child(3) .text-2xl {
+    font-size: 56px !important;
+}
+
+/* Card 4 - Icono Avión (reemplaza ✈️) */
+.stat-card:nth-child(4) .text-3xl {
+    font-size: 0 !important;
+    width: 56px !important;
+    height: 56px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Avion/Avion1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* ==========================================
+   HEADER - ESPACIADO CORRECTO
+   ========================================== */
+
+.japan-header {
+    padding: 24px 0 !important;
+    margin-bottom: 32px !important;
+    background: transparent !important;
+}
+
+.header-brand {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 3px solid #FFB3D9 !important;
+    border-radius: 24px !important;
+    padding: 20px 32px !important;
+    box-shadow: 0 8px 24px rgba(255, 179, 217, 0.25) !important;
+    position: relative !important;
+    overflow: visible !important;
+}
+
+/* Decoraciones kawaii flotantes */
+.header-brand::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -35px !important;
+    left: 20px !important;
+    width: 48px !important;
+    height: 48px !important;
+    background-image: url('/images/iconos/Dango/DangoTori3.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    animation: float 3s ease-in-out infinite !important;
+    z-index: 10 !important;
+}
+
+.header-brand::after {
+    content: '' !important;
+    position: absolute !important;
+    top: -30px !important;
+    right: 20px !important;
+    width: 42px !important;
+    height: 42px !important;
+    background-image: url('/images/iconos/Dango/Dango2.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    animation: float 3.5s ease-in-out infinite !important;
+    z-index: 10 !important;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-8px) rotate(3deg);
+    }
+}
+
+/* OCULTAR el email del header - Lo moveremos a perfil */
+.japan-header #userEmailDisplay {
+    display: none !important;
+}
+
+.japan-header .badge-kawaii-purple {
+    display: none !important;
+}
+
+/* ==========================================
+   PERFIL DE USUARIO - NUEVA ÁREA
+   ========================================== */
+
+/* Crear área de perfil fija en esquina superior derecha */
+#user-profile-widget {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.95);
+    border: 3px solid #FFB3D9;
+    border-radius: 50px;
+    padding: 12px 24px;
+    box-shadow: 0 8px 24px rgba(255, 179, 217, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+}
+
+#user-profile-widget:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(255, 179, 217, 0.4);
+}
+
+#user-profile-widget .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FFB3D9 0%, #FF99CC 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+#user-profile-widget .user-email-text {
+    color: #6B4E71;
+    font-weight: 600;
+    font-size: 14px;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Dark mode perfil */
+.dark #user-profile-widget,
+html[data-theme="dark"] #user-profile-widget {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 179, 217, 0.6);
+    backdrop-filter: blur(12px);
+}
+
+.dark #user-profile-widget .user-email-text,
+html[data-theme="dark"] #user-profile-widget .user-email-text {
+    color: #ffffff;
+}
+
+/* ==========================================
+   TABS - ICONOS KAWAII
+   ========================================== */
+
+/* Tab Itinerario */
+.tab-btn[data-tab="itinerary"] i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Checklist e itinerario/Itinerario1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Preparación */
+.tab-btn[data-tab="preparation"] i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Checklist e itinerario/Checklist1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Vuelos */
+.tab-btn[data-tab="flights"] i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Avion/Avion1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Hoteles */
+.tab-btn[data-tab="hotels"] i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Hotel/Hotel.1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Transporte */
+.tab-btn[data-tab="transport"] i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Transporte/Trenbala1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Mapa */
+.tab-btn[data-tab="map"] i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Mapa/mapa1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Atracciones */
+.tab-btn[data-tab="attractions"] i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Atracciones/atracciones 1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Esenciales */
+.tab-btn[data-tab="essentials"] i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Utilidades/tuerca1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    vertical-align: middle !important;
+}
+
+/* Tab Utilidades */
+.tab-btn[data-tab="utils"] i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Game geek/controlvideojuego.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    vertical-align: middle !important;
+}
+
+/* ==========================================
+   BOTONES KAWAII
+   ========================================== */
+
+.btn-kawaii,
+.btn-kawaii-primary {
+    background: linear-gradient(135deg, #FFB3D9 0%, #FF99CC 100%) !important;
+    border: 3px solid white !important;
+    color: white !important;
+    font-weight: 700 !important;
+    border-radius: 16px !important;
+    padding: 14px 28px !important;
+    box-shadow: 0 6px 20px rgba(255, 179, 217, 0.35) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btn-kawaii:hover,
+.btn-kawaii-primary:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 10px 30px rgba(255, 179, 217, 0.45) !important;
+}
+
+/* ==========================================
+   TABS NAVEGACIÓN - ESTILO KAWAII
+   ========================================== */
+
+.tab-btn {
+    background: white !important;
+    border: 3px solid #E6E8EC !important;
+    border-radius: 14px !important;
+    padding: 12px 20px !important;
+    color: #6B4E71 !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+}
+
+.tab-btn:hover {
+    background: #FFF0F5 !important;
+    border-color: #FFB3D9 !important;
+    transform: translateY(-2px) !important;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #FF9999 0%, #FF7B7B 100%) !important;
+    color: white !important;
+    border-color: white !important;
+    box-shadow: 0 6px 16px rgba(255, 123, 123, 0.35) !important;
+}
+
+/* Dark mode tabs */
+.dark .tab-btn,
+html[data-theme="dark"] .tab-btn {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 179, 217, 0.3) !important;
+    color: #ffffff !important;
+}
+
+.dark .tab-btn.active,
+html[data-theme="dark"] .tab-btn.active {
+    background: linear-gradient(135deg, #D64545 0%, #C23636 100%) !important;
+}
+
+/* ==========================================
+   CONTENIDO - SECCIONES
+   ========================================== */
+
+section[class],
+.card[class],
+.trip-card[class] {
+    background: rgba(255, 255, 255, 0.92) !important;
+    border-radius: 20px !important;
+    padding: 28px !important;
+    margin-bottom: 24px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+}
+
+.dark section[class],
+.dark .card[class],
+.dark .trip-card[class],
+html[data-theme="dark"] section[class],
+html[data-theme="dark"] .card[class],
+html[data-theme="dark"] .trip-card[class] {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 179, 217, 0.2) !important;
+}
+
+/* ==========================================
+   TEXTOS - MEJOR CONTRASTE
+   ========================================== */
+
+h1, h2, h3, h4, h5, h6 {
+    color: #6B4E71 !important;
+    font-weight: 700 !important;
+}
+
+p, span, div, label {
+    color: #6B4E71 !important;
+}
+
+/* Dark mode textos */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6,
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6 {
+    color: #ffffff !important;
+}
+
+.dark p, .dark span, .dark div, .dark label,
+html[data-theme="dark"] p,
+html[data-theme="dark"] span,
+html[data-theme="dark"] div,
+html[data-theme="dark"] label {
+    color: #e0e0e0 !important;
+}
+
+/* ==========================================
+   RESPONSIVE - MOBILE
+   ========================================== */
+
+@media (max-width: 768px) {
+    #user-profile-widget {
+        top: 12px;
+        right: 12px;
+        padding: 8px 16px;
+    }
+
+    #user-profile-widget .user-email-text {
+        max-width: 120px;
+        font-size: 12px;
+    }
+
+    #user-profile-widget .user-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
+
+    .header-brand::before,
+    .header-brand::after {
+        width: 32px !important;
+        height: 32px !important;
+        top: -25px !important;
+    }
+}
