@@ -1,0 +1,292 @@
+/*
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *  🎨 JAPITIN - ICONOS KAWAII
+ *  Reemplaza iconos Font Awesome con tus iconos kawaii personalizados
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ */
+
+/* ==========================================
+   STATS CARDS - ICONOS KAWAII
+   ========================================== */
+
+/* Card 1 - Icono de dango (15 días) */
+.stats-grid > div:nth-child(1) i.fa-gift::before,
+.stats-grid > div:nth-child(1) i.fa-calendar::before,
+.stats-card:nth-child(1) i::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 48px !important;
+    height: 48px !important;
+    background-image: url('/images/iconos/Dango/Dango1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+.stats-grid > div:nth-child(1) i,
+.stats-card:nth-child(1) i {
+    font-size: 0 !important;
+    width: 48px !important;
+    height: 48px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Dango/Dango1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Card 2 - Icono de itinerario (52 actividades) */
+.stats-grid > div:nth-child(2) i,
+.stats-card:nth-child(2) i {
+    font-size: 0 !important;
+    width: 48px !important;
+    height: 48px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Checklist e itinerario/Itinerario1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Card 3 - Icono de yen (¥0) */
+.stats-grid > div:nth-child(3) i,
+.stats-card:nth-child(3) i {
+    font-size: 48px !important;
+}
+
+/* Card 4 - Icono de avión (0/2 vuelos) */
+.stats-grid > div:nth-child(4) i,
+.stats-card:nth-child(4) i {
+    font-size: 0 !important;
+    width: 48px !important;
+    height: 48px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Avion/Avion1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Card 5 - Icono de hotel si existe */
+.stats-grid > div:nth-child(5) i,
+.stats-card:nth-child(5) i {
+    font-size: 0 !important;
+    width: 48px !important;
+    height: 48px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Hotel/Hotel.1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* ==========================================
+   TABS - ICONOS KAWAII
+   ========================================== */
+
+/* Tab ITINERARIO */
+.tab-item:has(.fa-list) i,
+button:has(+ span:contains("ITINERARIO")) i,
+button[class*="tab"]:nth-child(1) i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Checklist e itinerario/Itinerario1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Tab PREPARATIVOS */
+.tab-item:has(.fa-clipboard-check) i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Checklist e itinerario/Checklist1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Tab VUELOS */
+.tab-item:has(.fa-plane) i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Avion/Avion1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Tab HOTELES */
+.tab-item:has(.fa-hotel) i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Hotel/Hotel.1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Tab TRANSPORTE */
+.tab-item:has(.fa-train) i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Transporte/Trenbala1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Tab MAPA */
+.tab-item:has(.fa-map) i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Mapa/mapa1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Tab ATRACCIONES */
+.tab-item:has(.fa-landmark) i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Atracciones/atracciones 1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Tab UTILIDADES */
+.tab-item:has(.fa-box) i,
+.tab-item:has(.fa-wrench) i {
+    font-size: 0 !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Utilidades/tuerca1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* ==========================================
+   DECORACIONES KAWAII
+   ========================================== */
+
+/* Agregar dangos decorativos al header */
+.header-brand::before {
+    content: '' !important;
+    position: absolute !important;
+    top: -30px !important;
+    left: -20px !important;
+    width: 60px !important;
+    height: 60px !important;
+    background-image: url('/images/iconos/Dango/DangoTori3.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    opacity: 0.8 !important;
+    animation: float 3s ease-in-out infinite !important;
+}
+
+.header-brand::after {
+    content: '' !important;
+    position: absolute !important;
+    top: -25px !important;
+    right: -15px !important;
+    width: 50px !important;
+    height: 50px !important;
+    background-image: url('/images/iconos/Dango/Dango2.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    opacity: 0.7 !important;
+    animation: float 3.5s ease-in-out infinite !important;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-10px) rotate(5deg);
+    }
+}
+
+/* ==========================================
+   FLOATING BUTTONS - ICONOS KAWAII
+   ========================================== */
+
+/* Control de videojuego para utilidades */
+.floating-btn:has(.fa-wrench) i,
+.floating-btn:has(.fa-cog) i {
+    font-size: 0 !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: inline-block !important;
+    background-image: url('/images/iconos/Game geek/controlvideojuego.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* ==========================================
+   ICONOS GRANDES PARA SECCIONES
+   ========================================== */
+
+/* Sección de transportes */
+section:has([class*="transport"]) h2::before,
+.transport-section h2::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 36px !important;
+    height: 36px !important;
+    margin-right: 12px !important;
+    vertical-align: middle !important;
+    background-image: url('/images/iconos/Transporte/Trenbala1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Sección de hoteles */
+section:has([class*="hotel"]) h2::before,
+.hotel-section h2::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 36px !important;
+    height: 36px !important;
+    margin-right: 12px !important;
+    vertical-align: middle !important;
+    background-image: url('/images/iconos/Hotel/Hotel.1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+
+/* Sección de atracciones */
+section:has([class*="attraction"]) h2::before,
+.attraction-section h2::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 36px !important;
+    height: 36px !important;
+    margin-right: 12px !important;
+    vertical-align: middle !important;
+    background-image: url('/images/iconos/Atracciones/atracciones 1.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
