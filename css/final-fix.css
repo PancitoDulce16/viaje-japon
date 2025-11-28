@@ -1,0 +1,289 @@
+/*
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *  🔧 JAPITIN - FINAL FIX
+ *  Máxima prioridad para sobrescribir TODO y aplicar concepto
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ */
+
+/* ==========================================
+   WALLPAPER - FORZAR VISIBLE
+   ========================================== */
+
+body {
+    background-image: url('/images/iconos/Wallpaper/asanoha1.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+    background-repeat: no-repeat !important;
+}
+
+body::before {
+    content: '' !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(255, 240, 245, 0.92) !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
+}
+
+/* Dark mode wallpaper */
+body.dark,
+html[data-theme="dark"] body {
+    background-image: url('/images/iconos/Wallpaper/Osucuro1.png') !important;
+}
+
+body.dark::before,
+html[data-theme="dark"] body::before {
+    background: rgba(26, 26, 46, 0.88) !important;
+}
+
+/* ==========================================
+   STATS CARDS - COLORES VIBRANTES FORZADOS
+   ========================================== */
+
+/* Card 1 - CORAL */
+.stats-grid > div:nth-child(1),
+.stats-card:nth-child(1),
+div[class*="stats"] > div:nth-child(1) {
+    background: linear-gradient(135deg, #FF9999 0%, #FF7B7B 100%) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.stats-grid > div:nth-child(1) *,
+.stats-card:nth-child(1) *,
+div[class*="stats"] > div:nth-child(1) * {
+    color: white !important;
+}
+
+/* Card 2 - CYAN */
+.stats-grid > div:nth-child(2),
+.stats-card:nth-child(2),
+div[class*="stats"] > div:nth-child(2) {
+    background: linear-gradient(135deg, #66E3E8 0%, #4DD4D9 100%) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.stats-grid > div:nth-child(2) *,
+.stats-card:nth-child(2) *,
+div[class*="stats"] > div:nth-child(2) * {
+    color: white !important;
+}
+
+/* Card 3 - YELLOW */
+.stats-grid > div:nth-child(3),
+.stats-card:nth-child(3),
+div[class*="stats"] > div:nth-child(3) {
+    background: linear-gradient(135deg, #FFE699 0%, #FFD966 100%) !important;
+    color: #6B4E71 !important;
+    border: none !important;
+}
+
+.stats-grid > div:nth-child(3) *,
+.stats-card:nth-child(3) *,
+div[class*="stats"] > div:nth-child(3) * {
+    color: #6B4E71 !important;
+}
+
+/* Card 4 - ORANGE */
+.stats-grid > div:nth-child(4),
+.stats-card:nth-child(4),
+div[class*="stats"] > div:nth-child(4) {
+    background: linear-gradient(135deg, #FFC999 0%, #FFB366 100%) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.stats-grid > div:nth-child(4) *,
+.stats-card:nth-child(4) *,
+div[class*="stats"] > div:nth-child(4) * {
+    color: white !important;
+}
+
+/* Card 5 si existe - ORANGE también */
+.stats-grid > div:nth-child(5),
+.stats-card:nth-child(5),
+div[class*="stats"] > div:nth-child(5) {
+    background: linear-gradient(135deg, #FFC999 0%, #FFB366 100%) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.stats-grid > div:nth-child(5) *,
+.stats-card:nth-child(5) *,
+div[class*="stats"] > div:nth-child(5) * {
+    color: white !important;
+}
+
+/* ==========================================
+   DARK MODE - MANTENER COLORES VIBRANTES
+   ========================================== */
+
+.dark .stats-grid > div,
+.dark .stats-card,
+html[data-theme="dark"] .stats-grid > div,
+html[data-theme="dark"] .stats-card {
+    opacity: 1 !important;
+}
+
+/* Dark mode - Card 1 CORAL */
+.dark .stats-grid > div:nth-child(1),
+html[data-theme="dark"] .stats-grid > div:nth-child(1) {
+    background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%) !important;
+}
+
+/* Dark mode - Card 2 CYAN */
+.dark .stats-grid > div:nth-child(2),
+html[data-theme="dark"] .stats-grid > div:nth-child(2) {
+    background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%) !important;
+}
+
+/* Dark mode - Card 3 YELLOW */
+.dark .stats-grid > div:nth-child(3),
+html[data-theme="dark"] .stats-grid > div:nth-child(3) {
+    background: linear-gradient(135deg, #F7DC6F 0%, #F4D03F 100%) !important;
+    color: #2d2d2d !important;
+}
+
+.dark .stats-grid > div:nth-child(3) *,
+html[data-theme="dark"] .stats-grid > div:nth-child(3) * {
+    color: #2d2d2d !important;
+}
+
+/* Dark mode - Card 4 y 5 ORANGE */
+.dark .stats-grid > div:nth-child(4),
+.dark .stats-grid > div:nth-child(5),
+html[data-theme="dark"] .stats-grid > div:nth-child(4),
+html[data-theme="dark"] .stats-grid > div:nth-child(5) {
+    background: linear-gradient(135deg, #FAA05A 0%, #F48024 100%) !important;
+}
+
+/* ==========================================
+   SECCIONES CON FONDO BLANCO/CLARO
+   ========================================== */
+
+/* Secciones principales en light mode */
+section,
+.section,
+[class*="section-"],
+.card,
+.trip-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Dark mode - fondos más claros */
+.dark section,
+.dark .section,
+.dark [class*="section-"],
+.dark .card,
+.dark .trip-card,
+html[data-theme="dark"] section,
+html[data-theme="dark"] .section,
+html[data-theme="dark"] [class*="section-"],
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .trip-card {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 179, 217, 0.3) !important;
+}
+
+/* ==========================================
+   TEXTOS - CONTRASTE MEJORADO
+   ========================================== */
+
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6,
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] h5,
+html[data-theme="dark"] h6 {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+}
+
+.dark p,
+.dark span,
+.dark div,
+.dark label,
+html[data-theme="dark"] p,
+html[data-theme="dark"] span:not([class*="stats"]),
+html[data-theme="dark"] div:not([class*="stats"]),
+html[data-theme="dark"] label {
+    color: #e0e0e0 !important;
+}
+
+/* ==========================================
+   BOTONES - ROSA VIBRANTE
+   ========================================== */
+
+.btn-kawaii,
+.btn-primary,
+button[class*="kawaii"],
+button[class*="primary"] {
+    background: linear-gradient(135deg, #FFB3D9 0%, #FF99CC 100%) !important;
+    border: 2px solid white !important;
+    color: white !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 12px rgba(255, 179, 217, 0.3) !important;
+}
+
+.dark .btn-kawaii,
+.dark .btn-primary,
+html[data-theme="dark"] .btn-kawaii,
+html[data-theme="dark"] .btn-primary {
+    background: linear-gradient(135deg, #FF99CC 0%, #FF6BB3 100%) !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 179, 0.5) !important;
+}
+
+/* ==========================================
+   TABS - ACTIVO COLORIDO
+   ========================================== */
+
+.tab-item.active,
+button.tab-item.active {
+    background: linear-gradient(135deg, #FF9999 0%, #FF7B7B 100%) !important;
+    color: white !important;
+    border-color: white !important;
+}
+
+.tab-item.active *,
+button.tab-item.active * {
+    color: white !important;
+}
+
+/* ==========================================
+   BANNER - MÁS LIMPIO
+   ========================================== */
+
+.header-brand {
+    background: white !important;
+    border: 3px solid #FFB3D9 !important;
+    border-radius: 20px !important;
+    padding: 1.5rem !important;
+    box-shadow: 0 4px 16px rgba(255, 179, 217, 0.3) !important;
+}
+
+.dark .header-brand,
+html[data-theme="dark"] .header-brand {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 179, 217, 0.6) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+/* ==========================================
+   FUENTE POPPINS FORZADA
+   ========================================== */
+
+body,
+* {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+}
