@@ -1,0 +1,269 @@
+/* ═══════════════════════════════════════════════════════════════
+   JAPANESE GEOMETRIC PATTERNS
+   Patrones geométricos japoneses tradicionales para decoración sutil
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ═══ ASANOHA PATTERN (Hemp Leaf) ═══ */
+.pattern-asanoha {
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 35px, rgba(230, 57, 70, 0.03) 35px, rgba(230, 57, 70, 0.03) 70px),
+    repeating-linear-gradient(90deg, transparent, transparent 35px, rgba(230, 57, 70, 0.03) 35px, rgba(230, 57, 70, 0.03) 70px),
+    repeating-linear-gradient(45deg, transparent, transparent 25px, rgba(230, 57, 70, 0.02) 25px, rgba(230, 57, 70, 0.02) 50px),
+    repeating-linear-gradient(-45deg, transparent, transparent 25px, rgba(230, 57, 70, 0.02) 25px, rgba(230, 57, 70, 0.02) 50px);
+}
+
+[data-theme="dark"] .pattern-asanoha {
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 35px, rgba(255, 89, 100, 0.06) 35px, rgba(255, 89, 100, 0.06) 70px),
+    repeating-linear-gradient(90deg, transparent, transparent 35px, rgba(255, 89, 100, 0.06) 35px, rgba(255, 89, 100, 0.06) 70px),
+    repeating-linear-gradient(45deg, transparent, transparent 25px, rgba(255, 89, 100, 0.04) 25px, rgba(255, 89, 100, 0.04) 50px),
+    repeating-linear-gradient(-45deg, transparent, transparent 25px, rgba(255, 89, 100, 0.04) 25px, rgba(255, 89, 100, 0.04) 50px);
+}
+
+/* ═══ SEIGAIHA PATTERN (Wave) ═══ */
+.pattern-seigaiha {
+  background-color: var(--color-bg);
+  background-image:
+    radial-gradient(circle at 100% 150%, transparent 24px, rgba(42, 157, 143, 0.04) 25px, rgba(42, 157, 143, 0.04) 28px, transparent 29px),
+    radial-gradient(circle at 0 150%, transparent 24px, rgba(42, 157, 143, 0.04) 25px, rgba(42, 157, 143, 0.04) 28px, transparent 29px),
+    radial-gradient(circle at 50% 100%, rgba(42, 157, 143, 0.06) 10px, rgba(42, 157, 143, 0.04) 11px, transparent 12px);
+  background-size: 50px 25px;
+  background-position: 0 0;
+}
+
+/* ═══ SAKURA PATTERN (Cherry Blossom) ═══ */
+.pattern-sakura {
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(244, 166, 185, 0.08) 5px, transparent 5px),
+    radial-gradient(circle at 60% 60%, rgba(244, 166, 185, 0.06) 4px, transparent 4px),
+    radial-gradient(circle at 80% 20%, rgba(244, 166, 185, 0.07) 6px, transparent 6px),
+    radial-gradient(circle at 40% 80%, rgba(244, 166, 185, 0.05) 5px, transparent 5px);
+  background-size: 120px 120px;
+  background-position: 0 0, 60px 60px, 30px 90px, 90px 30px;
+}
+
+/* ═══ GRID PATTERN (Tech Isometric) ═══ */
+.pattern-grid-tech {
+  background-image:
+    linear-gradient(0deg, transparent 24%, rgba(69, 123, 157, 0.04) 25%, rgba(69, 123, 157, 0.04) 26%, transparent 27%, transparent 74%, rgba(69, 123, 157, 0.04) 75%, rgba(69, 123, 157, 0.04) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, rgba(69, 123, 157, 0.04) 25%, rgba(69, 123, 157, 0.04) 26%, transparent 27%, transparent 74%, rgba(69, 123, 157, 0.04) 75%, rgba(69, 123, 157, 0.04) 76%, transparent 77%, transparent);
+  background-size: 40px 40px;
+}
+
+/* ═══ COMBO PATTERN: Tech + Traditional ═══ */
+.pattern-tech-traditional {
+  background-color: var(--color-bg);
+  background-image:
+    /* Grid sutil */
+    linear-gradient(90deg, transparent 49%, rgba(230, 57, 70, 0.02) 50%, transparent 51%),
+    linear-gradient(0deg, transparent 49%, rgba(230, 57, 70, 0.02) 50%, transparent 51%),
+    /* Diagonal tradicional */
+    repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(42, 157, 143, 0.03) 35px, rgba(42, 157, 143, 0.03) 37px);
+  background-size: 40px 40px, 40px 40px, 100px 100px;
+}
+
+/* ═══ DECORATIVE CORNERS ═══ */
+.corner-decoration {
+  position: relative;
+}
+
+.corner-decoration::before,
+.corner-decoration::after {
+  content: '';
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.corner-decoration::before {
+  top: 0;
+  left: 0;
+  background: linear-gradient(135deg, var(--color-primary) 0%, transparent 70%);
+  border-top-left-radius: var(--radius-lg);
+}
+
+.corner-decoration::after {
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(-45deg, var(--color-secondary) 0%, transparent 70%);
+  border-bottom-right-radius: var(--radius-lg);
+}
+
+/* ═══ TORII GATE DECORATION (SVG Background) ═══ */
+.torii-decoration {
+  position: relative;
+}
+
+.torii-decoration::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -40px;
+  transform: translateY(-50%);
+  width: 80px;
+  height: 80px;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='6' y='8' width='3' height='24' fill='%23E63946' opacity='0.1'/%3E%3Crect x='31' y='8' width='3' height='24' fill='%23E63946' opacity='0.1'/%3E%3Crect x='2' y='8' width='36' height='4' rx='1' fill='%23E63946' opacity='0.1'/%3E%3Crect x='4' y='16' width='32' height='3' rx='1' fill='%23E63946' opacity='0.1'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ═══ MANEKI-NEKO (Lucky Cat) DECORATION ═══ */
+.lucky-cat-decoration {
+  position: relative;
+}
+
+.lucky-cat-decoration::after {
+  content: '🐱';
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  font-size: 48px;
+  opacity: 0.12;
+  filter: grayscale(0.8);
+  pointer-events: none;
+  transform: rotate(-15deg);
+}
+
+/* ═══ SUBTLE BACKGROUND PATTERNS FOR SECTIONS ═══ */
+
+.section-bg-light {
+  background-color: var(--color-surface);
+  position: relative;
+}
+
+.section-bg-light::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.section-bg-light.asanoha::before {
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 35px, rgba(230, 57, 70, 0.02) 35px, rgba(230, 57, 70, 0.02) 36px),
+    repeating-linear-gradient(90deg, transparent, transparent 35px, rgba(230, 57, 70, 0.02) 35px, rgba(230, 57, 70, 0.02) 36px),
+    repeating-linear-gradient(45deg, transparent, transparent 25px, rgba(42, 157, 143, 0.015) 25px, rgba(42, 157, 143, 0.015) 26px);
+}
+
+/* ═══ ANIMATED SAKURA PETALS (Optional) ═══ */
+@keyframes sakura-fall {
+  0% {
+    transform: translateY(-10px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.sakura-petal {
+  position: fixed;
+  top: -10px;
+  font-size: 20px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  animation: sakura-fall linear infinite;
+  color: var(--color-accent);
+  filter: blur(0.5px);
+}
+
+/* Random positions for petals */
+.sakura-petal:nth-child(1) { left: 10%; animation-duration: 15s; animation-delay: 0s; }
+.sakura-petal:nth-child(2) { left: 30%; animation-duration: 18s; animation-delay: 3s; }
+.sakura-petal:nth-child(3) { left: 50%; animation-duration: 20s; animation-delay: 6s; }
+.sakura-petal:nth-child(4) { left: 70%; animation-duration: 16s; animation-delay: 9s; }
+.sakura-petal:nth-child(5) { left: 90%; animation-duration: 19s; animation-delay: 12s; }
+
+/* Disable animations on reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .sakura-petal {
+    animation: none !important;
+    display: none;
+  }
+}
+
+/* ═══ GRADIENT OVERLAYS WITH JAPANESE AESTHETICS ═══ */
+
+.gradient-sunrise {
+  background: linear-gradient(135deg,
+    rgba(230, 57, 70, 0.05) 0%,
+    rgba(249, 199, 79, 0.05) 50%,
+    rgba(244, 166, 185, 0.05) 100%
+  );
+}
+
+.gradient-ocean {
+  background: linear-gradient(135deg,
+    rgba(69, 123, 157, 0.05) 0%,
+    rgba(42, 157, 143, 0.05) 100%
+  );
+}
+
+.gradient-sakura {
+  background: linear-gradient(135deg,
+    rgba(244, 166, 185, 0.08) 0%,
+    rgba(255, 184, 198, 0.05) 100%
+  );
+}
+
+/* ═══ TECH-INSPIRED GLOW EFFECTS (Subtle) ═══ */
+
+.tech-glow {
+  position: relative;
+}
+
+.tech-glow::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(45deg,
+    var(--color-tech),
+    var(--color-secondary),
+    var(--color-primary)
+  );
+  opacity: 0;
+  z-index: -1;
+  transition: opacity var(--transition-base);
+}
+
+.tech-glow:hover::after {
+  opacity: 0.08;
+}
+
+[data-theme="dark"] .tech-glow:hover::after {
+  opacity: 0.12;
+}
+
+/* ═══ DOT MATRIX PATTERN (Retro Geek) ═══ */
+.pattern-dot-matrix {
+  background-image:
+    radial-gradient(circle, rgba(230, 57, 70, 0.08) 1px, transparent 1px),
+    radial-gradient(circle, rgba(42, 157, 143, 0.08) 1px, transparent 1px);
+  background-size: 20px 20px, 20px 20px;
+  background-position: 0 0, 10px 10px;
+}
+
+/* ═══ CIRCUIT BOARD PATTERN (Tech Geek) ═══ */
+.pattern-circuit {
+  background-color: var(--color-bg);
+  background-image:
+    linear-gradient(90deg, transparent 48%, rgba(69, 123, 157, 0.03) 49%, rgba(69, 123, 157, 0.03) 51%, transparent 52%),
+    linear-gradient(0deg, transparent 48%, rgba(69, 123, 157, 0.03) 49%, rgba(69, 123, 157, 0.03) 51%, transparent 52%),
+    radial-gradient(circle at 50% 50%, rgba(230, 57, 70, 0.06) 2px, transparent 3px);
+  background-size: 60px 60px, 60px 60px, 30px 30px;
+  background-position: 0 0, 0 0, 15px 15px;
+}

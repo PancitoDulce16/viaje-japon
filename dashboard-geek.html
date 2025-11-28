@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🇯🇵 Japitin - Professional Geek Travel Planner</title>
+
+    <!-- SEO -->
+    <meta name="description" content="Planifica tu viaje a Japón con un diseño profesional kawaii-tech">
+    <meta name="theme-color" content="#E63946">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+    <!-- Design System -->
+    <link rel="stylesheet" href="/css/geek-design-system.css">
+
+    <style>
+        /* ═══ ADDITIONAL DASHBOARD STYLES ═══ */
+
+        /* Action Buttons Row */
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl);
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        /* Itinerary Section */
+        .itinerary-section {
+            background-color: var(--color-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-level-2);
+        }
+
+        .itinerary-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-xl);
+        }
+
+        .itinerary-title {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: var(--space-xl);
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            bottom: 8px;
+            width: 2px;
+            background: var(--color-border);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: var(--space-xl);
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -42px;
+            top: 4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: var(--color-secondary);
+            border: 3px solid var(--color-surface);
+            box-shadow: 0 0 0 2px var(--color-border);
+        }
+
+        .timeline-card {
+            background-color: var(--color-surface-overlay);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            transition: all var(--transition-base);
+        }
+
+        .timeline-card:hover {
+            border-color: var(--color-primary-alpha-20);
+            transform: translateX(4px);
+            box-shadow: var(--shadow-level-2);
+        }
+
+        .timeline-day {
+            font-size: var(--size-small);
+            font-weight: var(--weight-semibold);
+            color: var(--color-primary);
+            margin-bottom: var(--space-xs);
+        }
+
+        .timeline-location {
+            font-size: var(--size-h4);
+            font-weight: var(--weight-bold);
+            color: var(--color-text);
+            margin-bottom: var(--space-sm);
+        }
+
+        .timeline-activities {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-md);
+            padding: var(--space-sm);
+            border-radius: var(--radius-sm);
+            transition: background-color var(--transition-fast);
+        }
+
+        .activity-item:hover {
+            background-color: var(--color-surface);
+        }
+
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .activity-icon.culture {
+            background-color: rgba(230, 57, 70, 0.12);
+            color: var(--color-primary);
+        }
+
+        .activity-icon.food {
+            background-color: rgba(42, 157, 143, 0.12);
+            color: var(--color-secondary);
+        }
+
+        .activity-icon.transport {
+            background-color: rgba(69, 123, 157, 0.12);
+            color: var(--color-tech);
+        }
+
+        .activity-icon.shopping {
+            background-color: rgba(249, 199, 79, 0.12);
+            color: var(--color-genki);
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-time {
+            font-size: var(--size-caption);
+            font-weight: var(--weight-medium);
+            color: var(--color-text-muted);
+        }
+
+        .activity-name {
+            font-size: var(--size-small);
+            font-weight: var(--weight-semibold);
+            color: var(--color-text);
+            margin-top: 2px;
+        }
+
+        .activity-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            font-weight: var(--weight-medium);
+            margin-top: 4px;
+        }
+
+        .activity-tag.culture {
+            background-color: var(--color-primary-alpha-10);
+            color: var(--color-primary);
+        }
+
+        .activity-tag.food {
+            background-color: var(--color-secondary-alpha-10);
+            color: var(--color-secondary);
+        }
+
+        .activity-tag.transport {
+            background-color: rgba(69, 123, 157, 0.12);
+            color: var(--color-tech);
+        }
+
+        .activity-tag.shopping {
+            background-color: rgba(249, 199, 79, 0.12);
+            color: var(--color-genki-dark);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            background-color: var(--color-surface-overlay);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+            color: var(--color-text);
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--color-border);
+            transform: rotate(15deg);
+        }
+
+        /* Notification Badge */
+        .notification-badge {
+            position: relative;
+        }
+
+        .notification-badge::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 8px;
+            height: 8px;
+            background-color: var(--color-error);
+            border-radius: 50%;
+            border: 2px solid var(--color-surface);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 32px;
+            }
+
+            .hero-subtitle {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--space-sm);
+                font-size: var(--size-body);
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                min-width: 100%;
+            }
+
+            .tabs-nav {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+            }
+
+            .header-logo-text {
+                font-size: 20px;
+            }
+        }
+
+        /* Decorative Elements */
+        .sakura-decoration {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .sakura-1 {
+            top: 20px;
+            right: 80px;
+            transform: rotate(15deg);
+        }
+
+        .sakura-2 {
+            bottom: 20px;
+            left: 60px;
+            transform: rotate(-20deg);
+        }
+    </style>
+</head>
+<body class="app-layout">
+    <!-- ═══════════════════════════════════════════════════════════════
+         HEADER
+         ═══════════════════════════════════════════════════════════════ -->
+    <header class="app-header">
+        <div class="header-content">
+            <!-- Logo -->
+            <div class="header-logo">
+                <svg class="header-logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Simplified Torii Icon -->
+                    <rect x="6" y="8" width="3" height="24" fill="#E63946"/>
+                    <rect x="31" y="8" width="3" height="24" fill="#E63946"/>
+                    <rect x="2" y="8" width="36" height="4" rx="1" fill="#E63946"/>
+                    <rect x="4" y="16" width="32" height="3" rx="1" fill="#E63946"/>
+                </svg>
+                <span class="header-logo-text">Japitin</span>
+            </div>
+
+            <!-- Actions -->
+            <div class="header-actions">
+                <button class="btn-icon notification-badge" aria-label="Notificaciones">
+                    <i class="far fa-bell"></i>
+                </button>
+                <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="btn btn-sos">
+                    <i class="fas fa-phone-alt"></i>
+                    <span>SOS</span>
+                </button>
+                <button class="btn-icon" aria-label="Perfil de usuario">
+                    <i class="far fa-user"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         MAIN CONTENT
+         ═══════════════════════════════════════════════════════════════ -->
+    <main class="app-main">
+        <div class="container">
+            <!-- Hero Banner -->
+            <div class="hero-banner">
+                <div class="hero-content">
+                    <h1 class="hero-title">JAPAN 2026</h1>
+                    <div class="hero-subtitle">
+                        <span><i class="far fa-calendar"></i> 15 feb - 1 mar 2026</span>
+                        <span><i class="fas fa-map-marker-alt"></i> Viaje</span>
+                    </div>
+                </div>
+                <!-- Sakura decorations -->
+                <div class="sakura-decoration sakura-1">🌸</div>
+                <div class="sakura-decoration sakura-2">🌸</div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-icon coral">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <div>
+                            <div class="stat-card-value">15</div>
+                            <div class="stat-card-label">días</div>
+                        </div>
+                    </div>
+                    <div class="stat-card-subtitle">Comienza en 81 días</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-icon cyan">
+                            <i class="fas fa-ice-cream"></i>
+                        </div>
+                        <div>
+                            <div class="stat-card-value">52</div>
+                            <div class="stat-card-label">Actividades</div>
+                        </div>
+                    </div>
+                    <div class="stat-card-subtitle">Planificadas</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-icon yellow">
+                            <i class="fas fa-yen-sign"></i>
+                        </div>
+                        <div>
+                            <div class="stat-card-value">¥0</div>
+                            <div class="stat-card-label">Sin gastos</div>
+                        </div>
+                    </div>
+                    <div class="stat-card-subtitle">registrados</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-card-icon blue">
+                            <i class="fas fa-plane-departure"></i>
+                        </div>
+                        <div>
+                            <div class="stat-card-value">0/2</div>
+                            <div class="stat-card-label">Vuelos</div>
+                        </div>
+                    </div>
+                    <div class="stat-card-subtitle">
+                        <span>0 <i class="fas fa-plane-arrival" style="font-size: 10px; opacity: 0.6;"></i></span>
+                        <span style="margin-left: 8px;">0 <i class="fas fa-plane-departure" style="font-size: 10px; opacity: 0.6;"></i></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-secondary action-btn">
+                    <i class="fas fa-camera"></i>
+                    Mis Viajes
+                </button>
+                <button class="btn btn-primary action-btn">
+                    <i class="fas fa-plus-circle"></i>
+                    Agregar Viaje
+                </button>
+                <button class="btn btn-secondary action-btn">
+                    <i class="fas fa-share-alt"></i>
+                    Compartir
+                </button>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="tabs-container">
+                <div class="tabs-nav">
+                    <button class="tab-item active">
+                        <i class="fas fa-list"></i>
+                        <span>Itinerario</span>
+                    </button>
+                    <button class="tab-item">
+                        <i class="fas fa-clipboard-check"></i>
+                        <span>Preparativos</span>
+                    </button>
+                    <button class="tab-item">
+                        <i class="fas fa-plane"></i>
+                        <span>Vuelos</span>
+                    </button>
+                    <button class="tab-item">
+                        <i class="fas fa-hotel"></i>
+                        <span>Hoteles</span>
+                    </button>
+                    <button class="tab-item">
+                        <i class="fas fa-train"></i>
+                        <span>Transporte</span>
+                    </button>
+                    <button class="tab-item">
+                        <i class="fas fa-map"></i>
+                        <span>Mapa</span>
+                    </button>
+                    <button class="tab-item">
+                        <i class="fas fa-landmark"></i>
+                        <span>Atracciones</span>
+                    </button>
+                    <button class="tab-item">
+                        <i class="fas fa-box"></i>
+                        <span>Esenciales</span>
+                    </button>
+                    <button class="tab-item">
+                        <i class="fas fa-link"></i>
+                        <span>Vinculados</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Itinerary Section -->
+            <div class="itinerary-section">
+                <div class="itinerary-header">
+                    <div class="itinerary-title">
+                        <i class="fas fa-route" style="font-size: 28px; color: var(--color-primary);"></i>
+                        <h2>Itinerario</h2>
+                    </div>
+                    <button class="btn btn-tertiary">
+                        <i class="fas fa-user-plus"></i>
+                        Invitar
+                    </button>
+                </div>
+
+                <!-- Timeline -->
+                <div class="timeline">
+                    <!-- Day 1 -->
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-card">
+                            <div class="timeline-day">Día 1 - 15 Febrero 2026</div>
+                            <div class="timeline-location">
+                                <i class="fas fa-map-marker-alt" style="color: var(--color-primary); margin-right: 8px;"></i>
+                                Tokyo
+                            </div>
+                            <div class="timeline-activities">
+                                <div class="activity-item">
+                                    <div class="activity-icon culture">
+                                        <i class="fas fa-torii-gate"></i>
+                                    </div>
+                                    <div class="activity-details">
+                                        <div class="activity-time">09:00 - 12:00</div>
+                                        <div class="activity-name">Templo Senso-ji</div>
+                                        <span class="activity-tag culture">Cultura</span>
+                                    </div>
+                                </div>
+
+                                <div class="activity-item">
+                                    <div class="activity-icon food">
+                                        <i class="fas fa-utensils"></i>
+                                    </div>
+                                    <div class="activity-details">
+                                        <div class="activity-time">12:30 - 14:00</div>
+                                        <div class="activity-name">Ramen en Ichiran</div>
+                                        <span class="activity-tag food">Gastronomía</span>
+                                    </div>
+                                </div>
+
+                                <div class="activity-item">
+                                    <div class="activity-icon shopping">
+                                        <i class="fas fa-shopping-bag"></i>
+                                    </div>
+                                    <div class="activity-details">
+                                        <div class="activity-time">15:00 - 18:00</div>
+                                        <div class="activity-name">Shibuya & Harajuku</div>
+                                        <span class="activity-tag shopping">Compras</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Day 2 -->
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-card">
+                            <div class="timeline-day">Día 2 - 16 Febrero 2026</div>
+                            <div class="timeline-location">
+                                <i class="fas fa-map-marker-alt" style="color: var(--color-primary); margin-right: 8px;"></i>
+                                Tokyo
+                            </div>
+                            <div class="timeline-activities">
+                                <div class="activity-item">
+                                    <div class="activity-icon culture">
+                                        <i class="fas fa-building"></i>
+                                    </div>
+                                    <div class="activity-details">
+                                        <div class="activity-time">08:00 - 10:00</div>
+                                        <div class="activity-name">Mercado de Tsukiji</div>
+                                        <span class="activity-tag food">Gastronomía</span>
+                                    </div>
+                                </div>
+
+                                <div class="activity-item">
+                                    <div class="activity-icon transport">
+                                        <i class="fas fa-train"></i>
+                                    </div>
+                                    <div class="activity-details">
+                                        <div class="activity-time">10:30 - 11:00</div>
+                                        <div class="activity-name">Shinkansen a Kyoto</div>
+                                        <span class="activity-tag transport">Transporte</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Day 3 -->
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-card">
+                            <div class="timeline-day">Día 3 - 17 Febrero 2026</div>
+                            <div class="timeline-location">
+                                <i class="fas fa-map-marker-alt" style="color: var(--color-primary); margin-right: 8px;"></i>
+                                Kyoto
+                            </div>
+                            <div class="timeline-activities">
+                                <div class="activity-item">
+                                    <div class="activity-icon culture">
+                                        <i class="fas fa-tree"></i>
+                                    </div>
+                                    <div class="activity-details">
+                                        <div class="activity-time">09:00 - 12:00</div>
+                                        <div class="activity-name">Bosque de Bambú Arashiyama</div>
+                                        <span class="activity-tag culture">Cultura</span>
+                                    </div>
+                                </div>
+
+                                <div class="activity-item">
+                                    <div class="activity-icon culture">
+                                        <i class="fas fa-mountain"></i>
+                                    </div>
+                                    <div class="activity-details">
+                                        <div class="activity-time">14:00 - 17:00</div>
+                                        <div class="activity-name">Fushimi Inari Taisha</div>
+                                        <span class="activity-tag culture">Cultura</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         SCRIPTS
+         ═══════════════════════════════════════════════════════════════ -->
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        // Check for saved theme preference or default to 'light'
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', currentTheme);
+
+        // Update icon based on current theme
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('i');
+            if (theme === 'dark') {
+                icon.className = 'fas fa-sun';
+            } else {
+                icon.className = 'fas fa-moon';
+            }
+        }
+
+        updateThemeIcon(currentTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        // Tab Navigation
+        const tabs = document.querySelectorAll('.tab-item');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Aquí irían las transiciones de contenido
+                console.log('Tab clicked:', tab.textContent.trim());
+            });
+        });
+
+        // Fade in animations on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.timeline-item').forEach(item => {
+            observer.observe(item);
+        });
+    </script>
+</body>
+</html>
