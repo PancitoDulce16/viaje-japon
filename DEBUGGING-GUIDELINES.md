@@ -294,6 +294,49 @@ git log --oneline --name-only -5
 
 ---
 
+### ✅ CASO 3: Wallpapers con bloque negro gigante
+**Problema**: El wallpaper se mostraba abajo pero había un bloque negro gigante que cubría la mayor parte de la página.
+
+**Síntomas**:
+- Wallpaper visible solo en footer
+- Contenido principal con fondo negro sólido
+- En modo claro no se veía el wallpaper en absoluto
+
+**Proceso seguido (CORRECTO)**:
+1. ✅ Usar Dev Panel → Inspeccionar Estilos HTML
+2. ✅ Confirmar que background-image está aplicado en html
+3. ✅ Buscar sistemáticamente con grep:
+   ```bash
+   grep -rn "\.tab-content\|#appDashboard" css/ --include="*.css" | grep "background"
+   ```
+4. ✅ Encontrar los culpables:
+   - `css/main.css` línea 49: `#appDashboard { background-color: #f9fafb }`
+   - `css/main.css` línea 54: `.dark #appDashboard { background-color: var(--bg-dark-main) }`
+   - `css/contrast-fixes.css` línea 115: `.tab-content { background-color: #ffffff }`
+   - `css/contrast-fixes.css` línea 122: `.dark .tab-content { background-color: #111827 }`
+5. ✅ Cambiar todos a `transparent`
+6. ✅ Deploy y verificar
+
+**Tiempo total**: ~30 minutos (después de tener la metodología clara)
+
+**Archivos modificados**:
+- `css/main.css` - #appDashboard transparent
+- `css/contrast-fixes.css` - .tab-content transparent
+
+**Lección CRÍTICA**: Los contenedores principales (body, #appDashboard, .tab-content, main) TODOS necesitan ser transparentes para que el wallpaper del HTML se vea. Un solo contenedor con background sólido bloquea todo.
+
+**Jerarquía de contenedores encontrada**:
+```
+html (aquí va el wallpaper)
+└── body (transparent)
+    └── #appDashboard (transparent)
+        └── main
+            └── .tab-content (transparent) ← Este era el bloqueador principal
+                └── Cards individuales (pueden tener background)
+```
+
+---
+
 ## 💡 REGLAS DE ORO
 
 ### 1. DEBUG ANTES DE AGREGAR
