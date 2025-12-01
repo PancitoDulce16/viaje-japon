@@ -19,14 +19,19 @@
    BACKGROUNDS - Mejor contraste
    ======================================== */
 
-html.dark,
+/* HTML sin background para que se vea el wallpaper */
+html.dark {
+  color: var(--dark-text-primary) !important;
+}
+
+/* Body transparente para mostrar el wallpaper del HTML */
 html.dark body {
-  background-color: var(--dark-bg-primary) !important;
+  background-color: transparent !important;
   color: var(--dark-text-primary) !important;
 }
 
 html.dark #appDashboard {
-  background-color: var(--dark-bg-primary) !important;
+  background-color: transparent !important;
 }
 
 /* Cards con mejor contraste - MUY ESPECÍFICO */
