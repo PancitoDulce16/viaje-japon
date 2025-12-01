@@ -1422,9 +1422,9 @@ function renderDayOverview(day){
 
   container.innerHTML = `
     ${cityImage ? `
-      <div class="relative h-48 w-full overflow-hidden rounded-t-xl -mx-6 -mt-6 mb-4">
-        <img src="${cityImage}" alt="${day.city || day.location || 'Japan'}" class="w-full h-full object-cover" loading="lazy">
-        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+      <div class="relative h-48 w-full overflow-hidden rounded-t-xl -mx-6 -mt-6 mb-4 bg-gradient-to-br from-purple-100 to-pink-100">
+        <img src="${cityImage}" alt="${day.city || day.location || 'Japan'}" class="w-full h-full object-contain" loading="lazy">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"></div>
         <div class="absolute bottom-0 left-0 right-0 p-4">
           <div class="flex items-center gap-2 text-white">
             <span class="text-3xl">📅</span>
