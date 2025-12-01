@@ -735,57 +735,52 @@ export const TripsManager = {
 
     headerContainer.innerHTML = `
       <div class="space-y-6">
-        <!-- Fila 1: Título y acciones -->
-        <div class="flex justify-between items-start w-full flex-wrap gap-6">
-          <!-- Título principal y detalles del viaje -->
-          <div class="flex-1 min-w-[280px]">
-              <h2 class="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight animate__animated animate__fadeInDown">${this.currentTrip.info.name}</h2>
-              <div class="flex items-center gap-3 text-white/90 text-sm flex-wrap">
-                  <span class="flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path></svg>
-                    ${startDate.toLocaleDateString('es', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </span>
-                  <span class="hidden md:inline text-white/40">•</span>
-                  <span class="flex items-center gap-2">${collaborationStatus}</span>
-              </div>
+        <!-- Banner centrado -->
+        <div class="text-center mb-4">
+          <h2 class="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">${this.currentTrip.info.name}</h2>
+          <div class="flex items-center justify-center gap-3 text-white/90 text-sm flex-wrap mb-4">
+            <span class="flex items-center gap-2">
+              📅 ${startDate.toLocaleDateString('es', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
+            <span class="text-white/40">•</span>
+            <span>${this.currentTrip.info.tripType === 'individual' ? '👤 Viaje individual' : `👥 Viaje Grupal`}</span>
           </div>
 
-          <!-- Acciones y Countdown -->
-          <div class="flex items-center gap-3 flex-wrap">
-              <div class="text-center bg-white/10 backdrop-blur-sm px-5 py-3 rounded-xl border border-white/20">
-                  <div class="text-3xl font-bold text-white leading-none mb-1">${daysUntil > 0 ? `${daysUntil}` : tripProgress < 100 ? `${daysElapsed}` : '✅'}</div>
-                  <div class="text-xs text-white/80 font-medium">${daysUntil > 0 ? `días restantes` : tripProgress < 100 ? `Día ${daysElapsed} de ${totalDays}` : 'Completado'}</div>
-              </div>
-              <button
-                onclick="TripsManager.showTripsListModal()"
-                class="bg-white/10 hover:bg-white/20 text-white font-semibold py-2.5 px-5 rounded-xl transition backdrop-blur-sm hover:scale-105 border border-white/10"
-              >
-                Mis Viajes
-              </button>
-              <button
-                onclick="TripsManager.showCreateTripModal()"
-                class="bg-blue-500/90 hover:bg-blue-600 text-white font-bold py-2.5 px-5 rounded-xl transition backdrop-blur-sm flex items-center gap-2 hover:scale-105 shadow-md"
-              >
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
-                  <span class="hidden md:inline">Agregar Viaje</span>
-              </button>
-               <button
-                onclick="TripsManager.showShareCode()"
-                class="bg-green-500/90 hover:bg-green-600 text-white font-bold py-2.5 px-5 rounded-xl transition backdrop-blur-sm flex items-center gap-2 hover:scale-105 shadow-md"
-                title="Compartir código del viaje"
-              >
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 4a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V4z"></path></svg>
-                <span class="hidden md:inline">Compartir</span>
-              </button>
-              <button
-                onclick="TripsManager.inviteMemberByEmail()"
-                class="bg-purple-500/90 hover:bg-purple-600 text-white font-bold py-2.5 px-5 rounded-xl transition backdrop-blur-sm flex items-center gap-2 hover:scale-105 shadow-md"
-                title="Invitar por email"
-              >
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg>
-                  <span class="hidden md:inline">Invitar</span>
-              </button>
+          <!-- Contador de días -->
+          <div class="inline-block bg-white/10 backdrop-blur-sm px-6 py-3 rounded-xl border border-white/20 mb-4">
+            <div class="text-3xl font-bold text-white leading-none mb-1">${daysUntil > 0 ? `${daysUntil}` : tripProgress < 100 ? `${daysElapsed}` : '✅'}</div>
+            <div class="text-xs text-white/80 font-medium">${daysUntil > 0 ? `días restantes` : tripProgress < 100 ? `Día ${daysElapsed} de ${totalDays}` : 'Completado'}</div>
           </div>
+        </div>
+
+        <!-- Botones de acción centrados -->
+        <div class="flex items-center justify-center gap-3 flex-wrap">
+          <button
+            onclick="TripsManager.showTripsListModal()"
+            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2.5 px-5 rounded-xl transition backdrop-blur-sm hover:scale-105 border border-white/10"
+          >
+            📂 Mis Viajes
+          </button>
+          <button
+            onclick="TripsManager.showCreateTripModal()"
+            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2.5 px-5 rounded-xl transition backdrop-blur-sm hover:scale-105 border border-white/10"
+          >
+            ➕ Agregar Viaje
+          </button>
+          <button
+            onclick="TripsManager.showShareCode()"
+            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2.5 px-5 rounded-xl transition backdrop-blur-sm hover:scale-105 border border-white/10"
+            title="Compartir código del viaje"
+          >
+            🔗 Compartir
+          </button>
+          <button
+            onclick="TripsManager.inviteMemberByEmail()"
+            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2.5 px-5 rounded-xl transition backdrop-blur-sm hover:scale-105 border border-white/10"
+            title="Invitar por email"
+          >
+            ✉️ Invitar
+          </button>
         </div>
 
         <!-- Fila 2: Dashboard de Estadísticas Visuales -->
