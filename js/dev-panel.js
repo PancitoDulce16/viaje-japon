@@ -26,20 +26,20 @@ class DevPanel {
         const panel = document.createElement('div');
         panel.id = 'dev-panel';
         panel.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 400px;
-            max-height: 600px;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-            border: 2px solid #667eea;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            z-index: 999999;
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            position: fixed !important;
+            bottom: 20px !important;
+            right: 20px !important;
+            width: 400px !important;
+            max-height: 600px !important;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%) !important;
+            border: 2px solid #667eea !important;
+            border-radius: 16px !important;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5) !important;
+            z-index: 2147483647 !important;
+            display: none !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         `;
 
         panel.innerHTML = `
@@ -147,16 +147,22 @@ class DevPanel {
     }
 
     toggle() {
+        console.log('🔄 Dev Panel toggle - Estado actual:', this.isOpen);
         if (this.isOpen) {
             this.close();
         } else {
             this.open();
         }
+        console.log('✅ Dev Panel - Nuevo estado:', this.isOpen);
     }
 
     open() {
+        console.log('📂 Abriendo panel...', this.panel);
         this.panel.style.display = 'flex';
+        this.panel.style.visibility = 'visible';
+        this.panel.style.opacity = '1';
         this.isOpen = true;
+        console.log('📂 Panel abierto - Display:', this.panel.style.display);
     }
 
     close() {
