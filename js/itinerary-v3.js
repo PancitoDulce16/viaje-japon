@@ -1401,14 +1401,17 @@ function renderDayOverview(day){
       cityImage = window.ImageService.getCityImage(cityName);
       console.log('🖼️ Image from ImageService:', cityImage);
     } else {
-      // Fallback images for each city
+      // City cards locales kawaii
       const cityImages = {
-        tokyo: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=800&q=80',
-        kyoto: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80',
-        osaka: 'https://unsplash.com/photos/OwbvX2iahvw/download?force=true&w=800', // Dotonbori
-        nara: 'https://unsplash.com/photos/OugwfKxatME/download?force=true&w=800', // Nara deer
-        hiroshima: 'https://images.unsplash.com/photo-1617878223826-5a93d60fe046?auto=format&fit=crop&w=800&q=80',
-        nikko: 'https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&w=800&q=80'
+        tokyo: '/images/iconos/City cards/tokyo1.png',
+        kyoto: '/images/iconos/City cards/Kyoto1.png',
+        osaka: '/images/iconos/City cards/Osaka.png',
+        nara: '/images/iconos/City cards/Nara1.png',
+        hiroshima: '/images/iconos/City cards/Hiroshima.png',
+        fukuoka: '/images/iconos/City cards/Fukuoka.png',
+        hakone: '/images/iconos/City cards/hakone1.png',
+        kamakura: '/images/iconos/City cards/Kamakura.png',
+        nikko: '/images/iconos/City cards/tokyo1.png' // Fallback a Tokyo
       };
       cityImage = cityImages[cityName] || cityImages.tokyo;
       console.log('🖼️ Image from fallback:', cityImage);
