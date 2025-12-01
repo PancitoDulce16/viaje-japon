@@ -56,6 +56,39 @@
     <!-- 🎨 Wallpapers Kawaii - Modo Claro y Oscuro -->
     <link rel="stylesheet" href="/css/wallpapers.css?v=2">
 
+    <!-- Wallpapers inline para máxima prioridad -->
+    <style>
+        /* Modo Claro */
+        html:not(.dark):not([data-theme="dark"]) {
+            background-color: #fef3f8 !important;
+            background-image: url('/images/iconos/Wallpaper/Claro.png') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-attachment: fixed !important;
+            background-repeat: no-repeat !important;
+            min-height: 100vh !important;
+        }
+        html:not(.dark):not([data-theme="dark"]) body {
+            background: transparent !important;
+        }
+
+        /* Modo Oscuro */
+        html.dark,
+        html[data-theme="dark"] {
+            background-color: #0a0d1a !important;
+            background-image: url('/images/iconos/Wallpaper/Osucuro.png') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-attachment: fixed !important;
+            background-repeat: no-repeat !important;
+            min-height: 100vh !important;
+        }
+        html.dark body,
+        html[data-theme="dark"] body {
+            background: transparent !important;
+        }
+    </style>
+
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/png" href="/images/icons/icon-192.png">
     <meta name="mobile-web-app-capable" content="yes">
