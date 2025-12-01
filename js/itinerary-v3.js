@@ -1097,23 +1097,20 @@ function renderTripSelector(){
   const currentTrip=window.TripsManager?.currentTrip; if(!currentTrip){ container.innerHTML=''; return; }
   const userTrips=window.TripsManager?.userTrips||[];
   container.innerHTML = `
-    <div class="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4 rounded-lg mb-4">
-      <div class="flex items-center justify-between flex-wrap gap-3">
-        <div class="flex items-center gap-3 flex-1">
-          <div class="text-2xl">🗺️</div>
-          <div>
-            <h3 class="font-bold text-lg">${currentTrip.info.name}</h3>
-            <p class="text-xs text-white/80">${new Date(currentTrip.info.dateStart).toLocaleDateString('es')} - ${new Date(currentTrip.info.dateEnd).toLocaleDateString('es')}</p>
-          </div>
-        </div>
-        <div class="flex gap-2 flex-wrap">
-          <!-- ❌ ELIMINADO: Análisis del Viaje (feature semi-roto) -->
-          <!-- ❌ ELIMINADO: Generador Inteligente (frustrante, no funciona bien) -->
-          ${userTrips.length>1 ? `<button onclick="TripsManager.showTripsListModal()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">🔄 Cambiar Viaje</button>`:''}
-          <button onclick="TripsManager.showShareCode()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">🔗 Compartir</button>
-          ${currentItinerary ? `<button onclick="window.PDFExporter?.exportToPDF()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">📄 Exportar PDF</button>`:''}
-          ${!currentItinerary ? `<button onclick="ItineraryBuilder.showCreateItineraryWizard()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition text-sm font-bold shadow-md">✨ Crear Itinerario</button>`:''}
-        </div>
+    <div class="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-6 rounded-xl mb-6 shadow-lg">
+      <!-- Banner centrado y grande sin icono -->
+      <div class="text-center mb-4">
+        <h3 class="font-bold text-3xl mb-2">${currentTrip.info.name}</h3>
+        <p class="text-sm text-white/90">📅 ${new Date(currentTrip.info.dateStart).toLocaleDateString('es')} - ${new Date(currentTrip.info.dateEnd).toLocaleDateString('es')} • 👥 ${currentTrip.info.tripType === 'individual' ? 'Viaje Individual' : 'Viaje Grupal'}</p>
+      </div>
+
+      <!-- Botones de acción centrados -->
+      <div class="flex gap-2 flex-wrap justify-center">
+        ${userTrips.length>1 ? `<button onclick="TripsManager.showTripsListModal()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">📂 Mis Viajes</button>`:''}
+        <button onclick="TripsManager.showShareCode()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">🔗 Compartir</button>
+        <button onclick="TripsManager.showCreateTripModal()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">➕ Agregar Viaje</button>
+        ${currentItinerary ? `<button onclick="window.PDFExporter?.exportToPDF()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">📄 Exportar PDF</button>`:''}
+        ${!currentItinerary ? `<button onclick="ItineraryBuilder.showCreateItineraryWizard()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition text-sm font-bold shadow-md">✨ Crear Itinerario</button>`:''}
       </div>
     </div>`;
 }
