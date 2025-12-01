@@ -110,16 +110,16 @@
    TABS - Esenciales, Atracciones, Utilidades
    ================================================================= */
 
-/* Tab content general */
+/* Tab content general - Transparente para mostrar wallpaper */
 .tab-content {
-    background-color: #ffffff;
+    background-color: transparent;
     color: #1f2937;
     min-height: 400px;
     padding: 1.5rem;
 }
 
 .dark .tab-content {
-    background-color: #111827;
+    background-color: transparent;
     color: #f3f4f6;
 }
 
