@@ -44,14 +44,14 @@ body {
   background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
 }
 
-/* Dashboard con fondo claro y limpio */
+/* Dashboard transparente para mostrar wallpaper */
 #appDashboard {
-  background-color: #f9fafb;
+  background-color: transparent;
   min-height: 100vh;
 }
 
 .dark #appDashboard {
-  background-color: var(--bg-dark-main);
+  background-color: transparent;
 }
 
 .gradient-bg {
