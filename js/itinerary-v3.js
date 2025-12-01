@@ -1422,8 +1422,8 @@ function renderDayOverview(day){
 
   container.innerHTML = `
     ${cityImage ? `
-      <div class="relative w-full rounded-t-xl -mx-6 -mt-6 mb-4">
-        <img src="${cityImage}" alt="${day.city || day.location || 'Japan'}" class="w-full h-auto" loading="lazy">
+      <div class="relative w-full rounded-t-xl -mx-6 -mt-6 mb-4 flex items-center justify-center overflow-hidden">
+        <img src="${cityImage}" alt="${day.city || day.location || 'Japan'}" class="w-full h-auto block" loading="lazy">
         <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"></div>
         <div class="absolute bottom-0 left-0 right-0 p-4">
           <div class="flex items-center gap-2 text-white">
