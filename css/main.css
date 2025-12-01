@@ -26,12 +26,12 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
   color: var(--text-primary-light);
   transition: background-color 0.3s ease, color 0.3s ease;
-  background-color: #f3f4f6;
+  /* background-color removido para permitir wallpapers */
 }
 
 .dark body {
   color: var(--text-primary-dark);
-  background-color: #111827;
+  /* background-color removido para permitir wallpapers */
 }
 
 /* Landing Page con gradiente hermoso */
@@ -1300,10 +1300,15 @@ body {
    FONDOS - CONTRASTE BALANCEADO
    ======================================== */
 
-html.dark,
+/* HTML sin background para mostrar wallpaper */
+html.dark {
+  color: var(--balanced-white-text) !important;
+}
+
+/* Body y Dashboard transparentes para mostrar wallpaper */
 html.dark body,
 html.dark #appDashboard {
-  background-color: var(--balanced-dark-bg) !important;
+  background-color: transparent !important;
   color: var(--balanced-white-text) !important;
 }
 
