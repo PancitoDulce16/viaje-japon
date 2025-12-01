@@ -735,48 +735,53 @@ export const TripsManager = {
 
     headerContainer.innerHTML = `
       <div class="space-y-6">
-        <!-- Banner centrado -->
-        <div class="text-center mb-4">
-          <h2 class="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">${this.currentTrip.info.name}</h2>
-          <div class="flex items-center justify-center gap-3 text-white/90 text-sm flex-wrap mb-4">
-            <span class="flex items-center gap-2">
+        <!-- Banner JAPITIN grande centrado -->
+        <div class="flex justify-center mb-6">
+          <img src="/images/icons/japitin banner.png" alt="Japitin" class="h-20 md:h-24 rounded-lg border-2 border-white/20 bg-white/95 px-4 py-2 shadow-lg">
+        </div>
+
+        <!-- Título del viaje y contador -->
+        <div class="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h2 class="text-2xl md:text-3xl font-bold text-white mb-1">${this.currentTrip.info.name}</h2>
+            <p class="text-white/80 text-sm">
               📅 ${startDate.toLocaleDateString('es', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}
-            </span>
-            <span class="text-white/40">•</span>
-            <span>${this.currentTrip.info.tripType === 'individual' ? '👤 Viaje individual' : `👥 Viaje Grupal`}</span>
+              <span class="mx-2">•</span>
+              ${this.currentTrip.info.tripType === 'individual' ? '👤 Individual' : '👥 Grupal'}
+            </p>
           </div>
 
           <!-- Contador de días -->
-          <div class="inline-block bg-white/10 backdrop-blur-sm px-6 py-3 rounded-xl border border-white/20 mb-4">
+          <div class="text-center bg-white/10 backdrop-blur-sm px-5 py-3 rounded-xl border border-white/20">
             <div class="text-3xl font-bold text-white leading-none mb-1">${daysUntil > 0 ? `${daysUntil}` : tripProgress < 100 ? `${daysElapsed}` : '✅'}</div>
             <div class="text-xs text-white/80 font-medium">${daysUntil > 0 ? `días restantes` : tripProgress < 100 ? `Día ${daysElapsed} de ${totalDays}` : 'Completado'}</div>
           </div>
         </div>
 
         <!-- Botones de acción centrados -->
-        <div class="flex items-center justify-center gap-3 flex-wrap">
+        <div class="flex items-center justify-center gap-2 flex-wrap">
           <button
             onclick="TripsManager.showTripsListModal()"
-            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2.5 px-5 rounded-xl transition backdrop-blur-sm hover:scale-105 border border-white/10"
+            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2 px-4 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-white/10 text-sm"
           >
             📂 Mis Viajes
           </button>
           <button
             onclick="TripsManager.showCreateTripModal()"
-            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2.5 px-5 rounded-xl transition backdrop-blur-sm hover:scale-105 border border-white/10"
+            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2 px-4 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-white/10 text-sm"
           >
             ➕ Agregar Viaje
           </button>
           <button
             onclick="TripsManager.showShareCode()"
-            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2.5 px-5 rounded-xl transition backdrop-blur-sm hover:scale-105 border border-white/10"
+            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2 px-4 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-white/10 text-sm"
             title="Compartir código del viaje"
           >
             🔗 Compartir
           </button>
           <button
             onclick="TripsManager.inviteMemberByEmail()"
-            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2.5 px-5 rounded-xl transition backdrop-blur-sm hover:scale-105 border border-white/10"
+            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2 px-4 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-white/10 text-sm"
             title="Invitar por email"
           >
             ✉️ Invitar
@@ -846,71 +851,71 @@ export const TripsManager = {
       const totalDays = tripDays;
       const tripProgress = daysUntil <= 0 ? Math.min(100, (daysElapsed / totalDays) * 100) : 0;
 
-      // Renderizar cards de estadísticas
+      // Renderizar cards de estadísticas (más compactas)
       statsContainer.innerHTML = `
         <!-- Card 1: Progreso del Viaje -->
-        <div class="stat-card bg-gradient-to-br from-blue-500/90 to-cyan-500/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl hover-lift border border-white/10 transition-all hover:shadow-2xl">
-          <div class="flex items-center justify-between mb-3">
-            <div class="text-white font-semibold text-sm tracking-wide uppercase">Progreso del Viaje</div>
-            <div class="text-3xl">🗓️</div>
+        <div class="stat-card bg-gradient-to-br from-blue-500/90 to-cyan-500/90 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-white font-semibold text-xs tracking-wide uppercase">Progreso del Viaje</div>
+            <div class="text-2xl">🗓️</div>
           </div>
-          <div class="text-4xl font-bold text-white mb-3 leading-tight">${totalDays} días</div>
-          <div class="text-white/90 text-sm mb-4 font-medium">
-            ${daysUntil > 0 ? `Comienza en ${daysUntil} días` : tripProgress < 100 ? `Día ${daysElapsed} de ${totalDays}` : 'Viaje completado'}
+          <div class="text-3xl font-bold text-white mb-2 leading-tight">${totalDays} días</div>
+          <div class="text-white/90 text-xs mb-3 font-medium">
+            ${daysUntil > 0 ? `Comienza en ${daysUntil} días` : tripProgress < 100 ? `Día ${daysElapsed} de ${totalDays}` : 'Completado'}
           </div>
-          <div class="w-full bg-white/20 rounded-full h-2.5">
-            <div class="bg-white h-2.5 rounded-full transition-all duration-500 shadow-sm" style="width: ${tripProgress}%"></div>
+          <div class="w-full bg-white/20 rounded-full h-2">
+            <div class="bg-white h-2 rounded-full transition-all duration-500" style="width: ${tripProgress}%"></div>
           </div>
         </div>
 
         <!-- Card 2: Actividades del Itinerario -->
-        <div class="stat-card bg-gradient-to-br from-purple-500/90 to-pink-500/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl hover-lift border border-white/10 transition-all hover:shadow-2xl">
-          <div class="flex items-center justify-between mb-3">
-            <div class="text-white font-semibold text-sm tracking-wide uppercase">Actividades</div>
-            <div class="text-3xl">📍</div>
+        <div class="stat-card bg-gradient-to-br from-purple-500/90 to-pink-500/90 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-white font-semibold text-xs tracking-wide uppercase">Actividades</div>
+            <div class="text-2xl">📍</div>
           </div>
-          <div class="text-4xl font-bold text-white mb-3 leading-tight">${totalActivities}</div>
-          <div class="text-white/90 text-sm mb-4 font-medium">
+          <div class="text-3xl font-bold text-white mb-2 leading-tight">${totalActivities}</div>
+          <div class="text-white/90 text-xs mb-3 font-medium">
             ${completedActivities > 0 ? `${completedActivities} completadas` : 'Planificadas'}
           </div>
-          <div class="w-full bg-white/20 rounded-full h-2.5">
-            <div class="bg-white h-2.5 rounded-full transition-all duration-500 shadow-sm" style="width: ${activityProgress}%"></div>
+          <div class="w-full bg-white/20 rounded-full h-2">
+            <div class="bg-white h-2 rounded-full transition-all duration-500" style="width: ${activityProgress}%"></div>
           </div>
         </div>
 
         <!-- Card 3: Presupuesto -->
-        <div class="stat-card bg-gradient-to-br from-green-500/90 to-emerald-500/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl hover-lift border border-white/10 transition-all hover:shadow-2xl">
-          <div class="flex items-center justify-between mb-3">
-            <div class="text-white font-semibold text-sm tracking-wide uppercase">Presupuesto</div>
+        <div class="stat-card bg-gradient-to-br from-green-500/90 to-emerald-500/90 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-white font-semibold text-xs tracking-wide uppercase">Presupuesto</div>
             <div class="text-2xl">💰</div>
           </div>
-          <div class="text-4xl font-bold text-white mb-3 leading-tight">¥${totalBudget.toLocaleString()}</div>
-          <div class="text-white/90 text-sm mb-4 font-medium">
+          <div class="text-3xl font-bold text-white mb-2 leading-tight">¥${totalBudget.toLocaleString()}</div>
+          <div class="text-white/90 text-xs mb-3 font-medium">
             ${budgetProgress > 0 ? `${budgetProgress.toFixed(0)}% del estimado` : 'Sin gastos registrados'}
           </div>
-          <div class="w-full bg-white/20 rounded-full h-2.5">
-            <div class="bg-white h-2.5 rounded-full transition-all duration-500 shadow-sm" style="width: ${Math.min(100, budgetProgress)}%"></div>
+          <div class="w-full bg-white/20 rounded-full h-2">
+            <div class="bg-white h-2 rounded-full transition-all duration-500" style="width: ${Math.min(100, budgetProgress)}%"></div>
           </div>
         </div>
 
         <!-- Card 4: Reservas -->
-        <div class="stat-card bg-gradient-to-br from-orange-500/90 to-red-500/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl hover-lift border border-white/10 transition-all hover:shadow-2xl">
-          <div class="flex items-center justify-between mb-3">
-            <div class="text-white font-semibold text-sm tracking-wide uppercase">Reservas</div>
-            <div class="text-3xl">✈️</div>
+        <div class="stat-card bg-gradient-to-br from-orange-500/90 to-red-500/90 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 transition-all">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-white font-semibold text-xs tracking-wide uppercase">Reservas</div>
+            <div class="text-2xl">✈️</div>
           </div>
-          <div class="flex gap-6 items-center mb-3">
+          <div class="flex gap-4 items-center mb-2">
             <div>
-              <div class="text-3xl font-bold text-white leading-tight">${flightsBooked}/2</div>
-              <div class="text-white/90 text-sm font-medium mt-1">Vuelos</div>
+              <div class="text-2xl font-bold text-white leading-tight">${flightsBooked}/2</div>
+              <div class="text-white/90 text-xs font-medium mt-1">Vuelos</div>
             </div>
-            <div class="w-px h-14 bg-white/30"></div>
+            <div class="w-px h-10 bg-white/30"></div>
             <div>
-              <div class="text-3xl font-bold text-white leading-tight">${accommodationsCount}</div>
-              <div class="text-white/90 text-sm font-medium mt-1">Hoteles</div>
+              <div class="text-2xl font-bold text-white leading-tight">${accommodationsCount}</div>
+              <div class="text-white/90 text-xs font-medium mt-1">Hoteles</div>
             </div>
           </div>
-          <div class="text-white/90 text-sm font-medium">
+          <div class="text-white/90 text-xs font-medium">
             ${flightsBooked === 2 && accommodationsCount > 0 ? '✅ Todo listo' : '⚠️ Pendiente'}
           </div>
         </div>
