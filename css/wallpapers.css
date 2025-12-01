@@ -1,0 +1,46 @@
+/*
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ *  🎨 WALLPAPERS - Fondos Kawaii para Modo Claro y Oscuro
+ * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ */
+
+/* ==========================================
+   MODO CLARO - Wallpaper Claro.png
+   ========================================== */
+
+html:not(.dark):not([data-theme="dark"]),
+html:not(.dark):not([data-theme="dark"]) body {
+    background-color: #fef3f8 !important;
+    background-image: url('/images/iconos/Wallpaper/Claro.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+    background-repeat: no-repeat !important;
+}
+
+/* ==========================================
+   MODO OSCURO - Wallpaper Osucuro.png
+   ========================================== */
+
+html.dark,
+html.dark body,
+html[data-theme="dark"],
+html[data-theme="dark"] body {
+    background-color: #0a0d1a !important;
+    background-image: url('/images/iconos/Wallpaper/Osucuro.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+    background-repeat: no-repeat !important;
+}
+
+/* Overlay suave para modo oscuro (opcional) */
+html.dark body::before,
+html[data-theme="dark"] body::before {
+    content: '' !important;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(10, 13, 26, 0.2) !important;
+    z-index: -1 !important;
+    pointer-events: none !important;
+}
