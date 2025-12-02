@@ -436,20 +436,38 @@ position: ${computed.position}
                 // Usar SOLO la clase más importante con más especificidad
                 const mainClass = significantClasses[0];
 
-                // Agregar especificidad del padre si es posible
-                if (el.parentElement && el.parentElement.id) {
-                    return `#${el.parentElement.id} .${mainClass}`;
-                }
-
-                // Agregar nth-child para MÁXIMA especificidad
+                // ESTRATEGIA MEJORADA: Combinar padre + nth-child para MÁXIMA especificidad
                 const parent = el.parentElement;
                 if (parent) {
+                    // Contar hermanos con la misma clase significativa
                     const siblings = Array.from(parent.children).filter(child =>
-                        child.className && child.className.includes(mainClass)
+                        child.classList && child.classList.contains(mainClass)
                     );
+
                     if (siblings.length > 1) {
+                        // Hay múltiples elementos con esta clase
                         const index = siblings.indexOf(el) + 1;
-                        return `.${mainClass}:nth-of-type(${index})`;
+
+                        // Si el padre tiene ID, usarlo para máxima especificidad
+                        if (parent.id) {
+                            return `#${parent.id} > .${mainClass}:nth-child(${Array.from(parent.children).indexOf(el) + 1})`;
+                        }
+
+                        // Si no, usar clase del padre si existe
+                        const parentClasses = parent.className ?
+                            parent.className.split(' ').filter(c => c.trim() && !c.startsWith('bg-') && !c.startsWith('flex'))[0] : null;
+
+                        if (parentClasses) {
+                            return `.${parentClasses} > .${mainClass}:nth-child(${Array.from(parent.children).indexOf(el) + 1})`;
+                        }
+
+                        // Último recurso: usar tagName del padre
+                        return `${parent.tagName.toLowerCase()} > .${mainClass}:nth-child(${Array.from(parent.children).indexOf(el) + 1})`;
+                    }
+
+                    // Solo hay uno con esta clase, pero aún así ser específicos
+                    if (parent.id) {
+                        return `#${parent.id} > .${mainClass}`;
                     }
                 }
 
