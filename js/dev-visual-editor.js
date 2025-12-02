@@ -329,11 +329,16 @@ class DevVisualEditor {
         if (!styleTag) {
             styleTag = document.createElement('style');
             styleTag.id = 'dev-visual-editor-styles';
+            // Insertar AL FINAL para máxima especificidad
             document.head.appendChild(styleTag);
         }
 
         // Aplicar todo el CSS generado
-        styleTag.textContent = this.generatedCSS.join('\n');
+        // Agregar comentario para debugging
+        const cssContent = '/* Dev Visual Editor Styles */\n' + this.generatedCSS.join('\n');
+        styleTag.textContent = cssContent;
+
+        console.log('✅ CSS aplicado al DOM:', cssContent);
     }
 
     cancelColorPicker() {
@@ -395,14 +400,65 @@ position: ${computed.position}
         if (el.className && typeof el.className === 'string') {
             const classes = el.className.split(' ')
                 .filter(c => c.trim())
-                .filter(c => !c.startsWith('text-')) // Ignorar clases de texto de Tailwind
-                .filter(c => !c.startsWith('bg-'))   // Ignorar bg- de Tailwind
-                .filter(c => !c.startsWith('p-'))    // Ignorar padding de Tailwind
-                .filter(c => !c.startsWith('m-'))    // Ignorar margin de Tailwind
-                .slice(0, 3); // Max 3 clases
+                .filter(c => !c.startsWith('text-'))     // Ignorar clases de texto
+                .filter(c => !c.startsWith('bg-'))       // Ignorar bg-
+                .filter(c => !c.startsWith('from-'))     // Ignorar from-
+                .filter(c => !c.startsWith('to-'))       // Ignorar to-
+                .filter(c => !c.startsWith('via-'))      // Ignorar via-
+                .filter(c => !c.startsWith('p-'))        // Ignorar padding
+                .filter(c => !c.startsWith('pt-'))       // Ignorar padding-top
+                .filter(c => !c.startsWith('pb-'))       // Ignorar padding-bottom
+                .filter(c => !c.startsWith('px-'))       // Ignorar padding-x
+                .filter(c => !c.startsWith('py-'))       // Ignorar padding-y
+                .filter(c => !c.startsWith('m-'))        // Ignorar margin
+                .filter(c => !c.startsWith('mt-'))       // Ignorar margin-top
+                .filter(c => !c.startsWith('mb-'))       // Ignorar margin-bottom
+                .filter(c => !c.startsWith('mx-'))       // Ignorar margin-x
+                .filter(c => !c.startsWith('my-'))       // Ignorar margin-y
+                .filter(c => !c.startsWith('w-'))        // Ignorar width
+                .filter(c => !c.startsWith('h-'))        // Ignorar height
+                .filter(c => !c.startsWith('gap-'))      // Ignorar gap
+                .filter(c => !c.startsWith('space-'))    // Ignorar space
+                .filter(c => !c.startsWith('rounded-'))  // Ignorar rounded
+                .filter(c => !c.includes('/'));           // Ignorar opacidades como blue-500/60
 
+            // Buscar clases significativas (como stat-card, premium-card, etc)
+            const significantClasses = classes.filter(c =>
+                c.includes('card') ||
+                c.includes('btn') ||
+                c.includes('modal') ||
+                c.includes('header') ||
+                c.includes('banner') ||
+                c.includes('container')
+            );
+
+            if (significantClasses.length > 0) {
+                // Usar SOLO la clase más importante con más especificidad
+                const mainClass = significantClasses[0];
+
+                // Agregar especificidad del padre si es posible
+                if (el.parentElement && el.parentElement.id) {
+                    return `#${el.parentElement.id} .${mainClass}`;
+                }
+
+                // Agregar nth-child para MÁXIMA especificidad
+                const parent = el.parentElement;
+                if (parent) {
+                    const siblings = Array.from(parent.children).filter(child =>
+                        child.className && child.className.includes(mainClass)
+                    );
+                    if (siblings.length > 1) {
+                        const index = siblings.indexOf(el) + 1;
+                        return `.${mainClass}:nth-of-type(${index})`;
+                    }
+                }
+
+                return `.${mainClass}`;
+            }
+
+            // Si no hay clases significativas pero hay clases, usar las primeras 2
             if (classes.length > 0) {
-                return '.' + classes.join('.');
+                return '.' + classes.slice(0, 2).join('.');
             }
         }
 
@@ -411,6 +467,12 @@ position: ${computed.position}
         if (parent) {
             const siblings = Array.from(parent.children);
             const index = siblings.indexOf(el) + 1;
+
+            // Agregar ID del padre si existe
+            if (parent.id) {
+                return `#${parent.id} > ${el.tagName.toLowerCase()}:nth-child(${index})`;
+            }
+
             return `${el.tagName.toLowerCase()}:nth-child(${index})`;
         }
 
