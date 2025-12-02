@@ -232,13 +232,8 @@ class DashboardManager {
 
     async initUserInfo() {
         try {
+            // Email ahora se muestra en el perfil de usuario, no en el navbar
             const user = AuthHandler.currentUser;
-            if (user) {
-                const userEmailDisplay = document.getElementById('userEmailDisplay');
-                if (userEmailDisplay) {
-                    userEmailDisplay.textContent = user.email;
-                }
-            }
         } catch (error) {
             console.error('❌ Error al inicializar información del usuario:', error);
         }
@@ -536,23 +531,8 @@ class DashboardManager {
     }
 
     syncUserEmail() {
-        const userEmailDisplay = document.getElementById('userEmailDisplay');
-        const userEmailDisplayMobile = document.getElementById('userEmailDisplayMobile');
-
-        if (userEmailDisplay && userEmailDisplayMobile) {
-            const email = userEmailDisplay.textContent;
-            userEmailDisplayMobile.textContent = email;
-        }
-
-        // Observar cambios en el email
-        if (userEmailDisplay) {
-            const observer = new MutationObserver(() => {
-                if (userEmailDisplayMobile) {
-                    userEmailDisplayMobile.textContent = userEmailDisplay.textContent;
-                }
-            });
-            observer.observe(userEmailDisplay, { childList: true, characterData: true, subtree: true });
-        }
+        // Email ahora se muestra en el perfil de usuario
+        // Esta función ya no es necesaria
     }
 
     async handleLogout() {

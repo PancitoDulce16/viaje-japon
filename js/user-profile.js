@@ -172,6 +172,11 @@ export const UserProfile = {
                     <!-- Name & Bio -->
                     <div class="text-center mb-4">
                         <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-1">${profile.displayName}</h2>
+                        ${profile.email ? `
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                                📧 ${profile.email}
+                            </p>
+                        ` : ''}
                         ${profile.country ? `
                             <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
                                 🌍 ${profile.country}

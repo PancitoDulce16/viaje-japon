@@ -423,10 +423,8 @@ export const AuthHandler = {
   },
 
   updateUserInfo(user) {
-    const userEmailDisplay = document.getElementById('userEmailDisplay');
-    if (userEmailDisplay && user) {
-      userEmailDisplay.textContent = user.email;
-    }
+    // Email ahora se muestra en el perfil de usuario
+    // Esta función ya no necesita actualizar el navbar
   },
 
   showError(message, type = 'error') {
