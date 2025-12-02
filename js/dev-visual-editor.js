@@ -420,10 +420,23 @@ position: ${computed.position}
 
 // Inicializar Visual Editor cuando Dev Panel esté listo
 let devVisualEditor;
-setTimeout(() => {
+
+function initVisualEditor() {
     if (window.devPanel) {
         devVisualEditor = new DevVisualEditor(window.devPanel);
         window.devVisualEditor = devVisualEditor;
         console.log('🎨 Dev Visual Editor listo!');
+    } else {
+        console.log('⏳ Esperando Dev Panel...');
+        setTimeout(initVisualEditor, 500);
     }
-}, 1000);
+}
+
+// Intentar inicializar después de que la página cargue
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(initVisualEditor, 1000);
+    });
+} else {
+    setTimeout(initVisualEditor, 1000);
+}

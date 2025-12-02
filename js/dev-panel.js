@@ -300,9 +300,11 @@ let devPanel;
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         devPanel = new DevPanel();
+        window.devPanel = devPanel; // Exportar globalmente
         console.log('🛠️ Dev Panel listo! Presiona Ctrl+Shift+D para abrir');
     });
 } else {
     devPanel = new DevPanel();
+    window.devPanel = devPanel; // Exportar globalmente
     console.log('🛠️ Dev Panel listo! Presiona Ctrl+Shift+D para abrir');
 }
