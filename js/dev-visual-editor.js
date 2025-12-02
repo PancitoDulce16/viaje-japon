@@ -301,13 +301,26 @@ class DevVisualEditor {
         const selector = this.getElementSelector(this.selectedElement);
         const css = `${selector} { ${this.colorProperty}: ${color} !important; }`;
 
+        // DEBUG LOG
+        console.log('🎨 Aplicando color:', {
+            selector,
+            property: this.colorProperty,
+            color,
+            css,
+            element: this.selectedElement
+        });
+
         this.generatedCSS.push(css);
         this.originalStyles.delete(this.selectedElement); // Confirmar cambio
 
         // APLICAR CSS A LA PÁGINA EN TIEMPO REAL
         this.applyGeneratedCSS();
 
-        this.showStatus(`✓ Color aplicado: ${color}`, 'success');
+        // Verificar que se aplicó
+        const styleTag = document.getElementById('dev-visual-editor-styles');
+        console.log('📝 Style tag content:', styleTag?.textContent);
+
+        this.showStatus(`✓ Color aplicado: ${color} a ${selector}`, 'success');
     }
 
     applyGeneratedCSS() {
@@ -375,11 +388,32 @@ position: ${computed.position}
     }
 
     getElementSelector(el) {
+        // Prioridad 1: ID es el más específico
         if (el.id) return `#${el.id}`;
-        if (el.className) {
-            const classes = el.className.split(' ').filter(c => c.trim()).slice(0, 2).join('.');
-            return `.${classes}`;
+
+        // Prioridad 2: Clases significativas (evitar clases de Tailwind muy genéricas)
+        if (el.className && typeof el.className === 'string') {
+            const classes = el.className.split(' ')
+                .filter(c => c.trim())
+                .filter(c => !c.startsWith('text-')) // Ignorar clases de texto de Tailwind
+                .filter(c => !c.startsWith('bg-'))   // Ignorar bg- de Tailwind
+                .filter(c => !c.startsWith('p-'))    // Ignorar padding de Tailwind
+                .filter(c => !c.startsWith('m-'))    // Ignorar margin de Tailwind
+                .slice(0, 3); // Max 3 clases
+
+            if (classes.length > 0) {
+                return '.' + classes.join('.');
+            }
         }
+
+        // Prioridad 3: Tag + nth-child para más especificidad
+        const parent = el.parentElement;
+        if (parent) {
+            const siblings = Array.from(parent.children);
+            const index = siblings.indexOf(el) + 1;
+            return `${el.tagName.toLowerCase()}:nth-child(${index})`;
+        }
+
         return el.tagName.toLowerCase();
     }
 
