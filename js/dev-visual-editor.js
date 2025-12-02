@@ -168,6 +168,10 @@ class DevVisualEditor {
         const selector = this.getElementSelector(el);
         const css = `${selector} { position: fixed !important; left: ${left}px !important; top: ${top}px !important; }`;
         this.generatedCSS.push(css);
+
+        // APLICAR CSS A LA PÁGINA EN TIEMPO REAL
+        this.applyGeneratedCSS();
+
         this.showStatus('📍 Posición guardada', 'success');
     }
 
@@ -299,7 +303,24 @@ class DevVisualEditor {
 
         this.generatedCSS.push(css);
         this.originalStyles.delete(this.selectedElement); // Confirmar cambio
+
+        // APLICAR CSS A LA PÁGINA EN TIEMPO REAL
+        this.applyGeneratedCSS();
+
         this.showStatus(`✓ Color aplicado: ${color}`, 'success');
+    }
+
+    applyGeneratedCSS() {
+        // Crear o actualizar style tag con el CSS generado
+        let styleTag = document.getElementById('dev-visual-editor-styles');
+        if (!styleTag) {
+            styleTag = document.createElement('style');
+            styleTag.id = 'dev-visual-editor-styles';
+            document.head.appendChild(styleTag);
+        }
+
+        // Aplicar todo el CSS generado
+        styleTag.textContent = this.generatedCSS.join('\n');
     }
 
     cancelColorPicker() {
