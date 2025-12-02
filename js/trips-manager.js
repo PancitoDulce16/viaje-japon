@@ -816,7 +816,7 @@ export const TripsManager = {
       // Renderizar cards de estadísticas (más compactas)
       statsContainer.innerHTML = `
         <!-- Card 1: Progreso del Viaje -->
-        <div class="stat-card bg-gradient-to-br from-blue-500/90 to-cyan-500/90 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 transition-all">
+        <div class="stat-card bg-gradient-to-br from-blue-500/90 to-cyan-500/90 dark:from-blue-900/60 dark:to-cyan-900/60 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 dark:border-blue-800/30 transition-all">
           <div class="flex items-center justify-between mb-2">
             <div class="text-white font-semibold text-xs tracking-wide uppercase">Progreso del Viaje</div>
             <div class="text-2xl">🗓️</div>
@@ -825,13 +825,13 @@ export const TripsManager = {
           <div class="text-white/90 text-xs mb-3 font-medium">
             ${daysUntil > 0 ? `Comienza en ${daysUntil} días` : tripProgress < 100 ? `Día ${daysElapsed} de ${totalDays}` : 'Completado'}
           </div>
-          <div class="w-full bg-white/20 rounded-full h-2">
-            <div class="bg-white h-2 rounded-full transition-all duration-500" style="width: ${tripProgress}%"></div>
+          <div class="w-full bg-white/20 dark:bg-white/10 rounded-full h-2">
+            <div class="bg-white dark:bg-blue-300 h-2 rounded-full transition-all duration-500" style="width: ${tripProgress}%"></div>
           </div>
         </div>
 
         <!-- Card 2: Actividades del Itinerario -->
-        <div class="stat-card bg-gradient-to-br from-purple-500/90 to-pink-500/90 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 transition-all">
+        <div class="stat-card bg-gradient-to-br from-purple-500/90 to-pink-500/90 dark:from-purple-900/60 dark:to-pink-900/60 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 dark:border-purple-800/30 transition-all">
           <div class="flex items-center justify-between mb-2">
             <div class="text-white font-semibold text-xs tracking-wide uppercase">Actividades</div>
             <div class="text-2xl">📍</div>
@@ -840,13 +840,13 @@ export const TripsManager = {
           <div class="text-white/90 text-xs mb-3 font-medium">
             ${completedActivities > 0 ? `${completedActivities} completadas` : 'Planificadas'}
           </div>
-          <div class="w-full bg-white/20 rounded-full h-2">
-            <div class="bg-white h-2 rounded-full transition-all duration-500" style="width: ${activityProgress}%"></div>
+          <div class="w-full bg-white/20 dark:bg-white/10 rounded-full h-2">
+            <div class="bg-white dark:bg-purple-300 h-2 rounded-full transition-all duration-500" style="width: ${activityProgress}%"></div>
           </div>
         </div>
 
         <!-- Card 3: Presupuesto -->
-        <div class="stat-card bg-gradient-to-br from-green-500/90 to-emerald-500/90 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 transition-all">
+        <div class="stat-card bg-gradient-to-br from-green-500/90 to-emerald-500/90 dark:from-green-900/60 dark:to-emerald-900/60 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 dark:border-green-800/30 transition-all">
           <div class="flex items-center justify-between mb-2">
             <div class="text-white font-semibold text-xs tracking-wide uppercase">Presupuesto</div>
             <div class="text-2xl">💰</div>
@@ -855,13 +855,13 @@ export const TripsManager = {
           <div class="text-white/90 text-xs mb-3 font-medium">
             ${budgetProgress > 0 ? `${budgetProgress.toFixed(0)}% del estimado` : 'Sin gastos registrados'}
           </div>
-          <div class="w-full bg-white/20 rounded-full h-2">
-            <div class="bg-white h-2 rounded-full transition-all duration-500" style="width: ${Math.min(100, budgetProgress)}%"></div>
+          <div class="w-full bg-white/20 dark:bg-white/10 rounded-full h-2">
+            <div class="bg-white dark:bg-green-300 h-2 rounded-full transition-all duration-500" style="width: ${Math.min(100, budgetProgress)}%"></div>
           </div>
         </div>
 
         <!-- Card 4: Reservas -->
-        <div class="stat-card bg-gradient-to-br from-orange-500/90 to-red-500/90 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 transition-all">
+        <div class="stat-card bg-gradient-to-br from-orange-500/90 to-red-500/90 dark:from-orange-900/60 dark:to-red-900/60 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 dark:border-orange-800/30 transition-all">
           <div class="flex items-center justify-between mb-2">
             <div class="text-white font-semibold text-xs tracking-wide uppercase">Reservas</div>
             <div class="text-2xl">✈️</div>
