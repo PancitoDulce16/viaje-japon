@@ -1,3 +1,56 @@
+Hola Claude 👋
+
+Tengo un archivo en GitHub con TODO lo que hemos discutido sobre mi app de itinerarios de Japón:  
+- features principales  
+- monetización  
+- survival guide (tutoriales de aeropuerto, SIM, transporte, etc.)  
+- herramientas internas para desarrollo  
+- ideas de gamificación, comunidad, expansión futura  
+
+Quiero que hagas un análisis **muy específico y estructurado**:
+
+1. **Lee y organiza** todo el contenido del archivo en secciones claras:
+   - Core features (lo esencial para que la app funcione)
+   - UX/Delight (cosas que mejoran la experiencia)
+   - Monetización (formas de ganar dinero)
+   - Survival Guide (tutoriales prácticos para viajeros)
+   - Internal Tools (herramientas para mí como dev)
+   - Future Vision (ideas a largo plazo)
+
+2. **Evalúa factibilidad técnica** de cada idea:
+   - Fácil → se puede hacer rápido con JS/Firebase/HTML/CSS
+   - Medio difícil → requiere lógica más compleja, integración, o bastante tiempo
+   - Difícil → necesita infraestructura avanzada, datos externos, o mucho esfuerzo
+
+3. **Marca el estado actual**:
+   - Ya implementado
+   - Parcialmente implementado
+   - No implementado
+
+4. **Asigna prioridad**:
+   - Alta → imprescindible para que la app funcione o para monetizar pronto
+   - Media → mejora la experiencia pero no es crítico
+   - Baja → nice‑to‑have, puede esperar
+
+5. **Ordena todo en roadmap**:
+   - De lo más fácil/urgente a lo más difícil/largo plazo
+   - Indica qué se hace en corto plazo (Q1–Q2), medio plazo (Q3–Q4), y largo plazo (año 2+)
+
+6. **Entrega el resultado en formato tabla** con columnas:
+   - Categoría
+   - Feature
+   - Estado actual
+   - Dificultad (fácil/medio/difícil)
+   - Prioridad (alta/media/baja)
+   - Orden recomendado (ahora / próximo / después)
+
+7. **Al final**, haz un resumen ejecutivo:
+   - Qué cosas ya están listas
+   - Qué cosas debo implementar primero
+   - Qué cosas son más difíciles y se dejan para después
+   - Qué cosas tienen potencial de monetización inmediata
+
+
 [11:39 PM, 12/1/2025] 🦜🌻: 100 ACTIVIDADES CLAVE DE JAPÓN + todos sus tags ya puestos
 (ordenadas por popularidad real 2025)
 
