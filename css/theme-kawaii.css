@@ -1,0 +1,310 @@
+/* ========================================
+   KAWAII THEME - Sakura Dream Light
+   Aesthetic: Soft pastels, rounded, dreamy, cute
+   ======================================== */
+
+:root {
+    /* 🌸 KAWAII COLOR PALETTE */
+    --kawaii-white: #FEFEFE;              /* Blanco puro */
+    --kawaii-cream: #FFF9F5;              /* Crema suave */
+    --kawaii-blush: #FFF0F5;              /* Rubor lavanda */
+    --kawaii-cloud: #F8F9FA;              /* Nube */
+
+    --kawaii-sakura: #FFB7C5;             /* Rosa sakura */
+    --kawaii-sakura-light: #FFE4E9;       /* Sakura muy claro */
+    --kawaii-sakura-deep: #FF69B4;        /* Sakura profundo */
+
+    --kawaii-lavender: #E6E6FA;           /* Lavanda */
+    --kawaii-lavender-light: #F5F5FF;     /* Lavanda claro */
+    --kawaii-mint: #E0F8F1;               /* Menta suave */
+    --kawaii-peach: #FFE5D9;              /* Durazno */
+    --kawaii-sky: #E3F2FD;                /* Cielo */
+
+    --kawaii-text: #4A4A4A;               /* Gris oscuro suave */
+    --kawaii-text-light: #8A8A8A;         /* Gris medio */
+
+    /* 🎨 BACKGROUND & SURFACES */
+    --bg-primary: var(--kawaii-cream);
+    --bg-secondary: var(--kawaii-white);
+    --bg-elevated: var(--kawaii-white);
+    --bg-card: var(--kawaii-white);
+
+    /* ✨ ACCENTS & HIGHLIGHTS */
+    --accent-primary: var(--kawaii-sakura);
+    --accent-secondary: var(--kawaii-lavender);
+    --accent-tertiary: var(--kawaii-peach);
+
+    /* 📝 TEXT COLORS */
+    --text-primary: var(--kawaii-text);
+    --text-secondary: var(--kawaii-text-light);
+    --text-accent: var(--kawaii-sakura-deep);
+
+    /* 🔲 BORDERS & DIVIDERS */
+    --border-color: rgba(255, 183, 197, 0.2);
+    --border-accent: var(--kawaii-sakura);
+    --divider-color: rgba(0, 0, 0, 0.05);
+
+    /* ☁️ SHADOWS - Suaves y difuminadas */
+    --shadow-sm: 0 2px 8px rgba(255, 105, 180, 0.08);
+    --shadow-md: 0 4px 16px rgba(255, 105, 180, 0.12);
+    --shadow-lg: 0 8px 24px rgba(255, 105, 180, 0.16);
+    --shadow-xl: 0 16px 48px rgba(255, 105, 180, 0.2);
+    --shadow-pink: 0 8px 20px rgba(255, 183, 197, 0.3);
+    --shadow-lavender: 0 8px 20px rgba(230, 230, 250, 0.3);
+
+    /* 🎀 GRADIENTS - Kawaii Style */
+    --gradient-kawaii-sakura: linear-gradient(135deg, #FFE4E9 0%, #FFB7C5 100%);
+    --gradient-kawaii-sunset: linear-gradient(135deg, #FFB7C5 0%, #FFA07A 50%, #FFE5D9 100%);
+    --gradient-kawaii-dreamy: linear-gradient(135deg, #E6E6FA 0%, #FFE4E9 50%, #E0F8F1 100%);
+    --gradient-kawaii-sky: linear-gradient(135deg, #E3F2FD 0%, #E6E6FA 100%);
+    --gradient-kawaii-peach: linear-gradient(135deg, #FFE5D9 0%, #FFB7C5 100%);
+
+    /* Primary gradient override */
+    --gradient-primary: linear-gradient(135deg, #E91E63 0%, #FF6B9D 100%);
+}
+
+/* ========================================
+   KAWAII COMPONENTS
+   ======================================== */
+
+/* Header kawaii con glassmorphism */
+.japan-header {
+    background: var(--gradient-primary);
+    backdrop-filter: blur(10px);
+    border-bottom: none;
+    box-shadow: var(--shadow-lg);
+}
+
+/* Cards super suaves */
+.stat-card,
+.premium-card,
+.activity-card {
+    background: var(--bg-card);
+    border: none;
+    border-radius: 20px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card:hover,
+.premium-card:hover,
+.activity-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: var(--shadow-pink);
+}
+
+/* Botones kawaii - redondeados y suaves */
+button:not(.floating-btn):not([class*="bg-"]) {
+    background: var(--gradient-kawaii-sakura);
+    border: none;
+    border-radius: 12px;
+    color: var(--kawaii-text);
+    font-weight: 600;
+    padding: 10px 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+}
+
+button:not(.floating-btn):hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-pink);
+}
+
+/* Inputs kawaii */
+input,
+textarea,
+select {
+    background: var(--bg-elevated);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-primary);
+    padding: 10px 16px;
+    transition: all 0.3s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--kawaii-sakura);
+    box-shadow: 0 0 0 4px var(--kawaii-sakura-light);
+    outline: none;
+}
+
+/* Tabs kawaii */
+.tab-btn {
+    color: var(--text-secondary);
+    border-bottom: 3px solid transparent;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+    color: var(--kawaii-sakura-deep);
+    background: var(--kawaii-sakura-light);
+}
+
+.tab-btn.active {
+    color: var(--kawaii-sakura-deep);
+    border-bottom-color: var(--kawaii-sakura);
+    background: var(--kawaii-sakura-light);
+}
+
+/* Modals kawaii con blur */
+.modal,
+[class*="modal"] {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 2px solid var(--kawaii-sakura-light);
+    border-radius: 24px;
+    box-shadow: var(--shadow-xl);
+}
+
+/* Scrollbar kawaii */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--kawaii-sakura-light);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--gradient-kawaii-sakura);
+    border-radius: 10px;
+    border: 2px solid var(--kawaii-white);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--kawaii-sakura);
+}
+
+/* ========================================
+   KAWAII PATTERNS - Floating Petals
+   ======================================== */
+
+/* Patrón sutil de puntos */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+    background-image: radial-gradient(circle, var(--kawaii-sakura-light) 1px, transparent 1px);
+    background-size: 30px 30px;
+}
+
+/* ========================================
+   KAWAII ACCENTS
+   ======================================== */
+
+.highlight,
+.badge,
+.chip {
+    background: var(--gradient-kawaii-sakura);
+    color: var(--kawaii-text);
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Status indicators kawaii */
+.status-success {
+    color: #4CAF50;
+    background: #E8F5E9;
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+.status-error {
+    color: #FF6B9D;
+    background: var(--kawaii-sakura-light);
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+.status-warning {
+    color: #FF9800;
+    background: #FFF3E0;
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+/* ========================================
+   KAWAII TYPOGRAPHY
+   ======================================== */
+
+h1, h2, h3 {
+    color: var(--text-primary);
+    text-shadow: 2px 2px 8px rgba(255, 183, 197, 0.2);
+    letter-spacing: -0.01em;
+}
+
+.text-accent {
+    color: var(--kawaii-sakura-deep);
+    font-weight: 600;
+}
+
+/* ========================================
+   FLOATING BUTTONS - Kawaii Style
+   ======================================== */
+
+.floating-btn {
+    background: var(--gradient-kawaii-sakura);
+    border: none;
+    border-radius: 50%;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.floating-btn:hover {
+    transform: scale(1.15) rotate(5deg);
+    box-shadow: var(--shadow-pink);
+}
+
+/* ========================================
+   GLASSMORPHISM EFFECTS
+   ======================================== */
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+}
+
+/* ========================================
+   LOADING & ANIMATIONS
+   ======================================== */
+
+@keyframes float-gentle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.float-animation {
+    animation: float-gentle 3s ease-in-out infinite;
+}
+
+/* Shimmer effect para loading */
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+.shimmer {
+    background: linear-gradient(90deg,
+        var(--kawaii-white) 0%,
+        var(--kawaii-sakura-light) 50%,
+        var(--kawaii-white) 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+}

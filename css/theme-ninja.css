@@ -1,0 +1,247 @@
+/* ========================================
+   NINJA THEME - Traditional Japanese Dark
+   Aesthetic: Sumi-e ink, gold accents, sharp shadows
+   ======================================== */
+
+.dark {
+    /* 🥷 NINJA COLOR PALETTE */
+    --ninja-ink-black: #0a0a0a;           /* Tinta negra profunda */
+    --ninja-charcoal: #1a1a1a;            /* Carbón */
+    --ninja-shadow: #2a2a2a;              /* Sombra */
+    --ninja-steel: #3a3a3a;               /* Acero */
+
+    --ninja-gold: #D4AF37;                /* Oro elegante */
+    --ninja-gold-dim: #8B7355;            /* Oro apagado */
+    --ninja-blood-red: #8B0000;           /* Rojo sangre */
+    --ninja-crimson: #DC143C;             /* Carmesí */
+
+    --ninja-bamboo: #2F4F2F;              /* Verde bambú oscuro */
+    --ninja-indigo: #1a1a4d;              /* Índigo nocturno */
+    --ninja-slate: #2F4F4F;               /* Gris pizarra */
+
+    /* 🎨 BACKGROUND & SURFACES */
+    --bg-primary: var(--ninja-ink-black);
+    --bg-secondary: var(--ninja-charcoal);
+    --bg-elevated: var(--ninja-shadow);
+    --bg-card: var(--ninja-charcoal);
+
+    /* ✨ ACCENTS & HIGHLIGHTS */
+    --accent-primary: var(--ninja-gold);
+    --accent-secondary: var(--ninja-blood-red);
+    --accent-tertiary: var(--ninja-gold-dim);
+
+    /* 📝 TEXT COLORS */
+    --text-primary: #f5f5f5;              /* Casi blanco */
+    --text-secondary: #c0c0c0;            /* Gris claro */
+    --text-tertiary: #808080;             /* Gris medio */
+    --text-accent: var(--ninja-gold);
+
+    /* 🔲 BORDERS & DIVIDERS */
+    --border-color: rgba(212, 175, 55, 0.2);  /* Borde dorado sutil */
+    --border-accent: var(--ninja-gold);
+    --divider-color: rgba(255, 255, 255, 0.1);
+
+    /* 🌑 SHADOWS - Dramáticas y Sharp */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.8);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.9);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.95);
+    --shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.98);
+    --shadow-gold: 0 4px 12px rgba(212, 175, 55, 0.3);
+    --shadow-red: 0 4px 12px rgba(139, 0, 0, 0.5);
+
+    /* 🎭 GRADIENTS - Ninja Style */
+    --gradient-ninja-primary: linear-gradient(135deg, #2A0E5E 0%, #1a0838 100%);
+    --gradient-ninja-gold: linear-gradient(135deg, #D4AF37 0%, #8B7355 100%);
+    --gradient-ninja-red: linear-gradient(135deg, #8B0000 0%, #5a0000 100%);
+    --gradient-ninja-smoke: linear-gradient(180deg, rgba(26, 26, 26, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%);
+    --gradient-ninja-steel: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+
+    /* Override existing variables */
+    --gradient-primary: var(--gradient-ninja-primary);
+}
+
+/* ========================================
+   NINJA COMPONENTS
+   ======================================== */
+
+/* Header con aesthetic ninja */
+.dark .japan-header {
+    background: var(--gradient-ninja-primary);
+    border-bottom: 1px solid var(--ninja-gold);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Cards con borde dorado */
+.dark .stat-card,
+.dark .premium-card,
+.dark .activity-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    transition: all 0.2s ease-out;
+}
+
+.dark .stat-card:hover,
+.dark .premium-card:hover,
+.dark .activity-card:hover {
+    border-color: var(--ninja-gold);
+    box-shadow: var(--shadow-gold);
+    transform: translateY(-2px);
+}
+
+/* Botones estilo ninja */
+.dark button:not(.floating-btn):not([class*="bg-"]) {
+    background: var(--gradient-ninja-steel);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    transition: all 0.2s ease-out;
+}
+
+.dark button:not(.floating-btn):hover {
+    border-color: var(--ninja-gold);
+    box-shadow: var(--shadow-gold);
+}
+
+/* Inputs ninja style */
+.dark input,
+.dark textarea,
+.dark select {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+    border-color: var(--ninja-gold);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+    outline: none;
+}
+
+/* Tabs con línea dorada */
+.dark .tab-btn {
+    color: var(--text-secondary);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease-out;
+}
+
+.dark .tab-btn:hover {
+    color: var(--ninja-gold);
+}
+
+.dark .tab-btn.active {
+    color: var(--ninja-gold);
+    border-bottom-color: var(--ninja-gold);
+}
+
+/* Modals con marco dorado */
+.dark .modal,
+.dark [class*="modal"] {
+    background: var(--bg-secondary);
+    border: 1px solid var(--ninja-gold);
+    box-shadow: var(--shadow-xl);
+}
+
+/* Scrollbar ninja */
+.dark ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: var(--ninja-steel);
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: var(--ninja-shadow);
+    border-color: var(--ninja-gold);
+}
+
+/* ========================================
+   NINJA PATTERNS - Subtle Background
+   ======================================== */
+
+.dark body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.03;
+    background-image:
+        repeating-linear-gradient(45deg,
+            transparent,
+            transparent 10px,
+            var(--ninja-gold) 10px,
+            var(--ninja-gold) 11px
+        );
+}
+
+/* ========================================
+   NINJA ACCENTS - Toques dorados
+   ======================================== */
+
+/* Highlights importantes con acento dorado */
+.dark .highlight,
+.dark .badge,
+.dark .chip {
+    background: var(--gradient-ninja-gold);
+    color: var(--ninja-ink-black);
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 6px;
+    box-shadow: var(--shadow-gold);
+}
+
+/* Status indicators */
+.dark .status-success {
+    color: var(--ninja-gold);
+}
+
+.dark .status-error {
+    color: var(--ninja-crimson);
+}
+
+.dark .status-warning {
+    color: var(--ninja-gold-dim);
+}
+
+/* ========================================
+   NINJA TYPOGRAPHY
+   ======================================== */
+
+.dark h1, .dark h2, .dark h3 {
+    color: var(--text-primary);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    letter-spacing: 0.02em;
+}
+
+.dark .text-accent {
+    color: var(--ninja-gold);
+}
+
+/* ========================================
+   FLOATING BUTTONS - Ninja Style
+   ======================================== */
+
+.dark .floating-btn {
+    background: var(--gradient-ninja-steel);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+}
+
+.dark .floating-btn:hover {
+    border-color: var(--ninja-gold);
+    box-shadow: var(--shadow-gold);
+    transform: scale(1.1);
+}
