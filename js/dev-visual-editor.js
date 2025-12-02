@@ -1,0 +1,429 @@
+// Dev Visual Editor - Drag & Drop + Color Picker + Inspector
+// Extensión del Dev Panel para edición visual
+
+class DevVisualEditor {
+    constructor(devPanel) {
+        this.devPanel = devPanel;
+        this.editMode = false;
+        this.colorPickerMode = false;
+        this.selectedElement = null;
+        this.originalStyles = new Map();
+        this.generatedCSS = [];
+        this.init();
+    }
+
+    init() {
+        this.injectEditorUI();
+    }
+
+    injectEditorUI() {
+        // Agregar botones al Dev Panel
+        const quickFixesSection = this.devPanel.panel.querySelector('.dev-quick-fixes');
+        if (!quickFixesSection) return;
+
+        const editorSection = document.createElement('div');
+        editorSection.style.cssText = 'margin-top: 20px;';
+        editorSection.innerHTML = `
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                    <span style="font-size: 18px;">🎨</span>
+                    <h4 style="margin: 0; color: #fff; font-size: 14px;">Visual Editor</h4>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <button id="dev-toggle-edit-mode" style="background: #2a2a2a; border: 1px solid #444; color: white; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 12px; text-align: left; transition: all 0.2s;">
+                        🎯 <span id="edit-mode-text">Activar Modo Edición</span>
+                    </button>
+                    <button id="dev-toggle-color-picker" style="background: #2a2a2a; border: 1px solid #444; color: white; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 12px; text-align: left; transition: all 0.2s;">
+                        🎨 <span id="color-mode-text">Activar Color Picker</span>
+                    </button>
+                    <button onclick="devVisualEditor.showGeneratedCSS()" style="background: #2a2a2a; border: 1px solid #444; color: white; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 12px; text-align: left; transition: all 0.2s;">
+                        📋 Ver CSS Generado
+                    </button>
+                    <button onclick="devVisualEditor.clearEdits()" style="background: #2a2a2a; border: 1px solid #444; color: white; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 12px; text-align: left; transition: all 0.2s;">
+                        🗑️ Limpiar Cambios
+                    </button>
+                </div>
+
+                <!-- Color Picker Panel -->
+                <div id="dev-color-picker-panel" style="display: none; margin-top: 12px; background: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 12px;">
+                    <div style="margin-bottom: 8px; color: #fff; font-size: 12px; font-weight: 600;">Elige una propiedad:</div>
+                    <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;">
+                        <button onclick="devVisualEditor.setColorProperty('background')" style="background: #333; border: 1px solid #555; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px;">Background</button>
+                        <button onclick="devVisualEditor.setColorProperty('color')" style="background: #333; border: 1px solid #555; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px;">Text Color</button>
+                        <button onclick="devVisualEditor.setColorProperty('border-color')" style="background: #333; border: 1px solid #555; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px;">Border</button>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <label style="display: block; color: #fff; font-size: 11px; margin-bottom: 4px;">Color:</label>
+                        <input type="color" id="dev-color-input" style="width: 100%; height: 40px; border: none; border-radius: 4px; cursor: pointer;">
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                        <button onclick="devVisualEditor.applyColor()" style="flex: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">✓ Aplicar</button>
+                        <button onclick="devVisualEditor.cancelColorPicker()" style="flex: 1; background: #444; border: none; color: white; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 12px;">✗ Cancelar</button>
+                    </div>
+                </div>
+
+                <!-- Element Inspector -->
+                <div id="dev-element-inspector" style="display: none; margin-top: 12px; background: #1a1a1a; border: 1px solid #667eea; border-radius: 8px; padding: 12px;">
+                    <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 8px;">
+                        <div style="color: #667eea; font-size: 12px; font-weight: 600;">🔍 Elemento Seleccionado</div>
+                        <button onclick="devVisualEditor.deselectElement()" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 10px;">✗</button>
+                    </div>
+                    <div id="dev-element-info" style="font-size: 11px; color: #ccc; margin-bottom: 12px;"></div>
+                    <div id="dev-element-styles" style="font-size: 10px; color: #aaa; max-height: 150px; overflow-y: auto; font-family: monospace;"></div>
+                </div>
+
+                <!-- Status -->
+                <div id="dev-visual-status" style="margin-top: 10px; font-size: 11px;"></div>
+            </div>
+        `;
+
+        quickFixesSection.parentNode.insertBefore(editorSection, quickFixesSection.nextSibling);
+
+        // Event listeners
+        document.getElementById('dev-toggle-edit-mode').addEventListener('click', () => this.toggleEditMode());
+        document.getElementById('dev-toggle-color-picker').addEventListener('click', () => this.toggleColorPicker());
+        document.getElementById('dev-color-input').addEventListener('input', (e) => this.previewColor(e.target.value));
+    }
+
+    toggleEditMode() {
+        this.editMode = !this.editMode;
+        const button = document.getElementById('edit-mode-text');
+
+        if (this.editMode) {
+            button.textContent = 'Desactivar Modo Edición';
+            document.getElementById('dev-toggle-edit-mode').style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            this.enableEditMode();
+            this.showStatus('🎯 Modo Edición activado - Arrastra elementos', 'info');
+        } else {
+            button.textContent = 'Activar Modo Edición';
+            document.getElementById('dev-toggle-edit-mode').style.background = '#2a2a2a';
+            this.disableEditMode();
+            this.showStatus('✓ Modo Edición desactivado', 'success');
+        }
+    }
+
+    enableEditMode() {
+        // Hacer todos los elementos principales draggables
+        const editableSelectors = [
+            '#currentTripHeader',
+            '.stat-card',
+            '.floating-btn',
+            '.japan-header',
+            '#tripStatsDashboard',
+            '.tab-content',
+            'img[alt*="Japitin"]'
+        ];
+
+        editableSelectors.forEach(selector => {
+            document.querySelectorAll(selector).forEach(el => {
+                if (!el.hasAttribute('data-original-position')) {
+                    const computed = window.getComputedStyle(el);
+                    el.setAttribute('data-original-position', computed.position);
+                    el.setAttribute('data-original-top', computed.top);
+                    el.setAttribute('data-original-left', computed.left);
+                }
+
+                el.style.cursor = 'move';
+                el.style.outline = '2px dashed rgba(102, 126, 234, 0.5)';
+                el.draggable = true;
+
+                el.addEventListener('dragstart', this.handleDragStart.bind(this));
+                el.addEventListener('dragend', this.handleDragEnd.bind(this));
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.selectElement(el);
+                });
+            });
+        });
+    }
+
+    disableEditMode() {
+        document.querySelectorAll('[draggable="true"]').forEach(el => {
+            el.style.cursor = '';
+            el.style.outline = '';
+            el.draggable = false;
+        });
+    }
+
+    handleDragStart(e) {
+        const el = e.target;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', el.innerHTML);
+
+        setTimeout(() => {
+            el.style.opacity = '0.5';
+        }, 0);
+    }
+
+    handleDragEnd(e) {
+        const el = e.target;
+        el.style.opacity = '';
+
+        // Guardar nueva posición
+        const rect = el.getBoundingClientRect();
+        this.savePositionCSS(el, rect.left, rect.top);
+    }
+
+    savePositionCSS(el, left, top) {
+        const selector = this.getElementSelector(el);
+        const css = `${selector} { position: fixed !important; left: ${left}px !important; top: ${top}px !important; }`;
+        this.generatedCSS.push(css);
+        this.showStatus('📍 Posición guardada', 'success');
+    }
+
+    toggleColorPicker() {
+        this.colorPickerMode = !this.colorPickerMode;
+        const button = document.getElementById('color-mode-text');
+        const panel = document.getElementById('dev-color-picker-panel');
+
+        if (this.colorPickerMode) {
+            button.textContent = 'Desactivar Color Picker';
+            document.getElementById('dev-toggle-color-picker').style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+            panel.style.display = 'block';
+            this.enableColorPicker();
+            this.showStatus('🎨 Color Picker activado - Click en elementos', 'info');
+        } else {
+            button.textContent = 'Activar Color Picker';
+            document.getElementById('dev-toggle-color-picker').style.background = '#2a2a2a';
+            panel.style.display = 'none';
+            this.disableColorPicker();
+            this.showStatus('✓ Color Picker desactivado', 'success');
+        }
+    }
+
+    enableColorPicker() {
+        document.body.style.cursor = 'crosshair';
+
+        this.colorPickerListener = (e) => {
+            const el = e.target;
+            if (el.closest('#dev-panel')) return; // Ignorar el panel mismo
+
+            e.stopPropagation();
+            e.preventDefault();
+
+            this.selectElement(el);
+            this.showColorPicker(el);
+        };
+
+        document.addEventListener('click', this.colorPickerListener, true);
+
+        // Hover effect
+        this.colorPickerHover = (e) => {
+            if (e.target.closest('#dev-panel')) return;
+            e.target.style.outline = '2px solid rgba(245, 87, 108, 0.8)';
+        };
+        this.colorPickerHoverOut = (e) => {
+            if (e.target.closest('#dev-panel')) return;
+            if (e.target !== this.selectedElement) {
+                e.target.style.outline = '';
+            }
+        };
+
+        document.addEventListener('mouseover', this.colorPickerHover);
+        document.addEventListener('mouseout', this.colorPickerHoverOut);
+    }
+
+    disableColorPicker() {
+        document.body.style.cursor = '';
+        if (this.colorPickerListener) {
+            document.removeEventListener('click', this.colorPickerListener, true);
+        }
+        if (this.colorPickerHover) {
+            document.removeEventListener('mouseover', this.colorPickerHover);
+            document.removeEventListener('mouseout', this.colorPickerHoverOut);
+        }
+
+        // Limpiar outlines
+        document.querySelectorAll('[style*="outline"]').forEach(el => {
+            if (!el.closest('#dev-panel')) {
+                el.style.outline = '';
+            }
+        });
+    }
+
+    showColorPicker(el) {
+        const computed = window.getComputedStyle(el);
+        const colorInput = document.getElementById('dev-color-input');
+
+        if (this.colorProperty === 'background') {
+            colorInput.value = this.rgbToHex(computed.backgroundColor);
+        } else if (this.colorProperty === 'color') {
+            colorInput.value = this.rgbToHex(computed.color);
+        } else if (this.colorProperty === 'border-color') {
+            colorInput.value = this.rgbToHex(computed.borderColor);
+        }
+    }
+
+    setColorProperty(property) {
+        this.colorProperty = property;
+        this.showStatus(`🎨 Propiedad seleccionada: ${property}`, 'info');
+
+        // Highlight button
+        document.querySelectorAll('#dev-color-picker-panel button').forEach(btn => {
+            btn.style.background = '#333';
+        });
+        event.target.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    }
+
+    previewColor(color) {
+        if (!this.selectedElement || !this.colorProperty) return;
+
+        // Guardar estilo original si no existe
+        if (!this.originalStyles.has(this.selectedElement)) {
+            this.originalStyles.set(this.selectedElement, {
+                background: this.selectedElement.style.background,
+                color: this.selectedElement.style.color,
+                borderColor: this.selectedElement.style.borderColor
+            });
+        }
+
+        // Aplicar preview
+        if (this.colorProperty === 'background') {
+            this.selectedElement.style.background = color;
+        } else if (this.colorProperty === 'color') {
+            this.selectedElement.style.color = color;
+        } else if (this.colorProperty === 'border-color') {
+            this.selectedElement.style.borderColor = color;
+        }
+    }
+
+    applyColor() {
+        if (!this.selectedElement || !this.colorProperty) {
+            this.showStatus('⚠️ Selecciona un elemento y propiedad primero', 'error');
+            return;
+        }
+
+        const color = document.getElementById('dev-color-input').value;
+        const selector = this.getElementSelector(this.selectedElement);
+        const css = `${selector} { ${this.colorProperty}: ${color} !important; }`;
+
+        this.generatedCSS.push(css);
+        this.originalStyles.delete(this.selectedElement); // Confirmar cambio
+        this.showStatus(`✓ Color aplicado: ${color}`, 'success');
+    }
+
+    cancelColorPicker() {
+        if (this.selectedElement && this.originalStyles.has(this.selectedElement)) {
+            const original = this.originalStyles.get(this.selectedElement);
+            this.selectedElement.style.background = original.background;
+            this.selectedElement.style.color = original.color;
+            this.selectedElement.style.borderColor = original.borderColor;
+            this.originalStyles.delete(this.selectedElement);
+        }
+        this.deselectElement();
+    }
+
+    selectElement(el) {
+        // Deselect previous
+        if (this.selectedElement) {
+            this.selectedElement.style.outline = '';
+        }
+
+        this.selectedElement = el;
+        el.style.outline = '3px solid #667eea';
+
+        // Show inspector
+        const inspector = document.getElementById('dev-element-inspector');
+        inspector.style.display = 'block';
+
+        const info = document.getElementById('dev-element-info');
+        const selector = this.getElementSelector(el);
+        info.innerHTML = `<strong>${selector}</strong>`;
+
+        // Show styles
+        const styles = document.getElementById('dev-element-styles');
+        const computed = window.getComputedStyle(el);
+        styles.innerHTML = `
+background: ${computed.backgroundColor}<br>
+color: ${computed.color}<br>
+width: ${computed.width}<br>
+height: ${computed.height}<br>
+padding: ${computed.padding}<br>
+margin: ${computed.margin}<br>
+border: ${computed.border}<br>
+position: ${computed.position}
+        `.trim();
+    }
+
+    deselectElement() {
+        if (this.selectedElement) {
+            this.selectedElement.style.outline = '';
+            this.selectedElement = null;
+        }
+        document.getElementById('dev-element-inspector').style.display = 'none';
+    }
+
+    getElementSelector(el) {
+        if (el.id) return `#${el.id}`;
+        if (el.className) {
+            const classes = el.className.split(' ').filter(c => c.trim()).slice(0, 2).join('.');
+            return `.${classes}`;
+        }
+        return el.tagName.toLowerCase();
+    }
+
+    showGeneratedCSS() {
+        if (this.generatedCSS.length === 0) {
+            this.showStatus('⚠️ No hay CSS generado todavía', 'error');
+            return;
+        }
+
+        const css = this.generatedCSS.join('\n\n');
+        const textarea = document.getElementById('dev-live-css');
+        textarea.value = css;
+
+        navigator.clipboard.writeText(css);
+        this.showStatus('📋 CSS generado copiado al portapapeles (' + this.generatedCSS.length + ' reglas)', 'success');
+    }
+
+    clearEdits() {
+        this.generatedCSS = [];
+        this.originalStyles.clear();
+        this.deselectElement();
+
+        // Reload page to reset all changes
+        if (confirm('¿Recargar la página para limpiar todos los cambios?')) {
+            location.reload();
+        } else {
+            this.showStatus('✓ Cambios limpiados', 'success');
+        }
+    }
+
+    rgbToHex(rgb) {
+        const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+        if (!match) return '#000000';
+
+        const hex = (x) => {
+            const h = parseInt(x).toString(16);
+            return h.length === 1 ? '0' + h : h;
+        };
+
+        return '#' + hex(match[1]) + hex(match[2]) + hex(match[3]);
+    }
+
+    showStatus(message, type) {
+        const status = document.getElementById('dev-visual-status');
+        const colors = {
+            success: { text: '#00f260', bg: 'rgba(0, 242, 96, 0.1)', border: 'rgba(0, 242, 96, 0.3)' },
+            error: { text: '#f5576c', bg: 'rgba(245, 87, 108, 0.1)', border: 'rgba(245, 87, 108, 0.3)' },
+            info: { text: '#667eea', bg: 'rgba(102, 126, 234, 0.1)', border: 'rgba(102, 126, 234, 0.3)' }
+        };
+
+        const color = colors[type] || colors.info;
+        status.innerHTML = `<div style="color: ${color.text}; padding: 8px; background: ${color.bg}; border-radius: 6px; border: 1px solid ${color.border}; font-size: 11px;">${message}</div>`;
+
+        setTimeout(() => {
+            status.innerHTML = '';
+        }, 4000);
+    }
+}
+
+// Inicializar Visual Editor cuando Dev Panel esté listo
+let devVisualEditor;
+setTimeout(() => {
+    if (window.devPanel) {
+        devVisualEditor = new DevVisualEditor(window.devPanel);
+        window.devVisualEditor = devVisualEditor;
+        console.log('🎨 Dev Visual Editor listo!');
+    }
+}, 1000);

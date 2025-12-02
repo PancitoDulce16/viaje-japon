@@ -79,7 +79,7 @@ class DevPanel {
                 </div>
 
                 <!-- Quick Fixes -->
-                <div style="margin-bottom: 20px;">
+                <div class="dev-quick-fixes" style="margin-bottom: 20px;">
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                         <span style="font-size: 18px;">⚡</span>
                         <h4 style="margin: 0; color: #fff; font-size: 14px;">Quick Fixes</h4>
