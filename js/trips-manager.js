@@ -736,55 +736,17 @@ export const TripsManager = {
     headerContainer.innerHTML = `
       <div class="space-y-6">
         <!-- Banner JAPITIN grande centrado -->
-        <div class="flex justify-center mb-6">
+        <div class="flex justify-center mb-4">
           <img src="/images/icons/japitin banner.png" alt="Japitin" class="h-20 md:h-24 rounded-lg border-2 border-white/20 bg-white/95 px-4 py-2 shadow-lg">
         </div>
 
-        <!-- Título del viaje y contador -->
-        <div class="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h2 class="text-2xl md:text-3xl font-bold text-white mb-1">${this.currentTrip.info.name}</h2>
-            <p class="text-white/80 text-sm">
-              📅 ${startDate.toLocaleDateString('es', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' })}
-              <span class="mx-2">•</span>
-              ${this.currentTrip.info.tripType === 'individual' ? '👤 Individual' : '👥 Grupal'}
-            </p>
-          </div>
-
-          <!-- Contador de días -->
-          <div class="text-center bg-white/10 backdrop-blur-sm px-5 py-3 rounded-xl border border-white/20">
-            <div class="text-3xl font-bold text-white leading-none mb-1">${daysUntil > 0 ? `${daysUntil}` : tripProgress < 100 ? `${daysElapsed}` : '✅'}</div>
-            <div class="text-xs text-white/80 font-medium">${daysUntil > 0 ? `días restantes` : tripProgress < 100 ? `Día ${daysElapsed} de ${totalDays}` : 'Completado'}</div>
-          </div>
-        </div>
-
-        <!-- Botones de acción centrados -->
-        <div class="flex items-center justify-center gap-2 flex-wrap">
-          <button
-            onclick="TripsManager.showTripsListModal()"
-            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2 px-4 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-white/10 text-sm"
-          >
-            📂 Mis Viajes
-          </button>
+        <!-- Solo botón de agregar viaje -->
+        <div class="flex items-center justify-center">
           <button
             onclick="TripsManager.showCreateTripModal()"
-            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2 px-4 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-white/10 text-sm"
+            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2.5 px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-white/10 text-sm"
           >
             ➕ Agregar Viaje
-          </button>
-          <button
-            onclick="TripsManager.showShareCode()"
-            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2 px-4 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-white/10 text-sm"
-            title="Compartir código del viaje"
-          >
-            🔗 Compartir
-          </button>
-          <button
-            onclick="TripsManager.inviteMemberByEmail()"
-            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2 px-4 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-white/10 text-sm"
-            title="Invitar por email"
-          >
-            ✉️ Invitar
           </button>
         </div>
 
