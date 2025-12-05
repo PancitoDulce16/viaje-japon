@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Itinerary Generator Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 2em; background-color: #f4f4f9; color: #333; }
+        h1 { color: #005a9c; }
+        button { font-size: 1.2em; padding: 10px 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background-color: #0056b3; }
+        pre { background-color: #fff; border: 1px solid #ddd; padding: 1em; white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+
+    <h1>Smart Itinerary Generator Test</h1>
+    <p>
+        Click the button to generate a new itinerary based on the default traveler profile.
+        The results will be displayed below and in the browser's developer console.
+    </p>
+
+    <button id="generateBtn">Generate Itinerary</button>
+
+    <h2>Generated Itinerary:</h2>
+    <pre id="output">Itinerary will appear here...</pre>
+
+    <script type="module">
+        import { generateItinerary } from './js/main-generator.js';
+
+        const generateBtn = document.getElementById('generateBtn');
+        const outputEl = document.getElementById('output');
+
+        generateBtn.addEventListener('click', () => {
+            console.log("Button clicked, starting generation...");
+            outputEl.textContent = "Generating...";
+            try {
+                const itinerary = generateItinerary();
+                outputEl.textContent = JSON.stringify(itinerary, null, 2);
+                console.log("Itinerary successfully generated and displayed.");
+            } catch (error) {
+                outputEl.textContent = `An error occurred: ${error.message}`;
+                console.error("Error during itinerary generation:", error);
+            }
+        });
+    </script>
+
+</body>
+</html>

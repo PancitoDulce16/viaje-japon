@@ -14,7 +14,12 @@
       "Bash(dashboard.html.bak)",
       "Bash(npm uninstall:*)",
       "Bash(python3:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(done)",
+      "Skill(frontend-design:frontend-design)",
+      "Bash(git log:*)",
+      "Bash(git pull:*)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": []
