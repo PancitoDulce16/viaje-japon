@@ -188,3 +188,32 @@ export const activities = {
     }
   ]
 };
+
+// Export alias para compatibilidad con código existente
+export const ACTIVITIES_DATABASE = activities;
+
+/**
+ * Obtiene actividades filtradas por categoría
+ * @param {string} category - Categoría a filtrar
+ * @param {string} city - Ciudad (opcional)
+ * @returns {Array} Actividades que coinciden con la categoría
+ */
+export function getActivitiesByCategory(category, city = null) {
+  let results = [];
+
+  const citiesToSearch = city ? [city] : Object.keys(activities);
+
+  for (const cityKey of citiesToSearch) {
+    if (activities[cityKey]) {
+      const cityActivities = activities[cityKey].filter(activity => {
+        if (Array.isArray(activity.categories)) {
+          return activity.categories.includes(category);
+        }
+        return activity.category === category;
+      });
+      results = results.concat(cityActivities);
+    }
+  }
+
+  return results;
+}

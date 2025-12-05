@@ -1,0 +1,186 @@
+/* ========================================
+   TRAVELER PROFILER - Estilos del Cuestionario
+   ======================================== */
+
+/* Modal Container */
+#travelerProfilerModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 10002;
+}
+
+/* Question Sections */
+.question-section {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+  border: 2px solid rgba(139, 92, 246, 0.1);
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+
+.question-section:hover {
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Pace Options */
+.pace-option input[type="radio"]:checked + div {
+  border-color: rgb(168, 85, 247);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
+}
+
+.pace-option:hover div {
+  border-color: rgba(168, 85, 247, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Interest Sliders */
+.interest-slider {
+  background: white;
+  dark:background: rgb(31, 41, 55);
+  border: 1px solid rgba(229, 231, 235, 1);
+  dark:border: rgba(75, 85, 99, 1);
+  border-radius: 8px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.interest-slider:hover {
+  border-color: rgba(168, 85, 247, 0.3);
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.1);
+}
+
+/* Slider Styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #e5e7eb 0%, #8b5cf6 100%);
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.6);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.6);
+}
+
+/* Progress Bar Animation */
+#questionnaireProgress {
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Checkbox Styling */
+input[type="checkbox"] {
+  accent-color: #8b5cf6;
+  cursor: pointer;
+}
+
+input[type="checkbox"]:checked {
+  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+}
+
+/* Button Hover Effects */
+#completeProfileBtn {
+  transition: all 0.3s ease;
+}
+
+#completeProfileBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+}
+
+#completeProfileBtn:active {
+  transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #travelerProfilerModal .max-w-3xl {
+    max-width: 100%;
+  }
+
+  .question-section {
+    padding: 16px;
+  }
+
+  .interest-slider {
+    padding: 12px;
+  }
+
+  .pace-option div {
+    padding: 12px;
+  }
+}
+
+/* Dark Mode Specific */
+@media (prefers-color-scheme: dark) {
+  .question-section {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
+    border-color: rgba(139, 92, 246, 0.2);
+  }
+
+  .interest-slider {
+    background: rgb(31, 41, 55);
+    border-color: rgba(75, 85, 99, 1);
+  }
+
+  input[type="range"] {
+    background: linear-gradient(90deg, #374151 0%, #8b5cf6 100%);
+  }
+}
+
+/* Animation for modal entrance */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#travelerProfilerModal > div {
+  animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}

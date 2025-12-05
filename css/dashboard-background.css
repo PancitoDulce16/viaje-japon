@@ -1,0 +1,268 @@
+/* ========================================
+   DASHBOARD BACKGROUND
+   Background para el área del dashboard
+   ======================================== */
+
+/* Header color - solo modo oscuro */
+html.dark .japan-header,
+html[data-theme="dark"] .japan-header {
+    background: #2d007a !important;
+    background-image: none !important;
+}
+
+/* Reducir altura del header - SÚPER COMPACTO */
+.japan-header {
+    padding: 0.15rem 0.5rem !important;
+    min-height: auto !important;
+    line-height: 1.2 !important;
+}
+
+.japan-header .max-w-7xl {
+    padding: 0rem !important;
+}
+
+/* Botones en header - MÁS GRANDES */
+.japan-header button {
+    padding: 0.6rem 1rem !important;
+    font-size: 0.9rem !important;
+    line-height: 1.4 !important;
+    border-radius: 10px !important;
+    font-weight: 500 !important;
+}
+
+.japan-header .p-2\.5,
+.japan-header .p-3 {
+    padding: 0.25rem !important;
+}
+
+.japan-header .px-4 {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+.japan-header .py-2\.5 {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+}
+
+.japan-header .text-lg,
+.japan-header .text-2xl {
+    font-size: 0.85rem !important;
+    line-height: 1.2 !important;
+}
+
+.japan-header i {
+    font-size: 0.85rem !important;
+}
+
+.japan-header .gap-3,
+.japan-header .gap-4 {
+    gap: 0.5rem !important;
+}
+
+/* Botón de notificaciones - ROSA (solo modo oscuro) */
+html.dark .japan-header button[id="enableNotificationsBtn"],
+html[data-theme="dark"] .japan-header button[id="enableNotificationsBtn"],
+html.dark .japan-header button[aria-label="Notificaciones"],
+html[data-theme="dark"] .japan-header button[aria-label="Notificaciones"] {
+    background: linear-gradient(135deg, #ff6b9d 0%, #ffc3e0 100%) !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(255, 107, 157, 0.3) !important;
+    transition: all 0.2s ease !important;
+}
+
+html.dark .japan-header button[id="enableNotificationsBtn"]:hover,
+html[data-theme="dark"] .japan-header button[id="enableNotificationsBtn"]:hover,
+html.dark .japan-header button[aria-label="Notificaciones"]:hover,
+html[data-theme="dark"] .japan-header button[aria-label="Notificaciones"]:hover {
+    background: linear-gradient(135deg, #ff5a8f 0%, #ffb5d5 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 157, 0.4) !important;
+}
+
+/* Botón SOS - AMARILLO (solo modo oscuro) */
+html.dark .japan-header button[data-modal="emergency"],
+html[data-theme="dark"] .japan-header button[data-modal="emergency"],
+html.dark .japan-header button[aria-label="Emergencias"],
+html[data-theme="dark"] .japan-header button[aria-label="Emergencias"] {
+    background: linear-gradient(135deg, #ffd93d 0%, #ffe89f 100%) !important;
+    color: #1a0b2e !important;
+    border: none !important;
+    box-shadow: 0 2px 8px rgba(255, 217, 61, 0.3) !important;
+    transition: all 0.2s ease !important;
+    font-weight: 600 !important;
+}
+
+html.dark .japan-header button[data-modal="emergency"]:hover,
+html[data-theme="dark"] .japan-header button[data-modal="emergency"]:hover,
+html.dark .japan-header button[aria-label="Emergencias"]:hover,
+html[data-theme="dark"] .japan-header button[aria-label="Emergencias"]:hover {
+    background: linear-gradient(135deg, #ffcd1f 0%, #ffe080 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(255, 217, 61, 0.4) !important;
+}
+
+/* Dashboard section con background */
+#dashboardTopSection {
+    position: relative !important;
+    padding: 40px 8vw 60px 8vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    margin-right: calc(-50vw + 50%) !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    width: 100vw !important;
+    min-height: 55vh !important;
+
+    background-image: url('/images/backgrounds/Dashboard-back-oscuro.jpg') !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-color: #1a0b2e !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 20px !important;
+}
+
+/* Light mode background */
+html:not(.dark) #dashboardTopSection {
+    background-image: url('/images/backgrounds/Dashboard-back-claro.jpg') !important;
+    background-color: #fef3f8 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #dashboardTopSection {
+        padding: 40px 5vw 60px 5vw !important;
+        min-height: 80vh !important;
+        gap: 20px !important;
+    }
+}
+
+/* Content layer */
+#dashboardTopSection > * {
+    position: relative !important;
+    z-index: 10 !important;
+    width: 100% !important;
+    max-width: 1400px !important;
+}
+
+/* Reduce spacing between logo and button */
+#dashboardTopSection .flex.justify-center.mb-4 {
+    margin-bottom: 0.5rem !important;
+}
+
+#dashboardTopSection .flex.items-center.justify-center {
+    margin-top: 0 !important;
+    margin-bottom: 0.5rem !important;
+}
+
+/* Stats cards gap */
+#tripStatsDashboard {
+    gap: 1.25rem !important;
+}
+
+/* Dark mode stats cards - glassmorphism con neon glow */
+html.dark .stat-card-visual,
+html[data-theme="dark"] .stat-card-visual {
+    background: rgba(25, 20, 35, 0.8) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+    transition: all 0.3s ease !important;
+}
+
+html.dark .stat-card-visual:hover,
+html[data-theme="dark"] .stat-card-visual:hover {
+    transform: translateY(-2px) !important;
+    box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.15) inset !important;
+}
+
+/* Neon glow por card - modo oscuro */
+html.dark .stat-card-visual.stat-days,
+html[data-theme="dark"] .stat-card-visual.stat-days {
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(102, 126, 234, 0.4),
+        0 0 0 1px rgba(102, 126, 234, 0.5) inset !important;
+    border-color: rgba(102, 126, 234, 0.6) !important;
+}
+
+html.dark .stat-card-visual.stat-activities,
+html[data-theme="dark"] .stat-card-visual.stat-activities {
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(240, 147, 251, 0.4),
+        0 0 0 1px rgba(240, 147, 251, 0.5) inset !important;
+    border-color: rgba(240, 147, 251, 0.6) !important;
+}
+
+html.dark .stat-card-visual.stat-budget,
+html[data-theme="dark"] .stat-card-visual.stat-budget {
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(79, 172, 254, 0.4),
+        0 0 0 1px rgba(79, 172, 254, 0.5) inset !important;
+    border-color: rgba(79, 172, 254, 0.6) !important;
+}
+
+html.dark .stat-card-visual.stat-progress,
+html[data-theme="dark"] .stat-card-visual.stat-progress {
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(67, 233, 123, 0.4),
+        0 0 0 1px rgba(67, 233, 123, 0.5) inset !important;
+    border-color: rgba(67, 233, 123, 0.6) !important;
+}
+
+/* Light mode cards - mantener gradientes existentes */
+html:not(.dark) .stat-card-visual {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
+
+html:not(.dark) .stat-card-visual.stat-days {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%) !important;
+    color: white !important;
+}
+
+html:not(.dark) .stat-card-visual.stat-activities {
+    background: linear-gradient(135deg, rgba(240, 147, 251, 0.95) 0%, rgba(245, 87, 108, 0.95) 100%) !important;
+    color: white !important;
+}
+
+html:not(.dark) .stat-card-visual.stat-budget {
+    background: linear-gradient(135deg, rgba(79, 172, 254, 0.95) 0%, rgba(0, 242, 254, 0.95) 100%) !important;
+    color: white !important;
+}
+
+html:not(.dark) .stat-card-visual.stat-progress {
+    background: linear-gradient(135deg, rgba(67, 233, 123, 0.95) 0%, rgba(56, 249, 215, 0.95) 100%) !important;
+    color: white !important;
+}
+
+/* Gradient overlay en la parte inferior */
+#dashboardTopSection::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: linear-gradient(to top, rgba(26, 11, 46, 0.6) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+html:not(.dark) #dashboardTopSection::after {
+    background: linear-gradient(to top, rgba(254, 243, 248, 0.6) 0%, transparent 100%);
+}

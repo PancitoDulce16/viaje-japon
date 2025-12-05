@@ -1,0 +1,94 @@
+/* ========================================
+   CALENDAR FIX - Arreglo para calendarios
+   ======================================== */
+
+/* Asegurar que los date pickers estén por encima de todo */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    z-index: 10002 !important;
+    position: relative;
+}
+
+/* Flatpickr calendar (si se usa) */
+.flatpickr-calendar {
+    z-index: 10003 !important;
+}
+
+/* Date picker nativo */
+input[type="date"] {
+    position: relative;
+    z-index: 1;
+}
+
+/* Asegurar que los inputs dentro de modales sean clickeables */
+.modal input[type="date"],
+.modal-content input[type="date"] {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 2;
+}
+
+/* Fix para cualquier overlay que pueda estar bloqueando */
+.modal-overlay {
+    pointer-events: none !important;
+}
+
+.modal-content {
+    pointer-events: auto !important;
+}
+
+/* ========================================
+   CUSTOM CALENDAR FIX - Para calendario personalizado
+   ======================================== */
+
+/* Asegurar que el calendario personalizado sea clickeable */
+#datePickerCalendar {
+    position: relative;
+    z-index: 10 !important;
+    pointer-events: auto !important;
+}
+
+/* Grid de días del calendario */
+#calendarDaysGrid {
+    position: relative;
+    z-index: 10 !important;
+    pointer-events: auto !important;
+}
+
+/* Cada día del calendario debe ser clickeable */
+#calendarDaysGrid button {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 10 !important;
+}
+
+/* Asegurar que los botones de navegación del calendario sean clickeables */
+#datePickerCalendar button {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 10 !important;
+}
+
+/* El contenedor completo del calendario */
+.bg-white.dark\:bg-gray-800.rounded-lg.p-4.shadow-lg {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 10 !important;
+}
+
+/* Fix específico para el modal del wizard */
+#createItineraryWizard {
+    pointer-events: auto !important;
+}
+
+#createItineraryWizard .modal {
+    pointer-events: auto !important;
+}
+
+#createItineraryWizard button,
+#createItineraryWizard input,
+#createItineraryWizard select {
+    pointer-events: auto !important;
+}

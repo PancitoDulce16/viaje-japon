@@ -1,0 +1,390 @@
+/* ========================================
+   SURVIVAL GUIDE - Guía de Supervivencia
+   ======================================== */
+
+/* ===================================
+   MODAL PRINCIPAL
+   =================================== */
+.survival-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.survival-modal.active {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 40px;
+}
+
+.survival-modal-content {
+    background: white;
+    border-radius: 20px;
+    max-width: 1000px;
+    width: 100%;
+    padding: 30px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: slideInUp 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+html.dark .survival-modal-content,
+html[data-theme="dark"] .survival-modal-content {
+    background: #1a0b2e;
+    color: white;
+}
+
+.survival-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid rgba(239, 68, 68, 0.3);
+}
+
+.survival-modal-header h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #ef4444;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.survival-close-btn {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.survival-close-btn:hover {
+    transform: scale(1.1) rotate(90deg);
+}
+
+/* Tabs de secciones */
+.survival-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    border-bottom: 2px solid rgba(239, 68, 68, 0.2);
+    padding-bottom: 8px;
+}
+
+.survival-tab {
+    padding: 10px 20px;
+    border-radius: 8px 8px 0 0;
+    border: none;
+    background: transparent;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: #6b7280;
+}
+
+.survival-tab:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.survival-tab.active {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+html.dark .survival-tab,
+html[data-theme="dark"] .survival-tab {
+    color: #9ca3af;
+}
+
+/* ===================================
+   TARJETAS DE FRASES
+   =================================== */
+.frases-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.frase-card {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(220, 38, 38, 0.05) 100%);
+    border: 2px solid rgba(239, 68, 68, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.frase-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+}
+
+html.dark .frase-card,
+html[data-theme="dark"] .frase-card {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.frase-japones {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic Pro", "Yu Gothic", sans-serif;
+}
+
+html.dark .frase-japones,
+html[data-theme="dark"] .frase-japones {
+    color: white;
+}
+
+.frase-romaji {
+    font-size: 1.1rem;
+    color: #ef4444;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.frase-espanol {
+    font-size: 0.95rem;
+    color: #6b7280;
+}
+
+html.dark .frase-espanol,
+html[data-theme="dark"] .frase-espanol {
+    color: #9ca3af;
+}
+
+/* ===================================
+   EMERGENCIAS
+   =================================== */
+.emergencias-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.emergencia-card {
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+    transition: transform 0.3s;
+}
+
+.emergencia-card:hover {
+    transform: translateY(-4px);
+}
+
+.emergencia-icono {
+    font-size: 3rem;
+    margin-bottom: 12px;
+}
+
+.emergencia-numero {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 12px 0;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.emergencia-servicio {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.emergencia-descripcion {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+/* ===================================
+   NÚMEROS
+   =================================== */
+.numeros-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.numero-card {
+    background: rgba(239, 68, 68, 0.1);
+    border: 2px solid rgba(239, 68, 68, 0.2);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.numero-card:hover {
+    background: rgba(239, 68, 68, 0.2);
+    transform: scale(1.05);
+}
+
+.numero-arabigo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ef4444;
+    margin-bottom: 8px;
+}
+
+.numero-kanji {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+html.dark .numero-kanji,
+html[data-theme="dark"] .numero-kanji {
+    color: white;
+}
+
+.numero-romaji {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+/* ===================================
+   CONSEJOS DE SEGURIDAD
+   =================================== */
+.consejos-lista {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.consejo-item {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+    border-left: 4px solid #10b981;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.consejo-item::before {
+    content: '✅';
+    margin-right: 12px;
+    font-size: 1.2rem;
+}
+
+/* ===================================
+   EMBAJADAS
+   =================================== */
+.embajadas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.embajada-card {
+    background: rgba(59, 130, 246, 0.1);
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.embajada-nombre {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #3b82f6;
+    margin-bottom: 8px;
+}
+
+.embajada-info {
+    font-size: 0.85rem;
+    color: #4b5563;
+    margin: 4px 0;
+}
+
+html.dark .embajada-info,
+html[data-theme="dark"] .embajada-info {
+    color: #9ca3af;
+}
+
+.embajada-telefono {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ef4444;
+    margin: 8px 0;
+}
+
+/* ===================================
+   ANIMACIONES
+   =================================== */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===================================
+   RESPONSIVE
+   =================================== */
+@media (max-width: 768px) {
+    .frases-grid,
+    .emergencias-grid,
+    .embajadas-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .numeros-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    }
+
+    .survival-modal-content {
+        padding: 20px;
+    }
+
+    .survival-modal-header h2 {
+        font-size: 1.4rem;
+    }
+
+    .survival-tabs {
+        gap: 6px;
+    }
+
+    .survival-tab {
+        font-size: 0.75rem;
+        padding: 8px 12px;
+    }
+}

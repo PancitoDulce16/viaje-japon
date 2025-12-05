@@ -1,0 +1,334 @@
+/* ========================================
+   JR PASS CALCULATOR
+   ======================================== */
+
+.jr-pass-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.jr-pass-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.jr-pass-header h3 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #10b981;
+    margin-bottom: 12px;
+}
+
+.jr-pass-description {
+    color: #6b7280;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Ejemplos de itinerarios */
+.ejemplos-section {
+    margin-bottom: 30px;
+}
+
+.ejemplos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.ejemplo-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.ejemplo-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+/* Formulario de viajes */
+.viajes-form {
+    background: rgba(16, 185, 129, 0.05);
+    border: 2px solid rgba(16, 185, 129, 0.2);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+html.dark .viajes-form,
+html[data-theme="dark"] .viajes-form {
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.viaje-item {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: grid;
+    grid-template-columns: 1fr 1fr auto auto;
+    gap: 12px;
+    align-items: center;
+}
+
+html.dark .viaje-item,
+html[data-theme="dark"] .viaje-item {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.viaje-item select,
+.viaje-item input {
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px solid rgba(16, 185, 129, 0.3);
+    font-size: 0.9rem;
+    outline: none;
+    transition: all 0.3s;
+}
+
+.viaje-item select:focus,
+.viaje-item input:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+html.dark .viaje-item select,
+html.dark .viaje-item input,
+html[data-theme="dark"] .viaje-item select,
+html[data-theme="dark"] .viaje-item input {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.btn-remove-viaje {
+    background: #ef4444;
+    color: white;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.3s;
+}
+
+.btn-remove-viaje:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+.btn-add-viaje {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 12px;
+}
+
+.btn-add-viaje:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* Selector de días */
+.dias-selector {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.dias-selector label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #10b981;
+    font-size: 1.1rem;
+}
+
+.dias-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-dias {
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: 2px solid rgba(16, 185, 129, 0.3);
+    background: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-dias:hover {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: #10b981;
+}
+
+.btn-dias.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border-color: transparent;
+}
+
+html.dark .btn-dias,
+html[data-theme="dark"] .btn-dias {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+/* Botón calcular */
+.btn-calcular {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+    display: block;
+    margin: 24px auto;
+}
+
+.btn-calcular:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.5);
+}
+
+/* Resultados */
+.resultado-container {
+    margin-top: 30px;
+    animation: slideInUp 0.5s ease-out;
+}
+
+.resultado-card {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4);
+    margin-bottom: 24px;
+}
+
+.resultado-card.no-vale {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.resultado-titulo {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.resultado-detalles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.detalle-item {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 16px;
+    border-radius: 12px;
+}
+
+.detalle-label {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    margin-bottom: 8px;
+}
+
+.detalle-valor {
+    font-size: 1.8rem;
+    font-weight: 800;
+}
+
+/* Recomendaciones */
+.recomendaciones-lista {
+    list-style: none;
+    padding: 0;
+    margin: 24px 0;
+}
+
+.recomendacion-item {
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.recomendacion-item.success {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+    border-left: 4px solid #10b981;
+}
+
+.recomendacion-item.warning {
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%);
+    border-left: 4px solid #f59e0b;
+}
+
+.recomendacion-item.info {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
+    border-left: 4px solid #3b82f6;
+}
+
+.recomendacion-icono {
+    font-size: 1.5rem;
+}
+
+/* Animaciones */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .viaje-item {
+        grid-template-columns: 1fr;
+    }
+
+    .ejemplos-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .resultado-detalles {
+        grid-template-columns: 1fr;
+    }
+
+    .dias-buttons {
+        flex-direction: column;
+    }
+}

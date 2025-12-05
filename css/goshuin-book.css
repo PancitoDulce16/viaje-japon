@@ -1,0 +1,306 @@
+/* ========================================
+   GOSHUIN BOOK - Libro Digital de Sellos
+   ======================================== */
+
+.goshuin-book-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Stats */
+.goshuin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 30px;
+}
+
+.goshuin-stat-card {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.goshuin-stat-number {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.goshuin-stat-label {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+/* Formulario */
+.add-goshuin-form {
+    background: rgba(139, 92, 246, 0.05);
+    border: 2px solid rgba(139, 92, 246, 0.2);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 30px;
+}
+
+html.dark .add-goshuin-form,
+html[data-theme="dark"] .add-goshuin-form {
+    background: rgba(139, 92, 246, 0.1);
+}
+
+.goshuin-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.goshuin-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.goshuin-form-group label {
+    font-weight: 600;
+    color: #8b5cf6;
+    font-size: 0.9rem;
+}
+
+.goshuin-form-group input,
+.goshuin-form-group select,
+.goshuin-form-group textarea {
+    padding: 12px;
+    border-radius: 8px;
+    border: 2px solid rgba(139, 92, 246, 0.3);
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.3s;
+}
+
+.goshuin-form-group input:focus,
+.goshuin-form-group select:focus,
+.goshuin-form-group textarea:focus {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+html.dark .goshuin-form-group input,
+html.dark .goshuin-form-group select,
+html.dark .goshuin-form-group textarea,
+html[data-theme="dark"] .goshuin-form-group input,
+html[data-theme="dark"] .goshuin-form-group select,
+html[data-theme="dark"] .goshuin-form-group textarea {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.btn-submit-goshuin {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+.btn-submit-goshuin:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+}
+
+/* Lista de goshuin */
+.goshuin-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.goshuin-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+    border: 2px solid transparent;
+}
+
+.goshuin-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border-color: #8b5cf6;
+}
+
+html.dark .goshuin-card,
+html[data-theme="dark"] .goshuin-card {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.goshuin-card-header {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+.goshuin-card-header::before {
+    content: '⛩️';
+    position: absolute;
+    right: -10px;
+    top: -10px;
+    font-size: 5rem;
+    opacity: 0.1;
+}
+
+.goshuin-nombre {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 1;
+}
+
+.goshuin-ciudad {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    position: relative;
+    z-index: 1;
+}
+
+.goshuin-card-body {
+    padding: 16px;
+}
+
+.goshuin-tipo {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.goshuin-tipo.templo {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+}
+
+.goshuin-tipo.santuario {
+    background: rgba(236, 72, 153, 0.1);
+    color: #ec4899;
+}
+
+.goshuin-info {
+    margin: 8px 0;
+    font-size: 0.9rem;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+html.dark .goshuin-info,
+html[data-theme="dark"] .goshuin-info {
+    color: #9ca3af;
+}
+
+.goshuin-fecha {
+    font-size: 0.85rem;
+    color: #9ca3af;
+    margin-top: 8px;
+}
+
+.goshuin-notas {
+    font-size: 0.85rem;
+    font-style: italic;
+    color: #6b7280;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.btn-delete-goshuin {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 12px;
+}
+
+.btn-delete-goshuin:hover {
+    background: #dc2626;
+}
+
+/* Empty state */
+.goshuin-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #9ca3af;
+}
+
+.goshuin-empty-icon {
+    font-size: 5rem;
+    margin-bottom: 20px;
+}
+
+/* Templos sugeridos */
+.templos-sugeridos {
+    background: rgba(139, 92, 246, 0.05);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.templos-sugeridos h5 {
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #8b5cf6;
+}
+
+.templo-sugerido {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.templo-sugerido:hover {
+    background: rgba(139, 92, 246, 0.1);
+    transform: translateX(4px);
+}
+
+html.dark .templo-sugerido,
+html[data-theme="dark"] .templo-sugerido {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .goshuin-list {
+        grid-template-columns: 1fr;
+    }
+
+    .goshuin-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .goshuin-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

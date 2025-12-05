@@ -1,0 +1,307 @@
+/* ========================================
+   KAWAII ANIMATIONS - Maneki-neko & Countdown
+   VERSIÓN COOL Y MODERNA
+   ======================================== */
+
+/* ===================================
+   MANEKI-NEKO WIDGET
+   =================================== */
+.maneki-container {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.maneki-neko {
+    cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    filter: drop-shadow(0 8px 20px rgba(255, 105, 180, 0.4));
+    animation: floatGentle 3s ease-in-out infinite;
+}
+
+.maneki-neko:hover {
+    transform: scale(1.15) rotate(-5deg);
+    filter: drop-shadow(0 12px 30px rgba(255, 105, 180, 0.6));
+}
+
+.maneki-neko:active {
+    transform: scale(0.95);
+}
+
+.maneki-neko img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 50%;
+    background: white;
+    padding: 4px;
+    box-shadow:
+        0 4px 16px rgba(255, 182, 193, 0.4),
+        0 0 30px rgba(255, 105, 180, 0.3);
+    border: 3px solid rgba(255, 182, 193, 0.5);
+}
+
+/* Animación de saludo sutil */
+@keyframes wave {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
+}
+
+.fortune-bubble {
+    background: linear-gradient(135deg, #ff6b9d 0%, #ffc3e0 100%);
+    color: white;
+    padding: 14px 20px;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    max-width: 300px;
+    text-align: center;
+    box-shadow:
+        0 8px 32px rgba(255, 107, 157, 0.4),
+        0 0 0 3px rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    transform: translateY(20px) scale(0.8);
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    pointer-events: none;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+.fortune-bubble::before {
+    content: '✨';
+    position: absolute;
+    right: -15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    animation: sparkle 1.5s ease-in-out infinite;
+}
+
+.fortune-bubble.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    animation: bubblePop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Dark mode */
+html.dark .fortune-bubble,
+html[data-theme="dark"] .fortune-bubble {
+    background: linear-gradient(135deg, #d63384 0%, #ff85c0 100%);
+    box-shadow:
+        0 8px 32px rgba(214, 51, 132, 0.5),
+        0 0 20px rgba(255, 133, 192, 0.3);
+}
+
+/* ===================================
+   COUNTDOWN WIDGET - COMPACTO
+   =================================== */
+.countdown-widget {
+    background: linear-gradient(135deg, #ff6b9d 0%, #ff9ec5 50%, #ffc3e0 100%);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow:
+        0 4px 16px rgba(255, 107, 157, 0.3),
+        0 0 20px rgba(255, 195, 224, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    margin: 0 auto 16px auto;
+    max-width: 280px;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    animation: fadeInUp 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s backwards;
+}
+
+/* Elementos flotantes decorativos */
+.countdown-widget::before,
+.countdown-widget::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    animation: floatCircle 4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.countdown-widget::before {
+    width: 100px;
+    height: 100px;
+    top: -30px;
+    right: -20px;
+    animation-delay: 0s;
+}
+
+.countdown-widget::after {
+    width: 80px;
+    height: 80px;
+    bottom: -20px;
+    left: -15px;
+    animation-delay: 1.5s;
+}
+
+.countdown-widget h2 {
+    font-size: 0.85rem;
+    margin: 0 0 4px 0;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.3px;
+    position: relative;
+    z-index: 1;
+}
+
+.countdown-widget .days {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin: 4px 0;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    animation: pulseGlow 2.5s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+}
+
+.countdown-widget p {
+    font-size: 0.75rem;
+    margin: 4px 0 0 0;
+    font-weight: 500;
+    opacity: 0.95;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    position: relative;
+    z-index: 1;
+    line-height: 1.2;
+}
+
+/* Dark mode countdown */
+html.dark .countdown-widget,
+html[data-theme="dark"] .countdown-widget {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 50%, #ec4899 100%);
+    box-shadow:
+        0 12px 48px rgba(90, 103, 216, 0.5),
+        0 0 60px rgba(236, 72, 153, 0.4);
+}
+
+/* ===================================
+   ANIMACIONES COOL
+   =================================== */
+@keyframes floatGentle {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-10px) rotate(2deg);
+    }
+}
+
+@keyframes sparkle {
+    0%, 100% {
+        opacity: 0.4;
+        transform: translateY(-50%) scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(-50%) scale(1.2);
+    }
+}
+
+@keyframes bubblePop {
+    0% {
+        transform: translateY(20px) scale(0.8);
+    }
+    50% {
+        transform: translateY(-5px) scale(1.05);
+    }
+    100% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        transform: scale(1);
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    }
+    50% {
+        transform: scale(1.03);
+        filter: drop-shadow(0 8px 16px rgba(255, 255, 255, 0.4));
+    }
+}
+
+@keyframes floatCircle {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+        opacity: 0.3;
+    }
+    50% {
+        transform: translateY(-20px) scale(1.1);
+        opacity: 0.5;
+    }
+}
+
+/* ===================================
+   RESPONSIVE
+   =================================== */
+@media (max-width: 768px) {
+    .maneki-container {
+        bottom: 80px;
+        left: 10px;
+    }
+
+    .maneki-neko img {
+        width: 70px;
+        height: 70px;
+    }
+
+    .fortune-bubble {
+        max-width: 240px;
+        font-size: 0.9rem;
+        padding: 12px 16px;
+    }
+
+    .countdown-widget {
+        margin: 0 10px 16px 10px;
+        padding: 10px 14px;
+        max-width: 100%;
+    }
+
+    .countdown-widget .days {
+        font-size: 1.8rem;
+        margin: 4px 0;
+    }
+
+    .countdown-widget h2 {
+        font-size: 0.8rem;
+    }
+
+    .countdown-widget p {
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .countdown-widget .days {
+        font-size: 1.6rem;
+    }
+
+    .countdown-widget h2 {
+        font-size: 0.75rem;
+    }
+}
