@@ -217,3 +217,13 @@ export function getActivitiesByCategory(category, city = null) {
 
   return results;
 }
+
+/**
+ * Obtiene todas las actividades de una ciudad
+ * @param {string} city - Nombre de la ciudad
+ * @returns {Array} Todas las actividades de la ciudad
+ */
+export function getActivitiesByCity(city) {
+  const cityKey = city.toLowerCase();
+  return activities[cityKey] || [];
+}
