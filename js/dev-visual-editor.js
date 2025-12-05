@@ -37,7 +37,10 @@ class DevVisualEditor {
                         🎨 <span id="color-mode-text">Activar Color Picker</span>
                     </button>
                     <button onclick="devVisualEditor.showGeneratedCSS()" style="background: #2a2a2a; border: 1px solid #444; color: white; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 12px; text-align: left; transition: all 0.2s;">
-                        📋 Ver CSS Generado
+                        📋 Copiar CSS
+                    </button>
+                    <button onclick="devVisualEditor.saveToFile()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; color: white; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 12px; text-align: left; transition: all 0.2s; font-weight: 600;">
+                        💾 Guardar CSS a Archivo
                     </button>
                     <button onclick="devVisualEditor.clearEdits()" style="background: #2a2a2a; border: 1px solid #444; color: white; padding: 10px; border-radius: 6px; cursor: pointer; font-size: 12px; text-align: left; transition: all 0.2s;">
                         🗑️ Limpiar Cambios
@@ -509,6 +512,48 @@ position: ${computed.position}
 
         navigator.clipboard.writeText(css);
         this.showStatus('📋 CSS generado copiado al portapapeles (' + this.generatedCSS.length + ' reglas)', 'success');
+    }
+
+    saveToFile() {
+        if (this.generatedCSS.length === 0) {
+            this.showStatus('⚠️ No hay CSS generado todavía', 'error');
+            return;
+        }
+
+        const css = this.generatedCSS.join('\n\n');
+        const filename = prompt('Nombre del archivo CSS (sin extensión):', 'visual-editor-styles');
+        if (!filename) return;
+
+        // Crear comentario informativo en el archivo
+        const header = `/*
+ * CSS Generado por Visual Editor
+ * Fecha: ${new Date().toLocaleString('es-ES')}
+ * Total de reglas: ${this.generatedCSS.length}
+ */
+
+`;
+
+        const fullCSS = header + css;
+
+        // Crear blob y descargar
+        const blob = new Blob([fullCSS], { type: 'text/css' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}.css`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // También copiar al portapapeles
+        navigator.clipboard.writeText(fullCSS);
+
+        // Guardar en localStorage como backup
+        localStorage.setItem('visual-editor-last-css', fullCSS);
+        localStorage.setItem('visual-editor-last-css-timestamp', new Date().toISOString());
+
+        this.showStatus(`💾 Archivo "${filename}.css" guardado y descargado (${this.generatedCSS.length} reglas)`, 'success');
     }
 
     clearEdits() {

@@ -1,168 +1,86 @@
 // js/smart-itinerary-generator.js - Smart Complete Itinerary Generator
 // Sistema inteligente que genera itinerarios completos basados en preferencias del usuario
 
+import { ACTIVITIES_DATABASE as NEW_ACTIVITY_DATABASE } from '../data/activities-database.js';
+
 /**
- * Base de datos EXPANDIDA de actividades por ciudad
- * 200+ actividades con datos reales
+ * ----------------------------------------------------------------
+ * ADAPTER FOR NEW DATABASE
+ * ----------------------------------------------------------------
  */
-const ACTIVITY_DATABASE = {
-  tokyo: [
-    // ========== ASAKUSA ==========
-    { name: 'Senso-ji Temple', category: 'cultural', lat: 35.7148, lng: 139.7967, duration: 90, cost: 0, interests: ['cultural', 'history'], area: 'Asakusa', popularity: 95, timeOfDay: 'morning' },
-    { name: 'Nakamise Shopping Street', category: 'shopping', lat: 35.7115, lng: 139.7966, duration: 60, cost: 2000, interests: ['shopping', 'food'], area: 'Asakusa', popularity: 85, timeOfDay: 'any' },
-    { name: 'Tokyo Skytree', category: 'attraction', lat: 35.7101, lng: 139.8107, duration: 120, cost: 2100, interests: ['sightseeing'], area: 'Asakusa', popularity: 85, timeOfDay: 'evening' },
-    { name: 'Sumida River Cruise', category: 'attraction', lat: 35.7104, lng: 139.8010, duration: 60, cost: 1000, interests: ['relax', 'sightseeing'], area: 'Asakusa', popularity: 70, timeOfDay: 'afternoon' },
 
-    // ========== SHIBUYA ==========
-    { name: 'Shibuya Crossing', category: 'attraction', lat: 35.6595, lng: 139.7004, duration: 30, cost: 0, interests: ['urban', 'photography'], area: 'Shibuya', popularity: 90, timeOfDay: 'evening' },
-    { name: 'Hachiko Statue', category: 'attraction', lat: 35.6590, lng: 139.7005, duration: 20, cost: 0, interests: ['cultural', 'photography'], area: 'Shibuya', popularity: 75, timeOfDay: 'any' },
-    { name: 'Shibuya Sky Observatory', category: 'attraction', lat: 35.6580, lng: 139.7016, duration: 90, cost: 2000, interests: ['sightseeing'], area: 'Shibuya', popularity: 80, timeOfDay: 'evening' },
-    { name: 'Shibuya 109', category: 'shopping', lat: 35.6595, lng: 139.6989, duration: 120, cost: 5000, interests: ['shopping', 'fashion'], area: 'Shibuya', popularity: 75, timeOfDay: 'afternoon' },
-    { name: 'Shibuya Center Gai', category: 'nightlife', lat: 35.6616, lng: 139.6991, duration: 90, cost: 3000, interests: ['nightlife', 'food'], area: 'Shibuya', popularity: 70, timeOfDay: 'evening' },
+function inferInterests(category, name) {
+    const mapping = {
+        'culture': ['cultural', 'history'],
+        'food': ['food'],
+        'photography': ['photography', 'sightseeing'],
+        'nature': ['nature', 'relax'],
+        'shopping': ['shopping', 'fashion'],
+        'anime': ['anime', 'pop-culture'],
+        'nightlife': ['nightlife'],
+        'relaxation': ['relax'],
+        'family': ['family-friendly']
+    };
+    let interests = mapping[category] || [category];
 
-    // ========== SHINJUKU ==========
-    { name: 'Shinjuku Gyoen National Garden', category: 'nature', lat: 35.6852, lng: 139.7100, duration: 120, cost: 500, interests: ['nature', 'relax', 'photography'], area: 'Shinjuku', popularity: 85, timeOfDay: 'morning' },
-    { name: 'Tokyo Metropolitan Building Observatory', category: 'attraction', lat: 35.6896, lng: 139.6917, duration: 60, cost: 0, interests: ['sightseeing'], area: 'Shinjuku', popularity: 80, timeOfDay: 'evening' },
-    { name: 'Shinjuku Golden Gai', category: 'nightlife', lat: 35.6938, lng: 139.7053, duration: 120, cost: 4000, interests: ['nightlife', 'culture'], area: 'Shinjuku', popularity: 70, timeOfDay: 'night' },
-    { name: 'Kabukicho', category: 'nightlife', lat: 35.6945, lng: 139.7029, duration: 90, cost: 3000, interests: ['nightlife'], area: 'Shinjuku', popularity: 65, timeOfDay: 'night' },
-    { name: 'Omoide Yokocho', category: 'food', lat: 35.6925, lng: 139.7006, duration: 90, cost: 2500, interests: ['food', 'culture'], area: 'Shinjuku', popularity: 75, timeOfDay: 'evening' },
+    // Add interests based on keywords in name
+    if (name.toLowerCase().includes('temple') || name.toLowerCase().includes('santuario') || name.toLowerCase().includes('shrine')) {
+        interests.push('cultural', 'history');
+    }
+    if (name.toLowerCase().includes('ramen') || name.toLowerCase().includes('market')) {
+        interests.push('food');
+    }
+    if (name.toLowerCase().includes('park') || name.toLowerCase().includes('garden')) {
+        interests.push('nature', 'relax');
+    }
 
-    // ========== HARAJUKU ==========
-    { name: 'Meiji Shrine', category: 'cultural', lat: 35.6764, lng: 139.6993, duration: 90, cost: 0, interests: ['cultural', 'nature'], area: 'Harajuku', popularity: 90, timeOfDay: 'morning' },
-    { name: 'Takeshita Street', category: 'shopping', lat: 35.6702, lng: 139.7027, duration: 90, cost: 3000, interests: ['shopping', 'fashion', 'food'], area: 'Harajuku', popularity: 85, timeOfDay: 'afternoon' },
-    { name: 'Omotesando Avenue', category: 'shopping', lat: 35.6652, lng: 139.7102, duration: 90, cost: 4000, interests: ['shopping', 'fashion'], area: 'Harajuku', popularity: 75, timeOfDay: 'afternoon' },
-    { name: 'Yoyogi Park', category: 'nature', lat: 35.6719, lng: 139.6961, duration: 90, cost: 0, interests: ['nature', 'relax'], area: 'Harajuku', popularity: 70, timeOfDay: 'any' },
+    return [...new Set(interests)]; // return unique interests
+}
 
-    // ========== AKIHABARA ==========
-    { name: 'Akihabara Electric Town', category: 'shopping', lat: 35.7022, lng: 139.7745, duration: 120, cost: 5000, interests: ['anime', 'shopping', 'technology'], area: 'Akihabara', popularity: 85, timeOfDay: 'afternoon' },
-    { name: 'Mandarake', category: 'shopping', lat: 35.7022, lng: 139.7745, duration: 90, cost: 3000, interests: ['anime', 'shopping'], area: 'Akihabara', popularity: 75, timeOfDay: 'any' },
-    { name: 'Super Potato Retro-kan', category: 'shopping', lat: 35.6989, lng: 139.7731, duration: 60, cost: 2000, interests: ['technology', 'shopping'], area: 'Akihabara', popularity: 65, timeOfDay: 'any' },
-    { name: 'Maid Café Experience', category: 'food', lat: 35.7020, lng: 139.7740, duration: 60, cost: 1500, interests: ['anime', 'culture', 'food'], area: 'Akihabara', popularity: 70, timeOfDay: 'afternoon' },
+function adaptNewToOldDB(newDb) {
+  const oldDb = {};
 
-    // ========== UENO ==========
-    { name: 'Ueno Park', category: 'nature', lat: 35.7151, lng: 139.7738, duration: 90, cost: 0, interests: ['nature', 'relax'], area: 'Ueno', popularity: 80, timeOfDay: 'morning' },
-    { name: 'Tokyo National Museum', category: 'museum', lat: 35.7188, lng: 139.7764, duration: 120, cost: 1000, interests: ['history', 'art'], area: 'Ueno', popularity: 75, timeOfDay: 'any' },
-    { name: 'Ueno Zoo', category: 'attraction', lat: 35.7159, lng: 139.7730, duration: 150, cost: 600, interests: ['nature'], area: 'Ueno', popularity: 70, timeOfDay: 'morning' },
-    { name: 'Ameyoko Shopping Street', category: 'shopping', lat: 35.7082, lng: 139.7753, duration: 90, cost: 2500, interests: ['shopping', 'food'], area: 'Ueno', popularity: 75, timeOfDay: 'any' },
+  // Mapeo de categorías nuevas a antiguas
+  const categoryMapping = {
+    'culture': 'cultural',
+    'food': 'food',
+    'photography': 'attraction',
+    'nature': 'nature',
+    'shopping': 'shopping',
+    'nightlife': 'nightlife',
+    'anime': 'shopping',
+    'relaxation': 'relax'
+  };
 
-    // ========== ROPPONGI ==========
-    { name: 'Mori Art Museum', category: 'museum', lat: 35.6605, lng: 139.7293, duration: 120, cost: 1800, interests: ['art'], area: 'Roppongi', popularity: 75, timeOfDay: 'any' },
-    { name: 'Tokyo City View Observatory', category: 'attraction', lat: 35.6605, lng: 139.7293, duration: 60, cost: 1800, interests: ['sightseeing'], area: 'Roppongi', popularity: 75, timeOfDay: 'evening' },
-    { name: 'Roppongi Hills', category: 'shopping', lat: 35.6605, lng: 139.7293, duration: 120, cost: 4000, interests: ['shopping'], area: 'Roppongi', popularity: 70, timeOfDay: 'afternoon' },
+  for (const cityKey in newDb) {
+    if (newDb.hasOwnProperty(cityKey)) {
+        const cityData = newDb[cityKey];
+        oldDb[cityKey] = cityData.activities.map(activity => {
+          const interests = inferInterests(activity.category, activity.name);
+          const mappedCategory = categoryMapping[activity.category] || activity.category;
 
-    // ========== ODAIBA ==========
-    { name: 'teamLab Borderless', category: 'museum', lat: 35.6248, lng: 139.7753, duration: 150, cost: 3200, interests: ['art', 'technology'], area: 'Odaiba', popularity: 90, timeOfDay: 'evening' },
-    { name: 'Gundam Statue', category: 'attraction', lat: 35.6252, lng: 139.7755, duration: 30, cost: 0, interests: ['anime', 'photography'], area: 'Odaiba', popularity: 75, timeOfDay: 'any' },
-    { name: 'DiverCity Tokyo Plaza', category: 'shopping', lat: 35.6252, lng: 139.7755, duration: 120, cost: 4000, interests: ['shopping'], area: 'Odaiba', popularity: 70, timeOfDay: 'afternoon' },
-    { name: 'Oedo Onsen Monogatari', category: 'relax', lat: 35.6193, lng: 139.7839, duration: 180, cost: 2900, interests: ['relax', 'culture'], area: 'Odaiba', popularity: 75, timeOfDay: 'evening' },
+          return {
+            name: activity.name,
+            category: mappedCategory, // Usar categoría mapeada
+            lat: activity.location ? activity.location.lat : 0,
+            lng: activity.location ? activity.location.lng : 0,
+            duration: activity.duration,
+            cost: activity.cost,
+            interests: interests,
+            area: activity.station ? activity.station.replace(' Station', '') : 'Unknown', // Limpiar " Station"
+            popularity: (activity.rating || 3.5) * 20, // default rating 3.5 if missing
+            timeOfDay: Array.isArray(activity.timeOfDay) ? activity.timeOfDay[0] : (activity.timeOfDay || 'any'),
+            description: activity.description,
+            id: activity.id
+          };
+        });
+    }
+  }
+  return oldDb;
+}
 
-    // ========== GINZA ==========
-    { name: 'Ginza Shopping District', category: 'shopping', lat: 35.6717, lng: 139.7640, duration: 120, cost: 8000, interests: ['shopping', 'fashion'], area: 'Ginza', popularity: 80, timeOfDay: 'afternoon' },
-    { name: 'Kabuki-za Theater', category: 'cultural', lat: 35.6700, lng: 139.7702, duration: 180, cost: 4000, interests: ['cultural', 'history'], area: 'Ginza', popularity: 70, timeOfDay: 'evening' },
-    { name: 'Tsukiji Outer Market', category: 'food', lat: 35.6654, lng: 139.7707, duration: 120, cost: 3000, interests: ['food', 'market'], area: 'Ginza', popularity: 90, timeOfDay: 'morning' },
+const ACTIVITY_DATABASE = adaptNewToOldDB(NEW_ACTIVITY_DATABASE);
 
-    // ========== TOKYO STATION AREA ==========
-    { name: 'Imperial Palace East Gardens', category: 'nature', lat: 35.6852, lng: 139.7547, duration: 90, cost: 0, interests: ['nature', 'history'], area: 'Tokyo Station', popularity: 75, timeOfDay: 'morning' },
-    { name: 'Tokyo Station', category: 'attraction', lat: 35.6812, lng: 139.7671, duration: 30, cost: 0, interests: ['photography', 'history'], area: 'Tokyo Station', popularity: 70, timeOfDay: 'any' },
-    { name: 'Ramen Street', category: 'food', lat: 35.6812, lng: 139.7671, duration: 60, cost: 1000, interests: ['food'], area: 'Tokyo Station', popularity: 80, timeOfDay: 'any' },
-    { name: 'Tokyo Character Street', category: 'shopping', lat: 35.6812, lng: 139.7671, duration: 60, cost: 2000, interests: ['anime', 'shopping'], area: 'Tokyo Station', popularity: 70, timeOfDay: 'any' },
-
-    // ========== IKEBUKURO ==========
-    { name: 'Sunshine City', category: 'shopping', lat: 35.7295, lng: 139.7194, duration: 120, cost: 3000, interests: ['shopping'], area: 'Ikebukuro', popularity: 70, timeOfDay: 'any' },
-    { name: 'Pokémon Center Mega Tokyo', category: 'shopping', lat: 35.7295, lng: 139.7194, duration: 60, cost: 2000, interests: ['anime', 'shopping'], area: 'Ikebukuro', popularity: 75, timeOfDay: 'any' },
-    { name: 'Otome Road', category: 'shopping', lat: 35.7305, lng: 139.7177, duration: 90, cost: 2500, interests: ['anime', 'shopping'], area: 'Ikebukuro', popularity: 65, timeOfDay: 'any' },
-
-    // ========== MINATO/TOKYO TOWER ==========
-    { name: 'Tokyo Tower', category: 'attraction', lat: 35.6586, lng: 139.7454, duration: 90, cost: 1200, interests: ['sightseeing'], area: 'Minato', popularity: 80, timeOfDay: 'evening' },
-    { name: 'Zojoji Temple', category: 'cultural', lat: 35.6577, lng: 139.7457, duration: 60, cost: 0, interests: ['cultural', 'history'], area: 'Minato', popularity: 65, timeOfDay: 'morning' },
-
-    // ========== NAKANO ==========
-    { name: 'Nakano Broadway', category: 'shopping', lat: 35.7068, lng: 139.6649, duration: 120, cost: 3000, interests: ['anime', 'shopping'], area: 'Nakano', popularity: 70, timeOfDay: 'any' }
-  ],
-
-  kyoto: [
-    // ========== FUSHIMI ==========
-    { name: 'Fushimi Inari Shrine', category: 'cultural', lat: 34.9671, lng: 135.7727, duration: 120, cost: 0, interests: ['cultural', 'nature', 'photography'], area: 'Fushimi', popularity: 95, timeOfDay: 'morning' },
-    { name: 'Fushimi Sake District', category: 'food', lat: 34.9277, lng: 135.7604, duration: 90, cost: 2000, interests: ['food', 'culture'], area: 'Fushimi', popularity: 70, timeOfDay: 'afternoon' },
-
-    // ========== HIGASHIYAMA ==========
-    { name: 'Kiyomizu-dera', category: 'cultural', lat: 34.9949, lng: 135.7850, duration: 120, cost: 400, interests: ['cultural', 'history'], area: 'Higashiyama', popularity: 90, timeOfDay: 'morning' },
-    { name: 'Sannenzaka & Ninenzaka', category: 'shopping', lat: 34.9965, lng: 135.7803, duration: 90, cost: 2000, interests: ['shopping', 'cultural', 'photography'], area: 'Higashiyama', popularity: 85, timeOfDay: 'afternoon' },
-    { name: 'Yasaka Shrine', category: 'cultural', lat: 35.0036, lng: 135.7786, duration: 60, cost: 0, interests: ['cultural'], area: 'Higashiyama', popularity: 75, timeOfDay: 'any' },
-    { name: 'Maruyama Park', category: 'nature', lat: 35.0033, lng: 135.7801, duration: 60, cost: 0, interests: ['nature', 'relax'], area: 'Higashiyama', popularity: 70, timeOfDay: 'any' },
-
-    // ========== GION ==========
-    { name: 'Gion District', category: 'cultural', lat: 35.0036, lng: 135.7751, duration: 90, cost: 0, interests: ['cultural', 'history', 'photography'], area: 'Gion', popularity: 85, timeOfDay: 'evening' },
-    { name: 'Hanamikoji Street', category: 'cultural', lat: 35.0024, lng: 135.7751, duration: 60, cost: 0, interests: ['cultural', 'photography'], area: 'Gion', popularity: 80, timeOfDay: 'evening' },
-    { name: 'Pontocho Alley', category: 'food', lat: 35.0041, lng: 135.7706, duration: 120, cost: 5000, interests: ['food', 'culture', 'nightlife'], area: 'Gion', popularity: 75, timeOfDay: 'evening' },
-
-    // ========== ARASHIYAMA ==========
-    { name: 'Arashiyama Bamboo Grove', category: 'nature', lat: 35.0170, lng: 135.6717, duration: 60, cost: 0, interests: ['nature', 'photography'], area: 'Arashiyama', popularity: 90, timeOfDay: 'morning' },
-    { name: 'Tenryu-ji Temple', category: 'cultural', lat: 35.0157, lng: 135.6742, duration: 90, cost: 500, interests: ['cultural', 'nature'], area: 'Arashiyama', popularity: 80, timeOfDay: 'morning' },
-    { name: 'Togetsukyo Bridge', category: 'attraction', lat: 35.0142, lng: 135.6766, duration: 30, cost: 0, interests: ['nature', 'photography'], area: 'Arashiyama', popularity: 75, timeOfDay: 'any' },
-    { name: 'Monkey Park Iwatayama', category: 'nature', lat: 35.0126, lng: 135.6764, duration: 90, cost: 550, interests: ['nature'], area: 'Arashiyama', popularity: 70, timeOfDay: 'afternoon' },
-    { name: 'Sagano Scenic Railway', category: 'attraction', lat: 35.0175, lng: 135.6617, duration: 90, cost: 880, interests: ['nature', 'sightseeing'], area: 'Arashiyama', popularity: 75, timeOfDay: 'any' },
-
-    // ========== KITA (NORTH) ==========
-    { name: 'Kinkaku-ji (Golden Pavilion)', category: 'cultural', lat: 35.0394, lng: 135.7292, duration: 90, cost: 400, interests: ['cultural', 'photography'], area: 'Kita', popularity: 95, timeOfDay: 'morning' },
-    { name: 'Ryoan-ji Temple', category: 'cultural', lat: 35.0345, lng: 135.7184, duration: 60, cost: 500, interests: ['cultural', 'relax'], area: 'Kita', popularity: 75, timeOfDay: 'any' },
-    { name: 'Kinkaku-ji Temple', category: 'cultural', lat: 35.0275, lng: 135.7299, duration: 60, cost: 400, interests: ['cultural'], area: 'Kita', popularity: 70, timeOfDay: 'any' },
-
-    // ========== SAKYO (EAST) ==========
-    { name: 'Philosopher\'s Path', category: 'nature', lat: 35.0262, lng: 135.7949, duration: 90, cost: 0, interests: ['nature', 'relax', 'photography'], area: 'Sakyo', popularity: 80, timeOfDay: 'morning' },
-    { name: 'Ginkaku-ji (Silver Pavilion)', category: 'cultural', lat: 35.0269, lng: 135.7983, duration: 90, cost: 500, interests: ['cultural', 'nature'], area: 'Sakyo', popularity: 85, timeOfDay: 'afternoon' },
-    { name: 'Nanzen-ji Temple', category: 'cultural', lat: 35.0108, lng: 135.7934, duration: 90, cost: 500, interests: ['cultural'], area: 'Sakyo', popularity: 75, timeOfDay: 'any' },
-
-    // ========== NAKAGYO (CENTRAL) ==========
-    { name: 'Nishiki Market', category: 'food', lat: 35.0051, lng: 135.7638, duration: 90, cost: 2000, interests: ['food', 'shopping'], area: 'Nakagyo', popularity: 85, timeOfDay: 'morning' },
-    { name: 'Nijo Castle', category: 'cultural', lat: 35.0142, lng: 135.7481, duration: 120, cost: 600, interests: ['history', 'cultural'], area: 'Nakagyo', popularity: 85, timeOfDay: 'any' },
-    { name: 'Kyoto International Manga Museum', category: 'museum', lat: 35.0106, lng: 135.7588, duration: 120, cost: 900, interests: ['anime', 'art'], area: 'Nakagyo', popularity: 70, timeOfDay: 'any' },
-
-    // ========== SHIMOGYO (KYOTO STATION AREA) ==========
-    { name: 'To-ji Temple', category: 'cultural', lat: 34.9805, lng: 135.7476, duration: 60, cost: 500, interests: ['cultural', 'history'], area: 'Shimogyo', popularity: 70, timeOfDay: 'any' },
-    { name: 'Kyoto Tower', category: 'attraction', lat: 34.9876, lng: 135.7594, duration: 60, cost: 770, interests: ['sightseeing'], area: 'Shimogyo', popularity: 65, timeOfDay: 'evening' },
-
-    // ========== UKYO ==========
-    { name: 'Katsura Imperial Villa', category: 'cultural', lat: 34.9832, lng: 135.7041, duration: 90, cost: 1000, interests: ['cultural', 'history', 'nature'], area: 'Ukyo', popularity: 65, timeOfDay: 'afternoon' }
-  ],
-
-  osaka: [
-    // ========== NAMBA ==========
-    { name: 'Dotonbori', category: 'attraction', lat: 34.6686, lng: 135.5004, duration: 120, cost: 3000, interests: ['food', 'nightlife', 'photography'], area: 'Namba', popularity: 95, timeOfDay: 'evening' },
-    { name: 'Kuromon Market', category: 'food', lat: 34.6659, lng: 135.5064, duration: 90, cost: 2500, interests: ['food', 'market'], area: 'Namba', popularity: 85, timeOfDay: 'morning' },
-    { name: 'Namba Parks', category: 'shopping', lat: 34.6657, lng: 135.5031, duration: 90, cost: 3000, interests: ['shopping'], area: 'Namba', popularity: 70, timeOfDay: 'any' },
-    { name: 'Hozenji Yokocho', category: 'cultural', lat: 34.6681, lng: 135.5032, duration: 60, cost: 0, interests: ['cultural', 'food'], area: 'Namba', popularity: 75, timeOfDay: 'evening' },
-
-    // ========== SHINSAIBASHI ==========
-    { name: 'Shinsaibashi Shopping Street', category: 'shopping', lat: 34.6724, lng: 135.5010, duration: 120, cost: 5000, interests: ['shopping'], area: 'Shinsaibashi', popularity: 85, timeOfDay: 'afternoon' },
-    { name: 'Amerikamura', category: 'shopping', lat: 34.6727, lng: 135.4976, duration: 90, cost: 3000, interests: ['shopping', 'fashion'], area: 'Shinsaibashi', popularity: 70, timeOfDay: 'afternoon' },
-
-    // ========== UMEDA ==========
-    { name: 'Umeda Sky Building', category: 'attraction', lat: 34.7053, lng: 135.4903, duration: 90, cost: 1500, interests: ['sightseeing'], area: 'Umeda', popularity: 80, timeOfDay: 'evening' },
-    { name: 'Grand Front Osaka', category: 'shopping', lat: 34.7056, lng: 135.4967, duration: 120, cost: 4000, interests: ['shopping'], area: 'Umeda', popularity: 70, timeOfDay: 'any' },
-    { name: 'Hep Five Ferris Wheel', category: 'attraction', lat: 34.7030, lng: 135.5002, duration: 60, cost: 600, interests: ['sightseeing'], area: 'Umeda', popularity: 65, timeOfDay: 'evening' },
-
-    // ========== CHUO (OSAKA CASTLE AREA) ==========
-    { name: 'Osaka Castle', category: 'cultural', lat: 34.6873, lng: 135.5262, duration: 120, cost: 600, interests: ['history', 'cultural'], area: 'Chuo', popularity: 90, timeOfDay: 'morning' },
-    { name: 'Osaka Castle Park', category: 'nature', lat: 34.6873, lng: 135.5262, duration: 90, cost: 0, interests: ['nature', 'relax'], area: 'Chuo', popularity: 75, timeOfDay: 'any' },
-
-    // ========== TENNOJI ==========
-    { name: 'Shinsekai', category: 'attraction', lat: 34.6525, lng: 135.5063, duration: 90, cost: 2000, interests: ['food', 'culture'], area: 'Tennoji', popularity: 75, timeOfDay: 'evening' },
-    { name: 'Tsutenkaku Tower', category: 'attraction', lat: 34.6525, lng: 135.5063, duration: 60, cost: 900, interests: ['sightseeing'], area: 'Tennoji', popularity: 70, timeOfDay: 'any' },
-    { name: 'Tennoji Zoo', category: 'nature', lat: 34.6515, lng: 135.5061, duration: 150, cost: 500, interests: ['nature'], area: 'Tennoji', popularity: 65, timeOfDay: 'morning' },
-    { name: 'Abeno Harukas', category: 'attraction', lat: 34.6452, lng: 135.5140, duration: 90, cost: 1500, interests: ['sightseeing', 'shopping'], area: 'Tennoji', popularity: 75, timeOfDay: 'evening' },
-
-    // ========== KITA ==========
-    { name: 'Osaka Aquarium Kaiyukan', category: 'attraction', lat: 34.6546, lng: 135.4289, duration: 150, cost: 2400, interests: ['nature'], area: 'Minato', popularity: 85, timeOfDay: 'any' },
-    { name: 'Tempozan Ferris Wheel', category: 'attraction', lat: 34.6548, lng: 135.4287, duration: 60, cost: 800, interests: ['sightseeing'], area: 'Minato', popularity: 65, timeOfDay: 'evening' },
-
-    // ========== SUMIYOSHI ==========
-    { name: 'Sumiyoshi Taisha Shrine', category: 'cultural', lat: 34.6103, lng: 135.4916, duration: 90, cost: 0, interests: ['cultural', 'history'], area: 'Sumiyoshi', popularity: 70, timeOfDay: 'morning' },
-
-    // ========== NISHINARI ==========
-    { name: 'Spa World', category: 'relax', lat: 34.6479, lng: 135.5056, duration: 180, cost: 1500, interests: ['relax'], area: 'Nishinari', popularity: 65, timeOfDay: 'evening' }
-  ]
-};
 
 /**
  * ⚡ INTENSITY LEVELS - Controla qué tan lleno está cada día
@@ -592,6 +510,9 @@ export const SmartItineraryGenerator = {
     console.log(`👥 Companion: ${companionType || 'none'}`);
     console.log(`⚡ Intensity: ${pace}`);
 
+    // 🚨 NUEVO: Tracker global de actividades usadas para prevenir duplicados
+    const usedActivities = new Set();
+
     // Distribuir días entre ciudades
     const cityDistribution = this.distributeDaysAcrossCities(cities, totalDays);
 
@@ -634,7 +555,8 @@ export const SmartItineraryGenerator = {
           totalDays: totalDays,
           companionType: companionType,
           themedDay: themedDay,
-          tripStartDate: tripStartDate
+          tripStartDate: tripStartDate,
+          usedActivities: usedActivities // 🚨 Pasar tracker global
         });
 
         itinerary.days.push(day);
@@ -642,7 +564,18 @@ export const SmartItineraryGenerator = {
       }
     }
 
-    console.log('✅ Itinerario generado:', itinerary);
+    // 📊 RESUMEN FINAL
+    const totalActivities = itinerary.days.reduce((sum, day) => sum + (day.activities?.length || 0), 0);
+    const uniqueActivities = usedActivities.size;
+    const avgActivitiesPerDay = (totalActivities / itinerary.days.length).toFixed(1);
+
+    console.log('✅ ========== ITINERARIO GENERADO ==========');
+    console.log(`📅 Total días: ${itinerary.days.length}`);
+    console.log(`🎯 Total actividades: ${totalActivities} (promedio: ${avgActivitiesPerDay}/día)`);
+    console.log(`✨ Actividades únicas: ${uniqueActivities}`);
+    console.log(`🚫 Duplicados: ${totalActivities - uniqueActivities}`);
+    console.log('==========================================');
+
     return itinerary;
   },
 
@@ -691,7 +624,8 @@ export const SmartItineraryGenerator = {
       totalDays,
       companionType,
       themedDay,
-      tripStartDate
+      tripStartDate,
+      usedActivities = new Set() // 🚨 NUEVO: Tracker de actividades usadas
     } = options;
 
     // 🌸 SEASON INTELLIGENCE: Detectar temporada y ajustar recomendaciones
@@ -721,8 +655,11 @@ export const SmartItineraryGenerator = {
       console.log(`👥 Companion: ${companionConfig.name}, Activities ajustadas a ${targetActivities}`);
     }
 
-    // Días especiales
-    if (isArrivalDay || isDepartureDay) {
+    // 🛫 DÍA 1 JETLAG-FRIENDLY: Reducir drásticamente actividades y filtrar inapropiadas
+    if (isArrivalDay) {
+      targetActivities = Math.min(3, Math.max(2, Math.floor(targetActivities * 0.3))); // Máximo 3 actividades
+      console.log(`🛫 Día 1 (JETLAG): Reducido a ${targetActivities} actividades`);
+    } else if (isDepartureDay) {
       targetActivities = Math.max(2, Math.floor(targetActivities * 0.4));
     }
 
@@ -733,6 +670,11 @@ export const SmartItineraryGenerator = {
     const cityKey = city.toLowerCase();
     const dbActivities = ACTIVITY_DATABASE[cityKey] || [];
     candidateActivities = [...dbActivities];
+
+    // ⚠️ ADVERTENCIA: Si la ciudad tiene pocas actividades
+    if (candidateActivities.length < 20) {
+      console.warn(`⚠️ ADVERTENCIA: ${city} solo tiene ${candidateActivities.length} actividades en la base de datos`);
+    }
 
     // PASO 2: Buscar en Google Places API (si disponible)
     if (googlePlacesAPI && window.APP_CONFIG?.GOOGLE_PLACES_API_KEY) {
@@ -752,6 +694,47 @@ export const SmartItineraryGenerator = {
       console.log(`🎨 Themed Day: ${theme.name}, ${candidateActivities.length} actividades filtradas`);
     }
 
+    // 🛫 JETLAG FILTER: Filtrar actividades inapropiadas para día 1
+    if (isArrivalDay) {
+      const beforeFilter = candidateActivities.length;
+      candidateActivities = candidateActivities.filter(activity => {
+        const name = (activity.name || '').toLowerCase();
+        const category = (activity.category || '').toLowerCase();
+
+        // ❌ Actividades PROHIBIDAS en día 1 (requieren mucha energía)
+        const jetlagInappropriate = [
+          'onsen', 'spa', 'hot spring', 'baño', 'termal',
+          'hiking', 'mount', 'mountain', 'trek', 'hike', 'monte',
+          'nightlife', 'bar', 'club', 'karaoke',
+          'intensive', 'marathon', 'tour largo',
+          'sumo', 'baseball', 'sporting',
+          'teamlab', 'borderless', // Requiere mucha atención
+          'disney', 'universal' // Parks muy intensos
+        ];
+
+        const isInappropriate = jetlagInappropriate.some(keyword =>
+          name.includes(keyword) || category.includes(keyword)
+        );
+
+        if (isInappropriate) {
+          console.log(`  🛫 Filtrando "${activity.name}" (inapropiado para jetlag)`);
+          return false;
+        }
+
+        // ✅ Priorizar actividades ligeras y culturales para día 1
+        const jetlagFriendly = [
+          'temple', 'shrine', 'templo', 'santuario',
+          'garden', 'park', 'jardín', 'parque',
+          'shopping', 'compras', 'market', 'mercado',
+          'museum', 'museo', 'gallery',
+          'cultural', 'cultura'
+        ];
+
+        return true;
+      });
+      console.log(`🛫 Jetlag filter: ${beforeFilter} → ${candidateActivities.length} actividades`);
+    }
+
     // Filtrar y puntuar actividades
     const scoredActivities = candidateActivities
       .map(activity => {
@@ -769,6 +752,34 @@ export const SmartItineraryGenerator = {
           }
         }
 
+        // 🛫 JETLAG BONUS: Dar bonus a actividades ligeras en día 1
+        if (isArrivalDay) {
+          const name = (activity.name || '').toLowerCase();
+          const category = (activity.category || '').toLowerCase();
+          const jetlagFriendlyKeywords = [
+            'temple', 'shrine', 'garden', 'park', 'shopping', 'market', 'museum', 'gallery'
+          ];
+
+          const isJetlagFriendly = jetlagFriendlyKeywords.some(kw =>
+            name.includes(kw) || category.includes(kw)
+          );
+
+          if (isJetlagFriendly) {
+            score += 30; // Bonus significativo para actividades jetlag-friendly
+            console.log(`🛫 Jetlag bonus +30 para "${activity.name}"`);
+          }
+          
+          if (activity.interests?.includes('relax')) {
+            score += 40; // Extra bonus for relaxing activities
+            console.log(`🛫 Jetlag bonus +40 for relaxing activity "${activity.name}"`);
+          }
+
+          // Penalizar actividades largas (>2.5 horas)
+          if (activity.duration && activity.duration > 150) {
+            score -= 20;
+          }
+        }
+
         return {
           ...activity,
           score: score
@@ -783,21 +794,57 @@ export const SmartItineraryGenerator = {
     // 1. Must-see primero
     for (const must of mustSee || []) {
       const mustActivity = scoredActivities.find(a =>
-        a.name.toLowerCase().includes(must.name.toLowerCase())
+        a.name.toLowerCase().includes(must.name.toLowerCase()) &&
+        !usedActivities.has(a.name) // 🚨 Prevenir duplicados
       );
       if (mustActivity && selectedActivities.length < targetActivities) {
         selectedActivities.push(mustActivity);
+        usedActivities.add(mustActivity.name); // 🚨 Marcar como usada
+        console.log(`✅ Must-see agregada: "${mustActivity.name}"`);
       }
     }
 
-    // 2. Completar con top-scored
+    // 2. Completar con top-scored (prevenir duplicados y mejorar diversidad)
+    const categoriesUsed = new Map(); // Tracking de categorías por día
     for (const activity of scoredActivities) {
       if (selectedActivities.length >= targetActivities) break;
-      if (!selectedActivities.includes(activity)) {
-        // Diversidad de categorías
-        const lastCategory = selectedActivities[selectedActivities.length - 1]?.category;
-        if (lastCategory !== activity.category || selectedActivities.length < 2) {
+
+      // 🚨 PREVENIR DUPLICADOS: No usar actividades ya usadas en días anteriores
+      if (usedActivities.has(activity.name)) {
+        console.log(`⏭️ Saltando "${activity.name}" (ya usada en día anterior)`);
+        continue;
+      }
+
+      // No agregar si ya está en la selección del día actual
+      if (selectedActivities.includes(activity)) {
+        continue;
+      }
+
+      // Diversidad de categorías: Evitar más de 2 actividades de la misma categoría por día
+      const categoryCount = categoriesUsed.get(activity.category) || 0;
+      if (categoryCount >= 2) {
+        console.log(`⏭️ Saltando "${activity.name}" (demasiadas de categoría "${activity.category}")`);
+        continue;
+      }
+
+      // Agregar actividad
+      selectedActivities.push(activity);
+      usedActivities.add(activity.name); // 🚨 Marcar como usada globalmente
+      categoriesUsed.set(activity.category, categoryCount + 1);
+      console.log(`✅ Actividad ${selectedActivities.length}/${targetActivities}: "${activity.name}" (${activity.category})`);
+    }
+
+    console.log(`📊 Día ${dayNumber}: ${selectedActivities.length} actividades seleccionadas (target: ${targetActivities})`);
+
+    // 🚨 CALIDAD: Si no llegamos al target, intentar agregar actividades SIN restricción de categoría
+    if (selectedActivities.length < targetActivities - 1) {
+      console.log(`⚠️ Solo ${selectedActivities.length}/${targetActivities} actividades - buscando más sin restricciones...`);
+      for (const activity of scoredActivities) {
+        if (selectedActivities.length >= targetActivities) break;
+        if (!usedActivities.has(activity.name) && !selectedActivities.includes(activity)) {
           selectedActivities.push(activity);
+          usedActivities.add(activity.name);
+          console.log(`   ✅ Agregada: "${activity.name}" (completando día)`);
         }
       }
     }
@@ -1572,6 +1619,7 @@ export const SmartItineraryGenerator = {
   // ============================================================================
 
   calculateDistance(coord1, coord2) {
+    if (!coord1 || !coord2) return 0;
     const R = 6371;
     const dLat = this.deg2rad(coord2.lat - coord1.lat);
     const dLon = this.deg2rad(coord2.lng - coord1.lng);

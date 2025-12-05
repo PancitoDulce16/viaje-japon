@@ -44,6 +44,7 @@ import { MasterItineraryOptimizer } from './master-itinerary-optimizer-v2025.js'
 import { eventBus } from './event-bus.js'; // 📡 Sistema de eventos global
 import { ItineraryOrchestrator } from './itinerary-orchestrator.js'; // 🧠 Orquestador automático
 import './orchestrator-integration.js'; // 🔗 Integración automática del orquestador
+import { HealthDashboard } from './tools/health-dashboard.js'; // 🏥 Health Dashboard
 // Smart Suggestions se cargan desde HTML usando dynamic imports
 
 // 🔥 Firebase imports
@@ -175,6 +176,12 @@ class DashboardManager {
             // 🧠 Inicializar orquestador automático
             console.log('🧠 Inicializando sistema de orquestación automático...');
             ItineraryOrchestrator.init();
+
+            // 🏥 Inicializar Health Dashboard
+            console.log('🏥 Inicializando Health Dashboard...');
+            if (window.HealthDashboard) {
+                window.HealthDashboard.init();
+            }
 
             // Inicializar tabs con contenido
             await this.initializeTabContents();

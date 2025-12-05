@@ -453,11 +453,17 @@ class DevVisualEditorPro {
                 const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 días
 
                 if (age < maxAge) {
-                    this.visualEditor.generatedCSS = session.generatedCSS || [];
-                    this.visualEditor.applyGeneratedCSS();
+                    // ❌ DESACTIVADO: Auto-aplicar sesión
+                    // this.visualEditor.generatedCSS = session.generatedCSS || [];
+                    // this.visualEditor.applyGeneratedCSS();
 
-                    this.showToast(`✓ Sesión recuperada (${session.generatedCSS.length} reglas)`, 'success');
-                    console.log('📂 Sesión cargada:', session);
+                    // ✅ SOLO MOSTRAR que hay una sesión disponible
+                    console.log('💾 Sesión disponible (no aplicada automáticamente)');
+                    console.log('📂 Sesión encontrada:', session);
+                    console.log('📋 Para aplicarla: Usa el Dev Panel → Cargar Sesión');
+
+                    // NO mostrar toast automático
+                    // this.showToast(`✓ Sesión recuperada (${session.generatedCSS.length} reglas)`, 'success');
                 } else {
                     console.log('⚠️ Sesión muy antigua, ignorando');
                     localStorage.removeItem(this.sessionKey);

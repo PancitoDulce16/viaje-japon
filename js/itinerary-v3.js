@@ -482,6 +482,11 @@ function renderNoItinerary(){
       <button onclick="ItineraryBuilder.showCreateItineraryWizard()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition font-bold text-lg shadow-lg">✨ Crear Itinerario</button>
     </div>
   </div>`;
+
+  // 🏥 Ocultar botón flotante del Health Dashboard
+  if (window.HealthDashboard) {
+    window.HealthDashboard.hide();
+  }
 }
 
 function renderEmptyState(){
@@ -498,6 +503,11 @@ function renderEmptyState(){
         </div>
       </div>
     </div>`;
+
+  // 🏥 Ocultar botón flotante del Health Dashboard
+  if (window.HealthDashboard) {
+    window.HealthDashboard.hide();
+  }
 }
 
 // 🗺️ Optimizar ruta del día
@@ -1089,6 +1099,11 @@ async function render(){
   renderDaySelector();
   renderDayOverview(dayData);
   renderActivities(dayData);
+
+  // 🏥 Mostrar botón flotante del Health Dashboard
+  if (window.HealthDashboard) {
+    window.HealthDashboard.show();
+  }
 }
 
 // ⬇️⬇️⬇️  NUEVO: renderTripSelector con botón “Ver Insights AI”  ⬇️⬇️⬇️
@@ -1102,6 +1117,7 @@ function renderTripSelector(){
       <div class="text-center mb-4">
         <h3 class="font-bold text-3xl mb-2">${currentTrip.info.name}</h3>
         <p class="text-sm text-white/90">📅 ${new Date(currentTrip.info.dateStart).toLocaleDateString('es')} - ${new Date(currentTrip.info.dateEnd).toLocaleDateString('es')} • 👥 ${currentTrip.info.tripType === 'individual' ? 'Viaje Individual' : 'Viaje Grupal'}</p>
+        <div class="mt-2">${renderTripCrowdBadge()}</div>
       </div>
 
       <!-- Botones de acción centrados -->
@@ -1515,6 +1531,9 @@ function renderDayOverview(day){
 
     <!-- 🧠 Análisis Inteligente del Día (Colapsable) -->
     ${renderDayIntelligenceCollapsible(day)}
+
+    <!-- 👥 Análisis de Multitudes (Colapsable) -->
+    ${renderDayCrowdAnalysisCollapsible(day)}
 
     <!-- ⚖️ Indicador de Carga del Día (Colapsable) -->
     ${renderDayLoadIndicatorCollapsible(day)}
@@ -2323,6 +2342,7 @@ function renderActivities(day){
                 ${act.cost>0?`<span class="text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-white px-2 py-1 rounded font-semibold">¥${Number(act.cost).toLocaleString()}</span>`:''}
               </div>
               <h3 class="text-lg font-bold dark:text-white mb-1">${activityTitle}</h3>
+              ${renderActivityCrowdBadge(day, act)}
               ${act.photographyInfo ? `
                 <div class="inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50 rounded-full text-xs font-semibold text-purple-700 dark:text-purple-300">
                   <span>📸</span>
@@ -4042,6 +4062,120 @@ window.closeMealSuggestionsModal = closeMealSuggestionsModal;
 window.insertMealSuggestion = insertMealSuggestion;
 window.closeGapFillerModal = closeGapFillerModal;
 window.insertGapFiller = insertGapFiller;
+
+// ========================================
+// 👥 CROWD DETECTOR INTEGRATION FUNCTIONS
+// ========================================
+
+/**
+ * Renderiza análisis de multitudes colapsable para un día
+ */
+function renderDayCrowdAnalysisCollapsible(day) {
+    if (!window.crowdDetectorUI || !window.crowdDetector || !currentItinerary) {
+        return '';
+    }
+
+    const startDate = new Date(currentItinerary.startDate);
+    const dayDate = new Date(startDate);
+    dayDate.setDate(startDate.getDate() + (day.day - 1));
+
+    const analysis = window.crowdDetector.analyzeCrowdLevel(dayDate);
+    const activityNames = day.activities.map(a => a.name || a.title);
+
+    let badgeClass = 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300';
+    let badgeIcon = '✅';
+
+    if (analysis.crowdLevel === 'high') {
+        badgeClass = 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border-orange-300';
+        badgeIcon = '⚠️';
+    } else if (analysis.crowdLevel === 'extreme') {
+        badgeClass = 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-300';
+        badgeIcon = '🚨';
+    }
+
+    const collapsibleId = `crowd-analysis-${day.day}`;
+
+    return `
+        <div class="mt-4 border rounded-lg overflow-hidden bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <button
+                type="button"
+                onclick="toggleCollapsible('${collapsibleId}')"
+                class="w-full flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
+            >
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">${badgeIcon}</span>
+                    <div class="text-left">
+                        <div class="text-sm font-bold text-gray-900 dark:text-white">Análisis de Multitudes</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                            ${analysis.crowdLevel === 'normal' ? 'Nivel normal' :
+                              analysis.crowdLevel === 'high' ? 'Nivel alto' :
+                              'Nivel extremo'}
+                            ${analysis.isHoliday ? ' · Día festivo' : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="px-2 py-1 rounded-full text-xs font-semibold border ${badgeClass}">
+                        ${analysis.warnings.length + analysis.tips.length} alertas
+                    </span>
+                    <i class="fas fa-chevron-down text-gray-400 dark:text-gray-500 transition-transform duration-200 collapsible-icon"></i>
+                </div>
+            </button>
+            <div id="${collapsibleId}" class="collapsible-content max-h-0 overflow-hidden transition-all duration-300">
+                <div class="p-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700">
+                    ${window.crowdDetectorUI.generateWarningBanner(dayDate, activityNames)}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Renderiza badge de multitudes para una actividad individual
+ */
+function renderActivityCrowdBadge(day, activity) {
+    if (!window.crowdDetectorUI || !window.crowdDetector || !currentItinerary) {
+        return '';
+    }
+
+    const startDate = new Date(currentItinerary.startDate);
+    const dayDate = new Date(startDate);
+    dayDate.setDate(startDate.getDate() + (day.day - 1));
+
+    return window.crowdDetectorUI.generateActivityBadge(dayDate, activity.name || activity.title);
+}
+
+/**
+ * Renderiza badge de multitudes para el trip completo en el header
+ */
+function renderTripCrowdBadge() {
+    if (!window.crowdDetectorUI || !window.crowdDetector || !currentItinerary) {
+        return '';
+    }
+
+    const startDate = currentItinerary.startDate;
+    const endDate = currentItinerary.endDate;
+
+    const badgeHTML = window.crowdDetectorUI.generateTripCrowdBadge(startDate, endDate);
+
+    // Agregar click handler para mostrar análisis completo
+    setTimeout(() => {
+        const badge = document.querySelector('.crowd-badge');
+        if (badge) {
+            badge.onclick = () => {
+                const allActivities = [];
+                currentItinerary.days.forEach(day => {
+                    day.activities.forEach(a => {
+                        allActivities.push(a.name || a.title);
+                    });
+                });
+                window.crowdDetectorUI.showCrowdAnalysisModal(startDate, [...new Set(allActivities)]);
+            };
+        }
+    }, 100);
+
+    return badgeHTML;
+}
 
 // Exponer currentItinerary a través de ItineraryHandler para evitar conflictos
 Object.defineProperty(ItineraryHandler, 'currentItinerary', {

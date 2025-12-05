@@ -701,18 +701,18 @@ export const ItineraryBuilder = {
                                 date >= state.selectedStartDate && date <= state.selectedEndDate;
 
       if (!isInTripRange) {
-        // Outside trip range - disabled
-        dayCell.className += ' text-gray-300 dark:text-gray-600 cursor-not-allowed';
+        // Outside trip range - disabled (gris y sin hover)
+        dayCell.className += ' text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50';
         dayCell.disabled = true;
       } else if (isStartDate || isEndDate) {
         // Start or end date - purple circle
         dayCell.className += ' bg-purple-600 text-white font-bold hover:bg-purple-700';
       } else if (isInSelectedRange) {
         // In selected range - light purple
-        dayCell.className += ' bg-purple-200 dark:bg-purple-900/40 text-purple-900 dark:text-purple-200';
+        dayCell.className += ' bg-purple-200 dark:bg-purple-900/40 text-purple-900 dark:text-purple-200 font-semibold';
       } else {
-        // Available date
-        dayCell.className += ' hover:bg-blue-100 dark:hover:bg-blue-900/30 text-gray-700 dark:text-gray-300';
+        // Available date - rosa en light mode, azul oscuro en dark mode
+        dayCell.className += ' bg-pink-100 dark:bg-blue-800 text-pink-900 dark:text-white font-semibold hover:bg-pink-200 dark:hover:bg-blue-600';
       }
 
       dayCell.onclick = () => this.onDateClick(date);
@@ -1597,11 +1597,16 @@ export const ItineraryBuilder = {
       // Generar días basados en fechas
       const days = this.generateDays(data.startDate, data.endDate);
 
-      // Si eligió una plantilla, generar actividades sugeridas inteligentemente
+      // SIEMPRE generar actividades sugeridas inteligentemente (incluso sin plantilla específica)
       let activities = [];
-      if (data.template !== 'blank' && data.cityDayAssignments && data.cityDayAssignments.length > 0) {
+      if (data.cityDayAssignments && data.cityDayAssignments.length > 0) {
+        // Si no hay template o es 'blank', usar 'complete' por defecto (balance perfecto)
+        const templateToUse = (!data.template || data.template === 'blank') ? 'complete' : data.template;
+
+        console.log('🎯 Generando actividades con template:', templateToUse);
+
         activities = await this.generateActivitiesFromTemplate(
-          data.template,
+          templateToUse,
           data.cityDayAssignments,
           data.categories,
           days.length
@@ -1719,8 +1724,11 @@ export const ItineraryBuilder = {
   async generateActivitiesFromTemplate(templateId, cityDayAssignments, selectedCategories, totalDays) {
     console.log('🎯 Generating SMART itinerary with AI recommendations:', { templateId, cityDayAssignments, selectedCategories, totalDays });
 
-    // Get template info
-    const template = TEMPLATES.find(t => t.id === templateId) || { pace: 'moderate' };
+    // Get template info (fallback con categories vacío para evitar errores)
+    const template = TEMPLATES.find(t => t.id === templateId) || {
+      pace: 'moderate',
+      categories: []
+    };
 
     // Determine activities per day based on pace (INCREASED for more comprehensive itineraries)
     const activitiesPerDay = {
@@ -1729,8 +1737,9 @@ export const ItineraryBuilder = {
       intense: { min: 7, max: 9 }     // Was 4-6, now 7-9 (includes meals)
     }[template.pace] || { min: 5, max: 7 };
 
-    // Merge template categories with user-selected categories
-    const allCategories = [...new Set([...template.categories, ...selectedCategories])];
+    // Merge template categories with user-selected categories (asegurar que sean arrays válidos)
+    const safeSelectedCategories = Array.isArray(selectedCategories) ? selectedCategories : [];
+    const allCategories = [...new Set([...template.categories, ...safeSelectedCategories])];
 
     // ✨ NEW: Use RecommendationEngine for smart activity selection
     const useSmartRecommendations = window.RecommendationEngine && allCategories.length > 0;

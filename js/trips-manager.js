@@ -42,6 +42,13 @@ export const TripsManager = {
 
     console.log('🔍 DEBUG TripsManager - Inicializando listener de trips para userId:', userId);
 
+    // 🔧 FIX: Limpiar listener previo si existe (evitar duplicados)
+    if (this.unsubscribe) {
+      console.warn('⚠️ Limpiando listener previo antes de crear uno nuevo');
+      this.unsubscribe();
+      this.unsubscribe = null;
+    }
+
     // 🛡️ PROTECCIÓN: Restaurar currentTripId desde backup si se perdió
     const currentTripId = localStorage.getItem('currentTripId');
     const backupTripId = sessionStorage.getItem('backup_currentTripId');
@@ -113,6 +120,13 @@ export const TripsManager = {
         userId: userId,
         query: 'trips where members array-contains userId'
       });
+
+      // 🔧 FIX: Limpiar listener en caso de error para evitar memory leak
+      if (this.unsubscribe) {
+        this.unsubscribe();
+        this.unsubscribe = null;
+      }
+
       // Mostrar mensaje al usuario
       this.userTrips = [];
       this.renderTripsList();
@@ -258,34 +272,60 @@ export const TripsManager = {
 
         console.log('✅ Trip seleccionado:', this.currentTrip.info.name);
         console.log('💾 Backup guardado en localStorage + sessionStorage');
-        
+
         this.updateTripHeader();
-        
-        // Re-inicializar módulos
-        if (window.ItineraryHandler && window.ItineraryHandler.reinitialize) {
-          window.ItineraryHandler.reinitialize();
+
+        // 🔧 FIX: Re-inicializar módulos EN PARALELO con await
+        const initPromises = [];
+
+        if (window.ItineraryHandler?.reinitialize) {
+          initPromises.push(
+            Promise.resolve(window.ItineraryHandler.reinitialize())
+              .catch(err => console.error('Error reinit ItineraryHandler:', err))
+          );
         }
-        if (window.BudgetTracker && window.BudgetTracker.reinitialize) {
-          window.BudgetTracker.reinitialize();
+        if (window.BudgetTracker?.reinitialize) {
+          initPromises.push(
+            Promise.resolve(window.BudgetTracker.reinitialize())
+              .catch(err => console.error('Error reinit BudgetTracker:', err))
+          );
         }
-        if (window.PreparationHandler && window.PreparationHandler.reinitialize) {
-          window.PreparationHandler.reinitialize();
+        if (window.PreparationHandler?.reinitialize) {
+          initPromises.push(
+            Promise.resolve(window.PreparationHandler.reinitialize())
+              .catch(err => console.error('Error reinit PreparationHandler:', err))
+          );
         }
-        if (window.FlightsHandler && window.FlightsHandler.init) {
-          window.FlightsHandler.init(tripId);
+        if (window.FlightsHandler?.init) {
+          initPromises.push(
+            Promise.resolve(window.FlightsHandler.init(tripId))
+              .catch(err => console.error('Error reinit FlightsHandler:', err))
+          );
         }
-        if (window.HotelsHandler && window.HotelsHandler.init) {
-          window.HotelsHandler.init(tripId);
+        if (window.HotelsHandler?.init) {
+          initPromises.push(
+            Promise.resolve(window.HotelsHandler.init(tripId))
+              .catch(err => console.error('Error reinit HotelsHandler:', err))
+          );
         }
-        if (window.AppCore && window.AppCore.reinitialize) {
-          window.AppCore.reinitialize();
+        if (window.AppCore?.reinitialize) {
+          initPromises.push(
+            Promise.resolve(window.AppCore.reinitialize())
+              .catch(err => console.error('Error reinit AppCore:', err))
+          );
         }
-        if (window.ChatHandler && window.ChatHandler.reinitialize) {
-          window.ChatHandler.reinitialize(tripId);
+        if (window.ChatHandler?.reinitialize) {
+          initPromises.push(
+            Promise.resolve(window.ChatHandler.reinitialize(tripId))
+              .catch(err => console.error('Error reinit ChatHandler:', err))
+          );
         }
-        
+
+        // Esperar a que TODOS terminen (no falla si uno falla)
+        await Promise.allSettled(initPromises);
+
         this.closeTripsListModal();
-        
+
         console.log('🔄 Todos los módulos re-inicializados para el trip:', tripId);
       }
     } catch (error) {
@@ -734,7 +774,7 @@ export const TripsManager = {
         : '👤 Viaje individual';
 
     headerContainer.innerHTML = `
-      <div class="space-y-6">
+      <div id="dashboardTopSection" class="space-y-6">
         <!-- Banner JAPITIN grande centrado -->
         <div class="flex justify-center mb-4">
           <img src="/images/icons/japitin banner.png" alt="Japitin" class="h-20 md:h-24 rounded-lg border-2 border-white/20 bg-white/95 px-4 py-2 shadow-lg">

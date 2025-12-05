@@ -53,11 +53,34 @@
     <link rel="stylesheet" href="/css/mobile-optimizations.css">
     <link rel="stylesheet" href="/css/ui-improvements.css">
     <link rel="stylesheet" href="/css/visual-redesign.css">
+    <link rel="stylesheet" href="/css/dashboard-visual-upgrade.css">
     <!-- 🎨 TEMAS: Ninja (dark) & Kawaii (light) -->
     <link rel="stylesheet" href="/css/theme-kawaii.css">
     <link rel="stylesheet" href="/css/theme-ninja.css">
     <!-- 🎨 Wallpapers Kawaii - Modo Claro y Oscuro -->
     <link rel="stylesheet" href="/css/wallpapers.css?v=2">
+    <!-- 🖼️ Dashboard Background - DEBE IR AL FINAL para tener prioridad -->
+    <link rel="stylesheet" href="/css/dashboard-background.css?v=28">
+    <!-- 🐱 Kawaii Animations -->
+    <link rel="stylesheet" href="/css/kawaii-animations.css">
+    <!-- 📌 Japan Rules - 30 Reglas Anti-Error -->
+    <link rel="stylesheet" href="/css/japan-rules.css">
+    <!-- 🕐 Control Horarios -->
+    <link rel="stylesheet" href="/css/horarios-system.css">
+    <!-- 🗾 Sistema de Zonas -->
+    <link rel="stylesheet" href="/css/zonas-system.css">
+    <!-- 🆘 Survival Guide -->
+    <link rel="stylesheet" href="/css/survival-guide.css">
+    <!-- 🚄 JR Pass Calculator -->
+    <link rel="stylesheet" href="/css/jr-pass-calculator.css">
+    <!-- 🍜 Ramen Passport -->
+    <link rel="stylesheet" href="/css/ramen-passport.css">
+    <!-- ⛩️ Goshuin Book -->
+    <link rel="stylesheet" href="/css/goshuin-book.css">
+    <!-- 🗓️ Calendar Fix -->
+    <link rel="stylesheet" href="/css/calendar-fix.css">
+    <!-- 🏥 Health Dashboard -->
+    <link rel="stylesheet" href="/css/health-dashboard.css">
 
     <!-- Wallpapers inline para máxima prioridad -->
     <style>
@@ -100,6 +123,13 @@
     <link rel="apple-touch-icon" href="./images/icons/icon-192.png">
 </head>
 <body>
+    <!-- Background Decorations -->
+    <div class="dashboard-background">
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+        <div class="floating-shape"></div>
+    </div>
+
     <!-- APP DASHBOARD -->
     <div id="appDashboard">
         <!-- Botones Flotantes - Mejorado espaciado -->
@@ -270,6 +300,13 @@
 
         <!-- Contenido Principal -->
         <main id="main-content">
+            <!-- Contador de días para Japón -->
+            <div class="countdown-widget">
+                <h2>¡Faltan para Japón!</h2>
+                <div class="days" id="days">––</div>
+                <p id="message">¡Tokio, Kioto y mucho ramen te están esperando! ✈️🍜</p>
+            </div>
+
             <div id="content-itinerary" class="tab-content"></div>
             <div id="content-preparation" class="tab-content hidden"></div>
             <div id="content-flights" class="tab-content hidden"></div>
@@ -789,6 +826,57 @@
     <script src="/js/dev-visual-editor.js"></script>
     <script src="/js/dev-visual-editor-advanced.js"></script>
     <script src="/js/dev-visual-editor-pro.js"></script>
+
+    <!-- 👥 Crowd Detector - Sistema de detección de multitudes -->
+    <script src="/js/crowd-detector.js"></script>
+    <script src="/js/crowd-detector-ui.js"></script>
+    <script src="/js/crowd-detector-integration.js"></script>
+
+    <!-- 🐱 Maneki-neko (Gatito de la suerte) -->
+    <div class="maneki-container">
+        <div class="maneki-neko">
+            <img src="/images/icons/maneki-neko.jpg" alt="Maneki-neko - Gatito de la suerte">
+        </div>
+        <div class="fortune-bubble" id="fortuneBubble">
+            ¡Cargando tu ánimo del día... 🌸
+        </div>
+    </div>
+
+    <!-- Script de animaciones kawaii -->
+    <script src="/js/kawaii-animations.js"></script>
+
+    <!-- Scripts de 30 Reglas Anti-Error -->
+    <script src="/js/japan-rules.js"></script>
+    <script src="/js/japan-rules-ui.js"></script>
+
+    <!-- Scripts de Control Horarios -->
+    <script src="/js/horarios-system.js"></script>
+    <script src="/js/horarios-ui.js"></script>
+
+    <!-- Scripts de Sistema de Zonas -->
+    <script src="/js/zonas-system.js"></script>
+    <script src="/js/zonas-ui.js"></script>
+
+    <!-- Scripts de Survival Guide -->
+    <script src="/js/survival-guide.js"></script>
+    <script src="/js/survival-ui.js"></script>
+
+    <!-- Scripts de JR Pass Calculator -->
+    <script src="/js/jr-pass-calculator.js"></script>
+    <script src="/js/jr-pass-ui.js"></script>
+
+    <!-- Scripts de Ramen Passport -->
+    <script src="/js/ramen-passport.js"></script>
+    <script src="/js/ramen-passport-ui.js"></script>
+
+    <!-- Scripts de Goshuin Book -->
+    <script src="/js/goshuin-book.js"></script>
+    <script src="/js/goshuin-book-ui.js"></script>
+
+    <!-- 🏥 Health Dashboard - Diagnóstico del Itinerario -->
+    <script type="module" src="/js/tools/health-calculator.js"></script>
+    <script type="module" src="/js/tools/quick-fixes.js"></script>
+    <script type="module" src="/js/tools/health-dashboard.js"></script>
 
 </body>
 </html>

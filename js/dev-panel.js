@@ -6,6 +6,7 @@ class DevPanel {
         this.isOpen = false;
         this.panel = null;
         this.liveStyle = null;
+        this.sessionChecked = false;
         this.init();
     }
 
@@ -70,10 +71,16 @@ class DevPanel {
                         font-size: 12px;
                         resize: vertical;
                     "></textarea>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                        <button onclick="devPanel.applyCSS()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">▶️ Aplicar</button>
+                        <button onclick="devPanel.clearCSS()" style="background: #444; border: none; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px;">🗑️ Limpiar</button>
+                        <button onclick="devPanel.copyCSS()" style="background: #444; border: none; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px;">📋 Copiar</button>
+                        <button onclick="devPanel.saveToFile()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">💾 Guardar</button>
+                    </div>
                     <div style="display: flex; gap: 8px; margin-top: 8px;">
-                        <button onclick="devPanel.applyCSS()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; flex: 1;">▶️ Aplicar</button>
-                        <button onclick="devPanel.clearCSS()" style="background: #444; border: none; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; flex: 1;">🗑️ Limpiar</button>
-                        <button onclick="devPanel.copyCSS()" style="background: #444; border: none; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px;">📋</button>
+                        <button onclick="devPanel.saveSession()" style="background: #2a2a2a; border: 1px solid #667eea; color: #667eea; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; flex: 1;">💾 Guardar Sesión</button>
+                        <button onclick="devPanel.loadSession()" style="background: #2a2a2a; border: 1px solid #10b981; color: #10b981; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; flex: 1;">📂 Cargar Sesión</button>
+                        <button onclick="devPanel.clearSession()" style="background: #2a2a2a; border: 1px solid #f87171; color: #f87171; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; flex: 1;">🗑️ Borrar</button>
                     </div>
                     <div id="dev-css-status" style="margin-top: 8px; font-size: 12px;"></div>
                 </div>
@@ -162,6 +169,13 @@ class DevPanel {
         this.panel.style.visibility = 'visible';
         this.panel.style.opacity = '1';
         this.isOpen = true;
+
+        // Auto-aplicar sesión guardada la primera vez que se abre
+        if (!this.sessionChecked) {
+            this.autoApplySession();
+            this.sessionChecked = true;
+        }
+
         console.log('📂 Panel abierto - Display:', this.panel.style.display);
     }
 
@@ -196,6 +210,100 @@ class DevPanel {
         navigator.clipboard.writeText(css).then(() => {
             this.showStatus('📋 CSS copiado al portapapeles', 'success');
         });
+    }
+
+    // Save to File - Guardar CSS en archivo permanente
+    saveToFile() {
+        const css = document.getElementById('dev-live-css').value;
+        if (!css.trim()) {
+            this.showStatus('⚠️ No hay CSS para guardar', 'error');
+            return;
+        }
+
+        const filename = prompt('Nombre del archivo CSS (sin extensión):', 'custom-styles');
+        if (!filename) return;
+
+        // Crear el blob con el CSS
+        const blob = new Blob([css], { type: 'text/css' });
+        const url = URL.createObjectURL(blob);
+
+        // Crear link de descarga
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}.css`;
+        a.click();
+
+        // Limpiar
+        URL.revokeObjectURL(url);
+
+        // Guardar referencia en localStorage para auto-load
+        const savedFiles = JSON.parse(localStorage.getItem('dev-saved-css-files') || '[]');
+        savedFiles.push({
+            name: `${filename}.css`,
+            content: css,
+            timestamp: new Date().toISOString()
+        });
+        localStorage.setItem('dev-saved-css-files', JSON.stringify(savedFiles));
+
+        this.showStatus(`💾 Archivo "${filename}.css" guardado y descargado`, 'success');
+    }
+
+    // Session Management - Guardar sesión en localStorage
+    saveSession() {
+        const css = document.getElementById('dev-live-css').value;
+        if (!css.trim()) {
+            this.showStatus('⚠️ No hay CSS para guardar en la sesión', 'error');
+            return;
+        }
+
+        localStorage.setItem('dev-panel-session-css', css);
+        localStorage.setItem('dev-panel-session-timestamp', new Date().toISOString());
+
+        this.showStatus('💾 Sesión guardada en localStorage', 'success');
+    }
+
+    loadSession() {
+        const savedCSS = localStorage.getItem('dev-panel-session-css');
+        if (!savedCSS) {
+            this.showStatus('⚠️ No hay sesión guardada', 'error');
+            return;
+        }
+
+        const timestamp = localStorage.getItem('dev-panel-session-timestamp');
+        const date = timestamp ? new Date(timestamp).toLocaleString('es-ES') : 'Desconocida';
+
+        if (confirm(`¿Cargar la sesión guardada?\nFecha: ${date}`)) {
+            document.getElementById('dev-live-css').value = savedCSS;
+            this.applyCSS();
+            this.showStatus('📂 Sesión cargada y aplicada', 'success');
+        }
+    }
+
+    clearSession() {
+        if (confirm('¿Eliminar la sesión guardada en localStorage?')) {
+            localStorage.removeItem('dev-panel-session-css');
+            localStorage.removeItem('dev-panel-session-timestamp');
+            this.showStatus('🗑️ Sesión eliminada', 'success');
+        }
+    }
+
+    // Auto-apply session on load (DESACTIVADO - cargar manualmente)
+    autoApplySession() {
+        const savedCSS = localStorage.getItem('dev-panel-session-css');
+        if (savedCSS) {
+            const timestamp = localStorage.getItem('dev-panel-session-timestamp');
+            const date = timestamp ? new Date(timestamp).toLocaleString('es-ES') : 'Desconocida';
+
+            // SOLO MOSTRAR MENSAJE, NO AUTO-APLICAR
+            console.log('💾 Hay una sesión guardada disponible');
+            console.log('📅 Fecha:', date);
+            console.log('📋 Para cargar: Click en "📂 Cargar Sesión"');
+
+            // Mostrar en el textarea pero NO aplicar
+            document.getElementById('dev-live-css').value = savedCSS;
+
+            // NO llamar a this.applyCSS() automáticamente
+        }
     }
 
     // Quick Fixes

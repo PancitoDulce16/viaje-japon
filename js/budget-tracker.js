@@ -1,16 +1,17 @@
 // js/budget-tracker.js - CON MODO COLABORATIVO
 
 import { db, auth } from '/js/firebase-config.js';
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  deleteDoc, 
+import {
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
   doc,
   query,
   orderBy,
   onSnapshot
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { safeJSONParse, safeLocalStorageGet, safeLocalStorageSet } from '/js/utils/safe-helpers.js';
 
 export const BudgetTracker = {
   expenses: [],
@@ -34,7 +35,7 @@ export const BudgetTracker = {
     // Si no hay usuario, cargar de localStorage
     if (!auth.currentUser) {
       console.log('⚠️ Budget: No hay usuario autenticado, usando localStorage');
-      this.expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+      this.expenses = safeLocalStorageGet('expenses', []);
       this.updateModal();
       this.renderInTab();
       return;
@@ -53,7 +54,7 @@ export const BudgetTracker = {
     if (!tripId) {
       console.log('⚠️ Budget: No hay trip seleccionado, solo localStorage (sin sync)');
       // No crear listener de Firestore, solo usar localStorage
-      this.expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+      this.expenses = safeLocalStorageGet('expenses', []);
       this.updateModal();
       this.renderInTab();
       return;
@@ -74,7 +75,7 @@ export const BudgetTracker = {
       });
 
       // También guardar en localStorage como backup
-      localStorage.setItem('expenses', JSON.stringify(this.expenses));
+      safeLocalStorageSet('expenses', this.expenses);
 
       // Re-renderizar ambas vistas
       this.updateModal();
@@ -84,7 +85,7 @@ export const BudgetTracker = {
     }, (error) => {
       console.error('❌ Error en sync de gastos compartidos:', error);
       // Fallback a localStorage si falla
-      this.expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+      this.expenses = safeLocalStorageGet('expenses', []);
       this.updateModal();
       this.renderInTab();
     });

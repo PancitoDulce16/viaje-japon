@@ -82,6 +82,8 @@ export const UtilsHandler = {
     renderCulturalView() {
         return `
             <div class="space-y-4">
+                ${this.renderAccordion('survival', '🆘', 'Survival Guide', 'Frases esenciales y emergencias')}
+                ${this.renderAccordion('japanrules', '📌', '30 Reglas Anti-Error', 'Etiqueta japonesa esencial para evitar errores')}
                 ${this.renderAccordion('festivals', '🎊', 'Festivales Locales', 'Matsuri y eventos por mes y ciudad')}
                 ${this.renderAccordion('etiquette', '🙇', 'Guía de Etiqueta', 'Reglas de cortesía japonesa')}
                 ${this.renderAccordion('phrases', '🗣️', 'Frases Útiles', 'Aprende japonés básico')}
@@ -99,6 +101,9 @@ export const UtilsHandler = {
         return `
             <div class="space-y-4">
                 ${this.renderAccordion('countdown', '⏳', 'Contador de Días', '¿Cuánto falta para tu aventura?')}
+                ${this.renderAccordion('jrpass', '🚄', 'JR Pass Calculator', '¿Te conviene comprar el Japan Rail Pass?')}
+                ${this.renderAccordion('zonas', '🗾', 'Regiones de Japón', 'Guía de zonas: Kanto, Kansai, Hokkaido, etc.')}
+                ${this.renderAccordion('horarios', '🕐', 'Control de Horarios', 'Horarios de apertura/cierre y días festivos')}
                 ${this.renderAccordion('currency', '💸', 'Conversor de Moneda', 'JPY ↔ USD en tiempo real')}
                 ${this.renderAccordion('timezone', '🕐', 'Zona Horaria', 'Hora en Japón vs tu país')}
                 ${this.renderAccordion('weather', '🌤️', 'Clima', 'Pronóstico en Tokyo, Kyoto, Osaka')}
@@ -115,6 +120,8 @@ export const UtilsHandler = {
     renderFunView() {
         return `
             <div class="space-y-4">
+                ${this.renderAccordion('ramen', '🍜', 'Ramen Passport', 'Colecciona y califica todos los ramen que pruebes')}
+                ${this.renderAccordion('goshuin', '⛩️', 'Goshuin Book', 'Libro digital de sellos de templos y santuarios')}
                 ${this.renderAccordion('timeline', '📱', 'Timeline Compartido', 'Feed de actividad del grupo en tiempo real')}
                 ${this.renderAccordion('photogallery', '📸', 'Memorias Compartidas', 'Galería de fotos con comentarios y likes')}
                 ${this.renderAccordion('achievements', '🏆', 'Sistema de Logros', 'Desbloquea badges completando actividades')}
@@ -125,7 +132,6 @@ export const UtilsHandler = {
                 ${this.renderAccordion('namegen', '🏯', 'Tu Nombre en Japonés', 'Convierte a Katakana')}
                 ${this.renderAccordion('randomFood', '🍜', 'Restaurante Aleatorio', '¿Dónde comemos hoy?')}
                 ${this.renderAccordion('foodDict', '📖', 'Diccionario de Comida', 'Nombres en japonés con fotos')}
-                ${this.renderAccordion('foodTracker', '🍱', 'Rastreador de Comidas', 'Marca las comidas que probaste')}
                 ${this.renderAccordion('bingo', '🎯', 'Bingo de Viaje', 'Completa experiencias típicas')}
                 ${this.renderAccordion('stamps', '🎫', 'Colección de Sellos', 'Sella cada lugar que visitas')}
                 ${this.renderAccordion('counter', '📊', 'Contador de Experiencias', 'Estadísticas de tu viaje')}
@@ -200,9 +206,69 @@ export const UtilsHandler = {
                     sectionDiv.innerHTML = window.JapanUtils.renderCountdown();
                     window.JapanUtils.updateCountdown();
                     break;
+                case 'jrpass':
+                    sectionDiv.innerHTML = '<div id="jrpass-container"></div>';
+                    setTimeout(() => window.JRPassUI.render('jrpass-container'), 100);
+                    break;
+                case 'zonas':
+                    sectionDiv.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px;">
+                            <div style="font-size: 4rem; margin-bottom: 20px;">🗾</div>
+                            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 12px;">Regiones de Japón</h3>
+                            <p style="color: #6b7280; margin-bottom: 24px;">
+                                Descubre las 9 regiones principales: clima, cultura, ciudades y qué esperar
+                            </p>
+                            <button onclick="ZonasUI.openModal()" class="view-horarios-btn">
+                                🗺️ Explorar Regiones
+                            </button>
+                        </div>
+                    `;
+                    break;
+                case 'horarios':
+                    sectionDiv.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px;">
+                            <div style="font-size: 4rem; margin-bottom: 20px;">🕐</div>
+                            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 12px;">Control de Horarios</h3>
+                            <p style="color: #6b7280; margin-bottom: 24px;">
+                                Consulta horarios típicos de lugares en Japón y días festivos importantes
+                            </p>
+                            <button onclick="HorariosUI.openModal()" class="view-horarios-btn">
+                                📅 Ver Horarios y Festivos
+                            </button>
+                        </div>
+                    `;
+                    break;
                 case 'tips':
                     sectionDiv.innerHTML = window.JapanUtils.renderTipCalculator();
                     setTimeout(() => window.JapanUtils.initTipCalculator(), 100);
+                    break;
+                case 'survival':
+                    sectionDiv.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px;">
+                            <div style="font-size: 4rem; margin-bottom: 20px;">🆘</div>
+                            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 12px;">Survival Guide</h3>
+                            <p style="color: #6b7280; margin-bottom: 24px;">
+                                Frases esenciales, números, emergencias y todo lo que necesitas para sobrevivir
+                            </p>
+                            <button onclick="SurvivalUI.openModal()" class="view-horarios-btn" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                                🗣️ Abrir Guía de Supervivencia
+                            </button>
+                        </div>
+                    `;
+                    break;
+                case 'japanrules':
+                    sectionDiv.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px;">
+                            <div style="font-size: 4rem; margin-bottom: 20px;">📌</div>
+                            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 12px;">30 Reglas Anti-Error</h3>
+                            <p style="color: #6b7280; margin-bottom: 24px;">
+                                Etiqueta japonesa esencial para no meter la pata durante tu viaje
+                            </p>
+                            <button onclick="JapanRulesUI.openModal()" class="view-all-rules-btn" style="font-size: 1rem; padding: 12px 24px;">
+                                📚 Ver todas las reglas
+                            </button>
+                        </div>
+                    `;
                     break;
                 case 'etiquette':
                     sectionDiv.innerHTML = window.JapanUtils.renderEtiquetteGuide();
@@ -226,6 +292,14 @@ export const UtilsHandler = {
                     break;
                 case 'onsen':
                     sectionDiv.innerHTML = window.JapanUtils.renderOnsenGuide();
+                    break;
+                case 'ramen':
+                    sectionDiv.innerHTML = '<div id="ramen-container"></div>';
+                    setTimeout(() => window.RamenPassportUI.init('ramen-container'), 100);
+                    break;
+                case 'goshuin':
+                    sectionDiv.innerHTML = '<div id="goshuin-container"></div>';
+                    setTimeout(() => window.GoshuinBookUI.init('goshuin-container'), 100);
                     break;
                 case 'randomFood':
                     sectionDiv.innerHTML = window.JapanUtils.renderRandomRestaurant();
