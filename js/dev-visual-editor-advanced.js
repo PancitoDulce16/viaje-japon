@@ -1224,13 +1224,14 @@ class DevVisualEditorAdvanced {
 
 // Inicializar cuando Visual Editor esté listo
 let devVisualEditorAdvanced;
-setTimeout(() => {
+function initDevVisualEditorAdvanced() {
     if (window.devVisualEditor) {
         devVisualEditorAdvanced = new DevVisualEditorAdvanced(window.devVisualEditor);
         window.devVisualEditorAdvanced = devVisualEditorAdvanced;
         console.log('🚀 Dev Visual Editor Advanced listo!');
     } else {
         console.log('⏳ Esperando Visual Editor...');
-        setTimeout(arguments.callee, 500);
+        setTimeout(initDevVisualEditorAdvanced, 500);
     }
-}, 2000);
+}
+setTimeout(initDevVisualEditorAdvanced, 2000);
