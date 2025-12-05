@@ -1,7 +1,7 @@
 // js/smart-itinerary-generator.js - Smart Complete Itinerary Generator
 // Sistema inteligente que genera itinerarios completos basados en preferencias del usuario
 
-import { ACTIVITIES_DATABASE as NEW_ACTIVITY_DATABASE } from '../data/activities-database.js';
+import { activities as NEW_ACTIVITY_DATABASE } from '../data/activities-database.js';
 
 /**
  * ----------------------------------------------------------------
@@ -40,38 +40,58 @@ function inferInterests(category, name) {
 function adaptNewToOldDB(newDb) {
   const oldDb = {};
 
-  // Mapeo de categorías nuevas a antiguas
+  // Mapeo de categorías nuevas a antiguas (para compatibilidad)
   const categoryMapping = {
     'culture': 'cultural',
+    'history': 'cultural',
     'food': 'food',
+    'gastronomy': 'food',
     'photography': 'attraction',
+    'modern': 'attraction',
     'nature': 'nature',
     'shopping': 'shopping',
     'nightlife': 'nightlife',
     'anime': 'shopping',
-    'relaxation': 'relax'
+    'relaxation': 'relax',
+    'wellness': 'relax',
+    'art': 'museum',
+    'adventure': 'attraction'
   };
 
   for (const cityKey in newDb) {
     if (newDb.hasOwnProperty(cityKey)) {
-        const cityData = newDb[cityKey];
-        oldDb[cityKey] = cityData.activities.map(activity => {
-          const interests = inferInterests(activity.category, activity.name);
-          const mappedCategory = categoryMapping[activity.category] || activity.category;
+        // La nueva estructura es directo array, no { activities: [...] }
+        const cityActivities = Array.isArray(newDb[cityKey]) ? newDb[cityKey] : (newDb[cityKey].activities || []);
+
+        oldDb[cityKey] = cityActivities.map(activity => {
+          // Usar primera categoría del array para inferir interests
+          const firstCategory = Array.isArray(activity.categories) ? activity.categories[0] : activity.category;
+          const interests = inferInterests(firstCategory, activity.name);
+
+          // Mapear categoría principal
+          const mappedCategory = categoryMapping[firstCategory] || firstCategory || 'attraction';
 
           return {
             name: activity.name,
-            category: mappedCategory, // Usar categoría mapeada
-            lat: activity.location ? activity.location.lat : 0,
-            lng: activity.location ? activity.location.lng : 0,
+            category: mappedCategory,
+            // Soportar ambas estructuras de coordenadas
+            lat: activity.coordinates?.lat || activity.location?.lat || 0,
+            lng: activity.coordinates?.lon || activity.coordinates?.lng || activity.location?.lng || 0,
+            lon: activity.coordinates?.lon || activity.location?.lon || 0, // Preservar para Gemini
             duration: activity.duration,
             cost: activity.cost,
             interests: interests,
-            area: activity.station ? activity.station.replace(' Station', '') : 'Unknown', // Limpiar " Station"
-            popularity: (activity.rating || 3.5) * 20, // default rating 3.5 if missing
-            timeOfDay: Array.isArray(activity.timeOfDay) ? activity.timeOfDay[0] : (activity.timeOfDay || 'any'),
+            area: activity.area || activity.station?.replace(' Station', '') || 'Unknown',
+            popularity: (activity.quality_rating || activity.rating || 3.5) * 20,
+            timeOfDay: Array.isArray(activity.best_time) ? activity.best_time[0] : (activity.timeOfDay || 'any'),
             description: activity.description,
-            id: activity.id
+            id: activity.id,
+            // Preservar propiedades nuevas de Gemini
+            opening_hours: activity.opening_hours,
+            quality_rating: activity.quality_rating,
+            accessibility: activity.accessibility,
+            tags: activity.tags,
+            crowd_level: activity.crowd_level
           };
         });
     }
@@ -1620,9 +1640,14 @@ export const SmartItineraryGenerator = {
 
   calculateDistance(coord1, coord2) {
     if (!coord1 || !coord2) return 0;
-    const R = 6371;
+    const R = 6371; // Radio de la Tierra en km
+
+    // Soportar tanto lng como lon (compatibilidad con ambas bases de datos)
+    const lng1 = coord1.lng || coord1.lon || 0;
+    const lng2 = coord2.lng || coord2.lon || 0;
+
     const dLat = this.deg2rad(coord2.lat - coord1.lat);
-    const dLon = this.deg2rad(coord2.lng - coord1.lng);
+    const dLon = this.deg2rad(lng2 - lng1);
 
     const a =
       Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -1630,7 +1655,7 @@ export const SmartItineraryGenerator = {
       Math.sin(dLon/2) * Math.sin(dLon/2);
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
+    return R * c; // Distancia en km (fórmula de Haversine)
   },
 
   deg2rad(deg) {
