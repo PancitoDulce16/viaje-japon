@@ -227,3 +227,43 @@ export function getActivitiesByCity(city) {
   const cityKey = city.toLowerCase();
   return activities[cityKey] || [];
 }
+
+/**
+ * Busca actividades por texto en nombre, área o tags
+ * @param {string} query - Texto a buscar
+ * @param {string} city - Ciudad (opcional)
+ * @returns {Array} Actividades que coinciden con la búsqueda
+ */
+export function searchActivities(query, city = null) {
+  if (!query || query.trim().length === 0) {
+    return [];
+  }
+
+  const searchTerm = query.toLowerCase().trim();
+  let results = [];
+
+  const citiesToSearch = city ? [city] : Object.keys(activities);
+
+  for (const cityKey of citiesToSearch) {
+    if (activities[cityKey]) {
+      const cityActivities = activities[cityKey].filter(activity => {
+        // Buscar en nombre
+        if (activity.name && activity.name.toLowerCase().includes(searchTerm)) {
+          return true;
+        }
+        // Buscar en área
+        if (activity.area && activity.area.toLowerCase().includes(searchTerm)) {
+          return true;
+        }
+        // Buscar en tags
+        if (activity.tags && Array.isArray(activity.tags)) {
+          return activity.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+        }
+        return false;
+      });
+      results = results.concat(cityActivities);
+    }
+  }
+
+  return results;
+}
