@@ -547,63 +547,140 @@ const WEATHER_CATEGORIES = {
 export const SmartItineraryGenerator = {
 
   /**
-   * 🎨 Genera MÚLTIPLES VARIACIONES de itinerarios
-   * Retorna 3 versiones diferentes para que el usuario elija
+   * 🎨 VARIACIONES PERSONALIZADAS DINÁMICAS
+   * Genera 3 variaciones basadas en tus intereses dominantes (no fijas)
    */
   async generateMultipleVariations(profile) {
-    console.log('🎨 Generando 3 variaciones del itinerario...');
+    console.log('🎨 Generando 3 variaciones personalizadas del itinerario...');
 
     const variations = [];
+    const userInterests = profile.interests || [];
 
-    // ========== VARIACIÓN 1: CULTURAL-FOCUSED ==========
-    const culturalProfile = {
-      ...profile,
-      interests: this.prioritizeInterests(profile.interests, ['cultural', 'history', 'art']),
-      _variationType: 'cultural'
+    // Definir arquetipos de variaciones basados en combinaciones de intereses
+    const VARIATION_TEMPLATES = {
+      cultural: {
+        icon: '⛩️', name: 'Cultural Explorer',
+        description: 'Templos, historia y arte tradicional japonés',
+        interests: ['cultural', 'history', 'art'],
+        tags: ['Templos', 'Historia', 'Arte', 'Tradición']
+      },
+      foodie: {
+        icon: '🍜', name: 'Ultimate Foodie',
+        description: 'Gastronomía, mercados y experiencias culinarias',
+        interests: ['food', 'market'],
+        tags: ['Comida', 'Mercados', 'Restaurantes', 'Street Food']
+      },
+      nature: {
+        icon: '🌸', name: 'Nature Lover',
+        description: 'Jardines, onsen, naturaleza y relax',
+        interests: ['nature', 'relax'],
+        tags: ['Jardines', 'Onsen', 'Naturaleza', 'Relax']
+      },
+      popculture: {
+        icon: '🎮', name: 'Otaku Paradise',
+        description: 'Anime, manga, gaming y cultura pop',
+        interests: ['anime', 'pop-culture', 'technology'],
+        tags: ['Anime', 'Gaming', 'Akihabara', 'Pop Culture']
+      },
+      shopping: {
+        icon: '🛍️', name: 'Shopping Spree',
+        description: 'Fashion, electrónicos y souvenirs',
+        interests: ['shopping', 'fashion'],
+        tags: ['Shopping', 'Fashion', 'Electrónicos', 'Souvenirs']
+      },
+      nightlife: {
+        icon: '🌃', name: 'Night Owl',
+        description: 'Bares, karaoke, clubes y vida nocturna',
+        interests: ['nightlife', 'food'],
+        tags: ['Bares', 'Karaoke', 'Clubes', 'Nightlife']
+      },
+      photography: {
+        icon: '📸', name: 'Instagram Perfect',
+        description: 'Spots fotogénicos y escénicos',
+        interests: ['photography', 'nature', 'cultural'],
+        tags: ['Fotografía', 'Paisajes', 'Instagrameable']
+      },
+      adventure: {
+        icon: '🏃', name: 'Adventure Seeker',
+        description: 'Hiking, actividades físicas y aventuras',
+        interests: ['adventure', 'nature'],
+        tags: ['Hiking', 'Aventura', 'Deportes', 'Activo']
+      },
+      balanced: {
+        icon: '⚖️', name: 'Experiencia Completa',
+        description: 'Mix equilibrado de todo lo mejor',
+        interests: userInterests, // Usar todos los intereses del usuario
+        tags: ['Equilibrado', 'Variado', 'Completo', 'Recomendado']
+      }
     };
-    const culturalItinerary = await this.generateCompleteItinerary(culturalProfile);
-    variations.push({
-      id: 'cultural',
-      name: '⛩️ Cultural Explorer',
-      description: 'Enfocado en templos, historia y arte tradicional japonés',
-      icon: '⛩️',
-      itinerary: culturalItinerary,
-      tags: ['Templos', 'Historia', 'Arte', 'Tradición']
-    });
 
-    // ========== VARIACIÓN 2: FOOD & SHOPPING ==========
-    const foodShoppingProfile = {
-      ...profile,
-      interests: this.prioritizeInterests(profile.interests, ['food', 'shopping', 'nightlife']),
-      _variationType: 'foodShopping'
-    };
-    const foodShoppingItinerary = await this.generateCompleteItinerary(foodShoppingProfile);
-    variations.push({
-      id: 'foodShopping',
-      name: '🍜 Foodie & Shopper',
-      description: 'Gastronomía, mercados, shopping y vida nocturna',
-      icon: '🍜',
-      itinerary: foodShoppingItinerary,
-      tags: ['Comida', 'Shopping', 'Mercados', 'Nightlife']
-    });
+    // Calcular qué variaciones son más relevantes para el usuario
+    const relevantVariations = this.selectRelevantVariations(userInterests, VARIATION_TEMPLATES);
 
-    // ========== VARIACIÓN 3: BALANCED ==========
-    const balancedProfile = {
-      ...profile,
-      _variationType: 'balanced'
-    };
-    const balancedItinerary = await this.generateCompleteItinerary(balancedProfile);
-    variations.push({
-      id: 'balanced',
-      name: '⚖️ Experiencia Completa',
-      description: 'Mix perfecto de cultura, comida, shopping y diversión',
-      icon: '⚖️',
-      itinerary: balancedItinerary,
-      tags: ['Equilibrado', 'Variado', 'Completo', 'Recomendado']
-    });
+    console.log('✨ Variaciones seleccionadas:', relevantVariations.map(v => v.name).join(', '));
 
-    console.log('✅ 3 variaciones generadas exitosamente');
+    // Generar las 3 variaciones
+    for (const template of relevantVariations.slice(0, 3)) {
+      const variationProfile = {
+        ...profile,
+        interests: template.interests,
+        _variationType: template.icon
+      };
+
+      const itinerary = await this.generateCompleteItinerary(variationProfile);
+
+      variations.push({
+        id: template.name.toLowerCase().replace(/\s+/g, '-'),
+        name: `${template.icon} ${template.name}`,
+        description: template.description,
+        icon: template.icon,
+        itinerary: itinerary,
+        tags: template.tags
+      });
+    }
+
+    console.log('✅ 3 variaciones personalizadas generadas exitosamente');
     return variations;
+  },
+
+  /**
+   * 🎯 Selecciona las variaciones más relevantes basadas en intereses del usuario
+   */
+  selectRelevantVariations(userInterests, templates) {
+    const scores = [];
+
+    for (const [key, template] of Object.entries(templates)) {
+      // Skip balanced, lo agregaremos siempre al final
+      if (key === 'balanced') continue;
+
+      // Calcular match score
+      let matchScore = 0;
+      for (const interest of userInterests) {
+        if (template.interests.includes(interest)) {
+          matchScore += 10;
+        }
+      }
+
+      scores.push({
+        ...template,
+        key,
+        matchScore
+      });
+    }
+
+    // Ordenar por score descendente
+    scores.sort((a, b) => b.matchScore - a.matchScore);
+
+    // Tomar top 2 + balanced
+    const top2 = scores.slice(0, 2);
+    const result = [...top2, templates.balanced];
+
+    // Si no hay buenos matches, usar defaults
+    if (top2.every(v => v.matchScore === 0)) {
+      return [templates.cultural, templates.foodie, templates.balanced];
+    }
+
+    return result;
   },
 
   /**
@@ -642,8 +719,8 @@ export const SmartItineraryGenerator = {
     // 🚨 NUEVO: Tracker global de actividades usadas para prevenir duplicados
     const usedActivities = new Set();
 
-    // Distribuir días entre ciudades
-    const cityDistribution = this.distributeDaysAcrossCities(cities, totalDays);
+    // Distribuir días entre ciudades (basado en intereses)
+    const cityDistribution = this.distributeDaysAcrossCities(cities, totalDays, interests);
 
     const itinerary = {
       title: `Viaje a Japón - ${totalDays} días`,
@@ -709,26 +786,102 @@ export const SmartItineraryGenerator = {
   },
 
   /**
-   * Distribuye días entre ciudades
+   * 🎯 DISTRIBUCIÓN INTELIGENTE DE CIUDADES - Basada en intereses
+   * No distribución uniforme, sino optimizada por match de intereses
    */
-  distributeDaysAcrossCities(cities, totalDays) {
+  distributeDaysAcrossCities(cities, totalDays, interests = []) {
     if (cities.length === 0) return [];
     if (cities.length === 1) return [{ city: cities[0], days: totalDays }];
 
-    // Distribución inteligente
-    const distribution = [];
-    const daysPerCity = Math.floor(totalDays / cities.length);
-    const remainingDays = totalDays % cities.length;
+    // Scoring de ciudades basado en intereses
+    const CITY_PROFILES = {
+      tokyo: {
+        strengths: ['pop-culture', 'anime', 'technology', 'shopping', 'nightlife', 'modern'],
+        score: { 'pop-culture': 10, 'anime': 10, 'technology': 9, 'shopping': 9, 'nightlife': 9, 'cultural': 6, 'food': 8, 'nature': 4 }
+      },
+      kyoto: {
+        strengths: ['cultural', 'history', 'art', 'nature', 'traditional', 'photography'],
+        score: { 'cultural': 10, 'history': 10, 'art': 8, 'nature': 8, 'photography': 9, 'food': 7, 'shopping': 5, 'nightlife': 3 }
+      },
+      osaka: {
+        strengths: ['food', 'nightlife', 'shopping', 'entertainment', 'local'],
+        score: { 'food': 10, 'nightlife': 9, 'shopping': 8, 'entertainment': 8, 'cultural': 5, 'nature': 3 }
+      },
+      nara: {
+        strengths: ['nature', 'cultural', 'relax', 'photography'],
+        score: { 'nature': 9, 'cultural': 8, 'relax': 9, 'photography': 8, 'history': 7 }
+      },
+      hakone: {
+        strengths: ['nature', 'relax', 'onsen', 'photography'],
+        score: { 'nature': 10, 'relax': 10, 'onsen': 10, 'photography': 8, 'cultural': 4 }
+      },
+      hiroshima: {
+        strengths: ['history', 'cultural', 'food', 'photography'],
+        score: { 'history': 10, 'cultural': 8, 'food': 7, 'photography': 7, 'nature': 5 }
+      }
+    };
 
-    cities.forEach((city, index) => {
-      let days = daysPerCity;
-      // Dar días extra a las primeras ciudades
-      if (index < remainingDays) days++;
+    // Calcular score de cada ciudad basado en intereses
+    const cityScores = cities.map(city => {
+      const cityKey = city.toLowerCase();
+      const profile = CITY_PROFILES[cityKey];
 
-      distribution.push({ city, days });
+      if (!profile) {
+        // Default si la ciudad no tiene perfil
+        return { city, score: 50, days: 0 };
+      }
+
+      // Calcular match score
+      let matchScore = 0;
+      let matchCount = 0;
+
+      for (const interest of interests) {
+        if (profile.score[interest]) {
+          matchScore += profile.score[interest];
+          matchCount++;
+        }
+      }
+
+      // Average score (0-10 scale)
+      const avgScore = matchCount > 0 ? matchScore / matchCount : 5;
+
+      return { city, score: avgScore * 10, days: 0 }; // Normalizar a 0-100
     });
 
-    return distribution;
+    console.log('🎯 City Scores basados en intereses:', cityScores);
+
+    // Calcular días proporcionalmente al score
+    const totalScore = cityScores.reduce((sum, c) => sum + c.score, 0);
+
+    cityScores.forEach(cityData => {
+      const proportion = cityData.score / totalScore;
+      cityData.days = Math.max(1, Math.round(totalDays * proportion)); // Mínimo 1 día
+    });
+
+    // Ajustar si la suma no coincide con totalDays
+    let assignedDays = cityScores.reduce((sum, c) => sum + c.days, 0);
+
+    while (assignedDays !== totalDays) {
+      if (assignedDays < totalDays) {
+        // Agregar días a la ciudad con mayor score
+        const topCity = cityScores.reduce((max, c) => c.score > max.score ? c : max);
+        topCity.days++;
+        assignedDays++;
+      } else {
+        // Quitar días de la ciudad con menor score (pero mantener mínimo 1)
+        const bottomCity = cityScores
+          .filter(c => c.days > 1)
+          .reduce((min, c) => c.score < min.score ? c : min);
+        if (bottomCity) {
+          bottomCity.days--;
+          assignedDays--;
+        } else break;
+      }
+    }
+
+    console.log('📊 Distribución final de días:', cityScores.map(c => `${c.city}: ${c.days} días`).join(', '));
+
+    return cityScores.map(({ city, days }) => ({ city, days }));
   },
 
   /**
@@ -985,6 +1138,9 @@ export const SmartItineraryGenerator = {
     // 4. Insertar comidas
     const withMeals = await this.insertMealsIntoDay(optimizedActivities, hotel, googlePlacesAPI, dailyBudget);
 
+    // 4.5 💰 Calcular presupuesto real predictivo
+    const budgetBreakdown = this.calculateDayBudget(withMeals, dailyBudget);
+
     // 5. Crear estructura del día con ALTERNATIVAS y PHOTO INTELLIGENCE
     const day = {
       day: dayNumber,
@@ -997,6 +1153,7 @@ export const SmartItineraryGenerator = {
       city: city,
       cities: [{ cityId: city }],
       budget: dailyBudget,
+      budgetBreakdown: budgetBreakdown, // 💰 NUEVO: Presupuesto detallado
       hotel: hotel,
       energyLevel: energyLevel,
       intensity: pace,
@@ -1321,14 +1478,15 @@ export const SmartItineraryGenerator = {
   },
 
   /**
-   * 📊 Sistema de aprendizaje: Guarda edición del usuario
+   * 📊 SISTEMA DE APRENDIZAJE ML BÁSICO - Mejorado
+   * Guarda edición del usuario y aprende preferencias
    */
   saveUserEdit(editType, activityData) {
     const weights = this.loadUserLearningWeights();
     weights.editCount = (weights.editCount || 0) + 1;
 
-    if (editType === 'removed') {
-      // Usuario eliminó esta actividad - reduce peso de su categoría
+    if (editType === 'removed' || editType === 'skipped') {
+      // Usuario eliminó/skipped esta actividad - reduce peso de su categoría
       const category = activityData.category;
       weights.categoryPreferences[category] = (weights.categoryPreferences[category] || 0) - 2;
 
@@ -1336,8 +1494,8 @@ export const SmartItineraryGenerator = {
       activityData.interests?.forEach(interest => {
         weights.interestWeights[interest] = (weights.interestWeights[interest] || 1.0) - 0.1;
       });
-    } else if (editType === 'added') {
-      // Usuario agregó esta actividad - aumenta peso de su categoría
+    } else if (editType === 'added' || editType === 'completed') {
+      // Usuario agregó/completó esta actividad - aumenta peso de su categoría
       const category = activityData.category;
       weights.categoryPreferences[category] = (weights.categoryPreferences[category] || 0) + 3;
 
@@ -1352,6 +1510,113 @@ export const SmartItineraryGenerator = {
       console.log('📊 Learning weights actualizados:', weights);
     } catch (e) {
       console.warn('No se pudieron guardar learning weights');
+    }
+  },
+
+  /**
+   * 🧠 TRACKING AVANZADO - Trackea acciones del usuario
+   * Llamar desde el itinerario cuando el usuario interactúa
+   */
+  trackUserAction(action, activityData, metadata = {}) {
+    try {
+      // Cargar historial
+      let history = JSON.parse(localStorage.getItem('smartGenerator_userHistory') || '[]');
+
+      // Agregar nueva acción
+      const entry = {
+        timestamp: new Date().toISOString(),
+        action: action, // 'completed', 'skipped', 'added', 'removed', 'rated'
+        activity: {
+          name: activityData.name,
+          category: activityData.category,
+          interests: activityData.interests,
+          city: activityData.city || metadata.city
+        },
+        metadata: metadata // { rating: 5, duration_actual: 120, etc }
+      };
+
+      history.push(entry);
+
+      // Mantener solo últimas 100 acciones
+      if (history.length > 100) {
+        history = history.slice(-100);
+      }
+
+      localStorage.setItem('smartGenerator_userHistory', JSON.stringify(history));
+
+      // Actualizar learning weights automáticamente
+      this.saveUserEdit(action, activityData);
+
+      console.log('🧠 User action tracked:', action, activityData.name);
+    } catch (e) {
+      console.warn('Error tracking user action:', e);
+    }
+  },
+
+  /**
+   * 📈 ANÁLISIS DE PREFERENCIAS - Genera insights del usuario
+   */
+  analyzeUserPreferences() {
+    try {
+      const history = JSON.parse(localStorage.getItem('smartGenerator_userHistory') || '[]');
+      const weights = this.loadUserLearningWeights();
+
+      if (history.length === 0) {
+        return {
+          topCategories: [],
+          topInterests: [],
+          suggestions: ['Aún no hay historial suficiente para generar recomendaciones']
+        };
+      }
+
+      // Contar actividades completadas por categoría
+      const categoryCount = {};
+      const interestCount = {};
+
+      history.filter(h => h.action === 'completed').forEach(entry => {
+        const category = entry.activity.category;
+        categoryCount[category] = (categoryCount[category] || 0) + 1;
+
+        entry.activity.interests?.forEach(interest => {
+          interestCount[interest] = (interestCount[interest] || 0) + 1;
+        });
+      });
+
+      // Top categories e interests
+      const topCategories = Object.entries(categoryCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([cat, count]) => ({ category: cat, count }));
+
+      const topInterests = Object.entries(interestCount)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([interest, count]) => ({ interest, count }));
+
+      // Generar sugerencias
+      const suggestions = [];
+      if (topCategories.length > 0) {
+        suggestions.push(`Te encanta: ${topCategories.map(c => c.category).join(', ')}`);
+      }
+      if (topInterests.length > 0) {
+        suggestions.push(`Tus intereses principales: ${topInterests.map(i => i.interest).join(', ')}`);
+      }
+
+      const analysis = {
+        topCategories,
+        topInterests,
+        totalActions: history.length,
+        completedCount: history.filter(h => h.action === 'completed').length,
+        skippedCount: history.filter(h => h.action === 'skipped').length,
+        suggestions,
+        weights
+      };
+
+      console.log('📈 User Preferences Analysis:', analysis);
+      return analysis;
+    } catch (e) {
+      console.warn('Error analyzing preferences:', e);
+      return { topCategories: [], topInterests: [], suggestions: [] };
     }
   },
 
@@ -1374,6 +1639,79 @@ export const SmartItineraryGenerator = {
     });
 
     return Math.round(score);
+  },
+
+  /**
+   * 💰 PRESUPUESTO PREDICTIVO REAL-TIME
+   * Calcula el presupuesto detallado del día incluyendo transporte
+   */
+  calculateDayBudget(activities, dailyBudget) {
+    let activitiesCost = 0;
+    let mealsCost = 0;
+    let transportCost = 0;
+
+    // Calcular costos de actividades y comidas
+    activities.forEach((act, idx) => {
+      const cost = act.cost || 0;
+
+      if (act.isMeal) {
+        mealsCost += cost;
+      } else {
+        activitiesCost += cost;
+      }
+
+      // Estimar transporte entre actividades (excepto última)
+      if (idx < activities.length - 1) {
+        const nextAct = activities[idx + 1];
+
+        // Calcular distancia si hay coordenadas
+        if (act.lat && act.lng && nextAct.lat && nextAct.lng) {
+          const distance = this.calculateDistance(
+            { lat: act.lat, lng: act.lng },
+            { lat: nextAct.lat, lng: nextAct.lng }
+          );
+
+          // Estimar costo de transporte basado en distancia
+          if (distance < 0.8) {
+            transportCost += 0; // Caminar
+          } else if (distance < 3) {
+            transportCost += 200; // Metro/tren corto
+          } else if (distance < 10) {
+            transportCost += 400; // Metro/tren largo
+          } else if (distance < 50) {
+            transportCost += 2500; // Tren regional
+          } else {
+            transportCost += 8000; // Shinkansen
+          }
+        } else {
+          // Default si no hay coordenadas
+          transportCost += 300;
+        }
+      }
+    });
+
+    const totalCost = activitiesCost + mealsCost + transportCost;
+    const remaining = dailyBudget - totalCost;
+    const percentage = dailyBudget > 0 ? (totalCost / dailyBudget) * 100 : 0;
+
+    const breakdown = {
+      total: Math.round(totalCost),
+      activities: Math.round(activitiesCost),
+      meals: Math.round(mealsCost),
+      transport: Math.round(transportCost),
+      dailyBudget: dailyBudget,
+      remaining: Math.round(remaining),
+      percentage: Math.round(percentage),
+      status: percentage > 110 ? 'over_budget' :
+              percentage > 90 ? 'at_limit' :
+              percentage > 70 ? 'healthy' :
+              'under_budget'
+    };
+
+    console.log(`💰 Presupuesto día: ¥${breakdown.total} / ¥${dailyBudget} (${breakdown.percentage}%) - ${breakdown.status}`);
+    console.log(`   Actividades: ¥${breakdown.activities}, Comidas: ¥${breakdown.meals}, Transporte: ¥${breakdown.transport}`);
+
+    return breakdown;
   },
 
   /**
