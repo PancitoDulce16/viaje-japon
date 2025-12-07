@@ -336,6 +336,115 @@ const SEASON_INTELLIGENCE = {
 };
 
 /**
+ * 🗺️ GEOGRAPHIC CLUSTERS - Agrupación inteligente por zonas
+ * Para evitar cruzar la ciudad múltiples veces al día
+ */
+const GEOGRAPHIC_CLUSTERS = {
+  tokyo: {
+    asakusa: {
+      name: 'Asakusa',
+      center: { lat: 35.7147, lng: 139.7967 },
+      keywords: ['Senso-ji', 'Tokyo Skytree', 'Nakamise', 'Sumida'],
+      stations: ['Asakusa', 'Skytree', 'Oshiage']
+    },
+    shibuya: {
+      name: 'Shibuya & Harajuku',
+      center: { lat: 35.6595, lng: 139.7005 },
+      keywords: ['Shibuya', 'Harajuku', 'Meiji Shrine', 'Yoyogi', 'Omotesando'],
+      stations: ['Shibuya', 'Harajuku', 'Omotesando']
+    },
+    shinjuku: {
+      name: 'Shinjuku',
+      center: { lat: 35.6938, lng: 139.7034 },
+      keywords: ['Shinjuku', 'Kabukicho', 'Tokyo Metropolitan', 'Shinjuku Gyoen'],
+      stations: ['Shinjuku', 'Shinjuku-sanchome']
+    },
+    akihabara: {
+      name: 'Akihabara & Ueno',
+      center: { lat: 35.7022, lng: 139.7741 },
+      keywords: ['Akihabara', 'Ueno Park', 'Ameyoko', 'Electric Town'],
+      stations: ['Akihabara', 'Ueno']
+    },
+    roppongi: {
+      name: 'Roppongi & Tokyo Tower',
+      center: { lat: 35.6586, lng: 139.7454 },
+      keywords: ['Roppongi', 'Tokyo Tower', 'Mori Art Museum', 'TeamLab'],
+      stations: ['Roppongi', 'Azabu-juban', 'Kamiyacho']
+    },
+    ginza: {
+      name: 'Ginza & Tokyo Station',
+      center: { lat: 35.6762, lng: 139.7653 },
+      keywords: ['Ginza', 'Tokyo Station', 'Imperial Palace', 'Marunouchi'],
+      stations: ['Ginza', 'Tokyo', 'Yurakucho']
+    },
+    odaiba: {
+      name: 'Odaiba',
+      center: { lat: 35.6262, lng: 139.7744 },
+      keywords: ['Odaiba', 'teamLab Borderless', 'Rainbow Bridge', 'DiverCity'],
+      stations: ['Odaiba-kaihinkoen', 'Tokyo Teleport']
+    }
+  },
+  kyoto: {
+    central: {
+      name: 'Central Kyoto',
+      center: { lat: 35.0116, lng: 135.7681 },
+      keywords: ['Nishiki Market', 'Gion', 'Pontocho', 'Downtown'],
+      stations: ['Kawaramachi', 'Gion-Shijo']
+    },
+    arashiyama: {
+      name: 'Arashiyama',
+      center: { lat: 35.0170, lng: 135.6730 },
+      keywords: ['Arashiyama', 'Bamboo Grove', 'Tenryu-ji', 'Togetsukyo Bridge'],
+      stations: ['Arashiyama', 'Saga-Arashiyama']
+    },
+    higashiyama: {
+      name: 'Higashiyama',
+      center: { lat: 34.9946, lng: 135.7809 },
+      keywords: ['Kiyomizu-dera', 'Sannenzaka', 'Yasaka Shrine', 'Ninenzaka'],
+      stations: ['Gion-Shijo', 'Kiyomizu-Gojo']
+    },
+    northern: {
+      name: 'Northern Kyoto',
+      center: { lat: 35.0394, lng: 135.7292 },
+      keywords: ['Kinkaku-ji', 'Ryoan-ji', 'Kitano Tenmangu'],
+      stations: ['Kitaoji', 'Kinkakuji-michi']
+    },
+    fushimi: {
+      name: 'Fushimi',
+      center: { lat: 34.9671, lng: 135.7726 },
+      keywords: ['Fushimi Inari', 'Inari'],
+      stations: ['Fushimi-Inari', 'Inari']
+    }
+  },
+  osaka: {
+    namba: {
+      name: 'Namba & Dotonbori',
+      center: { lat: 34.6687, lng: 135.5013 },
+      keywords: ['Dotonbori', 'Namba', 'Shinsaibashi', 'Kuromon Market'],
+      stations: ['Namba', 'Shinsaibashi', 'Nipponbashi']
+    },
+    umeda: {
+      name: 'Umeda & Osaka Station',
+      center: { lat: 34.7024, lng: 135.4959 },
+      keywords: ['Umeda', 'Osaka Station', 'Umeda Sky Building'],
+      stations: ['Osaka', 'Umeda']
+    },
+    castle: {
+      name: 'Osaka Castle Area',
+      center: { lat: 34.6873, lng: 135.5262 },
+      keywords: ['Osaka Castle', 'Castle Park'],
+      stations: ['Osakajokoen', 'Tanimachi-yonchome']
+    },
+    bayarea: {
+      name: 'Bay Area',
+      center: { lat: 34.6656, lng: 135.4325 },
+      keywords: ['Universal Studios', 'Kaiyukan', 'Tempozan'],
+      stations: ['Universal City', 'Osakako']
+    }
+  }
+};
+
+/**
  * 📸 PHOTOGRAPHY INTELLIGENCE - Mejores spots y horarios
  */
 const PHOTOGRAPHY_SPOTS = {
@@ -871,7 +980,7 @@ export const SmartItineraryGenerator = {
 
     // 3. Optimizar ruta
     const dayStartTime = intensityConfig.startTime;
-    const optimizedActivities = this.optimizeActivityOrder(selectedActivities, hotel, dayStartTime);
+    const optimizedActivities = this.optimizeActivityOrder(selectedActivities, hotel, dayStartTime, city);
 
     // 4. Insertar comidas
     const withMeals = await this.insertMealsIntoDay(optimizedActivities, hotel, googlePlacesAPI, dailyBudget);
@@ -1268,98 +1377,194 @@ export const SmartItineraryGenerator = {
   },
 
   /**
-   * Puntúa una actividad según preferencias del usuario
-   * MEJORADO: Considera companion type y themed day
+   * 🎯 SCORING MULTI-FACTOR - Versión mejorada
+   * Evalúa actividades con múltiples factores ponderados
    */
-  scoreActivity(activity, interests, dailyBudget, avoid, hotel, companionType, themedDay) {
+  scoreActivity(activity, interests, dailyBudget, avoid, hotel, companionType, themedDay, currentTime = 9) {
     let score = 0;
+    const weights = {
+      interestMatch: 0.25,      // 25% - Match con intereses
+      qualityRating: 0.20,      // 20% - Quality/rating de la actividad
+      proximity: 0.18,          // 18% - Cercanía al hotel
+      budgetFit: 0.12,          // 12% - Fit con presupuesto
+      popularity: 0.10,         // 10% - Popularidad ajustada
+      openingHours: 0.10,       // 10% - Disponibilidad/horarios
+      seasonality: 0.05         //  5% - Temporada/clima
+    };
 
-    // 1. Match de intereses (30%)
-    const interestMatch = activity.interests?.some(i => interests.includes(i)) ? 1 : 0;
-    score += interestMatch * 30;
+    // 1️⃣ INTEREST MATCH (25%)
+    let interestScore = 0;
+    if (activity.interests && interests && interests.length > 0) {
+      const matchCount = activity.interests.filter(i => interests.includes(i)).length;
+      const matchRatio = matchCount / Math.max(interests.length, activity.interests.length);
+      interestScore = matchRatio * 100;
+    } else if (interests.includes(activity.category)) {
+      interestScore = 70; // Match parcial si solo matchea categoría
+    }
+    score += interestScore * weights.interestMatch;
 
-    // 2. Fit de presupuesto (15%)
-    const activityCost = activity.cost || 0;
-    const budgetFit = activityCost <= dailyBudget * 0.3 ? 1 :
-                      activityCost <= dailyBudget * 0.5 ? 0.7 :
-                      0.3;
-    score += budgetFit * 15;
+    // 2️⃣ QUALITY RATING (20%)
+    const qualityRating = activity.quality_rating || activity.rating || 3.5;
+    const qualityScore = (qualityRating / 5.0) * 100; // Normalizar a 0-100
+    score += qualityScore * weights.qualityRating;
 
-    // 3. Popularidad (15%)
-    const popularity = activity.popularity || 50;
-    score += (popularity / 100) * 15;
-
-    // 4. Cercanía al hotel (15%)
+    // 3️⃣ PROXIMITY TO HOTEL (18%)
+    let proximityScore = 50; // Default score si no hay coordenadas
     if (hotel && hotel.lat && hotel.lng && activity.lat && activity.lng) {
       const distance = this.calculateDistance(
         { lat: hotel.lat, lng: hotel.lng },
         { lat: activity.lat, lng: activity.lng }
       );
-      const proximityScore = distance < 2 ? 1 : distance < 5 ? 0.7 : distance < 10 ? 0.4 : 0.2;
-      score += proximityScore * 15;
-    } else {
-      score += 7.5;
+      // Scoring basado en distancia (km)
+      if (distance < 1) proximityScore = 100;
+      else if (distance < 2) proximityScore = 85;
+      else if (distance < 3) proximityScore = 70;
+      else if (distance < 5) proximityScore = 55;
+      else if (distance < 8) proximityScore = 40;
+      else proximityScore = 25;
     }
+    score += proximityScore * weights.proximity;
 
-    // 5. 🎨 THEMED DAY BONUS (15%)
+    // 4️⃣ BUDGET FIT (12%)
+    const activityCost = activity.cost || 0;
+    let budgetScore = 0;
+    if (activityCost === 0) {
+      budgetScore = 100; // Actividades gratis son ideales
+    } else if (activityCost <= dailyBudget * 0.15) {
+      budgetScore = 90;
+    } else if (activityCost <= dailyBudget * 0.30) {
+      budgetScore = 75;
+    } else if (activityCost <= dailyBudget * 0.50) {
+      budgetScore = 50;
+    } else if (activityCost <= dailyBudget * 0.70) {
+      budgetScore = 30;
+    } else {
+      budgetScore = 10; // Muy caro
+    }
+    score += budgetScore * weights.budgetFit;
+
+    // 5️⃣ POPULARITY ADJUSTED (10%)
+    const popularity = activity.popularity || 50;
+    const crowdLevel = activity.crowd_level || 'medium';
+    let popularityScore = popularity;
+
+    // Ajustar por nivel de multitudes
+    if (crowdLevel === 'very_high') popularityScore -= 15;
+    else if (crowdLevel === 'high') popularityScore -= 5;
+    else if (crowdLevel === 'low') popularityScore += 10;
+
+    score += popularityScore * weights.popularity;
+
+    // 6️⃣ OPENING HOURS & TIME APPROPRIATENESS (10%)
+    let timeScore = this.scoreTimeAppropriatenessAdvanced(activity, currentTime);
+    score += timeScore * weights.openingHours;
+
+    // 7️⃣ SEASONALITY (5%)
+    const seasonScore = 50; // Por ahora neutro, se puede mejorar
+    score += seasonScore * weights.seasonality;
+
+    // ========== BONUSES & PENALTIES ==========
+
+    // 🎨 THEMED DAY BONUS
     if (themedDay && THEMED_DAYS[themedDay]) {
       const theme = THEMED_DAYS[themedDay];
-
-      // Bonus si coincide con intereses del tema
       if (theme.interests && activity.interests) {
         const themeMatch = theme.interests.some(ti => activity.interests.includes(ti));
         if (themeMatch) score += 15;
       }
-
-      // Bonus si coincide con categorías del tema
       if (theme.categories && theme.categories.includes(activity.category)) {
-        score += 10;
+        score += 12;
       }
-
-      // Priorizar popularidad para temas photogenic
       if (theme.prioritizePopularity && popularity > 85) {
         score += 10;
       }
     }
 
-    // 6. 👥 COMPANION-AWARE BONUS (10%)
+    // 👥 COMPANION-AWARE BONUS
     if (companionType && COMPANION_TYPES[companionType]) {
       const companion = COMPANION_TYPES[companionType];
-
-      // Bonus por categorías preferidas
       if (companion.categories && companion.categories.includes(activity.category)) {
-        score += 10;
+        score += 12;
       }
-
-      // Bonus por preferencias
       if (companion.preferences) {
-        if (companion.preferences.kidFriendly && activity.category === 'nature') score += 5;
-        if (companion.preferences.romanticSpots && activity.popularity > 80) score += 5;
-        if (companion.preferences.nightlife && activity.category === 'nightlife') score += 10;
+        if (companion.preferences.kidFriendly && activity.category === 'nature') score += 8;
+        if (companion.preferences.romanticSpots && popularity > 80) score += 8;
+        if (companion.preferences.nightlife && activity.category === 'nightlife') score += 12;
+        if (companion.preferences.accessible && activity.accessibility?.reduced_mobility_friendly) score += 15;
       }
-
-      // Penalty por categorías a evitar
       if (companion.avoidCategories && companion.avoidCategories.includes(activity.category)) {
-        score -= 20;
+        score -= 25;
       }
     }
 
-    // Penalizar si está en lista de "avoid"
+    // ❌ AVOID LIST PENALTY
     if (avoid && avoid.some(a => activity.name.toLowerCase().includes(a.toLowerCase()))) {
-      score = 0;
+      return 0; // Eliminación total
     }
 
-    // 7. 📊 LEARNING WEIGHTS - Aprende de ediciones del usuario
+    // 📊 LEARNING WEIGHTS
     score = this.applyLearningWeights(score, activity);
 
-    return Math.round(score);
+    return Math.round(Math.max(0, Math.min(100, score))); // Clamp entre 0-100
+  },
+
+  /**
+   * ⏰ VERIFICACIÓN AVANZADA DE HORARIOS
+   * Evalúa si la actividad está disponible y es apropiada para el horario
+   */
+  scoreTimeAppropriatenessAdvanced(activity, currentTimeHour) {
+    let score = 50; // Default neutro
+
+    // 1. Verificar opening_hours
+    if (activity.opening_hours) {
+      const { start, end } = activity.opening_hours;
+      const duration = (activity.duration || 60) / 60; // Convertir a horas
+
+      // ❌ Cerrado antes de que termine la actividad
+      if (currentTimeHour < start || currentTimeHour + duration > end) {
+        console.log(`⏰ "${activity.name}" cerrado/cierra a las ${end}h (actual: ${currentTimeHour}h)`);
+        return 0; // No disponible
+      }
+
+      // ✅ Disponible pero evaluar timing óptimo
+      const hoursFromOpening = currentTimeHour - start;
+      const hoursToClosing = end - currentTimeHour;
+
+      // Mejor: 2-3 horas después de abrir, al menos 1.5h antes de cerrar
+      if (hoursFromOpening >= 2 && hoursToClosing >= 1.5) {
+        score = 100; // Timing perfecto
+      } else if (hoursFromOpening >= 1 && hoursToClosing >= 1) {
+        score = 80; // Buen timing
+      } else if (hoursToClosing < 1) {
+        score = 30; // Muy apurado, va a cerrar pronto
+      } else {
+        score = 60; // Timing OK
+      }
+    }
+
+    // 2. Time-of-day preferences (templos mejor en mañana, nightlife en noche)
+    const timeOfDay = activity.timeOfDay || activity.best_time?.[0] || 'any';
+
+    if (timeOfDay === 'any') {
+      score += 0; // Neutral
+    } else if (timeOfDay === 'early_morning' || timeOfDay === 'morning') {
+      score += currentTimeHour >= 6 && currentTimeHour <= 11 ? 20 : -10;
+    } else if (timeOfDay === 'afternoon') {
+      score += currentTimeHour >= 12 && currentTimeHour <= 17 ? 20 : -10;
+    } else if (timeOfDay === 'evening') {
+      score += currentTimeHour >= 17 && currentTimeHour <= 21 ? 20 : -10;
+    } else if (timeOfDay === 'night') {
+      score += currentTimeHour >= 19 ? 20 : -10;
+    }
+
+    return Math.max(0, Math.min(100, score));
   },
 
   /**
    * 🗺️ Optimiza el orden de actividades usando Geographic Clustering + TSP
    * NUEVO: Agrupa por área geográfica y encuentra la ruta óptima
    */
-  optimizeActivityOrder(activities, hotel, startTime) {
+  optimizeActivityOrder(activities, hotel, startTime, city = 'tokyo') {
     if (activities.length === 0) {
       return activities;
     }
@@ -1370,7 +1575,7 @@ export const SmartItineraryGenerator = {
     }
 
     // PASO 1: Geographic Clustering - Agrupar actividades por área
-    const clusters = this.clusterActivitiesByArea(activities);
+    const clusters = this.clusterActivitiesByArea(activities, city);
     console.log(`📍 Agrupadas en ${Object.keys(clusters).length} áreas:`, Object.keys(clusters));
 
     // PASO 2: Ordenar clusters por proximidad al hotel (si existe)
@@ -1421,18 +1626,64 @@ export const SmartItineraryGenerator = {
   },
 
   /**
-   * 🌐 Agrupa actividades por área geográfica
+   * 🌐 CLUSTERING INTELIGENTE - Agrupa actividades por área geográfica
+   * Usa clusters predefinidos y keywords para agrupar mejor
    */
-  clusterActivitiesByArea(activities) {
+  clusterActivitiesByArea(activities, city = 'tokyo') {
     const clusters = {};
+    const cityKey = city.toLowerCase();
+    const cityClusters = GEOGRAPHIC_CLUSTERS[cityKey] || {};
 
     for (const activity of activities) {
-      const area = activity.area || 'General';
-      if (!clusters[area]) {
-        clusters[area] = [];
+      let assignedCluster = null;
+
+      // 1. Intentar asignar usando clusters predefinidos
+      if (Object.keys(cityClusters).length > 0) {
+        for (const [clusterKey, clusterData] of Object.entries(cityClusters)) {
+          // Match por keywords en nombre o área
+          const activityText = `${activity.name} ${activity.area || ''}`.toLowerCase();
+          const matchesKeyword = clusterData.keywords.some(keyword =>
+            activityText.includes(keyword.toLowerCase())
+          );
+
+          // Match por estación
+          const matchesStation = activity.station && clusterData.stations.some(station =>
+            activity.station.toLowerCase().includes(station.toLowerCase())
+          );
+
+          // Match por coordenadas (si está cerca del centro del cluster)
+          let matchesCoords = false;
+          if (activity.lat && activity.lng && clusterData.center) {
+            const distance = this.calculateDistance(
+              { lat: activity.lat, lng: activity.lng },
+              { lat: clusterData.center.lat, lng: clusterData.center.lng }
+            );
+            matchesCoords = distance < 2; // Dentro de 2km del centro
+          }
+
+          if (matchesKeyword || matchesStation || matchesCoords) {
+            assignedCluster = clusterData.name;
+            break;
+          }
+        }
       }
-      clusters[area].push(activity);
+
+      // 2. Fallback: usar área existente o "General"
+      if (!assignedCluster) {
+        assignedCluster = activity.area || 'General';
+      }
+
+      // 3. Agregar al cluster
+      if (!clusters[assignedCluster]) {
+        clusters[assignedCluster] = [];
+      }
+      clusters[assignedCluster].push(activity);
     }
+
+    // Log de clustering para debugging
+    console.log(`📍 Clustered into ${Object.keys(clusters).length} areas:`,
+      Object.entries(clusters).map(([name, acts]) => `${name} (${acts.length})`).join(', ')
+    );
 
     return clusters;
   },
