@@ -594,6 +594,9 @@ export const TripsManager = {
               </div>
               <div class="flex items-center gap-2">
                 ${this.currentTrip && this.currentTrip.id === trip.id ? '<span class="text-blue-500 text-2xl">✓</span>' : ''}
+                <button onclick="event.stopPropagation(); TripsManager.duplicateTrip('${trip.id}')" class="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition" title="Duplicar Viaje">
+                    <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z"></path><path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z"></path></svg>
+                </button>
                 <button onclick="event.stopPropagation(); TripsManager.deleteTrip('${trip.id}')" class="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition" title="Eliminar Viaje">
                     <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
                 </button>
@@ -780,13 +783,19 @@ export const TripsManager = {
           <img src="/images/icons/japitin banner.png" alt="Japitin" class="h-20 md:h-24 rounded-lg border-2 border-white/20 bg-white/95 px-4 py-2 shadow-lg">
         </div>
 
-        <!-- Solo botón de agregar viaje -->
-        <div class="flex items-center justify-center">
+        <!-- Botones de acción -->
+        <div class="flex items-center justify-center gap-3">
           <button
             onclick="TripsManager.showCreateTripModal()"
             class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2.5 px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-white/10 text-sm"
           >
             ➕ Agregar Viaje
+          </button>
+          <button
+            onclick="TripsManager.regenerateItinerary()"
+            class="bg-purple-500/80 hover:bg-purple-600 text-white font-semibold py-2.5 px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-purple-400/30 text-sm shadow-lg"
+          >
+            🧠 Regenerar Itinerario
           </button>
         </div>
 
@@ -979,6 +988,135 @@ export const TripsManager = {
     if (modal) {
       modal.classList.remove('active');
       document.body.style.overflow = '';
+    }
+  },
+
+  // NUEVO: Duplicar un viaje
+  async duplicateTrip(tripId) {
+    const tripToDuplicate = this.userTrips.find(t => t.id === tripId);
+    if (!tripToDuplicate) {
+      Notifications.error('No se encontró el viaje a duplicar.');
+      return;
+    }
+
+    try {
+      Notifications.info('🔄 Duplicando viaje...');
+
+      const userId = auth.currentUser.uid;
+      const newTripId = `trip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const newShareCode = this.generateTripCode();
+
+      // Copiar datos del viaje original
+      const newTrip = {
+        info: {
+          name: `Copia de ${tripToDuplicate.info.name}`,
+          destination: tripToDuplicate.info.destination || 'Japón',
+          dateStart: tripToDuplicate.info.dateStart,
+          dateEnd: tripToDuplicate.info.dateEnd,
+          createdBy: userId,
+          createdAt: new Date().toISOString(),
+          shareCode: newShareCode,
+          creatorEmail: auth.currentUser.email,
+          templateUsed: tripToDuplicate.info.templateUsed || null
+        },
+        members: [userId],
+        memberEmails: [auth.currentUser.email],
+        flights: {
+          outbound: tripToDuplicate.flights?.outbound || null,
+          return: tripToDuplicate.flights?.return || null
+        },
+        accommodations: tripToDuplicate.accommodations || [],
+        cities: tripToDuplicate.cities || [],
+        activities: {
+          checklist: tripToDuplicate.activities?.checklist || {}
+        },
+        expenses: [] // No copiar gastos (empezar desde cero)
+      };
+
+      // Crear nuevo viaje en Firestore
+      await setDoc(doc(db, 'trips', newTripId), newTrip);
+
+      // Copiar itinerario si existe
+      try {
+        const originalItineraryRef = doc(db, 'trips', tripId, 'data', 'itinerary');
+        const originalItinerarySnap = await getDoc(originalItineraryRef);
+
+        if (originalItinerarySnap.exists()) {
+          const itineraryData = originalItinerarySnap.data();
+          const newItineraryRef = doc(db, 'trips', newTripId, 'data', 'itinerary');
+
+          // Copiar itinerario completo
+          await setDoc(newItineraryRef, itineraryData);
+
+          console.log('✅ Itinerario copiado exitosamente');
+        }
+      } catch (itineraryError) {
+        console.warn('⚠️ No se pudo copiar el itinerario:', itineraryError);
+      }
+
+      Notifications.success(`🎉 Viaje duplicado: "${newTrip.info.name}"`);
+
+      // Seleccionar el nuevo viaje
+      setTimeout(() => {
+        this.selectTrip(newTripId);
+      }, 500);
+
+      return newTripId;
+    } catch (error) {
+      console.error('❌ Error duplicando viaje:', error);
+      Notifications.error('Error al duplicar el viaje. Inténtalo de nuevo.');
+      throw error;
+    }
+  },
+
+  // NUEVO: Regenerar itinerario usando el wizard inteligente
+  async regenerateItinerary() {
+    if (!this.currentTrip) {
+      Notifications.warning('Debes seleccionar un viaje primero');
+      return;
+    }
+
+    try {
+      // Verificar que exista el SmartGeneratorWizard
+      if (!window.SmartGeneratorWizard) {
+        Notifications.error('El generador inteligente no está disponible');
+        console.error('SmartGeneratorWizard no encontrado');
+        return;
+      }
+
+      // Obtener datos del viaje actual
+      const startDate = new Date(this.currentTrip.info.dateStart);
+      const endDate = new Date(this.currentTrip.info.dateEnd);
+      const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+      // Calcular ciudades del viaje
+      const cities = this.currentTrip.cities || [];
+
+      // Pre-cargar datos en el wizard
+      window.SmartGeneratorWizard.wizardData = {
+        cities: cities.length > 0 ? cities : [],
+        totalDays: totalDays,
+        dailyBudget: 10000, // Default
+        interests: [], // Usuario los seleccionará
+        pace: 'moderate',
+        startTime: 9,
+        companionType: null,
+        hotels: {},
+        mustSee: [],
+        avoid: []
+      };
+
+      // Notificar al usuario
+      Notifications.info('🧠 Abriendo generador inteligente...');
+
+      // Abrir el wizard
+      setTimeout(() => {
+        window.SmartGeneratorWizard.open();
+      }, 300);
+
+    } catch (error) {
+      console.error('❌ Error abriendo generador:', error);
+      Notifications.error('Error al abrir el generador inteligente');
     }
   },
 
