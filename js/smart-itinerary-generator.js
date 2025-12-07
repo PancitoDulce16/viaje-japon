@@ -709,12 +709,22 @@ export const SmartItineraryGenerator = {
       avoid = [],
       companionType = null, // solo, couple, family, seniors, friends
       themedDays = {}, // { 1: 'traditional', 3: 'foodie', ... }
-      tripStartDate = null // Para detectar temporada
+      tripStartDate = null, // Para detectar temporada
+      // 🆕 Nuevos parámetros de contexto
+      groupSize = 1,
+      travelerAges = [],
+      tripEndDate = null,
+      dietaryRestrictions = [],
+      mobilityNeeds = null
     } = profile;
 
     console.log('🧠 Generando itinerario completo:', profile);
     console.log(`👥 Companion: ${companionType || 'none'}`);
     console.log(`⚡ Intensity: ${pace}`);
+    console.log(`🎫 Group size: ${groupSize} personas`);
+    console.log(`🎂 Ages: ${travelerAges.length > 0 ? travelerAges.join(', ') : 'N/A'}`);
+    console.log(`🍽️ Dietary: ${dietaryRestrictions.join(', ') || 'none'}`);
+    console.log(`♿ Mobility: ${mobilityNeeds || 'none'}`);
 
     // 🚨 NUEVO: Tracker global de actividades usadas para prevenir duplicados
     const usedActivities = new Set();
@@ -762,7 +772,12 @@ export const SmartItineraryGenerator = {
           companionType: companionType,
           themedDay: themedDay,
           tripStartDate: tripStartDate,
-          usedActivities: usedActivities // 🚨 Pasar tracker global
+          usedActivities: usedActivities, // 🚨 Pasar tracker global
+          // 🆕 Nuevos parámetros de contexto
+          groupSize: groupSize,
+          travelerAges: travelerAges,
+          dietaryRestrictions: dietaryRestrictions,
+          mobilityNeeds: mobilityNeeds
         });
 
         itinerary.days.push(day);
@@ -907,7 +922,12 @@ export const SmartItineraryGenerator = {
       companionType,
       themedDay,
       tripStartDate,
-      usedActivities = new Set() // 🚨 NUEVO: Tracker de actividades usadas
+      usedActivities = new Set(), // 🚨 NUEVO: Tracker de actividades usadas
+      // 🆕 Nuevos parámetros de contexto
+      groupSize = 1,
+      travelerAges = [],
+      dietaryRestrictions = [],
+      mobilityNeeds = null
     } = options;
 
     // 🌸 SEASON INTELLIGENCE: Detectar temporada y ajustar recomendaciones
@@ -1017,10 +1037,37 @@ export const SmartItineraryGenerator = {
       console.log(`🛫 Jetlag filter: ${beforeFilter} → ${candidateActivities.length} actividades`);
     }
 
+    // 🆕 MOBILITY FILTER: Filtrar por accesibilidad
+    if (mobilityNeeds) {
+      const beforeFilter = candidateActivities.length;
+      candidateActivities = candidateActivities.filter(activity => {
+        return this.isAccessible(activity, mobilityNeeds);
+      });
+      console.log(`♿ Mobility filter (${mobilityNeeds}): ${beforeFilter} → ${candidateActivities.length} actividades`);
+    }
+
+    // 🆕 AGE FILTER: Filtrar por edades apropiadas
+    if (travelerAges.length > 0) {
+      const beforeFilter = candidateActivities.length;
+      candidateActivities = candidateActivities.filter(activity => {
+        return this.isAgeAppropriate(activity, travelerAges);
+      });
+      console.log(`🎂 Age filter (${travelerAges.join(', ')}): ${beforeFilter} → ${candidateActivities.length} actividades`);
+    }
+
+    // 🆕 DIETARY FILTER: Filtrar restaurantes por restricciones
+    if (dietaryRestrictions.length > 0) {
+      const beforeFilter = candidateActivities.length;
+      candidateActivities = candidateActivities.filter(activity => {
+        return this.matchesDietaryRestrictions(activity, dietaryRestrictions);
+      });
+      console.log(`🍽️ Dietary filter (${dietaryRestrictions.join(', ')}): ${beforeFilter} → ${candidateActivities.length} actividades`);
+    }
+
     // Filtrar y puntuar actividades
     const scoredActivities = candidateActivities
       .map(activity => {
-        let score = this.scoreActivity(activity, interests, dailyBudget, avoid, hotel, companionType, themedDay);
+        let score = this.scoreActivity(activity, interests, dailyBudget, avoid, hotel, companionType, themedDay, 9, groupSize, travelerAges);
 
         // 🌸 SEASON BONUS: Bonus por actividades recomendadas en temporada
         if (season && season.recommendations) {
@@ -1718,7 +1765,7 @@ export const SmartItineraryGenerator = {
    * 🎯 SCORING MULTI-FACTOR - Versión mejorada
    * Evalúa actividades con múltiples factores ponderados
    */
-  scoreActivity(activity, interests, dailyBudget, avoid, hotel, companionType, themedDay, currentTime = 9) {
+  scoreActivity(activity, interests, dailyBudget, avoid, hotel, companionType, themedDay, currentTime = 9, groupSize = 1, travelerAges = []) {
     let score = 0;
     const weights = {
       interestMatch: 0.25,      // 25% - Match con intereses
@@ -1838,6 +1885,60 @@ export const SmartItineraryGenerator = {
     // ❌ AVOID LIST PENALTY
     if (avoid && avoid.some(a => activity.name.toLowerCase().includes(a.toLowerCase()))) {
       return 0; // Eliminación total
+    }
+
+    // 🆕 GROUP SIZE BONUS: Restaurantes y actividades aptas para grupos
+    if (groupSize > 1) {
+      const isRestaurant = activity.category === 'food' || activity.category === 'market';
+      const name = (activity.name || '').toLowerCase();
+
+      if (isRestaurant) {
+        // Bonus para restaurantes con capacidad para grupos
+        const groupFriendlyKeywords = ['izakaya', 'yakiniku', 'shabu', 'hotpot', 'buffet', 'all you can eat', 'nabe'];
+        if (groupFriendlyKeywords.some(k => name.includes(k))) {
+          score += 10 + (groupSize > 4 ? 5 : 0); // Extra bonus para grupos grandes
+        }
+      }
+
+      // Bonus para actividades familiares si el grupo es grande
+      if (groupSize >= 3 && (name.includes('park') || name.includes('garden') || name.includes('museum'))) {
+        score += 8;
+      }
+    }
+
+    // 🆕 AGE-BASED ADJUSTMENTS: Ajustar según edades de los viajeros
+    if (travelerAges.length > 0) {
+      const hasKids = travelerAges.some(age => age < 12);
+      const hasSeniors = travelerAges.some(age => age >= 65);
+      const hasTeens = travelerAges.some(age => age >= 12 && age < 18);
+      const name = (activity.name || '').toLowerCase();
+      const category = activity.category;
+
+      if (hasKids) {
+        // Bonus para actividades kid-friendly
+        const kidFriendly = ['aquarium', 'zoo', 'park', 'disney', 'ghibli', 'pokemon', 'doraemon', 'garden'];
+        if (kidFriendly.some(k => name.includes(k) || category === k)) score += 15;
+
+        // Penalty para lugares no aptos para niños
+        const notKidFriendly = ['nightlife', 'bar', 'club', 'sake', 'brewery', 'adult'];
+        if (notKidFriendly.some(k => name.includes(k) || category === k)) score -= 30;
+      }
+
+      if (hasSeniors) {
+        // Bonus para actividades de ritmo lento
+        const seniorFriendly = ['temple', 'shrine', 'garden', 'tea ceremony', 'museum', 'gallery', 'cruise'];
+        if (seniorFriendly.some(k => name.includes(k))) score += 12;
+
+        // Penalty para actividades intensas
+        const tooIntense = ['hiking', 'mountain', 'trek', 'climb', 'amusement park', 'roller coaster'];
+        if (tooIntense.some(k => name.includes(k))) score -= 25;
+      }
+
+      if (hasTeens) {
+        // Bonus para actividades cool para teenagers
+        const teenFriendly = ['anime', 'manga', 'arcade', 'technology', 'gaming', 'shibuya', 'harajuku', 'akihabara'];
+        if (teenFriendly.some(k => name.includes(k))) score += 10;
+      }
     }
 
     // 📊 LEARNING WEIGHTS
@@ -2266,6 +2367,175 @@ export const SmartItineraryGenerator = {
     const hours = Math.floor(minutes / 60);
     const mins = Math.round(minutes % 60);
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  },
+
+  /**
+   * 🆕 ♿ ACCESSIBILITY CHECK
+   * Verifica si una actividad es accesible según necesidades de movilidad
+   */
+  isAccessible(activity, mobilityNeeds) {
+    if (!mobilityNeeds) return true; // Sin restricciones
+
+    const name = (activity.name || '').toLowerCase();
+    const category = activity.category || '';
+    const area = (activity.area || '').toLowerCase();
+
+    // Actividades que típicamente NO son accesibles
+    const difficultAccess = [
+      'mountain', 'mount', 'hiking', 'trek', 'climb', 'monte', 'escalada',
+      'bamboo grove', 'fushimi inari', // Muchas escaleras
+      'steep', 'stairs', 'escaleras'
+    ];
+
+    if (mobilityNeeds === 'wheelchair') {
+      // Filtrado estricto para silla de ruedas
+      if (difficultAccess.some(k => name.includes(k) || area.includes(k))) {
+        console.log(`  ♿ Filtrando "${activity.name}" (no accesible para silla de ruedas)`);
+        return false;
+      }
+
+      // Si la actividad específica que es accesible, permitirla
+      if (activity.accessibility?.wheelchair_friendly) return true;
+
+      // Templos y santuarios en colinas son generalmente difíciles
+      if ((category === 'cultural' || category === 'temple') &&
+          (name.includes('kiyomizu') || name.includes('fushimi'))) {
+        return false;
+      }
+
+      // Parques modernos y museos suelen ser accesibles
+      if (category === 'museum' || category === 'shopping' || category === 'park') return true;
+
+      return true; // Default: permitir a menos que haya evidencia contraria
+
+    } else if (mobilityNeeds === 'limited') {
+      // Filtrado menos estricto para movilidad limitada
+      const veryDifficult = ['mountain', 'mount', 'hiking', 'trek', 'steep climb'];
+      if (veryDifficult.some(k => name.includes(k))) {
+        console.log(`  ♿ Filtrando "${activity.name}" (demasiado intenso para movilidad limitada)`);
+        return false;
+      }
+      return true;
+    }
+
+    return true;
+  },
+
+  /**
+   * 🆕 🎂 AGE APPROPRIATENESS CHECK
+   * Verifica si una actividad es apropiada para las edades del grupo
+   */
+  isAgeAppropriate(activity, travelerAges) {
+    if (!travelerAges || travelerAges.length === 0) return true;
+
+    const hasKids = travelerAges.some(age => age < 12);
+    const hasToddlers = travelerAges.some(age => age < 5);
+    const name = (activity.name || '').toLowerCase();
+    const category = activity.category || '';
+
+    // Filtrado estricto si hay niños pequeños
+    if (hasKids) {
+      // Lugares NO aptos para niños (filtrado estricto)
+      const notForKids = [
+        'nightclub', 'bar', 'club', 'sake brewery', 'wine', 'adult', 'red light',
+        'pachinko', 'casino', 'gambling'
+      ];
+
+      if (notForKids.some(k => name.includes(k) || category.includes(k))) {
+        console.log(`  🎂 Filtrando "${activity.name}" (no apto para niños)`);
+        return false;
+      }
+    }
+
+    // Filtrado estricto si hay bebés/toddlers
+    if (hasToddlers) {
+      const notForToddlers = [
+        'long hike', 'intensive', 'theme park', // Los parques temáticos pueden ser demasiado largos
+        'late night', 'nightlife'
+      ];
+
+      if (notForToddlers.some(k => name.includes(k))) {
+        console.log(`  🎂 Filtrando "${activity.name}" (no apto para bebés/toddlers)`);
+        return false;
+      }
+
+      // Actividades muy largas no son ideales con bebés
+      if (activity.duration && activity.duration > 180) { // Más de 3 horas
+        return false;
+      }
+    }
+
+    return true;
+  },
+
+  /**
+   * 🆕 🍽️ DIETARY RESTRICTIONS FILTER
+   * Filtra restaurantes según restricciones alimentarias
+   */
+  matchesDietaryRestrictions(activity, dietaryRestrictions) {
+    if (!dietaryRestrictions || dietaryRestrictions.length === 0) return true;
+
+    // Solo aplicar a restaurantes
+    const isRestaurant = activity.category === 'food' || activity.category === 'market';
+    if (!isRestaurant) return true; // No filtrar actividades que no son comida
+
+    const name = (activity.name || '').toLowerCase();
+    const tags = (activity.tags || []).map(t => t.toLowerCase());
+    const category = (activity.category || '').toLowerCase();
+
+    for (const restriction of dietaryRestrictions) {
+      if (restriction === 'vegetarian') {
+        // Restaurantes problemáticos para vegetarianos
+        const nonVegetarian = ['yakiniku', 'sushi', 'ramen', 'tonkatsu', 'yakitori', 'sukiyaki', 'wagyu', 'beef', 'pork'];
+        if (nonVegetarian.some(k => name.includes(k) || tags.includes(k))) {
+          console.log(`  🍽️ Filtrando "${activity.name}" (no vegetariano)`);
+          return false;
+        }
+
+        // Permitir si específicamente tiene opciones vegetarianas
+        if (tags.includes('vegetarian') || tags.includes('vegan') || name.includes('vegetarian')) {
+          return true;
+        }
+
+      } else if (restriction === 'vegan') {
+        const nonVegan = ['sushi', 'ramen', 'dairy', 'cheese', 'yogurt', 'milk', 'egg', 'meat', 'fish'];
+        if (nonVegan.some(k => name.includes(k) || tags.includes(k))) {
+          console.log(`  🍽️ Filtrando "${activity.name}" (no vegano)`);
+          return false;
+        }
+
+        if (tags.includes('vegan') || name.includes('vegan') || name.includes('shojin')) {
+          return true;
+        }
+
+      } else if (restriction === 'halal') {
+        const nonHalal = ['pork', 'alcohol', 'sake', 'wine', 'beer', 'tonkatsu', 'bacon'];
+        if (nonHalal.some(k => name.includes(k) || tags.includes(k))) {
+          console.log(`  🍽️ Filtrando "${activity.name}" (no halal)`);
+          return false;
+        }
+
+        if (tags.includes('halal') || name.includes('halal')) {
+          return true;
+        }
+
+      } else if (restriction === 'gluten-free') {
+        const hasGluten = ['ramen', 'udon', 'soba', 'bread', 'pasta', 'wheat'];
+        if (hasGluten.some(k => name.includes(k) || tags.includes(k))) {
+          console.log(`  🍽️ Filtrando "${activity.name}" (contiene gluten)`);
+          return false;
+        }
+
+      } else if (restriction === 'no-seafood') {
+        const seafood = ['sushi', 'sashimi', 'fish', 'seafood', 'oyster', 'crab', 'shrimp', 'octopus', 'squid'];
+        if (seafood.some(k => name.includes(k) || tags.includes(k))) {
+          console.log(`  🍽️ Filtrando "${activity.name}" (mariscos)`);
+          return false;
+        }
+      }
+    }
+
+    return true;
   }
 };
 

@@ -8,10 +8,16 @@ export const SmartGeneratorWizard = {
 
   currentStep: 1,
   wizardData: {
-    // Step 1
+    // Step 1 - Información básica del viaje
     cities: [],
     totalDays: 7,
     dailyBudget: 10000,
+    groupSize: 1,              // 🆕 Número de personas
+    travelerAges: [],          // 🆕 Edades de los viajeros [25, 30, 5]
+    tripStartDate: null,       // 🆕 Fecha de inicio (para eventos estacionales)
+    tripEndDate: null,         // 🆕 Fecha de fin
+    dietaryRestrictions: [],   // 🆕 ['vegetarian', 'halal', 'gluten-free']
+    mobilityNeeds: null,       // 🆕 'wheelchair', 'limited', null
 
     // Step 2
     interests: [],
@@ -51,6 +57,12 @@ export const SmartGeneratorWizard = {
       cities: [],
       totalDays: 7,
       dailyBudget: 10000,
+      groupSize: 1,
+      travelerAges: [],
+      tripStartDate: null,
+      tripEndDate: null,
+      dietaryRestrictions: [],
+      mobilityNeeds: null,
       interests: [],
       pace: 'moderate', // light, moderate, packed, extreme, maximum
       startTime: 9,
@@ -177,6 +189,35 @@ export const SmartGeneratorWizard = {
           </div>
         </div>
 
+        <!-- Fechas del viaje -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              📅 Fecha de inicio
+            </label>
+            <input
+              type="date"
+              id="tripStartDate"
+              value="${this.wizardData.tripStartDate || ''}"
+              onchange="window.SmartGeneratorWizard.updateTripDates()"
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition"
+            >
+            <p class="text-xs text-gray-500 mt-1">Para detectar eventos estacionales</p>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              📅 Fecha de fin
+            </label>
+            <input
+              type="date"
+              id="tripEndDate"
+              value="${this.wizardData.tripEndDate || ''}"
+              onchange="window.SmartGeneratorWizard.updateTripDates()"
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition"
+            >
+          </div>
+        </div>
+
         <!-- Días totales -->
         <div>
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -193,9 +234,42 @@ export const SmartGeneratorWizard = {
             class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition"
             placeholder="Ej: 7"
           >
-          <p class="text-xs text-gray-500 mt-1">Recomendamos 5-14 días para un viaje completo</p>
+          <p class="text-xs text-gray-500 mt-1">Se calcula automático con las fechas o configura manual</p>
           <div id="totalDaysError" class="hidden mt-2 p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
             <p class="text-sm text-red-600 dark:text-red-400">⚠️ El viaje debe durar al menos 1 día</p>
+          </div>
+        </div>
+
+        <!-- Grupo de viajeros -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              👥 ¿Cuántas personas viajan?
+            </label>
+            <input
+              type="number"
+              id="groupSize"
+              min="1"
+              max="20"
+              value="${this.wizardData.groupSize}"
+              onchange="window.SmartGeneratorWizard.updateGroupSize()"
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition"
+              placeholder="Ej: 2"
+            >
+            <p class="text-xs text-gray-500 mt-1">Afecta recomendaciones de restaurantes</p>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              🎂 Edades (separadas por comas)
+            </label>
+            <input
+              type="text"
+              id="travelerAges"
+              value="${this.wizardData.travelerAges.join(', ')}"
+              placeholder="Ej: 30, 28, 5"
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition"
+            >
+            <p class="text-xs text-gray-500 mt-1">Para actividades familiares o seniors</p>
           </div>
         </div>
 
@@ -234,6 +308,33 @@ export const SmartGeneratorWizard = {
             <p class="text-sm text-red-600 dark:text-red-400">⚠️ El presupuesto debe ser al menos ¥3,000</p>
           </div>
         </div>
+
+        <!-- Restricciones dietarias -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            🍽️ Restricciones alimentarias (opcional)
+          </label>
+          <div class="grid grid-cols-2 gap-2">
+            ${this.renderDietaryCheckbox('vegetarian', '🥗 Vegetariano')}
+            ${this.renderDietaryCheckbox('vegan', '🌱 Vegano')}
+            ${this.renderDietaryCheckbox('halal', '☪️ Halal')}
+            ${this.renderDietaryCheckbox('kosher', '✡️ Kosher')}
+            ${this.renderDietaryCheckbox('gluten-free', '🌾 Sin gluten')}
+            ${this.renderDietaryCheckbox('no-seafood', '🚫🐟 Sin mariscos')}
+          </div>
+        </div>
+
+        <!-- Necesidades de movilidad -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            ♿ Necesidades de accesibilidad (opcional)
+          </label>
+          <div class="grid grid-cols-3 gap-2">
+            ${this.renderMobilityOption('none', '✅ Sin limitaciones')}
+            ${this.renderMobilityOption('limited', '🚶 Movilidad limitada')}
+            ${this.renderMobilityOption('wheelchair', '♿ Silla de ruedas')}
+          </div>
+        </div>
       </div>
     `;
   },
@@ -255,6 +356,45 @@ export const SmartGeneratorWizard = {
         >
         <span class="text-2xl">${icon}</span>
         <span class="font-semibold text-gray-700 dark:text-gray-200">${city}</span>
+      </label>
+    `;
+  },
+
+  /**
+   * Helper para renderizar checkbox de restricción dietaria
+   */
+  renderDietaryCheckbox(restriction, label) {
+    const isChecked = this.wizardData.dietaryRestrictions.includes(restriction);
+    return `
+      <label class="flex items-center gap-2 p-2 border ${isChecked ? 'border-green-500 bg-green-50 dark:bg-green-900/30' : 'border-gray-300 dark:border-gray-600'}
+                     rounded-lg cursor-pointer hover:border-green-400 transition">
+        <input
+          type="checkbox"
+          class="dietary-checkbox w-4 h-4"
+          data-restriction="${restriction}"
+          ${isChecked ? 'checked' : ''}
+        >
+        <span class="text-sm text-gray-700 dark:text-gray-200">${label}</span>
+      </label>
+    `;
+  },
+
+  /**
+   * Helper para renderizar opción de movilidad
+   */
+  renderMobilityOption(type, label) {
+    const isSelected = (type === 'none' && !this.wizardData.mobilityNeeds) || this.wizardData.mobilityNeeds === type;
+    return `
+      <label class="flex items-center gap-2 p-2 border ${isSelected ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30' : 'border-gray-300 dark:border-gray-600'}
+                     rounded-lg cursor-pointer hover:border-purple-400 transition">
+        <input
+          type="radio"
+          name="mobilityNeeds"
+          class="mobility-radio w-4 h-4"
+          data-mobility="${type}"
+          ${isSelected ? 'checked' : ''}
+        >
+        <span class="text-sm text-gray-700 dark:text-gray-200">${label}</span>
       </label>
     `;
   },
@@ -476,6 +616,46 @@ export const SmartGeneratorWizard = {
     const labelElement = document.getElementById('intensityLabel');
     if (labelElement) {
       labelElement.textContent = `${label.icon} ${label.label}`;
+    }
+  },
+
+  /**
+   * 🆕 Actualiza las fechas del viaje y calcula días automáticamente
+   */
+  updateTripDates() {
+    const startInput = document.getElementById('tripStartDate');
+    const endInput = document.getElementById('tripEndDate');
+    const totalDaysInput = document.getElementById('totalDays');
+
+    if (startInput && endInput && startInput.value && endInput.value) {
+      const startDate = new Date(startInput.value);
+      const endDate = new Date(endInput.value);
+
+      // Calcular días entre fechas
+      const diffTime = Math.abs(endDate - startDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 para incluir ambos días
+
+      if (totalDaysInput && diffDays > 0) {
+        totalDaysInput.value = diffDays;
+        this.wizardData.totalDays = diffDays;
+        this.validateField('totalDays');
+      }
+    }
+
+    if (startInput) this.wizardData.tripStartDate = startInput.value || null;
+    if (endInput) this.wizardData.tripEndDate = endInput.value || null;
+
+    this.saveToSessionStorage();
+  },
+
+  /**
+   * 🆕 Actualiza el tamaño del grupo
+   */
+  updateGroupSize() {
+    const groupSizeInput = document.getElementById('groupSize');
+    if (groupSizeInput) {
+      this.wizardData.groupSize = parseInt(groupSizeInput.value) || 1;
+      this.saveToSessionStorage();
     }
   },
 
@@ -713,6 +893,15 @@ export const SmartGeneratorWizard = {
       checkbox.addEventListener('change', () => this.saveStep1Data());
     });
 
+    // 🆕 Event listeners para nuevos campos
+    document.querySelectorAll('.dietary-checkbox').forEach(checkbox => {
+      checkbox.addEventListener('change', () => this.saveStep1Data());
+    });
+
+    document.querySelectorAll('.mobility-radio').forEach(radio => {
+      radio.addEventListener('change', () => this.saveStep1Data());
+    });
+
     // Step 2
     document.querySelectorAll('.interest-checkbox').forEach(checkbox => {
       checkbox.addEventListener('change', () => this.saveStep2Data());
@@ -747,6 +936,42 @@ export const SmartGeneratorWizard = {
     const dailyBudgetInput = document.getElementById('dailyBudget');
     if (dailyBudgetInput) {
       this.wizardData.dailyBudget = parseInt(dailyBudgetInput.value) || 10000;
+    }
+
+    // 🆕 Guardar nuevos campos de contexto
+    const groupSizeInput = document.getElementById('groupSize');
+    if (groupSizeInput) {
+      this.wizardData.groupSize = parseInt(groupSizeInput.value) || 1;
+    }
+
+    const travelerAgesInput = document.getElementById('travelerAges');
+    if (travelerAgesInput && travelerAgesInput.value.trim()) {
+      this.wizardData.travelerAges = travelerAgesInput.value.split(',')
+        .map(age => parseInt(age.trim()))
+        .filter(age => !isNaN(age) && age > 0);
+    } else {
+      this.wizardData.travelerAges = [];
+    }
+
+    const tripStartDateInput = document.getElementById('tripStartDate');
+    if (tripStartDateInput) {
+      this.wizardData.tripStartDate = tripStartDateInput.value || null;
+    }
+
+    const tripEndDateInput = document.getElementById('tripEndDate');
+    if (tripEndDateInput) {
+      this.wizardData.tripEndDate = tripEndDateInput.value || null;
+    }
+
+    // Dietary restrictions
+    this.wizardData.dietaryRestrictions = Array.from(document.querySelectorAll('.dietary-checkbox:checked'))
+      .map(cb => cb.dataset.restriction);
+
+    // Mobility needs
+    const mobilityRadio = document.querySelector('.mobility-radio:checked');
+    if (mobilityRadio) {
+      const mobilityValue = mobilityRadio.dataset.mobility;
+      this.wizardData.mobilityNeeds = mobilityValue === 'none' ? null : mobilityValue;
     }
 
     this.saveToSessionStorage(); // 💾 Guardar progreso
@@ -1097,7 +1322,14 @@ export const SmartGeneratorWizard = {
         companionType: this.wizardData.companionType, // 👥 Companion-aware generation
         hotels: hotelsWithCoords,
         mustSee: this.wizardData.mustSee,
-        avoid: this.wizardData.avoid
+        avoid: this.wizardData.avoid,
+        // 🆕 Nuevos parámetros de contexto
+        groupSize: this.wizardData.groupSize,
+        travelerAges: this.wizardData.travelerAges,
+        tripStartDate: this.wizardData.tripStartDate,
+        tripEndDate: this.wizardData.tripEndDate,
+        dietaryRestrictions: this.wizardData.dietaryRestrictions,
+        mobilityNeeds: this.wizardData.mobilityNeeds
       };
 
       console.log('📋 Perfil final:', profile);
