@@ -307,6 +307,44 @@ export const SmartGeneratorWizard = {
           <div id="dailyBudgetError" class="hidden mt-2 p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
             <p class="text-sm text-red-600 dark:text-red-400">⚠️ El presupuesto debe ser al menos ¥3,000</p>
           </div>
+
+          <!-- 🆕 Preview de Presupuesto Real-Time -->
+          <div id="budgetPreview" class="mt-4 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border-2 border-blue-200 dark:border-blue-800">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="font-bold text-gray-800 dark:text-white text-sm">💰 Estimación de Presupuesto Total</h4>
+              <span class="text-2xl font-bold text-blue-600 dark:text-blue-400" id="totalBudgetPreview">¥70,000</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mb-3">
+              <div class="bg-white/60 dark:bg-gray-800/60 p-2 rounded">
+                <div class="text-xs text-gray-500 dark:text-gray-400">Actividades (40%)</div>
+                <div class="font-semibold text-sm text-gray-700 dark:text-gray-300" id="activitiesBudgetPreview">¥28,000</div>
+              </div>
+              <div class="bg-white/60 dark:bg-gray-800/60 p-2 rounded">
+                <div class="text-xs text-gray-500 dark:text-gray-400">Comidas (35%)</div>
+                <div class="font-semibold text-sm text-gray-700 dark:text-gray-300" id="mealsBudgetPreview">¥24,500</div>
+              </div>
+              <div class="bg-white/60 dark:bg-gray-800/60 p-2 rounded">
+                <div class="text-xs text-gray-500 dark:text-gray-400">Transporte (25%)</div>
+                <div class="font-semibold text-sm text-gray-700 dark:text-gray-300" id="transportBudgetPreview">¥17,500</div>
+              </div>
+              <div class="bg-white/60 dark:bg-gray-800/60 p-2 rounded">
+                <div class="text-xs text-gray-500 dark:text-gray-400">Hotel estimado</div>
+                <div class="font-semibold text-sm text-gray-700 dark:text-gray-300" id="hotelBudgetPreview">¥420,000</div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-blue-200 dark:border-blue-700">
+              <span class="text-xs text-gray-600 dark:text-gray-400">Presupuesto Total Estimado</span>
+              <span class="text-lg font-bold text-indigo-600 dark:text-indigo-400" id="grandTotalPreview">¥490,000</span>
+            </div>
+
+            <div class="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
+              <p class="text-xs text-yellow-800 dark:text-yellow-300" id="budgetComparison">
+                📊 Promedio para viajeros similares: ¥450,000 - <span class="font-semibold">Tu presupuesto es 9% mayor</span>
+              </p>
+            </div>
+          </div>
         </div>
 
         <!-- Restricciones dietarias -->
@@ -442,6 +480,8 @@ export const SmartGeneratorWizard = {
             inputElement.classList.add('border-gray-300', 'dark:border-gray-600');
           }
         }
+        // 🆕 Actualizar preview de presupuesto
+        this.updateBudgetPreview();
         break;
 
       case 'dailyBudget':
@@ -463,6 +503,8 @@ export const SmartGeneratorWizard = {
             inputElement.classList.add('border-gray-300', 'dark:border-gray-600');
           }
         }
+        // 🆕 Actualizar preview de presupuesto
+        this.updateBudgetPreview();
         break;
 
       case 'interests':
@@ -656,6 +698,8 @@ export const SmartGeneratorWizard = {
     if (groupSizeInput) {
       this.wizardData.groupSize = parseInt(groupSizeInput.value) || 1;
       this.saveToSessionStorage();
+      // 🆕 Actualizar preview de presupuesto
+      this.updateBudgetPreview();
     }
   },
 
@@ -1509,6 +1553,87 @@ export const SmartGeneratorWizard = {
       console.error('❌ Error guardando itinerario:', error);
       throw error;
     }
+  },
+
+  /**
+   * 🆕 ACTUALIZAR PREVIEW DE PRESUPUESTO EN TIEMPO REAL
+   * Calcula y muestra estimación de presupuesto total
+   */
+  updateBudgetPreview() {
+    const totalDaysInput = document.getElementById('totalDays');
+    const dailyBudgetInput = document.getElementById('dailyBudget');
+    const groupSizeInput = document.getElementById('groupSize');
+
+    const totalDays = parseInt(totalDaysInput?.value) || 7;
+    const dailyBudget = parseInt(dailyBudgetInput?.value) || 10000;
+    const groupSize = parseInt(groupSizeInput?.value) || 1;
+
+    // Calcular presupuesto de actividades (40% del daily budget)
+    const activitiesDaily = dailyBudget * 0.40;
+    const activitiesTotal = activitiesDaily * totalDays;
+
+    // Calcular presupuesto de comidas (35% del daily budget)
+    const mealsDaily = dailyBudget * 0.35;
+    const mealsTotal = mealsDaily * totalDays;
+
+    // Calcular presupuesto de transporte (25% del daily budget)
+    const transportDaily = dailyBudget * 0.25;
+    const transportTotal = transportDaily * totalDays;
+
+    // Presupuesto total de actividades
+    const dailyTotal = activitiesTotal + mealsTotal + transportTotal;
+
+    // Estimar hotel (promedio ¥10,000 por noche por persona)
+    const hotelPerNight = 10000 * groupSize;
+    const hotelTotal = hotelPerNight * totalDays;
+
+    // Gran total
+    const grandTotal = dailyTotal + hotelTotal;
+
+    // Actualizar DOM
+    const totalBudgetPreview = document.getElementById('totalBudgetPreview');
+    const activitiesBudgetPreview = document.getElementById('activitiesBudgetPreview');
+    const mealsBudgetPreview = document.getElementById('mealsBudgetPreview');
+    const transportBudgetPreview = document.getElementById('transportBudgetPreview');
+    const hotelBudgetPreview = document.getElementById('hotelBudgetPreview');
+    const grandTotalPreview = document.getElementById('grandTotalPreview');
+    const budgetComparison = document.getElementById('budgetComparison');
+
+    if (totalBudgetPreview) totalBudgetPreview.textContent = `¥${dailyTotal.toLocaleString()}`;
+    if (activitiesBudgetPreview) activitiesBudgetPreview.textContent = `¥${Math.round(activitiesTotal).toLocaleString()}`;
+    if (mealsBudgetPreview) mealsBudgetPreview.textContent = `¥${Math.round(mealsTotal).toLocaleString()}`;
+    if (transportBudgetPreview) transportBudgetPreview.textContent = `¥${Math.round(transportTotal).toLocaleString()}`;
+    if (hotelBudgetPreview) hotelBudgetPreview.textContent = `¥${hotelTotal.toLocaleString()}`;
+    if (grandTotalPreview) grandTotalPreview.textContent = `¥${grandTotal.toLocaleString()}`;
+
+    // Calcular comparación con promedio
+    // Promedio estimado: ¥12,000/día para moderate travelers
+    const averageDailyBudget = 12000;
+    const averageTotal = (averageDailyBudget * totalDays) + hotelTotal;
+    const difference = grandTotal - averageTotal;
+    const percentDiff = Math.abs(Math.round((difference / averageTotal) * 100));
+
+    if (budgetComparison) {
+      let comparisonText = '';
+      let comparisonClass = '';
+
+      if (Math.abs(difference) < averageTotal * 0.05) {
+        // Within 5% is similar
+        comparisonText = `📊 Promedio para viajeros similares: ¥${averageTotal.toLocaleString()} - <span class="font-semibold">Tu presupuesto es similar</span>`;
+        comparisonClass = 'text-green-800 dark:text-green-300';
+      } else if (difference > 0) {
+        comparisonText = `📊 Promedio para viajeros similares: ¥${averageTotal.toLocaleString()} - <span class="font-semibold">Tu presupuesto es ${percentDiff}% mayor</span>`;
+        comparisonClass = 'text-yellow-800 dark:text-yellow-300';
+      } else {
+        comparisonText = `📊 Promedio para viajeros similares: ¥${averageTotal.toLocaleString()} - <span class="font-semibold">Tu presupuesto es ${percentDiff}% menor (¡Ahorro!)</span>`;
+        comparisonClass = 'text-blue-800 dark:text-blue-300';
+      }
+
+      budgetComparison.innerHTML = comparisonText;
+      budgetComparison.className = `text-xs ${comparisonClass}`;
+    }
+
+    console.log('📊 Preview actualizado:', { dailyTotal, hotelTotal, grandTotal });
   }
 };
 

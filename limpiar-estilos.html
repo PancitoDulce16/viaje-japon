@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧹 Limpiar Estilos del Visual Editor</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            margin: 0 0 20px 0;
+            font-size: 32px;
+        }
+        .status {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        button {
+            background: #10b981;
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        button.danger {
+            background: #ef4444;
+        }
+        button.danger:hover {
+            background: #dc2626;
+        }
+        .success {
+            color: #10b981;
+        }
+        .error {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Limpiador de Estilos</h1>
+        <p>Esta herramienta eliminará TODOS los estilos guardados por el Visual Editor y Dev Panel.</p>
+
+        <button onclick="analizarEstilos()">🔍 1. Analizar qué hay guardado</button>
+        <button class="danger" onclick="limpiarTodo()">🗑️ 2. LIMPIAR TODO</button>
+        <button onclick="irAlDashboard()">✅ 3. Ir al Dashboard</button>
+
+        <div class="status" id="status">
+            <div>Esperando acción...</div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const status = document.getElementById('status');
+            const color = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+            status.innerHTML += `<div class="${color}">${message}</div>`;
+            status.scrollTop = status.scrollHeight;
+        }
+
+        function analizarEstilos() {
+            document.getElementById('status').innerHTML = '';
+            log('🔍 Analizando localStorage...', 'info');
+
+            const keys = [
+                'dev-panel-session-css',
+                'dev-panel-session-timestamp',
+                'visual-editor-last-css',
+                'visual-editor-last-css-timestamp',
+                'dev-saved-css-files',
+                'dev-custom-presets',
+                'devVisualEditorSession'  // ← LA KEY QUE FALTABA!
+            ];
+
+            let found = 0;
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    found++;
+                    log(`✓ ${key}: ${value.length > 100 ? value.substring(0, 100) + '...' : value}`, 'error');
+                } else {
+                    log(`○ ${key}: No encontrado`, 'success');
+                }
+            });
+
+            log('', 'info');
+            log(`📊 Total encontrado: ${found} items`, found > 0 ? 'error' : 'success');
+
+            if (found > 0) {
+                log('⚠️ HAY DATOS GUARDADOS - Usa el botón "LIMPIAR TODO"', 'error');
+            } else {
+                log('✅ No hay datos guardados del Visual Editor', 'success');
+            }
+        }
+
+        function limpiarTodo() {
+            if (!confirm('¿Estás SEGURA de que quieres eliminar TODO el CSS guardado?\n\nEsto NO se puede deshacer.')) {
+                return;
+            }
+
+            document.getElementById('status').innerHTML = '';
+            log('🗑️ Limpiando localStorage...', 'info');
+
+            // Eliminar todas las keys del Visual Editor y Dev Panel
+            const keys = [
+                'dev-panel-session-css',
+                'dev-panel-session-timestamp',
+                'visual-editor-last-css',
+                'visual-editor-last-css-timestamp',
+                'dev-saved-css-files',
+                'dev-custom-presets',
+                'devVisualEditorSession'  // ← LA KEY QUE FALTABA!
+            ];
+
+            keys.forEach(key => {
+                localStorage.removeItem(key);
+                log(`✓ Eliminado: ${key}`, 'success');
+            });
+
+            log('', 'info');
+            log('✅ ¡LIMPIEZA COMPLETADA!', 'success');
+            log('', 'info');
+            log('📋 Próximos pasos:', 'info');
+            log('1. Click en "Ir al Dashboard"', 'info');
+            log('2. Los colores deberían estar normales', 'info');
+            log('3. Si aún ves el mensaje "sesión recuperada", presiona Ctrl+Shift+R para forzar recarga', 'info');
+        }
+
+        function irAlDashboard() {
+            log('🚀 Redirigiendo al dashboard...', 'success');
+            setTimeout(() => {
+                window.location.href = '/dashboard.html';
+            }, 500);
+        }
+
+        // Analizar automáticamente al cargar
+        window.onload = () => {
+            setTimeout(analizarEstilos, 500);
+        };
+    </script>
+</body>
+</html>

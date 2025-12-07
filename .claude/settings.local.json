@@ -19,7 +19,11 @@
       "Skill(frontend-design:frontend-design)",
       "Bash(git log:*)",
       "Bash(git pull:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(npm outdated:*)",
+      "Bash(npm audit)",
+      "Bash(npm audit fix:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

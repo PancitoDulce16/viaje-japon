@@ -797,6 +797,72 @@ export const TripsManager = {
           >
             🧠 Regenerar Itinerario
           </button>
+
+          <!-- 🆕 Botón de Exportar con Dropdown -->
+          <div class="relative">
+            <button
+              onclick="TripsManager.toggleExportMenu()"
+              id="exportButton"
+              class="bg-green-500/80 hover:bg-green-600 text-white font-semibold py-2.5 px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-green-400/30 text-sm shadow-lg flex items-center gap-2"
+            >
+              📤 Exportar
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div
+              id="exportMenu"
+              class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
+            >
+              <div class="p-2">
+                <button
+                  onclick="TripsManager.exportCurrentTrip('pdf')"
+                  class="w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition flex items-center gap-3 text-gray-700 dark:text-gray-200"
+                >
+                  <span class="text-2xl">📄</span>
+                  <div>
+                    <div class="font-semibold text-sm">Exportar a PDF</div>
+                    <div class="text-xs text-gray-500">Itinerario completo descargable</div>
+                  </div>
+                </button>
+
+                <button
+                  onclick="TripsManager.exportCurrentTrip('calendar')"
+                  class="w-full text-left px-4 py-3 hover:bg-green-50 dark:hover:bg-green-900/30 rounded-lg transition flex items-center gap-3 text-gray-700 dark:text-gray-200"
+                >
+                  <span class="text-2xl">📅</span>
+                  <div>
+                    <div class="font-semibold text-sm">Google Calendar</div>
+                    <div class="text-xs text-gray-500">Agregar eventos a tu calendario</div>
+                  </div>
+                </button>
+
+                <button
+                  onclick="TripsManager.exportCurrentTrip('maps')"
+                  class="w-full text-left px-4 py-3 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition flex items-center gap-3 text-gray-700 dark:text-gray-200"
+                >
+                  <span class="text-2xl">🗺️</span>
+                  <div>
+                    <div class="font-semibold text-sm">Google Maps</div>
+                    <div class="text-xs text-gray-500">Abrir ruta completa en Maps</div>
+                  </div>
+                </button>
+
+                <button
+                  onclick="TripsManager.exportCurrentTrip('checklist')"
+                  class="w-full text-left px-4 py-3 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-lg transition flex items-center gap-3 text-gray-700 dark:text-gray-200"
+                >
+                  <span class="text-2xl">📋</span>
+                  <div>
+                    <div class="font-semibold text-sm">Lista de Tareas</div>
+                    <div class="text-xs text-gray-500">Checklist descargable (.md)</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Fila 2: Dashboard de Estadísticas Visuales -->
@@ -1117,6 +1183,96 @@ export const TripsManager = {
     } catch (error) {
       console.error('❌ Error abriendo generador:', error);
       Notifications.error('Error al abrir el generador inteligente');
+    }
+  },
+
+  /**
+   * 🆕 Toggle del menú de exportación
+   */
+  toggleExportMenu() {
+    const menu = document.getElementById('exportMenu');
+    if (!menu) return;
+
+    if (menu.classList.contains('hidden')) {
+      menu.classList.remove('hidden');
+      menu.classList.add('animate-fade-in');
+
+      // Cerrar al hacer click fuera
+      setTimeout(() => {
+        document.addEventListener('click', this.closeExportMenuOnClickOutside);
+      }, 100);
+    } else {
+      menu.classList.add('hidden');
+      document.removeEventListener('click', this.closeExportMenuOnClickOutside);
+    }
+  },
+
+  /**
+   * Cerrar menú de exportación al hacer click fuera
+   */
+  closeExportMenuOnClickOutside(event) {
+    const menu = document.getElementById('exportMenu');
+    const button = document.getElementById('exportButton');
+
+    if (menu && button && !menu.contains(event.target) && !button.contains(event.target)) {
+      menu.classList.add('hidden');
+      document.removeEventListener('click', TripsManager.closeExportMenuOnClickOutside);
+    }
+  },
+
+  /**
+   * 🆕 Exportar viaje actual
+   */
+  async exportCurrentTrip(format) {
+    // Cerrar menú
+    const menu = document.getElementById('exportMenu');
+    if (menu) menu.classList.add('hidden');
+
+    if (!this.currentTrip) {
+      Notifications.warning('⚠️ Debes seleccionar un viaje primero');
+      return;
+    }
+
+    if (!window.ExportManager) {
+      Notifications.error('❌ El sistema de exportación no está disponible');
+      console.error('ExportManager no encontrado');
+      return;
+    }
+
+    console.log(`📤 Exportando viaje a ${format}:`, this.currentTrip);
+
+    try {
+      let success = false;
+
+      switch (format) {
+        case 'pdf':
+          success = await window.ExportManager.exportToPDF(this.currentTrip);
+          break;
+
+        case 'calendar':
+          success = window.ExportManager.exportToGoogleCalendar(this.currentTrip);
+          break;
+
+        case 'maps':
+          success = window.ExportManager.exportToGoogleMaps(this.currentTrip);
+          break;
+
+        case 'checklist':
+          success = window.ExportManager.exportToChecklist(this.currentTrip);
+          break;
+
+        default:
+          Notifications.warning('⚠️ Formato de exportación no soportado');
+          return;
+      }
+
+      if (success) {
+        console.log(`✅ Exportación a ${format} exitosa`);
+      }
+
+    } catch (error) {
+      console.error(`❌ Error exportando a ${format}:`, error);
+      Notifications.error(`❌ Error al exportar: ${error.message}`);
     }
   },
 
