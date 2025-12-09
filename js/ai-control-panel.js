@@ -364,10 +364,10 @@ class AIControlPanel {
    */
   async analyzeAnomalies(itinerary) {
     const container = document.getElementById('ai-anomalies');
-    if (!container || !window.AnomalyDetector) return;
+    if (!container || !window.ItineraryAnomalyDetector) return;
 
     try {
-      const anomalies = window.AnomalyDetector.analyzeItinerary(itinerary);
+      const anomalies = window.ItineraryAnomalyDetector.analyzeItinerary(itinerary);
 
       const totalIssues = anomalies.critical.length + anomalies.warnings.length;
 
@@ -413,8 +413,8 @@ class AIControlPanel {
     // Contar issues críticos
     let criticalCount = 0;
 
-    if (window.AnomalyDetector) {
-      const anomalies = window.AnomalyDetector.analyzeItinerary(this.currentItinerary);
+    if (window.ItineraryAnomalyDetector) {
+      const anomalies = window.ItineraryAnomalyDetector.analyzeItinerary(this.currentItinerary);
       criticalCount += anomalies.critical.length;
     }
 

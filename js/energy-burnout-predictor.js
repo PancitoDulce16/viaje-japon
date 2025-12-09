@@ -867,5 +867,3 @@ class EnergyBurnoutPredictor {
 if (typeof window !== 'undefined') {
   window.EnergyBurnoutPredictor = new EnergyBurnoutPredictor();
 }
-
-export default EnergyBurnoutPredictor;

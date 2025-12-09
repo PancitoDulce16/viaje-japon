@@ -13,7 +13,7 @@
  * Auto-detecta y auto-corrige problemas
  */
 
-class AnomalyDetector {
+class ItineraryAnomalyDetector {
   constructor() {
     this.thresholds = {
       maxWalkingPerDay: 20, // km
@@ -708,7 +708,5 @@ class AnomalyDetector {
 
 // 🌐 Exportar para uso global
 if (typeof window !== 'undefined') {
-  window.AnomalyDetector = AnomalyDetector;
+  window.ItineraryAnomalyDetector = new ItineraryAnomalyDetector();
 }
-
-export default AnomalyDetector;

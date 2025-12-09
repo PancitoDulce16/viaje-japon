@@ -590,5 +590,3 @@ class CollaborativeRecommender {
 if (typeof window !== 'undefined') {
   window.CollaborativeRecommender = new CollaborativeRecommender();
 }
-
-export default CollaborativeRecommender;

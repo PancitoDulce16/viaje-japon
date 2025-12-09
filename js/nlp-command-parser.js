@@ -685,5 +685,3 @@ class NLPCommandParser {
 if (typeof window !== 'undefined') {
   window.NLPCommandParser = new NLPCommandParser();
 }
-
-export default NLPCommandParser;

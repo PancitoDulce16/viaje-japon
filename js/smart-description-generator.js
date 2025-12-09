@@ -636,5 +636,3 @@ class SmartDescriptionGenerator {
 if (typeof window !== 'undefined') {
   window.SmartDescriptionGenerator = new SmartDescriptionGenerator();
 }
-
-export default SmartDescriptionGenerator;
