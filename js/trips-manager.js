@@ -897,6 +897,13 @@ export const TripsManager = {
       const itinerarySnap = await getDoc(itineraryRef);
       const itineraryData = itinerarySnap.exists() ? itinerarySnap.data() : null;
 
+      // 🔔 Emitir evento de itinerario cargado para el AI Panel
+      if (itineraryData) {
+        window.dispatchEvent(new CustomEvent('itineraryLoaded', {
+          detail: { itinerary: itineraryData, source: 'trip-statistics' }
+        }));
+      }
+
       // Contar actividades totales
       const totalActivities = itineraryData?.days?.reduce((sum, day) => sum + (day.activities?.length || 0), 0) || 0;
 

@@ -174,6 +174,21 @@ class AIControlPanel {
       }
     });
 
+    // 🔔 Escuchar eventos de actualización de itinerario
+    window.addEventListener('itineraryUpdated', async (e) => {
+      console.log('🔔 AI Panel: Itinerario actualizado', e.detail);
+      if (e.detail && e.detail.itinerary) {
+        await this.updateWithItinerary(e.detail.itinerary);
+      }
+    });
+
+    window.addEventListener('itineraryLoaded', async (e) => {
+      console.log('🔔 AI Panel: Itinerario cargado', e.detail);
+      if (e.detail && e.detail.itinerary) {
+        await this.updateWithItinerary(e.detail.itinerary);
+      }
+    });
+
     // Cargar datos iniciales
     this.loadInitialData();
   }

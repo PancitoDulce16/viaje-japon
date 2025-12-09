@@ -194,6 +194,17 @@ class DashboardManager {
                 }
             }
 
+            // 🤖 Inicializar Panel Central de IA
+            console.log('🤖 Inicializando Panel Central de IA...');
+            if (window.AIControlPanel) {
+                try {
+                    window.AIControlPanel.render();
+                    console.log('✅ Panel de IA renderizado');
+                } catch (error) {
+                    console.error('❌ Error inicializando Panel de IA:', error);
+                }
+            }
+
             // Inicializar tabs con contenido
             await this.initializeTabContents();
 

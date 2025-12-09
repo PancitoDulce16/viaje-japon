@@ -70,6 +70,7 @@ class SettingsUI {
       { id: 'travel', icon: '✈️', label: 'Preferencias de Viaje' },
       { id: 'security', icon: '🔒', label: 'Seguridad' },
       { id: 'privacy', icon: '🛡️', label: 'Privacidad' },
+      { id: 'export-import', icon: '📦', label: 'Exportar/Importar' },
       { id: 'advanced', icon: '⚡', label: 'Avanzado' }
     ];
 
@@ -110,6 +111,8 @@ class SettingsUI {
         return this.renderSecurity();
       case 'privacy':
         return this.renderPrivacy();
+      case 'export-import':
+        return this.renderExportImport();
       case 'advanced':
         return this.renderAdvanced();
       default:
@@ -172,15 +175,10 @@ class SettingsUI {
             onchange="SettingsUIInstance.updateSetting('basicInfo.preferredCurrency', this.value)"
             class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
           >
-            <option value="MXN" ${data.preferredCurrency === 'MXN' ? 'selected' : ''}>🇲🇽 Peso Mexicano (MXN)</option>
-            <option value="USD" ${data.preferredCurrency === 'USD' ? 'selected' : ''}>🇺🇸 Dólar Estadounidense (USD)</option>
-            <option value="EUR" ${data.preferredCurrency === 'EUR' ? 'selected' : ''}>🇪🇺 Euro (EUR)</option>
-            <option value="JPY" ${data.preferredCurrency === 'JPY' ? 'selected' : ''}>🇯🇵 Yen Japonés (JPY)</option>
-            <option value="CAD" ${data.preferredCurrency === 'CAD' ? 'selected' : ''}>🇨🇦 Dólar Canadiense (CAD)</option>
-            <option value="GBP" ${data.preferredCurrency === 'GBP' ? 'selected' : ''}>🇬🇧 Libra Esterlina (GBP)</option>
+            ${this.renderCurrencyOptions(data.preferredCurrency)}
           </select>
           <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Todos los presupuestos se mostrarán en esta moneda
+            💱 Conversión automática usando tasas de cambio en tiempo real (API Exchange Rate)
           </p>
         </div>
 
@@ -781,6 +779,107 @@ class SettingsUI {
     `;
   }
 
+  /**
+   * 📦 Export/Import
+   */
+  renderExportImport() {
+    return window.ExportImportSystem?.renderUI() || `
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+          <span>📦</span>
+          <span>Exportar e Importar Datos</span>
+        </h3>
+
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+          Respalda y restaura toda tu información: configuraciones, itinerarios, logros y más.
+        </p>
+
+        <!-- EXPORTAR -->
+        <div class="mb-6">
+          <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">📤 Exportar</h4>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <button
+              onclick="window.ExportImportSystem?.exportAll()"
+              class="flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition"
+            >
+              <span>💾</span>
+              <span>Exportar Todo (JSON)</span>
+            </button>
+
+            <button
+              onclick="window.ExportImportSystem?.backupToCloud()"
+              class="flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition"
+            >
+              <span>☁️</span>
+              <span>Backup a la Nube</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- IMPORTAR -->
+        <div class="mb-6">
+          <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">📥 Importar</h4>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <label class="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold cursor-pointer transition">
+              <span>📂</span>
+              <span>Importar desde Archivo</span>
+              <input
+                type="file"
+                accept=".json"
+                onchange="if(this.files[0]) window.ExportImportSystem?.importAll(this.files[0])"
+                class="hidden"
+              >
+            </label>
+
+            <button
+              onclick="window.ExportImportSystem?.restoreFromCloud()"
+              class="flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition"
+            >
+              <span>☁️</span>
+              <span>Restaurar de la Nube</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- INFORMACIÓN -->
+        <div class="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+          <p class="text-sm text-gray-700 dark:text-gray-300">
+            <strong>💡 Consejo:</strong> Exporta tus datos regularmente para tener un respaldo.
+            El backup en la nube requiere inicio de sesión.
+          </p>
+        </div>
+
+        <!-- ACCIONES RÁPIDAS DE CONFIGURACIÓN -->
+        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">⚙️ Exportar/Importar Solo Configuraciones</h4>
+
+          <div class="flex gap-3">
+            <button
+              onclick="window.UserSettings?.exportSettings()"
+              class="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold transition"
+            >
+              📥 Exportar Config
+            </button>
+
+            <label class="flex-1 cursor-pointer">
+              <input
+                type="file"
+                accept=".json"
+                onchange="if(this.files[0]) { const reader = new FileReader(); reader.onload = (e) => window.UserSettings?.importSettings(e.target.result); reader.readAsText(this.files[0]); }"
+                class="hidden"
+              >
+              <div class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-semibold transition text-center">
+                📤 Importar Config
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   // ====================================
   // HELPER METHODS PARA RENDERIZADO
   // ====================================
@@ -859,13 +958,142 @@ class SettingsUI {
 
   renderCountryOptions(selected) {
     const countries = [
-      'Mexico', 'United States', 'Canada', 'Spain', 'Argentina', 'Colombia',
-      'Chile', 'Peru', 'United Kingdom', 'Germany', 'France', 'Italy',
-      'Brazil', 'Japan', 'China', 'South Korea', 'Australia'
+      { code: 'MX', name: 'Mexico', flag: '🇲🇽' },
+      { code: 'US', name: 'United States', flag: '🇺🇸' },
+      { code: 'CR', name: 'Costa Rica', flag: '🇨🇷' },
+      { code: 'CA', name: 'Canada', flag: '🇨🇦' },
+      { code: 'AR', name: 'Argentina', flag: '🇦🇷' },
+      { code: 'CO', name: 'Colombia', flag: '🇨🇴' },
+      { code: 'CL', name: 'Chile', flag: '🇨🇱' },
+      { code: 'PE', name: 'Peru', flag: '🇵🇪' },
+      { code: 'BR', name: 'Brazil', flag: '🇧🇷' },
+      { code: 'UY', name: 'Uruguay', flag: '🇺🇾' },
+      { code: 'PY', name: 'Paraguay', flag: '🇵🇾' },
+      { code: 'EC', name: 'Ecuador', flag: '🇪🇨' },
+      { code: 'BO', name: 'Bolivia', flag: '🇧🇴' },
+      { code: 'VE', name: 'Venezuela', flag: '🇻🇪' },
+      { code: 'GT', name: 'Guatemala', flag: '🇬🇹' },
+      { code: 'HN', name: 'Honduras', flag: '🇭🇳' },
+      { code: 'SV', name: 'El Salvador', flag: '🇸🇻' },
+      { code: 'NI', name: 'Nicaragua', flag: '🇳🇮' },
+      { code: 'PA', name: 'Panama', flag: '🇵🇦' },
+      { code: 'DO', name: 'Dominican Republic', flag: '🇩🇴' },
+      { code: 'CU', name: 'Cuba', flag: '🇨🇺' },
+      { code: 'ES', name: 'Spain', flag: '🇪🇸' },
+      { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
+      { code: 'DE', name: 'Germany', flag: '🇩🇪' },
+      { code: 'FR', name: 'France', flag: '🇫🇷' },
+      { code: 'IT', name: 'Italy', flag: '🇮🇹' },
+      { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
+      { code: 'NL', name: 'Netherlands', flag: '🇳🇱' },
+      { code: 'BE', name: 'Belgium', flag: '🇧🇪' },
+      { code: 'CH', name: 'Switzerland', flag: '🇨🇭' },
+      { code: 'AT', name: 'Austria', flag: '🇦🇹' },
+      { code: 'SE', name: 'Sweden', flag: '🇸🇪' },
+      { code: 'NO', name: 'Norway', flag: '🇳🇴' },
+      { code: 'DK', name: 'Denmark', flag: '🇩🇰' },
+      { code: 'FI', name: 'Finland', flag: '🇫🇮' },
+      { code: 'IS', name: 'Iceland', flag: '🇮🇸' },
+      { code: 'IE', name: 'Ireland', flag: '🇮🇪' },
+      { code: 'PL', name: 'Poland', flag: '🇵🇱' },
+      { code: 'CZ', name: 'Czech Republic', flag: '🇨🇿' },
+      { code: 'HU', name: 'Hungary', flag: '🇭🇺' },
+      { code: 'RO', name: 'Romania', flag: '🇷🇴' },
+      { code: 'GR', name: 'Greece', flag: '🇬🇷' },
+      { code: 'TR', name: 'Turkey', flag: '🇹🇷' },
+      { code: 'RU', name: 'Russia', flag: '🇷🇺' },
+      { code: 'UA', name: 'Ukraine', flag: '🇺🇦' },
+      { code: 'JP', name: 'Japan', flag: '🇯🇵' },
+      { code: 'CN', name: 'China', flag: '🇨🇳' },
+      { code: 'KR', name: 'South Korea', flag: '🇰🇷' },
+      { code: 'TW', name: 'Taiwan', flag: '🇹🇼' },
+      { code: 'HK', name: 'Hong Kong', flag: '🇭🇰' },
+      { code: 'SG', name: 'Singapore', flag: '🇸🇬' },
+      { code: 'MY', name: 'Malaysia', flag: '🇲🇾' },
+      { code: 'TH', name: 'Thailand', flag: '🇹🇭' },
+      { code: 'VN', name: 'Vietnam', flag: '🇻🇳' },
+      { code: 'PH', name: 'Philippines', flag: '🇵🇭' },
+      { code: 'ID', name: 'Indonesia', flag: '🇮🇩' },
+      { code: 'IN', name: 'India', flag: '🇮🇳' },
+      { code: 'PK', name: 'Pakistan', flag: '🇵🇰' },
+      { code: 'BD', name: 'Bangladesh', flag: '🇧🇩' },
+      { code: 'AU', name: 'Australia', flag: '🇦🇺' },
+      { code: 'NZ', name: 'New Zealand', flag: '🇳🇿' },
+      { code: 'ZA', name: 'South Africa', flag: '🇿🇦' },
+      { code: 'EG', name: 'Egypt', flag: '🇪🇬' },
+      { code: 'MA', name: 'Morocco', flag: '🇲🇦' },
+      { code: 'KE', name: 'Kenya', flag: '🇰🇪' },
+      { code: 'NG', name: 'Nigeria', flag: '🇳🇬' },
+      { code: 'IL', name: 'Israel', flag: '🇮🇱' },
+      { code: 'SA', name: 'Saudi Arabia', flag: '🇸🇦' },
+      { code: 'AE', name: 'United Arab Emirates', flag: '🇦🇪' }
     ];
 
-    return countries.map(country =>
-      `<option value="${country}" ${selected === country ? 'selected' : ''}>${country}</option>`
+    return countries
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(country =>
+        `<option value="${country.name}" ${selected === country.name ? 'selected' : ''}>
+          ${country.flag} ${country.name}
+        </option>`
+      ).join('');
+  }
+
+  renderCurrencyOptions(selected) {
+    const currencies = [
+      // Américas
+      { code: 'USD', name: 'US Dollar', flag: '🇺🇸' },
+      { code: 'MXN', name: 'Mexican Peso', flag: '🇲🇽' },
+      { code: 'CRC', name: 'Costa Rican Colón', flag: '🇨🇷' },
+      { code: 'CAD', name: 'Canadian Dollar', flag: '🇨🇦' },
+      { code: 'BRL', name: 'Brazilian Real', flag: '🇧🇷' },
+      { code: 'ARS', name: 'Argentine Peso', flag: '🇦🇷' },
+      { code: 'CLP', name: 'Chilean Peso', flag: '🇨🇱' },
+      { code: 'COP', name: 'Colombian Peso', flag: '🇨🇴' },
+      { code: 'PEN', name: 'Peruvian Sol', flag: '🇵🇪' },
+      { code: 'UYU', name: 'Uruguayan Peso', flag: '🇺🇾' },
+      // Europa
+      { code: 'EUR', name: 'Euro', flag: '🇪🇺' },
+      { code: 'GBP', name: 'British Pound', flag: '🇬🇧' },
+      { code: 'CHF', name: 'Swiss Franc', flag: '🇨🇭' },
+      { code: 'NOK', name: 'Norwegian Krone', flag: '🇳🇴' },
+      { code: 'SEK', name: 'Swedish Krona', flag: '🇸🇪' },
+      { code: 'DKK', name: 'Danish Krone', flag: '🇩🇰' },
+      { code: 'PLN', name: 'Polish Złoty', flag: '🇵🇱' },
+      { code: 'CZK', name: 'Czech Koruna', flag: '🇨🇿' },
+      { code: 'HUF', name: 'Hungarian Forint', flag: '🇭🇺' },
+      { code: 'RON', name: 'Romanian Leu', flag: '🇷🇴' },
+      { code: 'TRY', name: 'Turkish Lira', flag: '🇹🇷' },
+      { code: 'RUB', name: 'Russian Ruble', flag: '🇷🇺' },
+      // Asia-Pacífico
+      { code: 'JPY', name: 'Japanese Yen', flag: '🇯🇵' },
+      { code: 'CNY', name: 'Chinese Yuan', flag: '🇨🇳' },
+      { code: 'KRW', name: 'South Korean Won', flag: '🇰🇷' },
+      { code: 'INR', name: 'Indian Rupee', flag: '🇮🇳' },
+      { code: 'THB', name: 'Thai Baht', flag: '🇹🇭' },
+      { code: 'SGD', name: 'Singapore Dollar', flag: '🇸🇬' },
+      { code: 'MYR', name: 'Malaysian Ringgit', flag: '🇲🇾' },
+      { code: 'PHP', name: 'Philippine Peso', flag: '🇵🇭' },
+      { code: 'VND', name: 'Vietnamese Dong', flag: '🇻🇳' },
+      { code: 'IDR', name: 'Indonesian Rupiah', flag: '🇮🇩' },
+      { code: 'TWD', name: 'Taiwan Dollar', flag: '🇹🇼' },
+      { code: 'HKD', name: 'Hong Kong Dollar', flag: '🇭🇰' },
+      { code: 'AUD', name: 'Australian Dollar', flag: '🇦🇺' },
+      { code: 'NZD', name: 'New Zealand Dollar', flag: '🇳🇿' },
+      // África y Medio Oriente
+      { code: 'ZAR', name: 'South African Rand', flag: '🇿🇦' },
+      { code: 'EGP', name: 'Egyptian Pound', flag: '🇪🇬' },
+      { code: 'MAD', name: 'Moroccan Dirham', flag: '🇲🇦' },
+      { code: 'KES', name: 'Kenyan Shilling', flag: '🇰🇪' },
+      { code: 'NGN', name: 'Nigerian Naira', flag: '🇳🇬' },
+      { code: 'SAR', name: 'Saudi Riyal', flag: '🇸🇦' },
+      { code: 'AED', name: 'UAE Dirham', flag: '🇦🇪' },
+      { code: 'ILS', name: 'Israeli Shekel', flag: '🇮🇱' }
+    ];
+
+    return currencies.map(curr =>
+      `<option value="${curr.code}" ${selected === curr.code ? 'selected' : ''}>
+        ${curr.flag} ${curr.name} (${curr.code})
+      </option>`
     ).join('');
   }
 

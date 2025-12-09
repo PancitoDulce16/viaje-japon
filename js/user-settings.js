@@ -31,7 +31,7 @@ class UserSettings {
         displayName: '',
         email: '',
         originCountry: 'Mexico', // País de residencia
-        preferredCurrency: 'MXN', // USD, EUR, MXN, JPY
+        preferredCurrency: 'MXN', // 50+ monedas soportadas
         phoneNumber: ''
       },
 
@@ -365,18 +365,31 @@ class UserSettings {
 
   /**
    * 🌍 Obtiene moneda formateada según preferencias
+   * AHORA USA API REAL DE EXCHANGE RATE!
    */
-  formatCurrency(amount, fromCurrency = 'JPY') {
+  async formatCurrency(amount, fromCurrency = 'JPY') {
     const toCurrency = this.getSetting('basicInfo.preferredCurrency', 'MXN');
+    const shouldRound = this.getSetting('itineraryConfig.roundPriceConversion', true);
 
-    // Tasas de cambio aproximadas (en producción, usar API real)
+    // Usar el CurrencyConverter si está disponible
+    if (window.CurrencyConverter) {
+      try {
+        return await window.CurrencyConverter.formatCurrency(amount, fromCurrency, toCurrency, shouldRound);
+      } catch (e) {
+        console.warn('Currency converter failed, using fallback:', e);
+      }
+    }
+
+    // Fallback si CurrencyConverter no está disponible
     const rates = {
       'JPY-MXN': 0.13,
       'JPY-USD': 0.0067,
       'JPY-EUR': 0.0062,
+      'JPY-CRC': 3.40,
       'MXN-JPY': 7.7,
       'USD-JPY': 149.5,
-      'EUR-JPY': 161.2
+      'EUR-JPY': 161.2,
+      'CRC-JPY': 0.29
     };
 
     let converted = amount;
@@ -387,12 +400,10 @@ class UserSettings {
       }
     }
 
-    // Redondear si está configurado
-    if (this.getSetting('itineraryConfig.roundPriceConversion', true)) {
+    if (shouldRound) {
       converted = Math.round(converted);
     }
 
-    // Formatear según moneda
     const formatter = new Intl.NumberFormat('es-MX', {
       style: 'currency',
       currency: toCurrency
