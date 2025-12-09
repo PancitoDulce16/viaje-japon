@@ -180,6 +180,11 @@ export const TripsManager = {
         await this.loadTemplateItinerary(tripId, tripData.templateId);
       }
 
+      // 🏆 Tracking de gamificación
+      if (window.GamificationSystem) {
+        await window.GamificationSystem.trackAction('tripsCreated', 1);
+      }
+
       Notifications.success(
         `🎉 Viaje "${tripData.name}" creado exitosamente!\n🔗 Código: ${shareCode}${tripData.useTemplate ? '\n✨ Itinerario cargado del template' : ''}`,
         6000

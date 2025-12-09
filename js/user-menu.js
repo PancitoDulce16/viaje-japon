@@ -215,7 +215,54 @@ export const UserMenu = {
 
     openSettings() {
         this.closeMenu();
-        alert('⚙️ Configuración próximamente...');
+
+        // Crear modal para configuraciones
+        const modal = document.createElement('div');
+        modal.id = 'settingsModal';
+        modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4';
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.remove();
+        };
+
+        const modalContent = document.createElement('div');
+        modalContent.className = 'bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto';
+        modalContent.onclick = (e) => e.stopPropagation();
+
+        // Header del modal
+        const header = document.createElement('div');
+        header.className = 'sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between z-10';
+        header.innerHTML = `
+            <h2 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                <span>⚙️</span>
+                <span>Configuración</span>
+            </h2>
+            <button class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-3xl leading-none" onclick="document.getElementById('settingsModal').remove()">
+                &times;
+            </button>
+        `;
+
+        // Contenedor para SettingsUI
+        const settingsContainer = document.createElement('div');
+        settingsContainer.id = 'settingsUIContainer';
+        settingsContainer.className = 'p-6';
+
+        modalContent.appendChild(header);
+        modalContent.appendChild(settingsContainer);
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        // Renderizar SettingsUI
+        if (window.SettingsUI) {
+            window.SettingsUI.render('settingsUIContainer');
+        } else {
+            settingsContainer.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="text-6xl mb-4">⚠️</div>
+                    <p class="text-lg font-semibold mb-2">Error al cargar configuraciones</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">El sistema de configuraciones no está disponible.</p>
+                </div>
+            `;
+        }
     },
 
     toggleDarkMode() {

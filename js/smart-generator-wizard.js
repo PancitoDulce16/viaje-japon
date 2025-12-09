@@ -1400,16 +1400,31 @@ export const SmartGeneratorWizard = {
     const modal = document.getElementById('smartGeneratorWizard');
     if (!modal) return;
 
+    // Guardar variaciones en el objeto para acceso global
+    this.currentVariations = variations;
+    this.comparisonMode = false; // Por defecto vista grid
+
     modal.innerHTML = `
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
         <!-- Header -->
         <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
-          <h2 class="text-2xl font-bold mb-2">🎨 ¡3 Itinerarios Creados!</h2>
-          <p class="text-purple-100">Elige el que más te guste</p>
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-2xl font-bold mb-2">🎨 ¡3 Itinerarios Creados!</h2>
+              <p class="text-purple-100">Elige el que más te guste o crea uno personalizado</p>
+            </div>
+            <button
+              onclick="window.SmartGeneratorWizard.toggleComparisonMode()"
+              class="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-lg font-semibold transition flex items-center gap-2"
+            >
+              <span id="comparisonToggleIcon">📊</span>
+              <span id="comparisonToggleText">Modo Comparación</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Variations Grid -->
-        <div class="flex-1 overflow-y-auto p-6">
+        <!-- Content Container -->
+        <div id="variationsContent" class="flex-1 overflow-y-auto p-6">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             ${variations.map(variation => this.renderVariationCard(variation)).join('')}
           </div>
@@ -1426,6 +1441,394 @@ export const SmartGeneratorWizard = {
         </div>
       </div>
     `;
+  },
+
+  /**
+   * 🔄 Alterna entre vista grid y vista comparación
+   */
+  toggleComparisonMode() {
+    this.comparisonMode = !this.comparisonMode;
+    const contentContainer = document.getElementById('variationsContent');
+    const toggleIcon = document.getElementById('comparisonToggleIcon');
+    const toggleText = document.getElementById('comparisonToggleText');
+
+    if (this.comparisonMode) {
+      // Mostrar vista comparación detallada
+      toggleIcon.textContent = '🃏';
+      toggleText.textContent = 'Vista Tarjetas';
+      contentContainer.innerHTML = this.renderComparisonView(this.currentVariations);
+
+      // 🏆 Tracking de gamificación - comparaciones
+      if (window.GamificationSystem) {
+        window.GamificationSystem.trackAction('variationsCompared', 1);
+      }
+    } else {
+      // Volver a vista grid
+      toggleIcon.textContent = '📊';
+      toggleText.textContent = 'Modo Comparación';
+      contentContainer.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          ${this.currentVariations.map(variation => this.renderVariationCard(variation)).join('')}
+        </div>
+      `;
+    }
+  },
+
+  /**
+   * 📊 Renderiza vista de comparación detallada
+   */
+  renderComparisonView(variations) {
+    const maxDays = Math.max(...variations.map(v => v.itinerary.days.length));
+
+    return `
+      <div class="space-y-6">
+        <!-- Summary Table -->
+        <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl p-6">
+          <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">📋 Resumen Comparativo</h3>
+          <div class="grid grid-cols-4 gap-4">
+            <div class="font-semibold text-gray-700 dark:text-gray-300">Criterio</div>
+            ${variations.map(v => `
+              <div class="text-center">
+                <div class="text-3xl mb-2">${v.icon}</div>
+                <div class="font-bold text-gray-900 dark:text-white">${v.name}</div>
+              </div>
+            `).join('')}
+
+            <div class="text-gray-600 dark:text-gray-400">📅 Días</div>
+            ${variations.map(v => `
+              <div class="text-center font-semibold text-gray-900 dark:text-white">${v.itinerary.days.length}</div>
+            `).join('')}
+
+            <div class="text-gray-600 dark:text-gray-400">🎯 Actividades</div>
+            ${variations.map(v => {
+              const total = v.itinerary.days.reduce((sum, day) => sum + day.activities.length, 0);
+              return `<div class="text-center font-semibold text-gray-900 dark:text-white">${total}</div>`;
+            }).join('')}
+
+            <div class="text-gray-600 dark:text-gray-400">💰 Presupuesto</div>
+            ${variations.map(v => `
+              <div class="text-center font-semibold text-gray-900 dark:text-white">¥${(v.itinerary.totalBudget || 0).toLocaleString()}</div>
+            `).join('')}
+
+            <div class="text-gray-600 dark:text-gray-400">⚡ Ritmo</div>
+            ${variations.map(v => {
+              const pace = v.name.includes('Relajado') ? '🐢 Tranquilo' :
+                          v.name.includes('Equilibrado') ? '🚶 Moderado' : '🏃 Intenso';
+              return `<div class="text-center font-semibold text-gray-900 dark:text-white">${pace}</div>`;
+            }).join('')}
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="grid grid-cols-3 gap-4 mt-6">
+            ${variations.map(v => `
+              <button
+                onclick="window.SmartGeneratorWizard.selectVariation('${v.id}', ${JSON.stringify(v.itinerary).replace(/"/g, '&quot;')})"
+                class="py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg font-semibold transition shadow-md hover:shadow-lg"
+              >
+                ✅ Elegir ${v.name}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Day-by-Day Comparison -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border-2 border-purple-200 dark:border-purple-700">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">📅 Comparación Día por Día</h3>
+            <button
+              onclick="window.SmartGeneratorWizard.showHybridBuilder()"
+              class="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-lg font-semibold transition shadow-md hover:shadow-lg flex items-center gap-2"
+            >
+              🎨 Crear Híbrido
+            </button>
+          </div>
+
+          <div class="space-y-6">
+            ${Array.from({length: maxDays}, (_, i) => {
+              const dayNumber = i + 1;
+              return `
+                <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                  <div class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-2 font-bold">
+                    📅 Día ${dayNumber}
+                  </div>
+                  <div class="grid grid-cols-3 divide-x divide-gray-200 dark:divide-gray-700">
+                    ${variations.map((v, vIndex) => {
+                      const day = v.itinerary.days[i];
+                      if (!day) {
+                        return `<div class="p-4 bg-gray-50 dark:bg-gray-900/50 text-center text-gray-400">Sin actividades</div>`;
+                      }
+                      return `
+                        <div class="p-4 bg-white dark:bg-gray-800">
+                          <div class="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-2">
+                            ${v.icon} ${v.name}
+                          </div>
+                          <div class="space-y-2">
+                            ${day.activities.slice(0, 4).map(act => `
+                              <div class="text-sm">
+                                <div class="font-semibold text-gray-900 dark:text-white">${act.name}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                  ${act.category} • ${Math.floor(act.duration / 60)}h ${act.duration % 60}m
+                                </div>
+                              </div>
+                            `).join('')}
+                            ${day.activities.length > 4 ? `
+                              <div class="text-xs text-purple-600 dark:text-purple-400 font-semibold">
+                                +${day.activities.length - 4} actividades más
+                              </div>
+                            ` : ''}
+                          </div>
+                          <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between text-xs">
+                            <span class="text-gray-600 dark:text-gray-400">💰 ${day.dailyBudget?.toLocaleString() || '0'} ¥</span>
+                            <span class="text-gray-600 dark:text-gray-400">${day.activities.length} act.</span>
+                          </div>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Tags Comparison -->
+        <div class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl p-6">
+          <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">🏷️ Categorías de Interés</h3>
+          <div class="grid grid-cols-3 gap-4">
+            ${variations.map(v => `
+              <div class="space-y-2">
+                <div class="font-semibold text-center text-gray-900 dark:text-white">
+                  ${v.icon} ${v.name}
+                </div>
+                <div class="flex flex-wrap gap-2 justify-center">
+                  ${v.tags.map(tag => `
+                    <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-xs font-semibold">
+                      ${tag}
+                    </span>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * 🎨 Muestra el constructor de itinerario híbrido
+   */
+  showHybridBuilder() {
+    const modal = document.getElementById('smartGeneratorWizard');
+    if (!modal || !this.currentVariations) return;
+
+    const maxDays = Math.max(...this.currentVariations.map(v => v.itinerary.days.length));
+
+    // Inicializar selección híbrida (por defecto variación 0 para todos los días)
+    if (!this.hybridSelection) {
+      this.hybridSelection = Array(maxDays).fill(0);
+    }
+
+    modal.innerHTML = `
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-cyan-600 p-6 text-white">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-2xl font-bold mb-2">🎨 Constructor de Itinerario Híbrido</h2>
+              <p class="text-blue-100">Selecciona qué variación usar para cada día</p>
+            </div>
+            <button
+              onclick="window.SmartGeneratorWizard.showVariationsSelector(window.SmartGeneratorWizard.currentVariations)"
+              class="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-lg font-semibold transition"
+            >
+              ← Volver
+            </button>
+          </div>
+        </div>
+
+        <!-- Hybrid Builder Content -->
+        <div class="flex-1 overflow-y-auto p-6">
+          <div class="space-y-4">
+            ${Array.from({length: maxDays}, (_, i) => {
+              const dayNumber = i + 1;
+              return `
+                <div class="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                  <div class="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50 px-6 py-3">
+                    <div class="flex items-center justify-between">
+                      <h3 class="text-lg font-bold text-gray-900 dark:text-white">📅 Día ${dayNumber}</h3>
+                      <div class="text-sm text-gray-600 dark:text-gray-400">
+                        Seleccionado: <span class="font-bold text-purple-600 dark:text-purple-400" id="selectedVar${i}">
+                          ${this.currentVariations[this.hybridSelection[i]].name}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-3 divide-x divide-gray-200 dark:divide-gray-700">
+                    ${this.currentVariations.map((v, vIndex) => {
+                      const day = v.itinerary.days[i];
+                      const isSelected = this.hybridSelection[i] === vIndex;
+
+                      if (!day) {
+                        return `<div class="p-4 bg-gray-50 dark:bg-gray-900/50 text-center text-gray-400">Sin actividades</div>`;
+                      }
+
+                      return `
+                        <div class="p-4 ${isSelected ? 'bg-purple-50 dark:bg-purple-900/30 border-4 border-purple-500' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700'} cursor-pointer transition"
+                             onclick="window.SmartGeneratorWizard.selectDayVariation(${i}, ${vIndex})">
+
+                          <!-- Header -->
+                          <div class="flex items-center justify-between mb-3">
+                            <div class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                              ${isSelected ? '✅' : ''} ${v.icon} ${v.name}
+                            </div>
+                          </div>
+
+                          <!-- Activities -->
+                          <div class="space-y-2">
+                            ${day.activities.slice(0, 3).map(act => `
+                              <div class="text-sm bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700">
+                                <div class="font-semibold text-gray-900 dark:text-white truncate">${act.name}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                  ${act.category} • ${Math.floor(act.duration / 60)}h ${act.duration % 60}m
+                                </div>
+                              </div>
+                            `).join('')}
+                            ${day.activities.length > 3 ? `
+                              <div class="text-xs text-center text-purple-600 dark:text-purple-400 font-semibold">
+                                +${day.activities.length - 3} más
+                              </div>
+                            ` : ''}
+                          </div>
+
+                          <!-- Stats -->
+                          <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between text-xs">
+                            <span class="text-gray-600 dark:text-gray-400">💰 ¥${day.dailyBudget?.toLocaleString() || '0'}</span>
+                            <span class="text-gray-600 dark:text-gray-400">${day.activities.length} actividades</span>
+                          </div>
+
+                          <!-- Select Button -->
+                          <button class="w-full mt-3 py-2 ${isSelected ? 'bg-purple-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} rounded-lg font-semibold transition">
+                            ${isSelected ? '✅ Seleccionado' : 'Usar Esta Variación'}
+                          </button>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Footer with Save -->
+        <div class="border-t border-gray-200 dark:border-gray-700 p-6 flex justify-between items-center">
+          <button
+            onclick="window.SmartGeneratorWizard.showVariationsSelector(window.SmartGeneratorWizard.currentVariations)"
+            class="px-6 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+          >
+            Cancelar
+          </button>
+          <button
+            onclick="window.SmartGeneratorWizard.saveHybridItinerary()"
+            class="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-bold transition shadow-lg hover:shadow-xl flex items-center gap-2"
+          >
+            💾 Guardar Itinerario Híbrido
+          </button>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Selecciona qué variación usar para un día específico
+   */
+  selectDayVariation(dayIndex, variationIndex) {
+    this.hybridSelection[dayIndex] = variationIndex;
+    // Actualizar la vista
+    this.showHybridBuilder();
+  },
+
+  /**
+   * 💾 Guarda el itinerario híbrido creado por el usuario
+   */
+  async saveHybridItinerary() {
+    if (!this.currentVariations || !this.hybridSelection) {
+      window.Notifications?.show('⚠️ Error creando híbrido', 'error');
+      return;
+    }
+
+    console.log('🎨 Creando itinerario híbrido con selección:', this.hybridSelection);
+
+    // Construir el itinerario híbrido
+    const baseVariation = this.currentVariations[0];
+    const hybridItinerary = {
+      ...baseVariation.itinerary,
+      days: []
+    };
+
+    let totalBudget = 0;
+
+    // Construir días del híbrido
+    this.hybridSelection.forEach((varIndex, dayIndex) => {
+      const selectedVariation = this.currentVariations[varIndex];
+      const day = selectedVariation.itinerary.days[dayIndex];
+
+      if (day) {
+        hybridItinerary.days.push({...day});
+        totalBudget += (day.dailyBudget || 0);
+      }
+    });
+
+    hybridItinerary.totalBudget = totalBudget;
+
+    console.log('✅ Itinerario híbrido creado:', hybridItinerary);
+
+    // Mostrar loading
+    const modal = document.getElementById('smartGeneratorWizard');
+    if (modal) {
+      modal.innerHTML = `
+        <div class="flex items-center justify-center h-full p-12">
+          <div class="text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">💾 Guardando itinerario híbrido...</h3>
+            <p class="text-gray-600 dark:text-gray-400">🎨 Combinando lo mejor de cada variación</p>
+          </div>
+        </div>
+      `;
+    }
+
+    try {
+      // Guardar itinerario
+      await this.saveGeneratedItinerary(hybridItinerary);
+
+      // 🏆 Tracking de gamificación - híbridos
+      if (window.GamificationSystem) {
+        await window.GamificationSystem.trackAction('hybridsCreated', 1);
+      }
+
+      // 🗑️ Limpiar sessionStorage y datos temporales
+      this.clearSessionStorage();
+      this.hybridSelection = null;
+      this.currentVariations = null;
+
+      // Cerrar modal
+      this.close();
+
+      // Mostrar éxito
+      window.Notifications?.show('✅ ¡Itinerario híbrido guardado exitosamente!', 'success');
+
+      // Recargar la página
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+
+    } catch (error) {
+      console.error('❌ Error guardando itinerario híbrido:', error);
+      window.Notifications?.show('❌ Error al guardar: ' + error.message, 'error');
+      this.close();
+    }
   },
 
   /**
@@ -1549,6 +1952,11 @@ export const SmartGeneratorWizard = {
       });
 
       console.log('✅ Itinerario guardado en Firebase');
+
+      // 🏆 Tracking de gamificación
+      if (window.GamificationSystem) {
+        await window.GamificationSystem.trackAction('itinerariesGenerated', 1);
+      }
     } catch (error) {
       console.error('❌ Error guardando itinerario:', error);
       throw error;

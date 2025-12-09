@@ -39,6 +39,12 @@ const ExportManager = {
       await html2pdf().set(opt).from(element).save();
 
       window.Notifications?.show('✅ PDF generado exitosamente', 'success');
+
+      // 🏆 Tracking de gamificación
+      if (window.GamificationSystem) {
+        await window.GamificationSystem.trackAction('exportFormats', 1);
+      }
+
       return true;
 
     } catch (error) {
@@ -194,6 +200,12 @@ const ExportManager = {
       document.body.removeChild(link);
 
       window.Notifications?.show('✅ Archivo de calendario descargado. Ábrelo para agregar a Google Calendar', 'success');
+
+      // 🏆 Tracking de gamificación
+      if (window.GamificationSystem) {
+        window.GamificationSystem.trackAction('exportFormats', 1);
+      }
+
       return true;
 
     } catch (error) {
@@ -256,6 +268,12 @@ const ExportManager = {
       window.open(mapsURL, '_blank');
 
       window.Notifications?.show('✅ Abriendo Google Maps con tu ruta', 'success');
+
+      // 🏆 Tracking de gamificación
+      if (window.GamificationSystem) {
+        window.GamificationSystem.trackAction('exportFormats', 1);
+      }
+
       return true;
 
     } catch (error) {
@@ -313,6 +331,12 @@ const ExportManager = {
       document.body.removeChild(link);
 
       window.Notifications?.show('✅ Checklist descargado', 'success');
+
+      // 🏆 Tracking de gamificación
+      if (window.GamificationSystem) {
+        window.GamificationSystem.trackAction('exportFormats', 1);
+      }
+
       return true;
 
     } catch (error) {

@@ -183,6 +183,17 @@ class DashboardManager {
                 window.HealthDashboard.init();
             }
 
+            // 🏆 Inicializar Sistema de Gamificación
+            console.log('🏆 Inicializando Sistema de Gamificación...');
+            if (window.GamificationSystem && AuthHandler.currentUser) {
+                try {
+                    await window.GamificationSystem.initialize(AuthHandler.currentUser.uid);
+                    this.renderGamificationPanel();
+                } catch (error) {
+                    console.error('❌ Error inicializando gamificación:', error);
+                }
+            }
+
             // Inicializar tabs con contenido
             await this.initializeTabContents();
 
@@ -278,6 +289,20 @@ class DashboardManager {
         } catch (error) {
             console.error('❌ Error al inicializar notificaciones:', error);
             throw error;
+        }
+    }
+
+    renderGamificationPanel() {
+        try {
+            const panel = document.getElementById('gamification-panel');
+            if (!panel || !window.GamificationSystem) return;
+
+            const html = window.GamificationSystem.renderGamificationPanel();
+            panel.innerHTML = html;
+
+            console.log('🏆 Panel de gamificación renderizado');
+        } catch (error) {
+            console.error('❌ Error renderizando gamificación:', error);
         }
     }
 
