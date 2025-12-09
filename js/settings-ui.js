@@ -1004,7 +1004,9 @@ class SettingsUI {
 
 // 🌐 Instancia global
 if (typeof window !== 'undefined') {
-  window.SettingsUIInstance = new SettingsUI();
+  const instance = new SettingsUI();
+  window.SettingsUIInstance = instance;
+  window.SettingsUI = instance; // Alias para fácil acceso
 }
 
 export default SettingsUI;

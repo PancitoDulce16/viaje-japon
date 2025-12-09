@@ -260,7 +260,56 @@ export const UserProfile = {
                     ` : ''}
                 </div>
             </div>
+
+            <!-- 🏆 SECCIÓN DE LOGROS Y BADGES COMPLETA -->
+            ${this.isOwnProfile ? `
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden mt-6">
+                    <div class="bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/40 dark:to-orange-900/40 p-6 border-b border-yellow-200 dark:border-yellow-700">
+                        <h3 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-3">
+                            <span>🏆</span>
+                            <span>Mis Logros y Badges</span>
+                        </h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                            Completa actividades y alcanza hitos para desbloquear badges especiales
+                        </p>
+                    </div>
+                    <div class="p-6">
+                        <!-- Panel de Gamificación se renderizará aquí -->
+                        <div id="profile-gamification-panel">
+                            <div class="text-center text-gray-400 py-8">
+                                Cargando sistema de logros...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
         `;
+
+        // Si es el propio perfil, cargar gamification después de renderizar
+        if (this.isOwnProfile) {
+            setTimeout(() => {
+                this.loadGamificationPanel();
+            }, 500);
+        }
+    },
+
+    // Cargar panel de gamificación en el perfil
+    loadGamificationPanel() {
+        const container = document.getElementById('profile-gamification-panel');
+        if (!container) return;
+
+        if (window.GamificationSystem) {
+            container.innerHTML = '<div id="gamification-container"></div>';
+            window.GamificationSystem.renderPanel('gamification-container');
+        } else {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="text-4xl mb-3">🎮</div>
+                    <p class="text-gray-600 dark:text-gray-400">Sistema de gamificación no disponible</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Intenta recargar la página</p>
+                </div>
+            `;
+        }
     },
 
     // ============================================

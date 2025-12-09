@@ -730,6 +730,35 @@ export class HealthDashboard {
   }
 
   /**
+   * Recargar itinerario desde Firebase
+   */
+  async reloadItinerary() {
+    if (!this.tripId) return;
+
+    try {
+      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+      const { db } = await import('/js/firebase-config.js');
+
+      const itineraryRef = doc(db, `trips/${this.tripId}/data`, 'itinerary');
+      const itinerarySnap = await getDoc(itineraryRef);
+
+      if (itinerarySnap.exists()) {
+        const data = itinerarySnap.data();
+        this.itinerary = data;
+
+        // Actualizar QuickFixes con el itinerario actualizado
+        if (this.quickFixes) {
+          this.quickFixes.itinerary = data;
+        }
+
+        console.log('✅ Itinerario recargado desde Firebase');
+      }
+    } catch (error) {
+      console.error('Error recargando itinerario:', error);
+    }
+  }
+
+  /**
    * Ejecutar un quick fix específico
    */
   async runQuickFix(fixAction, issueId) {
@@ -787,16 +816,23 @@ export class HealthDashboard {
       }
 
       if (success) {
-        // Recargar itinerario y re-analizar
-        if (window.ItineraryHandler?.reinitialize) {
-          await window.ItineraryHandler.reinitialize();
-        }
-
-        // Actualizar itinerario local
-        this.itinerary = window.ItineraryHandler.currentItinerary;
+        // Recargar itinerario desde Firebase
+        await this.reloadItinerary();
 
         // Re-analizar
         await this.analyze();
+
+        // Emitir evento para que otros componentes actualicen
+        window.dispatchEvent(new CustomEvent('itineraryUpdated', {
+          detail: { itinerary: this.itinerary, source: 'healthDashboard' }
+        }));
+
+        // Refrescar UI del itinerario si existe
+        if (window.ItineraryHandler?.reinitialize) {
+          await window.ItineraryHandler.reinitialize();
+        } else if (window.ItineraryHandler?.render) {
+          window.ItineraryHandler.render();
+        }
       }
     } catch (error) {
       console.error('Error ejecutando quick fix:', error);

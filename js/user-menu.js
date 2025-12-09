@@ -252,16 +252,33 @@ export const UserMenu = {
         document.body.appendChild(modal);
 
         // Renderizar SettingsUI
-        if (window.SettingsUI) {
-            window.SettingsUI.render('settingsUIContainer');
+        // Usar instancia global (puede estar como SettingsUI o SettingsUIInstance)
+        const settingsUI = window.SettingsUI || window.SettingsUIInstance;
+
+        if (settingsUI) {
+            settingsUI.render('settingsUIContainer');
         } else {
-            settingsContainer.innerHTML = `
-                <div class="text-center py-12">
-                    <div class="text-6xl mb-4">⚠️</div>
-                    <p class="text-lg font-semibold mb-2">Error al cargar configuraciones</p>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">El sistema de configuraciones no está disponible.</p>
-                </div>
-            `;
+            // Si no existe, intentar crear una instancia
+            console.warn('SettingsUI no encontrado, esperando carga...');
+
+            // Retry después de un momento (módulos pueden cargar async)
+            setTimeout(() => {
+                const retryUI = window.SettingsUI || window.SettingsUIInstance;
+                if (retryUI) {
+                    retryUI.render('settingsUIContainer');
+                } else {
+                    settingsContainer.innerHTML = `
+                        <div class="text-center py-12">
+                            <div class="text-6xl mb-4">⚠️</div>
+                            <p class="text-lg font-semibold mb-2">Error al cargar configuraciones</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">El sistema de configuraciones no está disponible.</p>
+                            <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                                Recargar página
+                            </button>
+                        </div>
+                    `;
+                }
+            }, 500);
         }
     },
 
