@@ -401,14 +401,16 @@ class AIControlPanel {
           <div class="space-y-2">
             ${anomalies.critical.slice(0, 2).map(issue => `
               <div class="text-xs p-2 bg-red-50 dark:bg-red-900/20 rounded border-l-2 border-red-500">
-                <div class="font-semibold text-red-800 dark:text-red-200">🔴 ${issue.title}</div>
-                <div class="text-red-700 dark:text-red-300 mt-1">${issue.description}</div>
+                <div class="font-semibold text-red-800 dark:text-red-200">${issue.icon || '🔴'} ${issue.type || 'Problema crítico'}</div>
+                <div class="text-red-700 dark:text-red-300 mt-1">${issue.message || 'Sin descripción'}</div>
+                ${issue.fix ? `<div class="text-xs text-red-600 dark:text-red-400 mt-1">💡 ${issue.fix.suggestion}</div>` : ''}
               </div>
             `).join('')}
             ${anomalies.warnings.slice(0, 2).map(issue => `
               <div class="text-xs p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border-l-2 border-yellow-500">
-                <div class="font-semibold text-yellow-800 dark:text-yellow-200">🟡 ${issue.title}</div>
-                <div class="text-yellow-700 dark:text-yellow-300 mt-1">${issue.description}</div>
+                <div class="font-semibold text-yellow-800 dark:text-yellow-200">${issue.icon || '🟡'} ${issue.type || 'Advertencia'}</div>
+                <div class="text-yellow-700 dark:text-yellow-300 mt-1">${issue.message || 'Sin descripción'}</div>
+                ${issue.fix ? `<div class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">💡 ${issue.fix.suggestion}</div>` : ''}
               </div>
             `).join('')}
           </div>
