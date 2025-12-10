@@ -42,7 +42,7 @@ class AIChatUI {
   createChatButton() {
     const button = document.createElement('button');
     button.id = 'ai-chat-button';
-    button.className = 'fixed bottom-6 right-6 z-[999] w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 flex items-center justify-center text-white text-2xl hover:scale-110';
+    button.className = 'fixed bottom-[450px] right-6 md:bottom-96 md:right-8 z-[999] w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 flex items-center justify-center text-white text-2xl hover:scale-110 animate-bounce-soft';
     button.innerHTML = '🤖';
     button.title = 'Habla con la IA';
 
@@ -58,7 +58,7 @@ class AIChatUI {
   createChatPanel() {
     const panel = document.createElement('div');
     panel.id = 'ai-chat-panel';
-    panel.className = 'fixed bottom-24 right-6 z-[998] w-96 h-[600px] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl hidden flex-col overflow-hidden border-2 border-purple-300 dark:border-purple-700';
+    panel.className = 'fixed bottom-[520px] right-6 md:bottom-[420px] md:right-8 z-[998] w-96 max-w-[calc(100vw-3rem)] h-[380px] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl hidden flex-col overflow-hidden border-2 border-purple-300 dark:border-purple-700';
 
     panel.innerHTML = `
       <!-- Header -->
