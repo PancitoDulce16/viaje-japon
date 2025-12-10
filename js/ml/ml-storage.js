@@ -16,7 +16,7 @@
 class MLStorage {
   constructor() {
     this.dbName = 'JapitinMLDatabase';
-    this.version = 1;
+    this.version = 2; // Upgraded to add config store
     this.db = null;
 
     this.stores = {
@@ -25,7 +25,8 @@ class MLStorage {
       features: 'features',
       models: 'models',
       predictions: 'predictions',
-      clusters: 'clusters'
+      clusters: 'clusters',
+      config: 'config' // Generic key-value store
     };
 
     console.log('💾 ML Storage Manager initializing...');
@@ -113,6 +114,13 @@ class MLStorage {
           });
           clustersStore.createIndex('algorithm', 'algorithm', { unique: false });
           clustersStore.createIndex('timestamp', 'timestamp', { unique: false });
+        }
+
+        // Config store (generic key-value for ML modules)
+        if (!db.objectStoreNames.contains(this.stores.config)) {
+          db.createObjectStore(this.stores.config, {
+            keyPath: 'key'
+          });
         }
 
         console.log('✅ IndexedDB schema upgraded');
@@ -614,6 +622,63 @@ class MLStorage {
 
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
+   * 🔑 GENERIC GET - Get any config value by key
+   */
+  async get(key) {
+    if (!this.db) await this.initDB();
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.db.transaction([this.stores.config], 'readonly');
+        const store = transaction.objectStore(this.stores.config);
+        const request = store.get(key);
+
+        request.onsuccess = () => {
+          const result = request.result;
+          resolve(result ? result.value : null);
+        };
+
+        request.onerror = () => {
+          console.error(`Error getting ${key}:`, request.error);
+          resolve(null); // Return null on error instead of rejecting
+        };
+      } catch (error) {
+        console.error(`Error in get(${key}):`, error);
+        resolve(null);
+      }
+    });
+  }
+
+  /**
+   * 💾 GENERIC SET - Set any config value by key
+   */
+  async set(key, value) {
+    if (!this.db) await this.initDB();
+
+    return new Promise((resolve, reject) => {
+      try {
+        const transaction = this.db.transaction([this.stores.config], 'readwrite');
+        const store = transaction.objectStore(this.stores.config);
+        const request = store.put({
+          key,
+          value,
+          timestamp: Date.now()
+        });
+
+        request.onsuccess = () => resolve(true);
+
+        request.onerror = () => {
+          console.error(`Error setting ${key}:`, request.error);
+          resolve(false); // Return false on error instead of rejecting
+        };
+      } catch (error) {
+        console.error(`Error in set(${key}):`, error);
+        resolve(false);
+      }
     });
   }
 }
