@@ -228,14 +228,14 @@ class GamificationSystem {
 
     try {
       // Verificar que Firebase esté disponible
-      if (typeof firebase === 'undefined' || !firebase.firestore) {
+      if (typeof window.firebase === 'undefined' || !window.firebase.firestore) {
         console.warn('⚠️ Firebase not available, using local stats only');
         this.userStats = this.getDefaultStats();
         return this.userStats;
       }
 
       // Cargar estadísticas del usuario desde Firebase
-      const statsDoc = await firebase.firestore()
+      const statsDoc = await window.firebase.firestore()
         .collection('users')
         .doc(userId)
         .collection('gamification')
@@ -427,7 +427,13 @@ class GamificationSystem {
     if (!this.userId || !this.userStats) return;
 
     try {
-      await firebase.firestore()
+      // Verificar que Firebase esté disponible
+      if (typeof window.firebase === 'undefined' || !window.firebase.firestore) {
+        console.warn('⚠️ Firebase not available, using local stats only');
+        return;
+      }
+
+      await window.firebase.firestore()
         .collection('users')
         .doc(this.userId)
         .collection('gamification')
@@ -684,5 +690,3 @@ class GamificationSystem {
 
 // Instancia global
 window.GamificationSystem = new GamificationSystem();
-
-export default GamificationSystem;
