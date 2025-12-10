@@ -181,6 +181,25 @@ class VisualPaceSimulator {
    * 📏 Calcula distancia entre coordenadas
    */
   calculateDistance(coords1, coords2) {
+    if (!coords1 || !coords2) return 5;
+
+    // Validar que sean arrays o convertir de objeto
+    if (!Array.isArray(coords1)) {
+      if (coords1.lat !== undefined && coords1.lon !== undefined) {
+        coords1 = [coords1.lat, coords1.lon];
+      } else {
+        return 5; // Default distance
+      }
+    }
+
+    if (!Array.isArray(coords2)) {
+      if (coords2.lat !== undefined && coords2.lon !== undefined) {
+        coords2 = [coords2.lat, coords2.lon];
+      } else {
+        return 5; // Default distance
+      }
+    }
+
     const [lat1, lon1] = coords1;
     const [lat2, lon2] = coords2;
 

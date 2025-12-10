@@ -367,7 +367,23 @@ class AIControlPanel {
     if (!container || !window.ItineraryAnomalyDetector) return;
 
     try {
+      // Validar que el itinerario tenga días
+      if (!itinerary || !itinerary.days || itinerary.days.length === 0) {
+        container.innerHTML = `
+          <div class="text-center text-gray-500 dark:text-gray-400 py-4">
+            <div class="text-2xl mb-2">📋</div>
+            <div class="text-sm">No hay itinerario para analizar</div>
+          </div>
+        `;
+        return;
+      }
+
       const anomalies = window.ItineraryAnomalyDetector.analyzeItinerary(itinerary);
+
+      // Validar que anomalies tenga la estructura esperada
+      if (!anomalies || !anomalies.critical || !anomalies.warnings) {
+        throw new Error('Invalid anomaly detection result');
+      }
 
       const totalIssues = anomalies.critical.length + anomalies.warnings.length;
 
@@ -400,6 +416,13 @@ class AIControlPanel {
       `;
     } catch (e) {
       console.error('Error analyzing anomalies:', e);
+      container.innerHTML = `
+        <div class="text-center text-gray-500 dark:text-gray-400 py-4">
+          <div class="text-2xl mb-2">⚠️</div>
+          <div class="text-sm">Error al analizar anomalías</div>
+          <div class="text-xs mt-1 opacity-70">${e.message || 'Error desconocido'}</div>
+        </div>
+      `;
     }
   }
 
@@ -410,23 +433,32 @@ class AIControlPanel {
     const badge = document.getElementById('ai-notification-badge');
     if (!badge || !this.currentItinerary) return;
 
-    // Contar issues críticos
-    let criticalCount = 0;
+    try {
+      // Contar issues críticos
+      let criticalCount = 0;
 
-    if (window.ItineraryAnomalyDetector) {
-      const anomalies = window.ItineraryAnomalyDetector.analyzeItinerary(this.currentItinerary);
-      criticalCount += anomalies.critical.length;
-    }
+      if (window.ItineraryAnomalyDetector && this.currentItinerary.days && this.currentItinerary.days.length > 0) {
+        const anomalies = window.ItineraryAnomalyDetector.analyzeItinerary(this.currentItinerary);
+        if (anomalies && anomalies.critical) {
+          criticalCount += anomalies.critical.length;
+        }
+      }
 
-    if (window.EnergyBurnoutPredictor) {
-      const energyData = window.EnergyBurnoutPredictor.predictEnergyLevels(this.currentItinerary);
-      if (energyData.summary.hasBurnoutRisk) criticalCount++;
-    }
+      if (window.EnergyBurnoutPredictor && this.currentItinerary.days && this.currentItinerary.days.length > 0) {
+        const energyData = window.EnergyBurnoutPredictor.predictEnergyLevels(this.currentItinerary);
+        if (energyData && energyData.summary && energyData.summary.hasBurnoutRisk) {
+          criticalCount++;
+        }
+      }
 
-    if (criticalCount > 0) {
-      badge.textContent = criticalCount;
-      badge.classList.remove('hidden');
-    } else {
+      if (criticalCount > 0) {
+        badge.textContent = criticalCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    } catch (e) {
+      console.error('Error updating notification badge:', e);
       badge.classList.add('hidden');
     }
   }
