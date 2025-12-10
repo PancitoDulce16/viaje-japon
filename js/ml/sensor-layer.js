@@ -337,13 +337,15 @@ class SensorLayer {
   inferClickIntention(clickData) {
     const intentions = [];
 
+    // FIX: Use className (string) instead of class (DOMTokenList)
+    const className = clickData.element.className || '';
+
     // Detectar si está explorando vs decidiendo
-    if (clickData.element.class?.includes('activity-card')) {
+    if (className.includes('activity-card')) {
       intentions.push('exploring_activities');
     }
 
-    if (clickData.element.class?.includes('btn-select') ||
-        clickData.element.class?.includes('btn-choose')) {
+    if (className.includes('btn-select') || className.includes('btn-choose')) {
       intentions.push('making_decision');
 
       // Medir tiempo de decisión
@@ -357,8 +359,7 @@ class SensorLayer {
       }
     }
 
-    if (clickData.element.class?.includes('settings') ||
-        clickData.element.class?.includes('config')) {
+    if (className.includes('settings') || className.includes('config')) {
       intentions.push('adjusting_preferences');
     }
 

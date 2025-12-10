@@ -778,12 +778,19 @@ class DialogueManager {
 if (typeof window !== 'undefined') {
   window.DialogueManager = new DialogueManager();
 
-  // Auto-initialize
-  document.addEventListener('DOMContentLoaded', () => {
+  // Auto-initialize (check if DOM already loaded)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      window.DialogueManager.initialize().catch(e => {
+        console.error('Failed to initialize Dialogue Manager:', e);
+      });
+    });
+  } else {
+    // DOM already loaded, initialize immediately
     window.DialogueManager.initialize().catch(e => {
       console.error('Failed to initialize Dialogue Manager:', e);
     });
-  });
+  }
 
   console.log('💬 Dialogue Manager loaded!');
 }

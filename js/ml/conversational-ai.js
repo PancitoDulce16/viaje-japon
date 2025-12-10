@@ -568,15 +568,25 @@ class ConversationalAI {
 if (typeof window !== 'undefined') {
   window.ConversationalAI = new ConversationalAI();
 
-  // Auto-initialize
-  document.addEventListener('DOMContentLoaded', () => {
+  // Auto-initialize (check if DOM already loaded)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      window.ConversationalAI.initialize().then(() => {
+        console.log('🚀 Conversational AI is ready to chat!');
+        console.log('Try: await window.ConversationalAI.chat("Ayúdame con mi itinerario")');
+      }).catch(e => {
+        console.error('Failed to initialize Conversational AI:', e);
+      });
+    });
+  } else {
+    // DOM already loaded, initialize immediately
     window.ConversationalAI.initialize().then(() => {
       console.log('🚀 Conversational AI is ready to chat!');
       console.log('Try: await window.ConversationalAI.chat("Ayúdame con mi itinerario")');
     }).catch(e => {
       console.error('Failed to initialize Conversational AI:', e);
     });
-  });
+  }
 
   console.log('🤖 Conversational AI loaded!');
 }

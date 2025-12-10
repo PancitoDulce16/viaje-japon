@@ -661,12 +661,19 @@ class NLPEngine {
 if (typeof window !== 'undefined') {
   window.NLPEngine = new NLPEngine();
 
-  // Auto-initialize
-  document.addEventListener('DOMContentLoaded', () => {
+  // Auto-initialize (check if DOM already loaded)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      window.NLPEngine.initialize().catch(e => {
+        console.error('Failed to initialize NLP Engine:', e);
+      });
+    });
+  } else {
+    // DOM already loaded, initialize immediately
     window.NLPEngine.initialize().catch(e => {
       console.error('Failed to initialize NLP Engine:', e);
     });
-  });
+  }
 
   console.log('🗣️ NLP Engine loaded!');
 }

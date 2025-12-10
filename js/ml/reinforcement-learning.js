@@ -502,12 +502,19 @@ class ReinforcementLearningEngine {
 if (typeof window !== 'undefined') {
   window.ReinforcementLearningEngine = new ReinforcementLearningEngine();
 
-  // Auto-initialize
-  document.addEventListener('DOMContentLoaded', () => {
+  // Auto-initialize (check if DOM already loaded)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      window.ReinforcementLearningEngine.initialize().catch(e => {
+        console.error('Failed to initialize RL Engine:', e);
+      });
+    });
+  } else {
+    // DOM already loaded, initialize immediately
     window.ReinforcementLearningEngine.initialize().catch(e => {
       console.error('Failed to initialize RL Engine:', e);
     });
-  });
+  }
 
   console.log('🎮 Reinforcement Learning Engine loaded!');
 }
