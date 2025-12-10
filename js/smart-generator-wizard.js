@@ -1875,11 +1875,79 @@ export const SmartGeneratorWizard = {
           </div>
         </div>
 
+        ${this.renderMLEnhancements(itinerary)}
+
         <!-- Action Button -->
         <div class="p-6 bg-white dark:bg-gray-800">
           <button class="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg font-semibold transition shadow-md hover:shadow-lg">
             ✅ Elegir Este Itinerario
           </button>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * 🧠 Renderiza los insights de ML si existen
+   */
+  renderMLEnhancements(itinerary) {
+    if (!itinerary._mlEnhancement) {
+      return ''; // No ML enhancements
+    }
+
+    const ml = itinerary._mlEnhancement;
+    const hasOptimizations = ml.optimizations && ml.optimizations.length > 0;
+    const hasInsights = ml.insights && ml.insights.length > 0;
+    const hasWarnings = ml.warnings && ml.warnings.length > 0;
+
+    if (!hasOptimizations && !hasInsights && !hasWarnings) {
+      return ''; // Nothing to show
+    }
+
+    return `
+      <!-- ML Brain Enhancements -->
+      <div class="px-6 py-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-t border-b border-blue-200 dark:border-blue-800">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-xl">🧠</span>
+          <h4 class="font-bold text-gray-900 dark:text-white text-sm">ML Brain Optimizations</h4>
+          <span class="ml-auto text-xs font-semibold px-2 py-1 rounded-full ${ml.confidence >= 0.7 ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300'}">
+            ${(ml.confidence * 100).toFixed(0)}% confianza
+          </span>
+        </div>
+
+        <div class="space-y-2 text-xs">
+          ${hasOptimizations ? `
+            ${ml.optimizations.slice(0, 2).map(opt => `
+              <div class="flex items-start gap-2 bg-white/50 dark:bg-gray-800/50 rounded-lg p-2">
+                <span class="text-base flex-shrink-0">${opt.icon}</span>
+                <div class="flex-1">
+                  <div class="font-semibold text-gray-900 dark:text-white">${opt.title}</div>
+                  <div class="text-gray-600 dark:text-gray-400">${opt.message}</div>
+                  ${opt.savings || opt.improvement ? `
+                    <div class="text-green-600 dark:text-green-400 font-semibold mt-1">
+                      💚 ${opt.savings || opt.improvement}
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+            `).join('')}
+          ` : ''}
+
+          ${hasWarnings && ml.warnings.length > 0 ? `
+            <div class="flex items-start gap-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-2">
+              <span class="text-base flex-shrink-0">${ml.warnings[0].icon || '⚠️'}</span>
+              <div class="flex-1">
+                <div class="font-semibold text-yellow-900 dark:text-yellow-300">${ml.warnings[0].title}</div>
+                <div class="text-yellow-700 dark:text-yellow-400 text-xs">${ml.warnings[0].message}</div>
+              </div>
+            </div>
+          ` : ''}
+
+          ${hasInsights && ml.insights.length > 0 ? `
+            <div class="text-gray-600 dark:text-gray-400">
+              ${ml.insights[0].icon} ${ml.insights[0].message}
+            </div>
+          ` : ''}
         </div>
       </div>
     `;

@@ -627,7 +627,28 @@ export const SmartItineraryGenerator = {
         _variationType: template.icon
       };
 
-      const itinerary = await this.generateCompleteItinerary(variationProfile);
+      let itinerary = await this.generateCompleteItinerary(variationProfile);
+
+      // 🧠 MEJORA CON ML BRAIN (si está disponible)
+      if (window.MLItineraryEnhancer && window.MLItineraryEnhancer.initialized) {
+        try {
+          console.log('🧠 Enhancing itinerary with ML Brain...');
+          const enhancement = await window.MLItineraryEnhancer.enhanceItinerary(itinerary, {
+            userProfile: variationProfile,
+            origin: profile.origin || 'International'
+          });
+
+          // Usar itinerario mejorado si hay optimizaciones
+          if (enhancement.optimizations && enhancement.optimizations.length > 0) {
+            itinerary = enhancement.enhanced;
+            itinerary._mlEnhancement = enhancement; // Guardar datos de mejora para mostrar en UI
+            console.log(`✅ Applied ${enhancement.optimizations.length} ML optimizations`);
+          }
+        } catch (error) {
+          console.warn('⚠️ Could not enhance itinerary with ML:', error);
+          // Continuar con itinerario original si ML falla
+        }
+      }
 
       variations.push({
         id: template.name.toLowerCase().replace(/\s+/g, '-'),

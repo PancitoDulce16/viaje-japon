@@ -227,6 +227,13 @@ class GamificationSystem {
     this.userId = userId;
 
     try {
+      // Verificar que Firebase esté disponible
+      if (typeof firebase === 'undefined' || !firebase.firestore) {
+        console.warn('⚠️ Firebase not available, using local stats only');
+        this.userStats = this.getDefaultStats();
+        return this.userStats;
+      }
+
       // Cargar estadísticas del usuario desde Firebase
       const statsDoc = await firebase.firestore()
         .collection('users')
