@@ -330,6 +330,71 @@ class NLPEngine {
    */
   buildIntentPatterns() {
     return {
+      // Conversational intents
+      GREETING: {
+        patterns: [
+          /^hola$/i,
+          /^hey$/i,
+          /^hi$/i,
+          /^buenos\s+(?:días|dias|tardes|noches)/i,
+          /^qué\s+tal/i,
+          /^cómo\s+estás/i
+        ],
+        keywords: ['hola', 'hey', 'hi', 'buenos', 'saludos'],
+        action: 'greeting'
+      },
+
+      THANKS: {
+        patterns: [
+          /^gracias$/i,
+          /^muchas\s+gracias$/i,
+          /^thanks$/i,
+          /^thank\s+you$/i,
+          /^te\s+agradezco/i
+        ],
+        keywords: ['gracias', 'thanks', 'agradezco'],
+        action: 'acknowledge'
+      },
+
+      AFFIRMATIVE: {
+        patterns: [
+          /^s[ií]$/i,
+          /^ok$/i,
+          /^okay$/i,
+          /^de\s+acuerdo$/i,
+          /^perfecto$/i,
+          /^dale$/i,
+          /^claro$/i
+        ],
+        keywords: ['sí', 'si', 'ok', 'perfecto', 'dale', 'claro'],
+        action: 'affirm'
+      },
+
+      NEGATIVE: {
+        patterns: [
+          /^no$/i,
+          /^nah$/i,
+          /^nope$/i,
+          /^para\s+nada$/i,
+          /^ni\s+hablar$/i
+        ],
+        keywords: ['no', 'nah', 'nope'],
+        action: 'deny'
+      },
+
+      FAREWELL: {
+        patterns: [
+          /^adiós$/i,
+          /^adios$/i,
+          /^chao$/i,
+          /^hasta\s+luego$/i,
+          /^nos\s+vemos$/i,
+          /^bye$/i
+        ],
+        keywords: ['adiós', 'adios', 'chao', 'bye', 'hasta'],
+        action: 'farewell'
+      },
+
       // Modification intents
       ADD_ACTIVITY: {
         patterns: [

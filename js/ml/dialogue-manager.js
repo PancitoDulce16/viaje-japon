@@ -375,6 +375,14 @@ class DialogueManager {
 
     // Map intent to response
     const responses = {
+      // Conversational intents
+      greeting: this.generateGreetingResponse(turn),
+      farewell: this.generateFarewellResponse(turn),
+      acknowledge: this.generateAcknowledgment(turn),
+      affirm: this.handleConfirmation(this.memory.shortTerm[this.memory.shortTerm.length - 1]),
+      deny: this.handleDenial(this.memory.shortTerm[this.memory.shortTerm.length - 1]),
+
+      // Action intents
       addActivity: this.generateAddActivityResponse(turn),
       removeActivity: this.generateRemoveActivityResponse(turn),
       adjustBudget: this.generateBudgetResponse(turn),
@@ -383,7 +391,6 @@ class DialogueManager {
       recommend: this.generateRecommendationResponse(turn),
       explain: this.generateExplanationResponse(turn),
       getStats: this.generateStatsResponse(turn),
-      acknowledge: this.generateAcknowledgment(turn),
       handleComplaint: this.generateComplaintResponse(turn)
     };
 
@@ -392,6 +399,54 @@ class DialogueManager {
     }
 
     return this.generateFallbackResponse(turn);
+  }
+
+  /**
+   * 👋 Generate greeting response
+   */
+  generateGreetingResponse(turn) {
+    const greetings = [
+      '¡Hola! 😊 Soy tu asistente de viajes para Japón. ¿En qué puedo ayudarte hoy?',
+      '¡Hey! 🇯🇵 Estoy aquí para ayudarte a planificar tu aventura japonesa. ¿Qué necesitas?',
+      '¡Hola! 👋 ¿Listo para optimizar tu itinerario? Cuéntame qué necesitas.',
+      '¡Saludos! ✨ Estoy aquí para hacer tu viaje a Japón perfecto. ¿Cómo te ayudo?'
+    ];
+
+    const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+
+    return {
+      text: greeting,
+      actions: [],
+      suggestions: [
+        { text: 'Recomiéndame algo', action: 'recommend' },
+        { text: 'Optimiza mi ruta', action: 'optimize' },
+        { text: 'Ver estadísticas', action: 'stats' }
+      ],
+      confidence: 1.0,
+      needsClarification: false
+    };
+  }
+
+  /**
+   * 👋 Generate farewell response
+   */
+  generateFarewellResponse(turn) {
+    const farewells = [
+      '¡Hasta luego! 👋 Que disfrutes tu viaje a Japón. ¡Sayonara!',
+      '¡Adiós! 🇯🇵 Vuelve cuando necesites algo más. ¡Buen viaje!',
+      '¡Nos vemos! ✨ Espero haberte ayudado. ¡Mata ne!',
+      '¡Chao! 😊 Que tu aventura en Japón sea increíble.'
+    ];
+
+    const farewell = farewells[Math.floor(Math.random() * farewells.length)];
+
+    return {
+      text: farewell,
+      actions: [],
+      suggestions: [],
+      confidence: 1.0,
+      needsClarification: false
+    };
   }
 
   /**
