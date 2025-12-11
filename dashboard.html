@@ -132,54 +132,50 @@
 
     <!-- APP DASHBOARD -->
     <div id="appDashboard">
-        <!-- Botones Flotantes - Mejorado espaciado -->
-        <div class="z-40 fixed bottom-6 right-6 md:bottom-8 md:right-8 flex flex-col gap-4 stagger-fade-in floating-btn-container">
-            <button data-modal="budget" data-tooltip="💰 Budget Tracker" class="floating-btn ripple bounce-click gpu-accelerated tooltip-sakura shadow-lg hover:shadow-xl transition-all" aria-label="Abrir control de gastos" style="animation-delay: 0.1s">
-                <i class="fas fa-yen-sign text-lg"></i>
-            </button>
-            <button data-modal="packing" data-tooltip="🎒 Checklist de Equipaje" class="floating-btn ripple bounce-click gpu-accelerated tooltip-info shadow-lg hover:shadow-xl transition-all" aria-label="Abrir checklist de equipaje" style="animation-delay: 0.2s">
-                <i class="fas fa-suitcase-rolling text-lg"></i>
-            </button>
-            <button data-modal="favorites" data-tooltip="⭐ Mis Favoritos" class="floating-btn ripple bounce-click gpu-accelerated tooltip-warning shadow-lg hover:shadow-xl transition-all" aria-label="Abrir mis favoritos" style="animation-delay: 0.3s">
-                <i class="fas fa-star text-lg"></i>
-            </button>
-            <button data-modal="phrases" data-tooltip="🗣️ Frases Útiles" class="floating-btn ripple bounce-click gpu-accelerated tooltip-success shadow-lg hover:shadow-xl transition-all" aria-label="Abrir frases útiles" style="animation-delay: 0.4s">
-                <i class="fas fa-language text-lg"></i>
-            </button>
-            <button data-modal="notes" data-tooltip="📝 Mis Notas" class="floating-btn ripple bounce-click gpu-accelerated tooltip-info shadow-lg hover:shadow-xl transition-all" aria-label="Abrir mis notas" style="animation-delay: 0.5s">
-                <i class="fas fa-sticky-note text-lg"></i>
-            </button>
-            <button data-modal="chat" data-tooltip="💬 Chat Grupal" class="floating-btn ripple bounce-click gpu-accelerated tooltip-success shadow-lg hover:shadow-xl transition-all" aria-label="Abrir chat grupal" style="animation-delay: 0.6s">
-                <i class="fas fa-comments text-lg"></i>
-            </button>
-        </div>
-
-        <!-- FAB Menu para Móvil (Solo visible en mobile) -->
-        <div id="fabContainer">
+        <!-- 🎯 SINGLE FAB MENU (No duplicates!) -->
+        <div id="fabContainer" class="z-50">
             <!-- Overlay -->
             <div id="fabOverlay" class="fab-overlay"></div>
 
-            <!-- FAB Menu Items -->
-            <button class="fab-menu-item" id="open-ml-test-panel" data-label="🧠 ML Test Panel">
+            <!-- FAB Menu Items (Ordered by importance) -->
+            <!-- AI Chat - MOST IMPORTANT -->
+            <button class="fab-menu-item" id="open-ai-chat" data-label="🤖 AI Chat">
+                <i class="fas fa-robot"></i>
+            </button>
+
+            <!-- ML Test Panel -->
+            <button class="fab-menu-item" id="open-ml-test-panel" data-label="🧠 ML Test">
                 <i class="fas fa-brain"></i>
             </button>
-            <button class="fab-menu-item" data-modal="chat" data-label="Chat Grupal">
-                <i class="fas fa-comments"></i>
+
+            <!-- Budget Tracker -->
+            <button class="fab-menu-item" data-modal="budget" data-label="💰 Presupuesto">
+                <i class="fas fa-yen-sign"></i>
             </button>
-            <button class="fab-menu-item" data-modal="notes" data-label="Mis Notas">
-                <i class="fas fa-sticky-note"></i>
-            </button>
-            <button class="fab-menu-item" data-modal="phrases" data-label="Frases Útiles">
-                <i class="fas fa-language"></i>
-            </button>
-            <button class="fab-menu-item" data-modal="favorites" data-label="Mis Favoritos">
+
+            <!-- Favorites -->
+            <button class="fab-menu-item" data-modal="favorites" data-label="⭐ Favoritos">
                 <i class="fas fa-star"></i>
             </button>
-            <button class="fab-menu-item" data-modal="packing" data-label="Equipaje">
+
+            <!-- Notes -->
+            <button class="fab-menu-item" data-modal="notes" data-label="📝 Notas">
+                <i class="fas fa-sticky-note"></i>
+            </button>
+
+            <!-- Phrases -->
+            <button class="fab-menu-item" data-modal="phrases" data-label="🗣️ Frases">
+                <i class="fas fa-language"></i>
+            </button>
+
+            <!-- Packing Checklist -->
+            <button class="fab-menu-item" data-modal="packing" data-label="🎒 Equipaje">
                 <i class="fas fa-suitcase-rolling"></i>
             </button>
-            <button class="fab-menu-item" data-modal="budget" data-label="Budget">
-                <i class="fas fa-yen-sign"></i>
+
+            <!-- Group Chat -->
+            <button class="fab-menu-item" data-modal="chat" data-label="💬 Chat">
+                <i class="fas fa-comments"></i>
             </button>
 
             <!-- FAB Toggle Button -->
