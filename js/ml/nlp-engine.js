@@ -333,65 +333,95 @@ class NLPEngine {
       // Conversational intents
       GREETING: {
         patterns: [
-          /^hola$/i,
-          /^hey$/i,
-          /^hi$/i,
-          /^buenos\s+(?:días|dias|tardes|noches)/i,
-          /^qué\s+tal/i,
-          /^cómo\s+estás/i
+          // 🔥 FLEXIBLE GREETINGS - acepta variaciones emocionales
+          /^ho+l[ai]+[!.]*$/i,        // holaaa, holii, holaaaa, hola!, holiii
+          /^he+y+[!.]*$/i,            // hey, heyy, heyyy, hey!
+          /^hi+[!.]*$/i,              // hi, hiii, hiiii, hi!
+          /^hello+[!.]*$/i,           // hello, hellooo, hello!
+          /^holi+[!.]*$/i,            // holi, holii, holiii
+          /^que\s*tal[!.]*$/i,        // que tal, qué tal!
+          /^como\s*esta[s]*[!.]*$/i,  // como estas, cómo estás!
+          /^buenos\s+(?:dias|días|tardes|noches)[!.]*$/i,
+          /^buenas[!.]*$/i,           // buenas, buenas!
+          /^saludos[!.]*$/i,          // saludos!
+          /^que\s*onda[!.]*$/i,       // qué onda!
+          /^wenas[!.]*$/i,            // wenas (coloquial)
+          /^ey+[!.]*$/i               // ey, eyy, eyyy
         ],
-        keywords: ['hola', 'hey', 'hi', 'buenos', 'saludos'],
+        keywords: ['hol', 'hey', 'hi', 'buenos', 'saludos', 'buenas', 'onda', 'hello'],
         action: 'greeting'
       },
 
       THANKS: {
         patterns: [
-          /^gracias$/i,
-          /^muchas\s+gracias$/i,
-          /^thanks$/i,
-          /^thank\s+you$/i,
-          /^te\s+agradezco/i
+          // 🔥 FLEXIBLE THANKS - variaciones emocionales
+          /^gra+cia+s+[!.]*$/i,           // gracias, graacias, graciaaas!
+          /^mucha+s\s+gra+cia+s+[!.]*$/i, // muchas gracias, muchaaas graciaaas!
+          /^than+k+s*[!.]*$/i,            // thanks, thaaanks, thankss!
+          /^than+k\s*yo+u+[!.]*$/i,       // thank you, thaank youuu!
+          /^te\s+agradezco+[!.]*$/i,
+          /^mil\s+gra+cia+s+[!.]*$/i,     // mil gracias!
+          /^ty+[!.]*$/i                    // ty, tyy (abreviación)
         ],
-        keywords: ['gracias', 'thanks', 'agradezco'],
+        keywords: ['graci', 'thank', 'agradezco'],
         action: 'acknowledge'
       },
 
       AFFIRMATIVE: {
         patterns: [
-          /^s[ií]$/i,
-          /^ok$/i,
-          /^okay$/i,
-          /^de\s+acuerdo$/i,
-          /^perfecto$/i,
-          /^dale$/i,
-          /^claro$/i
+          // 🔥 FLEXIBLE AFFIRMATIVE - variaciones emocionales
+          /^si+[!.]*$/i,                  // si, siii, siiiii!
+          /^o+k+[!.]*$/i,                 // ok, okok, okkk!
+          /^o+ka+y+[!.]*$/i,              // okay, okaaay, okayyy!
+          /^de\s+acuerdo+[!.]*$/i,        // de acuerdo!
+          /^perfecto+[!.]*$/i,            // perfecto, perfectooo!
+          /^dale+[!.]*$/i,                // dale, daleee!
+          /^cla+ro+[!.]*$/i,              // claro, clarooo!
+          /^se+p+[!.]*$/i,                // sep, sepp!
+          /^ya+[!.]*$/i,                  // ya, yaaa!
+          /^yes+[!.]*$/i,                 // yes, yesss!
+          /^yep+[!.]*$/i,                 // yep, yepp!
+          /^exacto+[!.]*$/i,              // exacto, exactooo!
+          /^correcto+[!.]*$/i             // correcto!
         ],
-        keywords: ['sí', 'si', 'ok', 'perfecto', 'dale', 'claro'],
+        keywords: ['si', 'ok', 'perfecto', 'dale', 'claro', 'yes', 'yep', 'exacto'],
         action: 'affirm'
       },
 
       NEGATIVE: {
         patterns: [
-          /^no$/i,
-          /^nah$/i,
-          /^nope$/i,
-          /^para\s+nada$/i,
-          /^ni\s+hablar$/i
+          // 🔥 FLEXIBLE NEGATIVE - variaciones emocionales
+          /^no+[!.]*$/i,                  // no, nooo, noooo!
+          /^na+h+[!.]*$/i,                // nah, naah, naaah!
+          /^nope+[!.]*$/i,                // nope, nopee!
+          /^para\s+nada+[!.]*$/i,         // para nada!
+          /^ni\s+hablar+[!.]*$/i,         // ni hablar!
+          /^nop+[!.]*$/i,                 // nop, nopp!
+          /^nel+[!.]*$/i,                 // nel (coloquial)
+          /^ni\s+modo+[!.]*$/i,           // ni modo!
+          /^tampoco+[!.]*$/i,             // tampoco!
+          /^nunca+[!.]*$/i,               // nunca!
+          /^jamas+[!.]*$/i                // jamás!
         ],
-        keywords: ['no', 'nah', 'nope'],
+        keywords: ['no', 'nah', 'nope', 'nel', 'tampoco', 'nunca'],
         action: 'deny'
       },
 
       FAREWELL: {
         patterns: [
-          /^adiós$/i,
-          /^adios$/i,
-          /^chao$/i,
-          /^hasta\s+luego$/i,
-          /^nos\s+vemos$/i,
-          /^bye$/i
+          // 🔥 FLEXIBLE FAREWELL - variaciones emocionales
+          /^adio+s+[!.]*$/i,              // adios, adioooos, adiós!
+          /^cha+o+[!.]*$/i,               // chao, chaaao, chaoooo!
+          /^hasta\s+luego+[!.]*$/i,       // hasta luego!
+          /^nos\s+vemo+s+[!.]*$/i,        // nos vemos, nos vemoooos!
+          /^by+e+[!.]*$/i,                // bye, byeee, byyyy!
+          /^see\s*ya+[!.]*$/i,            // see ya, see yaaaa!
+          /^hasta\s+pronto+[!.]*$/i,      // hasta pronto!
+          /^me\s+vo+y+[!.]*$/i,           // me voy, me voyyyy!
+          /^sayonara+[!.]*$/i,            // sayonara!
+          /^mata\s*ne+[!.]*$/i            // mata ne! (japonés)
         ],
-        keywords: ['adiós', 'adios', 'chao', 'bye', 'hasta'],
+        keywords: ['adio', 'chao', 'bye', 'hasta', 'vemo', 'sayonara', 'mata'],
         action: 'farewell'
       },
 
