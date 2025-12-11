@@ -184,6 +184,10 @@ class MobileFirst {
             <i class="fas fa-bowl-rice text-2xl text-pink-600"></i>
             <span class="text-sm">Ramen</span>
           </button>
+          <button class="tool-btn flex flex-col items-center gap-2 p-4 rounded-lg bg-indigo-50 dark:bg-indigo-900/20" onclick="window.TravelerProfilesUI?.showProfileSelector(); this.closest('.fixed').remove();">
+            <i class="fas fa-user-circle text-2xl text-indigo-600"></i>
+            <span class="text-sm">Mi Perfil</span>
+          </button>
         </div>
         <button class="w-full py-3 bg-gray-200 dark:bg-gray-700 rounded-lg font-semibold" onclick="this.closest('.fixed').remove();">
           Cerrar
@@ -212,13 +216,13 @@ class MobileFirst {
         <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
         <h3 class="text-xl font-bold mb-4">⚙️ Más Opciones</h3>
         <div class="space-y-3 mb-4">
+          <button class="w-full flex items-center gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700" onclick="window.TravelerProfilesUI?.showProfileSelector(); this.closest('.fixed').remove();">
+            <i class="fas fa-user-circle text-xl text-purple-600"></i>
+            <span>Mi Perfil de Viajero</span>
+          </button>
           <button class="w-full flex items-center gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700" onclick="alert('Settings'); this.closest('.fixed').remove();">
             <i class="fas fa-cog text-xl"></i>
             <span>Configuración</span>
-          </button>
-          <button class="w-full flex items-center gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700" onclick="alert('Profile'); this.closest('.fixed').remove();">
-            <i class="fas fa-user text-xl"></i>
-            <span>Perfil de Viajero</span>
           </button>
           <button class="w-full flex items-center gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700" onclick="alert('Export'); this.closest('.fixed').remove();">
             <i class="fas fa-download text-xl"></i>
