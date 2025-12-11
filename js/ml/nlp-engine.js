@@ -123,9 +123,47 @@ class NLPEngine {
    * 🎯 Classify user intent
    */
   async classifyIntent(text) {
+    // 🔥 NEW: Use Semantic Intent Recognition FIRST
+    if (window.SemanticIntentRecognition) {
+      const semanticResult = window.SemanticIntentRecognition.recognizeIntent(text, {
+        conversationHistory: this.context.conversationHistory
+      });
+
+      console.log('🧠 Semantic recognition:', semanticResult);
+
+      // If semantic recognition is confident, use it
+      if (semanticResult.confidence > 0.5) {
+        // Map semantic intent to NLP intent
+        const intentMapping = {
+          'GREETING': 'greeting',
+          'THANKS': 'acknowledge',
+          'AFFIRMATIVE': 'affirm',
+          'NEGATIVE': 'deny',
+          'FAREWELL': 'farewell'
+        };
+
+        const action = intentMapping[semanticResult.intent] || semanticResult.intent.toLowerCase();
+
+        return {
+          intent: semanticResult.intent,
+          score: semanticResult.confidence,
+          action: action,
+          semanticReasoning: semanticResult.reasoning,
+          method: 'semantic',
+          requiresContext: false
+        };
+      }
+    }
+
+    // FALLBACK: Use pattern matching for complex intents
     const scores = [];
 
     for (const [intentName, intentData] of Object.entries(this.intents)) {
+      // Skip conversational intents (handled by semantic recognition)
+      if (['GREETING', 'THANKS', 'AFFIRMATIVE', 'NEGATIVE', 'FAREWELL'].includes(intentName)) {
+        continue;
+      }
+
       let score = 0;
       let matchedPattern = null;
       let extractedData = {};
@@ -154,7 +192,8 @@ class NLPEngine {
           action: intentData.action,
           matchedPattern,
           extractedData,
-          requiresContext: intentData.requiresContext || false
+          requiresContext: intentData.requiresContext || false,
+          method: 'pattern'
         });
       }
     }
@@ -168,7 +207,8 @@ class NLPEngine {
         intent: 'UNKNOWN',
         score: 0,
         action: 'clarify',
-        needsClarification: true
+        needsClarification: true,
+        method: 'fallback'
       };
     }
 
