@@ -1,513 +1,481 @@
 /**
- * 🧠 FASE 6: META-LEARNING ENGINE
- * ==================================
+ * 🧠 FASE 6: META-LEARNING ENGINE (RE-ENGINEERED)
+ * =================================================
  *
- * "Aprender a Aprender Más Rápido"
+ * "Aprender a Aprender Más Rápido" - Versión From Scratch
  *
- * Este módulo identifica QUÉ tipo de aprendiz es cada usuario y adapta
- * la estrategia de aprendizaje para maximizar la velocidad de aprendizaje.
+ * Este NO es ajuste de prompts. Es ajuste DINÁMICO de hiperparámetros matemáticos
+ * del algoritmo de Reinforcement Learning basado en el comportamiento del usuario.
  *
- * Implementa:
- * - User Type Classification (quick-learner, needs-guidance, explorer)
- * - Adaptive Learning Rate
- * - Strategy Selection (few-shot, supervised, reinforcement)
- * - Performance Tracking per User Type
+ * Hiperparámetros que se ajustan automáticamente:
+ * - α (Alpha / Learning Rate): Qué tan rápido sobrescribo lo viejo con lo nuevo
+ * - ε (Epsilon / Exploration Rate): Cuánto arriesgo a probar cosas nuevas vs. ir a lo seguro
+ * - γ (Gamma / Discount Factor): Cuánto valoro recompensas futuras vs. inmediatas
  *
- * Como un maestro que reconoce si un estudiante aprende mejor:
- * - Viendo ejemplos (few-shot)
- * - Con instrucciones paso a paso (supervised)
- * - Experimentando por su cuenta (reinforcement)
+ * Detecta 3 tipos de usuarios basados en MÉTRICAS REALES:
+ * 1. QUICK LEARNER (Impaciente): Rechaza rápido → α alto, ε bajo
+ * 2. EXPLORER (Curioso): Acepta variedad → α medio, ε alto
+ * 3. NEEDS GUIDANCE (Perdido): Tarda en decidir → α bajo, ε bajo
+ *
+ * Como un maestro que reconoce:
+ * - Si un estudiante aprende rápido con pocos ejemplos
+ * - Si le gusta experimentar y descubrir
+ * - Si necesita guía paso a paso
  */
 
 class MetaLearningEngine {
   constructor() {
     this.initialized = false;
 
-    // User type profiles
+    // Default hyperparameters (Conservative starting point)
+    this.defaultConfig = {
+      learningRate: 0.1,      // α - Aprende despacio (prudente)
+      explorationRate: 0.2,   // ε - 20% de veces prueba cosas nuevas
+      discountFactor: 0.9,    // γ - Valora el futuro (viajes de largo plazo)
+      temperature: 1.0        // Para softmax en decisiones
+    };
+
+    // Current hyperparameters per user
+    this.userConfigs = new Map(); // userId -> hyperparameters
+
+    // User behavior metrics (tracked in real-time)
+    this.userMetrics = new Map(); // userId -> metrics
+
+    // User type profiles (mathematical definitions)
     this.userTypes = {
       'quick-learner': {
-        description: 'Aprende rápido con pocos ejemplos',
-        strategy: 'few-shot',
-        epsilon: 0.1,  // Baja exploración (ya sabe lo que quiere)
-        learningRate: 0.3,  // Alta (aprende rápido)
-        minExamples: 3,
-        confidenceThreshold: 0.8
-      },
-      'needs-guidance': {
-        description: 'Necesita más instrucciones y ejemplos',
-        strategy: 'supervised',
-        epsilon: 0.3,  // Media exploración
-        learningRate: 0.15,  // Media
-        minExamples: 8,
-        confidenceThreshold: 0.6
+        description: 'Aprende rápido, impaciente, quiere resultados YA',
+        hyperparams: {
+          learningRate: 0.8,      // MUY alto - aprende super rápido
+          explorationRate: 0.05,  // MUY bajo - no experimentes, dale lo seguro
+          discountFactor: 0.7,    // Prioriza satisfacción inmediata
+          temperature: 0.5        // Decisiones más determinísticas
+        },
+        detectionCriteria: {
+          rejectVelocity: 'high',      // < 5 segundos para rechazar
+          consecutiveRejects: 3,        // Rechaza 3 seguidas
+          avgResponseTime: 'low'        // Responde rápido
+        }
       },
       'explorer': {
-        description: 'Le gusta experimentar y descubrir',
-        strategy: 'reinforcement',
-        epsilon: 0.5,  // Alta exploración (prueba muchas cosas)
-        learningRate: 0.1,  // Más lenta (aprende de la experiencia)
-        minExamples: 15,
-        confidenceThreshold: 0.5
+        description: 'Curioso, le gusta variedad, experimentar',
+        hyperparams: {
+          learningRate: 0.3,      // Medio - aprende normal
+          explorationRate: 0.6,   // ALTO - arriésgate, muéstrale cosas raras
+          discountFactor: 0.85,   // Valora experiencias variadas
+          temperature: 1.5        // Más aleatorio, más sorpresas
+        },
+        detectionCriteria: {
+          categoryVariety: 'high',      // Acepta 4+ categorías distintas
+          acceptanceRate: 'medium-high', // 50-80% aceptación
+          explorationScore: 'high'       // Clickea cosas fuera de patrón
+        }
+      },
+      'needs-guidance': {
+        description: 'Perdido, necesita mano firme, dudas frecuentes',
+        hyperparams: {
+          learningRate: 0.1,      // Bajo - aprende lento, estable
+          explorationRate: 0.1,   // MUY bajo - conservador, "Top Hits"
+          discountFactor: 0.95,   // Planificación a largo plazo
+          temperature: 0.3        // MUY determinístico
+        },
+        detectionCriteria: {
+          hesitationTime: 'high',       // > 30 segs para decidir
+          helpRequests: 'frequent',     // Pide ayuda seguido
+          acceptanceRate: 'low'         // < 40% aceptación
+        }
       },
       'undecided': {
-        description: 'Cambia de opinión frecuentemente',
-        strategy: 'adaptive',
-        epsilon: 0.4,
-        learningRate: 0.2,
-        minExamples: 10,
-        confidenceThreshold: 0.55
+        description: 'Cambia de opinión, inconsistente',
+        hyperparams: {
+          learningRate: 0.2,      // Medio-bajo
+          explorationRate: 0.4,   // Medio
+          discountFactor: 0.8,    // Medio
+          temperature: 1.0        // Normal
+        },
+        detectionCriteria: {
+          changeRate: 'high',         // Cambia decisiones
+          acceptRejectRatio: 'close'  // 50/50
+        }
       }
     };
 
-    // User profiles (userId -> profile)
-    this.userProfiles = new Map();
+    // Performance tracking per configuration
+    this.configPerformance = new Map();
 
-    // Global statistics
-    this.stats = {
-      totalUsers: 0,
-      typeDistribution: {
-        'quick-learner': 0,
-        'needs-guidance': 0,
-        'explorer': 0,
-        'undecided': 0
-      },
-      avgLearningSpeed: {},
-      bestStrategy: null
-    };
+    // Adjustment history
+    this.adjustmentHistory = [];
 
-    console.log('🧠 Meta-Learning Engine initializing...');
+    console.log('🧠 Meta-Learning Engine (Mathematical) initializing...');
   }
 
   async initialize() {
     if (this.initialized) return;
 
-    // Load user profiles from storage
+    // Load configurations from storage
     if (window.MLStorage) {
-      const stored = await window.MLStorage.get('meta_learning_profiles');
+      const stored = await window.MLStorage.get('meta_learning_hyperparams');
       if (stored) {
-        // Convert array back to Map
-        this.userProfiles = new Map(stored.profiles || []);
-        this.stats = stored.stats || this.stats;
+        this.userConfigs = new Map(stored.configs || []);
+        this.userMetrics = new Map(stored.metrics || []);
+        this.configPerformance = new Map(stored.performance || []);
+        this.adjustmentHistory = stored.history || [];
       }
     }
 
     this.initialized = true;
-    console.log('✅ Meta-Learning Engine ready');
-    console.log(`📊 Loaded ${this.userProfiles.size} user profiles`);
+    console.log('✅ Meta-Learning Engine (Mathematical) ready');
+    console.log(`📊 Tracking ${this.userConfigs.size} user configurations`);
   }
 
   /**
-   * 🎯 Classify user type based on interaction history
-   * @param {string} userId - User ID
-   * @param {Array} interactions - User's interaction history
-   * @returns {Object} User type profile
+   * 🎯 Main entry point: Get optimal hyperparameters for user
+   * @param {string} userId - User identifier
+   * @returns {Object} Hyperparameters { learningRate, explorationRate, discountFactor, temperature }
    */
-  classifyUserType(userId, interactions) {
-    if (interactions.length < 5) {
-      // Not enough data, default to needs-guidance
-      return this.userTypes['needs-guidance'];
+  getHyperparameters(userId = 'default') {
+    // If we have a config for this user, return it
+    if (this.userConfigs.has(userId)) {
+      return this.userConfigs.get(userId);
     }
 
-    // Extract features from interactions
-    const features = this.extractUserFeatures(interactions);
+    // Otherwise, detect user type and assign appropriate hyperparameters
+    const userType = this.detectUserType(userId);
+    const config = this.userTypes[userType].hyperparams;
 
-    // Score each user type
-    const scores = {
-      'quick-learner': this.scoreQuickLearner(features),
-      'needs-guidance': this.scoreNeedsGuidance(features),
-      'explorer': this.scoreExplorer(features),
-      'undecided': this.scoreUndecided(features)
-    };
+    // Store and return
+    this.userConfigs.set(userId, { ...config, type: userType });
 
-    // Get best matching type
-    const bestType = Object.entries(scores).reduce((best, [type, score]) => {
-      return score > best.score ? { type, score } : best;
-    }, { type: 'needs-guidance', score: 0 });
+    console.log(`🎯 Assigned ${userType} hyperparameters to user ${userId}:`, config);
 
-    console.log(`👤 User ${userId} classified as: ${bestType.type} (confidence: ${bestType.score.toFixed(2)})`);
-
-    return {
-      ...this.userTypes[bestType.type],
-      classification: bestType.type,
-      confidence: bestType.score,
-      features
-    };
+    return config;
   }
 
   /**
-   * 📊 Extract features from user interaction history
+   * 🔍 Detect user type based on behavioral metrics
+   * @param {string} userId - User identifier
+   * @returns {string} User type ('quick-learner', 'explorer', 'needs-guidance', 'undecided')
    */
-  extractUserFeatures(interactions) {
-    const total = interactions.length;
+  detectUserType(userId) {
+    const metrics = this.userMetrics.get(userId);
 
-    // Time between interactions (learning speed indicator)
-    const avgTimeBetween = this.calculateAvgTimeBetween(interactions);
-
-    // Decision consistency
-    const consistency = this.calculateConsistency(interactions);
-
-    // Acceptance rate
-    const acceptanceRate = interactions.filter(i => i.feedback === 'accept').length / total;
-
-    // Exploration rate (how varied are their choices)
-    const explorationRate = this.calculateExplorationRate(interactions);
-
-    // Edit rate (how often they modify suggestions)
-    const editRate = interactions.filter(i => i.feedback === 'edit').length / total;
-
-    // Question rate (how often they ask for help)
-    const questionRate = interactions.filter(i => i.type === 'question').length / total;
-
-    return {
-      total,
-      avgTimeBetween,
-      consistency,
-      acceptanceRate,
-      explorationRate,
-      editRate,
-      questionRate
-    };
-  }
-
-  /**
-   * ⚡ Score: Quick Learner
-   * Characteristics: Fast decisions, high consistency, high acceptance
-   */
-  scoreQuickLearner(features) {
-    let score = 0;
-
-    // Fast decisions (< 30 seconds between actions)
-    if (features.avgTimeBetween < 30000) score += 0.3;
-
-    // High consistency (> 0.7)
-    if (features.consistency > 0.7) score += 0.3;
-
-    // High acceptance rate (> 0.7)
-    if (features.acceptanceRate > 0.7) score += 0.2;
-
-    // Low exploration (< 0.3)
-    if (features.explorationRate < 0.3) score += 0.1;
-
-    // Few questions (< 0.2)
-    if (features.questionRate < 0.2) score += 0.1;
-
-    return score;
-  }
-
-  /**
-   * 🆘 Score: Needs Guidance
-   * Characteristics: Slow decisions, asks many questions, low confidence
-   */
-  scoreNeedsGuidance(features) {
-    let score = 0;
-
-    // Slow decisions (> 60 seconds)
-    if (features.avgTimeBetween > 60000) score += 0.3;
-
-    // Many questions (> 0.3)
-    if (features.questionRate > 0.3) score += 0.3;
-
-    // High edit rate (> 0.4)
-    if (features.editRate > 0.4) score += 0.2;
-
-    // Low acceptance rate (< 0.5)
-    if (features.acceptanceRate < 0.5) score += 0.2;
-
-    return score;
-  }
-
-  /**
-   * 🔍 Score: Explorer
-   * Characteristics: High exploration, varied choices, willing to try new things
-   */
-  scoreExplorer(features) {
-    let score = 0;
-
-    // High exploration (> 0.5)
-    if (features.explorationRate > 0.5) score += 0.4;
-
-    // Medium acceptance (0.5-0.7) - tries things
-    if (features.acceptanceRate >= 0.5 && features.acceptanceRate <= 0.7) score += 0.2;
-
-    // Medium consistency (0.4-0.6) - varies choices
-    if (features.consistency >= 0.4 && features.consistency <= 0.6) score += 0.2;
-
-    // Low questions (< 0.2) - self-sufficient
-    if (features.questionRate < 0.2) score += 0.2;
-
-    return score;
-  }
-
-  /**
-   * 🤔 Score: Undecided
-   * Characteristics: Inconsistent, changes mind frequently
-   */
-  scoreUndecided(features) {
-    let score = 0;
-
-    // Low consistency (< 0.4)
-    if (features.consistency < 0.4) score += 0.4;
-
-    // High edit rate (> 0.5)
-    if (features.editRate > 0.5) score += 0.3;
-
-    // Medium exploration
-    if (features.explorationRate >= 0.3 && features.explorationRate <= 0.5) score += 0.2;
-
-    // Medium questions
-    if (features.questionRate >= 0.2 && features.questionRate <= 0.4) score += 0.1;
-
-    return score;
-  }
-
-  /**
-   * ⏱️ Calculate average time between interactions
-   */
-  calculateAvgTimeBetween(interactions) {
-    if (interactions.length < 2) return 0;
-
-    let totalTime = 0;
-    for (let i = 1; i < interactions.length; i++) {
-      const timeDiff = interactions[i].timestamp - interactions[i - 1].timestamp;
-      totalTime += timeDiff;
+    if (!metrics || metrics.totalInteractions < 5) {
+      // Not enough data, default to undecided
+      return 'undecided';
     }
 
-    return totalTime / (interactions.length - 1);
-  }
-
-  /**
-   * 📏 Calculate decision consistency
-   * How often user makes similar decisions in similar contexts
-   */
-  calculateConsistency(interactions) {
-    if (interactions.length < 3) return 0.5;
-
-    // Group interactions by similar contexts
-    const contexts = {};
-    for (const interaction of interactions) {
-      const contextKey = this.getContextKey(interaction);
-      if (!contexts[contextKey]) contexts[contextKey] = [];
-      contexts[contextKey].push(interaction.feedback);
-    }
-
-    // Calculate consistency within each context
-    let totalConsistency = 0;
-    let contextCount = 0;
-
-    for (const feedbacks of Object.values(contexts)) {
-      if (feedbacks.length < 2) continue;
-
-      // Most common feedback in this context
-      const mode = this.getMostCommon(feedbacks);
-      const consistency = feedbacks.filter(f => f === mode).length / feedbacks.length;
-
-      totalConsistency += consistency;
-      contextCount++;
-    }
-
-    return contextCount > 0 ? totalConsistency / contextCount : 0.5;
-  }
-
-  /**
-   * 🗺️ Calculate exploration rate
-   * How varied are the user's choices
-   */
-  calculateExplorationRate(interactions) {
-    if (interactions.length < 3) return 0.5;
-
-    // Count unique categories/actions
-    const categories = new Set();
-    const actions = new Set();
-
-    for (const interaction of interactions) {
-      if (interaction.category) categories.add(interaction.category);
-      if (interaction.action) actions.add(interaction.action);
-    }
-
-    // Normalize by total interactions
-    const categoryDiversity = categories.size / Math.min(interactions.length, 10);
-    const actionDiversity = actions.size / Math.min(interactions.length, 8);
-
-    return (categoryDiversity + actionDiversity) / 2;
-  }
-
-  /**
-   * 🔑 Get context key for grouping similar interactions
-   */
-  getContextKey(interaction) {
-    return `${interaction.intent || 'unknown'}_${interaction.category || 'general'}`;
-  }
-
-  /**
-   * 📊 Get most common element in array
-   */
-  getMostCommon(arr) {
-    const counts = {};
-    let maxCount = 0;
-    let mode = arr[0];
-
-    for (const item of arr) {
-      counts[item] = (counts[item] || 0) + 1;
-      if (counts[item] > maxCount) {
-        maxCount = counts[item];
-        mode = item;
+    // Check each type's criteria
+    for (const [typeName, typeConfig] of Object.entries(this.userTypes)) {
+      if (this.matchesCriteria(metrics, typeConfig.detectionCriteria)) {
+        return typeName;
       }
     }
 
-    return mode;
+    return 'undecided';
   }
 
   /**
-   * 🎓 Get or create user profile
+   * ✅ Check if metrics match detection criteria
    */
-  async getUserProfile(userId, interactions = []) {
-    // Check cache
-    if (this.userProfiles.has(userId)) {
-      return this.userProfiles.get(userId);
+  matchesCriteria(metrics, criteria) {
+    let matches = 0;
+    let total = 0;
+
+    for (const [key, value] of Object.entries(criteria)) {
+      total++;
+
+      if (key === 'rejectVelocity' && value === 'high') {
+        if (metrics.avgRejectTime < 5000) matches++; // < 5 segundos
+      }
+      else if (key === 'consecutiveRejects') {
+        if (metrics.maxConsecutiveRejects >= value) matches++;
+      }
+      else if (key === 'avgResponseTime' && value === 'low') {
+        if (metrics.avgResponseTime < 10000) matches++; // < 10 segundos
+      }
+      else if (key === 'categoryVariety' && value === 'high') {
+        if (metrics.uniqueCategories >= 4) matches++;
+      }
+      else if (key === 'acceptanceRate') {
+        const rate = metrics.acceptedCount / metrics.totalInteractions;
+        if (value === 'medium-high' && rate >= 0.5 && rate <= 0.8) matches++;
+        else if (value === 'low' && rate < 0.4) matches++;
+      }
+      else if (key === 'hesitationTime' && value === 'high') {
+        if (metrics.avgResponseTime > 30000) matches++; // > 30 segundos
+      }
+      else if (key === 'helpRequests' && value === 'frequent') {
+        if (metrics.helpRequestCount > 3) matches++;
+      }
+      else if (key === 'changeRate' && value === 'high') {
+        if (metrics.decisionChanges >= 3) matches++;
+      }
     }
 
-    // Classify new user
-    const classification = this.classifyUserType(userId, interactions);
-
-    const profile = {
-      userId,
-      type: classification.classification,
-      strategy: classification.strategy,
-      confidence: classification.confidence,
-      features: classification.features,
-      learningRate: classification.learningRate,
-      epsilon: classification.epsilon,
-      minExamples: classification.minExamples,
-      interactionCount: interactions.length,
-      lastUpdated: Date.now(),
-      createdAt: Date.now()
-    };
-
-    // Cache profile
-    this.userProfiles.set(userId, profile);
-
-    // Update stats
-    this.stats.totalUsers++;
-    this.stats.typeDistribution[profile.type]++;
-
-    // Save
-    await this.saveState();
-
-    return profile;
+    // Need to match at least 70% of criteria
+    return (matches / total) >= 0.7;
   }
 
   /**
-   * 🔄 Update user profile based on new interactions
+   * 📊 Track user interaction for metrics
+   * @param {string} userId - User identifier
+   * @param {Object} interaction - Interaction data
    */
-  async updateUserProfile(userId, newInteractions) {
-    const profile = await this.getUserProfile(userId);
-
-    // Get all interactions
-    const allInteractions = [...profile.interactions || [], ...newInteractions];
-
-    // Re-classify
-    const newClassification = this.classifyUserType(userId, allInteractions);
-
-    // Check if type changed
-    if (newClassification.classification !== profile.type) {
-      console.log(`🔄 User ${userId} type changed: ${profile.type} → ${newClassification.classification}`);
-
-      // Update stats
-      this.stats.typeDistribution[profile.type]--;
-      this.stats.typeDistribution[newClassification.classification]++;
+  trackInteraction(userId, interaction) {
+    if (!this.userMetrics.has(userId)) {
+      this.userMetrics.set(userId, {
+        totalInteractions: 0,
+        acceptedCount: 0,
+        rejectedCount: 0,
+        avgResponseTime: 0,
+        avgRejectTime: 0,
+        maxConsecutiveRejects: 0,
+        currentConsecutiveRejects: 0,
+        uniqueCategories: new Set(),
+        helpRequestCount: 0,
+        decisionChanges: 0,
+        explorationScore: 0,
+        lastDecision: null,
+        timestamps: []
+      });
     }
 
-    // Update profile
-    profile.type = newClassification.classification;
-    profile.strategy = newClassification.strategy;
-    profile.confidence = newClassification.confidence;
-    profile.features = newClassification.features;
-    profile.learningRate = newClassification.learningRate;
-    profile.epsilon = newClassification.epsilon;
-    profile.interactionCount = allInteractions.length;
-    profile.lastUpdated = Date.now();
+    const metrics = this.userMetrics.get(userId);
+    metrics.totalInteractions++;
 
-    // Save
-    await this.saveState();
+    // Track acceptance/rejection
+    if (interaction.accepted) {
+      metrics.acceptedCount++;
+      metrics.currentConsecutiveRejects = 0;
+    } else if (interaction.rejected) {
+      metrics.rejectedCount++;
+      metrics.currentConsecutiveRejects++;
 
-    return profile;
-  }
+      if (metrics.currentConsecutiveRejects > metrics.maxConsecutiveRejects) {
+        metrics.maxConsecutiveRejects = metrics.currentConsecutiveRejects;
+      }
 
-  /**
-   * 🎯 Get recommended strategy for user
-   */
-  getRecommendedStrategy(userId) {
-    const profile = this.userProfiles.get(userId);
-
-    if (!profile) {
-      return {
-        strategy: 'supervised',  // Default for new users
-        epsilon: 0.3,
-        learningRate: 0.15,
-        reason: 'New user, using default strategy'
-      };
+      // Track reject velocity
+      if (interaction.responseTime && interaction.responseTime < 5000) {
+        const n = metrics.rejectedCount;
+        metrics.avgRejectTime = (metrics.avgRejectTime * (n - 1) + interaction.responseTime) / n;
+      }
     }
 
-    return {
-      strategy: profile.strategy,
-      epsilon: profile.epsilon,
-      learningRate: profile.learningRate,
-      confidence: profile.confidence,
-      reason: `User type: ${profile.type}`
-    };
+    // Track response time
+    if (interaction.responseTime) {
+      const n = metrics.totalInteractions;
+      metrics.avgResponseTime = (metrics.avgResponseTime * (n - 1) + interaction.responseTime) / n;
+    }
+
+    // Track category variety
+    if (interaction.category) {
+      metrics.uniqueCategories.add(interaction.category);
+    }
+
+    // Track help requests
+    if (interaction.helpRequested) {
+      metrics.helpRequestCount++;
+    }
+
+    // Track decision changes
+    if (interaction.changedDecision) {
+      metrics.decisionChanges++;
+    }
+
+    // Track exploration
+    if (interaction.exploredNewCategory) {
+      metrics.explorationScore++;
+    }
+
+    metrics.timestamps.push(Date.now());
+
+    // Check if we need to adjust hyperparameters
+    this.checkForHyperparameterAdjustment(userId);
   }
 
   /**
-   * 📊 Get meta-learning statistics
+   * 🔧 Check if hyperparameters need adjustment
+   */
+  checkForHyperparameterAdjustment(userId) {
+    const metrics = this.userMetrics.get(userId);
+
+    // Need at least 10 interactions before adjusting
+    if (metrics.totalInteractions < 10) return;
+
+    // Re-detect user type every 10 interactions
+    if (metrics.totalInteractions % 10 === 0) {
+      const oldType = this.userConfigs.get(userId)?.type || 'undecided';
+      const newType = this.detectUserType(userId);
+
+      if (oldType !== newType) {
+        console.log(`🔄 User ${userId} type changed: ${oldType} → ${newType}`);
+
+        // Update hyperparameters
+        const newConfig = {
+          ...this.userTypes[newType].hyperparams,
+          type: newType
+        };
+
+        this.userConfigs.set(userId, newConfig);
+
+        // Record adjustment
+        this.adjustmentHistory.push({
+          timestamp: Date.now(),
+          userId,
+          oldType,
+          newType,
+          oldConfig: this.userTypes[oldType].hyperparams,
+          newConfig: this.userTypes[newType].hyperparams,
+          metrics: { ...metrics }
+        });
+
+        // Notify Reinforcement Learning Engine
+        if (window.ReinforcementLearningEngine) {
+          window.ReinforcementLearningEngine.updateHyperparameters(newConfig);
+        }
+
+        this.save();
+      }
+    }
+
+    // Fine-tune based on recent performance
+    if (metrics.totalInteractions % 20 === 0) {
+      this.fineTuneHyperparameters(userId);
+    }
+  }
+
+  /**
+   * 🎛️ Fine-tune hyperparameters based on performance
+   */
+  fineTuneHyperparameters(userId) {
+    const config = this.userConfigs.get(userId);
+    const metrics = this.userMetrics.get(userId);
+
+    if (!config || !metrics) return;
+
+    const acceptanceRate = metrics.acceptedCount / metrics.totalInteractions;
+
+    // If acceptance rate is dropping, adjust
+    if (acceptanceRate < 0.3) {
+      // Too many rejections - need to explore more
+      config.explorationRate = Math.min(0.8, config.explorationRate * 1.3);
+      console.log(`📈 Increasing exploration for ${userId}: ε → ${config.explorationRate.toFixed(2)}`);
+    } else if (acceptanceRate > 0.8) {
+      // High acceptance - can be more confident, less exploration
+      config.explorationRate = Math.max(0.05, config.explorationRate * 0.8);
+      console.log(`📉 Decreasing exploration for ${userId}: ε → ${config.explorationRate.toFixed(2)}`);
+    }
+
+    // Adjust learning rate based on consistency
+    if (metrics.decisionChanges > 5) {
+      // User is inconsistent - slow down learning
+      config.learningRate = Math.max(0.05, config.learningRate * 0.8);
+      console.log(`🐌 Slowing learning for ${userId}: α → ${config.learningRate.toFixed(2)}`);
+    }
+
+    this.save();
+  }
+
+  /**
+   * 📊 Apply hyperparameters to Q-Learning update
+   * This is the CORE mathematical formula
+   */
+  applyQLearningUpdate(oldQValue, reward, maxFutureQ, hyperparams) {
+    const { learningRate, discountFactor } = hyperparams;
+
+    // Q-Learning formula: Q(s,a) ← Q(s,a) + α[r + γ·max(Q(s',a')) - Q(s,a)]
+    const tdTarget = reward + discountFactor * maxFutureQ;
+    const tdError = tdTarget - oldQValue;
+    const newQValue = oldQValue + learningRate * tdError;
+
+    return newQValue;
+  }
+
+  /**
+   * 🎲 Apply epsilon-greedy exploration
+   * Returns true if should explore (random action), false if should exploit (best action)
+   */
+  shouldExplore(hyperparams) {
+    return Math.random() < hyperparams.explorationRate;
+  }
+
+  /**
+   * 🌡️ Apply softmax temperature to action selection
+   * Higher temperature = more random, lower = more deterministic
+   */
+  softmaxSelection(qValues, hyperparams) {
+    const { temperature } = hyperparams;
+
+    // Compute softmax with temperature
+    const expValues = qValues.map(q => Math.exp(q / temperature));
+    const sumExp = expValues.reduce((a, b) => a + b, 0);
+    const probabilities = expValues.map(exp => exp / sumExp);
+
+    // Sample from distribution
+    const rand = Math.random();
+    let cumProb = 0;
+
+    for (let i = 0; i < probabilities.length; i++) {
+      cumProb += probabilities[i];
+      if (rand < cumProb) {
+        return i;
+      }
+    }
+
+    return qValues.length - 1;
+  }
+
+  /**
+   * 💾 Save to storage
+   */
+  async save() {
+    if (window.MLStorage) {
+      await window.MLStorage.set('meta_learning_hyperparams', {
+        configs: Array.from(this.userConfigs.entries()),
+        metrics: Array.from(this.userMetrics.entries()).map(([id, m]) => [
+          id,
+          { ...m, uniqueCategories: Array.from(m.uniqueCategories) }
+        ]),
+        performance: Array.from(this.configPerformance.entries()),
+        history: this.adjustmentHistory.slice(-100)
+      });
+    }
+  }
+
+  /**
+   * 📊 Get statistics
    */
   getStats() {
-    const totalUsers = this.stats.totalUsers || 1;
+    const typeDistribution = {};
+    for (const [userId, config] of this.userConfigs) {
+      const type = config.type || 'undecided';
+      typeDistribution[type] = (typeDistribution[type] || 0) + 1;
+    }
 
     return {
-      totalUsers: this.stats.totalUsers,
-      typeDistribution: Object.entries(this.stats.typeDistribution).map(([type, count]) => ({
-        type,
-        count,
-        percentage: ((count / totalUsers) * 100).toFixed(1) + '%'
-      })),
-      activeProfiles: this.userProfiles.size,
-      avgLearningSpeed: this.stats.avgLearningSpeed,
-      bestStrategy: this.stats.bestStrategy
+      totalUsers: this.userConfigs.size,
+      typeDistribution,
+      recentAdjustments: this.adjustmentHistory.slice(-10),
+      avgLearningRate: Array.from(this.userConfigs.values())
+        .reduce((sum, c) => sum + c.learningRate, 0) / (this.userConfigs.size || 1),
+      avgExplorationRate: Array.from(this.userConfigs.values())
+        .reduce((sum, c) => sum + c.explorationRate, 0) / (this.userConfigs.size || 1)
     };
   }
 
   /**
-   * 💾 Save state to storage
+   * 🎯 Get current configuration for user
    */
-  async saveState() {
-    if (!window.MLStorage) return;
-
-    await window.MLStorage.set('meta_learning_profiles', {
-      profiles: Array.from(this.userProfiles.entries()),
-      stats: this.stats,
-      timestamp: Date.now()
-    });
+  getUserConfig(userId) {
+    return this.userConfigs.get(userId) || { ...this.defaultConfig, type: 'undecided' };
   }
 
   /**
-   * 🧹 Reset (for testing)
+   * 📈 Get metrics for user
    */
-  async reset() {
-    this.userProfiles.clear();
-    this.stats = {
-      totalUsers: 0,
-      typeDistribution: {
-        'quick-learner': 0,
-        'needs-guidance': 0,
-        'explorer': 0,
-        'undecided': 0
-      },
-      avgLearningSpeed: {},
-      bestStrategy: null
-    };
-
-    await this.saveState();
-    console.log('🧹 Meta-Learning state reset');
+  getUserMetrics(userId) {
+    return this.userMetrics.get(userId) || null;
   }
 }
 
@@ -518,15 +486,11 @@ if (typeof window !== 'undefined') {
   // Auto-initialize
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      window.MetaLearningEngine.initialize().catch(e => {
-        console.error('Failed to initialize Meta-Learning Engine:', e);
-      });
+      window.MetaLearningEngine.initialize();
     });
   } else {
-    window.MetaLearningEngine.initialize().catch(e => {
-      console.error('Failed to initialize Meta-Learning Engine:', e);
-    });
+    window.MetaLearningEngine.initialize();
   }
 
-  console.log('🧠 Meta-Learning Engine loaded!');
+  console.log('🧠 Meta-Learning Engine (Mathematical) loaded!');
 }
