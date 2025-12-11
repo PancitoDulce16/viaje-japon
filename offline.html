@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sin Conexión - Japitin</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #fef3f8 0%, #fce7f3 100%);
+        }
+
+        .offline-container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 500px;
+        }
+
+        .offline-icon {
+            font-size: 80px;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 32px;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            font-size: 18px;
+            color: #6b7280;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        button {
+            background: #9333ea;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #7e22ce;
+        }
+
+        .tips {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 12px;
+            text-align: left;
+        }
+
+        .tips h3 {
+            font-size: 18px;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .tips ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .tips li {
+            padding: 0.5rem 0;
+            color: #4b5563;
+        }
+
+        .tips li::before {
+            content: "✓ ";
+            color: #9333ea;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">📡</div>
+        <h1>Sin Conexión</h1>
+        <p>
+            No pudimos conectarnos a internet. Pero no te preocupes,
+            puedes seguir usando Japitin con las funciones que ya tienes guardadas.
+        </p>
+
+        <button onclick="window.location.reload()">
+            Reintentar Conexión
+        </button>
+
+        <div class="tips">
+            <h3>💡 Mientras tanto...</h3>
+            <ul>
+                <li>Puedes ver tu itinerario guardado</li>
+                <li>Revisar tu presupuesto</li>
+                <li>Ver lugares marcados</li>
+                <li>Explorar tus fotos</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Retry connection every 5 seconds
+        setInterval(() => {
+            fetch('/', { method: 'HEAD', cache: 'no-store' })
+                .then(() => {
+                    window.location.reload();
+                })
+                .catch(() => {
+                    // Still offline
+                });
+        }, 5000);
+    </script>
+</body>
+</html>
