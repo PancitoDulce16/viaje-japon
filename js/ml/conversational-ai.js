@@ -379,7 +379,7 @@ class ConversationalAI {
 
     return {
       success: true,
-      message: `Actividad de ${action.category} agregada exitosamente`,
+      message: `Actividad de ${action.category || 'interés'} agregada exitosamente`,
       changes: {
         type: 'activity_added',
         category: action.category,
@@ -396,7 +396,7 @@ class ConversationalAI {
 
     return {
       success: true,
-      message: `Actividades de ${action.category} eliminadas`,
+      message: `Actividades de ${action.category || 'esa categoría'} eliminadas`,
       changes: {
         type: 'activity_removed',
         category: action.category
