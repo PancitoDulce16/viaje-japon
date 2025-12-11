@@ -33,7 +33,9 @@ class DialogueManager {
     // Memory systems
     this.memory = {
       shortTerm: [], // Last 5 turns
-      working: {},   // Current task/goal
+      working: {     // Current task/goal
+        lastAISuggestions: []  // 🔥 NEW: Items mentioned by AI (for context resolution)
+      },
       longTerm: {},  // User preferences, past trips
       episodic: []   // Specific memorable events
     };
@@ -76,10 +78,18 @@ class DialogueManager {
   async processMessage(userMessage, context = {}) {
     if (!this.initialized) await this.initialize();
 
+    // 🔥 NEW: Check if user is referring to something AI just suggested
+    const contextualMatch = this.resolveWithContext(userMessage);
+
     // Parse message using NLP Engine
     let parsed;
     if (window.NLPEngine) {
       parsed = await window.NLPEngine.parse(userMessage);
+
+      // 🔥 NEW: Enhance parsing with contextual match
+      if (contextualMatch) {
+        parsed = this.enhanceParsingWithContext(parsed, contextualMatch, userMessage);
+      }
     } else {
       // Fallback if NLP not available
       parsed = { intent: { intent: 'UNKNOWN' }, entities: {}, confidence: 0 };
@@ -714,12 +724,27 @@ class DialogueManager {
       this.memory.working.startedAt = turn.timestamp;
     }
 
+    // 🔥 NEW: Extract and store items mentioned by AI
+    if (turn.response && turn.response.text) {
+      const mentionedItems = this.extractMentionedItems(turn.response.text);
+
+      if (mentionedItems.length > 0) {
+        console.log(`💾 AI mentioned ${mentionedItems.length} items:`, mentionedItems.map(i => i.name));
+
+        // Store in working memory (keep last 10)
+        this.memory.working.lastAISuggestions = [
+          ...mentionedItems,
+          ...(this.memory.working.lastAISuggestions || [])
+        ].slice(0, 10);
+      }
+    }
+
     // Add to episodic memory if significant
-    if (turn.response.confidence > 0.8 || turn.parsed.sentiment.label === 'positive') {
+    if (turn.response.confidence > 0.8 || turn.parsed.sentiment?.label === 'positive') {
       this.memory.episodic.push({
         summary: turn.userMessage.slice(0, 100),
         intent: turn.parsed.intent.intent,
-        sentiment: turn.parsed.sentiment.label,
+        sentiment: turn.parsed.sentiment?.label || 'neutral',
         timestamp: turn.timestamp
       });
 
@@ -792,6 +817,188 @@ class DialogueManager {
     };
 
     return mapping[intent] || intent;
+  }
+
+  /**
+   * 🔥 CONVERSATIONAL CONTEXT RESOLUTION
+   */
+
+  /**
+   * Resolve user message with recent AI suggestions
+   */
+  resolveWithContext(userMessage) {
+    const lowerMessage = userMessage.toLowerCase();
+    const suggestions = this.memory.working.lastAISuggestions || [];
+
+    if (suggestions.length === 0) return null;
+
+    // Check if user mentions any of the recent suggestions
+    for (const item of suggestions) {
+      const lowerItem = item.name.toLowerCase();
+
+      // Direct match
+      if (lowerMessage.includes(lowerItem)) {
+        console.log(`🎯 Contextual match found: "${item.name}"`);
+        return {
+          matched: true,
+          item: item,
+          confidence: 0.95
+        };
+      }
+
+      // Partial match (e.g., "Fushimi" matches "Fushimi Inari")
+      const itemWords = lowerItem.split(' ');
+      for (const word of itemWords) {
+        if (word.length > 4 && lowerMessage.includes(word)) {
+          console.log(`🎯 Partial contextual match: "${word}" -> "${item.name}"`);
+          return {
+            matched: true,
+            item: item,
+            confidence: 0.85
+          };
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Enhance NLP parsing with contextual match
+   */
+  enhanceParsingWithContext(parsed, contextualMatch, userMessage) {
+    // Boost confidence if we found a contextual match
+    const boostedConfidence = Math.max(parsed.confidence, contextualMatch.confidence);
+
+    // Fill in entities if missing
+    if (!parsed.entities.CATEGORY && contextualMatch.item.category) {
+      parsed.entities.CATEGORY = {
+        value: contextualMatch.item.category,
+        captured: [contextualMatch.item.category],
+        source: 'contextual_inference'
+      };
+    }
+
+    if (!parsed.entities.PLACE) {
+      parsed.entities.PLACE = {
+        value: contextualMatch.item.name,
+        captured: [contextualMatch.item.name],
+        source: 'contextual_inference'
+      };
+    }
+
+    // Infer intent if missing or low confidence
+    const lowerMessage = userMessage.toLowerCase();
+    if (parsed.confidence < 0.5) {
+      // If user says "agregar X" where X is from suggestions
+      if (lowerMessage.includes('agregar') ||
+          lowerMessage.includes('añadir') ||
+          lowerMessage.includes('add')) {
+        parsed.intent = {
+          intent: 'ADD_ACTIVITY',
+          action: 'addActivity',
+          confidence: boostedConfidence
+        };
+      }
+    }
+
+    parsed.confidence = boostedConfidence;
+    parsed.contextuallyEnhanced = true;
+
+    console.log('✨ Parsing enhanced with context:', parsed);
+
+    return parsed;
+  }
+
+  /**
+   * Extract items mentioned in AI response
+   */
+  extractMentionedItems(responseText) {
+    const items = [];
+
+    // Common patterns for Japan places/activities
+    const patterns = [
+      // Place names (capitalized words)
+      /(?:Visitar|Ver|Probar|Explorar|Ir a)\s+([A-Z][a-zá-úñ]+(?:\s+[A-Z][a-zá-úñ]+)*)/g,
+      // Items in bullet lists
+      /[•\-]\s*(.+?)(?:\n|$)/g,
+      // Quoted items
+      /"([^"]+)"/g
+    ];
+
+    for (const pattern of patterns) {
+      let match;
+      while ((match = pattern.exec(responseText)) !== null) {
+        const name = match[1].trim();
+
+        // Skip common words
+        if (name.length > 3 && !name.match(/^(más|para|con|por|sin|sobre)$/i)) {
+          items.push({
+            name: name,
+            category: this.inferCategory(name),
+            timestamp: Date.now()
+          });
+        }
+      }
+    }
+
+    // Hardcoded important places (for bootstrap)
+    const knownPlaces = [
+      'Fushimi Inari', 'Kinkaku-ji', 'Sensō-ji', 'Meiji Jingu',
+      'Arashiyama', 'Shibuya', 'Akihabara', 'Harajuku',
+      'Hakone', 'onsen', 'templo', 'santuario'
+    ];
+
+    for (const place of knownPlaces) {
+      if (responseText.includes(place)) {
+        items.push({
+          name: place,
+          category: this.inferCategory(place),
+          timestamp: Date.now()
+        });
+      }
+    }
+
+    return items;
+  }
+
+  /**
+   * Infer category from item name
+   */
+  inferCategory(name) {
+    const lowerName = name.toLowerCase();
+
+    if (lowerName.includes('templo') || lowerName.includes('temple') ||
+        lowerName.includes('santuario') || lowerName.includes('shrine') ||
+        lowerName.includes('inari') || lowerName.includes('ji')) {
+      return 'temples';
+    }
+
+    if (lowerName.includes('onsen') || lowerName.includes('baño')) {
+      return 'onsen';
+    }
+
+    if (lowerName.includes('café') || lowerName.includes('cafe') ||
+        lowerName.includes('restaurante') || lowerName.includes('comida')) {
+      return 'food';
+    }
+
+    if (lowerName.includes('parque') || lowerName.includes('jardín') ||
+        lowerName.includes('park') || lowerName.includes('garden')) {
+      return 'parks';
+    }
+
+    if (lowerName.includes('museo') || lowerName.includes('museum') ||
+        lowerName.includes('galería')) {
+      return 'culture';
+    }
+
+    if (lowerName.includes('shopping') || lowerName.includes('tienda') ||
+        lowerName.includes('akihabara') || lowerName.includes('shibuya')) {
+      return 'shopping';
+    }
+
+    return 'general';
   }
 
   /**
