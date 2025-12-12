@@ -59,9 +59,7 @@ class EnsembleMethods {
 
     // Statistics
     this.stats = {
-      predictionsM
-
-ade: 0,
+      predictionsMade: 0,
       ensembleAccuracy: 0,
       bestModel: null,
       worstModel: null
