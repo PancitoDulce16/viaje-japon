@@ -515,6 +515,11 @@
                 if (window.OnboardingTutorial) {
                     window.OnboardingTutorial.showIfFirstTime();
                 }
+
+                // 📊 Renderizar visual dashboard
+                if (window.VisualDashboard && window.currentItinerary) {
+                    window.VisualDashboard.render(window.currentItinerary);
+                }
             }, 2000);
         });
     </script>
@@ -892,6 +897,12 @@
 
     <!-- 🎓 Onboarding Tutorial -->
     <script src="/js/onboarding-tutorial.js"></script>
+
+    <!-- 🔄 Loading States -->
+    <script src="/js/loading-states.js"></script>
+
+    <!-- 📊 Visual Dashboard -->
+    <script src="/js/visual-dashboard.js"></script>
 
     <!-- ⚙️ SISTEMA DE CONFIGURACIONES DE USUARIO -->
     <!-- Sistema de configuraciones completo -->

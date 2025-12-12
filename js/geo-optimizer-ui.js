@@ -68,13 +68,25 @@ class GeoOptimizerUI {
    * Get current itinerary from app
    */
   getCurrentItinerary() {
-    // This would integrate with your existing itinerary manager
-    // For now, mock data
-    if (window.ItineraryManager && window.ItineraryManager.getCurrentItinerary) {
-      return window.ItineraryManager.getCurrentItinerary();
+    // Try multiple sources for itinerary
+
+    // 1. Global currentItinerary (from itinerary-v3.js)
+    if (window.currentItinerary && window.currentItinerary.days && window.currentItinerary.days.length > 0) {
+      console.log('✅ Using window.currentItinerary');
+      return window.currentItinerary;
     }
 
-    // Fallback to mock
+    // 2. ItineraryManager
+    if (window.ItineraryManager && window.ItineraryManager.getCurrentItinerary) {
+      const itinerary = window.ItineraryManager.getCurrentItinerary();
+      if (itinerary && itinerary.days) {
+        console.log('✅ Using ItineraryManager');
+        return itinerary;
+      }
+    }
+
+    // 3. Fallback to mock for demo
+    console.warn('⚠️ No real itinerary found, using mock data for demo');
     return this.getMockItinerary();
   }
 
@@ -117,20 +129,32 @@ class GeoOptimizerUI {
    * Show loading state
    */
   showLoading() {
-    const modal = this.createModal();
-    modal.innerHTML = `
-      <div class="text-center py-8">
-        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
-        <p class="text-lg">🗺️ Optimizando tu ruta...</p>
-        <p class="text-sm text-gray-500 mt-2">Analizando zonas, calculando distancias...</p>
-      </div>
-    `;
+    // Usar el nuevo sistema de loading states si está disponible
+    if (window.LoadingStates) {
+      this.loaderId = window.LoadingStates.show('Optimizando tu ruta... 🗺️', '🧭');
+    } else {
+      // Fallback al método original
+      const modal = this.createModal();
+      modal.innerHTML = `
+        <div class="text-center py-8">
+          <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p class="text-lg">🗺️ Optimizando tu ruta...</p>
+          <p class="text-sm text-gray-500 mt-2">Analizando zonas, calculando distancias...</p>
+        </div>
+      `;
+    }
   }
 
   /**
    * Show optimization results
    */
   showResults(optimization) {
+    // Ocultar loading si está activo
+    if (this.loaderId && window.LoadingStates) {
+      window.LoadingStates.hide(this.loaderId);
+      this.loaderId = null;
+    }
+
     const modal = this.createModal();
 
     modal.innerHTML = `

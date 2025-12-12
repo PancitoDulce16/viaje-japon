@@ -313,10 +313,21 @@ class MLTestPanel {
   async testSensorLayer() {
     this.log('🔍 Testing Sensor Layer...', 'info');
 
-    const summary = window.SensorLayer.getSessionSummary();
-    this.log(`✅ Session clicks: ${summary.behavioral.clicks.length}`, 'success');
-    this.log(`✅ Engagement score: ${summary.behavioral.engagementScore}`, 'success');
-    this.log(`✅ Session duration: ${(summary.duration / 1000).toFixed(0)}s`, 'success');
+    try {
+      const summary = window.SensorLayer?.getSessionSummary() || {};
+
+      // Verificar que behavioral existe
+      if (summary.behavioral) {
+        this.log(`✅ Session clicks: ${summary.behavioral.clicks?.length || 0}`, 'success');
+        this.log(`✅ Engagement score: ${summary.behavioral.engagementScore || 0}`, 'success');
+      } else {
+        this.log('⚠️ No behavioral data available yet', 'warning');
+      }
+
+      this.log(`✅ Session duration: ${((summary.duration || 0) / 1000).toFixed(0)}s`, 'success');
+    } catch (error) {
+      this.log(`❌ Error testing Sensor Layer: ${error.message}`, 'error');
+    }
   }
 
   async testPatternRecognition() {
