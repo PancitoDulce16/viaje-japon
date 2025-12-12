@@ -3,6 +3,7 @@
  * =============================
  *
  * "El poder de la inteligencia colectiva"
+ * Fixed: predictionsMade syntax error (Dec 2025)
  *
  * Sistema que combina múltiples modelos ML para decisiones más precisas:
  * 1. Voting (votación mayoritaria)
