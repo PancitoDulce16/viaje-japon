@@ -331,8 +331,16 @@ class GeoOptimizerUI {
           console.log('✅ Itinerary view refreshed');
         }
 
-        // Show success message
-        alert(`✅ Optimización aplicada!\n\n⏱️ Ahorras ${this.currentOptimization.stats.timeSaved} minutos\n📏 Reduces ${this.currentOptimization.stats.distanceSaved.toFixed(2)}km de distancia\n\n¡Recarga la página para ver los cambios!`);
+        // Show success message with toast
+        if (window.showToast) {
+          window.showToast(
+            `✅ Ruta optimizada! Ahorras ${this.currentOptimization.stats.timeSaved} minutos y ${this.currentOptimization.stats.distanceSaved.toFixed(2)}km`,
+            'success',
+            5000
+          );
+        } else {
+          alert(`✅ Optimización aplicada!\n\n⏱️ Ahorras ${this.currentOptimization.stats.timeSaved} minutos\n📏 Reduces ${this.currentOptimization.stats.distanceSaved.toFixed(2)}km de distancia`);
+        }
       } else {
         throw new Error('No se pudo acceder al itinerario actual');
       }

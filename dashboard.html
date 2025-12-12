@@ -136,7 +136,7 @@
     <!-- APP DASHBOARD -->
     <div id="appDashboard">
         <!-- 🎯 SIMPLE FAB BUTTON - Opens Everything -->
-        <button id="main-fab-button" style="position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%); color: white; border: none; box-shadow: 0 4px 20px rgba(147,51,234,0.4); cursor: pointer; z-index: 1000; font-size: 24px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="window.showMainMenu()" aria-label="Abrir menú principal">
+        <button id="main-fab-button" style="position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%); color: white; border: none; box-shadow: 0 4px 20px rgba(147,51,234,0.4); cursor: pointer; z-index: 99999; font-size: 24px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="window.showMainMenu()" aria-label="Abrir menú principal">
             <i class="fas fa-th"></i>
         </button>
 
@@ -491,6 +491,16 @@
                             <div class="text-3xl mb-2">🧠</div>
                             <div class="font-semibold">ML Test</div>
                         </button>
+
+                        <button class="feature-btn bg-gray-50 dark:bg-gray-700 p-4 rounded-xl hover:shadow-lg transition-all" onclick="window.HealthDashboard?.toggle(); this.closest('.fixed').remove();">
+                            <div class="text-3xl mb-2">🏥</div>
+                            <div class="font-semibold">Health Dashboard</div>
+                        </button>
+
+                        <button class="feature-btn bg-gray-50 dark:bg-gray-700 p-4 rounded-xl hover:shadow-lg transition-all" onclick="window.AIControlPanel?.toggle(); this.closest('.fixed').remove();">
+                            <div class="text-3xl mb-2">🤖</div>
+                            <div class="font-semibold">Asistente IA Pro</div>
+                        </button>
                     </div>
                 </div>
             `;
@@ -498,6 +508,15 @@
             document.body.appendChild(modal);
         };
         console.log('✅ Main Menu System loaded');
+
+        // 🎓 Iniciar onboarding tutorial cuando cargue todo
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (window.OnboardingTutorial) {
+                    window.OnboardingTutorial.showIfFirstTime();
+                }
+            }, 2000);
+        });
     </script>
 
     <!-- 📱 PWA Service Worker -->
@@ -867,6 +886,12 @@
 
     <!-- 🤖 Panel Central de IA -->
     <script type="module" src="/js/ai-control-panel.js"></script>
+
+    <!-- 🍞 Toast Notifications -->
+    <script src="/js/toast-notifications.js"></script>
+
+    <!-- 🎓 Onboarding Tutorial -->
+    <script src="/js/onboarding-tutorial.js"></script>
 
     <!-- ⚙️ SISTEMA DE CONFIGURACIONES DE USUARIO -->
     <!-- Sistema de configuraciones completo -->

@@ -21,8 +21,13 @@ class AIControlPanel {
 
   /**
    * 🎨 Renderiza el botón flotante y panel
+   * MODIFICADO - No crear botón flotante, solo el panel
    */
   render() {
+    // NO crear botón flotante - ahora está en el menú principal
+    console.log('🤖 AI Control Panel button disabled - use main menu');
+
+    /* BOTÓN FLOTANTE DESACTIVADO
     // Verificar si ya existe
     if (document.getElementById('ai-control-panel-btn')) return;
 
@@ -42,6 +47,7 @@ class AIControlPanel {
     button.onclick = () => this.toggle();
 
     document.body.appendChild(button);
+    */
 
     // Crear panel lateral
     const panel = document.createElement('div');

@@ -29,8 +29,14 @@ export class HealthDashboard {
 
   /**
    * Crear botón flotante con badge de score
+   * DESACTIVADO - Ahora se accede desde menú principal
    */
   createFloatingButton() {
+    // NO crear botón flotante - ahora está en el menú principal
+    console.log('🏥 Health Dashboard button disabled - use main menu');
+    return;
+
+    /* CÓDIGO ORIGINAL DESACTIVADO
     // Remover botón existente si hay
     const existing = document.getElementById('healthFloatingBtn');
     if (existing) existing.remove();
@@ -48,6 +54,7 @@ export class HealthDashboard {
     document.body.appendChild(button);
 
     button.addEventListener('click', () => this.toggle());
+    */
   }
 
   /**
