@@ -309,16 +309,37 @@ class GeoOptimizerUI {
   /**
    * Apply optimization to itinerary
    */
-  applyOptimization() {
+  async applyOptimization() {
     if (!this.currentOptimization) return;
 
-    // This would integrate with your itinerary manager
-    if (window.ItineraryManager && window.ItineraryManager.updateItinerary) {
-      window.ItineraryManager.updateItinerary(this.currentOptimization);
-    }
+    try {
+      // Update the global currentItinerary variable
+      if (window.currentItinerary && this.currentOptimization.days) {
+        window.currentItinerary.days = this.currentOptimization.days;
 
-    // Show success message
-    alert(`✅ Optimización aplicada!\n\n⏱️ Ahorras ${this.currentOptimization.stats.timeSaved} minutos\n📏 Reduces ${this.currentOptimization.stats.distanceSaved}km de distancia`);
+        console.log('📝 Updating itinerary with optimized route...');
+
+        // Save to Firebase
+        if (typeof saveCurrentItineraryToFirebase === 'function') {
+          await saveCurrentItineraryToFirebase();
+          console.log('✅ Optimized itinerary saved to Firebase');
+        }
+
+        // Reload the view to show changes
+        if (typeof render === 'function') {
+          await render();
+          console.log('✅ Itinerary view refreshed');
+        }
+
+        // Show success message
+        alert(`✅ Optimización aplicada!\n\n⏱️ Ahorras ${this.currentOptimization.stats.timeSaved} minutos\n📏 Reduces ${this.currentOptimization.stats.distanceSaved.toFixed(2)}km de distancia\n\n¡Recarga la página para ver los cambios!`);
+      } else {
+        throw new Error('No se pudo acceder al itinerario actual');
+      }
+    } catch (error) {
+      console.error('❌ Error applying optimization:', error);
+      alert('Error al aplicar optimización: ' + error.message);
+    }
 
     this.closeModal();
 

@@ -24,8 +24,8 @@ class AIChatUI {
   }
 
   init() {
-    // Create chat button
-    this.createChatButton();
+    // DON'T create chat button - it's now in the main menu
+    // this.createChatButton();
 
     // Create chat panel
     this.createChatPanel();
@@ -134,11 +134,22 @@ class AIChatUI {
   }
 
   /**
+   * 🚪 Public method to open chat
+   */
+  open() {
+    if (!this.isOpen) {
+      this.toggleChat();
+    }
+  }
+
+  /**
    * 🎯 Setup event listeners
    */
   setupEventListeners() {
-    // Toggle chat panel
-    this.chatButton.addEventListener('click', () => this.toggleChat());
+    // Toggle chat panel (only if button exists)
+    if (this.chatButton) {
+      this.chatButton.addEventListener('click', () => this.toggleChat());
+    }
 
     // Close button
     document.getElementById('ai-chat-close').addEventListener('click', () => this.toggleChat());
