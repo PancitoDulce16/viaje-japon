@@ -92,7 +92,10 @@ class OnboardingTutorial {
     tooltip.id = 'onboarding-tooltip';
     tooltip.className = 'fixed z-[100002] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-md';
 
-    // Posicionar tooltip
+    // Posicionar tooltip - SIEMPRE CENTRADO para evitar que se corte
+    tooltip.style.cssText = 'left: 50%; top: 50%; transform: translate(-50%, -50%); max-height: 90vh; overflow-y: auto;';
+
+    /* POSICIONAMIENTO ORIGINAL DESACTIVADO - causaba que se corte
     if (step.position === 'center') {
       tooltip.style.cssText = 'left: 50%; top: 50%; transform: translate(-50%, -50%);';
     } else if (step.position === 'left' && step.target) {
@@ -105,20 +108,23 @@ class OnboardingTutorial {
         `;
       }
     }
+    */
 
     tooltip.innerHTML = `
-      <div class="mb-4">
-        <h3 class="text-2xl font-bold mb-2">${step.title}</h3>
-        <p class="text-gray-600 dark:text-gray-300">${step.message}</p>
+      <div class="mb-6">
+        <h3 class="text-2xl font-bold mb-3 text-gray-900 dark:text-white">${step.title}</h3>
+        <p class="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">${step.message}</p>
       </div>
-      <div class="flex items-center justify-between">
-        <div class="text-sm text-gray-500">
+      <div class="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-4">
+        <div class="text-sm text-gray-500 dark:text-gray-400">
           Paso ${index + 1} de ${this.steps.length}
         </div>
-        <div class="flex gap-2">
-          ${index > 0 ? '<button id="onboarding-skip" class="px-4 py-2 text-gray-600 hover:text-gray-800">Saltar</button>' : ''}
-          <button id="onboarding-next" class="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:shadow-lg transition">
-            ${index < this.steps.length - 1 ? 'Siguiente' : 'Comenzar'}
+        <div class="flex gap-3">
+          <button id="onboarding-skip" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium">
+            Saltar Tutorial
+          </button>
+          <button id="onboarding-next" class="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:shadow-xl transition-all font-bold text-lg">
+            ${index < this.steps.length - 1 ? 'Siguiente →' : '¡Comenzar! 🚀'}
           </button>
         </div>
       </div>
@@ -138,9 +144,9 @@ class OnboardingTutorial {
       this.complete();
     });
 
-    overlay.addEventListener('click', () => {
-      // Allow clicking outside to close only on last step
-      if (index === this.steps.length - 1) {
+    overlay.addEventListener('click', (e) => {
+      // Permitir cerrar haciendo click fuera en cualquier momento
+      if (e.target === overlay) {
         this.complete();
       }
     });
