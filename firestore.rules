@@ -121,6 +121,37 @@ service cloud.firestore {
         allow read: if isTripMember(tripId);
         allow write: if isTripMember(tripId);
       }
+
+      // --- Sub-colección de Chat ---
+      match /chat/{messageId} {
+        allow read: if isTripMember(tripId);
+        allow create: if isTripMember(tripId);
+        allow update, delete: if isTripMember(tripId);
+      }
+
+      // --- Sub-colección de Timeline ---
+      match /timeline/{activityId} {
+        allow read: if isTripMember(tripId);
+        allow write: if isTripMember(tripId);
+      }
+
+      // --- Sub-colección de Journal ---
+      match /journal/{entryId} {
+        allow read: if isTripMember(tripId);
+        allow write: if isTripMember(tripId);
+      }
+
+      // --- Sub-colección de Photos ---
+      match /photos/{photoId} {
+        allow read: if isTripMember(tripId);
+        allow write: if isTripMember(tripId);
+      }
+
+      // --- Sub-colección de Polls ---
+      match /polls/{pollId} {
+        allow read: if isTripMember(tripId);
+        allow write: if isTripMember(tripId);
+      }
     }
   }
 }

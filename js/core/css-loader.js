@@ -73,7 +73,7 @@ class CSSLoader {
         survival: [
           '/css/survival-guide.css'
         ],
-        japan-rules: [
+        'japan-rules': [
           '/css/japan-rules.css'
         ],
         horarios: [
