@@ -188,6 +188,10 @@ class MobileFirst {
             <i class="fas fa-user-circle text-2xl text-indigo-600"></i>
             <span class="text-sm">Mi Perfil</span>
           </button>
+          <button class="tool-btn flex flex-col items-center gap-2 p-4 rounded-lg bg-teal-50 dark:bg-teal-900/20" onclick="window.LiveModeUI?.activate(); this.closest('.fixed').remove();">
+            <i class="fas fa-map-marker-alt text-2xl text-teal-600"></i>
+            <span class="text-sm">Modo Live</span>
+          </button>
         </div>
         <button class="w-full py-3 bg-gray-200 dark:bg-gray-700 rounded-lg font-semibold" onclick="this.closest('.fixed').remove();">
           Cerrar
