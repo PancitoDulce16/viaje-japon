@@ -546,23 +546,27 @@ class AIActionExecutor {
     }
 
     // 🧠 NEW: Use conversational memory to infer missing parameters
-    if (missingParams.length > 0 && window.ConversationalMemory && window.ConversationalMemory.initialized) {
-      console.log('🧠 Inferring missing parameters from memory:', missingParams);
-      const inferred = window.ConversationalMemory.inferParameters(missingParams);
+    try {
+      if (missingParams.length > 0 && window.ConversationalMemory && window.ConversationalMemory.initialized) {
+        console.log('🧠 Inferring missing parameters from memory:', missingParams);
+        const inferred = window.ConversationalMemory.inferParameters(missingParams);
 
-      for (const [paramName, value] of Object.entries(inferred)) {
-        if (value !== null && value !== undefined) {
-          console.log(`  ✅ Inferred ${paramName} = ${value} from context`);
-          params[paramName] = value;
-          // Remove from missing list
-          const index = missingParams.indexOf(paramName);
-          if (index > -1) missingParams.splice(index, 1);
+        for (const [paramName, value] of Object.entries(inferred)) {
+          if (value !== null && value !== undefined) {
+            console.log(`  ✅ Inferred ${paramName} = ${value} from context`);
+            params[paramName] = value;
+            // Remove from missing list
+            const index = missingParams.indexOf(paramName);
+            if (index > -1) missingParams.splice(index, 1);
+          }
+        }
+
+        if (missingParams.length > 0) {
+          console.log('  ⚠️ Still missing:', missingParams);
         }
       }
-
-      if (missingParams.length > 0) {
-        console.log('  ⚠️ Still missing:', missingParams);
-      }
+    } catch (e) {
+      console.warn('⚠️ Parameter inference error:', e);
     }
 
     // Try to fill optional params

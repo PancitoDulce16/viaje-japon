@@ -91,124 +91,163 @@ class DialogueManager {
    * 🎯 Process user message and generate appropriate response
    */
   async processMessage(userMessage, context = {}) {
-    if (!this.initialized) await this.initialize();
+    try {
+      if (!this.initialized) await this.initialize();
 
-    // 🧠 NEW: Add user message to conversational memory
-    if (window.ConversationalMemory && window.ConversationalMemory.initialized) {
-      window.ConversationalMemory.addMessage('user', userMessage, {
-        timestamp: Date.now()
-      });
-    }
-
-    // 🔥 NEW: Check if user is referring to something AI just suggested
-    const contextualMatch = this.resolveWithContext(userMessage);
-
-    // Parse message using NLP Engine
-    let parsed;
-    if (window.NLPEngine) {
-      parsed = await window.NLPEngine.parse(userMessage);
-
-      // 🔥 NEW: Enhance parsing with contextual match
-      if (contextualMatch) {
-        parsed = this.enhanceParsingWithContext(parsed, contextualMatch, userMessage);
-      }
-    } else {
-      // Fallback if NLP not available
-      parsed = { intent: { intent: 'UNKNOWN' }, entities: {}, confidence: 0 };
-    }
-
-    // 🧠 NEW: Check if this is a follow-up using conversational memory
-    if (window.ConversationalMemory && window.ConversationalMemory.initialized) {
-      const isFollowUp = window.ConversationalMemory.isFollowUp(userMessage);
-      if (isFollowUp) {
-        // Enrich entities with remembered context
-        const memoryContext = window.ConversationalMemory.getContext();
-        context.isFollowUp = true;
-        context.memoryContext = memoryContext;
-      }
-    }
-
-    // 🔗 NEW: Check if this is part of an intent chain
-    if (window.IntentChaining && window.IntentChaining.initialized) {
-      const chainInfo = window.IntentChaining.detectChain(userMessage, context);
-      if (chainInfo) {
-        console.log('🔗 Detected intent chain:', chainInfo);
-        const processedChain = window.IntentChaining.processChain(
-          chainInfo,
-          userMessage,
-          parsed.intent,
-          parsed.entities
-        );
-
-        if (processedChain) {
-          // Override parsed intent and entities with chain-processed versions
-          parsed.intent = processedChain.intent;
-          parsed.entities = processedChain.entities;
-          context.chainContext = processedChain.chainContext;
-          console.log('🔗 Applied chain context to intent:', parsed.intent);
+      // 🧠 NEW: Add user message to conversational memory
+      try {
+        if (window.ConversationalMemory && window.ConversationalMemory.initialized) {
+          window.ConversationalMemory.addMessage('user', userMessage, {
+            timestamp: Date.now()
+          });
         }
+      } catch (e) {
+        console.warn('⚠️ Conversational memory error:', e);
       }
-    }
 
-    // Create turn object
-    const turn = {
-      id: this.turns++,
-      timestamp: Date.now(),
-      userMessage,
-      parsed,
-      context,
-      response: null,
-      actions: []
-    };
+      // 🔥 NEW: Check if user is referring to something AI just suggested
+      const contextualMatch = this.resolveWithContext(userMessage);
 
-    // Determine response strategy
-    const responseStrategy = this.selectResponseStrategy(turn);
+      // Parse message using NLP Engine
+      let parsed;
+      if (window.NLPEngine) {
+        parsed = await window.NLPEngine.parse(userMessage);
 
-    // Execute strategy
-    const response = await this.executeStrategy(responseStrategy, turn);
-
-    // Add to turn
-    turn.response = response;
-
-    // Update conversation state
-    this.updateConversationState(turn);
-
-    // Update memory
-    this.updateMemory(turn);
-
-    // 🔗 NEW: Add to intent chain
-    if (window.IntentChaining && window.IntentChaining.initialized) {
-      const intentAction = turn.parsed.intent.action || turn.parsed.intent.intent;
-      if (intentAction && intentAction !== 'UNKNOWN') {
-        window.IntentChaining.addStep(intentAction, {
-          entities: turn.parsed.entities,
-          response: response.text,
-          confidence: response.confidence
-        });
+        // 🔥 NEW: Enhance parsing with contextual match
+        if (contextualMatch) {
+          parsed = this.enhanceParsingWithContext(parsed, contextualMatch, userMessage);
+        }
+      } else {
+        // Fallback if NLP not available
+        parsed = { intent: { intent: 'UNKNOWN' }, entities: {}, confidence: 0 };
       }
-    }
 
-    // 🎭 NEW: Adapt response personality to match user style
-    if (window.PersonalityAdapter && window.PersonalityAdapter.initialized) {
-      const metadata = {
-        intent: turn.parsed.intent.action || turn.parsed.intent.intent,
-        sentiment: turn.parsed.sentiment?.label,
-        confidence: response.confidence
+      // 🧠 NEW: Check if this is a follow-up using conversational memory
+      try {
+        if (window.ConversationalMemory && window.ConversationalMemory.initialized) {
+          const isFollowUp = window.ConversationalMemory.isFollowUp(userMessage);
+          if (isFollowUp) {
+            // Enrich entities with remembered context
+            const memoryContext = window.ConversationalMemory.getContext();
+            context.isFollowUp = true;
+            context.memoryContext = memoryContext;
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Follow-up detection error:', e);
+      }
+
+      // 🔗 NEW: Check if this is part of an intent chain
+      try {
+        if (window.IntentChaining && window.IntentChaining.initialized) {
+          const chainInfo = window.IntentChaining.detectChain(userMessage, context);
+          if (chainInfo) {
+            console.log('🔗 Detected intent chain:', chainInfo);
+            const processedChain = window.IntentChaining.processChain(
+              chainInfo,
+              userMessage,
+              parsed.intent,
+              parsed.entities
+            );
+
+            if (processedChain) {
+              // Override parsed intent and entities with chain-processed versions
+              parsed.intent = processedChain.intent;
+              parsed.entities = processedChain.entities;
+              context.chainContext = processedChain.chainContext;
+              console.log('🔗 Applied chain context to intent:', parsed.intent);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Intent chaining error:', e);
+      }
+
+      // Create turn object
+      const turn = {
+        id: this.turns++,
+        timestamp: Date.now(),
+        userMessage,
+        parsed,
+        context,
+        response: null,
+        actions: []
       };
-      response.text = window.PersonalityAdapter.adaptResponse(response.text, metadata);
+
+      // Determine response strategy
+      const responseStrategy = this.selectResponseStrategy(turn);
+
+      // Execute strategy
+      const response = await this.executeStrategy(responseStrategy, turn);
+
+      // Add to turn
+      turn.response = response;
+
+      // Update conversation state
+      this.updateConversationState(turn);
+
+      // Update memory
+      this.updateMemory(turn);
+
+      // 🔗 NEW: Add to intent chain
+      try {
+        if (window.IntentChaining && window.IntentChaining.initialized) {
+          const intentAction = turn.parsed.intent.action || turn.parsed.intent.intent;
+          if (intentAction && intentAction !== 'UNKNOWN') {
+            window.IntentChaining.addStep(intentAction, {
+              entities: turn.parsed.entities,
+              response: response.text,
+              confidence: response.confidence
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Intent chain save error:', e);
+      }
+
+      // 🎭 NEW: Adapt response personality to match user style
+      try {
+        if (window.PersonalityAdapter && window.PersonalityAdapter.initialized) {
+          const metadata = {
+            intent: turn.parsed.intent.action || turn.parsed.intent.intent,
+            sentiment: turn.parsed.sentiment?.label,
+            confidence: response.confidence
+          };
+          response.text = window.PersonalityAdapter.adaptResponse(response.text, metadata);
+        }
+      } catch (e) {
+        console.warn('⚠️ Personality adaptation error:', e);
+      }
+
+      // Save state
+      await this.saveState();
+
+      return {
+        response: response.text,
+        actions: response.actions,
+        suggestions: response.suggestions,
+        confidence: response.confidence,
+        needsClarification: response.needsClarification,
+        turn
+      };
+
+    } catch (error) {
+      console.error('❌ Error in processMessage:', error);
+
+      // Return a helpful error response
+      return {
+        response: 'Disculpa, tuve un problema procesando tu mensaje. Por favor intenta de nuevo o reformula tu pregunta.',
+        actions: [],
+        suggestions: [
+          { text: 'Ver estadísticas', action: 'showStats' },
+          { text: 'Analizar viaje', action: 'recommend' },
+          { text: 'Ayuda', action: 'help' }
+        ],
+        confidence: 0,
+        needsClarification: true,
+        error: true
+      };
     }
-
-    // Save state
-    await this.saveState();
-
-    return {
-      response: response.text,
-      actions: response.actions,
-      suggestions: response.suggestions,
-      confidence: response.confidence,
-      needsClarification: response.needsClarification,
-      turn
-    };
   }
 
   /**
@@ -635,12 +674,16 @@ class DialogueManager {
    */
   generateSuggestionsForIntent(action, turn) {
     // 🧠 NEW: Use conversational memory for context-aware suggestions
-    if (window.ConversationalMemory && window.ConversationalMemory.initialized) {
-      const memorySuggestions = window.ConversationalMemory.getSuggestedNextActions();
-      if (memorySuggestions && memorySuggestions.length > 0) {
-        console.log('🧠 Using context-aware suggestions from memory:', memorySuggestions);
-        return memorySuggestions;
+    try {
+      if (window.ConversationalMemory && window.ConversationalMemory.initialized) {
+        const memorySuggestions = window.ConversationalMemory.getSuggestedNextActions();
+        if (memorySuggestions && memorySuggestions.length > 0) {
+          console.log('🧠 Using context-aware suggestions from memory:', memorySuggestions);
+          return memorySuggestions;
+        }
       }
+    } catch (e) {
+      console.warn('⚠️ Suggestions generation error:', e);
     }
 
     // Fallback to action-specific suggestions
@@ -1035,14 +1078,18 @@ class DialogueManager {
     }
 
     // 🧠 NEW: Add assistant response to conversational memory
-    if (window.ConversationalMemory && window.ConversationalMemory.initialized && turn.response) {
-      window.ConversationalMemory.addMessage('assistant', turn.response.text, {
-        intent: turn.parsed?.intent?.intent,
-        confidence: turn.response.confidence,
-        entities: turn.parsed?.entities,
-        actions: turn.response.actions,
-        timestamp: turn.timestamp
-      });
+    try {
+      if (window.ConversationalMemory && window.ConversationalMemory.initialized && turn.response) {
+        window.ConversationalMemory.addMessage('assistant', turn.response.text, {
+          intent: turn.parsed?.intent?.intent,
+          confidence: turn.response.confidence,
+          entities: turn.parsed?.entities,
+          actions: turn.response.actions,
+          timestamp: turn.timestamp
+        });
+      }
+    } catch (e) {
+      console.warn('⚠️ Memory save error:', e);
     }
 
     // 🔥 NEW: Extract and store items mentioned by AI
