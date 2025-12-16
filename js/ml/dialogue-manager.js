@@ -59,6 +59,16 @@ class DialogueManager {
       await window.ConversationalMemory.initialize();
     }
 
+    // 🎭 NEW: Initialize Personality Adapter
+    if (window.PersonalityAdapter && !window.PersonalityAdapter.initialized) {
+      await window.PersonalityAdapter.initialize();
+    }
+
+    // 🔗 NEW: Initialize Intent Chaining
+    if (window.IntentChaining && !window.IntentChaining.initialized) {
+      await window.IntentChaining.initialize();
+    }
+
     // Load conversation history
     if (window.MLStorage) {
       const stored = await window.MLStorage.get('dialogue_state');
@@ -74,7 +84,7 @@ class DialogueManager {
     }
 
     this.initialized = true;
-    console.log('✅ Dialogue Manager ready with conversational memory');
+    console.log('✅ Dialogue Manager ready with conversational memory & personality adaptation');
   }
 
   /**
@@ -118,6 +128,28 @@ class DialogueManager {
       }
     }
 
+    // 🔗 NEW: Check if this is part of an intent chain
+    if (window.IntentChaining && window.IntentChaining.initialized) {
+      const chainInfo = window.IntentChaining.detectChain(userMessage, context);
+      if (chainInfo) {
+        console.log('🔗 Detected intent chain:', chainInfo);
+        const processedChain = window.IntentChaining.processChain(
+          chainInfo,
+          userMessage,
+          parsed.intent,
+          parsed.entities
+        );
+
+        if (processedChain) {
+          // Override parsed intent and entities with chain-processed versions
+          parsed.intent = processedChain.intent;
+          parsed.entities = processedChain.entities;
+          context.chainContext = processedChain.chainContext;
+          console.log('🔗 Applied chain context to intent:', parsed.intent);
+        }
+      }
+    }
+
     // Create turn object
     const turn = {
       id: this.turns++,
@@ -143,6 +175,28 @@ class DialogueManager {
 
     // Update memory
     this.updateMemory(turn);
+
+    // 🔗 NEW: Add to intent chain
+    if (window.IntentChaining && window.IntentChaining.initialized) {
+      const intentAction = turn.parsed.intent.action || turn.parsed.intent.intent;
+      if (intentAction && intentAction !== 'UNKNOWN') {
+        window.IntentChaining.addStep(intentAction, {
+          entities: turn.parsed.entities,
+          response: response.text,
+          confidence: response.confidence
+        });
+      }
+    }
+
+    // 🎭 NEW: Adapt response personality to match user style
+    if (window.PersonalityAdapter && window.PersonalityAdapter.initialized) {
+      const metadata = {
+        intent: turn.parsed.intent.action || turn.parsed.intent.intent,
+        sentiment: turn.parsed.sentiment?.label,
+        confidence: response.confidence
+      };
+      response.text = window.PersonalityAdapter.adaptResponse(response.text, metadata);
+    }
 
     // Save state
     await this.saveState();
