@@ -24,13 +24,16 @@ class NLPEngine {
 
     // Entity types we can extract
     this.entityTypes = {
-      DATE: /(?:día|day)\s+(\d+)/gi,
+      DATE: /(?:d[íi]a|day)\s+(\d+)/gi,
+      DATE_RANGE: /(?:d[íi]as?|days?)\s+(\d+)\s+(?:a|al?|to|-)\s+(\d+)/gi,
       NUMBER: /(\d+)/g,
       CATEGORY: this.buildCategoryPattern(),
-      LOCATION: /(?:en|cerca de|around)\s+(\w+)/gi,
-      TIME: /(\d+)(?::(\d+))?\s*(?:am|pm|hrs?)?/gi,
+      LOCATION: /(?:en|cerca\s+de|around|at)\s+([\w\s]+?)(?:\s+|$|,|\.|!|\?)/gi,
+      PLACE_NAME: /((?:templo|temple|santuario|shrine)\s+(?:de\s+)?[\w\s]+|(?:restaurante|restaurant)\s+[\w\s]+|[\w\s]+\s+(?:tower|crossing|station|market|castle|palace))/gi,
+      TIME: /(\d+)(?::(\d+))?\s*(?:am|pm|hrs?|h)?/gi,
       PRICE: /¥?(\d+(?:,\d{3})*)/g,
-      INTENSITY: /(relajado|intenso|tranquilo|activo|moderado)/gi
+      INTENSITY: /(relajado|intenso|tranquilo|activo|moderado)/gi,
+      PREFERENCE: /(me\s+gusta|prefiero|no\s+me\s+gusta|me\s+encanta|odio)\s+(.+?)(?:\s+|$|,|\.|!|\?)/gi
     };
 
     // Conversation context
@@ -468,13 +471,18 @@ class NLPEngine {
       // Modification intents
       ADD_ACTIVITY: {
         patterns: [
-          /agrega?(?:\s+más)?\s+(\w+)/i,
-          /añad[ei](?:\s+más)?\s+(\w+)/i,
-          /incluye?(?:\s+más)?\s+(\w+)/i,
-          /quiero\s+(?:más\s+)?(\w+)/i
+          /agrega?(?:\s+el)?\s+(.+?)(?:\s+al?\s+d[ií]a\s+\d+)?$/i,
+          /añad[ei](?:\s+el)?\s+(.+?)(?:\s+al?\s+d[ií]a\s+\d+)?$/i,
+          /incluye?(?:\s+el)?\s+(.+?)(?:\s+al?\s+d[ií]a\s+\d+)?$/i,
+          /quiero\s+(?:ir\s+a|visitar|conocer|ver)\s+(.+)/i,
+          /(?:pon|mete|pone)\s+(.+?)(?:\s+al?\s+d[ií]a\s+\d+)?$/i,
+          /me\s+gustar[ií]a\s+(?:ir\s+a|visitar|conocer|ver)\s+(.+)/i,
+          /pod[ée]is?\s+agregar\s+(.+)/i,
+          /puedes?\s+añadir\s+(.+)/i
         ],
-        keywords: ['agregar', 'añadir', 'incluir', 'mas'],
-        action: 'addActivity'
+        keywords: ['agregar', 'añadir', 'incluir', 'mas', 'visitar', 'conocer', 'ver', 'pon'],
+        action: 'addActivity',
+        requiresContext: true
       },
 
       REMOVE_ACTIVITY: {
@@ -510,13 +518,63 @@ class NLPEngine {
 
       OPTIMIZE_ROUTE: {
         patterns: [
-          /optimiza?\s+(?:las?\s+)?ruta[s]?/i,
+          /optimiza?(?:me)?\s+(?:la[s]?\s+)?ruta[s]?/i,
           /mejora\s+(?:el\s+)?orden/i,
-          /reorganiza/i,
-          /reduce\s+(?:el\s+)?tiempo\s+de\s+viaje/i
+          /reorganiza(?:me)?\s+(?:el\s+)?itinerario/i,
+          /reduce\s+(?:el\s+)?tiempo\s+de\s+viaje/i,
+          /ahor+a(?:me)?\s+tiempo/i,
+          /puedes?\s+optimizar/i,
+          /(?:haz|hace)\s+(?:la\s+)?ruta\s+m[áa]s\s+eficiente/i,
+          /qu[ée]\s+orden\s+(?:me\s+)?recomiendas/i
         ],
-        keywords: ['optimizar', 'mejorar', 'reorganizar', 'ruta'],
+        keywords: ['optimizar', 'mejorar', 'reorganizar', 'ruta', 'eficiente', 'ahorrar', 'tiempo'],
         action: 'optimizeRoute'
+      },
+
+      SEARCH_PLACES: {
+        patterns: [
+          /busca(?:me)?\s+(.+?)(?:\s+en\s+(.+))?$/i,
+          /encuentra(?:me)?\s+(.+?)(?:\s+(?:cerca|en)\s+(.+))?$/i,
+          /qu[ée]\s+(.+?)\s+(?:hay|tiene|encuentro)(?:\s+en\s+(.+))?/i,
+          /recomienda(?:me)?\s+(?:un|una)\s+(.+)/i,
+          /(?:conoces?|sabes?)\s+(?:alg[uú]n|alguna)\s+(.+)/i,
+          /donde\s+(?:está|puedo\s+(?:ir|encontrar))\s+(.+)/i
+        ],
+        keywords: ['buscar', 'encontrar', 'busca', 'encuentra', 'hay', 'donde', 'conoces'],
+        action: 'searchPlaces'
+      },
+
+      SHOW_STATS: {
+        patterns: [
+          // Preguntas directas sobre cantidad
+          /cu[áa]ntas?\s+actividades?\s+tengo/i,
+          /cu[áa]ntos?\s+d[íi]as?\s+tengo/i,
+          /cu[áa]ntas?\s+cosas?\s+tengo/i,
+          /cu[áa]nto\s+tiempo\s+(?:tengo|dura)/i,
+          /(?:tengo|hay)\s+cu[áa]ntas?\s+actividades/i,
+
+          // Variaciones con "mi"
+          /cu[áa]ntas?\s+actividades?\s+(?:hay\s+)?en\s+mi\s+(?:itinerario|viaje)/i,
+          /cu[áa]ntos?\s+d[íi]as?\s+(?:tiene|dura)\s+mi\s+viaje/i,
+
+          // Preguntas sobre el viaje
+          /qu[ée]\s+tan\s+largo\s+es\s+mi\s+viaje/i,
+          /(?:dame|muestra|muestrame)\s+(?:las?\s+)?(?:estad[íi]sticas|stats|n[uú]meros)/i,
+          /(?:muestra|muestr[ée]strame|ens[éeñ]ña(?:me)?)\s+(?:las?\s+)?estad[íi]sticas/i,
+
+          // Patrones generales
+          /(?:cu[áa]ntos?|cuantas?)\s+(.+?)\s+(?:tengo|hay)/i,
+          /(?:muestra|ens[éeñ]ña)(?:me)?\s+(?:el\s+)?(?:resumen|sumario)/i,
+          /estad[íi]sticas?\s+del?\s+viaje/i,
+          /(?:informaci[óo]n|info)\s+del?\s+viaje/i,
+          /qu[ée]\s+tengo\s+(?:planeado|en\s+el\s+itinerario)/i,
+
+          // Info general
+          /(?:dame|dime)\s+(?:info|informaci[óo]n)/i,
+          /(?:cu[ée]ntame|dime)\s+(?:sobre|de)\s+mi\s+viaje/i
+        ],
+        keywords: ['cuantas', 'cuantos', 'actividades', 'dias', 'estadísticas', 'stats', 'resumen', 'sumario', 'info', 'informacion', 'tengo'],
+        action: 'showStats'
       },
 
       REGENERATE_DAY: {
@@ -542,12 +600,26 @@ class NLPEngine {
 
       GET_RECOMMENDATIONS: {
         patterns: [
+          // Recomendaciones directas
           /recomienda(?:me)?\s+algo/i,
-          /qué\s+me\s+recomiendas/i,
+          /qu[ée]\s+me\s+recomiendas/i,
+          /(?:dame|dime)\s+(?:una\s+)?recomendaci[óo]n/i,
           /suger[ei]ncias?/i,
-          /qué\s+(?:más|otra cosa)\s+puedo\s+(?:hacer|ver)/i
+          /qu[ée]\s+(?:m[áa]s|otra cosa)\s+puedo\s+(?:hacer|ver)/i,
+
+          // Análisis y consejos
+          /analiza(?:me)?\s+(?:mi\s+)?(?:itinerario|viaje)/i,
+          /(?:dame|dime)\s+consejos/i,
+          /(?:qu[ée]\s+)?opinas\s+de\s+mi\s+(?:itinerario|viaje)/i,
+          /est[áa]\s+bien\s+mi\s+(?:itinerario|viaje)/i,
+          /c[óo]mo\s+(?:est[áa]|se\s+ve)\s+mi\s+(?:itinerario|viaje)/i,
+
+          // Mejoras
+          /qu[ée]\s+puedo\s+mejorar/i,
+          /qu[ée]\s+(?:me\s+)?falta/i,
+          /(?:ayuda|ay[úu]dame)\s+a\s+mejorar/i
         ],
-        keywords: ['recomendar', 'sugerir', 'qué hacer'],
+        keywords: ['recomendar', 'sugerir', 'qué hacer', 'analiza', 'consejos', 'opinas', 'falta', 'mejorar'],
         action: 'recommend'
       },
 

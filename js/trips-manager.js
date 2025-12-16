@@ -819,7 +819,8 @@ export const TripsManager = {
             <!-- Dropdown Menu -->
             <div
               id="exportMenu"
-              class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden"
+              class="hidden fixed w-64 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 z-[10000] overflow-hidden"
+              style="top: 60px; right: 20px;"
             >
               <div class="p-2">
                 <button

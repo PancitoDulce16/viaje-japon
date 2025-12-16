@@ -18,6 +18,46 @@ export const GroupChat = {
   unsubscribe: null,
   isTyping: false,
   typingTimeout: null,
+  userColors: new Map(), // Cache de colores por usuario
+
+  // Paleta de colores vibrantes para cada usuario
+  colorPalette: [
+    { bg: 'from-purple-500 to-purple-700', avatar: 'from-purple-400 to-purple-600', text: 'text-white' },
+    { bg: 'from-pink-500 to-pink-700', avatar: 'from-pink-400 to-pink-600', text: 'text-white' },
+    { bg: 'from-blue-500 to-blue-700', avatar: 'from-blue-400 to-blue-600', text: 'text-white' },
+    { bg: 'from-green-500 to-green-700', avatar: 'from-green-400 to-green-600', text: 'text-white' },
+    { bg: 'from-orange-500 to-orange-700', avatar: 'from-orange-400 to-orange-600', text: 'text-white' },
+    { bg: 'from-teal-500 to-teal-700', avatar: 'from-teal-400 to-teal-600', text: 'text-white' },
+    { bg: 'from-indigo-500 to-indigo-700', avatar: 'from-indigo-400 to-indigo-600', text: 'text-white' },
+    { bg: 'from-rose-500 to-rose-700', avatar: 'from-rose-400 to-rose-600', text: 'text-white' },
+    { bg: 'from-cyan-500 to-cyan-700', avatar: 'from-cyan-400 to-cyan-600', text: 'text-white' },
+    { bg: 'from-amber-500 to-amber-700', avatar: 'from-amber-400 to-amber-600', text: 'text-white' },
+  ],
+
+  // Obtener color consistente para un usuario
+  getUserColor(userId, isCurrentUser = false) {
+    // Usuario actual siempre tiene gradiente especial púrpura-rosa
+    if (isCurrentUser) {
+      return {
+        bg: 'from-purple-600 via-pink-600 to-purple-600',
+        avatar: 'from-purple-500 to-pink-500',
+        text: 'text-white'
+      };
+    }
+
+    // Si ya tiene color asignado, reutilizar
+    if (this.userColors.has(userId)) {
+      return this.userColors.get(userId);
+    }
+
+    // Asignar nuevo color basado en hash del userId
+    const hash = userId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const colorIndex = hash % this.colorPalette.length;
+    const color = this.colorPalette[colorIndex];
+
+    this.userColors.set(userId, color);
+    return color;
+  },
 
   getCurrentTripId() {
     if (window.TripsManager && window.TripsManager.currentTrip) {
@@ -82,43 +122,59 @@ export const GroupChat = {
     container.innerHTML = `
       <div class="flex flex-col h-[600px] max-h-[80vh]">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 rounded-t-xl">
-          <h3 class="font-bold text-lg">💬 ${tripName}</h3>
-          <p class="text-xs text-white/80">Chat grupal en tiempo real</p>
+        <div class="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white p-5 rounded-t-xl shadow-lg relative overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+          <div class="relative z-10">
+            <h3 class="font-bold text-lg flex items-center gap-2">
+              <span class="text-2xl animate-bounce-slow">💬</span>
+              <span>${tripName}</span>
+            </h3>
+            <p class="text-xs text-white/90 mt-1 flex items-center gap-2">
+              <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+              Chat grupal en tiempo real
+            </p>
+          </div>
         </div>
 
         <!-- Messages Container -->
-        <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 dark:bg-gray-900">
+        <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-br from-gray-50 to-purple-50/30 dark:from-gray-900 dark:to-purple-900/10">
           <!-- Messages will be rendered here -->
         </div>
 
         <!-- Typing Indicator -->
         <div id="typingIndicator" class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 hidden">
-          <span class="animate-pulse">● ● ●</span> Alguien está escribiendo...
+          <span class="inline-flex gap-1">
+            <span class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+            <span class="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+            <span class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+          </span>
+          <span class="ml-2">Alguien está escribiendo...</span>
         </div>
 
         <!-- Input Area -->
-        <div class="border-t dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
+        <div class="border-t dark:border-gray-700 p-4 bg-white dark:bg-gray-800 shadow-lg">
           <div class="flex gap-2">
             <input
               type="text"
               id="chatInput"
-              placeholder="Escribe un mensaje..."
-              class="flex-1 p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="Escribe un mensaje... 💭"
+              class="flex-1 p-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all placeholder:text-gray-400"
               maxlength="500"
             >
             <button
               id="sendMessageBtn"
-              class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg font-bold transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-bold transition-all transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              ➤
+              <span class="text-xl">➤</span>
             </button>
           </div>
-          <div class="flex justify-between items-center mt-2">
-            <p class="text-xs text-gray-500 dark:text-gray-400">
+          <div class="flex justify-between items-center mt-3 px-1">
+            <p class="text-xs font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1">
+              <span>👤</span>
               ${currentUser.email.split('@')[0]}
             </p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">
+            <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+              <span>💬</span>
               <span id="messageCount">${this.messages.length}</span> mensajes
             </p>
           </div>
@@ -136,7 +192,7 @@ export const GroupChat = {
     if (this.messages.length === 0) {
       container.innerHTML = `
         <div class="text-center py-12">
-          <div class="text-6xl mb-3">💬</div>
+          <div class="text-6xl mb-3 animate-bounce-slow">💬</div>
           <p class="text-gray-500 dark:text-gray-400 font-semibold">No hay mensajes aún</p>
           <p class="text-sm text-gray-400 dark:text-gray-500">¡Sé el primero en escribir!</p>
         </div>
@@ -152,33 +208,33 @@ export const GroupChat = {
       const username = msg.userName || msg.userEmail?.split('@')[0] || 'Usuario';
       const time = this.formatTime(msg.timestamp);
 
+      // Obtener colores para este usuario
+      const userColor = this.getUserColor(msg.userId, isCurrentUser);
+
       return `
-        <div class="flex ${isCurrentUser ? 'justify-end' : 'justify-start'} gap-2 animate-fade-in-up">
+        <div class="flex ${isCurrentUser ? 'justify-end' : 'justify-start'} gap-2 animate-fade-in-up group">
           ${!isCurrentUser && showAvatar ? `
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br ${userColor.avatar} flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-lg ring-2 ring-white dark:ring-gray-800 transform hover:scale-110 transition-transform">
               ${username.charAt(0).toUpperCase()}
             </div>
           ` : !isCurrentUser ? '<div class="w-8"></div>' : ''}
 
           <div class="${isCurrentUser ? 'items-end' : 'items-start'} max-w-[70%]">
             ${showAvatar && !isCurrentUser ? `
-              <p class="text-xs text-gray-500 dark:text-gray-400 mb-1 px-2">${username}</p>
+              <p class="text-xs font-semibold mb-1 px-2 bg-gradient-to-r ${userColor.avatar} bg-clip-text text-transparent">${username}</p>
             ` : ''}
 
-            <div class="${isCurrentUser
-              ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-              : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-white border dark:border-gray-600'
-            } rounded-2xl px-4 py-2 shadow-md">
-              <p class="text-sm break-words">${this.escapeHtml(msg.message)}</p>
+            <div class="bg-gradient-to-r ${userColor.bg} ${userColor.text} rounded-2xl px-4 py-3 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02]">
+              <p class="text-sm break-words leading-relaxed">${this.escapeHtml(msg.message)}</p>
             </div>
 
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 px-2">${time}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 px-2 font-medium">${time}</p>
           </div>
 
           ${isCurrentUser && msg.id ? `
             <button
               onclick="GroupChat.deleteMessage('${msg.id}')"
-              class="text-gray-400 hover:text-red-500 transition opacity-0 group-hover:opacity-100 text-xs"
+              class="text-gray-400 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100 text-xs transform hover:scale-110"
               title="Eliminar mensaje"
             >
               🗑️

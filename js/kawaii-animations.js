@@ -48,7 +48,18 @@ window.addEventListener('load', () => {
 // ===================================
 // COUNTDOWN - Contador de días
 // ===================================
-const fechaViaje = new Date("2026-04-05"); // ← Cambia esta fecha cuando quieras
+function getFechaViaje() {
+  // Intentar obtener fecha del viaje actual
+  if (window.currentItinerary && window.currentItinerary.days && window.currentItinerary.days.length > 0) {
+    const firstDay = window.currentItinerary.days[0];
+    if (firstDay.date) {
+      return new Date(firstDay.date);
+    }
+  }
+
+  // Si no hay itinerario, usar fecha de ejemplo
+  return new Date("2025-04-01");
+}
 
 function actualizarContador() {
   const daysElement = document.getElementById("days");
@@ -56,17 +67,25 @@ function actualizarContador() {
 
   if (!daysElement || !messageElement) return;
 
+  const fechaViaje = getFechaViaje();
+
+  // Obtener solo la fecha (sin hora) para comparación precisa
   const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+
+  // Asegurar que fechaViaje también esté en hora 0
+  fechaViaje.setHours(0, 0, 0, 0);
+
   const diferencia = fechaViaje - hoy;
   const dias = Math.ceil(diferencia / (1000 * 60 * 60 * 24));
 
   // Actualizar número de días
   if (dias > 0) {
-    daysElement.textContent = dias;
+    daysElement.textContent = `${dias} días`;
   } else if (dias === 0) {
     daysElement.textContent = "¡HOY!";
   } else {
-    daysElement.textContent = Math.abs(dias);
+    daysElement.textContent = `¡Hace ${Math.abs(dias)} días!`;
   }
 
   // Actualizar mensaje según días restantes

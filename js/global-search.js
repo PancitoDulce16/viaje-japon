@@ -59,27 +59,31 @@ class GlobalSearch {
 
           <!-- Results -->
           <div id="global-search-results" class="max-h-96 overflow-y-auto">
-            <div class="p-8 text-center text-gray-400">
-              <span class="text-4xl mb-2 block">🔍</span>
-              <p>Escribe para buscar...</p>
+            <div class="p-8 text-center text-gray-400 dark:text-gray-500">
+              <span class="text-4xl mb-2 block animate-bounce-slow">🔍</span>
+              <p class="font-semibold">Escribe para buscar...</p>
+              <p class="text-xs mt-2">Comandos, lugares, comida y más</p>
             </div>
           </div>
 
           <!-- Quick Commands -->
-          <div class="p-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">Comandos rápidos:</p>
+          <div class="p-4 bg-gradient-to-br from-gray-50 to-purple-50/30 dark:from-gray-900 dark:to-purple-900/10 border-t border-gray-200 dark:border-gray-700">
+            <p class="text-xs font-bold text-gray-600 dark:text-gray-300 mb-3 flex items-center gap-2">
+              <span class="text-sm">⚡</span>
+              Comandos rápidos:
+            </p>
             <div class="flex flex-wrap gap-2">
-              <button onclick="window.GlobalSearch.executeCommand('/optimizar')" class="text-xs px-3 py-1 bg-white dark:bg-gray-800 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition">
-                /optimizar
+              <button onclick="window.GlobalSearch.executeCommand('/optimizar')" class="text-xs px-3 py-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-all shadow-sm hover:shadow border border-gray-200 dark:border-gray-700 font-medium text-gray-700 dark:text-gray-300">
+                🗺️ /optimizar
               </button>
-              <button onclick="window.GlobalSearch.executeCommand('/presupuesto')" class="text-xs px-3 py-1 bg-white dark:bg-gray-800 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition">
-                /presupuesto
+              <button onclick="window.GlobalSearch.executeCommand('/presupuesto')" class="text-xs px-3 py-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-all shadow-sm hover:shadow border border-gray-200 dark:border-gray-700 font-medium text-gray-700 dark:text-gray-300">
+                💰 /presupuesto
               </button>
-              <button onclick="window.GlobalSearch.executeCommand('/chat')" class="text-xs px-3 py-1 bg-white dark:bg-gray-800 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition">
-                /chat
+              <button onclick="window.GlobalSearch.executeCommand('/chat')" class="text-xs px-3 py-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-all shadow-sm hover:shadow border border-gray-200 dark:border-gray-700 font-medium text-gray-700 dark:text-gray-300">
+                🤖 /chat
               </button>
-              <button onclick="window.GlobalSearch.executeCommand('/live')" class="text-xs px-3 py-1 bg-white dark:bg-gray-800 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition">
-                /live
+              <button onclick="window.GlobalSearch.executeCommand('/live')" class="text-xs px-3 py-2 bg-white dark:bg-gray-800 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-all shadow-sm hover:shadow border border-gray-200 dark:border-gray-700 font-medium text-gray-700 dark:text-gray-300">
+                📍 /live
               </button>
             </div>
           </div>
@@ -181,9 +185,10 @@ class GlobalSearch {
 
     if (!query || query.length < 2) {
       resultsContainer.innerHTML = `
-        <div class="p-8 text-center text-gray-400">
-          <span class="text-4xl mb-2 block">🔍</span>
-          <p>Escribe para buscar...</p>
+        <div class="p-8 text-center text-gray-400 dark:text-gray-500">
+          <span class="text-4xl mb-2 block animate-bounce-slow">🔍</span>
+          <p class="font-semibold">Escribe para buscar...</p>
+          <p class="text-xs mt-2">Comandos, lugares, comida y más</p>
         </div>
       `;
       return;
@@ -197,9 +202,10 @@ class GlobalSearch {
 
     if (results.length === 0) {
       resultsContainer.innerHTML = `
-        <div class="p-8 text-center text-gray-400">
+        <div class="p-8 text-center text-gray-400 dark:text-gray-500">
           <span class="text-4xl mb-2 block">🤷</span>
-          <p>No se encontraron resultados para "${query}"</p>
+          <p class="font-semibold">No se encontraron resultados</p>
+          <p class="text-sm mt-2 text-gray-500 dark:text-gray-600">"${query}"</p>
         </div>
       `;
       return;
@@ -207,14 +213,17 @@ class GlobalSearch {
 
     // Renderizar resultados
     resultsContainer.innerHTML = results.map((item, index) => `
-      <div class="search-result-item ${index === 0 ? 'bg-purple-50 dark:bg-purple-900/20' : ''} p-4 hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer transition border-b border-gray-100 dark:border-gray-700 last:border-0" onclick="window.GlobalSearch.selectResult(${this.searchIndex.indexOf(item)})">
+      <div class="search-result-item ${index === 0 ? 'bg-purple-50 dark:bg-purple-900/20' : ''} p-4 hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer transition-all border-b border-gray-100 dark:border-gray-700 last:border-0 transform hover:scale-[1.02]" onclick="window.GlobalSearch.selectResult(${this.searchIndex.indexOf(item)})">
         <div class="flex items-center gap-3">
           <span class="text-3xl">${item.icon}</span>
           <div class="flex-1">
             <div class="font-semibold text-gray-900 dark:text-white">${item.name}</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 capitalize">${item.type}</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 capitalize flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+              ${item.type}
+            </div>
           </div>
-          <kbd class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-500">Enter</kbd>
+          <kbd class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600">Enter</kbd>
         </div>
       </div>
     `).join('');

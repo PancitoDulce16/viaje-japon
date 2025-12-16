@@ -141,7 +141,7 @@
         </button>
 
         <!-- 🔍 Search Hint (visible en desktop) -->
-        <div class="hidden md:block fixed top-4 right-4 z-50">
+        <div class="hidden md:block fixed top-20 right-4 z-[100]">
             <button onclick="window.GlobalSearch?.open()" class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">
                 <span>🔍</span>
                 <span>Buscar</span>
@@ -266,8 +266,9 @@
         <main id="main-content">
             <!-- Contador de días para Japón -->
             <div class="countdown-widget">
-                <h2>¡Faltan para Japón!</h2>
+                <h2>¡Faltan</h2>
                 <div class="days" id="days">––</div>
+                <h2>para Japón! 🇯🇵</h2>
                 <p id="message">¡Tokio, Kioto y mucho ramen te están esperando! ✈️🍜</p>
             </div>
 
@@ -509,6 +510,12 @@
                         <button class="feature-btn bg-gray-50 dark:bg-gray-700 p-4 rounded-xl hover:shadow-lg transition-all" onclick="window.AIControlPanel?.toggle(); this.closest('.fixed').remove();">
                             <div class="text-3xl mb-2">🤖</div>
                             <div class="font-semibold">Asistente IA Pro</div>
+                        </button>
+
+                        <button class="feature-btn bg-gradient-to-br from-pink-50 to-purple-100 dark:from-pink-900/20 dark:to-purple-800/20 p-4 rounded-xl hover:shadow-lg transition-all border-2 border-pink-200 dark:border-pink-700" onclick="window.InstagramTimeline?.open(); this.closest('.fixed').remove();">
+                            <div class="text-3xl mb-2">📸</div>
+                            <div class="font-bold">Timeline Instagram</div>
+                            <div class="text-xs text-gray-600">¡Nuevo! Ver tu viaje</div>
                         </button>
                     </div>
                 </div>
@@ -919,6 +926,9 @@
     <!-- 🎨 Empty States -->
     <script src="/js/empty-states.js"></script>
 
+    <!-- 📱 Mobile Gestures -->
+    <script src="/js/mobile-gestures.js"></script>
+
     <!-- ⚙️ SISTEMA DE CONFIGURACIONES DE USUARIO -->
     <!-- Sistema de configuraciones completo -->
     <script type="module" src="/js/user-settings.js"></script>
@@ -961,6 +971,24 @@
     <!-- 🗣️ FASE 4: NATURAL LANGUAGE UNDERSTANDING -->
     <script type="module" src="/js/ml/semantic-intent-recognition.js"></script>
     <script type="module" src="/js/ml/nlp-engine.js"></script>
+
+    <!-- 🧠 SMART RESPONSE GENERATION (NEW!) -->
+    <script type="module" src="/js/ml/smart-response-generator.js"></script>
+
+    <!-- 🎬 AI ACTION EXECUTOR - Makes AI actually DO things -->
+    <script type="module" src="/js/ml/ai-action-executor.js"></script>
+
+    <!-- 💡 PROACTIVE RECOMMENDATIONS - AI suggests improvements automatically -->
+    <script type="module" src="/js/ml/proactive-recommendations.js"></script>
+
+    <!-- 📚 FEEDBACK LEARNING - AI learns from user feedback -->
+    <script type="module" src="/js/ml/feedback-learning.js"></script>
+
+    <!-- 🧠 CONVERSATIONAL MEMORY - Multi-turn conversation context -->
+    <script type="module" src="/js/ml/conversational-memory.js"></script>
+
+    <!-- 🔍 AI INSIGHTS - Deep itinerary analysis -->
+    <script type="module" src="/js/ml/ai-insights.js"></script>
 
     <!-- 🎮 FASE 5: REINFORCEMENT LEARNING -->
     <script type="module" src="/js/ml/reinforcement-learning.js"></script>
@@ -1028,6 +1056,9 @@
 
     <!-- 💬 AI CHAT UI - Interface for talking to the AI -->
     <script src="/js/ai-chat-ui.js"></script>
+
+    <!-- 📸 INSTAGRAM TIMELINE - Visual timeline of your trip -->
+    <script src="/js/instagram-timeline.js"></script>
 
 </body>
 </html>

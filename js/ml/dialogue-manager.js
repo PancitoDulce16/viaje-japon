@@ -54,6 +54,11 @@ class DialogueManager {
   async initialize() {
     if (this.initialized) return;
 
+    // 🧠 NEW: Initialize Conversational Memory
+    if (window.ConversationalMemory && !window.ConversationalMemory.initialized) {
+      await window.ConversationalMemory.initialize();
+    }
+
     // Load conversation history
     if (window.MLStorage) {
       const stored = await window.MLStorage.get('dialogue_state');
@@ -69,7 +74,7 @@ class DialogueManager {
     }
 
     this.initialized = true;
-    console.log('✅ Dialogue Manager ready');
+    console.log('✅ Dialogue Manager ready with conversational memory');
   }
 
   /**
@@ -77,6 +82,13 @@ class DialogueManager {
    */
   async processMessage(userMessage, context = {}) {
     if (!this.initialized) await this.initialize();
+
+    // 🧠 NEW: Add user message to conversational memory
+    if (window.ConversationalMemory && window.ConversationalMemory.initialized) {
+      window.ConversationalMemory.addMessage('user', userMessage, {
+        timestamp: Date.now()
+      });
+    }
 
     // 🔥 NEW: Check if user is referring to something AI just suggested
     const contextualMatch = this.resolveWithContext(userMessage);
@@ -93,6 +105,17 @@ class DialogueManager {
     } else {
       // Fallback if NLP not available
       parsed = { intent: { intent: 'UNKNOWN' }, entities: {}, confidence: 0 };
+    }
+
+    // 🧠 NEW: Check if this is a follow-up using conversational memory
+    if (window.ConversationalMemory && window.ConversationalMemory.initialized) {
+      const isFollowUp = window.ConversationalMemory.isFollowUp(userMessage);
+      if (isFollowUp) {
+        // Enrich entities with remembered context
+        const memoryContext = window.ConversationalMemory.getContext();
+        context.isFollowUp = true;
+        context.memoryContext = memoryContext;
+      }
     }
 
     // Create turn object
@@ -383,7 +406,103 @@ class DialogueManager {
     const intent = turn.parsed.intent;
     const action = intent.action;
 
-    // Map intent to response
+    // 🎬 NEW: Execute actions with AIActionExecutor
+    if (window.AIActionExecutor && window.AIActionExecutor.initialized) {
+      try {
+        const executionResult = await window.AIActionExecutor.execute(
+          intent,
+          turn.parsed.entities,
+          {
+            originalText: turn.input,
+            conversationHistory: this.conversation.turns,
+            userProfile: this.conversation.userProfile
+          }
+        );
+
+        console.log('🎬 Action execution result:', executionResult);
+
+        // If action was executed successfully, use the result
+        if (executionResult && executionResult.success) {
+          // Use Smart Response Generator for the response text
+          let responseText = executionResult.message;
+
+          if (window.SmartResponseGenerator && window.SmartResponseGenerator.initialized) {
+            try {
+              const context = {
+                userName: this.conversation.userProfile.name,
+                conversationLength: this.conversation.turns.length,
+                sentiment: turn.parsed.sentiment?.label,
+                currentTopic: this.conversation.currentTopic,
+                actionSuccess: true,
+                actionData: executionResult.data
+              };
+
+              const smartResponse = await window.SmartResponseGenerator.generate(
+                action,
+                turn.parsed.entities,
+                context
+              );
+
+              // Combine action result with smart response
+              responseText = executionResult.message + '\n\n' + smartResponse;
+            } catch (e) {
+              console.warn('Smart Response Generator failed:', e);
+            }
+          }
+
+          return {
+            text: responseText,
+            actions: executionResult.data ? [executionResult.data] : [],
+            suggestions: this.generateSuggestionsForIntent(action, turn),
+            confidence: 0.95,
+            needsClarification: false,
+            executionResult
+          };
+        } else if (executionResult && !executionResult.success) {
+          // Action failed, provide helpful error message
+          return {
+            text: `❌ ${executionResult.error}\n\n¿Puedes darme más detalles o intentar de otra forma?`,
+            actions: [],
+            suggestions: this.generateSuggestionsForIntent(action, turn),
+            confidence: 0.7,
+            needsClarification: true,
+            executionError: executionResult.error
+          };
+        }
+      } catch (e) {
+        console.error('Action execution error:', e);
+      }
+    }
+
+    // 🔥 Fallback: Use Smart Response Generator if available
+    if (window.SmartResponseGenerator && window.SmartResponseGenerator.initialized) {
+      try {
+        const context = {
+          userName: this.conversation.userProfile.name,
+          conversationLength: this.conversation.turns.length,
+          sentiment: turn.parsed.sentiment?.label,
+          currentTopic: this.conversation.currentTopic
+        };
+
+        const smartResponse = await window.SmartResponseGenerator.generate(
+          action,
+          turn.parsed.entities,
+          context
+        );
+
+        return {
+          text: smartResponse,
+          actions: this.generateActionsForIntent(action, turn),
+          suggestions: this.generateSuggestionsForIntent(action, turn),
+          confidence: turn.parsed.confidence,
+          needsClarification: false
+        };
+      } catch (e) {
+        console.warn('Smart Response Generator failed, using fallback:', e);
+      }
+    }
+
+    // FALLBACK: Use hardcoded responses (old method)
     const responses = {
       // Conversational intents
       greeting: this.generateGreetingResponse(turn),
@@ -409,6 +528,92 @@ class DialogueManager {
     }
 
     return this.generateFallbackResponse(turn);
+  }
+
+  /**
+   * ⚡ Generate actions for intent
+   */
+  generateActionsForIntent(action, turn) {
+    const entities = turn.parsed.entities;
+    const actions = [];
+
+    switch (action) {
+      case 'optimizeRoute':
+        actions.push({
+          type: 'optimize_route',
+          data: { day: entities.DATE?.captured?.[0] || 'all' }
+        });
+        break;
+
+      case 'addActivity':
+        actions.push({
+          type: 'add_activity',
+          data: {
+            category: entities.CATEGORY?.value,
+            day: entities.DATE?.captured?.[0]
+          }
+        });
+        break;
+
+      case 'adjustBudget':
+        actions.push({
+          type: 'adjust_budget',
+          data: { direction: entities.INTENSITY?.value || 'lower' }
+        });
+        break;
+
+      case 'changePace':
+        actions.push({
+          type: 'change_pace',
+          data: {
+            intensity: entities.INTENSITY?.value || 'relaxed',
+            day: entities.DATE?.captured?.[0]
+          }
+        });
+        break;
+    }
+
+    return actions;
+  }
+
+  /**
+   * 💡 Generate suggestions for intent
+   */
+  generateSuggestionsForIntent(action, turn) {
+    // 🧠 NEW: Use conversational memory for context-aware suggestions
+    if (window.ConversationalMemory && window.ConversationalMemory.initialized) {
+      const memorySuggestions = window.ConversationalMemory.getSuggestedNextActions();
+      if (memorySuggestions && memorySuggestions.length > 0) {
+        console.log('🧠 Using context-aware suggestions from memory:', memorySuggestions);
+        return memorySuggestions;
+      }
+    }
+
+    // Fallback to action-specific suggestions
+    const baseSuggestions = [
+      { text: '¿Qué más puedes hacer?', action: 'help' },
+      { text: 'Ver estadísticas', action: 'stats' },
+      { text: 'Optimizar rutas', action: 'optimize' }
+    ];
+
+    const actionSpecificSuggestions = {
+      greeting: [
+        { text: 'Recomiéndame algo', action: 'recommend' },
+        { text: 'Optimiza mi ruta', action: 'optimize' },
+        { text: 'Ver estadísticas', action: 'stats' }
+      ],
+      recommend: [
+        { text: 'Agregar más templos', action: 'add_temples' },
+        { text: 'Buscar restaurantes', action: 'add_restaurants' },
+        { text: 'Optimizar ruta', action: 'optimize' }
+      ],
+      optimizeRoute: [
+        { text: 'Ver mejoras', action: 'show_improvements' },
+        { text: 'Aplicar optimización', action: 'apply_optimization' }
+      ]
+    };
+
+    return actionSpecificSuggestions[action] || baseSuggestions.slice(0, 3);
   }
 
   /**
@@ -672,12 +877,63 @@ class DialogueManager {
    * 🆘 Generate fallback response
    */
   generateFallbackResponse(turn) {
+    // Try to be more helpful by detecting keywords
+    const input = turn.input.toLowerCase();
+
+    // Detect stats/info questions
+    if (input.includes('actividad') || input.includes('cuantas') || input.includes('cuantos') || input.includes('info')) {
+      return {
+        text: '¿Quieres saber sobre tu viaje? Puedo mostrarte estadísticas completas.\n\nPrueba preguntar:\n• "¿Cuántas actividades tengo?"\n• "Muéstrame las estadísticas"\n• "Dame info de mi viaje"',
+        actions: [],
+        suggestions: [
+          { text: 'Mostrar estadísticas', action: 'showStats' },
+          { text: 'Analizar viaje', action: 'recommend' },
+          { text: 'Ver ayuda', action: 'help' }
+        ],
+        confidence: 0.5,
+        needsClarification: true
+      };
+    }
+
+    // Detect recommendation requests
+    if (input.includes('recomien') || input.includes('sugier') || input.includes('consejo') || input.includes('ayuda')) {
+      return {
+        text: '¡Claro! Puedo analizar tu itinerario y darte recomendaciones.\n\nPrueba:\n• "Recomiéndame algo"\n• "Analiza mi viaje"\n• "Dame consejos"',
+        actions: [],
+        suggestions: [
+          { text: 'Analizar mi viaje', action: 'recommend' },
+          { text: 'Ver estadísticas', action: 'showStats' },
+          { text: 'Optimizar ruta', action: 'optimizeRoute' }
+        ],
+        confidence: 0.5,
+        needsClarification: true
+      };
+    }
+
+    // Detect add/modify requests
+    if (input.includes('agregar') || input.includes('añadir') || input.includes('incluir') || input.includes('pon')) {
+      return {
+        text: 'Puedo ayudarte a agregar actividades. Dime algo como:\n• "Agrega el Templo Senso-ji al día 2"\n• "Quiero visitar el Monte Fuji"\n• "Ponme restaurantes de ramen"',
+        actions: [],
+        suggestions: [
+          { text: 'Ver recomendaciones', action: 'recommend' },
+          { text: 'Buscar lugares', action: 'searchPlaces' },
+          { text: 'Ver ayuda', action: 'help' }
+        ],
+        confidence: 0.5,
+        needsClarification: true
+      };
+    }
+
+    // Generic helpful fallback
     return {
-      text: 'Hmm, no estoy seguro de cómo ayudarte con eso. ¿Podrías reformularlo o elegir una de estas opciones?',
+      text: 'No entendí bien, pero puedo ayudarte con muchas cosas! 😊\n\nPuedes preguntarme:\n• "¿Cuántas actividades tengo?"\n• "Recomiéndame algo"\n• "Optimiza mi ruta"\n• "Agrégame templos al día 2"',
       actions: [],
       suggestions: [
-        { text: 'Ver ayuda', action: 'help' },
-        { text: 'Recomiéndame algo', action: 'recommend' }
+        { text: 'Ver estadísticas 📊', action: 'showStats' },
+        { text: 'Analizar viaje 🔍', action: 'recommend' },
+        { text: 'Optimizar ruta 🗺️', action: 'optimizeRoute' },
+        { text: 'Ver ayuda completa', action: 'help' }
       ],
       confidence: 0.2,
       needsClarification: true
@@ -722,6 +978,17 @@ class DialogueManager {
     if (turn.response.actions && turn.response.actions.length > 0) {
       this.memory.working.currentGoal = turn.response.actions[0].type;
       this.memory.working.startedAt = turn.timestamp;
+    }
+
+    // 🧠 NEW: Add assistant response to conversational memory
+    if (window.ConversationalMemory && window.ConversationalMemory.initialized && turn.response) {
+      window.ConversationalMemory.addMessage('assistant', turn.response.text, {
+        intent: turn.parsed?.intent?.intent,
+        confidence: turn.response.confidence,
+        entities: turn.parsed?.entities,
+        actions: turn.response.actions,
+        timestamp: turn.timestamp
+      });
     }
 
     // 🔥 NEW: Extract and store items mentioned by AI

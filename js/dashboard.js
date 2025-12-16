@@ -687,7 +687,10 @@ class DashboardManager {
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-    new DashboardManager();
+    const instance = new DashboardManager();
+    // Exponer como window.DashboardApp para compatibilidad con el menú principal
+    window.DashboardApp = instance;
+    console.log('✅ DashboardApp exposed to window');
 });
 
 // Exportar para uso en otros módulos si es necesario

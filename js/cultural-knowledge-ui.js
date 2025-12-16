@@ -447,7 +447,7 @@ class CulturalKnowledgeUI {
 
     const modal = document.createElement('div');
     modal.id = 'cultural-knowledge-modal';
-    modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto';
+    modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[10000] p-4 overflow-y-auto';
     modal.innerHTML = '<div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-6xl my-8"></div>';
 
     // Add custom styles for tabs
