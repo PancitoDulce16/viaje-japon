@@ -82,6 +82,9 @@
     <!-- 🏥 Health Dashboard -->
     <link rel="stylesheet" href="/css/health-dashboard.css">
 
+    <!-- 📊 Analytics Dashboard -->
+    <link rel="stylesheet" href="/css/analytics-dashboard.css">
+
     <!-- 📱 Mobile-First Redesign -->
     <link rel="stylesheet" href="/css/mobile-first-redesign.css">
 
@@ -270,6 +273,33 @@
                 <div class="days" id="days">––</div>
                 <h2>para Japón! 🇯🇵</h2>
                 <p id="message">¡Tokio, Kioto y mucho ramen te están esperando! ✈️🍜</p>
+            </div>
+
+            <!-- 📊 ANALYTICS DASHBOARD -->
+            <div id="analytics-section" class="analytics-dashboard hidden">
+                <h2 class="section-title">📊 Análisis del Viaje</h2>
+
+                <div class="analytics-grid">
+                    <!-- Activity Distribution Chart -->
+                    <div class="chart-card">
+                        <canvas id="activityDistributionChart"></canvas>
+                    </div>
+
+                    <!-- Activities Per Day Chart -->
+                    <div class="chart-card">
+                        <canvas id="activitiesPerDayChart"></canvas>
+                    </div>
+
+                    <!-- Timeline Heatmap -->
+                    <div class="chart-card">
+                        <canvas id="timelineHeatmap"></canvas>
+                    </div>
+
+                    <!-- Category Timeline Chart -->
+                    <div class="chart-card full-width">
+                        <canvas id="categoryTimelineChart"></canvas>
+                    </div>
+                </div>
             </div>
 
             <div id="content-itinerary" class="tab-content"></div>
@@ -1065,6 +1095,15 @@
 
     <!-- 📸 INSTAGRAM TIMELINE - Visual timeline of your trip -->
     <script src="/js/instagram-timeline.js"></script>
+
+    <!-- 📊 CHART.JS - Interactive charts library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <!-- 📊 ANALYTICS DASHBOARD - Data visualizations -->
+    <script src="/js/analytics-dashboard.js"></script>
+
+    <!-- 📊 ANALYTICS INTEGRATION - Connect charts to app -->
+    <script src="/js/analytics-integration.js"></script>
 
 </body>
 </html>

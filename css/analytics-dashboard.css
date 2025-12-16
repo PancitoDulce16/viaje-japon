@@ -1,0 +1,142 @@
+/**
+ * 📊 ANALYTICS DASHBOARD STYLES
+ * ==============================
+ */
+
+.analytics-dashboard {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.analytics-dashboard .section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary, #1a202c);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+              0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  height: 400px;
+}
+
+.chart-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+              0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+.chart-card.full-width {
+  grid-column: 1 / -1;
+  height: 450px;
+}
+
+/* Dark mode support */
+.dark .analytics-dashboard .section-title {
+  color: var(--text-primary-dark, #f7fafc);
+}
+
+.dark .chart-card {
+  background: var(--bg-secondary-dark, #2d3748);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
+              0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+.dark .chart-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4),
+              0 4px 6px -2px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .chart-card {
+    height: 350px;
+  }
+
+  .chart-card.full-width {
+    height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .analytics-dashboard {
+    padding: 1rem;
+  }
+
+  .analytics-dashboard .section-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .chart-card {
+    padding: 1rem;
+    height: 300px;
+  }
+
+  .chart-card.full-width {
+    height: 350px;
+  }
+}
+
+/* Loading state */
+.chart-card.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary, #718096);
+}
+
+.chart-card.loading::after {
+  content: 'Cargando gráfico...';
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Empty state */
+.chart-card.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary, #718096);
+  text-align: center;
+  padding: 2rem;
+}
+
+.chart-card.empty::before {
+  content: '📊';
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.chart-card.empty::after {
+  content: 'No hay datos para mostrar';
+  font-size: 1rem;
+}
