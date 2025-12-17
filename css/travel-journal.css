@@ -1,0 +1,462 @@
+/**
+ * 📔 TRAVEL JOURNAL STYLES
+ * =========================
+ */
+
+.travel-journal-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.journal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.journal-header h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary, #1a202c);
+  margin: 0;
+}
+
+.journal-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.stat-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #3498db;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #718096);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Journal Entries List */
+.journal-entries-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.journal-entry {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.journal-entry:hover {
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.entry-date {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #718096);
+  text-transform: capitalize;
+}
+
+.entry-mood {
+  font-size: 1.5rem;
+}
+
+.entry-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary, #1a202c);
+  margin: 0 0 0.5rem 0;
+}
+
+.entry-location {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #718096);
+  margin-bottom: 1rem;
+}
+
+.entry-content {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-primary, #2d3748);
+  margin-bottom: 1rem;
+}
+
+.entry-content p {
+  margin-bottom: 0.75rem;
+}
+
+.entry-content p:last-child {
+  margin-bottom: 0;
+}
+
+.entry-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.entry-tag {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #e3f2fd;
+  color: #1976d2;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.entry-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+.entry-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #718096);
+}
+
+.entry-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Empty State */
+.journal-empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.empty-icon {
+  font-size: 5rem;
+  margin-bottom: 1rem;
+}
+
+.journal-empty-state h3 {
+  font-size: 1.5rem;
+  color: var(--text-primary, #1a202c);
+  margin-bottom: 0.5rem;
+}
+
+.journal-empty-state p {
+  color: var(--text-secondary, #718096);
+  margin-bottom: 1.5rem;
+}
+
+/* Modal Styles */
+.journal-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 1rem;
+}
+
+.journal-modal {
+  background: white;
+  border-radius: 16px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+              0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.journal-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.journal-modal .modal-header h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary, #1a202c);
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary, #718096);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: var(--bg-hover, #f7fafc);
+  color: var(--text-primary, #1a202c);
+}
+
+.journal-modal .modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #2d3748);
+  margin-bottom: 0.5rem;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 150px;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+.char-count {
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #718096);
+  margin-top: 0.25rem;
+}
+
+/* Mood Selector */
+.mood-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mood-btn {
+  padding: 0.75rem 1.25rem;
+  border: 2px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  background: white;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mood-btn:hover {
+  border-color: #3498db;
+  background: #f0f9ff;
+}
+
+.mood-btn.selected {
+  border-color: #3498db;
+  background: #3498db;
+  color: white;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+/* Buttons */
+.btn-primary,
+.btn-secondary {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--text-primary, #2d3748);
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-hover, #f7fafc);
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary, #718096);
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background: var(--bg-hover, #f7fafc);
+  color: var(--text-primary, #2d3748);
+}
+
+.delete-entry-btn:hover {
+  background: #fee;
+  color: #e53e3e;
+}
+
+/* Dark mode */
+.dark .travel-journal-container {
+  color: var(--text-primary-dark, #f7fafc);
+}
+
+.dark .journal-header h2 {
+  color: var(--text-primary-dark, #f7fafc);
+}
+
+.dark .stat-card,
+.dark .journal-entry,
+.dark .journal-modal {
+  background: var(--bg-secondary-dark, #2d3748);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.dark .entry-title,
+.dark .entry-content {
+  color: var(--text-primary-dark, #f7fafc);
+}
+
+.dark .form-input,
+.dark .form-textarea,
+.dark .mood-btn {
+  background: var(--bg-primary-dark, #1a202c);
+  border-color: var(--border-color-dark, #4a5568);
+  color: var(--text-primary-dark, #f7fafc);
+}
+
+.dark .btn-secondary {
+  background: var(--bg-primary-dark, #1a202c);
+  color: var(--text-primary-dark, #f7fafc);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .travel-journal-container {
+    padding: 1rem;
+  }
+
+  .journal-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .journal-entry {
+    padding: 1.5rem;
+  }
+
+  .entry-title {
+    font-size: 1.25rem;
+  }
+
+  .mood-selector {
+    flex-direction: column;
+  }
+
+  .mood-btn {
+    width: 100%;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
+}
