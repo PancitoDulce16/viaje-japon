@@ -975,7 +975,7 @@ class DialogueManager {
    */
   generateFallbackResponse(turn) {
     // Try to be more helpful by detecting keywords
-    const input = turn.input.toLowerCase();
+    const input = turn.userMessage ? turn.userMessage.toLowerCase() : '';
 
     // Detect stats/info questions
     if (input.includes('actividad') || input.includes('cuantas') || input.includes('cuantos') || input.includes('info')) {

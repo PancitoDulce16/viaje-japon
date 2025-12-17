@@ -190,7 +190,7 @@ class SmartResponseGenerator {
             action: ['Voy a agregar', 'Añado', 'Incluyo'],
             location_phrase: ['a tu itinerario', 'al plan', 'al día', ''],
             question: ['¿Algún lugar específico?', '¿Tienes alguno en mente?', ''],
-            context: ['¿A qué día?', '¿Para cuándo?', '¿Dónde lo pongo?'}
+            context: ['¿A qué día?', '¿Para cuándo?', '¿Dónde lo pongo?']
           }
         }
       ],
