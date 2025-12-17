@@ -242,7 +242,7 @@ class SmartResponseGenerator {
             reason: ['elegí esto porque', 'lo puse así para', 'consideré que'],
             details: ['es lo mejor para tu perfil', 'se alinea con tus preferencias', 'maximiza tu experiencia'],
             explanation: ['Básicamente,', 'En resumen,', 'Lo que pasa es que'],
-            benefit: ['así aprovechas mejor el tiempo', 'evitas cansancio', 'disfrutas más'}
+            benefit: ['así aprovechas mejor el tiempo', 'evitas cansancio', 'disfrutas más']
           }
         }
       ],
