@@ -642,18 +642,67 @@ class AIActionExecutor {
    * Get current itinerary
    */
   getCurrentItinerary() {
+    // Try window.currentItinerary first
     if (window.currentItinerary && window.currentItinerary.days) {
+      console.log('✅ Found itinerary in window.currentItinerary');
       return window.currentItinerary;
     }
 
+    // Try TripsManager.currentTrip
     if (window.TripsManager && window.TripsManager.currentTrip) {
-      return window.TripsManager.currentTrip;
+      const trip = window.TripsManager.currentTrip;
+
+      // Check if it has itinerary.days
+      if (trip.itinerary && trip.itinerary.days) {
+        console.log('✅ Found itinerary in TripsManager.currentTrip.itinerary');
+        return trip.itinerary;
+      }
+
+      // Check if trip itself has days
+      if (trip.days) {
+        console.log('✅ Found itinerary in TripsManager.currentTrip.days');
+        return trip;
+      }
     }
 
+    // Try ItineraryManager
     if (window.ItineraryManager && window.ItineraryManager.getCurrentItinerary) {
-      return window.ItineraryManager.getCurrentItinerary();
+      const itinerary = window.ItineraryManager.getCurrentItinerary();
+      if (itinerary && itinerary.days) {
+        console.log('✅ Found itinerary in ItineraryManager');
+        return itinerary;
+      }
     }
 
+    // Last resort: try localStorage
+    try {
+      const storedItinerary = localStorage.getItem('currentItinerary');
+      if (storedItinerary) {
+        const parsed = JSON.parse(storedItinerary);
+        if (parsed && parsed.days) {
+          console.log('✅ Found itinerary in localStorage');
+          return parsed;
+        }
+      }
+
+      // Try also from trip data in localStorage
+      const currentTripId = localStorage.getItem('currentTripId');
+      if (currentTripId) {
+        const tripKey = `trip_${currentTripId}`;
+        const tripData = localStorage.getItem(tripKey);
+        if (tripData) {
+          const trip = JSON.parse(tripData);
+          if (trip.itinerary && trip.itinerary.days) {
+            console.log('✅ Found itinerary in localStorage trip data');
+            return trip.itinerary;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error loading itinerary from localStorage:', e);
+    }
+
+    console.warn('❌ No itinerary found from any source');
     return null;
   }
 

@@ -14,14 +14,29 @@ export const PDFExporter = {
 
       const { jsPDF } = window.jspdf;
 
-      // Obtener itinerario actual
-      const itinerary = window.ItineraryHandler?.currentItinerary;
+      // Obtener itinerario actual desde múltiples fuentes posibles
+      let itinerary = window.ItineraryHandler?.currentItinerary;
 
+      // Intentar obtener desde TripsManager si no existe en ItineraryHandler
       if (!itinerary || !itinerary.days) {
-        throw new Error('No hay itinerario para exportar');
+        const currentTrip = window.TripsManager?.currentTrip;
+        if (currentTrip && currentTrip.itinerary) {
+          itinerary = currentTrip.itinerary;
+        }
       }
 
-      console.log('📄 Generando PDF del itinerario...');
+      console.log('📄 Intentando generar PDF...', {
+        itinerary,
+        hasHandler: !!window.ItineraryHandler,
+        hasTripsManager: !!window.TripsManager,
+        currentTrip: window.TripsManager?.currentTrip
+      });
+
+      if (!itinerary || !itinerary.days || itinerary.days.length === 0) {
+        throw new Error('No hay itinerario para exportar. Por favor crea o carga un itinerario primero.');
+      }
+
+      console.log('📄 Generando PDF del itinerario con', itinerary.days.length, 'días...');
 
       // Crear documento PDF
       const doc = new jsPDF();

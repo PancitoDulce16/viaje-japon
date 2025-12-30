@@ -1,0 +1,247 @@
+/**
+ * 💰 BUDGET VISUAL CHARTS STYLES
+ * ===============================
+ * Beautiful styling for budget visualization charts
+ */
+
+/* Panel Overlay */
+.budget-charts-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.budget-charts-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.budget-charts-content {
+  position: relative;
+  background: white;
+  border-radius: 24px;
+  max-width: 1200px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Header */
+.budget-charts-header {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 24px 24px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.budget-charts-header h2 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0 0 0.5rem 0;
+}
+
+.budget-charts-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.budget-charts-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.budget-charts-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+/* Charts Grid */
+.budget-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.budget-chart-card {
+  background: #f9fafb;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.budget-chart-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.budget-chart-card.full-width {
+  grid-column: 1 / -1;
+}
+
+.budget-chart-card h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chart-container {
+  position: relative;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-container canvas {
+  max-height: 100%;
+}
+
+/* Insights */
+.budget-insights {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.budget-insight-item {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.budget-insight-item:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.insight-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.insight-text {
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+/* Dark Mode */
+.dark .budget-charts-content {
+  background: #1f2937;
+}
+
+.dark .budget-chart-card {
+  background: #374151;
+}
+
+.dark .budget-chart-card h3 {
+  color: #f3f4f6;
+}
+
+.dark .budget-insight-item {
+  background: #4b5563;
+}
+
+.dark .insight-text {
+  color: #d1d5db;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .budget-charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .budget-chart-card {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .budget-charts-panel {
+    padding: 0;
+  }
+
+  .budget-charts-content {
+    border-radius: 0;
+    max-height: 100vh;
+  }
+
+  .budget-charts-header {
+    padding: 1.5rem;
+    border-radius: 0;
+  }
+
+  .budget-charts-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .budget-charts-subtitle {
+    font-size: 0.875rem;
+  }
+
+  .budget-charts-grid {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .chart-container {
+    height: 250px;
+  }
+
+  .budget-insight-item {
+    padding: 0.75rem 1rem;
+  }
+
+  .insight-icon {
+    font-size: 1.25rem;
+  }
+
+  .insight-text {
+    font-size: 0.8125rem;
+  }
+}
