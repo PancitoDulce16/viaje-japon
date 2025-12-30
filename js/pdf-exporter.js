@@ -14,26 +14,45 @@ export const PDFExporter = {
 
       const { jsPDF } = window.jspdf;
 
-      // Obtener itinerario actual desde múltiples fuentes posibles
-      let itinerary = window.ItineraryHandler?.currentItinerary;
+      // 🔥 ORDEN DE BÚSQUEDA MEJORADO - Buscar itinerario desde múltiples fuentes
+      let itinerary = null;
 
-      // Intentar obtener desde TripsManager si no existe en ItineraryHandler
-      if (!itinerary || !itinerary.days) {
-        const currentTrip = window.TripsManager?.currentTrip;
-        if (currentTrip && currentTrip.itinerary) {
-          itinerary = currentTrip.itinerary;
+      // 1️⃣ PRIORIDAD 1: TripsManager.currentTrip (la fuente principal en la app)
+      if (window.TripsManager?.currentTrip) {
+        const trip = window.TripsManager.currentTrip;
+
+        // El itinerario puede estar directamente en el trip o en trip.itinerary
+        if (trip.days && Array.isArray(trip.days)) {
+          itinerary = trip; // El trip ES el itinerario
+          console.log('✅ Itinerario encontrado en TripsManager.currentTrip (directo)');
+        } else if (trip.itinerary && trip.itinerary.days) {
+          itinerary = trip.itinerary; // El itinerario está anidado
+          console.log('✅ Itinerario encontrado en TripsManager.currentTrip.itinerary');
         }
       }
 
-      console.log('📄 Intentando generar PDF...', {
-        itinerary,
-        hasHandler: !!window.ItineraryHandler,
+      // 2️⃣ FALLBACK 2: ItineraryHandler.currentItinerary (legacy)
+      if (!itinerary && window.ItineraryHandler?.currentItinerary) {
+        itinerary = window.ItineraryHandler.currentItinerary;
+        console.log('✅ Itinerario encontrado en ItineraryHandler.currentItinerary');
+      }
+
+      // 3️⃣ FALLBACK 3: Variable global currentItinerary (si existe)
+      if (!itinerary && window.currentItinerary) {
+        itinerary = window.currentItinerary;
+        console.log('✅ Itinerario encontrado en window.currentItinerary');
+      }
+
+      console.log('📄 DEBUG PDF Export:', {
         hasTripsManager: !!window.TripsManager,
-        currentTrip: window.TripsManager?.currentTrip
+        currentTrip: window.TripsManager?.currentTrip,
+        hasItineraryHandler: !!window.ItineraryHandler,
+        itineraryFound: !!itinerary,
+        itinerary: itinerary
       });
 
       if (!itinerary || !itinerary.days || itinerary.days.length === 0) {
-        throw new Error('No hay itinerario para exportar. Por favor crea o carga un itinerario primero.');
+        throw new Error('No hay itinerario para exportar.\n\nPor favor:\n1. Crea un itinerario desde "Crear Itinerario"\n2. O carga un viaje existente\n3. Asegúrate de que tenga al menos un día con actividades');
       }
 
       console.log('📄 Generando PDF del itinerario con', itinerary.days.length, 'días...');
@@ -218,8 +237,27 @@ export const PDFExporter = {
     } catch (error) {
       console.error('❌ Error generando PDF:', error);
 
+      // Mostrar notificación de error con más detalle
       if (window.Notifications) {
-        window.Notifications.error(`Error al generar PDF: ${error.message}`);
+        if (error.message.includes('No hay itinerario')) {
+          window.Notifications.error(
+            `📄 No se puede exportar PDF\n\n${error.message}`,
+            8000
+          );
+        } else if (error.message.includes('jsPDF')) {
+          window.Notifications.error(
+            '📄 Error: Librería de PDF no cargada.\n\nPor favor recarga la página.',
+            5000
+          );
+        } else {
+          window.Notifications.error(
+            `📄 Error al generar PDF:\n${error.message}`,
+            5000
+          );
+        }
+      } else {
+        // Fallback si no hay sistema de notificaciones
+        alert(`Error al generar PDF:\n\n${error.message}`);
       }
 
       return false;

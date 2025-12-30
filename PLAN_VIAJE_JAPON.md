@@ -69,10 +69,16 @@
   - Arcades de varios pisos
 - 🍱 **Almuerzo**: Curry japonés en CoCo Ichibanya
 
-**Tarde (15:00-19:00)**
+**Tarde (15:00-19:30)**
 - 🚆 Metro a Harajuku
 - 🌸 **Meiji Shrine** - Santuario en el bosque (1 hora) GRATIS
 - 👗 **Takeshita Street** - Moda kawaii y crepes (1.5 horas)
+- 🧸 **Anakuma Café** ⭐ (45 min)
+  - 📍 En Harajuku
+  - Café temático kawaii con osos
+  - Comida y bebidas adorables
+  - Perfecto para fotos y experiencia cute
+  - ¡Imperdible! ☕🐻
 - 🛍️ **Omotesando** - Avenue de marcas de lujo (1 hora)
   - Tokyu Plaza rooftop - vista gratis
 
@@ -727,6 +733,7 @@
 4. **📚 Museo del Manga de Kyoto** (Día 6) - 50,000 mangas ⭐⭐⭐
 5. **🎋 Arashiyama** (Día 5) - Bosque de bambú + monos ⭐⭐⭐
 6. **🥢 Nakatanidou en Nara** (Día 8) - Mochi pounding show ⭐⭐⭐
+7. **🧸 Anakuma Café** (Día 3) - Café temático kawaii en Harajuku ⭐⭐⭐
 
 ---
 
