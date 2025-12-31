@@ -163,10 +163,7 @@ const RamenPassportUI = {
 
     // Re-render
     const stats = this.passport.obtenerEstadisticas();
-    document.querySelectorAll('.stat-number')[0].textContent = stats.total;
-    document.querySelectorAll('.stat-number')[1].textContent = stats.tiposVisitados;
-    document.querySelectorAll('.stat-number')[2].textContent = stats.ciudadesVisitadas;
-    document.querySelectorAll('.stat-number')[3].textContent = stats.ratingPromedio;
+    this.updateStats(stats);
 
     this.renderLista();
   },
@@ -242,12 +239,19 @@ const RamenPassportUI = {
 
       // Re-render stats
       const stats = this.passport.obtenerEstadisticas();
-      document.querySelectorAll('.stat-number')[0].textContent = stats.total;
-      document.querySelectorAll('.stat-number')[1].textContent = stats.tiposVisitados;
-      document.querySelectorAll('.stat-number')[2].textContent = stats.ciudadesVisitadas;
-      document.querySelectorAll('.stat-number')[3].textContent = stats.ratingPromedio;
+      this.updateStats(stats);
 
       this.renderLista();
+    }
+  },
+
+  updateStats(stats) {
+    const statNumbers = document.querySelectorAll('.stat-number');
+    if (statNumbers.length >= 4) {
+      statNumbers[0].textContent = stats.total;
+      statNumbers[1].textContent = stats.tiposVisitados;
+      statNumbers[2].textContent = stats.ciudadesVisitadas;
+      statNumbers[3].textContent = stats.ratingPromedio;
     }
   }
 };
