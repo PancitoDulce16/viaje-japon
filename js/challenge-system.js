@@ -320,6 +320,13 @@ class ChallengeSystem {
     `;
 
     document.body.appendChild(modal);
+
+    // Cerrar al hacer click fuera del contenido
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.close();
+      }
+    });
   }
 
   /**
