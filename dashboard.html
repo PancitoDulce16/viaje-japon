@@ -439,6 +439,15 @@
     <!-- 🌸 JAPITIN SOCIAL - Red social interna tipo Instagram -->
     <script type="module" src="/js/social-network.js?v=1763264017"></script>
 
+    <!-- 📖 TRIP STORY GENERATOR - Genera Instagram Stories del viaje -->
+    <script type="module" src="/js/trip-story-generator.js?v=1763264017"></script>
+
+    <!-- 📊 TRIP CARDS GENERATOR - Tarjetas compartibles para redes -->
+    <script type="module" src="/js/trip-cards-generator.js?v=1763264017"></script>
+
+    <!-- 🎯 JAPAN PERSONA QUIZ - Quiz viral tipo BuzzFeed -->
+    <script type="module" src="/js/japan-persona-quiz.js?v=1763264017"></script>
+
     <!-- 📝 LOG EXPORTER - Captura TODOS los logs automáticamente -->
     <script type="module" src="/js/log-exporter.js?v=1763264017"></script>
 
@@ -554,6 +563,25 @@
                             <div class="text-3xl mb-2">🛍️</div>
                             <div class="font-semibold">Shopping</div>
                             <div class="text-xs text-gray-600 dark:text-gray-400">Lista de compras</div>
+                        </button>
+
+                        <!-- 🔥 VIRAL FEATURES -->
+                        <button class="feature-btn bg-gradient-to-br from-orange-50 to-pink-50 dark:from-orange-900/20 dark:to-pink-900/20 p-4 rounded-xl hover:shadow-lg transition-all border-2 border-orange-300 dark:border-orange-600" onclick="window.TripStoryGenerator?.generateStories(window.TripsManager?.currentTrip); this.closest('.fixed').remove();">
+                            <div class="text-3xl mb-2">📖</div>
+                            <div class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-pink-600">IG Stories</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">Genera historias</div>
+                        </button>
+
+                        <button class="feature-btn bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 rounded-xl hover:shadow-lg transition-all border-2 border-blue-300 dark:border-blue-600" onclick="window.TripCardsGenerator?.open(window.TripsManager?.currentTrip); this.closest('.fixed').remove();">
+                            <div class="text-3xl mb-2">📊</div>
+                            <div class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Trip Cards</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">Tarjetas virales</div>
+                        </button>
+
+                        <button class="feature-btn bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 p-4 rounded-xl hover:shadow-lg transition-all border-2 border-green-300 dark:border-green-600" onclick="window.JapanPersonaQuiz?.open(); this.closest('.fixed').remove();">
+                            <div class="text-3xl mb-2">🎯</div>
+                            <div class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-teal-600">Persona Quiz</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">¿Qué viajero eres?</div>
                         </button>
 
                         <button class="feature-btn bg-gray-50 dark:bg-gray-700 p-4 rounded-xl hover:shadow-lg transition-all" onclick="window.DashboardApp?.openFloatingModal?.('phrases'); this.closest('.fixed').remove();">
