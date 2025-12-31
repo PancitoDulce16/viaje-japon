@@ -16,7 +16,16 @@ class InstagramTimeline {
   /**
    * Open the Instagram timeline
    */
-  open() {
+  async open() {
+    // Intentar cargar el itinerario si existe la función
+    if (window.ItineraryV3 && window.ItineraryV3.loadItinerary) {
+      try {
+        await window.ItineraryV3.loadItinerary();
+      } catch (err) {
+        console.warn('No se pudo cargar con ItineraryV3.loadItinerary');
+      }
+    }
+
     this.currentItinerary = this.getCurrentItinerary();
 
     if (!this.currentItinerary || !this.currentItinerary.days || this.currentItinerary.days.length === 0) {
@@ -49,6 +58,17 @@ class InstagramTimeline {
     console.log('📸 Instagram Timeline: Trying to get itinerary...');
 
     // Try multiple sources with detailed logging
+
+    // 1. Try ItineraryV3.currentItinerary (PRIMERO - más actualizado)
+    if (window.ItineraryV3 && window.ItineraryV3.currentItinerary) {
+      console.log('Found ItineraryV3.currentItinerary:', window.ItineraryV3.currentItinerary);
+      if (window.ItineraryV3.currentItinerary.days && window.ItineraryV3.currentItinerary.days.length > 0) {
+        console.log('✅ Using ItineraryV3.currentItinerary with', window.ItineraryV3.currentItinerary.days.length, 'days');
+        return window.ItineraryV3.currentItinerary;
+      }
+    }
+
+    // 2. Try window.currentItinerary
     if (window.currentItinerary) {
       console.log('Found window.currentItinerary:', window.currentItinerary);
       if (window.currentItinerary.days && window.currentItinerary.days.length > 0) {
@@ -59,6 +79,7 @@ class InstagramTimeline {
       }
     }
 
+    // 3. Try TripsManager.currentTrip (pero probablemente no tenga days)
     if (window.TripsManager) {
       console.log('Found window.TripsManager');
       if (window.TripsManager.currentTrip) {
@@ -70,6 +91,7 @@ class InstagramTimeline {
       }
     }
 
+    // 4. Try legacy ItineraryManager
     if (window.ItineraryManager && window.ItineraryManager.getCurrentItinerary) {
       const itinerary = window.ItineraryManager.getCurrentItinerary();
       console.log('ItineraryManager returned:', itinerary);
