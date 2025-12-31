@@ -648,23 +648,60 @@
 
 ---
 
-#### 🎫 ATRACCIONES Y ENTRADAS (~¥42,000 - $280 USD)
-| Atracción | Precio |
-|-----------|--------|
-| Shibuya Sky (opcional) | ¥2,000 |
-| **Toei Kyoto Studio Park (EVA-01)** ⭐ | **¥2,400** |
-| **Kyoto Manga Museum** ⭐ | **¥900** |
-| **Kaiyukan (Acuario Osaka)** ⭐ | **¥2,700** |
-| Templos varios en Kyoto | ¥3,000 |
-| Nara (Todai-ji, Kasuga Taisha) | ¥1,100 |
-| Monkey Park (Arashiyama) | ¥550 |
-| Hakone (transporte y acceso a sitios) | ¥6,100 |
-| Kamakura (Great Buddha + Hasedera) | ¥700 |
-| Maid Café | ¥1,500 |
-| Arcades varios días | ¥2,000 |
-| Ferris Wheel Osaka (opcional) | ¥800 |
-| Otros | ¥8,250 |
-| **TOTAL ACTIVIDADES** | **¥32,000** |
+#### 🎫 ATRACCIONES Y ENTRADAS (~¥32,000 - $215 USD)
+
+**TOKYO - Primera Ronda:**
+| Atracción | Día | Precio |
+|-----------|-----|--------|
+| Shibuya Sky (opcional) | 1 | ¥2,000 |
+| Palacio Imperial - East Gardens | 2 | GRATIS |
+| Sensoji Temple (Asakusa) | 2 | GRATIS |
+| Meiji Shrine | 3 | GRATIS |
+| **Anakuma Café** ⭐ | 3 | ~¥1,500 |
+| Maid Café (Akihabara) | 3 | ¥1,500 |
+
+**KYOTO:**
+| Atracción | Día | Precio |
+|-----------|-----|--------|
+| **Arashiyama - Bosque de Bambú** ⭐ | 5 | GRATIS |
+| Tenryu-ji Temple (Arashiyama) | 5 | ¥500 |
+| Monkey Park Iwatayama | 5 | ¥550 |
+| **Toei Kyoto Studio Park (EVA-01)** ⭐ | 5 | **¥2,400** |
+| Kinkaku-ji (Pabellón Dorado) | 6 | ¥500 |
+| Ryoan-ji (Jardín zen) | 6 | ¥500 |
+| **Kyoto Manga Museum** ⭐ | 6 | **¥900** |
+| Fushimi Inari Taisha | 7 | GRATIS |
+| Nijo Castle | 7 | ¥800 |
+
+**OSAKA Y NARA:**
+| Atracción | Día | Precio |
+|-----------|-----|--------|
+| **Nakatanidou (Mochi Pounding)** ⭐ | 8 | ~¥200 |
+| Todai-ji Temple (Gran Buda Nara) | 8 | ¥600 |
+| Kasuga Taisha Shrine (Nara) | 8 | ¥500 |
+| Nara Park (alimentar ciervos) | 8 | ~¥200 |
+| Osaka Castle (solo jardines) | 9 | GRATIS |
+| **Kaiyukan (Acuario Osaka)** ⭐ | 9 | **¥2,700** |
+| Tempozan Ferris Wheel (opcional) | 9 | ¥800 |
+
+**TOKYO - Segunda Ronda:**
+| Atracción | Día | Precio |
+|-----------|-----|--------|
+| Pokemon Center Mega Tokyo | 10 | GRATIS |
+| Kamakura - Great Buddha | 11 | ¥300 |
+| Hasedera Temple (Kamakura) | 11 | ¥400 |
+| Tsurugaoka Hachimangu (Kamakura) | 11 | ¥200 |
+| **Hakone Loop completo** ⭐ | 12 | **¥6,100** |
+| - Hakone-Tozan Railway | 12 | (incluido) |
+| - Hakone Ropeway | 12 | (incluido) |
+| - Owakudani Valle Volcánico | 12 | (incluido) |
+| - Lake Ashi Cruise | 12 | (incluido) |
+| - Hakone Shrine | 12 | (incluido) |
+| Arcades varios días | varios | ¥2,000 |
+| Character Cafés | varios | ~¥1,000 |
+| Otros gastos varios | varios | ¥5,550 |
+
+| **TOTAL ACTIVIDADES** | | **¥32,000** |
 
 ---
 
