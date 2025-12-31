@@ -175,6 +175,21 @@ function getCurrentTripId() {
   return localStorage.getItem('currentTripId');
 }
 
+// Helper: Sanitizar datos para Firestore (remover undefined)
+function sanitizeForFirestore(obj) {
+  if (obj === null || obj === undefined) return null;
+  if (typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitizeForFirestore);
+
+  const sanitized = {};
+  for (const key in obj) {
+    if (obj[key] !== undefined) {
+      sanitized[key] = sanitizeForFirestore(obj[key]);
+    }
+  }
+  return sanitized;
+}
+
 async function saveCurrentItineraryToFirebase() {
   validateFirestoreAccess('Save itinerary');
 
@@ -186,7 +201,9 @@ async function saveCurrentItineraryToFirebase() {
 
   try {
     const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
-    await setDoc(itineraryRef, currentItinerary);
+    // Sanitizar datos antes de guardar para evitar undefined
+    const sanitizedData = sanitizeForFirestore(currentItinerary);
+    await setDoc(itineraryRef, sanitizedData);
     console.log('✅ Itinerary saved to Firebase');
     return true;
   } catch (error) {

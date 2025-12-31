@@ -1676,23 +1676,26 @@ export const ItineraryBuilder = {
       });
       const cityList = Array.from(citySet);
 
-      // Guardar en Firebase
+      // Guardar en Firebase - Sanitizar datos para evitar undefined
       const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+
+      // Construir objeto de vuelos solo con valores válidos
+      const flightsData = {};
+      if (data.outboundFlight) flightsData.outbound = data.outboundFlight;
+      if (data.returnFlight) flightsData.return = data.returnFlight;
+
       await setDoc(itineraryRef, {
-        name: data.name,
+        name: data.name || 'Mi Viaje a Japón',
         startDate: data.startDate,
         endDate: data.endDate,
         cities: cityList,
-        cityDayAssignments: data.cityDayAssignments,
-        categories: data.categories,
-        template: data.template,
+        cityDayAssignments: data.cityDayAssignments || [],
+        categories: data.categories || [],
+        template: data.template || 'complete',
         days: daysWithActivities,
-        flights: {
-          outbound: data.outboundFlight,
-          return: data.returnFlight
-        },
+        flights: flightsData,
         createdAt: new Date().toISOString(),
-        createdBy: auth.currentUser.email
+        createdBy: auth.currentUser?.email || 'anonymous'
       });
 
       Notifications.success(`✨ Itinerario "${data.name}" creado exitosamente con ${activities.length} actividades!`);
