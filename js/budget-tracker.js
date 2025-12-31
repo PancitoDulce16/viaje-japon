@@ -44,15 +44,8 @@ export const BudgetTracker = {
     const tripId = this.getCurrentTripId();
     const userId = auth.currentUser.uid;
 
-    console.log('🔍 DEBUG Budget initRealtimeSync:', {
-      userId: userId,
-      tripId: tripId,
-      hasTrip: !!tripId
-    });
-
     // Si NO hay trip, solo usar localStorage (sin Firestore sync)
     if (!tripId) {
-      console.log('⚠️ Budget: No hay trip seleccionado, solo localStorage (sin sync)');
       // No crear listener de Firestore, solo usar localStorage
       this.expenses = safeLocalStorageGet('expenses', []);
       this.updateModal();
@@ -61,7 +54,6 @@ export const BudgetTracker = {
     }
 
     // 🔥 MODO COLABORATIVO: Usar el trip compartido
-    console.log('🤝 Budget: Modo colaborativo activado para trip:', tripId);
     const expensesRef = collection(db, `trips/${tripId}/expenses`);
     const q = query(expensesRef, orderBy('timestamp', 'desc'));
 

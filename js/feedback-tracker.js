@@ -115,13 +115,6 @@ export const FeedbackTracker = {
       return;
     }
 
-    console.log('🔍 DEBUG trackLike - Starting:', {
-      activityId,
-      activityName,
-      userId: auth.currentUser.uid,
-      userEmail: auth.currentUser.email
-    });
-
     const likeData = {
       activityId,
       activityName,
@@ -135,7 +128,6 @@ export const FeedbackTracker = {
     // Guardar en Firestore
     try {
       const userDoc = doc(db, 'users', auth.currentUser.uid);
-      console.log('🔍 DEBUG - Firestore path:', `users/${auth.currentUser.uid}`);
 
       // Primero verificar si el documento existe
       const userSnap = await getDoc(userDoc);
@@ -205,14 +197,12 @@ export const FeedbackTracker = {
     // Guardar en Firestore
     try {
       const userDoc = doc(db, 'users', auth.currentUser.uid);
-      console.log('🔍 DEBUG - Firestore path:', `users/${auth.currentUser.uid}`);
 
       // Primero verificar si el documento existe
       const userSnap = await getDoc(userDoc);
 
       if (userSnap.exists()) {
         // Documento existe, actualizar
-        console.log('✅ User doc exists, updating...');
         await updateDoc(userDoc, {
           dislikedActivities: arrayUnion({
             activityId,
@@ -258,17 +248,8 @@ export const FeedbackTracker = {
     const sessionDuration = Date.now() - this.sessionData.sessionStart;
     const sessionId = `${auth.currentUser.uid}_${this.sessionData.sessionStart}`;
 
-    console.log('🔍 DEBUG saveSessionData - Starting:', {
-      userId: auth.currentUser.uid,
-      sessionId: sessionId,
-      clicks: this.sessionData.clicks.length,
-      likes: this.sessionData.likes.length,
-      dislikes: this.sessionData.dislikes.length
-    });
-
     try {
       const sessionDoc = doc(db, 'userSessions', sessionId);
-      console.log('🔍 DEBUG - Firestore path:', `userSessions/${sessionId}`);
 
       await setDoc(sessionDoc, {
         userId: auth.currentUser.uid,
