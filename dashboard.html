@@ -448,6 +448,27 @@
     <!-- 🎯 JAPAN PERSONA QUIZ - Quiz viral tipo BuzzFeed -->
     <script type="module" src="/js/japan-persona-quiz.js?v=1763264017"></script>
 
+    <!-- 👯 TRAVEL TWINS MATCHER - AI matching con otros viajeros -->
+    <script type="module" src="/js/travel-twins-matcher.js?v=1763264017"></script>
+
+    <!-- 💎 HIDDEN GEMS MAP - Mapa colaborativo de lugares secretos -->
+    <script type="module" src="/js/hidden-gems-map.js?v=1763264017"></script>
+
+    <!-- 🎯 LOCATION GAME - Adivina el lugar de la foto -->
+    <script type="module" src="/js/location-game.js?v=1763264017"></script>
+
+    <!-- 🎬 CHALLENGE SYSTEM - #MyJapanIn60Seconds video challenges -->
+    <script type="module" src="/js/challenge-system.js?v=1763264017"></script>
+
+    <!-- 📱 WHATSAPP UPDATER - Sistema de mensajes automáticos -->
+    <script type="module" src="/js/whatsapp-updater.js?v=1763264017"></script>
+
+    <!-- 🎥 VIDEO MONTAGE CREATOR - AI video montage generator -->
+    <script type="module" src="/js/video-montage-creator.js?v=1763264017"></script>
+
+    <!-- 🌐 LANDING PAGE GENERATOR - Generador de landing pages públicas -->
+    <script type="module" src="/js/landing-page-generator.js?v=1763264017"></script>
+
     <!-- 📝 LOG EXPORTER - Captura TODOS los logs automáticamente -->
     <script type="module" src="/js/log-exporter.js?v=1763264017"></script>
 
@@ -582,6 +603,49 @@
                             <div class="text-3xl mb-2">🎯</div>
                             <div class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-teal-600">Persona Quiz</div>
                             <div class="text-xs text-gray-600 dark:text-gray-400">¿Qué viajero eres?</div>
+                        </button>
+
+                        <!-- 🔥 NEW VIRAL FEATURES -->
+                        <button class="feature-btn bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl hover:shadow-lg transition-all border-2 border-purple-300 dark:border-purple-600" onclick="window.travelTwinsMatcher = window.travelTwinsMatcher || new TravelTwinsMatcher(); window.travelTwinsMatcher.open(); this.closest('.fixed').remove();">
+                            <div class="text-3xl mb-2">👯</div>
+                            <div class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Travel Twins</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">Encuentra tu twin</div>
+                        </button>
+
+                        <button class="feature-btn bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-900/20 dark:to-emerald-900/20 p-4 rounded-xl hover:shadow-lg transition-all border-2 border-teal-300 dark:border-teal-600" onclick="window.hiddenGemsMap = window.hiddenGemsMap || new HiddenGemsMap(); window.hiddenGemsMap.open(); this.closest('.fixed').remove();">
+                            <div class="text-3xl mb-2">💎</div>
+                            <div class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-emerald-600">Hidden Gems</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">Mapa secreto</div>
+                        </button>
+
+                        <button class="feature-btn bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 p-4 rounded-xl hover:shadow-lg transition-all border-2 border-indigo-300 dark:border-indigo-600" onclick="window.locationGame = window.locationGame || new LocationGame(); window.locationGame.open(); this.closest('.fixed').remove();">
+                            <div class="text-3xl mb-2">🎯</div>
+                            <div class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">Location Game</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">Adivina el lugar</div>
+                        </button>
+
+                        <button class="feature-btn bg-gradient-to-br from-pink-50 to-red-50 dark:from-pink-900/20 dark:to-red-900/20 p-4 rounded-xl hover:shadow-lg transition-all border-2 border-pink-300 dark:border-pink-600" onclick="window.challengeSystem = window.challengeSystem || new ChallengeSystem(); window.challengeSystem.open(); this.closest('.fixed').remove();">
+                            <div class="text-3xl mb-2">🎬</div>
+                            <div class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-red-600">#MyJapanIn60s</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">Video challenge</div>
+                        </button>
+
+                        <button class="feature-btn bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-xl hover:shadow-lg transition-all border-2 border-green-300 dark:border-green-600" onclick="window.whatsappUpdater = window.whatsappUpdater || new WhatsAppUpdater(); window.whatsappUpdater.open(); this.closest('.fixed').remove();">
+                            <div class="text-3xl mb-2">📱</div>
+                            <div class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600">WhatsApp Updates</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">Auto mensajes</div>
+                        </button>
+
+                        <button class="feature-btn bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 p-4 rounded-xl hover:shadow-lg transition-all border-2 border-purple-300 dark:border-purple-600" onclick="window.videoMontageCreator = window.videoMontageCreator || new VideoMontageCreator(); window.videoMontageCreator.open(); this.closest('.fixed').remove();">
+                            <div class="text-3xl mb-2">🎥</div>
+                            <div class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">Video Montage</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">AI montajes</div>
+                        </button>
+
+                        <button class="feature-btn bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-4 rounded-xl hover:shadow-lg transition-all border-2 border-indigo-300 dark:border-indigo-600" onclick="window.landingPageGenerator = window.landingPageGenerator || new LandingPageGenerator(); window.landingPageGenerator.open(); this.closest('.fixed').remove();">
+                            <div class="text-3xl mb-2">🌐</div>
+                            <div class="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Landing Page</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">Página pública</div>
                         </button>
 
                         <button class="feature-btn bg-gray-50 dark:bg-gray-700 p-4 rounded-xl hover:shadow-lg transition-all" onclick="window.DashboardApp?.openFloatingModal?.('phrases'); this.closest('.fixed').remove();">
