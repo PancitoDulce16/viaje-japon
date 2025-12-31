@@ -1309,14 +1309,43 @@ export const ItineraryBuilder = {
       const startDate = document.getElementById('itineraryStartDate').value;
       const endDate = document.getElementById('itineraryEndDate').value;
 
-      if (!name || !startDate || !endDate) {
-        Notifications.warning('Por favor completa todos los campos obligatorios');
+      if (!name) {
+        Notifications.warning('⚠️ Ingresa un nombre para tu itinerario (ej: "Viaje a Japón 2025")');
+        document.getElementById('itineraryName').focus();
         return false;
       }
 
-      if (new Date(endDate) <= new Date(startDate)) {
-        Notifications.warning('La fecha de fin debe ser posterior a la fecha de inicio');
+      if (!startDate) {
+        Notifications.warning('⚠️ Selecciona la fecha de inicio de tu viaje');
+        document.getElementById('itineraryStartDate').focus();
         return false;
+      }
+
+      if (!endDate) {
+        Notifications.warning('⚠️ Selecciona la fecha de fin de tu viaje');
+        document.getElementById('itineraryEndDate').focus();
+        return false;
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      if (end <= start) {
+        Notifications.warning('⚠️ La fecha de fin debe ser posterior a la fecha de inicio');
+        document.getElementById('itineraryEndDate').focus();
+        return false;
+      }
+
+      // Validar que el viaje no sea demasiado largo (más de 60 días)
+      const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      if (daysDiff > 60) {
+        Notifications.warning('⚠️ El viaje es muy largo (máximo 60 días). Considera dividirlo en varios itinerarios.');
+        return false;
+      }
+
+      // Advertencia si el viaje es muy corto
+      if (daysDiff < 3) {
+        Notifications.info(`ℹ️ Tu viaje es de ${daysDiff} día${daysDiff > 1 ? 's' : ''}. Tendrás tiempo limitado para explorar.`, 5000);
       }
     }
 
@@ -1361,7 +1390,23 @@ export const ItineraryBuilder = {
       }
 
       if (unassignedDays.length > 0) {
-        Notifications.warning(`Por favor agrega al menos una ciudad para los siguientes días: ${unassignedDays.join(', ')}`);
+        const daysText = unassignedDays.length === 1 ? 'el día' : 'los días';
+        const daysList = unassignedDays.length <= 3
+          ? unassignedDays.join(', ')
+          : `${unassignedDays.slice(0, 3).join(', ')} y ${unassignedDays.length - 3} más`;
+
+        Notifications.warning(`📍 Por favor selecciona al menos una ciudad para ${daysText}: ${daysList}`, 6000);
+
+        // Scroll al primer día sin asignar
+        const firstUnassignedDay = document.getElementById(`city-blocks-day-${unassignedDays[0]}`);
+        if (firstUnassignedDay) {
+          firstUnassignedDay.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          firstUnassignedDay.style.border = '2px solid #f59e0b';
+          setTimeout(() => {
+            firstUnassignedDay.style.border = '';
+          }, 3000);
+        }
+
         return false;
       }
     }
@@ -1698,7 +1743,23 @@ export const ItineraryBuilder = {
         createdBy: auth.currentUser?.email || 'anonymous'
       });
 
-      Notifications.success(`✨ Itinerario "${data.name}" creado exitosamente con ${activities.length} actividades!`);
+      // Mensaje de éxito mejorado con detalles
+      const totalCities = cityList.length;
+      const totalDays = daysWithActivities.length;
+
+      Notifications.success(
+        `🎉 ¡Itinerario "${data.name}" creado exitosamente!\n` +
+        `📅 ${totalDays} días | 🏙️ ${totalCities} ciudad${totalCities > 1 ? 'es' : ''} | 🎯 ${activities.length} actividades sugeridas`,
+        8000
+      );
+
+      // Mostrar tip útil
+      setTimeout(() => {
+        Notifications.info(
+          '💡 Tip: Puedes editar, reorganizar o eliminar actividades arrastrándolas en el itinerario',
+          6000
+        );
+      }, 2000);
 
       // Recargar vista
       if (window.ItineraryHandler && window.ItineraryHandler.reinitialize) {
