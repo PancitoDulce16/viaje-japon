@@ -3,9 +3,19 @@
 
 ---
 
+## 🏨 ALOJAMIENTOS
+
+- **16-19 Feb (3 noches)**: APA Hotel Shinjuku Gyoenmae - Tokyo
+- **19-21 Feb (2 noches)**: Kyoto Tune Stay - Kyoto
+- **21-24 Feb (3 noches)**: Toyoko Inn Osaka Namba - Osaka
+- **24 Feb - 2 Mar (6 noches)**: APA Hotel Otsuka Ekimae - Tokyo
+
+---
+
 ## 📅 ITINERARIO DÍA POR DÍA
 
-### 🗼 TOKYO - Primera Ronda (16-19 Feb) - 4 días
+### 🗼 TOKYO - Primera Ronda (16-19 Feb) - 3 noches
+**Hotel**: APA Hotel Shinjuku Gyoenmae
 
 #### **DÍA 1 - Domingo 16 de Febrero** ✈️ Llegada + Shibuya/Shinjuku
 **Tema del día**: Llegada y primera impresión de Tokyo
@@ -13,12 +23,12 @@
 **Mañana/Tarde (según hora de llegada)**
 - ⏰ Aterrizaje en Aeropuerto Narita/Haneda
 - 🚆 Comprar Suica/Pasmo Card en el aeropuerto (¥2,000 + ¥500 depósito)
-- 🚆 Traslado a hotel en Shinjuku (Narita Express o Keisei Skyliner)
-- 🏨 Check-in hotel Shinjuku (dejar maletas)
+- 🚆 Traslado a APA Hotel Shinjuku Gyoenmae (Narita Express o Keisei Skyliner)
+- 🏨 Check-in hotel (dejar maletas)
 
 **Tarde/Noche (17:00-22:00)**
 - 🌆 **Shibuya Crossing** - El cruce más famoso del mundo (30 min)
-  - Subir a Shibuya Sky para vista panorámica (¥2,000)
+  - Subir a Shibuya Sky para vista panorámica (¥2,000) - opcional
   - Foto con la estatua de Hachiko
 - 🛍️ **Shibuya Center Gai** - Calle comercial llena de tiendas (1 hora)
 - 🍜 **Cena**: Ichiran Ramen en Shibuya (¥1,000)
@@ -27,7 +37,7 @@
   - Kabukicho - zona de entretenimiento
   - Omoide Yokocho - callejón de yakitori
 
-**Consejo del día**: No hagas demasiado el primer día, probablemente estarás cansado del vuelo. Céntrate en el área Shibuya-Shinjuku que están cerca.
+**Consejo del día**: No hagas demasiado el primer día, probablemente estarás cansado del vuelo. Céntrate en el área Shibuya-Shinjuku que están cerca del hotel.
 
 ---
 
@@ -46,7 +56,7 @@
 - ⛩️ **Sensoji Temple** - El templo más antiguo de Tokyo (1.5 horas)
   - Nakamise Shopping Street - souvenirs tradicionales
   - Kaminarimon Gate - puerta del trueno
-- 🗼 **Tokyo Skytree** - Vista desde el barrio (opcional subir ¥2,100)
+- 🗼 **Vista del Tokyo Skytree** desde el barrio (foto de lejos)
 - 🍡 **Merienda**: Melon pan y dango en Nakamise
 
 **Noche (19:00-22:00)**
@@ -84,28 +94,26 @@
 
 **Noche (19:30-22:00)**
 - 🍣 **Cena**: Sushi en Shibuya (Sushi Zanmai o Genki Sushi) ¥2,500
-- 🎰 **Opcional**: Round1 (arcade/karaoke) en Shibuya
+- 🎮 **Opcional**: Round1 (arcade) en Shibuya
 
 ---
 
-#### **DÍA 4 - Miércoles 19 de Febrero** 🗻 Odaiba + Viaje a Kyoto
-**Tema del día**: Tokyo Bay + Traslado a Kyoto
+#### **DÍA 4 - Miércoles 19 de Febrero** 🚄 Última mañana en Tokyo + Traslado a Kyoto
+**Tema del día**: Compras finales y viaje a Kyoto
 
-**Mañana (9:00-13:00)**
-- 🚆 Yurikamome Line a Odaiba (vista panorámica del tren elevado)
-- 🤖 **TeamLab Borderless** - Museo digital interactivo (¥3,200) - 2 horas
-  - ⚠️ RESERVAR CON ANTICIPACIÓN ONLINE
-- 🗽 **DiverCity Tokyo Plaza** (1 hora)
-  - Gundam gigante de 18 metros (foto)
-  - Tiendas de anime (Gundam Base Tokyo)
-- 🍜 **Almuerzo rápido** en food court
+**Mañana (9:00-12:00)**
+- 🛍️ **Shinjuku** - Compras de último minuto cerca del hotel
+  - Don Quijote Shinjuku - souvenirs y snacks
+  - Yodobashi Camera - electrónica
+- 🏨 Check-out APA Hotel Shinjuku Gyoenmae
+- 🍱 **Almuerzo**: Ekiben (bento) en Tokyo Station
 
-**Tarde (14:00-18:30)** 🚄 VIAJE A KYOTO
-- 🚆 Regreso a hotel para recoger maletas
+**Tarde (13:00-18:30)** 🚄 VIAJE A KYOTO
 - 🚄 **Shinkansen Tokyo → Kyoto** (2h 15min)
   - Tokaido Shinkansen (Hikari o Nozomi)
   - Reservar asiento con ventana lado derecho para ver Mt. Fuji
-  - Comprar ekiben (bento de tren) en la estación ¥1,200
+  - Salida recomendada: 14:00-15:00
+- 🚆 Traslado a Kyoto Tune Stay
 - 🏨 Check-in hotel en Kyoto
 
 **Noche (19:00-21:00)**
@@ -114,7 +122,8 @@
 
 ---
 
-### ⛩️ KYOTO (19-22 Feb) - 3 días completos
+### ⛩️ KYOTO (19-21 Feb) - 2 noches
+**Hotel**: Kyoto Tune Stay
 
 #### **DÍA 5 - Jueves 20 de Febrero** 🎋 Kyoto Oeste - Arashiyama & Toei Studio Park
 **Tema del día**: Bosque de Bambú, Monos y EVANGELION ⭐
@@ -170,7 +179,7 @@
 
 ---
 
-#### **DÍA 7 - Sábado 22 de Febrero** ⛩️ Fushimi Inari + Traslado a Osaka
+#### **DÍA 7 - Viernes 21 de Febrero** ⛩️ Fushimi Inari + Traslado a Osaka
 **Tema del día**: Torii Rojos & Traslado a Osaka
 
 **Mañana (8:00-12:00)**
@@ -184,15 +193,16 @@
   - Ruta de regreso a Kyoto Station
 
 **Tarde/Noche (14:00-20:00)** 🚄 TRASLADO A OSAKA
-- 🚆 Recoger maletas del hotel
-- 🚄 **JR Kyoto Line a Osaka** (30 min) - Usar JR Pass o ¥570
-- 🏨 Check-in hotel en Osaka (Namba o Umeda)
+- 🏨 Check-out Kyoto Tune Stay y recoger maletas
+- 🚄 **JR Kyoto Line a Osaka** (30 min) ~¥570
+- 🏨 Check-in Toyoko Inn Osaka Namba
 - 🍜 **Cena**: Dotonbori - Takoyaki y Okonomiyaki en Osaka
 - 🌃 **Primera noche en Dotonbori** - Glico Running Man (foto icónica)
 
 ---
 
-### 🏯 OSAKA (22-24 Feb) - 3 días + 1 día en Nara
+### 🏯 OSAKA (21-24 Feb) - 3 noches + 1 día en Nara
+**Hotel**: Toyoko Inn Osaka Namba
 
 #### **DÍA 8 - Domingo 23 de Febrero** 🦌 NARA DAY TRIP ⭐
 **Tema del día**: Ciervos Sagrados, Buda Gigante y Mochi Show
@@ -221,16 +231,16 @@
 
 ---
 
-#### **DÍA 9 - Lunes 24 de Febrero** 🏯 Osaka Castle + Acuario
-**Tema del día**: Castillo e Acuario de Osaka ⭐
+#### **DÍA 9 - Lunes 24 de Febrero** 🏯 Osaka Castle + Acuario + Regreso a Tokyo
+**Tema del día**: Castillo, Acuario y Traslado a Tokyo
 
-**Mañana (9:00-12:30)**
-- 🏯 **Osaka Castle** - Castillo histórico con museo (2 horas) ¥600
-  - Subir a la torre para vista de Osaka
-  - Jardines exteriores GRATIS
+**Mañana (9:00-12:00)**
+- 🏯 **Osaka Castle** - Ver el castillo desde los jardines exteriores (GRATIS)
+  - No entramos al museo interior
+  - Fotos del castillo y los jardines
 - 🌸 **Osaka Castle Park** - Paseo por los jardines
 
-**Tarde (13:30-18:00)** 🐠 ACUARIO DE OSAKA ⭐⭐⭐
+**Tarde (12:30-16:30)** 🐠 ACUARIO DE OSAKA ⭐⭐⭐
 - 🚇 Metro a Osakako Station
 - 🐋 **Kaiyukan** - Uno de los acuarios más grandes del mundo (3 horas)
   - 📍 En la zona de puerto (Tempozan)
@@ -239,73 +249,54 @@
   - Entrada: ¥2,700
   - **SUPER RECOMENDADO - Uno de los mejores del mundo**
 - 🎡 **Tempozan Ferris Wheel** - Noria gigante al lado (opcional ¥800)
-- 🍱 **Merienda**: Food court en el mall
+- 🍱 **Merienda rápida**: Food court en el mall
 
-**Noche (19:00-22:00)**
-- 🏛️ **Dotonbori** - El corazón de Osaka (2 horas)
-  - Glico Running Man - foto icónica
-  - Kani Doraku - Cangrejo gigante
-  - Shinsaibashi Shopping Street
-- 🍜 **Cena**: Ichiran Ramen o Ippudo
-- 🎰 **Karaoke** en Round1 ¥1,500/hora
-
----
-
-#### **DÍA 10 - Martes 25 de Febrero** 🍜 Osaka Foodie + Regreso a Tokyo
-**Tema del día**: Comida y Compras Finales
-
-**Mañana (9:00-13:00)**
-- 🏮 **Kuromon Ichiba Market** - "La cocina de Osaka" (2 horas)
-  - Probar diferentes street foods
-  - Sashimi fresco
-  - Frutas premium
-- ☕ **Café** en Amerikamura (barrio americano)
-- 🛍️ **Compras** en Amerikamura - ropa vintage y urbana
-
-**Tarde (14:00-18:30)** 🚄 REGRESO A TOKYO
-- 🚆 Recoger maletas del hotel
+**Tarde/Noche (17:00-22:00)** 🚄 REGRESO A TOKYO
+- 🏨 Check-out Toyoko Inn Osaka Namba y recoger maletas
 - 🚄 **Shinkansen Osaka → Tokyo** (2h 40min)
   - Tokaido Shinkansen (Hikari o Nozomi)
-- 🏨 Check-in hotel en Tokyo (misma zona o diferente)
-
-**Noche (19:00-21:00)**
-- 🍜 **Cena ligera** cerca del hotel
-- 🛌 Descansar después del viaje
+  - Salida recomendada: 18:00-19:00
+- 🚆 Traslado a APA Hotel Otsuka Ekimae
+- 🏨 Check-in hotel en Tokyo
+- 🍜 **Cena ligera** cerca del hotel o en la estación
 
 ---
 
-### 🗼 TOKYO - Segunda Ronda (25 Feb - 2 Mar) - 6 días
+### 🗼 TOKYO - Segunda Ronda (24 Feb - 2 Mar) - 6 noches
+**Hotel**: APA Hotel Otsuka Ekimae
 
-#### **DÍA 11 - Miércoles 26 de Febrero** 🎯 Tokyo Alternativo
-**Tema del día**: Barrios menos turísticos
+**💡 ENFOQUE**: Esta segunda ronda está enfocada en COMPRAS y explorar áreas que no visitamos en la primera ronda. ¡Perfect para llenar maletas antes de regresar!
+
+#### **DÍA 10 - Martes 25 de Febrero** 🛍️ Shopping Day 1 - Electrónica y Anime
+**Tema del día**: Compras de electrónica, anime y gadgets
 
 **Mañana (10:00-14:00)**
-- 🎨 **Shimokitazawa** - Barrio hipster con vintage shops (2 horas)
-  - Tiendas de ropa de segunda mano
-  - Cafés únicos
-- 🍜 **Almuerzo**: Tsukemen (ramen para mojar)
+- 📱 **Akihabara revisitado** - Compras intensivas (3 horas)
+  - Yodobashi Camera - electrónica con tax-free
+  - Bic Camera - gadgets y cámaras
+  - Mandarake - manga/anime coleccionables
+  - Super Potato - videojuegos retro para llevar
+- 🍱 **Almuerzo**: Curry japonés en CoCo Ichibanya
 
 **Tarde (15:00-19:00)**
-- 🎭 **Nakano Broadway** - Paraíso del anime/manga (2 horas)
-  - Similar a Akihabara pero menos turístico
-  - Mandarake gigante de 4 pisos
-- 🎮 **Ikebukuro** (2 horas)
-  - Pokemon Center Mega Tokyo
-  - Animate - tienda de anime
+- 🎮 **Ikebukuro** - Shopping de anime y Pokémon (3 horas)
+  - Pokemon Center Mega Tokyo ⭐
+  - Animate - tienda de anime gigante
   - Sunshine City - complejo comercial
+  - Tokyu Hands - gadgets únicos japoneses
+- 🛍️ Comprar souvenirs para amigos
 
 **Noche (19:30-22:00)**
 - 🍖 **Cena**: Yakiniku (BBQ japonés) ¥3,000
-- 🎰 **Game Center** en Ikebukuro
+- 🏨 Regresar al hotel y organizar compras
 
 ---
 
-#### **DÍA 12 - Jueves 27 de Febrero** 🗻 KAMAKURA DAY TRIP
+#### **DÍA 11 - Miércoles 26 de Febrero** 🗻 KAMAKURA DAY TRIP
 **Tema del día**: Gran Buda y Playa
 
 **Viaje desde Tokyo (7:30-20:00)**
-- 🚆 **JR Yokosuka Line** desde Tokyo/Shinjuku (1 hora) ~¥950
-  - Usar JR Pass si lo tienes
+- 🚆 **JR Yokosuka Line** desde Tokyo/Otsuka (1 hora) ~¥950
 
 **En Kamakura (9:00-18:00)**
 - 🗿 **Great Buddha (Kotoku-in)** - Buda gigante de bronce (1 hora) ¥300
@@ -315,6 +306,7 @@
   - Paseo por la costa
 - 🚶 **Komachi-dori Street** - Calle comercial (1 hora)
   - Probar shirasu (pescaditos) local
+  - Compras de souvenirs locales
 - ⛩️ **Tsurugaoka Hachimangu Shrine** - Santuario principal ¥200
 - 🍜 **Almuerzo**: Shirasu-don (bowl de pescaditos)
 
@@ -324,10 +316,10 @@
 
 ---
 
-#### **DÍA 13 - Viernes 28 de Febrero** ♨️ HAKONE DAY TRIP ⭐
-**Tema del día**: Onsen y Monte Fuji
+#### **DÍA 12 - Jueves 27 de Febrero** 🗻 HAKONE DAY TRIP ⭐
+**Tema del día**: Monte Fuji y Naturaleza
 
-**⚠️ IMPORTANTE**: Verifica el clima. Si está nublado, Mt. Fuji no se verá. Considera cambiar este día.
+**⚠️ IMPORTANTE**: Verifica el clima. Si está nublado, Mt. Fuji no se verá. Considera cambiar este día por más shopping.
 
 **Viaje desde Tokyo (7:00-21:00)**
 - 🚆 **Romance Car** desde Shinjuku a Hakone-Yumoto (1.5 horas) ~¥2,500
@@ -339,93 +331,94 @@
 2. 🚡 **Hakone Ropeway** - Teleférico con vista a Mt. Fuji
 3. ⛰️ **Owakudani** - Valle volcánico activo
    - Probar huevo negro (kuro-tamago) - dicen que da 7 años de vida ¥500
+   - Fotos del valle humeante
 4. 🚢 **Lake Ashi Cruise** - Crucero pirata con vista a Mt. Fuji
-5. ⛩️ **Hakone Shrine** - Torii flotante en el lago
-6. ♨️ **Onsen** (baño termal) - Experiencia obligatoria
-   - Tenzan Tohji-kyo (onsen público) ¥1,300
-   - Yunessun (onsen temático con traje de baño) ¥2,500
+5. ⛩️ **Hakone Shrine** - Torii flotante en el lago (foto icónica)
+6. 🍜 **Almuerzo**: Comida local en Hakone-Yumoto
 
 **Regreso a Tokyo (19:30-21:00)**
 - 🚆 Romance Car o Odakyu Line de regreso
-- 🍜 **Cena** en Tokyo Station o hotel
+- 🍜 **Cena ligera** en Tokyo Station o hotel
 
 ---
 
-#### **DÍA 14 - Sábado 1 de Marzo** 🛍️ SHOPPING DAY 1 - Electrónica
-**Tema del día**: Compras de Electrónica y Tech
+#### **DÍA 13 - Viernes 28 de Febrero** 🛍️ SHOPPING DAY 2 - Moda y Estilo
+**Tema del día**: Compras de ropa, accesorios y tendencias
 
 **Mañana (10:00-14:00)**
-- 📱 **Yodobashi Camera Shinjuku** - Electrónica gigante (2 horas)
-  - 9 pisos de electrónica
-  - Tax-free para turistas (8% descuento)
-  - Cámaras, headphones, gadgets
-- 🎮 **Bic Camera** - Otra tienda de electrónica (1 hora)
+- 👗 **Harajuku revisitado** - Moda y shopping (3 horas)
+  - Takeshita Street - ropa kawaii y trendy
+  - 6% DOKIDOKI - ropa colorida única
+  - WEGO - ropa urbana asequible
+  - Tiendas de vintage
+- 🍱 **Almuerzo**: Crepes de Harajuku o ramen
 
 **Tarde (15:00-19:00)**
-- 🏬 **Ginza** - Distrito de lujo (3 horas)
-  - Uniqlo Flagship - 12 pisos
-  - Muji Flagship
-  - Apple Store Ginza
-  - Itoya - papelería japonesa premium
-- 🍱 **Merienda**: Depachika (basement food halls) en Mitsukoshi
+- 🏬 **Shibuya** - Shopping de moda (3 horas)
+  - Shibuya 109 - 8 pisos de moda joven
+  - Shibuya Parco - marcas urbanas
+  - Loft - artículos de estilo de vida y papelería
+  - Tokyu Hands - souvenirs únicos
+- 🛍️ Comprar ropa y accesorios
 
 **Noche (19:30-22:00)**
-- 🍣 **Cena**: Sushi de alta calidad en Ginza o Tsukiji Outer Market
-- 🌃 Paseo nocturno por Ginza iluminado
+- 🍣 **Cena**: Sushi en Shibuya
+- 🏨 Regresar al hotel y organizar compras
 
 ---
 
-#### **DÍA 15 - Domingo 2 de Marzo** 🛍️ SHOPPING DAY 2 + Despedida
-**Tema del día**: Últimas compras y Adiós a Japón
+#### **DÍA 14 - Sábado 1 de Marzo** 🛍️ SHOPPING DAY 3 - Últimas compras
+**Tema del día**: Compras finales y souvenirs
 
-**Mañana (9:00-12:00)**
-- 🗼 **Tokyo Character Street** (Tokyo Station) - 1 hora
-  - Pokémon, Studio Ghibli, Sanrio, Jump Shop
-- 🏢 **Tokyo Station Ichibangai** - Souvenirs gourmet
-- 🏬 **Tokyu Hands Shinjuku** - 8 pisos de todo (2 horas)
-  - Papelería japonesa
-  - Utensilios de cocina
-  - Gadgets únicos
+**Mañana (9:00-13:00)**
+- 🏬 **Ginza** - Compras de calidad (3 horas)
+  - Uniqlo Flagship - 12 pisos de ropa
+  - Muji Flagship - productos minimalistas
+  - Itoya - papelería japonesa premium
+  - Ginza Six - centro comercial de lujo
+- 🍱 **Almuerzo**: Depachika (basement food halls) en Mitsukoshi
 
-**Tarde (13:00-16:00)**
-- 🛍️ **Daiso/Seria** - Tiendas de ¥100 (todo a 100 yenes) - 1 hora
+**Tarde (14:00-18:00)**
+- 🛍️ **Daiso/Seria** - Tiendas de ¥100 (1 hora)
   - Comprar souvenirs baratos en cantidad
-- 📦 **Don Quijote Shinjuku** - Tienda del caos (2 horas)
-  - Snacks, dulces, souvenirs, electrónica, cosméticos
-  - Abierto 24 horas
+- 📦 **Don Quijote** - Última parada de compras (2 horas)
+  - Snacks japoneses para llevar
+  - Cosméticos y productos de belleza
+  - Últimos souvenirs
+- 🗼 **Tokyo Character Street** (Tokyo Station)
+  - Pokémon, Studio Ghibli, Sanrio
 
-**Tarde/Noche (16:00-20:00)**
-- 🏨 Regresar al hotel, organizar maletas
-- 🍜 **ÚLTIMA CENA ESPECIAL**: Wagyu beef o sushi de despedida
-- 🌃 **Última noche en Tokyo**:
-  - Opción 1: Paseo final por Shinjuku/Shibuya
-  - Opción 2: Tokyo Tower iluminada
-  - Opción 3: Roppongi Hills vista nocturna
-
-**Preparativos para mañana**
-- 📦 Organizar maletas finales
-- 🎫 Confirmar hora de vuelo
-- 🚆 Planear ruta al aeropuerto
-- 😢 Despedirse de Japón
+**Noche (19:00-22:00)**
+- 🍜 **Cena especial**: Wagyu beef o tonkatsu
+- 🏨 Organizar maletas con todas las compras
+- 🌃 Paseo nocturno final por el barrio
 
 ---
 
-#### **DÍA 16 - Lunes 3 de Marzo** ✈️ Vuelta a Casa
-**Tema del día**: Sayonara Japón 👋
+#### **DÍA 15 - Domingo 2 de Marzo** ✈️ Última mañana + Despedida
+**Tema del día**: Preparativos finales y regreso
 
 **Mañana (según hora de vuelo)**
-- 🏨 Check-out del hotel
+- 🏨 Check-out APA Hotel Otsuka Ekimae
+- 🍜 **Desayuno ligero** en konbini o café cercano
+- 🛍️ **Última parada** si hay tiempo:
+  - Don Quijote para últimos snacks
+  - Konbini para souvenirs de último minuto
+
+**Salida al Aeropuerto**
 - 🚆 **Traslado al aeropuerto** (Narita o Haneda)
-  - Narita Express: 90 min desde Shinjuku (¥3,250)
+  - Narita Express: 90 min desde Tokyo (¥3,250)
   - Keisei Skyliner: 70 min desde Ueno (¥2,570)
-  - Airport Limousine Bus: 1.5-2 horas (¥3,200)
+  - Salir con 3 horas de anticipación
 - 💰 Devolver Suica Card para recuperar depósito (¥500)
 - 🛍️ **Última compra** en duty-free del aeropuerto
-  - Snacks japoneses (Kit-Kats sabores únicos, Pocky)
+  - Kit-Kats sabores únicos
   - Whisky japonés
   - Cosméticos japoneses
 
 **⚠️ IMPORTANTE**: Llegar al aeropuerto 3 horas antes del vuelo internacional
+
+**Sayonara, Japón!** 🇯🇵✨
 
 ---
 
@@ -658,24 +651,20 @@
 #### 🎫 ATRACCIONES Y ENTRADAS (~¥42,000 - $280 USD)
 | Atracción | Precio |
 |-----------|--------|
-| Shibuya Sky | ¥2,000 |
-| Tokyo Skytree | ¥2,100 |
-| TeamLab Borderless | ¥3,200 |
+| Shibuya Sky (opcional) | ¥2,000 |
 | **Toei Kyoto Studio Park (EVA-01)** ⭐ | **¥2,400** |
 | **Kyoto Manga Museum** ⭐ | **¥900** |
 | **Kaiyukan (Acuario Osaka)** ⭐ | **¥2,700** |
 | Templos varios en Kyoto | ¥3,000 |
 | Nara (Todai-ji, Kasuga Taisha) | ¥1,100 |
-| Osaka Castle | ¥600 |
 | Monkey Park (Arashiyama) | ¥550 |
-| Hakone Onsen | ¥1,300 |
+| Hakone (transporte y acceso a sitios) | ¥6,100 |
 | Kamakura (Great Buddha + Hasedera) | ¥700 |
 | Maid Café | ¥1,500 |
-| Karaoke (2 veces) | ¥3,000 |
-| Arcades varios días | ¥3,000 |
-| Museos/Galerías | ¥2,000 |
-| Otros | ¥11,950 |
-| **TOTAL ACTIVIDADES** | **¥42,000** |
+| Arcades varios días | ¥2,000 |
+| Ferris Wheel Osaka (opcional) | ¥800 |
+| Otros | ¥8,250 |
+| **TOTAL ACTIVIDADES** | **¥32,000** |
 
 ---
 
@@ -711,10 +700,10 @@
 | Alojamiento | ¥162,000 | $1,080 |
 | Transporte | ¥56,000 | $375 |
 | Comida | ¥104,000 | $695 |
-| Atracciones | ¥42,000 | $280 |
-| Shopping | ¥100,000 | $670 |
+| Atracciones | ¥32,000 | $215 |
+| Shopping | ¥120,000 | $800 |
 | Otros | ¥16,000 | $105 |
-| **TOTAL ESTIMADO** | **¥480,000** | **$3,200** |
+| **TOTAL ESTIMADO** | **¥490,000** | **$3,270** |
 
 **SIN INCLUIR**:
 - ✈️ Vuelo internacional (varía mucho)
@@ -727,13 +716,14 @@
 
 ### 🎯 EXPERIENCIAS IMPERDIBLES (Tus Favoritos)
 
-1. **♨️ Hakone** (Día 13) - Onsen + Mt. Fuji + Valle volcánico ⭐⭐⭐
+1. **🗻 Hakone** (Día 12) - Mt. Fuji + Valle volcánico + Lake Ashi ⭐⭐⭐
 2. **🐋 Acuario de Osaka (Kaiyukan)** (Día 9) - Uno de los mejores del mundo ⭐⭐⭐
 3. **🤖 Toei Kyoto Studio Park** (Día 5) - ¡EVA-01 a tamaño real! ⭐⭐⭐
 4. **📚 Museo del Manga de Kyoto** (Día 6) - 50,000 mangas ⭐⭐⭐
 5. **🎋 Arashiyama** (Día 5) - Bosque de bambú + monos ⭐⭐⭐
 6. **🥢 Nakatanidou en Nara** (Día 8) - Mochi pounding show ⭐⭐⭐
 7. **🧸 Anakuma Café** (Día 3) - Café temático kawaii en Harajuku ⭐⭐⭐
+8. **🛍️ Shopping en Tokyo** (Días 10, 13, 14) - Akihabara, Harajuku, Shibuya, Ginza ⭐⭐⭐
 
 ---
 
@@ -832,20 +822,23 @@
 ## 🎯 RESUMEN EJECUTIVO
 
 **TU VIAJE EN NÚMEROS:**
-- 📅 **16 días totales** (16 Feb - 3 Mar)
-- 🏙️ **7 ciudades**: Tokyo (10 días), Kyoto (3 días), Osaka (3 días), Nara (1 día), Kamakura (1 día), Hakone (1 día), Arashiyama (incluido)
-- 🚄 **2 viajes en Shinkansen**
-- 🏨 **15 noches de hotel**
-- 💴 **Presupuesto estimado**: ¥480,000 (~$3,200 USD) sin vuelo
+- 📅 **15 días totales** (16 Feb - 2 Mar)
+- 🏨 **4 hoteles**: APA Shinjuku (3 noches), Kyoto Tune Stay (2 noches), Toyoko Inn Namba (3 noches), APA Otsuka (6 noches)
+- 🏙️ **7 ciudades**: Tokyo (9 noches), Kyoto (2 noches), Osaka (3 noches), Nara (1 día), Kamakura (1 día), Hakone (1 día), Arashiyama (incluido)
+- 🚄 **2 viajes en Shinkansen** (Tokyo→Kyoto, Osaka→Tokyo)
+- 💴 **Presupuesto estimado**: ¥490,000 (~$3,270 USD) sin vuelo
 - 🎫 **NO necesitas JR Pass** - tickets individuales son más baratos
+- 🛍️ **3 días dedicados a shopping** en la segunda ronda de Tokyo
 
 **HIGHLIGHTS PRINCIPALES:**
-1. ⭐ Hakone - Onsen + Mt. Fuji
-2. ⭐ Acuario de Osaka (Kaiyukan)
-3. ⭐ EVA-01 en Toei Kyoto Studio Park
-4. ⭐ Museo del Manga de Kyoto
-5. ⭐ Arashiyama - Bosque de bambú
-6. ⭐ Nakatanidou - Mochi pounding show
+1. ⭐ Hakone - Mt. Fuji + Valle volcánico + Lake Ashi
+2. ⭐ Acuario de Osaka (Kaiyukan) - Tiburón ballena
+3. ⭐ EVA-01 en Toei Kyoto Studio Park - Foto con EVA
+4. ⭐ Museo del Manga de Kyoto - 50,000 mangas
+5. ⭐ Arashiyama - Bosque de bambú + monos
+6. ⭐ Nakatanidou en Nara - Mochi pounding show
+7. ⭐ Anakuma Café en Harajuku - Experiencia kawaii
+8. ⭐ Shopping Days - Akihabara, Harajuku, Shibuya, Ginza
 
 ---
 
