@@ -548,83 +548,254 @@ export const TripsManager = {
     }
   },
 
-  // Renderizar lista de viajes
+  // ===== RENDER MEJORADO DE LISTA DE VIAJES =====
   renderTripsList() {
     const container = document.getElementById('tripsListContainer');
     if (!container) return;
 
+    // Actualizar badge de cantidad de viajes
+    const updateBadges = () => {
+      const badge1 = document.getElementById('tripsCountBadge');
+      const badge2 = document.getElementById('tripsCountBadgeMobile');
+      if (badge1) badge1.textContent = this.userTrips.length;
+      if (badge2) badge2.textContent = this.userTrips.length;
+    };
+    updateBadges();
+
+    // ===== EMPTY STATE =====
     if (this.userTrips.length === 0) {
       container.innerHTML = `
-        <div class="text-center py-8">
-          <p class="text-gray-500 dark:text-gray-400 mb-4">No tienes viajes creados</p>
-          <button 
-            onclick="TripsManager.showCreateTripModal()" 
-            class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
-          >
-            ➕ Crear Primer Viaje
-          </button>
-          <button 
-            onclick="TripsManager.joinTripWithCode()" 
-            class="mt-3 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-semibold block w-full"
-          >
-            🔗 Unirse con Código
-          </button>
+        <div class="text-center py-12">
+          <div class="mb-6">
+            <div class="text-8xl mb-4">✈️</div>
+            <h3 class="text-2xl font-bold dark:text-white mb-2">¡Comienza tu aventura!</h3>
+            <p class="text-gray-500 dark:text-gray-400 mb-6">Aún no tienes viajes creados</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            <button
+              onclick="TripsManager.showCreateTripModal(); TripsManager.closeTripsListModal()"
+              class="p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl border-2 border-blue-200 dark:border-blue-700 hover:shadow-lg transition-all hover:scale-105"
+            >
+              <div class="text-4xl mb-3">➕</div>
+              <div class="font-bold text-lg dark:text-white mb-1">Crear Primer Viaje</div>
+              <div class="text-sm text-gray-600 dark:text-gray-400">Planifica tu aventura a Japón</div>
+            </button>
+
+            <button
+              onclick="TripsManager.joinTripWithCode()"
+              class="p-6 bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 rounded-xl border-2 border-green-200 dark:border-green-700 hover:shadow-lg transition-all hover:scale-105"
+            >
+              <div class="text-4xl mb-3">🔗</div>
+              <div class="font-bold text-lg dark:text-white mb-1">Unirse a Viaje</div>
+              <div class="text-sm text-gray-600 dark:text-gray-400">Ingresa un código compartido</div>
+            </button>
+          </div>
         </div>
       `;
       return;
     }
 
-    container.innerHTML = `
-      <div class="space-y-3">
-        ${this.userTrips.map(trip => `
-          <div 
-            class="p-4 bg-white dark:bg-gray-700 rounded-lg border-2 ${
-              this.currentTrip && this.currentTrip.id === trip.id 
-                ? 'border-blue-500' 
-                : 'border-gray-200 dark:border-gray-600'
-            } hover:shadow-lg transition cursor-pointer"
-            onclick="TripsManager.selectTrip('${trip.id}')"
-          >
-            <div class="flex justify-between items-start">
-              <div class="flex-1">
-                <h3 class="font-bold text-lg dark:text-white">${trip.info.name}</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400">
-                  ${new Date(trip.info.dateStart).toLocaleDateString('es')} - 
-                  ${new Date(trip.info.dateEnd).toLocaleDateString('es')}
-                </p>
-                <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                  👥 ${trip.members.length} miembro${trip.members.length > 1 ? 's' : ''}
-                  ${trip.info.shareCode ? `• 🔗 ${trip.info.shareCode}` : ''}
-                </p>
-              </div>
-              <div class="flex items-center gap-2">
-                ${this.currentTrip && this.currentTrip.id === trip.id ? '<span class="text-blue-500 text-2xl">✓</span>' : ''}
-                <button onclick="event.stopPropagation(); TripsManager.duplicateTrip('${trip.id}')" class="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 transition" title="Duplicar Viaje">
-                    <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z"></path><path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z"></path></svg>
-                </button>
-                <button onclick="event.stopPropagation(); TripsManager.deleteTrip('${trip.id}')" class="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition" title="Eliminar Viaje">
-                    <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        `).join('')}
-        
-        <button 
-          onclick="TripsManager.showCreateTripModal()" 
-          class="w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-        >
-          <span class="text-gray-600 dark:text-gray-400 font-semibold">➕ Crear Nuevo Viaje</span>
-        </button>
+    // ===== CALCULAR STATS DE CADA VIAJE =====
+    const tripsWithStats = this.userTrips.map(trip => {
+      const start = new Date(trip.info.dateStart);
+      const end = new Date(trip.info.dateEnd);
+      const today = new Date();
+      const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      const daysUntil = Math.ceil((start - today) / (1000 * 60 * 60 * 24));
+      const daysRemaining = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
 
-        <button 
-          onclick="TripsManager.joinTripWithCode()" 
-          class="w-full p-4 border-2 border-dashed border-green-300 dark:border-green-600 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition"
+      let status = 'upcoming'; // upcoming, ongoing, past
+      let statusText = 'Próximo';
+      let statusColor = 'blue';
+
+      if (daysRemaining < 0) {
+        status = 'past';
+        statusText = 'Finalizado';
+        statusColor = 'gray';
+      } else if (daysUntil <= 0 && daysRemaining >= 0) {
+        status = 'ongoing';
+        statusText = '¡En curso!';
+        statusColor = 'green';
+      } else if (daysUntil <= 7) {
+        statusText = `En ${daysUntil} día${daysUntil > 1 ? 's' : ''}`;
+        statusColor = 'orange';
+      }
+
+      return {
+        ...trip,
+        stats: { totalDays, daysUntil, daysRemaining, status, statusText, statusColor }
+      };
+    });
+
+    // Ordenar: En curso > Próximos > Pasados
+    const sorted = tripsWithStats.sort((a, b) => {
+      if (a.stats.status === 'ongoing') return -1;
+      if (b.stats.status === 'ongoing') return 1;
+      if (a.stats.status === 'upcoming' && b.stats.status === 'past') return -1;
+      if (a.stats.status === 'past' && b.stats.status === 'upcoming') return 1;
+      return new Date(b.info.dateStart) - new Date(a.info.dateStart);
+    });
+
+    // ===== RENDER GRID DE CARDS =====
+    container.innerHTML = `
+      <!-- Barra de búsqueda y acciones -->
+      <div class="mb-6 flex flex-col md:flex-row gap-3">
+        <div class="flex-1 relative">
+          <input
+            type="text"
+            id="tripsSearchInput"
+            placeholder="🔍 Buscar viajes..."
+            class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+            oninput="TripsManager.filterTrips(this.value)"
+          >
+          <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+        </div>
+        <button
+          onclick="TripsManager.showCreateTripModal(); TripsManager.closeTripsListModal()"
+          class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition font-semibold"
         >
-          <span class="text-green-600 dark:text-green-400 font-semibold">🔗 Unirse con Código</span>
+          ➕ Nuevo Viaje
+        </button>
+      </div>
+
+      <!-- Grid de Viajes -->
+      <div id="tripsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        ${sorted.map(trip => this.renderTripCard(trip)).join('')}
+      </div>
+
+      <!-- Acciones adicionales -->
+      <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-6">
+        <button
+          onclick="TripsManager.joinTripWithCode()"
+          class="w-full p-3 border-2 border-dashed border-green-300 dark:border-green-600 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition text-center"
+        >
+          <span class="text-green-600 dark:text-green-400 font-semibold">🔗 Unirse a Viaje Compartido</span>
         </button>
       </div>
     `;
+  },
+
+  // Render individual trip card
+  renderTripCard(trip) {
+    const isActive = this.currentTrip && this.currentTrip.id === trip.id;
+    const { stats } = trip;
+
+    // Color del badge de status
+    const statusColors = {
+      green: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+      blue: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+      orange: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
+      gray: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+    };
+
+    return `
+      <div
+        class="trip-card group relative p-5 rounded-xl border-2 transition-all hover:shadow-xl cursor-pointer ${
+          isActive
+            ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-purple-300'
+        }"
+        onclick="TripsManager.selectTrip('${trip.id}'); TripsManager.closeTripsListModal()"
+        data-trip-name="${trip.info.name.toLowerCase()}"
+      >
+        <!-- Badge de activo -->
+        ${isActive ? `
+          <div class="absolute top-3 right-3">
+            <span class="bg-purple-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+              <i class="fas fa-check-circle"></i> ACTIVO
+            </span>
+          </div>
+        ` : ''}
+
+        <!-- Header del card -->
+        <div class="mb-4">
+          <h3 class="font-bold text-xl dark:text-white mb-2 pr-20">${trip.info.name}</h3>
+
+          <!-- Status badge -->
+          <div class="flex items-center gap-2 mb-3">
+            <span class="px-3 py-1 rounded-full text-xs font-bold ${statusColors[stats.statusColor]}">
+              ${stats.statusText}
+            </span>
+            ${trip.members.length > 1 ? `
+              <span class="px-3 py-1 rounded-full text-xs font-bold bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300">
+                <i class="fas fa-users"></i> ${trip.members.length} personas
+              </span>
+            ` : ''}
+          </div>
+
+          <!-- Fechas -->
+          <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <i class="fas fa-calendar-alt"></i>
+            <span>${new Date(trip.info.dateStart).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            <span>→</span>
+            <span>${new Date(trip.info.dateEnd).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2">
+            <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">${stats.totalDays}</div>
+            <div class="text-xs text-gray-600 dark:text-gray-400">días</div>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2">
+            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">${trip.members.length}</div>
+            <div class="text-xs text-gray-600 dark:text-gray-400">viajeros</div>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2">
+            <div class="text-2xl font-bold text-green-600 dark:text-green-400">${trip.info.shareCode || 'N/A'}</div>
+            <div class="text-xs text-gray-600 dark:text-gray-400">código</div>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <button
+            onclick="event.stopPropagation(); TripsManager.duplicateTrip('${trip.id}')"
+            class="flex-1 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition text-sm font-semibold"
+            title="Duplicar Viaje"
+          >
+            <i class="fas fa-copy"></i> Duplicar
+          </button>
+          <button
+            onclick="event.stopPropagation(); TripsManager.editTrip('${trip.id}')"
+            class="flex-1 px-3 py-2 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 transition text-sm font-semibold"
+            title="Editar Viaje"
+          >
+            <i class="fas fa-edit"></i> Editar
+          </button>
+          <button
+            onclick="event.stopPropagation(); TripsManager.deleteTrip('${trip.id}')"
+            class="px-3 py-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition text-sm font-semibold"
+            title="Eliminar Viaje"
+          >
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  },
+
+  // Filtrar viajes por búsqueda
+  filterTrips(searchTerm) {
+    const cards = document.querySelectorAll('.trip-card');
+    const term = searchTerm.toLowerCase();
+
+    cards.forEach(card => {
+      const tripName = card.dataset.tripName;
+      if (tripName.includes(term)) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  },
+
+  // Editar viaje (placeholder)
+  editTrip(tripId) {
+    Notifications.info('🚧 Función de edición en desarrollo');
+    // TODO: Implementar modal de edición
   },
 
   // Mostrar modal para crear viaje

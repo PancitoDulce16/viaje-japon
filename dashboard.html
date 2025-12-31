@@ -177,7 +177,19 @@
         <header class="japan-header text-white shadow-lg sticky top-0 z-40">
             <div class="max-w-7xl mx-auto px-6 py-4">
                 <!-- Primera fila: Controles principales (sin logo, está en el centro del dashboard) -->
-                <div class="flex justify-end items-center w-full">
+                <div class="flex justify-between items-center w-full">
+                    <!-- 🆕 BOTÓN MIS VIAJES - Lado Izquierdo -->
+                    <button
+                        onclick="window.TripsManager?.showTripsListModal()"
+                        class="hidden lg:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all hover:scale-105 font-semibold backdrop-blur-sm"
+                        aria-label="Mis Viajes"
+                        title="Ver todos mis viajes"
+                    >
+                        <i class="fas fa-suitcase-rolling text-lg"></i>
+                        <span>Mis Viajes</span>
+                        <span id="tripsCountBadge" class="ml-1 bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                    </button>
+
                     <!-- Controles Desktop con mejor espaciado -->
                     <div class="hidden lg:flex items-center gap-4">
                         <!-- Botones de acción simplificados -->
@@ -229,6 +241,13 @@
                 </div>
 
                 <div class="p-4 space-y-3">
+                    <!-- 🆕 MIS VIAJES Mobile - DESTACADO -->
+                    <button onclick="window.TripsManager?.showTripsListModal(); document.getElementById('menuClose').click()" class="w-full flex items-center gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition text-left border-2 border-purple-200 dark:border-purple-700">
+                        <i class="fas fa-suitcase-rolling w-5 text-purple-600 dark:text-purple-400"></i>
+                        <span class="text-purple-600 dark:text-purple-400 font-bold">Mis Viajes</span>
+                        <span id="tripsCountBadgeMobile" class="ml-auto bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                    </button>
+
                     <!-- Notifications Mobile -->
                     <button id="enableNotificationsBtnMobile" class="w-full flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition text-left">
                         <i class="fas fa-bell w-5"></i>

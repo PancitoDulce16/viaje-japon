@@ -567,12 +567,23 @@ export const ModalRenderer = {
     getTripsListModal() {
         return `
             <div id="modal-trips-list" class="modal">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                    <div class="p-6">
-                        <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold dark:text-white">🗂️ Mis Viajes</h2>
-                            <button onclick="TripsManager.closeTripsListModal()" class="text-3xl hover:text-red-600 transition" aria-label="Cerrar">&times;</button>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 rounded-t-xl z-10">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-3xl font-bold">🗂️ Mis Viajes</h2>
+                                <p class="text-sm text-white/80 mt-1">Gestiona todos tus viajes a Japón</p>
+                            </div>
+                            <button
+                                onclick="TripsManager.closeTripsListModal()"
+                                class="text-4xl hover:bg-white/20 rounded-full w-12 h-12 flex items-center justify-center transition"
+                                aria-label="Cerrar"
+                            >
+                                &times;
+                            </button>
                         </div>
+                    </div>
+                    <div class="p-6">
                         <div id="tripsListContainer"></div>
                     </div>
                 </div>
