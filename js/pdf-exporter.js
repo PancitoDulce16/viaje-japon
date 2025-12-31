@@ -81,6 +81,29 @@ export const PDFExporter = {
       doc.text(tripInfo, margin, yPos);
       yPos += 5;
 
+      // 🆕 Agregar QR code en la primera página (link a la app)
+      try {
+        const appURL = window.location.origin || 'https://japan-itin-dev.web.app';
+        const mainQR = await this.generateQRCode(appURL, 150);
+
+        if (mainQR) {
+          const qrSize = 30; // Tamaño en mm
+          const qrX = pageWidth - margin - qrSize;
+          const qrY = 15;
+
+          doc.addImage(mainQR, 'PNG', qrX, qrY, qrSize, qrSize);
+
+          // Texto explicativo
+          doc.setFontSize(7);
+          doc.setTextColor(100, 100, 100);
+          doc.text('Escanea para', qrX + qrSize/2, qrY + qrSize + 3, { align: 'center' });
+          doc.text('abrir en app', qrX + qrSize/2, qrY + qrSize + 6, { align: 'center' });
+          doc.setTextColor(0, 0, 0);
+        }
+      } catch (error) {
+        console.warn('⚠️ Error generando QR principal:', error);
+      }
+
       // Línea divisoria
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, yPos, pageWidth - margin, yPos);
@@ -127,6 +150,9 @@ export const PDFExporter = {
         doc.setTextColor(255, 255, 255);
         doc.text(`Día ${day.day} - ${day.date} - ${day.city}`, margin + 3, yPos + 2);
         yPos += 8;
+
+        // 🆕 Generar QR code para el día (con la primera actividad que tenga coordenadas)
+        const dayStartYPos = yPos; // Guardar posición del inicio del día para el QR
 
         // Actividades del día
         if (day.activities && day.activities.length > 0) {
@@ -196,6 +222,37 @@ export const PDFExporter = {
           doc.setTextColor(150, 150, 150);
           doc.text('  Sin actividades programadas', margin + 5, yPos);
           yPos += 5;
+        }
+
+        // 🆕 Agregar QR code para el día (si hay actividades con coordenadas)
+        if (day.activities && day.activities.length > 0) {
+          const activityWithCoords = day.activities.find(a => a.coordinates);
+          if (activityWithCoords) {
+            try {
+              const mapsURL = this.getGoogleMapsURL(activityWithCoords);
+              const qrImage = await this.generateQRCode(mapsURL, 120);
+
+              if (qrImage) {
+                // Posicionar QR en la esquina superior derecha del día
+                const qrSize = 25; // Tamaño en mm
+                const qrX = pageWidth - margin - qrSize - 5;
+                const qrY = dayStartYPos - 5;
+
+                doc.addImage(qrImage, 'PNG', qrX, qrY, qrSize, qrSize);
+
+                // Texto explicativo debajo del QR
+                doc.setFontSize(7);
+                doc.setTextColor(100, 100, 100);
+                const qrText = 'Escanea para';
+                const qrText2 = 'ver en Maps';
+                doc.text(qrText, qrX + qrSize/2, qrY + qrSize + 3, { align: 'center' });
+                doc.text(qrText2, qrX + qrSize/2, qrY + qrSize + 6, { align: 'center' });
+                doc.setTextColor(0, 0, 0);
+              }
+            } catch (error) {
+              console.warn('⚠️ Error generando QR para día', day.day, error);
+            }
+          }
         }
 
         yPos += 5;
@@ -324,6 +381,58 @@ export const PDFExporter = {
       .replace(/¡/g, '')                       // Exclamación invertida
       .replace(/•/g, '-')                      // Bullet point
       .trim();
+  },
+
+  /**
+   * 🆕 Genera un código QR y lo retorna como imagen base64
+   * @param {string} data - Data para codificar en el QR
+   * @param {number} size - Tamaño del QR en píxeles (default: 150)
+   * @returns {Promise<string>} URL de la imagen en base64
+   */
+  async generateQRCode(data, size = 150) {
+    try {
+      // Usar API pública de QR code (qrserver.com)
+      const url = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(data)}`;
+
+      // Fetch la imagen
+      const response = await fetch(url);
+      const blob = await response.blob();
+
+      // Convertir blob a base64
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('❌ Error generando QR code:', error);
+      return null;
+    }
+  },
+
+  /**
+   * 🆕 Genera Google Maps URL para una actividad
+   * @param {object} activity - Actividad con coordenadas o nombre
+   * @returns {string} URL de Google Maps
+   */
+  getGoogleMapsURL(activity) {
+    if (activity.coordinates && activity.coordinates.lat && activity.coordinates.lng) {
+      // Si hay coordenadas, usarlas directamente
+      return `https://www.google.com/maps?q=${activity.coordinates.lat},${activity.coordinates.lng}`;
+    } else if (activity.location) {
+      // Si solo hay nombre de ubicación, buscar
+      const query = encodeURIComponent(`${activity.location}, Japan`);
+      return `https://www.google.com/maps/search/?api=1&query=${query}`;
+    } else if (activity.name || activity.title || activity.activity) {
+      // Usar el nombre de la actividad
+      const name = activity.name || activity.title || activity.activity;
+      const query = encodeURIComponent(`${name}, Japan`);
+      return `https://www.google.com/maps/search/?api=1&query=${query}`;
+    }
+
+    // Fallback: buscar "Japan"
+    return 'https://www.google.com/maps/@35.6762,139.6503,12z';
   }
 };
 

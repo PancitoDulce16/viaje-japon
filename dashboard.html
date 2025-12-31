@@ -433,6 +433,9 @@
     <!-- 🎫 RESERVATIONS MANAGER - Gestor de reservas -->
     <script type="module" src="/js/reservations-manager.js?v=1763264017"></script>
 
+    <!-- 🛍️ SHOPPING TRACKER - Sistema de seguimiento de compras -->
+    <script type="module" src="/js/shopping-tracker.js?v=1763264017"></script>
+
     <!-- 📝 LOG EXPORTER - Captura TODOS los logs automáticamente -->
     <script type="module" src="/js/log-exporter.js?v=1763264017"></script>
 
@@ -535,6 +538,12 @@
                         <button class="feature-btn bg-gray-50 dark:bg-gray-700 p-4 rounded-xl hover:shadow-lg transition-all" onclick="window.DashboardApp?.openFloatingModal?.('packing'); this.closest('.fixed').remove();">
                             <div class="text-3xl mb-2">🎒</div>
                             <div class="font-semibold">Equipaje</div>
+                        </button>
+
+                        <button class="feature-btn bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-900/20 dark:to-pink-800/20 p-4 rounded-xl hover:shadow-lg transition-all border-2 border-purple-200 dark:border-purple-700" onclick="window.ShoppingTracker?.open(); this.closest('.fixed').remove();">
+                            <div class="text-3xl mb-2">🛍️</div>
+                            <div class="font-semibold">Shopping</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">Lista de compras</div>
                         </button>
 
                         <button class="feature-btn bg-gray-50 dark:bg-gray-700 p-4 rounded-xl hover:shadow-lg transition-all" onclick="window.DashboardApp?.openFloatingModal?.('phrases'); this.closest('.fixed').remove();">

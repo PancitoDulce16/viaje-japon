@@ -173,6 +173,22 @@ export const SmartGeneratorWizard = {
       <div class="space-y-6">
         <h3 class="text-xl font-bold text-gray-900 dark:text-white">📍 Configuración Básica</h3>
 
+        <!-- 🆕 Load from Template Button -->
+        <div class="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-200 dark:border-purple-800 rounded-xl">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="font-bold text-gray-800 dark:text-white mb-1">🚀 ¿Prefieres empezar con una plantilla?</h4>
+              <p class="text-sm text-gray-600 dark:text-gray-300">Carga un itinerario pre-diseñado y personalízalo a tu gusto</p>
+            </div>
+            <button
+              onclick="window.SmartGeneratorWizard.showTemplateSelector()"
+              class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition transform hover:scale-105"
+            >
+              📋 Ver Plantillas
+            </button>
+          </div>
+        </div>
+
         <!-- Ciudades -->
         <div>
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -1148,6 +1164,180 @@ export const SmartGeneratorWizard = {
       modal.remove();
     }
     // No borramos el sessionStorage aquí, solo cuando se completa o el usuario lo cancela explícitamente
+  },
+
+  /**
+   * 🆕 Muestra el selector de plantillas
+   */
+  async showTemplateSelector() {
+    try {
+      // Cargar templates desde attractions.json
+      const response = await fetch(`/data/attractions.json?v=${Date.now()}`);
+      const data = await response.json();
+
+      if (!data.templateInfo) {
+        window.Notifications?.show('❌ No se encontraron plantillas disponibles', 'error');
+        return;
+      }
+
+      const template = data.templateInfo;
+
+      // Crear modal de selección de templates
+      const modalHTML = `
+        <div id="templateSelectorModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h2 class="text-2xl font-bold">📋 Plantillas de Itinerarios</h2>
+                  <p class="text-purple-100 mt-1">Selecciona una plantilla para empezar</p>
+                </div>
+                <button onclick="document.getElementById('templateSelectorModal').remove()" class="text-white hover:bg-white/20 rounded-lg p-2 transition">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Template Card -->
+            <div class="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+              <div class="border-2 border-purple-200 dark:border-purple-800 rounded-xl overflow-hidden hover:shadow-xl transition cursor-pointer"
+                   onclick="window.SmartGeneratorWizard.loadTemplate('${template.id}')">
+
+                <!-- Template Header -->
+                <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 p-6 border-b-2 border-purple-200 dark:border-purple-800">
+                  <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                      <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">${template.name}</h3>
+                      <p class="text-gray-700 dark:text-gray-300 mb-4">${template.description}</p>
+
+                      <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 rounded-full text-sm font-semibold">
+                          📅 ${template.duration} días
+                        </span>
+                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 rounded-full text-sm font-semibold">
+                          💰 ¥${template.totalBudget.toLocaleString()}
+                        </span>
+                        <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 rounded-full text-sm font-semibold">
+                          🏙️ ${template.cities.length} ciudades
+                        </span>
+                      </div>
+
+                      <div class="flex flex-wrap gap-2">
+                        ${template.cities.map(city => `
+                          <span class="px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-xs">
+                            ${city}
+                          </span>
+                        `).join('')}
+                      </div>
+                    </div>
+
+                    <div class="ml-4">
+                      <div class="text-5xl">🇯🇵</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Highlights -->
+                <div class="p-6 bg-white dark:bg-gray-800">
+                  <h4 class="font-bold text-gray-900 dark:text-white mb-3">✨ Experiencias Destacadas:</h4>
+                  <div class="grid grid-cols-2 gap-3">
+                    ${template.highlights.slice(0, 8).map(highlight => `
+                      <div class="flex items-start gap-2">
+                        <span class="text-lg">⭐</span>
+                        <span class="text-sm text-gray-700 dark:text-gray-300">${highlight}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+
+                  <div class="mt-6 p-4 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                    <p class="text-center text-gray-800 dark:text-gray-200 font-semibold">
+                      👆 Haz clic en esta tarjeta para cargar esta plantilla
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+              <button onclick="document.getElementById('templateSelectorModal').remove()"
+                      class="w-full px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold rounded-lg transition">
+                ❌ Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Agregar modal al DOM
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    } catch (error) {
+      console.error('❌ Error cargando templates:', error);
+      window.Notifications?.show('❌ Error cargando plantillas', 'error');
+    }
+  },
+
+  /**
+   * 🆕 Carga una plantilla específica
+   */
+  async loadTemplate(templateId) {
+    try {
+      console.log(`🔥 Cargando template: ${templateId}`);
+
+      // Cerrar modal de selección
+      const selectorModal = document.getElementById('templateSelectorModal');
+      if (selectorModal) selectorModal.remove();
+
+      // Mostrar loading
+      window.Notifications?.show('⏳ Cargando plantilla...', 'info');
+
+      // Cargar template desde attractions.json
+      const response = await fetch(`/data/attractions.json?v=${Date.now()}`);
+      const data = await response.json();
+
+      if (!data.suggestedItinerary || !data.templateInfo) {
+        window.Notifications?.show('❌ Template no válido', 'error');
+        return;
+      }
+
+      // Crear un nuevo trip con el template
+      const tripData = {
+        name: data.templateInfo.name,
+        cities: data.templateInfo.cities,
+        totalDays: data.templateInfo.duration,
+        budget: data.templateInfo.totalBudget,
+        status: 'draft',
+        templateId: templateId,
+        createdAt: new Date().toISOString()
+      };
+
+      // Crear el trip usando TripsManager
+      const newTripId = await window.TripsManager.createTrip(tripData);
+
+      if (newTripId) {
+        // El template ya se cargó automáticamente en createTrip (línea 180)
+        window.Notifications?.show(`✅ Plantilla "${data.templateInfo.name}" cargada con éxito`, 'success');
+
+        // Cerrar wizard
+        this.close();
+
+        // Opcional: Redirigir al nuevo trip o recargar la vista
+        setTimeout(() => {
+          window.location.reload(); // O navegar al trip específico
+        }, 1000);
+      } else {
+        window.Notifications?.show('❌ Error creando el viaje', 'error');
+      }
+
+    } catch (error) {
+      console.error('❌ Error cargando template:', error);
+      window.Notifications?.show('❌ Error cargando la plantilla', 'error');
+    }
   },
 
   /**
