@@ -112,6 +112,11 @@ export const ItineraryBuilder = {
                   <div class="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center font-bold">5</div>
                   <span class="text-xs mt-1">Plantilla</span>
                 </div>
+                <div class="w-8 h-1 bg-gray-300"></div>
+                <div class="wizard-step" data-step="6">
+                  <div class="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center font-bold">6</div>
+                  <span class="text-xs mt-1">Preview</span>
+                </div>
               </div>
             </div>
 
@@ -457,6 +462,17 @@ export const ItineraryBuilder = {
                     </div>
                   </label>
                 `).join('')}
+              </div>
+            </div>
+
+            <!-- Step 6: Preview/Resumen -->
+            <div id="wizardStep6" class="wizard-content hidden">
+              <h3 class="text-xl font-bold mb-4 dark:text-white">✅ Revisa tu Itinerario</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Confirma que todo esté correcto antes de crear tu itinerario
+              </p>
+              <div id="itineraryPreviewContainer" class="space-y-4">
+                <!-- El preview se generará dinámicamente aquí -->
               </div>
             </div>
 
@@ -1272,6 +1288,78 @@ export const ItineraryBuilder = {
     console.log(`Validating day assignment for ${cityId}`);
   },
 
+  // ===== VALIDACIÓN DE COHERENCIA GEOGRÁFICA =====
+  validateGeographicCoherence(cityDayAssignments) {
+    const issues = [];
+
+    // Definir distancias aproximadas entre ciudades principales (en km)
+    const cityDistances = {
+      'tokyo-osaka': 400,
+      'tokyo-kyoto': 380,
+      'tokyo-hiroshima': 800,
+      'tokyo-sapporo': 830,
+      'tokyo-fukuoka': 880,
+      'tokyo-nara': 400,
+      'tokyo-kobe': 420,
+      'tokyo-nagoya': 260,
+      'osaka-kyoto': 50,
+      'osaka-nara': 35,
+      'osaka-kobe': 30,
+      'osaka-hiroshima': 330,
+      'kyoto-nara': 40,
+      'kyoto-hiroshima': 340,
+      'hiroshima-fukuoka': 250
+    };
+
+    // Función helper para obtener distancia entre dos ciudades
+    const getDistance = (city1, city2) => {
+      const key1 = `${city1}-${city2}`.toLowerCase();
+      const key2 = `${city2}-${city1}`.toLowerCase();
+      return cityDistances[key1] || cityDistances[key2] || 0;
+    };
+
+    // Validar cada día
+    cityDayAssignments.forEach(dayAssignment => {
+      const { day, cities } = dayAssignment;
+
+      // Si hay múltiples ciudades en un día, validar que no estén muy lejos
+      if (cities && cities.length > 1) {
+        for (let i = 0; i < cities.length - 1; i++) {
+          const city1 = cities[i].cityName;
+          const city2 = cities[i + 1].cityName;
+          const distance = getDistance(city1, city2);
+
+          // Si las ciudades están a más de 100km, es probablemente inviable
+          if (distance > 100) {
+            issues.push(
+              `Día ${day}: ${city1} y ${city2} están a ~${distance}km. ` +
+              `Considera dedicar días separados o elegir ciudades más cercanas.`
+            );
+          }
+        }
+      }
+
+      // Validar que si es un día parcial, tenga sentido el tiempo asignado
+      cities.forEach(city => {
+        if (city.timeStart && city.timeEnd && !city.isFullDay) {
+          const [startHour] = city.timeStart.split(':').map(Number);
+          const [endHour] = city.timeEnd.split(':').map(Number);
+          const hours = endHour - startHour;
+
+          // Si hay menos de 2 horas en una ciudad, es muy poco tiempo
+          if (hours < 2) {
+            issues.push(
+              `Día ${day}: Solo ${hours}h en ${city.cityName}. ` +
+              `Considera asignar más tiempo o eliminar esta ciudad del día.`
+            );
+          }
+        }
+      });
+    });
+
+    return issues;
+  },
+
   // Navegación del Wizard
   currentStep: 1,
 
@@ -1281,11 +1369,16 @@ export const ItineraryBuilder = {
       return;
     }
 
-    if (this.currentStep < 5) {
+    if (this.currentStep < 6) {
       this.currentStep++;
 
       if (this.currentStep === 2) {
         this.generateDateCitySelector();
+      }
+
+      if (this.currentStep === 6) {
+        // Generar preview del itinerario
+        this.generateItineraryPreview();
       }
 
       if (this.renderQuickCityBlocksUI) {
@@ -1456,7 +1549,7 @@ export const ItineraryBuilder = {
       prevBtn.classList.remove('hidden');
     }
 
-    if (this.currentStep === 5) {
+    if (this.currentStep === 6) {
       nextBtn.classList.add('hidden');
       finishBtn.classList.remove('hidden');
     } else {
@@ -1628,6 +1721,148 @@ export const ItineraryBuilder = {
     return connections;
   },
 
+  // ===== GENERAR PREVIEW DEL ITINERARIO =====
+  generateItineraryPreview() {
+    const container = document.getElementById('itineraryPreviewContainer');
+    if (!container) return;
+
+    // Recopilar datos del formulario
+    const name = document.getElementById('itineraryName').value;
+    const startDate = document.getElementById('itineraryStartDate').value;
+    const endDate = document.getElementById('itineraryEndDate').value;
+    const cityDayAssignments = this.getCityDayAssignments();
+    const selectedCategories = Array.from(document.querySelectorAll('input[name="categories"]:checked')).map(cb => cb.value);
+    const templateId = document.querySelector('input[name="template"]:checked')?.value || 'blank';
+
+    // Calcular estadísticas
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    const uniqueCities = new Set();
+    cityDayAssignments.forEach(assignment => {
+      assignment.cities.forEach(city => uniqueCities.add(city.cityName));
+    });
+
+    const template = TEMPLATES.find(t => t.id === templateId);
+    const templateName = template ? template.name : 'Desde Cero';
+    const templatePace = template ? template.pace : 'moderate';
+
+    // Estimar actividades según el ritmo
+    const activitiesPerDayEstimate = {
+      'relaxed': '4-5',
+      'moderate': '5-7',
+      'intense': '7-9'
+    }[templatePace] || '5-7';
+
+    const estimatedActivities = totalDays * 5; // Promedio estimado
+
+    // Estimar costos (basado en actividades promedio)
+    const avgCostPerActivity = 2000; // ¥2000 promedio por actividad
+    const estimatedCost = estimatedActivities * avgCostPerActivity;
+
+    // Generar HTML del preview
+    container.innerHTML = `
+      <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-6 rounded-xl border-2 border-purple-200 dark:border-purple-700">
+        <h4 class="text-2xl font-bold text-purple-800 dark:text-purple-300 mb-4">
+          ${name || 'Mi Viaje a Japón'}
+        </h4>
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="bg-white dark:bg-gray-800 p-4 rounded-lg">
+            <div class="text-sm text-gray-500 dark:text-gray-400">Duración</div>
+            <div class="text-2xl font-bold dark:text-white">${totalDays} días</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              ${new Date(startDate).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })} -
+              ${new Date(endDate).toLocaleDateString('es-ES', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-gray-800 p-4 rounded-lg">
+            <div class="text-sm text-gray-500 dark:text-gray-400">Ciudades</div>
+            <div class="text-2xl font-bold dark:text-white">${uniqueCities.size}</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              ${Array.from(uniqueCities).join(', ')}
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg mb-4">
+          <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">Plantilla Seleccionada</div>
+          <div class="flex items-center gap-2">
+            <span class="text-3xl">${template?.icon || '📝'}</span>
+            <div>
+              <div class="font-bold dark:text-white">${templateName}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">
+                Ritmo: ${templatePace === 'relaxed' ? '🐢 Relajado' : templatePace === 'moderate' ? '🚶 Moderado' : '🏃 Intenso'}
+                • ${activitiesPerDayEstimate} actividades/día
+              </div>
+            </div>
+          </div>
+        </div>
+
+        ${selectedCategories.length > 0 ? `
+          <div class="bg-white dark:bg-gray-800 p-4 rounded-lg mb-4">
+            <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">Intereses Seleccionados</div>
+            <div class="flex flex-wrap gap-2">
+              ${selectedCategories.map(catId => {
+                const cat = CATEGORIES.find(c => c.id === catId);
+                return `<span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-3 py-1 rounded-full text-sm font-semibold">
+                  ${cat?.icon} ${cat?.name}
+                </span>`;
+              }).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
+            <div class="text-sm text-blue-700 dark:text-blue-300">Actividades Estimadas</div>
+            <div class="text-2xl font-bold text-blue-800 dark:text-blue-200">~${estimatedActivities}</div>
+            <div class="text-xs text-blue-600 dark:text-blue-400 mt-1">Incluye comidas y transporte</div>
+          </div>
+
+          <div class="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
+            <div class="text-sm text-green-700 dark:text-green-300">Costo Estimado</div>
+            <div class="text-2xl font-bold text-green-800 dark:text-green-200">¥${estimatedCost.toLocaleString()}</div>
+            <div class="text-xs text-green-600 dark:text-green-400 mt-1">~$${Math.round(estimatedCost / 150)} USD (actividades)</div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-purple-200 dark:border-purple-700">
+          <div class="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+            <p>💡 <strong>Tip:</strong> Podrás editar, reorganizar o eliminar actividades después de crear el itinerario</p>
+            <p>🔄 <strong>Cambios:</strong> Todos los datos se pueden modificar en cualquier momento</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desglose por días -->
+      <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700">
+        <h5 class="font-bold text-lg mb-4 dark:text-white">📅 Desglose de Ciudades por Día</h5>
+        <div class="space-y-2">
+          ${cityDayAssignments.map(assignment => {
+            const cityNames = assignment.cities.map(c => c.cityName).join(' + ');
+            return `
+              <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div class="w-12 h-12 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold">
+                  ${assignment.day}
+                </div>
+                <div class="flex-1">
+                  <div class="font-semibold dark:text-white">${cityNames}</div>
+                  ${assignment.cities[0].timeStart ? `
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                      ${assignment.cities[0].timeStart} - ${assignment.cities[0].timeEnd || 'Fin del día'}
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  },
+
   closeCreateItineraryWizard() {
     const modal = document.getElementById('createItineraryWizard');
     if (modal) {
@@ -1769,7 +2004,30 @@ export const ItineraryBuilder = {
       console.log('✅ Itinerario creado:', tripId, `con ${activities.length} actividades`);
     } catch (error) {
       console.error('❌ Error creando itinerario:', error);
-      Notifications.error('Error al crear itinerario. Inténtalo de nuevo.');
+
+      // Mensajes de error específicos
+      let errorMessage = 'Error al crear itinerario. ';
+
+      if (error.code === 'permission-denied') {
+        errorMessage += 'No tienes permisos para guardar en este viaje.';
+      } else if (error.code === 'unavailable') {
+        errorMessage += 'Sin conexión a internet. Verifica tu conexión.';
+      } else if (error.message?.includes('undefined')) {
+        errorMessage += 'Datos incompletos. Por favor verifica todos los campos.';
+      } else if (error.message?.includes('Firebase')) {
+        errorMessage += 'Error de servidor. Intenta de nuevo en unos momentos.';
+      } else {
+        errorMessage += 'Inténtalo de nuevo o contacta soporte si persiste.';
+      }
+
+      Notifications.error(errorMessage, 8000);
+
+      // Log para debugging
+      console.error('Error details:', {
+        code: error.code,
+        message: error.message,
+        stack: error.stack?.split('\n').slice(0, 3)
+      });
     }
   },
 
@@ -1802,11 +2060,57 @@ export const ItineraryBuilder = {
   async generateActivitiesFromTemplate(templateId, cityDayAssignments, selectedCategories, totalDays) {
     console.log('🎯 Generating SMART itinerary with AI recommendations:', { templateId, cityDayAssignments, selectedCategories, totalDays });
 
+    // ===== VALIDACIÓN COMPREHENSIVA DE PARÁMETROS =====
+
+    // 1. Validar cityDayAssignments
+    if (!cityDayAssignments || !Array.isArray(cityDayAssignments) || cityDayAssignments.length === 0) {
+      console.warn('⚠️ No city day assignments provided, returning empty activities');
+      return [];
+    }
+
+    // 2. Validar que cada assignment tenga estructura correcta
+    const validAssignments = cityDayAssignments.every(assignment => {
+      return assignment &&
+             typeof assignment.day === 'number' &&
+             Array.isArray(assignment.cities) &&
+             assignment.cities.length > 0;
+    });
+
+    if (!validAssignments) {
+      console.error('❌ Invalid city day assignments structure');
+      Notifications.error('Error en la configuración de ciudades. Por favor intenta de nuevo.');
+      return [];
+    }
+
+    // 3. Validar coherencia geográfica (no permitir ciudades muy lejanas el mismo día)
+    const geographicIssues = this.validateGeographicCoherence(cityDayAssignments);
+    if (geographicIssues.length > 0) {
+      console.warn('⚠️ Geographic coherence issues found:', geographicIssues);
+      // Mostrar advertencia pero continuar (el usuario puede tener razones para esto)
+      geographicIssues.forEach(issue => {
+        Notifications.warning(`⚠️ ${issue}`, 8000);
+      });
+    }
+
+    // 4. Validar que TEMPLATES exista y tenga el template solicitado
+    if (typeof TEMPLATES === 'undefined' || !Array.isArray(TEMPLATES)) {
+      console.error('❌ TEMPLATES not defined or not an array');
+      Notifications.error('Error del sistema: plantillas no disponibles');
+      return [];
+    }
+
     // Get template info (fallback con categories vacío para evitar errores)
     const template = TEMPLATES.find(t => t.id === templateId) || {
       pace: 'moderate',
       categories: []
     };
+
+    // 5. Validar que ACTIVITIES_DATABASE exista
+    if (typeof ACTIVITIES_DATABASE === 'undefined' || typeof ACTIVITIES_DATABASE !== 'object') {
+      console.error('❌ ACTIVITIES_DATABASE not defined or not an object');
+      Notifications.error('Error del sistema: base de datos de actividades no disponible');
+      return [];
+    }
 
     // Determine activities per day based on pace (INCREASED for more comprehensive itineraries)
     const activitiesPerDay = {
@@ -1949,7 +2253,7 @@ export const ItineraryBuilder = {
         // Generate start time for activities if time range is specified
         let currentTime = cityVisit.timeStart || '09:00';
 
-        // Add selected activities to the itinerary
+        // Add selected activities to the itinerary with smart time calculation
         selectedActivities.forEach((activity, i) => {
           generatedActivities.push({
             id: `activity-${activityIdCounter++}`,
@@ -1957,7 +2261,10 @@ export const ItineraryBuilder = {
             city: cityId,
             cityName: cityVisit.cityName,
             ...activity,
-            time: cityVisit.timeStart ? this.calculateActivityTime(currentTime, i) : activity.time || `${9 + i * 2}:00`,
+            // Mejorado: pasar activity para calcular duración específica
+            time: cityVisit.timeStart
+              ? this.calculateActivityTime(currentTime, i, activity, selectedActivities.length)
+              : activity.time || `${9 + i * 2}:00`,
             cityVisitInfo: {
               timeStart: cityVisit.timeStart,
               timeEnd: cityVisit.timeEnd,
@@ -2221,16 +2528,70 @@ export const ItineraryBuilder = {
 
   /**
    * Calcula la hora de una actividad basada en una hora de inicio y un índice
+   * MEJORADO: Ahora considera duración de actividades, breaks y horarios realistas
    * @param {string} startTime - Hora de inicio (formato HH:MM)
    * @param {number} index - Índice de la actividad
+   * @param {object} activity - Objeto de actividad (opcional) para determinar duración
+   * @param {number} totalActivities - Total de actividades del día (opcional)
    * @returns {string} Hora calculada (formato HH:MM)
    */
-  calculateActivityTime(startTime, index) {
+  calculateActivityTime(startTime, index, activity = null, totalActivities = null) {
     const [hours, minutes] = startTime.split(':').map(Number);
-    const totalMinutes = hours * 60 + minutes + (index * 120); // 2 horas por actividad
-    const newHours = Math.floor(totalMinutes / 60) % 24;
-    const newMinutes = totalMinutes % 60;
-    return `${String(newHours).padStart(2, '0')}:${String(newMinutes).padStart(2, '0')}`;
+    let baseMinutes = hours * 60 + minutes;
+
+    // Determinar duración de la actividad basada en tipo o duración especificada
+    let activityDuration = 90; // Default: 1.5 horas
+
+    if (activity) {
+      // Si la actividad tiene duración especificada
+      if (activity.duration) {
+        activityDuration = activity.duration;
+      }
+      // Si no, estimar basado en categoría
+      else {
+        const durationByCategory = {
+          'temples': 60,         // Templos: 1 hora
+          'museums': 90,         // Museos: 1.5 horas
+          'parks': 120,          // Parques: 2 horas
+          'shopping': 120,       // Shopping: 2 horas
+          'food': 75,            // Comida: 1.25 horas
+          'entertainment': 180,  // Entretenimiento: 3 horas
+          'nature': 150,         // Naturaleza: 2.5 horas
+          'culture': 90,         // Cultura: 1.5 horas
+          'nightlife': 120       // Vida nocturna: 2 horas
+        };
+        activityDuration = durationByCategory[activity.category] || 90;
+      }
+    }
+
+    // Calcular tiempo acumulado para esta actividad
+    let totalMinutes = baseMinutes;
+
+    for (let i = 0; i < index; i++) {
+      // Agregar duración de actividad anterior
+      totalMinutes += activityDuration;
+
+      // Agregar tiempo de buffer entre actividades (30 min para travel/rest)
+      totalMinutes += 30;
+
+      // Agregar break de almuerzo si cruzamos el mediodía (12:00-13:30)
+      const currentHour = Math.floor(totalMinutes / 60);
+      if (currentHour >= 11 && currentHour < 13 && i > 0) {
+        // Solo agregar almuerzo una vez
+        if (i === 1 || i === 2) {
+          totalMinutes += 60; // 1 hora para almuerzo
+        }
+      }
+    }
+
+    // Ajustar para horarios realistas (evitar actividades muy tarde)
+    const finalHour = Math.floor(totalMinutes / 60);
+    const finalMinutes = totalMinutes % 60;
+
+    // Si es después de las 21:00, ajustar a horario diurno más realista
+    const adjustedHour = finalHour > 21 ? 21 : finalHour;
+
+    return `${String(adjustedHour).padStart(2, '0')}:${String(finalMinutes).padStart(2, '0')}`;
   },
 
   /**
