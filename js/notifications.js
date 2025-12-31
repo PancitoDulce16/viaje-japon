@@ -2,7 +2,6 @@
 
 export const Notifications = {
   container: null,
-  callCount: 0, // Contador para debugging
   themeToast: null, // Guardar referencia al toast del tema
 
   init() {
@@ -19,8 +18,6 @@ export const Notifications = {
 
   show(message, type = 'info', duration = 4000, title = null) {
     this.init();
-
-    console.log('📢 Notifications.show() creando toast:', { message, type, title });
 
     const icons = {
       success: '<i class="fas fa-check-circle"></i>',
@@ -50,8 +47,6 @@ export const Notifications = {
       <button class="toast-close" aria-label="Cerrar">&times;</button>
     `;
 
-    console.log('📢 Toast HTML creado:', toast.innerHTML);
-
     // Event listener para cerrar
     const closeBtn = toast.querySelector('.toast-close');
     closeBtn.addEventListener('click', () => {
@@ -59,8 +54,6 @@ export const Notifications = {
     });
 
     this.container.appendChild(toast);
-
-    console.log('📢 Toasts actualmente en pantalla:', this.container.children.length);
 
     // Auto-remover
     if (duration > 0) {
@@ -94,9 +87,6 @@ export const Notifications = {
   },
 
   info(message, duration, isThemeNotification = false) {
-    this.callCount++;
-    console.log(`📢 [#${this.callCount}] Notifications.info() recibió:`, message);
-    console.trace('📍 Stack trace de la llamada:');
 
     // Si es una notificación de tema, remover la anterior primero
     if (isThemeNotification && this.themeToast) {
