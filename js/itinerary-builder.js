@@ -73,11 +73,11 @@ export const ItineraryBuilder = {
     console.log('🎨 Opening wizard with createTripFlag:', createTripFlag);
 
     const modalHtml = `
-      <div id="createItineraryWizard" class="modal active" style="z-index: 10001;">
+      <div id="createItineraryWizard" class="modal active" style="z-index: 10001;" role="dialog" aria-labelledby="wizardTitle" aria-modal="true">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           <!-- Header -->
           <div class="sticky top-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 rounded-t-xl z-10">
-            <h2 class="text-3xl font-bold flex items-center gap-3">
+            <h2 id="wizardTitle" class="text-3xl font-bold flex items-center gap-3">
               ✈️ Crear Nuevo Itinerario
             </h2>
             <p class="text-sm text-white/80 mt-2">Paso a paso para planear tu viaje perfecto</p>
@@ -86,7 +86,7 @@ export const ItineraryBuilder = {
           <!-- Steps Container -->
           <div class="p-6">
             <!-- Step Indicator -->
-            <div class="flex items-center justify-center mb-8">
+            <div class="flex items-center justify-center mb-8" role="navigation" aria-label="Progreso del wizard">
               <div class="flex items-center gap-2">
                 <div class="wizard-step active" data-step="1">
                   <div class="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold">1</div>
@@ -527,10 +527,18 @@ export const ItineraryBuilder = {
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     document.body.style.overflow = 'hidden';
-    
+
     // Setup category selection visual feedback
     this.setupCategorySelection();
     this.setupTemplateSelection();
+
+    // ✨ NUEVO: Setup auto-save y restaurar progreso
+    this.setupAutoSave();
+
+    // Intentar restaurar progreso previo (si existe)
+    setTimeout(() => {
+      this.restoreWizardProgress();
+    }, 100); // Pequeño delay para que los elementos estén listos
   },
 
   setupCategorySelection() {
@@ -1420,25 +1428,88 @@ export const ItineraryBuilder = {
         return false;
       }
 
+      // ===== VALIDACIÓN AVANZADA DE FECHAS =====
+
       const start = new Date(startDate);
       const end = new Date(endDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Resetear a medianoche
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
 
+      // 1. Validar que las fechas sean válidas
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        Notifications.error('❌ Formato de fecha inválido. Por favor selecciona fechas válidas.');
+        return false;
+      }
+
+      // 2. Validar que la fecha de fin sea posterior a la de inicio
       if (end <= start) {
         Notifications.warning('⚠️ La fecha de fin debe ser posterior a la fecha de inicio');
         document.getElementById('itineraryEndDate').focus();
         return false;
       }
 
-      // Validar que el viaje no sea demasiado largo (más de 60 días)
+      // 3. Advertencia si el viaje es en el pasado (permitir, pero advertir)
+      if (start < today) {
+        const daysPast = Math.ceil((today - start) / (1000 * 60 * 60 * 24));
+        Notifications.warning(
+          `⚠️ La fecha de inicio es ${daysPast} día${daysPast > 1 ? 's' : ''} en el pasado. ` +
+          `¿Estás creando un itinerario para un viaje pasado?`,
+          6000
+        );
+        // No bloquear, solo advertir
+      }
+
+      // 4. Advertencia si el viaje es muy pronto (menos de 7 días)
+      const daysUntilTrip = Math.ceil((start - today) / (1000 * 60 * 60 * 24));
+      if (daysUntilTrip > 0 && daysUntilTrip < 7) {
+        Notifications.info(
+          `⏰ Tu viaje es en ${daysUntilTrip} día${daysUntilTrip > 1 ? 's' : ''}. ` +
+          `¡Asegúrate de tener todo listo!`,
+          5000
+        );
+      }
+
+      // 5. Advertencia si el viaje es muy lejano (más de 2 años)
+      const daysInFuture = Math.ceil((start - today) / (1000 * 60 * 60 * 24));
+      if (daysInFuture > 730) { // 2 años
+        Notifications.info(
+          `📅 Tu viaje es en ${Math.round(daysInFuture / 365)} años. ` +
+          `Recuerda actualizar el itinerario más cerca de la fecha.`,
+          5000
+        );
+      }
+
+      // 6. Validar duración del viaje
       const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
       if (daysDiff > 60) {
         Notifications.warning('⚠️ El viaje es muy largo (máximo 60 días). Considera dividirlo en varios itinerarios.');
         return false;
       }
 
-      // Advertencia si el viaje es muy corto
+      if (daysDiff < 1) {
+        Notifications.error('❌ El viaje debe durar al menos 1 día');
+        return false;
+      }
+
+      // 7. Advertencia si el viaje es muy corto
       if (daysDiff < 3) {
-        Notifications.info(`ℹ️ Tu viaje es de ${daysDiff} día${daysDiff > 1 ? 's' : ''}. Tendrás tiempo limitado para explorar.`, 5000);
+        Notifications.info(
+          `ℹ️ Tu viaje es de ${daysDiff} día${daysDiff > 1 ? 's' : ''}. ` +
+          `Tendrás tiempo limitado para explorar.`,
+          5000
+        );
+      }
+
+      // 8. Información sobre duración ideal
+      if (daysDiff >= 7 && daysDiff <= 14) {
+        Notifications.success(
+          `✨ ${daysDiff} días es una duración ideal para explorar Japón. ` +
+          `Podrás ver varias ciudades sin apresurarte.`,
+          4000
+        );
       }
     }
 
@@ -1510,13 +1581,32 @@ export const ItineraryBuilder = {
   },
 
   updateWizardView() {
-    // Ocultar todos los pasos
+    // Ocultar todos los pasos con animación
     document.querySelectorAll('.wizard-content').forEach(content => {
-      content.classList.add('hidden');
+      if (!content.classList.contains('hidden')) {
+        // Fade out antes de ocultar
+        content.style.opacity = '0';
+        content.style.transform = 'translateX(-20px)';
+        setTimeout(() => {
+          content.classList.add('hidden');
+        }, 200);
+      }
     });
-    
-    // Mostrar paso actual
-    document.getElementById(`wizardStep${this.currentStep}`).classList.remove('hidden');
+
+    // Mostrar paso actual con animación
+    setTimeout(() => {
+      const currentStepElement = document.getElementById(`wizardStep${this.currentStep}`);
+      currentStepElement.classList.remove('hidden');
+      currentStepElement.style.opacity = '0';
+      currentStepElement.style.transform = 'translateX(20px)';
+      currentStepElement.style.transition = 'all 0.3s ease-out';
+
+      // Trigger animation
+      setTimeout(() => {
+        currentStepElement.style.opacity = '1';
+        currentStepElement.style.transform = 'translateX(0)';
+      }, 50);
+    }, 200);
     
     // Actualizar indicadores de paso
     document.querySelectorAll('.wizard-step').forEach((step, index) => {
@@ -1569,6 +1659,23 @@ export const ItineraryBuilder = {
   },
 
   async finishWizard() {
+    // Mostrar loading state
+    const finishBtn = document.getElementById('wizardFinishBtn');
+    if (finishBtn) {
+      finishBtn.disabled = true;
+      finishBtn.innerHTML = `
+        <svg class="animate-spin inline-block h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Creando itinerario...
+      `;
+    }
+
+    // Deshabilitar botón de anterior
+    const prevBtn = document.getElementById('wizardPrevBtn');
+    if (prevBtn) prevBtn.disabled = true;
+
     // Recopilar todos los datos
     const data = {
       name: document.getElementById('itineraryName').value,
@@ -1642,7 +1749,12 @@ export const ItineraryBuilder = {
     }
 
     // Crear itinerario
-    await this.createItinerary(data);
+    const success = await this.createItinerary(data);
+
+    // Limpiar auto-save solo si fue exitoso
+    if (success) {
+      this.clearWizardProgress();
+    }
 
     this.closeCreateItineraryWizard();
   },
@@ -1863,6 +1975,120 @@ export const ItineraryBuilder = {
     `;
   },
 
+  // ===== AUTO-SAVE WIZARD PROGRESS =====
+  AUTOSAVE_KEY: 'itinerary_wizard_autosave',
+
+  saveWizardProgress() {
+    try {
+      const progress = {
+        step: this.currentStep,
+        name: document.getElementById('itineraryName')?.value || '',
+        startDate: document.getElementById('itineraryStartDate')?.value || '',
+        endDate: document.getElementById('itineraryEndDate')?.value || '',
+        categories: Array.from(document.querySelectorAll('input[name="categories"]:checked')).map(cb => cb.value),
+        template: document.querySelector('input[name="template"]:checked')?.value || '',
+        timestamp: new Date().toISOString()
+      };
+
+      localStorage.setItem(this.AUTOSAVE_KEY, JSON.stringify(progress));
+      console.log('💾 Wizard progress auto-saved');
+    } catch (error) {
+      console.warn('Failed to auto-save wizard progress:', error);
+    }
+  },
+
+  restoreWizardProgress() {
+    try {
+      const saved = localStorage.getItem(this.AUTOSAVE_KEY);
+      if (!saved) return false;
+
+      const progress = JSON.parse(saved);
+
+      // Verificar que no sea muy viejo (más de 7 días)
+      const savedDate = new Date(progress.timestamp);
+      const daysSince = (new Date() - savedDate) / (1000 * 60 * 60 * 24);
+      if (daysSince > 7) {
+        console.log('Auto-save too old, clearing...');
+        this.clearWizardProgress();
+        return false;
+      }
+
+      // Restaurar valores
+      const nameInput = document.getElementById('itineraryName');
+      const startDateInput = document.getElementById('itineraryStartDate');
+      const endDateInput = document.getElementById('itineraryEndDate');
+
+      if (nameInput && progress.name) nameInput.value = progress.name;
+      if (startDateInput && progress.startDate) startDateInput.value = progress.startDate;
+      if (endDateInput && progress.endDate) endDateInput.value = progress.endDate;
+
+      // Restaurar categorías
+      if (progress.categories && progress.categories.length > 0) {
+        progress.categories.forEach(catId => {
+          const checkbox = document.querySelector(`input[name="categories"][value="${catId}"]`);
+          if (checkbox) {
+            checkbox.checked = true;
+            checkbox.closest('.category-card')?.classList.add('selected');
+          }
+        });
+      }
+
+      // Restaurar template
+      if (progress.template) {
+        const templateRadio = document.querySelector(`input[name="template"][value="${progress.template}"]`);
+        if (templateRadio) {
+          templateRadio.checked = true;
+          templateRadio.closest('.template-card')?.classList.add('selected');
+        }
+      }
+
+      console.log('✅ Wizard progress restored from auto-save');
+
+      // Mostrar notificación al usuario
+      setTimeout(() => {
+        Notifications.info('📝 Se restauró tu progreso anterior del itinerario', 5000);
+      }, 500);
+
+      return true;
+    } catch (error) {
+      console.warn('Failed to restore wizard progress:', error);
+      return false;
+    }
+  },
+
+  clearWizardProgress() {
+    localStorage.removeItem(this.AUTOSAVE_KEY);
+    console.log('🗑️ Wizard auto-save cleared');
+  },
+
+  setupAutoSave() {
+    // Auto-save cuando cambian los campos principales
+    const fieldsToWatch = [
+      'itineraryName',
+      'itineraryStartDate',
+      'itineraryEndDate'
+    ];
+
+    fieldsToWatch.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.addEventListener('change', () => this.saveWizardProgress());
+        field.addEventListener('blur', () => this.saveWizardProgress());
+      }
+    });
+
+    // Auto-save cuando seleccionan categorías o templates
+    document.querySelectorAll('input[name="categories"]').forEach(checkbox => {
+      checkbox.addEventListener('change', () => this.saveWizardProgress());
+    });
+
+    document.querySelectorAll('input[name="template"]').forEach(radio => {
+      radio.addEventListener('change', () => this.saveWizardProgress());
+    });
+
+    console.log('✅ Auto-save listeners configured');
+  },
+
   closeCreateItineraryWizard() {
     const modal = document.getElementById('createItineraryWizard');
     if (modal) {
@@ -1877,12 +2103,12 @@ export const ItineraryBuilder = {
   async createItinerary(data) {
     if (!auth.currentUser) {
       Notifications.warning('Debes iniciar sesión para crear un itinerario');
-      return;
+      return false;
     }
 
     if (!window.TripsManager || !window.TripsManager.currentTrip) {
       Notifications.warning('Primero debes crear o seleccionar un viaje');
-      return;
+      return false;
     }
 
     try {
@@ -2002,6 +2228,7 @@ export const ItineraryBuilder = {
       }
 
       console.log('✅ Itinerario creado:', tripId, `con ${activities.length} actividades`);
+      return true; // Éxito
     } catch (error) {
       console.error('❌ Error creando itinerario:', error);
 
@@ -2028,6 +2255,8 @@ export const ItineraryBuilder = {
         message: error.message,
         stack: error.stack?.split('\n').slice(0, 3)
       });
+
+      return false; // Fallo
     }
   },
 
