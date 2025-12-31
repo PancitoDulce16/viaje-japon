@@ -973,12 +973,26 @@ export const ItineraryBuilder = {
 
   // 🔥 NEW: Populate quick city selector with available cities
   populateQuickCitySelector() {
+    // Mapeo de cityId a nombre completo
+    const cityNames = {
+      'tokyo': 'Tokyo',
+      'kyoto': 'Kyoto',
+      'osaka': 'Osaka',
+      'nara': 'Nara',
+      'hakone': 'Hakone',
+      'hiroshima': 'Hiroshima',
+      'nikko': 'Nikko',
+      'takayama': 'Takayama',
+      'kanazawa': 'Kanazawa',
+      'fukuoka': 'Fukuoka'
+    };
+
     // Populate date picker city select
     const datePickerSelect = document.getElementById('datePickerCitySelect');
     if (datePickerSelect) {
       const cityOptions = Object.keys(ACTIVITIES_DATABASE).map(cityId => {
-        const cityData = ACTIVITIES_DATABASE[cityId];
-        return `<option value="${cityId}">${cityData.city}</option>`;
+        const cityName = cityNames[cityId] || cityId.charAt(0).toUpperCase() + cityId.slice(1);
+        return `<option value="${cityId}">${cityName}</option>`;
       }).join('');
 
       datePickerSelect.innerHTML = '<option value="">Seleccionar ciudad...</option>' + cityOptions;
