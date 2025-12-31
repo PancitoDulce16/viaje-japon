@@ -501,7 +501,21 @@ export const HiddenGemsMap = {
     const difficulty = document.getElementById('gemDifficulty')?.value;
     const tipsRaw = document.getElementById('gemTips')?.value;
 
-    if (!name || !description) {
+    // Validar con InputValidator
+    if (window.InputValidator) {
+      const nameValidation = window.InputValidator.validate(name, { required: true, minLength: 3 });
+      const descValidation = window.InputValidator.validate(description, { required: true, minLength: 10 });
+
+      if (!nameValidation.isValid) {
+        window.Notifications?.show('❌ El nombre debe tener al menos 3 caracteres', 'error');
+        return;
+      }
+
+      if (!descValidation.isValid) {
+        window.Notifications?.show('❌ La descripción debe tener al menos 10 caracteres', 'error');
+        return;
+      }
+    } else if (!name || !description) {
       window.Notifications?.show('❌ Completa los campos obligatorios', 'error');
       return;
     }
@@ -529,7 +543,12 @@ export const HiddenGemsMap = {
     this.userGems.push(newGem);
 
     window.Notifications?.show('✨ Hidden Gem publicado!', 'success');
-    document.getElementById('addGemForm')?.remove();
+
+    if (window.ModalManager) {
+      window.ModalManager.closeModal('addGemForm');
+    } else {
+      document.getElementById('addGemForm')?.remove();
+    }
 
     // Rerender
     this.filterBy('all');
@@ -539,7 +558,12 @@ export const HiddenGemsMap = {
    * Cierra el modal
    */
   close() {
-    document.getElementById('hiddenGemsModal')?.remove();
+    // Usar ModalManager si está disponible
+    if (window.ModalManager) {
+      window.ModalManager.closeModal('hiddenGemsModal');
+    } else {
+      document.getElementById('hiddenGemsModal')?.remove();
+    }
   }
 };
 

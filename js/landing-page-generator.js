@@ -746,7 +746,12 @@ class LandingPageGenerator {
    * Cierra el generador
    */
   close() {
-    document.getElementById('landingPageModal')?.remove();
+    // Usar ModalManager si está disponible
+    if (window.ModalManager) {
+      window.ModalManager.closeModal('landingPageModal');
+    } else {
+      document.getElementById('landingPageModal')?.remove();
+    }
   }
 }
 

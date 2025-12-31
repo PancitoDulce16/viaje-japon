@@ -958,13 +958,41 @@ class ChallengeSystem {
   submitVideo(event, challengeId) {
     event.preventDefault();
 
+    // Validar formulario con InputValidator
+    if (window.InputValidator) {
+      const validation = window.InputValidator.validateForm(event.target);
+      if (!validation.isValid) {
+        window.Notifications?.show('❌ Por favor completa todos los campos', 'error');
+        return;
+      }
+    }
+
+    // Mostrar loading
+    if (window.LoadingManager) {
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      window.LoadingManager.showButtonLoading(submitBtn, { text: 'Subiendo...' });
+    }
+
     // TODO: Implementar upload a Firebase Storage + crear documento en Firestore
 
-    alert('🎉 Video subido exitosamente!\n\n¡Buena suerte en el challenge!');
-    document.getElementById('uploadVideoModal')?.remove();
+    setTimeout(() => {
+      // Ocultar loading
+      if (window.LoadingManager) {
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        window.LoadingManager.hideButtonLoading(submitBtn);
+      }
 
-    // Refresh tab
-    this.showTab('myvideos');
+      window.Notifications?.show('🎉 Video subido exitosamente!', 'success');
+
+      if (window.ModalManager) {
+        window.ModalManager.closeModal('uploadVideoModal');
+      } else {
+        document.getElementById('uploadVideoModal')?.remove();
+      }
+
+      // Refresh tab
+      this.showTab('myvideos');
+    }, 1500);
   }
 
   /**
@@ -1024,9 +1052,17 @@ class ChallengeSystem {
    * Cierra el sistema
    */
   close() {
-    document.getElementById('challengeSystemModal')?.remove();
-    document.getElementById('challengeDetailModal')?.remove();
-    document.getElementById('uploadVideoModal')?.remove();
+    // Usar ModalManager si está disponible
+    if (window.ModalManager) {
+      window.ModalManager.closeModal('challengeSystemModal');
+      window.ModalManager.closeModal('challengeDetailModal');
+      window.ModalManager.closeModal('uploadVideoModal');
+    } else {
+      // Fallback a método tradicional
+      document.getElementById('challengeSystemModal')?.remove();
+      document.getElementById('challengeDetailModal')?.remove();
+      document.getElementById('uploadVideoModal')?.remove();
+    }
   }
 }
 

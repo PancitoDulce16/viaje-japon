@@ -405,9 +405,17 @@ export const LocationGame = {
    * Cierra el juego
    */
   close() {
-    document.getElementById('locationGameModal')?.remove();
-    document.getElementById('gameRoundModal')?.remove();
-    document.getElementById('resultModal')?.remove();
+    // Usar ModalManager si está disponible
+    if (window.ModalManager) {
+      window.ModalManager.closeModal('locationGameModal');
+      window.ModalManager.closeModal('gameRoundModal');
+      window.ModalManager.closeModal('resultModal');
+    } else {
+      // Fallback a método tradicional
+      document.getElementById('locationGameModal')?.remove();
+      document.getElementById('gameRoundModal')?.remove();
+      document.getElementById('resultModal')?.remove();
+    }
   }
 };
 

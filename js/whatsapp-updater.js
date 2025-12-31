@@ -781,7 +781,12 @@ class WhatsAppUpdater {
    * Cierra el updater
    */
   close() {
-    document.getElementById('whatsappUpdaterModal')?.remove();
+    // Usar ModalManager si está disponible
+    if (window.ModalManager) {
+      window.ModalManager.closeModal('whatsappUpdaterModal');
+    } else {
+      document.getElementById('whatsappUpdaterModal')?.remove();
+    }
   }
 }
 

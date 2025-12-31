@@ -752,7 +752,12 @@ class VideoMontageCreator {
    * Cierra el creator
    */
   close() {
-    document.getElementById('videoMontageModal')?.remove();
+    // Usar ModalManager si está disponible
+    if (window.ModalManager) {
+      window.ModalManager.closeModal('videoMontageModal');
+    } else {
+      document.getElementById('videoMontageModal')?.remove();
+    }
   }
 }
 

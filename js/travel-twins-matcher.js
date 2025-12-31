@@ -437,14 +437,26 @@ export const TravelTwinsMatcher = {
   confirmSendMessage(userId) {
     const text = document.getElementById('messageText')?.value;
 
-    if (!text?.trim()) {
+    // Validar con InputValidator
+    if (window.InputValidator) {
+      const validation = window.InputValidator.validate(text, { required: true, minLength: 10 });
+      if (!validation.isValid) {
+        window.Notifications?.show('❌ Escribe un mensaje de al menos 10 caracteres', 'error');
+        return;
+      }
+    } else if (!text?.trim()) {
       window.Notifications?.show('❌ Escribe un mensaje', 'error');
       return;
     }
 
     // TODO: Guardar mensaje en Firestore
     window.Notifications?.show('✅ Mensaje enviado!', 'success');
-    document.getElementById('chatModal')?.remove();
+
+    if (window.ModalManager) {
+      window.ModalManager.closeModal('chatModal');
+    } else {
+      document.getElementById('chatModal')?.remove();
+    }
   },
 
   /**
@@ -463,7 +475,12 @@ export const TravelTwinsMatcher = {
    * Cierra el modal
    */
   close() {
-    document.getElementById('travelTwinsModal')?.remove();
+    // Usar ModalManager si está disponible
+    if (window.ModalManager) {
+      window.ModalManager.closeModal('travelTwinsModal');
+    } else {
+      document.getElementById('travelTwinsModal')?.remove();
+    }
   }
 };
 
