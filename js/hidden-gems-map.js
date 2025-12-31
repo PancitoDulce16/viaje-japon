@@ -150,10 +150,12 @@ export const HiddenGemsMap = {
    */
   showMap() {
     const modalHTML = `
-      <div id="hiddenGemsModal" class="fixed inset-0 z-50 bg-gray-100 dark:bg-gray-900 flex flex-col">
+      <div id="hiddenGemsModal" class="fixed inset-0 z-50 bg-gradient-to-br from-gray-100 to-purple-50 dark:from-gray-900 dark:to-purple-900/20 flex flex-col animate-fadeInUp">
 
         <!-- Header -->
-        <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 text-white shadow-lg">
+        <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 gradient-animated p-6 text-white shadow-lg relative overflow-hidden glow-purple">
+          <div class="shimmer absolute inset-0"></div>
+          <div class="relative z-10">
           <div class="max-w-7xl mx-auto">
             <div class="flex items-center justify-between mb-4">
               <div>

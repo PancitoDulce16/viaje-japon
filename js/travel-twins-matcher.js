@@ -257,11 +257,13 @@ export const TravelTwinsMatcher = {
     const topMatches = this.matches.slice(0, 10);
 
     const modalHTML = `
-      <div id="travelTwinsModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div id="travelTwinsModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-strong flex items-center justify-center p-4 animate-fadeInUp">
+        <div class="glass-card rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col glow-purple hover-lift">
 
           <!-- Header -->
-          <div class="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 p-6 text-white">
+          <div class="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 gradient-animated p-6 text-white relative overflow-hidden">
+            <div class="shimmer absolute inset-0"></div>
+            <div class="relative z-10">
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-3xl font-bold mb-2">👥 Tu Travel Twin</h2>

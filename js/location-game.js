@@ -28,30 +28,33 @@ export const LocationGame = {
    */
   showMainMenu() {
     const modalHTML = `
-      <div id="locationGameModal" class="fixed inset-0 z-50 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 flex items-center justify-center p-4">
+      <div id="locationGameModal" class="fixed inset-0 z-50 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 gradient-animated flex items-center justify-center p-4 animate-fadeInUp">
 
-        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
+        <div class="glass-card rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden glow-purple hover-lift">
 
           <!-- Header -->
-          <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-8 text-white text-center">
-            <div class="text-7xl mb-4 animate-bounce">📍</div>
-            <h1 class="text-4xl font-bold mb-2">Spot the Location!</h1>
-            <p class="text-xl opacity-90">¿Puedes adivinar dónde fue tomada la foto?</p>
+          <div class="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 gradient-animated p-8 text-white text-center relative overflow-hidden">
+            <div class="shimmer absolute inset-0"></div>
+            <div class="relative z-10">
+              <div class="text-7xl mb-4 float sparkle">📍</div>
+              <h1 class="text-4xl font-bold mb-2 gradient-text-animated">Spot the Location!</h1>
+              <p class="text-xl opacity-90">¿Puedes adivinar dónde fue tomada la foto?</p>
+            </div>
           </div>
 
           <!-- Stats -->
-          <div class="p-6 bg-gray-50 dark:bg-gray-900 grid grid-cols-3 gap-4 text-center border-b border-gray-200 dark:border-gray-700">
-            <div>
-              <div class="text-3xl font-bold text-purple-600 dark:text-purple-400">${this.userScore}</div>
-              <div class="text-xs text-gray-600 dark:text-gray-400">Tu Puntaje</div>
+          <div class="p-6 bg-gradient-to-r from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-pink-900/20 grid grid-cols-3 gap-4 text-center border-b border-gray-200 dark:border-gray-700">
+            <div class="hover-lift animate-fadeInUp-delay-1">
+              <div class="stat-number text-4xl mb-1 pulse-glow">${this.userScore}</div>
+              <div class="text-xs text-gray-600 dark:text-gray-400 font-semibold">Tu Puntaje</div>
             </div>
-            <div>
-              <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">${this.totalRounds}</div>
-              <div class="text-xs text-gray-600 dark:text-gray-400">Rondas Jugadas</div>
+            <div class="hover-lift animate-fadeInUp-delay-2">
+              <div class="stat-number text-4xl mb-1">${this.totalRounds}</div>
+              <div class="text-xs text-gray-600 dark:text-gray-400 font-semibold">Rondas Jugadas</div>
             </div>
-            <div>
-              <div class="text-3xl font-bold text-pink-600 dark:text-pink-400">#15</div>
-              <div class="text-xs text-gray-600 dark:text-gray-400">Ranking Global</div>
+            <div class="hover-lift animate-fadeInUp-delay-3">
+              <div class="text-4xl font-bold mb-1 bg-gradient-to-r from-pink-600 to-orange-600 bg-clip-text text-transparent">#15</div>
+              <div class="text-xs text-gray-600 dark:text-gray-400 font-semibold">Ranking Global</div>
             </div>
           </div>
 
@@ -63,17 +66,17 @@ export const LocationGame = {
 
             ${Object.entries(this.DIFFICULTY_LEVELS).map(([key, level]) => `
               <button onclick="window.LocationGame.startGame('${key}')"
-                      class="group w-full p-6 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-500 transition bg-gradient-to-r from-white to-gray-50 dark:from-gray-700 dark:to-gray-800 hover:shadow-lg">
-                <div class="flex items-center justify-between">
+                      class="group w-full p-6 rounded-xl border-2 border-transparent glass-card hover-lift btn-aesthetic hover-glow transition relative overflow-hidden">
+                <div class="flex items-center justify-between relative z-10">
                   <div class="text-left">
-                    <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition">
+                    <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-1 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-600 group-hover:to-pink-600 transition">
                       ${level.name}
                     </h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">
-                      ${level.points} puntos • ${level.time}s por ronda
+                    <p class="text-sm text-gray-600 dark:text-gray-400 font-semibold">
+                      ⭐ ${level.points} puntos • ⏱️ ${level.time}s por ronda
                     </p>
                   </div>
-                  <div class="text-4xl group-hover:scale-110 transition">
+                  <div class="text-5xl animate-wave">
                     ${key === 'easy' ? '😊' : key === 'medium' ? '🤔' : '😰'}
                   </div>
                 </div>
@@ -180,9 +183,9 @@ export const LocationGame = {
     const points = this.DIFFICULTY_LEVELS[difficulty].points;
 
     const modalHTML = `
-      <div id="gameRoundModal" class="fixed inset-0 z-[60] bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center p-4">
+      <div id="gameRoundModal" class="fixed inset-0 z-[60] bg-gradient-to-br from-blue-600 to-purple-600 gradient-animated flex items-center justify-center p-4 animate-fadeInUp">
 
-        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden">
+        <div class="glass-card rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden glow-blue hover-lift">
 
           <!-- Timer Bar -->
           <div class="h-3 bg-gray-200 dark:bg-gray-700 overflow-hidden">
@@ -302,16 +305,16 @@ export const LocationGame = {
     const correctAnswer = this.currentRound.round.correct;
 
     const modalHTML = `
-      <div id="resultModal" class="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-md p-8 text-center">
+      <div id="resultModal" class="fixed inset-0 z-[70] bg-black/80 backdrop-blur-strong flex items-center justify-center p-4 animate-fadeInUp">
+        <div class="glass-card rounded-3xl shadow-2xl w-full max-w-md p-8 text-center ${isCorrect ? 'glow-green' : 'glow-pink'} hover-lift">
 
           <!-- Result Icon -->
-          <div class="text-8xl mb-4 animate-bounce">
+          <div class="text-9xl mb-4 animate-bounce sparkle">
             ${isCorrect ? '🎉' : '😢'}
           </div>
 
           <!-- Message -->
-          <h2 class="text-3xl font-bold mb-2 ${isCorrect ? 'text-green-600' : 'text-red-600'}">
+          <h2 class="text-4xl font-bold mb-2 gradient-text-animated">
             ${isCorrect ? '¡Correcto!' : '¡Incorrecto!'}
           </h2>
 

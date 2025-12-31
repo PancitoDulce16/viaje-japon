@@ -263,14 +263,16 @@ class WhatsAppUpdater {
   open() {
     const modal = document.createElement('div');
     modal.id = 'whatsappUpdaterModal';
-    modal.className = 'fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 backdrop-blur-strong flex items-center justify-center z-50 p-4 animate-fadeInUp';
 
     const daysRemaining = Math.ceil((new Date(this.currentTrip.endDate) - new Date()) / (1000 * 60 * 60 * 24));
 
     modal.innerHTML = `
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="glass-card rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col glow-green hover-lift">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white p-6">
+        <div class="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 gradient-animated text-white p-6 relative overflow-hidden">
+          <div class="shimmer absolute inset-0"></div>
+          <div class="relative z-10">
           <div class="flex items-center justify-between">
             <div>
               <h2 class="text-3xl font-bold mb-2">📱 WhatsApp Trip Updater</h2>
