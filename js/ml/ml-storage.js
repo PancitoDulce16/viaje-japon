@@ -341,6 +341,22 @@ class MLStorage {
   }
 
   /**
+   * 📖 GET ALL MODELS
+   */
+  async getModels() {
+    if (!this.db) await this.initDB();
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction([this.stores.models], 'readonly');
+      const store = transaction.objectStore(this.stores.models);
+      const request = store.getAll();
+
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  /**
    * 💾 SAVE PREDICTION
    */
   async savePrediction(predictionData) {
