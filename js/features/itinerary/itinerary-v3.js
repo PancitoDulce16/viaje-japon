@@ -35,6 +35,7 @@ let unsubscribe = null;
 let currentItinerary = null;
 let sortableInstance = null; // 🔥 Para drag & drop
 let isListenerAttached = false;
+let checklistSaveQueue = Promise.resolve(); // Serializa los writes del checklist para evitar que un write más viejo sobreescriba uno más nuevo si llegan fuera de orden
 let saveDebounceTimer = null;
 
 // ---- Auth & Firestore validation helper ----
@@ -442,47 +443,54 @@ async function toggleActivity(activityId) {
   const previousState = checkedActivities[activityId];
   checkedActivities[activityId] = !previousState;
 
-  try {
-    // If not authenticated, save locally only
-    if (!db || !auth || !auth.currentUser) {
-      localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));
-      render();
-      return;
-    }
-
-    const tripId = getCurrentTripId();
-    if (!tripId) {
-      alert('⚠️ Debes seleccionar un viaje primero');
-      checkedActivities[activityId] = previousState; // Revert
-      render();
-      return;
-    }
-
-    // Save to Firestore
-    const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
-    await updateDoc(itineraryRef, {
-      'checklist.checked': checkedActivities,
-      lastUpdated: new Date().toISOString(),
-      updatedBy: auth.currentUser.email
-    });
-
-    console.log('✅ Activity synced by:', auth.currentUser.email);
-  } catch (error) {
-    console.error('❌ Error saving activity:', error);
-
-    // Specific error handling
-    if (error.code === 'permission-denied') {
-      alert('⚠️ No tienes permiso para modificar este checklist');
-    } else if (error.code === 'unavailable') {
-      alert('⚠️ No se pudo conectar. Verifica tu conexión a internet.');
-    } else {
-      alert('⚠️ Error al sincronizar. Intenta de nuevo.');
-    }
-
-    // Revert the change
-    checkedActivities[activityId] = previousState;
+  // If not authenticated, save locally only
+  if (!db || !auth || !auth.currentUser) {
+    localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));
     render();
+    return;
   }
+
+  const tripId = getCurrentTripId();
+  if (!tripId) {
+    alert('⚠️ Debes seleccionar un viaje primero');
+    checkedActivities[activityId] = previousState; // Revert
+    render();
+    return;
+  }
+
+  // Encolar el write para que, si hay clicks rápidos, los writes a Firestore
+  // siempre completen en el mismo orden en que se iniciaron - evita que un
+  // write más viejo (con un snapshot desactualizado de checkedActivities)
+  // sobreescriba el resultado de un click más reciente si la red los entrega
+  // fuera de orden.
+  checklistSaveQueue = checklistSaveQueue.then(async () => {
+    try {
+      const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+      await updateDoc(itineraryRef, {
+        'checklist.checked': checkedActivities,
+        lastUpdated: new Date().toISOString(),
+        updatedBy: auth.currentUser.email
+      });
+
+      console.log('✅ Activity synced by:', auth.currentUser.email);
+    } catch (error) {
+      console.error('❌ Error saving activity:', error);
+
+      // Specific error handling
+      if (error.code === 'permission-denied') {
+        alert('⚠️ No tienes permiso para modificar este checklist');
+      } else if (error.code === 'unavailable') {
+        alert('⚠️ No se pudo conectar. Verifica tu conexión a internet.');
+      } else {
+        alert('⚠️ Error al sincronizar. Intenta de nuevo.');
+      }
+
+      // Revert the change
+      checkedActivities[activityId] = previousState;
+      render();
+    }
+  });
+  await checklistSaveQueue;
 }
 
 // --- Vacíos/No trip ---
