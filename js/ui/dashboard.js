@@ -475,6 +475,16 @@ class DashboardManager {
             window.AnalyticsIntegration.showAnalytics();
         }
 
+        // 💰 Refrescar el resumen de presupuesto con el itinerario actual al entrar al tab.
+        // renderPreparation() también se dispara desde un listener de Firestore sobre la
+        // packing list, independiente de cuándo termina de cargar el itinerario - por eso
+        // el presupuesto puede quedar en ¥0 si esa carga inicial fue antes de que
+        // ItineraryHandler.currentItinerary estuviera listo. Forzar un re-render aquí
+        // asegura que siempre use los datos más recientes disponibles.
+        if (tabName === 'preparation' && window.PreparationHandler) {
+            window.PreparationHandler.renderPreparation();
+        }
+
         // 🔥 NUEVO: Sincronizar el mapa con el itinerario cuando se cambie al tab del mapa
         if (tabName === 'map' && window.MapHandler) {
             console.log('🗺️ Sincronizando mapa con itinerario...');
