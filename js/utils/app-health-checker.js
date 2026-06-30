@@ -59,7 +59,7 @@ class AppHealthChecker {
       'KeyboardShortcuts',
       'PerformanceMonitor',
       'OnboardingTour',
-      'NotificationSystem',
+      'Notifications',
       'AccessibilityManager'
     ];
 
