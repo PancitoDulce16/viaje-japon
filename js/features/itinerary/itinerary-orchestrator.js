@@ -5,7 +5,7 @@ import { eventBus } from '../../core/event-bus.js';
 import { DayBalancer } from './day-balancer-v3.js';
 import { RouteOptimizer } from '../../map/route-optimizer-v2.js';
 import { ActivityDayAssignment } from './activity-day-assignment.js';
-import { MasterItineraryOptimizer } from './master-itinerary-optimizer-v2025.js'; // 🚀 UPDATED to use new file with DEBUG
+import { MasterItineraryOptimizer } from './master-itinerary-optimizer.js';
 import { HotelBaseSystem } from '../../api/hotel-base-system.js';
 
 /**

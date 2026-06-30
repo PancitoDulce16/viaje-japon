@@ -40,7 +40,7 @@ import { ItineraryIntelligence } from '../features/itinerary/itinerary-intellige
 import { ItineraryIntelligenceTier2 } from '../features/itinerary/itinerary-intelligence-tier2.js'; // 🤖 TIER 2 - Automatización avanzada
 import { SmartItineraryGenerator } from '../features/itinerary/smart-itinerary-generator.js'; // 🧠 Generador inteligente de itinerarios
 import { SmartGeneratorWizard } from '../features/itinerary/smart-generator-wizard.js'; // 🎯 Wizard de generación
-import { MasterItineraryOptimizer } from '../features/itinerary/master-itinerary-optimizer-v2025.js'; // 🚀 NEW FILE - Cache bypass via filename change
+import { MasterItineraryOptimizer } from '../features/itinerary/master-itinerary-optimizer.js';
 import { eventBus } from '../core/event-bus.js'; // 📡 Sistema de eventos global
 import { ItineraryOrchestrator } from '../features/itinerary/itinerary-orchestrator.js'; // 🧠 Orquestador automático
 import '../features/itinerary/orchestrator-integration.js'; // 🔗 Integración automática del orquestador

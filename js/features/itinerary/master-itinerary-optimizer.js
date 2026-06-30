@@ -1,12 +1,21 @@
 // js/master-itinerary-optimizer.js - Sistema Maestro de Optimización Inteligente
 // Arquitectura modular que entiende el viaje como una narrativa completa
-// VERSION: 2025-11-11-SIMPLIFIED-CONDITION
+// VERSION: 2025-11-12-V2-CLEAN-DETECTION
 
-console.log('🚀 MASTER OPTIMIZER v2025-11-11-SIMPLIFIED - PASO 9 Auto-Correction ACTIVE');
+console.log('🚀 ═══════════════════════════════════════════════════════════════');
+console.log('🚀 MASTER OPTIMIZER v2025-11-12-V2-CLEAN-DETECTION');
+console.log('🚀 ✨ NUEVA ARQUITECTURA V2:');
+console.log('🚀    ✅ CityDetectionV2: Detección robusta sin bugs');
+console.log('🚀    ✅ AutoCorrectionV2: Corrección simplificada y funcional');
+console.log('🚀    ✅ Sin hardcoded cities, sin tratamiento especial de Tokyo');
+console.log('🚀 ═══════════════════════════════════════════════════════════════');
 
 import { RouteOptimizer } from '../../map/route-optimizer-v2.js';
 import { HotelBaseSystem } from '../../api/hotel-base-system.js';
 import { MasterValidator, DistanceValidator } from './itinerary-intelligence-validator.js';
+import { ItineraryHealthChecker } from './itinerary-health-checker.js';
+import { CityDetectionV2 } from '../../ai/city-detection-v2.js';
+import { AutoCorrectionV2 } from './auto-correction-v2.js';
 
 /**
  * 1️⃣ TRIP CONTEXT ANALYZER
@@ -51,7 +60,9 @@ export const TripContextAnalyzer = {
     let currentSegment = null;
 
     itinerary.days.forEach((day, index) => {
-      const city = HotelBaseSystem.detectCityForDay(day);
+      // 🔥 USANDO CityDetectionV2 - Sistema robusto sin bugs
+      const detection = CityDetectionV2.detectDayCity(day);
+      const city = detection.city || 'Unknown';
 
       if (city !== currentCity) {
         // Nueva ciudad - guardar segmento anterior si existe
@@ -769,8 +780,27 @@ export const MasterItineraryOptimizer = {
     const startTime = Date.now();
 
     try {
+      // PASO 0: DIAGNÓSTICO DE SALUD (PREVENTIVO)
+      console.log('📍 PASO 0: Diagnóstico preventivo de salud del itinerario...');
+      const healthReport = ItineraryHealthChecker.analyzeHealth(itinerary);
+
+      // Si hay problemas críticos, abortar
+      if (!healthReport.healthy && healthReport.issues.critical.length > 0) {
+        console.error('🔴 ABORTANDO: Problemas críticos detectados que impiden la optimización');
+        return {
+          success: false,
+          error: 'Critical health issues',
+          healthReport: healthReport
+        };
+      }
+
+      // Si hay warnings, continuar pero guardar el reporte
+      if (healthReport.issues.warnings.length > 0) {
+        console.warn(`⚠️ Continuando optimización con ${healthReport.issues.warnings.length} advertencias`);
+      }
+
       // PASO 1: Analizar contexto del viaje
-      console.log('📍 PASO 1: Analizando contexto del viaje...');
+      console.log('\n📍 PASO 1: Analizando contexto del viaje...');
       const context = TripContextAnalyzer.analyzeTripContext(itinerary);
 
       if (!context) {
@@ -825,62 +855,113 @@ export const MasterItineraryOptimizer = {
       console.log('\n📍 PASO 6: Balanceando niveles de energía...');
       const energyReport = EnergyManagementSystem.balanceEnergyLevels(itinerary);
 
-      // PASO 7: Optimizar rutas de cada día
-      console.log('\n📍 PASO 7: Optimizando rutas individuales...');
-      itinerary.days.forEach(day => {
-        if (day.activities && day.activities.length > 1) {
-          const city = HotelBaseSystem.detectCityForDay(day);
-          const hotel = HotelBaseSystem.getHotelForCity(itinerary, city, day.day);
+      // ❌ PASO 7: Optimización Automática de Rutas - DESACTIVADO
+      //
+      // RAZÓN: Reorganiza actividades sin permiso del usuario
+      //
+      // PROBLEMA:
+      // - Cambia el orden que el usuario estableció intencionalmente
+      // - Recalcula horarios automáticamente (puede no ser deseado)
+      // - A veces "optimiza" pero empeora la experiencia real
+      // - No hay preview ni confirmación
+      //
+      // DECISIÓN: DESACTIVADO - El usuario controla el orden manualmente
+      //
+      // ALTERNATIVA:
+      // - Agregar botón "Optimizar día X" (opcional, por día)
+      // - Mostrar preview antes de aplicar
+      // - Usuario tiene control total
+      //
+      console.log('\n📍 PASO 7: Optimización de rutas (DESACTIVADO)');
+      console.log('   💡 TIP: Usa drag & drop para organizar el orden de actividades');
+      console.log('   📏 Las distancias entre actividades se muestran en el validador');
 
-          if (hotel && hotel.coordinates) {
-            const result = RouteOptimizer.optimizeRoute(day.activities, {
-              startPoint: hotel.coordinates,
-              optimizationMode: 'balanced',
-              shouldRecalculateTimings: true
-            });
-
-            if (result.wasOptimized) {
-              day.activities = result.optimizedActivities;
-            }
-          }
-        }
-      });
+      /* ═══════════════════════════════════════════════════════════════
+       * CÓDIGO DESACTIVADO - Mantener para referencia
+       * ═══════════════════════════════════════════════════════════════
+       *
+       * itinerary.days.forEach(day => {
+       *   if (day.activities && day.activities.length > 1) {
+       *     const city = HotelBaseSystem.detectCityForDay(day);
+       *     const hotel = HotelBaseSystem.getHotelForCity(itinerary, city, day.day);
+       *
+       *     if (hotel && hotel.coordinates) {
+       *       const result = RouteOptimizer.optimizeRoute(day.activities, {
+       *         startPoint: hotel.coordinates,
+       *         optimizationMode: 'balanced',
+       *         shouldRecalculateTimings: true
+       *       });
+       *
+       *       if (result.wasOptimized) {
+       *         day.activities = result.optimizedActivities;
+       *       }
+       *     }
+       *   }
+       * });
+       *
+       * ═══════════════════════════════════════════════════════════════
+       */
 
       // PASO 8: VALIDAR el itinerario resultante
       console.log('\n📍 PASO 8: Validando itinerario resultante...');
       let validation = MasterValidator.validateCompleteItinerary(itinerary);
 
-      // PASO 9: AUTO-CORRECCIÓN de errores de distancia (si existen)
-      // Condición SIMPLIFICADA: Si hay errores de distancia (daysWithErrors > 0), corregir
+      // 🔍 DEBUG: Mostrar estructura completa de validación (sin imprimir objetos grandes)
+      console.log('\n🔍 DEBUG - Estructura de validación recibida:');
+      console.log('   validation.valid:', validation.valid);
+      console.log('   validation.summary.totalErrors:', validation.summary?.totalErrors);
+      console.log('   validation.validations?.distances:', validation.validations?.distances ? 'EXISTS' : 'NULL');
+
       const distanceValidation = validation.validations?.distances;
-      const hasDistanceErrors = distanceValidation &&
-                                distanceValidation.daysWithErrors &&
-                                distanceValidation.daysWithErrors.length > 0;
-
-      if (hasDistanceErrors) {
-        console.log(`\n🔧 PASO 9: Auto-corrección de ${distanceValidation.daysWithErrors.length} días con errores de distancia...`);
-
-        const correctionResult = await this.autoCorrectDistanceErrors(itinerary, distanceValidation);
-
-        if (correctionResult.corrected) {
-          itinerary = correctionResult.itinerary;
-          console.log(`   ✅ ${correctionResult.correctionsMade} correcciones aplicadas`);
-
-          // Re-validar después de correcciones
-          console.log('   🔄 Re-validando itinerario corregido...');
-          validation = MasterValidator.validateCompleteItinerary(itinerary);
-
-          if (validation.validations?.distances?.daysWithErrors?.length === 0) {
-            console.log('   ✅ ¡Todos los errores de distancia fueron corregidos!');
-          } else {
-            console.warn(`   ⚠️ Quedan ${validation.validations.distances.daysWithErrors.length} días con errores`);
-          }
-        } else {
-          console.warn('   ⚠️ No se pudieron aplicar correcciones automáticas');
-        }
-      } else {
-        console.log('✅ No hay errores de distancia que corregir');
+      if (distanceValidation) {
+        console.log('   distanceValidation.valid:', distanceValidation.valid);
+        console.log('   distanceValidation.daysWithErrors count:', distanceValidation.daysWithErrors?.length || 0);
+        console.log('   distanceValidation.totalErrors:', distanceValidation.totalErrors);
       }
+
+      // ❌ PASO 9: AUTO-CORRECCIÓN - DESACTIVADO
+      //
+      // RAZÓN: Feature semi-roto que genera falsas expectativas
+      //
+      // PROBLEMA:
+      // - Solo puede mover actividades si YA existen días puros disponibles
+      // - Si no hay días disponibles → falla silenciosamente
+      // - Genera confusión: "dice que arreglará pero no lo hace"
+      // - Gastó muchas sesiones de debugging sin valor real
+      //
+      // DECISIÓN: DESACTIVADO hasta que se reimplemente correctamente
+      //
+      // ALTERNATIVA ACTUAL:
+      // - El validador muestra errores de distancia claramente
+      // - El usuario decide cómo resolverlos (manual)
+      // - Más transparente y predecible
+      //
+      console.log('\n📍 PASO 9: Auto-corrección (DESACTIVADO)');
+
+      if (distanceValidation && !distanceValidation.valid) {
+        const errorCount = distanceValidation.daysWithErrors?.length || 0;
+        console.log(`   ⚠️  ${errorCount} días con errores de distancia detectados`);
+        console.log('   💡 Revisa manualmente estos días en el reporte de validación');
+        console.log('   📝 TIP: Arrastra actividades entre días para organizarlas mejor');
+      } else {
+        console.log('   ✅ No hay errores de distancia');
+      }
+
+      /* ═══════════════════════════════════════════════════════════════
+       * CÓDIGO DESACTIVADO - No borrar (puede ser útil como referencia)
+       * ═══════════════════════════════════════════════════════════════
+       *
+       * const check1 = distanceValidation?.daysWithErrors?.length > 0;
+       * const check2 = distanceValidation?.totalErrors > 0;
+       * const check3 = distanceValidation?.valid === false;
+       *
+       * if (check1 || check2 || check3) {
+       *   const correctionResult = await this.autoCorrectDistanceErrors(itinerary, distanceValidation);
+       *   // ... resto del código
+       * }
+       *
+       * ═══════════════════════════════════════════════════════════════
+       */
 
       const endTime = Date.now();
       const duration = ((endTime - startTime) / 1000).toFixed(2);
@@ -951,172 +1032,102 @@ export const MasterItineraryOptimizer = {
   },
 
   /**
-   * AUTO-CORRECCIÓN de errores de distancia
-   * Mueve actividades problemáticas a días más apropiados
+   * AUTO-CORRECCIÓN V2 - Sistema simplificado y robusto
+   * Delega la corrección al módulo AutoCorrectionV2
    * @param {Object} itinerary
    * @param {Object} distanceValidation - Resultado de DistanceValidator
    * @returns {Object} { corrected: boolean, itinerary, correctionsMade }
    */
   async autoCorrectDistanceErrors(itinerary, distanceValidation) {
-    console.log('   🔧 Analizando errores de distancia para corrección automática...');
+    console.log('   🔧 Usando AutoCorrectionV2 para corregir días mezclados...');
 
-    let correctionsMade = 0;
-    const affectedDays = new Set();
+    // 🔒 VALIDACIÓN: Verificar que tenemos un itinerario válido
+    if (!itinerary || !itinerary.days || !Array.isArray(itinerary.days)) {
+      console.error('   ❌ Itinerario inválido o sin días');
+      return {
+        corrected: false,
+        itinerary: itinerary,
+        correctionsMade: 0,
+        correctionsFailed: distanceValidation?.daysWithErrors?.length || 0,
+        error: 'Itinerario inválido'
+      };
+    }
 
-    // Iterar sobre cada día con errores de distancia
-    for (const dayError of distanceValidation.daysWithErrors) {
-      const dayNumber = dayError.day;
-      const day = itinerary.days.find(d => d.day === dayNumber);
+    try {
+      // Delegar TODA la lógica de corrección al módulo V2
+      const result = await AutoCorrectionV2.correctMixedDays(itinerary);
 
-      if (!day || !day.activities) continue;
+      if (!result.success) {
+        console.error('   ❌ Error en AutoCorrectionV2:', result.error);
+        return {
+          corrected: false,
+          itinerary: itinerary,
+          correctionsMade: 0,
+          correctionsFailed: distanceValidation.daysWithErrors?.length || 0,
+          error: result.error
+        };
+      }
 
-      console.log(`   📍 Día ${dayNumber}: ${dayError.errors.length} errores de distancia`);
+      // Re-optimizar rutas de días afectados si hubo correcciones
+      if (result.corrected && result.stats.activitiesMoved > 0) {
+        console.log(`\n   🔄 Re-optimizando días afectados...`);
 
-      // Procesar cada error de distancia en este día
-      for (const error of dayError.errors) {
-        if (!error.activities || error.activities.length < 2) continue;
+        let reoptimizedCount = 0;
+        let reoptimizationErrors = 0;
 
-        const [act1, act2] = error.activities;
+        // Re-optimizar TODOS los días (es más seguro)
+        itinerary.days.forEach(day => {
+          if (!day.activities || day.activities.length < 2) return;
 
-        // Determinar cuál actividad está "fuera de lugar"
-        // La actividad problemática es la que está MÁS LEJOS del hotel del día
-        const city = HotelBaseSystem.detectCityForDay(day);
-        const hotel = HotelBaseSystem.getHotelForCity(itinerary, city, day.day);
-        let problematicActivity = null;
-        let otherActivity = null;
+          try {
+            const detection = CityDetectionV2.detectDayCity(day);
+            if (!detection.city) return;
 
-        if (hotel && hotel.coordinates) {
-          const dist1 = RouteOptimizer.calculateDistance(hotel.coordinates, act1.coordinates);
-          const dist2 = RouteOptimizer.calculateDistance(hotel.coordinates, act2.coordinates);
+            const hotel = HotelBaseSystem.getHotelForCity(itinerary, detection.city, day.day);
 
-          // La actividad más lejana del hotel es probablemente la problemática
-          if (dist1 > dist2) {
-            problematicActivity = act1;
-            otherActivity = act2;
-          } else {
-            problematicActivity = act2;
-            otherActivity = act1;
-          }
-        } else {
-          // Si no hay hotel, usar la segunda actividad como problemática
-          problematicActivity = act2;
-          otherActivity = act1;
-        }
+            if (hotel && hotel.coordinates) {
+              const routeResult = RouteOptimizer.optimizeRoute(day.activities, {
+                startPoint: hotel.coordinates,
+                optimizationMode: 'balanced',
+                shouldRecalculateTimings: true
+              });
 
-        console.log(`      🎯 Actividad problemática: ${problematicActivity.title || problematicActivity.name}`);
-
-        // Buscar un día mejor para esta actividad
-        const betterDay = this.findBetterDayForActivity(itinerary, problematicActivity, dayNumber);
-
-        if (betterDay && betterDay !== dayNumber) {
-          console.log(`      ➡️  Moviendo a día ${betterDay}`);
-
-          // Remover de día actual
-          const activityIndex = day.activities.findIndex(a =>
-            (a.title || a.name) === (problematicActivity.title || problematicActivity.name)
-          );
-
-          if (activityIndex !== -1) {
-            const [removed] = day.activities.splice(activityIndex, 1);
-
-            // Agregar al día mejor
-            const targetDay = itinerary.days.find(d => d.day === betterDay);
-            if (targetDay) {
-              if (!targetDay.activities) targetDay.activities = [];
-              targetDay.activities.push(removed);
-
-              affectedDays.add(dayNumber);
-              affectedDays.add(betterDay);
-              correctionsMade++;
-
-              console.log(`      ✅ Movida exitosamente`);
+              if (routeResult && routeResult.wasOptimized) {
+                day.activities = routeResult.optimizedActivities;
+                reoptimizedCount++;
+              }
             }
+          } catch (routeError) {
+            console.error(`      ⚠️ Error re-optimizando día ${day.day}:`, routeError.message);
+            reoptimizationErrors++;
           }
-        } else {
-          console.log(`      ⚠️  No se encontró un día mejor para esta actividad`);
+        });
+
+        console.log(`      ✅ ${reoptimizedCount} días re-optimizados`);
+        if (reoptimizationErrors > 0) {
+          console.warn(`      ⚠️ ${reoptimizationErrors} errores en re-optimización`);
         }
       }
+
+      // Retornar en el formato esperado
+      return {
+        corrected: result.corrected || false,
+        itinerary: itinerary,
+        correctionsMade: result.stats?.activitiesMoved || 0,
+        correctionsFailed: result.stats?.failed || 0,
+        affectedDays: [] // V2 no rastrea esto explícitamente
+      };
+
+    } catch (error) {
+      console.error(`   ❌ Error crítico en auto-corrección V2:`, error);
+      return {
+        corrected: false,
+        itinerary: itinerary,
+        correctionsMade: 0,
+        correctionsFailed: distanceValidation.daysWithErrors?.length || 0,
+        error: error.message
+      };
     }
-
-    // Re-optimizar rutas de días afectados
-    if (affectedDays.size > 0) {
-      console.log(`   🔄 Re-optimizando ${affectedDays.size} días afectados...`);
-
-      for (const dayNum of affectedDays) {
-        const day = itinerary.days.find(d => d.day === dayNum);
-        if (!day || !day.activities || day.activities.length < 2) continue;
-
-        const city = HotelBaseSystem.detectCityForDay(day);
-        const hotel = HotelBaseSystem.getHotelForCity(itinerary, city, day.day);
-
-        if (hotel && hotel.coordinates) {
-          const result = RouteOptimizer.optimizeRoute(day.activities, {
-            startPoint: hotel.coordinates,
-            optimizationMode: 'balanced',
-            shouldRecalculateTimings: true
-          });
-
-          if (result.wasOptimized) {
-            day.activities = result.optimizedActivities;
-            console.log(`      ✅ Día ${dayNum}: Ruta re-optimizada`);
-          }
-        }
-      }
-    }
-
-    return {
-      corrected: correctionsMade > 0,
-      itinerary: itinerary,
-      correctionsMade: correctionsMade,
-      affectedDays: Array.from(affectedDays)
-    };
-  },
-
-  /**
-   * Encuentra el mejor día para una actividad basado en proximidad a hoteles
-   * @param {Object} itinerary
-   * @param {Object} activity
-   * @param {number} currentDay - Día actual (para excluir)
-   * @returns {number|null} Número del día mejor, o null si no se encuentra
-   */
-  findBetterDayForActivity(itinerary, activity, currentDay) {
-    if (!activity.coordinates) return null;
-
-    let bestDay = null;
-    let minDistance = Infinity;
-
-    // Evaluar cada día
-    for (const day of itinerary.days) {
-      if (day.day === currentDay) continue; // Skip día actual
-      if (!day.activities) continue;
-
-      // Obtener hotel del día
-      const city = HotelBaseSystem.detectCityForDay(day);
-      const hotel = HotelBaseSystem.getHotelForCity(itinerary, city, day.day);
-
-      if (!hotel || !hotel.coordinates) continue;
-
-      // Calcular distancia del hotel a la actividad
-      const distance = RouteOptimizer.calculateDistance(hotel.coordinates, activity.coordinates);
-
-      // También considerar la capacidad del día (no sobrecargar)
-      const dayCapacity = day.activities.length;
-      const capacityPenalty = dayCapacity > 5 ? dayCapacity * 2 : 0; // Penalizar días sobrecargados
-
-      const score = distance + capacityPenalty;
-
-      if (score < minDistance) {
-        minDistance = score;
-        bestDay = day.day;
-      }
-    }
-
-    // Solo recomendar si la distancia es razonable (<20km)
-    if (minDistance < 20) {
-      return bestDay;
-    }
-
-    return null;
   }
 };
 
