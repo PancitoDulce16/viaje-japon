@@ -1,8 +1,8 @@
 // js/utils.js - Con APIs reales
 
 export const AppUtils = {
-    EXCHANGE_RATE_API_KEY: 'a9b02159c01b0c7c132f1a65',
-    OPENWEATHER_API_KEY: '8afa1bdee4ba3fb17c86c1edc3345148',
+    EXCHANGE_RATE_API_KEY: import.meta.env.VITE_EXCHANGE_RATE_API_KEY || '',
+    OPENWEATHER_API_KEY: import.meta.env.VITE_OPENWEATHER_API_KEY || '',
     exchangeRate: 143, // Fallback
     clockInterval: null,
     weatherCache: {},
@@ -226,3 +226,7 @@ export const AppUtils = {
         if (jpElem) jpElem.textContent = jpTimeStr;
     }
 };
+
+if (typeof window !== 'undefined') {
+    window.AppUtils = AppUtils;
+}
