@@ -12,6 +12,9 @@
  * - Persistencia en Firebase
  */
 
+import { db } from '../../core/firebase-config.js';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+
 class GamificationSystem {
   constructor() {
     this.userId = null;
@@ -228,21 +231,17 @@ class GamificationSystem {
 
     try {
       // Verificar que Firebase esté disponible
-      if (typeof window.firebase === 'undefined' || !window.firebase.firestore) {
+      if (!db) {
         console.warn('⚠️ Firebase not available, using local stats only');
         this.userStats = this.getDefaultStats();
         return this.userStats;
       }
 
       // Cargar estadísticas del usuario desde Firebase
-      const statsDoc = await window.firebase.firestore()
-        .collection('users')
-        .doc(userId)
-        .collection('gamification')
-        .doc('stats')
-        .get();
+      const statsRef = doc(db, 'users', userId, 'gamification', 'stats');
+      const statsDoc = await getDoc(statsRef);
 
-      if (statsDoc.exists) {
+      if (statsDoc.exists()) {
         this.userStats = statsDoc.data();
       } else {
         // Crear stats iniciales
@@ -428,17 +427,13 @@ class GamificationSystem {
 
     try {
       // Verificar que Firebase esté disponible
-      if (typeof window.firebase === 'undefined' || !window.firebase.firestore) {
+      if (!db) {
         console.warn('⚠️ Firebase not available, using local stats only');
         return;
       }
 
-      await window.firebase.firestore()
-        .collection('users')
-        .doc(this.userId)
-        .collection('gamification')
-        .doc('stats')
-        .set(this.userStats, { merge: true });
+      const statsRef = doc(db, 'users', this.userId, 'gamification', 'stats');
+      await setDoc(statsRef, this.userStats, { merge: true });
 
       console.log('💾 Stats saved');
     } catch (error) {
