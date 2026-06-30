@@ -87,7 +87,7 @@ class AppHealthChecker {
   checkDOMElements() {
     const criticalElements = [
       { selector: '#main-content, main, .dashboard-content', name: 'Main Content Area' },
-      { selector: '#notificationContainer', name: 'Notification Container' },
+      { selector: '#toastContainer', name: 'Notification Container' },
       { selector: '#ariaLive', name: 'ARIA Live Region' }
     ];
 
@@ -140,12 +140,16 @@ class AppHealthChecker {
    * Check Firebase connection
    */
   checkFirebaseConnection() {
-    if (typeof firebase === 'undefined') {
+    // Esta app usa el SDK modular v9 (window.db, window.auth, window.app
+    // expuestos por firebase-config.js), no el SDK v8 con namespace global
+    // 'firebase' - ese global nunca existe aquí, así que no es lo correcto
+    // a chequear.
+    if (typeof window.app === 'undefined' || !window.db || !window.auth) {
       this.warnings.push({
         type: 'WARNING',
         category: 'Firebase',
-        message: 'Firebase SDK not loaded',
-        fix: 'Check Firebase CDN scripts in HTML'
+        message: 'Firebase SDK not initialized (window.app/db/auth missing)',
+        fix: 'Check firebase-config.js loaded correctly'
       });
     } else {
       this.checks.push({
@@ -154,23 +158,12 @@ class AppHealthChecker {
         status: 'OK'
       });
 
-      // Check if initialized
-      try {
-        const app = firebase.app();
-        this.checks.push({
-          category: 'Firebase',
-          name: 'App Initialized',
-          status: 'OK',
-          details: app.name
-        });
-      } catch (e) {
-        this.warnings.push({
-          type: 'WARNING',
-          category: 'Firebase',
-          message: 'Firebase not initialized',
-          fix: 'Firebase may initialize later - this is normal'
-        });
-      }
+      this.checks.push({
+        category: 'Firebase',
+        name: 'App Initialized',
+        status: 'OK',
+        details: window.app.name
+      });
     }
   }
 
