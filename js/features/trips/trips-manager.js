@@ -805,8 +805,107 @@ export const TripsManager = {
 
   // Editar viaje (placeholder)
   editTrip(tripId) {
-    Notifications.info('🚧 Función de edición en desarrollo');
-    // TODO: Implementar modal de edición
+    const trip = this.userTrips.find(t => t.id === tripId);
+    if (!trip) {
+      Notifications.error('No se encontró el viaje a editar.');
+      return;
+    }
+
+    // Cerrar el modal de "Editar Viaje" anterior si quedó abierto
+    document.getElementById('modal-edit-trip')?.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'modal-edit-trip';
+    modal.className = 'fixed inset-0 z-[10000] bg-black/70 backdrop-blur-md flex items-center justify-center p-4';
+    modal.innerHTML = `
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold dark:text-white flex items-center gap-2">✏️ Editar Viaje</h3>
+          <button id="editTripCloseBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl leading-none">&times;</button>
+        </div>
+        <form id="editTripForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nombre del Viaje *</label>
+            <input id="editTripName" type="text" required
+              class="w-full p-3 border-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:outline-none"
+              value="${(trip.info?.name || '').replace(/"/g, '&quot;')}">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Destino</label>
+            <input id="editTripDestination" type="text"
+              class="w-full p-3 border-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:outline-none"
+              value="${(trip.info?.destination || '').replace(/"/g, '&quot;')}">
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Fecha de Inicio *</label>
+              <input id="editTripDateStart" type="date" required
+                class="w-full p-3 border-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:outline-none"
+                value="${trip.info?.dateStart || ''}">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Fecha de Fin *</label>
+              <input id="editTripDateEnd" type="date" required
+                class="w-full p-3 border-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:outline-none"
+                value="${trip.info?.dateEnd || ''}">
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            ⚠️ Cambiar las fechas no ajusta automáticamente el itinerario ya generado. Si cambias la duración del viaje, usa "Regenerar Itinerario" después.
+          </p>
+          <div class="flex justify-end gap-3 pt-2">
+            <button type="button" id="editTripCancelBtn" class="px-5 py-2.5 rounded-lg border-2 dark:border-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">Cancelar</button>
+            <button type="submit" class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition">Guardar Cambios</button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const close = () => modal.remove();
+    document.getElementById('editTripCloseBtn').addEventListener('click', close);
+    document.getElementById('editTripCancelBtn').addEventListener('click', close);
+
+    document.getElementById('editTripForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('editTripName').value.trim();
+      const destination = document.getElementById('editTripDestination').value.trim();
+      const dateStart = document.getElementById('editTripDateStart').value;
+      const dateEnd = document.getElementById('editTripDateEnd').value;
+
+      if (!name || !dateStart || !dateEnd) {
+        Notifications.warning('Por favor completa todos los campos obligatorios');
+        return;
+      }
+      if (new Date(dateEnd) <= new Date(dateStart)) {
+        Notifications.warning('La fecha de fin debe ser posterior a la fecha de inicio');
+        return;
+      }
+
+      try {
+        await updateDoc(doc(db, 'trips', tripId), {
+          'info.name': name,
+          'info.destination': destination || 'Japón',
+          'info.dateStart': dateStart,
+          'info.dateEnd': dateEnd
+        });
+
+        // Reflejar el cambio localmente sin esperar al listener de Firestore
+        if (this.currentTrip && this.currentTrip.id === tripId) {
+          this.currentTrip.info.name = name;
+          this.currentTrip.info.destination = destination || 'Japón';
+          this.currentTrip.info.dateStart = dateStart;
+          this.currentTrip.info.dateEnd = dateEnd;
+          this.updateTripHeader();
+        }
+
+        Notifications.success(`✅ Viaje "${name}" actualizado`);
+        close();
+      } catch (error) {
+        console.error('❌ Error actualizando el viaje:', error);
+        Notifications.error('Ocurrió un error al guardar los cambios.');
+      }
+    });
   },
 
   // Mostrar modal para crear viaje
