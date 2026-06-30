@@ -81,67 +81,12 @@
   }
 
   /**
-   * Show analytics section
+   * Show analytics section - el tab "analytics" real (#content-analytics) ya
+   * es mostrado/ocultado por Dashboard.switchTab() como cualquier otro tab;
+   * esta función solo refresca los charts cuando se entra al tab.
    */
   function showAnalytics() {
-    const analyticsSection = document.getElementById('analytics-section');
-    if (analyticsSection) {
-      analyticsSection.classList.remove('hidden');
-      updateCharts();
-    }
-  }
-
-  /**
-   * Hide analytics section
-   */
-  function hideAnalytics() {
-    const analyticsSection = document.getElementById('analytics-section');
-    if (analyticsSection) {
-      analyticsSection.classList.add('hidden');
-    }
-  }
-
-  /**
-   * Create Analytics button in navbar or add to menu
-   */
-  function createAnalyticsButton() {
-    // Check if button already exists
-    if (document.getElementById('analytics-nav-btn')) {
-      return;
-    }
-
-    // Try to find a good place to add the button
-    const navbar = document.querySelector('nav') || document.querySelector('.nav-bar') || document.querySelector('.top-nav');
-
-    if (!navbar) {
-      console.warn('⚠️ Navbar not found, cannot add analytics button');
-      return;
-    }
-
-    const button = document.createElement('button');
-    button.id = 'analytics-nav-btn';
-    button.className = 'nav-btn analytics-btn';
-    button.innerHTML = '<i class="fas fa-chart-pie"></i> <span>Analytics</span>';
-    button.title = 'Ver análisis del viaje';
-
-    button.addEventListener('click', () => {
-      // Hide other sections
-      document.querySelectorAll('.tab-content').forEach(section => {
-        section.classList.add('hidden');
-      });
-
-      // Show analytics
-      showAnalytics();
-
-      // Update active state
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      button.classList.add('active');
-    });
-
-    navbar.appendChild(button);
-    console.log('✅ Analytics button added to navbar');
+    updateCharts();
   }
 
   /**
@@ -184,9 +129,6 @@
     updateCharts();
   });
 
-  // Create analytics button
-  setTimeout(createAnalyticsButton, 1000); // Wait for navbar to be ready
-
   // Initial chart update if itinerary already exists
   setTimeout(() => {
     const itinerary = getCurrentItinerary();
@@ -200,7 +142,6 @@
   window.AnalyticsIntegration = {
     updateCharts,
     showAnalytics,
-    hideAnalytics,
     getCurrentItinerary
   };
 

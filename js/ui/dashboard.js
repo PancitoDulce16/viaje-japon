@@ -470,6 +470,11 @@ class DashboardManager {
             console.error(`❌ Tab content not found: content-${tabName}`);
         }
 
+        // 📊 Refrescar los charts de Analytics con datos actuales al entrar al tab
+        if (tabName === 'analytics' && window.AnalyticsIntegration) {
+            window.AnalyticsIntegration.showAnalytics();
+        }
+
         // 🔥 NUEVO: Sincronizar el mapa con el itinerario cuando se cambie al tab del mapa
         if (tabName === 'map' && window.MapHandler) {
             console.log('🗺️ Sincronizando mapa con itinerario...');
