@@ -2504,6 +2504,10 @@ export const ItineraryHandler = {
   get currentItinerary() {
     return currentItinerary;
   },
+  // Exponer el día actualmente abierto en la vista de itinerario
+  __getCurrentDay() {
+    return currentDay;
+  },
   async loadItinerary(tripId) {
     // Llamar a la función standalone loadItinerary
     await loadItinerary();

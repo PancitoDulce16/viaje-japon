@@ -253,22 +253,20 @@ export const ItineraryBuilderExtensions = {
         if (found) { selected = found; cityId = cid; break; }
       }
       if (!selected) { Notifications.error('Actividad no encontrada'); return; }
-      const newAct = {
-        id: `custom-${Date.now()}`,
-        icon: '📍',
-        time: selected.time || '09:00',
-        title: selected.name || selected.title || 'Actividad',
-        desc: selected.description || selected.desc || '',
-        cost: selected.cost || 0,
-        station: selected.station || '',
-        city: cityId || '',
-        category: selected.category || 'general'
-      };
-      // Delega al handler existente
-      if (window.ItineraryHandler?.__appendActivityToDay) {
-        window.ItineraryHandler.__appendActivityToDay(day.day, newAct);
+
+      // Abre el modal de actividad pre-rellenado para que el usuario confirme;
+      // reutiliza el flujo existente (geocoding + persistencia en Firebase) en vez
+      // de un append directo que no existe en ItineraryHandler.
+      if (window.ItineraryHandler?.showActivityModal) {
+        window.ItineraryHandler.showActivityModal(null, day);
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+        setVal('activityIcon', '📍');
+        setVal('activityTime', selected.time || '09:00');
+        setVal('activityTitle', selected.name || selected.title || 'Actividad');
+        setVal('activityDesc', selected.description || selected.desc || '');
+        setVal('activityCost', selected.cost || 0);
+        setVal('activityStation', selected.station || '');
       }
-      Notifications.success('Actividad añadida');
     } catch (e) {
       console.error(e); Notifications.error('No se pudo añadir');
     }

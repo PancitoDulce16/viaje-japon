@@ -737,31 +737,25 @@ export const HotelBaseSystem = {
    * @param {string} city - Ciudad
    * @param {Object} hotel - Hotel seleccionado
    */
-  selectHotel(city, hotel) {
+  async selectHotel(city, hotel) {
     console.log(`✅ Hotel seleccionado para ${city}:`, hotel.name);
 
-    // Obtener itinerario actual
-    const currentItinerary = window.ItineraryHandler?.currentItinerary;
-    if (!currentItinerary) {
+    if (!window.ItineraryHandler) {
       alert('Error: No hay itinerario activo');
       return;
     }
 
-    // Agregar hotel al itinerario
-    this.addHotelToItinerary(currentItinerary, hotel, city);
-
-    // Guardar itinerario actualizado
-    if (window.ItineraryHandler && window.ItineraryHandler.saveCurrentItinerary) {
-      window.ItineraryHandler.saveCurrentItinerary();
-    }
+    // Delega al flujo existente (agrega el hotel y persiste en Firebase)
+    await window.ItineraryHandler.selectHotelForCity({
+      id: hotel.id,
+      displayName: hotel.displayName || hotel.name,
+      formattedAddress: hotel.formattedAddress || hotel.address,
+      location: hotel.location || hotel.coordinates,
+      rating: hotel.rating
+    }, city);
 
     // Cerrar modal
     document.getElementById('hotelSearchModal')?.remove();
-
-    // Notificar
-    if (window.Notifications) {
-      window.Notifications.show(`Hotel configurado para ${city}: ${hotel.name}`, 'success');
-    }
 
     // Recargar UI si existe
     if (window.location.href.includes('dashboard.html')) {
