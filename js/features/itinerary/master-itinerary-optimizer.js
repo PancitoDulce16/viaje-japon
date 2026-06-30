@@ -634,24 +634,19 @@ export const TransitionOptimizer = {
     console.log(`   Pre-transición: ${preTransitionActivities.length} actividades`);
     console.log(`   Post-transición: ${postTransitionActivities.length} actividades`);
 
-    // Recalcular horarios
-    // Pre-transición: 08:00-11:00 (máximo 2 actividades)
-    const finalPreActivities = preTransitionActivities.slice(0, 2);
-    // Post-transición: 16:00-20:00 (máximo 1 actividad)
-    const finalPostActivities = postTransitionActivities.slice(0, 1);
-
-    // Marcar actividades como pre/post
-    finalPreActivities.forEach(act => {
+    // Marcar actividades como pre/post (sin descartar ninguna - el límite de
+    // 2 pre / 1 post era solo aspiracional y borraba actividades del usuario
+    // permanentemente; el horario nunca se recalcula después de esto, así
+    // que tampoco se toca act.time).
+    preTransitionActivities.forEach(act => {
       act.transitionPhase = 'pre';
-      act.time = null; // Recalcular después
     });
 
-    finalPostActivities.forEach(act => {
+    postTransitionActivities.forEach(act => {
       act.transitionPhase = 'post';
-      act.time = null; // Recalcular después
     });
 
-    day.activities = [...finalPreActivities, ...finalPostActivities];
+    day.activities = [...preTransitionActivities, ...postTransitionActivities];
     day.isTransitionDay = true;
 
     return day;

@@ -349,6 +349,11 @@ export const ActivityDayAssignment = {
         if (targetDays.length > 0) {
           targetDays[0].activities.push(activity);
           console.log(`   ↪ "${activity.title || activity.name}" movida del día 1 (inapropiada para jetlag)`);
+        } else {
+          // Viaje corto sin días intermedios: no hay dónde moverla, mantenerla en día 1
+          // en vez de perderla.
+          firstDay.activities.push(activity);
+          console.warn(`   ⚠️ "${activity.title || activity.name}" mantenida en Día 1 (no hay días intermedios)`);
         }
       });
 
@@ -387,6 +392,11 @@ export const ActivityDayAssignment = {
           if (targetDays.length > 0) {
             targetDays[0].activities.push(activity);
             console.log(`   ↪ "${activity.title || activity.name}" movida a Día ${targetDays[0].day}`);
+          } else {
+            // Viaje corto sin días intermedios: no hay dónde moverla, mantenerla en día 1
+            // en vez de perderla (excede el límite de 3, pero es preferible a borrarla).
+            firstDay.activities.push(activity);
+            console.warn(`   ⚠️ "${activity.title || activity.name}" mantenida en Día 1 (no hay días intermedios)`);
           }
         });
       }
