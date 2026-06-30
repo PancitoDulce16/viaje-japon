@@ -263,8 +263,14 @@ export const HotelBaseSystem = {
 
       // Si hay empate o casi empate (diferencia < 20 votos)
       if (Math.abs(topCity[1] - secondCity[1]) < 20) {
-        console.warn(`⚠️ DÍA ${day.day} MEZCLADO: ${topCity[0]} (${topCity[1]}) vs ${secondCity[0]} (${secondCity[1]})`);
-        console.warn(`   → Actividades de múltiples ciudades en el mismo día - NECESITA CORRECCIÓN`);
+        if (day.isTransitionDay) {
+          // Esperado: un día de transición entre ciudades legítimamente tiene
+          // actividades de ambas. No es un error a corregir.
+          console.log(`ℹ️ Día ${day.day} es día de transición: ${topCity[0]} (${topCity[1]}) ↔ ${secondCity[0]} (${secondCity[1]})`);
+        } else {
+          console.warn(`⚠️ DÍA ${day.day} MEZCLADO: ${topCity[0]} (${topCity[1]}) vs ${secondCity[0]} (${secondCity[1]})`);
+          console.warn(`   → Actividades de múltiples ciudades en el mismo día sin marcar como transición - revisar`);
+        }
 
         // Usar la ciudad con actividades de mayor prioridad (mayor peso individual)
         // Si ambas son cityName (peso 100), usar la primera actividad del día
