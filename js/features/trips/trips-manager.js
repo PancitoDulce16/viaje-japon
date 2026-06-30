@@ -1083,6 +1083,12 @@ export const TripsManager = {
           >
             🧠 Regenerar Itinerario
           </button>
+          <button
+            onclick="TripsManager.clearItinerary()"
+            class="bg-red-500/80 hover:bg-red-600 text-white font-semibold py-2.5 px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-red-400/30 text-sm shadow-lg"
+          >
+            🗑️ Vaciar Itinerario
+          </button>
 
           <!-- 🆕 Botón de Exportar con Dropdown -->
           <div class="relative">
@@ -1477,6 +1483,49 @@ export const TripsManager = {
     } catch (error) {
       console.error('❌ Error abriendo generador:', error);
       Notifications.error('Error al abrir el generador inteligente');
+    }
+  },
+
+  /**
+   * 🗑️ Vacía el itinerario (borra días/actividades) pero conserva el viaje
+   * (vuelos, hoteles, fechas, miembros, etc.)
+   */
+  async clearItinerary() {
+    if (!this.currentTrip) {
+      Notifications.warning('Debes seleccionar un viaje primero');
+      return;
+    }
+
+    const confirmed = await window.Dialogs.confirm({
+      title: '🗑️ ¿Vaciar el itinerario?',
+      message: 'Se eliminarán todos los días y actividades del itinerario. El viaje, vuelos y hoteles se conservan. Esta acción no se puede deshacer.',
+      okText: 'Sí, vaciar itinerario',
+      isDestructive: true
+    });
+    if (!confirmed) return;
+
+    try {
+      if (!window.ItineraryBuilder?.generateDays) {
+        Notifications.error('No se pudo vaciar el itinerario (módulo no disponible)');
+        return;
+      }
+
+      const emptyDays = window.ItineraryBuilder.generateDays(
+        this.currentTrip.info.dateStart,
+        this.currentTrip.info.dateEnd
+      );
+
+      const itineraryRef = doc(db, `trips/${this.currentTrip.id}/data`, 'itinerary');
+      await setDoc(itineraryRef, { days: emptyDays });
+
+      if (window.ItineraryHandler?.reinitialize) {
+        await window.ItineraryHandler.reinitialize();
+      }
+
+      Notifications.success('🗑️ Itinerario vaciado. El viaje sigue intacto.');
+    } catch (error) {
+      console.error('❌ Error vaciando el itinerario:', error);
+      Notifications.error('Ocurrió un error al vaciar el itinerario.');
     }
   },
 
