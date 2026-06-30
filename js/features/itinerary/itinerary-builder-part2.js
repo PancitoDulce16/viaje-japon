@@ -276,8 +276,10 @@ export const ItineraryBuilderExtensions = {
     const activityData = {
       id: `custom-${Date.now()}`,
       name: document.getElementById('customActivityName').value,
+      title: document.getElementById('customActivityName').value,
       category: document.getElementById('customActivityCategory').value,
       description: document.getElementById('customActivityDescription').value,
+      desc: document.getElementById('customActivityDescription').value,
       time: document.getElementById('customActivityTime').value,
       duration: parseInt(document.getElementById('customActivityDuration').value || '60', 10),
       cost: parseInt(document.getElementById('customActivityCost').value || '0', 10),
@@ -287,9 +289,32 @@ export const ItineraryBuilderExtensions = {
       isCustom: true,
       createdAt: new Date().toISOString()
     };
-    // Aquí podrías persistir en una doc por usuario si lo deseas.
-    Notifications.success(`Actividad personalizada "${activityData.name}" creada`);
-    this.closeAddActivityModal();
+
+    try {
+      const tripId = window.TripsManager?.currentTrip?.id;
+      const itinerary = window.ItineraryHandler?.currentItinerary;
+      if (!tripId || !itinerary) {
+        Notifications.error('No hay viaje activo para guardar la actividad');
+        return;
+      }
+      const dayData = itinerary.days?.find(d => d.day === dayNumber);
+      if (!dayData) {
+        Notifications.error('No se encontró el día seleccionado');
+        return;
+      }
+      dayData.activities = dayData.activities || [];
+      dayData.activities.push(activityData);
+
+      const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
+      await setDoc(itineraryRef, itinerary);
+
+      Notifications.success(`Actividad personalizada "${activityData.name}" creada`);
+      this.closeAddActivityModal();
+      if (window.ItineraryHandler?.reinitialize) window.ItineraryHandler.reinitialize();
+    } catch (e) {
+      console.error('❌ Error guardando actividad personalizada:', e);
+      Notifications.error('No se pudo guardar la actividad personalizada');
+    }
   },
 
   closeAddActivityModal() {

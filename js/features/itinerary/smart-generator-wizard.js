@@ -1,6 +1,9 @@
 // js/smart-generator-wizard.js - UI Wizard para generador inteligente de itinerarios
 // Wizard de 3 pasos que guía al usuario a crear un itinerario completo
 
+import { db } from '../../core/firebase-config.js';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+
 /**
  * Smart Generator Wizard
  */
@@ -481,9 +484,16 @@ export const SmartGeneratorWizard = {
         inputElement = document.getElementById('totalDays');
         errorElement = document.getElementById('totalDaysError');
         const days = parseInt(inputElement?.value) || 0;
+        const cityCount = this.wizardData.cities.length;
+        const errorText = errorElement?.querySelector('p');
 
-        if (days < 1) {
+        if (days < 1 || (cityCount > 0 && days < cityCount)) {
           isValid = false;
+          if (errorText) {
+            errorText.textContent = days < 1
+              ? '⚠️ El viaje debe durar al menos 1 día'
+              : `⚠️ Necesitas al menos ${cityCount} días para ${cityCount} ciudades (1 día mínimo por ciudad)`;
+          }
           if (errorElement) errorElement.classList.remove('hidden');
           if (inputElement) {
             inputElement.classList.remove('border-gray-300', 'dark:border-gray-600');
@@ -1117,6 +1127,10 @@ export const SmartGeneratorWizard = {
       }
       if (this.wizardData.totalDays < 1) {
         window.Notifications?.show('❌ El viaje debe durar al menos 1 día', 'error');
+        return false;
+      }
+      if (this.wizardData.totalDays < this.wizardData.cities.length) {
+        window.Notifications?.show(`❌ Necesitas al menos ${this.wizardData.cities.length} días para ${this.wizardData.cities.length} ciudades (1 día mínimo por ciudad)`, 'error');
         return false;
       }
     } else if (this.currentStep === 2) {
@@ -2191,21 +2205,21 @@ export const SmartGeneratorWizard = {
    * Guarda el itinerario generado en Firebase
    */
   async saveGeneratedItinerary(itinerary) {
-    if (!window.TripsManager || !window.TripsManager.currentTripId) {
+    const tripId = window.TripsManager?.currentTrip?.id;
+    if (!tripId) {
       console.warn('⚠️ No hay trip activo, no se puede guardar');
       return;
     }
 
-    const tripId = window.TripsManager.currentTripId;
-
-    // Guardar en Firebase
+    // Guardar en Firebase - mismo documento que lee/escribe ItineraryHandler
+    // (trips/{tripId}/data/itinerary), no el documento principal del trip.
     try {
-      const tripRef = window.firebase.firestore().collection('trips').doc(tripId);
+      const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
 
-      await tripRef.update({
-        itinerary: itinerary.days,
+      await setDoc(itineraryRef, {
+        days: itinerary.days,
         generatedBy: 'SmartGenerator',
-        generatedAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+        generatedAt: serverTimestamp(),
         generatorProfile: itinerary.profile
       });
 

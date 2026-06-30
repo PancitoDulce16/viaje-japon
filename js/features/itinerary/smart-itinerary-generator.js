@@ -905,13 +905,11 @@ export const SmartItineraryGenerator = {
         assignedDays++;
       } else {
         // Quitar días de la ciudad con menor score (pero mantener mínimo 1)
-        const bottomCity = cityScores
-          .filter(c => c.days > 1)
-          .reduce((min, c) => c.score < min.score ? c : min);
-        if (bottomCity) {
-          bottomCity.days--;
-          assignedDays--;
-        } else break;
+        const candidates = cityScores.filter(c => c.days > 1);
+        if (candidates.length === 0) break; // Todas las ciudades ya están en el mínimo de 1 día
+        const bottomCity = candidates.reduce((min, c) => c.score < min.score ? c : min);
+        bottomCity.days--;
+        assignedDays--;
       }
     }
 

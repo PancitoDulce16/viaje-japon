@@ -332,7 +332,7 @@ class ItineraryAnomalyDetector {
 
     const intenseCategories = ['hiking', 'walking-tour', 'shopping', 'nightlife'];
 
-    activities.forEach(activity => {
+    for (const activity of activities) {
       if (intenseCategories.includes(activity.category)) {
         consecutiveIntense++;
       } else {
@@ -352,7 +352,7 @@ class ItineraryAnomalyDetector {
           }
         };
       }
-    });
+    }
 
     return null;
   }
@@ -452,8 +452,8 @@ class ItineraryAnomalyDetector {
   checkConsecutiveIntenseDays(days) {
     let consecutiveIntense = 0;
 
-    days.forEach((day, index) => {
-      const activityCount = day.activities?.length || 0;
+    for (let index = 0; index < days.length; index++) {
+      const activityCount = days[index].activities?.length || 0;
 
       if (activityCount >= 7) {
         consecutiveIntense++;
@@ -473,7 +473,7 @@ class ItineraryAnomalyDetector {
           }
         };
       }
-    });
+    }
 
     return null;
   }
@@ -576,17 +576,20 @@ class ItineraryAnomalyDetector {
     if (!coords1 || !coords2) return 5;
 
     // Validar que sean arrays o convertir de objeto
+    // (las coordenadas en esta app se guardan como { lat, lng })
     if (!Array.isArray(coords1)) {
-      if (coords1.lat !== undefined && coords1.lon !== undefined) {
-        coords1 = [coords1.lat, coords1.lon];
+      const lon1 = coords1.lon ?? coords1.lng;
+      if (coords1.lat !== undefined && lon1 !== undefined) {
+        coords1 = [coords1.lat, lon1];
       } else {
         return 5; // Default distance
       }
     }
 
     if (!Array.isArray(coords2)) {
-      if (coords2.lat !== undefined && coords2.lon !== undefined) {
-        coords2 = [coords2.lat, coords2.lon];
+      const lon2 = coords2.lon ?? coords2.lng;
+      if (coords2.lat !== undefined && lon2 !== undefined) {
+        coords2 = [coords2.lat, lon2];
       } else {
         return 5; // Default distance
       }
