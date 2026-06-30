@@ -260,7 +260,7 @@ export const TripsManager = {
   },
 
   // Seleccionar trip actual
-  async selectTrip(tripId) {
+  async selectTrip(tripId, _isRetry = false) {
     try {
       const tripRef = doc(db, 'trips', tripId);
       const tripSnap = await getDoc(tripRef);
@@ -334,6 +334,17 @@ export const TripsManager = {
         console.log('🔄 Todos los módulos re-inicializados para el trip:', tripId);
       }
     } catch (error) {
+      // 🛡️ Justo después de crear un trip, el listener onSnapshot de la query
+      // de trips puede disparar un auto-select inmediato (antes del setTimeout
+      // de createTrip) cuando las reglas de seguridad de Firestore todavía no
+      // "ven" el documento recién creado para un getDoc directo, aunque el
+      // dato ya esté en el cache local. Reintentamos una vez antes de mostrar
+      // el error - en el caso normal (trip ya existente) nunca debería pasar.
+      if (error.code === 'permission-denied' && !_isRetry) {
+        console.warn('⚠️ Permission-denied seleccionando trip recién creado, reintentando en 800ms...');
+        await new Promise(resolve => setTimeout(resolve, 800));
+        return this.selectTrip(tripId, true);
+      }
       console.error('❌ Error seleccionando trip:', error);
     }
   },

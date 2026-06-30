@@ -7,6 +7,7 @@ import { Notifications } from '../../core/notifications.js';
 import { CATEGORIES } from '../../../data/categories-data.js';
 import { ACTIVITIES_DATABASE, getActivitiesByCity, getActivitiesByCategory, searchActivities } from '../../../data/activities-database.js';
 import { doc, setDoc } from 'firebase/firestore';
+import { sanitizeForFirestore } from './itinerary-v3.js';
 
 export const ItineraryBuilderExtensions = {
   // === AGREGAR ACTIVIDAD ===
@@ -306,7 +307,7 @@ export const ItineraryBuilderExtensions = {
       dayData.activities.push(activityData);
 
       const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
-      await setDoc(itineraryRef, itinerary);
+      await setDoc(itineraryRef, sanitizeForFirestore(itinerary));
 
       Notifications.success(`Actividad personalizada "${activityData.name}" creada`);
       this.closeAddActivityModal();

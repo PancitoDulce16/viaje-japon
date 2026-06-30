@@ -3,6 +3,7 @@
 
 import { db } from '../../core/firebase-config.js';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { sanitizeForFirestore } from './itinerary-v3.js';
 
 /**
  * Smart Generator Wizard
@@ -2216,11 +2217,14 @@ export const SmartGeneratorWizard = {
     try {
       const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
 
+      // Firestore rechaza cualquier valor undefined en el documento (ej:
+      // day.hotel cuando todavía no hay un hotel configurado para esa
+      // ciudad) - sanitizar antes de escribir, igual que saveCurrentItineraryToFirebase.
       await setDoc(itineraryRef, {
-        days: itinerary.days,
+        days: sanitizeForFirestore(itinerary.days),
         generatedBy: 'SmartGenerator',
         generatedAt: serverTimestamp(),
-        generatorProfile: itinerary.profile
+        generatorProfile: sanitizeForFirestore(itinerary.profile)
       });
 
       console.log('✅ Itinerario guardado en Firebase');

@@ -177,7 +177,7 @@ function getCurrentTripId() {
 }
 
 // Helper: Sanitizar datos para Firestore (remover undefined)
-function sanitizeForFirestore(obj) {
+export function sanitizeForFirestore(obj) {
   if (obj === null || obj === undefined) return null;
   if (typeof obj !== 'object') return obj;
   if (Array.isArray(obj)) return obj.map(sanitizeForFirestore);
