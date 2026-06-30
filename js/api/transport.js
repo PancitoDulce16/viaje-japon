@@ -179,9 +179,11 @@ export const TransportHandler = {
                 <div class="flex items-start gap-4">
                     <div class="text-6xl">💡</div>
                     <div class="flex-1">
-                        <h3 class="text-2xl font-bold mb-2">Tu Mejor Opción: Tickets Individuales</h3>
-                        <p class="text-sm opacity-90 mb-4">Para tu viaje de 15 días con 5 rutas principales, los tickets individuales son más económicos que el JR Pass.</p>
-                        
+                        <h3 class="text-2xl font-bold mb-2">Ejemplo: Tickets Individuales vs JR Pass</h3>
+                        <p class="text-sm opacity-90 mb-4">Comparación con 5 rutas típicas de un viaje de 2 semanas. Este es solo un ejemplo ilustrativo - usa la
+                            <a href="#" onclick="window.DashboardApp?.switchTab('utils'); setTimeout(() => window.UtilsHandler?.toggleSection('jrpass'), 300); return false;" class="underline font-bold hover:text-yellow-200">calculadora de JR Pass en Utilidades</a>
+                            con tus rutas reales para un resultado personalizado.</p>
+
                         <div class="grid md:grid-cols-3 gap-4">
                             <div class="bg-white/20 rounded-lg p-4 backdrop-blur-sm">
                                 <p class="text-xs opacity-80 mb-1">Tickets Individuales</p>
@@ -219,10 +221,11 @@ export const TransportHandler = {
         return `
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
                 <h3 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
-                    🎫 Tus 5 Rutas Principales
+                    🎫 Ejemplo: 5 Rutas Típicas de Larga Distancia
                 </h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Estas son las rutas de tren de larga distancia que necesitas para tu itinerario de 15 días.
+                    Ejemplo ilustrativo de rutas comunes entre ciudades populares - no son necesariamente las tuyas.
+                    Usa la <a href="#" onclick="window.DashboardApp?.switchTab('utils'); setTimeout(() => window.UtilsHandler?.toggleSection('jrpass'), 300); return false;" class="underline font-bold text-blue-700 dark:text-blue-400 hover:text-blue-900">calculadora de JR Pass en Utilidades</a> con tus ciudades reales.
                 </p>
 
                 <div class="space-y-3">

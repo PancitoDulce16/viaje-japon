@@ -158,11 +158,15 @@ export const PreparationHandler = {
         }
 
         // Get current trip for budget calculation
+        // BudgetCalculator espera trip.itinerary.days, pero el itinerario real
+        // vive en un documento separado (trips/{id}/data/itinerary), no como
+        // campo del trip - hay que combinarlos explícitamente.
         const currentTrip = window.TripsManager?.currentTrip;
         let budgetHTML = '';
 
         if (currentTrip && window.BudgetCalculator) {
-            budgetHTML = window.BudgetCalculator.generateBudgetSummary(currentTrip);
+            const tripWithItinerary = { ...currentTrip, itinerary: window.ItineraryHandler?.currentItinerary };
+            budgetHTML = window.BudgetCalculator.generateBudgetSummary(tripWithItinerary);
         }
 
         container.innerHTML = `
