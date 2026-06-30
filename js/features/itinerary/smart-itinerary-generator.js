@@ -1258,6 +1258,7 @@ export const SmartItineraryGenerator = {
           isMeal: act.isMeal || false,
           rating: act.rating || null,
           source: act.source || 'database',
+          city: act.city || city, // 🏙️ requerido por MasterItineraryOptimizer y otros chequeos de salud
           // 🎯 SMART ALTERNATIVES
           alternatives: alternatives.length > 0 ? alternatives.map(alt => ({
             name: alt.name,

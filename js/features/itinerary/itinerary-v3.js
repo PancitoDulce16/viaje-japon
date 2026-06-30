@@ -1164,6 +1164,8 @@ function renderTripSelector(){
         <button onclick="TripsManager.showShareCode()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">🔗 Compartir</button>
         <button onclick="TripsManager.showCreateTripModal()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">➕ Agregar Viaje</button>
         ${currentItinerary ? `<button onclick="window.PDFExporter?.exportToPDF()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">📄 Exportar PDF</button>`:''}
+        ${currentItinerary ? `<button onclick="window.runMasterOptimization?.()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">🚀 Optimizar Todo</button>`:''}
+        ${currentItinerary ? `<button onclick="window.showBalanceAnalysis?.()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">⚖️ Balancear</button>`:''}
         ${!currentItinerary ? `<button onclick="ItineraryBuilder.showCreateItineraryWizard()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition text-sm font-bold shadow-md">✨ Crear Itinerario</button>`:''}
       </div>
     </div>`;
@@ -4078,6 +4080,7 @@ window.ItineraryHandler = ItineraryHandler;
 window.saveCurrentItineraryToFirebase = saveCurrentItineraryToFirebase;
 window.renderItinerary = render;
 window.showBalanceAnalysis = showBalanceAnalysis;
+window.runMasterOptimization = runMasterOptimization;
 window.editDayBudget = editDayBudget;
 window.showTripIntelligenceModal = showTripIntelligenceModal;
 window.closeIntelligenceModal = closeIntelligenceModal;
