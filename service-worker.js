@@ -91,8 +91,13 @@ const cacheFirst = (request, cacheName) => {
         }
         return fetch(request).then(networkResponse => {
             // Only cache successful responses — never cache 404s or errors
+            // ⚠️ clone() debe llamarse SINCRÓNICAMENTE aquí, antes de devolver
+            // networkResponse - si se llama dentro del .then() de abajo, el
+            // body de networkResponse ya puede haber sido consumido por el
+            // navegador para cuando ese callback async se ejecuta.
             if (networkResponse.ok) {
-                caches.open(cacheName).then(cache => cache.put(request, networkResponse.clone()));
+                const responseToCache = networkResponse.clone();
+                caches.open(cacheName).then(cache => cache.put(request, responseToCache));
             }
             return networkResponse;
         }).catch(() => new Response('', { status: 404, statusText: 'Not Found' }));
