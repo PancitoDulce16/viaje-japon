@@ -280,7 +280,7 @@ function analyzeItineraryBalance(days, itinerary = null) {
         if (itinerary && itinerary.hotels && window.HotelBaseSystem) {
             try {
                 const city = window.HotelBaseSystem.detectCityForDay(day);
-                const hotel = window.HotelBaseSystem.getHotelForCity(itinerary, city);
+                const hotel = window.HotelBaseSystem.getHotelForCity(itinerary, city, day.day);
                 if (hotel && hotel.coordinates) {
                     hotelCoords = hotel.coordinates;
                     console.log(`🏨 Hotel detectado para Día ${day.day} (${city}):`, hotel.name);
