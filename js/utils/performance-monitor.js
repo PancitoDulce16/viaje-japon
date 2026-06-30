@@ -31,7 +31,11 @@ class PerformanceMonitor {
     if (document.readyState === 'complete') {
       this.captureMetrics();
     } else {
-      window.addEventListener('load', () => this.captureMetrics());
+      // navigation.loadEventEnd no está finalizado todavía dentro del propio
+      // handler del evento 'load' - leerlo ahí mismo puede dar 0 y producir
+      // un pageLoad negativo. Difiere la lectura un tick para que el
+      // navegador termine de escribirlo.
+      window.addEventListener('load', () => setTimeout(() => this.captureMetrics(), 0));
     }
 
     // Monitor long tasks
@@ -275,7 +279,10 @@ class PerformanceMonitor {
     });
 
     if (this.slowOperations.length > 0) {
-      console.warn('⚠️ Slow Operations (>100ms):');
+      // Mezcla long-tasks del navegador (umbral 50ms, ver observeLongTasks)
+      // con mediciones manuales (umbral 100ms, ver mark/measure) - no es un
+      // único umbral fijo, así que no se etiqueta con un número específico.
+      console.warn('⚠️ Slow Operations:');
       console.table(this.slowOperations.map(op => ({
         Name: op.name,
         Duration: `${op.duration.toFixed(0)}ms`,
