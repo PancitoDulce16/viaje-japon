@@ -260,6 +260,13 @@ export const TripContextAnalyzer = {
    * @returns {Object} Fase correspondiente
    */
   getPhaseForDay(dayNumber, phases) {
+    // Para viajes cortos (2-3 días) los rangos de fase pueden solaparse en el
+    // último día (ej: aparece en 'arrival', 'deepDive' Y 'departure' a la
+    // vez). 'departure' es la regla de negocio más estricta (día de salida,
+    // siempre exactamente 1 día), así que tiene prioridad sobre cualquier
+    // otra fase que también reclame ese día.
+    const departure = phases.find(phase => phase.name === 'departure' && phase.days.includes(dayNumber));
+    if (departure) return departure;
     return phases.find(phase => phase.days.includes(dayNumber)) || null;
   },
 
@@ -573,7 +580,7 @@ export const JourneyArcOptimizer = {
    * @returns {string} Intensidad (low, medium, high)
    */
   calculateRecommendedIntensity(dayNumber, context) {
-    const phase = context.phases.find(p => p.days.includes(dayNumber));
+    const phase = TripContextAnalyzer.getPhaseForDay(dayNumber, context.phases);
     return phase ? phase.intensity : 'medium';
   }
 };

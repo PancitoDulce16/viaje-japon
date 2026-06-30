@@ -874,12 +874,27 @@ async function runMasterOptimization() {
         <div class="bg-blue-100 dark:bg-blue-900 p-4 rounded-lg border-2 border-blue-400 dark:border-blue-500">
           <h3 class="font-bold text-lg mb-2 text-blue-900 dark:text-white">📖 Narrativa del Viaje</h3>
           <div class="text-sm space-y-2">
-            ${result.context.phases.map(phase => `
+            ${(() => {
+              // En viajes cortos las fases pueden solaparse (ej: el último día
+              // cuenta a la vez como 'arrival' y 'departure'). 'departure' es
+              // la regla más estricta, así que se le resta ese día a las demás
+              // fases para que la narrativa no muestre el mismo día dos veces.
+              const departureDays = new Set(
+                (result.context.phases.find(p => p.name === 'departure')?.days) || []
+              );
+              return result.context.phases
+                .map(phase => ({
+                  ...phase,
+                  days: phase.name === 'departure' ? phase.days : phase.days.filter(d => !departureDays.has(d))
+                }))
+                .filter(phase => phase.days.length > 0)
+                .map(phase => `
               <div class="flex items-start gap-2">
                 <span class="font-semibold text-blue-900 dark:text-blue-100">${phase.label}:</span>
                 <span class="text-gray-700 dark:text-gray-300">Días ${phase.days.join(', ')}</span>
               </div>
-            `).join('')}
+            `).join('');
+            })()}
           </div>
         </div>
       `;
