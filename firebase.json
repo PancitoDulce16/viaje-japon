@@ -10,7 +10,22 @@
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "**/dist/**",
+      "check-trips.html",
+      "diagnose-data.html",
+      "recover-data.html",
+      "dev-tools.html",
+      "test-button.html",
+      "test-suggestions.html",
+      "limpiar-estilos.html",
+      "simple-recover.js",
+      "force-recover.js",
+      "MODULE_TEMPLATE.js",
+      "validate-imports.js",
+      "js/dev/**",
+      "**/*.example.js",
+      "**/*.example.json"
     ],
     "headers": [
       {

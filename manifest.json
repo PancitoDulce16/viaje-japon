@@ -1,12 +1,12 @@
 {
-  "name": "Japan Trip Planner",
-  "short_name": "Japan Trip",
-  "description": "Planifica tu viaje a Japón - Itinerario, gastos, mapas y más",
+  "name": "Japitin",
+  "short_name": "Japitin",
+  "description": "El planificador de viajes a Japón más completo. Itinerarios con IA, gastos compartidos, mapas interactivos y más.",
   "start_url": "/dashboard.html?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#9333ea",
+  "background_color": "#0f0a1e",
+  "theme_color": "#7c3aed",
   "orientation": "any",
   "prefer_related_applications": false,
   "icons": [

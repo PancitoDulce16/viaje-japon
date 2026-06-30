@@ -1,4 +1,4 @@
-// SCRIPT DE RECUPERACIÓN SIMPLE
+﻿// SCRIPT DE RECUPERACIÓN SIMPLE
 // Copia y pega TODO esto en la consola del navegador
 
 console.log('🚑 Iniciando recuperación simple...');
@@ -23,7 +23,7 @@ console.log('🚑 Iniciando recuperación simple...');
 
     // Paso 2: Importar Firestore
     const { collection, getDocs, query, where, getDoc, doc } = await import(
-        'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js'
+        'firebase/firestore'
     );
 
     // Paso 3: Buscar trips

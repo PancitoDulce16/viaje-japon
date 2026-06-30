@@ -18,6 +18,22 @@
     <meta property="og:description" content="Planifica tu aventura japonesa con itinerarios colaborativos, seguimiento de gastos, galería de fotos, festivales y más.">
     <meta property="og:image" content="https://japan-itin-dev.web.app/images/icons/japitin%20banner.png">
 
+    <!-- Import map: resolves firebase/app etc. in native ES module scripts -->
+    <script type="importmap">
+    {
+      "imports": {
+        "firebase/app": "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js",
+        "firebase/auth": "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js",
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js",
+        "firebase/storage": "https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js",
+        "firebase/messaging": "https://www.gstatic.com/firebasejs/11.1.0/firebase-messaging.js",
+        "firebase/analytics": "https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js",
+        "firebase/functions": "https://www.gstatic.com/firebasejs/11.1.0/firebase-functions.js",
+        "firebase/database": "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js"
+      }
+    }
+    </script>
+
     <!-- Tailwind CSS with dark mode config -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -39,75 +55,8 @@
     <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-    <!-- CSS del dashboard -->
-    <link rel="stylesheet" href="/css/main.css">
-    <link rel="stylesheet" href="/css/japan-theme.css">
-    <link rel="stylesheet" href="/css/animations.css">
-    <link rel="stylesheet" href="/css/enhanced-animations.css">
-    <link rel="stylesheet" href="/css/smooth-animations.css">
-    <link rel="stylesheet" href="/css/tooltips.css">
-    <link rel="stylesheet" href="/css/forms.css">
-    <link rel="stylesheet" href="/css/calendar-planner.css">
-    <link rel="stylesheet" href="/css/ai-planner.css">
-    <link rel="stylesheet" href="/css/contrast-fixes.css">
-    <link rel="stylesheet" href="/css/mobile-optimizations.css">
-    <link rel="stylesheet" href="/css/ui-improvements.css">
-    <link rel="stylesheet" href="/css/visual-redesign.css">
-    <link rel="stylesheet" href="/css/dashboard-visual-upgrade.css">
-    <!-- 🎨 TEMAS: Ninja (dark) & Kawaii (light) -->
-    <link rel="stylesheet" href="/css/theme-kawaii.css">
-    <link rel="stylesheet" href="/css/theme-ninja.css">
-    <!-- 🎨 Wallpapers Kawaii - Modo Claro y Oscuro -->
-    <link rel="stylesheet" href="/css/wallpapers.css?v=2">
-    <!-- 🖼️ Dashboard Background - DEBE IR AL FINAL para tener prioridad -->
-    <link rel="stylesheet" href="/css/dashboard-background.css?v=28">
-    <!-- 🐱 Kawaii Animations -->
-    <link rel="stylesheet" href="/css/kawaii-animations.css">
-    <!-- 📌 Japan Rules - 30 Reglas Anti-Error -->
-    <link rel="stylesheet" href="/css/japan-rules.css">
-    <!-- 🕐 Control Horarios -->
-    <link rel="stylesheet" href="/css/horarios-system.css">
-    <!-- 🗾 Sistema de Zonas -->
-    <link rel="stylesheet" href="/css/zonas-system.css">
-    <!-- 🆘 Survival Guide -->
-    <link rel="stylesheet" href="/css/survival-guide.css">
-    <!-- 🚄 JR Pass Calculator -->
-    <link rel="stylesheet" href="/css/jr-pass-calculator.css">
-    <!-- 🍜 Ramen Passport -->
-    <link rel="stylesheet" href="/css/ramen-passport.css">
-    <!-- ⛩️ Goshuin Book -->
-    <link rel="stylesheet" href="/css/goshuin-book.css">
-    <!-- 🗓️ Calendar Fix -->
-    <link rel="stylesheet" href="/css/calendar-fix.css">
-    <!-- 🏥 Health Dashboard -->
-    <link rel="stylesheet" href="/css/health-dashboard.css">
-
-    <!-- 📊 Analytics Dashboard -->
-    <link rel="stylesheet" href="/css/analytics-dashboard.css">
-
-    <!-- 📔 Travel Journal -->
-    <link rel="stylesheet" href="/css/travel-journal.css">
-
-    <!-- 🏆 Gamification System -->
-    <link rel="stylesheet" href="/css/gamification-system.css">
-
-    <!-- 🎯 Enhanced Dashboard -->
-    <link rel="stylesheet" href="/css/dashboard-enhanced.css">
-
-    <!-- 💰 Budget Visual Charts -->
-    <link rel="stylesheet" href="/css/budget-visual-charts.css">
-
-    <!-- 🔍 Global Search & Filters -->
-    <link rel="stylesheet" href="/css/global-search-filters.css">
-
-    <!-- 📱 Mobile-First Redesign -->
-    <link rel="stylesheet" href="/css/mobile-first-redesign.css">
-
-    <!-- 🎨 VIRAL FEATURES AESTHETIC -->
-    <link rel="stylesheet" href="/css/viral-features-aesthetic.css">
-
-    <!-- 🎨 MICRO-INTERACTIONS & POLISH -->
-    <link rel="stylesheet" href="/css/micro-interactions.css">
+    <!-- App styles -->
+    <link rel="stylesheet" href="/css/app.css">
 
     <!-- Wallpapers inline para máxima prioridad -->
     <style>
@@ -402,106 +351,102 @@
             crossorigin=""></script>
 
     <!-- 🔍 Logger System - Centralized logging with debug mode -->
-    <script src="/js/logger.js?v=1763264017"></script>
+    <script type="module" src="/js/core/logger.js"></script>
 
     <!-- ⏰ Time Utilities - Consolidated time functions -->
-    <script src="/js/time-utils.js?v=1763264017"></script>
+    <script type="module" src="/js/utils/time-utils.js"></script>
 
     <!-- 🎌 Japan Utilities - Cultural tools and guides -->
-    <script type="module" src="/js/japan-utils.js?v=1763264017"></script>
+    <script type="module" src="/js/utils/japan-utils.js"></script>
 
     <!-- 🛠️ Utils Handler - Organized utilities with sub-tabs -->
-    <script type="module" src="/js/utils-handler.js?v=1763264017"></script>
+    <script type="module" src="/js/utils/utils-handler.js"></script>
 
     <!-- 👥 Social Features - Achievements, challenges, polls, journal -->
-    <script type="module" src="/js/social-features.js?v=1763264017"></script>
+    <script type="module" src="/js/features/social/social-features.js"></script>
 
     <!-- 📸 Photo Gallery - Shared photo gallery with upload, comments, likes -->
-    <script type="module" src="/js/photo-gallery.js?v=1763264017"></script>
+    <script type="module" src="/js/features/journal/photo-gallery.js"></script>
 
     <!-- 👤 User Profile - User profiles with photo, bio, stats -->
-    <script type="module" src="/js/user-profile.js?v=1763264017"></script>
+    <script type="module" src="/js/ui/user-profile.js"></script>
 
     <!-- 📱 Activity Timeline - Shared activity feed in real-time -->
-    <script type="module" src="/js/activity-timeline.js?v=1763264017"></script>
+    <script type="module" src="/js/api/activity-timeline.js"></script>
 
     <!-- 🍔 User Menu - Hamburger menu with profile and settings -->
-    <script type="module" src="/js/user-menu.js?v=1763264017"></script>
+    <script type="module" src="/js/ui/user-menu.js"></script>
 
     <!-- 🎊 Festivals - Local matsuri and events by date and city -->
-    <script type="module" src="/js/festivals.js?v=1763264017"></script>
+    <script type="module" src="/js/features/japan/festivals.js"></script>
 
-    <!-- ⌨️ Keyboard Shortcuts - Command palette and shortcuts -->
-    <script src="/js/keyboard-shortcuts.js?v=1763264017"></script>
+    <!-- ⌨️ Keyboard Shortcuts - Command palette and shortcuts (see js/utils/keyboard-shortcuts.js) -->
 
     <!-- 📄 PDF Export Library - jsPDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <!-- 📄 PDF EXPORTER - Exportar itinerario a PDF -->
-    <script type="module" src="/js/pdf-exporter.js?v=1763264017"></script>
+    <script type="module" src="/js/features/trips/pdf-exporter.js"></script>
 
     <!-- 📊 EXPENSE CHARTS - Gráficos visuales para gastos -->
-    <script type="module" src="/js/expense-charts.js?v=1763264017"></script>
+    <script type="module" src="/js/features/budget/expense-charts.js"></script>
 
     <!-- 🆕 HTML2PDF - Librería para generar PDFs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <!-- 🆕 EXPORT MANAGER - Sistema de exportación multi-formato -->
-    <script type="module" src="/js/export-manager.js?v=1763264017"></script>
+    <script type="module" src="/js/features/trips/export-manager.js"></script>
 
     <!-- 🏆 GAMIFICATION SYSTEM - Sistema de badges y logros -->
-    <script type="module" src="/js/gamification-system.js?v=1763264017"></script>
+    <script type="module" src="/js/features/gamification/gamification-system.js"></script>
 
     <!-- 💰 BUDGET TRACKER - Sistema de tracking de gastos -->
-    <script type="module" src="/js/budget-tracker.js?v=1763264017"></script>
+    <script type="module" src="/js/features/budget/budget-tracker.js"></script>
 
     <!-- 🎫 RESERVATIONS MANAGER - Gestor de reservas -->
-    <script type="module" src="/js/reservations-manager.js?v=1763264017"></script>
+    <script type="module" src="/js/features/trips/reservations-manager.js"></script>
 
     <!-- 🛍️ SHOPPING TRACKER - Sistema de seguimiento de compras -->
-    <script type="module" src="/js/shopping-tracker.js?v=1763264017"></script>
+    <script type="module" src="/js/features/trips/shopping-tracker.js"></script>
 
     <!-- 🌸 JAPITIN SOCIAL - Red social interna tipo Instagram -->
-    <script type="module" src="/js/social-network.js?v=1763264017"></script>
+    <script type="module" src="/js/features/social/social-network.js"></script>
 
     <!-- 📖 TRIP STORY GENERATOR - Genera Instagram Stories del viaje -->
-    <script type="module" src="/js/trip-story-generator.js?v=1763264017"></script>
+    <script type="module" src="/js/features/journal/trip-story-generator.js"></script>
 
     <!-- 📊 TRIP CARDS GENERATOR - Tarjetas compartibles para redes -->
-    <script type="module" src="/js/trip-cards-generator.js?v=1763264017"></script>
+    <script type="module" src="/js/features/journal/trip-cards-generator.js"></script>
 
     <!-- 🎯 JAPAN PERSONA QUIZ - Quiz viral tipo BuzzFeed -->
-    <script type="module" src="/js/japan-persona-quiz.js?v=1763264017"></script>
+    <script type="module" src="/js/features/japan/japan-persona-quiz.js"></script>
 
     <!-- 👯 TRAVEL TWINS MATCHER - AI matching con otros viajeros -->
-    <script type="module" src="/js/travel-twins-matcher.js?v=1763264017"></script>
+    <script type="module" src="/js/features/social/travel-twins-matcher.js"></script>
 
     <!-- 💎 HIDDEN GEMS MAP - Mapa colaborativo de lugares secretos -->
-    <script type="module" src="/js/hidden-gems-map.js?v=1763264017"></script>
+    <script type="module" src="/js/map/hidden-gems-map.js"></script>
 
     <!-- 🎯 LOCATION GAME - Adivina el lugar de la foto -->
-    <script type="module" src="/js/location-game.js?v=1763264017"></script>
+    <script type="module" src="/js/features/gamification/location-game.js"></script>
 
     <!-- 🎬 CHALLENGE SYSTEM - #MyJapanIn60Seconds video challenges -->
-    <script type="module" src="/js/challenge-system.js?v=1763264017"></script>
+    <script type="module" src="/js/features/gamification/challenge-system.js"></script>
 
     <!-- 📱 WHATSAPP UPDATER - Sistema de mensajes automáticos -->
-    <script type="module" src="/js/whatsapp-updater.js?v=1763264017"></script>
+    <script type="module" src="/js/features/social/whatsapp-updater.js"></script>
 
     <!-- 🎥 VIDEO MONTAGE CREATOR - AI video montage generator -->
-    <script type="module" src="/js/video-montage-creator.js?v=1763264017"></script>
+    <script type="module" src="/js/features/journal/video-montage-creator.js"></script>
 
     <!-- 🌐 LANDING PAGE GENERATOR - Generador de landing pages públicas -->
-    <script type="module" src="/js/landing-page-generator.js?v=1763264017"></script>
-
-    <!-- 📝 LOG EXPORTER - Captura TODOS los logs automáticamente -->
-    <script type="module" src="/js/log-exporter.js?v=1763264017"></script>
+    <script type="module" src="/js/ui/landing-page-generator.js"></script>
 
     <!-- 🔥 CACHE BUSTER - Detecta y corrige automáticamente problemas de cache -->
-    <script type="module" src="/js/cache-buster.js?v=1763264017"></script>
+    <script type="module" src="/js/utils/cache-buster.js"></script>
 
     <!-- 🚀 PRE-LOAD MASTER OPTIMIZER - CACHE BUSTED -->
-    <script type="module" src="/js/master-itinerary-optimizer-v2025.js?v=1763264017"></script>
+    <script type="module" src="/js/features/itinerary/master-itinerary-optimizer-v2025.js"></script>
 
     <!-- 🎯 UTILITY SYSTEMS - Gestión centralizada -->
     <script type="module" src="/js/utils/modal-manager.js?v=1763264017"></script>
@@ -511,32 +456,16 @@
     <script type="module" src="/js/utils/keyboard-shortcuts.js?v=1763264017"></script>
     <script type="module" src="/js/utils/performance-monitor.js?v=1763264017"></script>
     <script type="module" src="/js/utils/onboarding-tour.js?v=1763264017"></script>
-    <script type="module" src="/js/utils/notification-system.js?v=1763264017"></script>
+    <!-- notification-system.js merged into core/notifications.js -->
     <script type="module" src="/js/utils/accessibility-manager.js?v=1763264017"></script>
     <script type="module" src="/js/utils/app-health-checker.js?v=1763264017"></script>
 
     <!-- Firebase Configuration loaded from js/firebase-config.js (not tracked in git) -->
-    <script type="module" src="/js/dashboard.js?v=1763264017"></script>
+    <script type="module" src="/js/ui/dashboard.js"></script>
 
     <!-- Smart Suggestions Engine - Cargar después de dashboard -->
-    <script type="module">
-        console.log('💡 Cargando Smart Suggestions Engine...');
-
-        // Esperar a que dashboard.js cargue completamente
-        setTimeout(async () => {
-            try {
-                await import('./js/smart-suggestions-engine.js');
-                console.log('✅ smart-suggestions-engine.js cargado');
-
-                await import('./js/smart-suggestions-ui.js');
-                console.log('✅ smart-suggestions-ui.js cargado');
-
-                console.log('✅ SuggestionsEngine disponible:', window.SuggestionsEngine ? 'SÍ' : 'NO');
-            } catch (error) {
-                console.error('❌ Error cargando Smart Suggestions:', error);
-            }
-        }, 2000); // Esperar 2 segundos después de que dashboard.js cargue
-    </script>
+    <script type="module" src="/js/ai/smart-suggestions-engine.js"></script>
+    <script type="module" src="/js/ai/smart-suggestions-ui.js"></script>
     
     <!-- 📱 FAB Menu Script (Mobile) -->
     <script>
@@ -716,7 +645,6 @@
             modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
             document.body.appendChild(modal);
         };
-        console.log('✅ Main Menu System loaded');
 
         // 🎓 Iniciar onboarding tutorial cuando cargue todo
         window.addEventListener('load', () => {
@@ -735,21 +663,9 @@
 
     <!-- 📱 PWA Service Worker -->
     <script>
-        console.log('🔧 DEBUG PWA: Iniciando configuración PWA');
-        console.log('🔧 DEBUG PWA: Service Worker soportado?', 'serviceWorker' in navigator);
-        console.log('🔧 DEBUG PWA: URL actual:', window.location.href);
-        console.log('🔧 DEBUG PWA: Protocol:', window.location.protocol);
-
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
-                    .then(registration => {
-                        console.log('✅ PWA: Service Worker registrado:', registration.scope);
-                        console.log('🔧 DEBUG PWA: Registration state:', registration.active?.state);
-                    })
-                    .catch(error => {
-                        console.error('❌ PWA: Error al registrar Service Worker:', error);
-                    });
+                navigator.serviceWorker.register('./service-worker.js').catch(() => {});
             });
         }
 
@@ -762,29 +678,10 @@
         const isAndroid = /Android/.test(navigator.userAgent);
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 
-        console.log('🔧 DEBUG PWA: isIOS?', isIOS);
-        console.log('🔧 DEBUG PWA: isAndroid?', isAndroid);
-        console.log('🔧 DEBUG PWA: isStandalone?', isStandalone);
-        console.log('🔧 DEBUG PWA: User Agent:', navigator.userAgent);
-
-        // Timeout para verificar si beforeinstallprompt NO se dispara
-        setTimeout(() => {
-            if (!deferredPrompt && !isIOS && !isStandalone) {
-                console.warn('⚠️ DEBUG PWA: beforeinstallprompt NO se disparó después de 5 segundos');
-                console.warn('⚠️ DEBUG PWA: Posibles razones:');
-                console.warn('  1. La app ya está instalada');
-                console.warn('  2. No cumple criterios PWA (manifest, service worker, HTTPS, icons)');
-                console.warn('  3. El usuario ya rechazó la instalación anteriormente');
-                console.warn('  4. Chrome no reconoce el manifest.json correctamente');
-            }
-        }, 5000);
-
         // Solo mostrar el botón si NO está instalada ya Y es móvil
         const isMobile = window.innerWidth <= 768;
-        console.log('🔧 DEBUG PWA: isMobile?', isMobile, '(width:', window.innerWidth + ')');
 
         if (!isStandalone && isMobile) {
-            console.log('🔧 DEBUG PWA: App NO instalada y es móvil, configurando botón install');
             installButton = document.createElement('button');
             installButton.id = 'pwa-install-button';
             // Clase inicial: hidden, se mostrará cuando beforeinstallprompt se dispare o en iOS
@@ -798,8 +695,6 @@
 
             // Para Android Chrome - usar el evento nativo
             window.addEventListener('beforeinstallprompt', (e) => {
-                console.log('✅ DEBUG PWA: ¡beforeinstallprompt DISPARADO! Chrome reconoce la app como instalable');
-                console.log('📲 PWA: Evento beforeinstallprompt detectado (Android)');
                 e.preventDefault();
                 deferredPrompt = e;
                 // Mostrar botón
@@ -817,8 +712,6 @@
                     // Android Chrome - instalación nativa
                     deferredPrompt.prompt();
                     const { outcome } = await deferredPrompt.userChoice;
-                    console.log(`📲 PWA: Usuario ${outcome === 'accepted' ? 'aceptó' : 'rechazó'} la instalación`);
-
                     if (outcome === 'accepted') {
                         installButton.classList.add('hidden');
                         installButton.classList.remove('flex');
@@ -831,7 +724,6 @@
             });
 
             window.addEventListener('appinstalled', () => {
-                console.log('✅ PWA: App instalada exitosamente');
                 installButton.classList.add('hidden');
                 installButton.classList.remove('flex');
                 if (window.Notifications) {
@@ -915,7 +807,7 @@
                     </button>
                     <div class="mb-4">
                         <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-                            🎯 Instalar Japan Trip Planner
+                            🎯 Instalar Japitin
                         </h3>
                     </div>
                     <div class="text-gray-700 dark:text-gray-300">
@@ -938,59 +830,11 @@
         }
     </script>
 
-    <!-- 📝 Botón flotante para exportar logs (SOLO DESKTOP) -->
-    <style>
-        #log-export-button {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 999998;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: system-ui, -apple-system;
-        }
-
-        #log-export-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
-        }
-
-        /* OCULTAR en móvil */
-        @media (max-width: 768px) {
-            #log-export-button {
-                display: none !important;
-            }
-        }
-    </style>
-    <button
-        id="log-export-button"
-        onclick="uploadLogs()"
-        title="Subir logs a dpaste.com para compartir con Claude"
-    >
-        📤
-    </button>
-
-    <!-- 🛠️ Dev Panel - Solo en desarrollo -->
-    <script src="/js/dev-panel.js"></script>
-    <script src="/js/dev-visual-editor.js"></script>
-    <script src="/js/dev-visual-editor-advanced.js"></script>
-    <script src="/js/dev-visual-editor-pro.js"></script>
 
     <!-- 👥 Crowd Detector - Sistema de detección de multitudes -->
-    <script src="/js/crowd-detector.js"></script>
-    <script src="/js/crowd-detector-ui.js"></script>
-    <script src="/js/crowd-detector-integration.js"></script>
+    <script type="module" src="/js/ai/crowd-detector.js"></script>
+    <script type="module" src="/js/ai/crowd-detector-ui.js"></script>
+    <script type="module" src="/js/ai/crowd-detector-integration.js"></script>
 
     <!-- 🐱 Maneki-neko (Gatito de la suerte) -->
     <div class="maneki-container">
@@ -1003,35 +847,35 @@
     </div>
 
     <!-- Script de animaciones kawaii -->
-    <script src="/js/kawaii-animations.js"></script>
+    <script type="module" src="/js/ui/kawaii-animations.js"></script>
 
     <!-- Scripts de 30 Reglas Anti-Error -->
-    <script src="/js/japan-rules.js"></script>
-    <script src="/js/japan-rules-ui.js"></script>
+    <script type="module" src="/js/features/japan/japan-rules.js"></script>
+    <script type="module" src="/js/features/japan/japan-rules-ui.js"></script>
 
     <!-- Scripts de Control Horarios -->
-    <script src="/js/horarios-system.js"></script>
-    <script src="/js/horarios-ui.js"></script>
+    <script type="module" src="/js/features/japan/horarios-system.js"></script>
+    <script type="module" src="/js/features/japan/horarios-ui.js"></script>
 
     <!-- Scripts de Sistema de Zonas -->
-    <script src="/js/zonas-system.js"></script>
-    <script src="/js/zonas-ui.js"></script>
+    <script type="module" src="/js/features/japan/zonas-system.js"></script>
+    <script type="module" src="/js/features/japan/zonas-ui.js"></script>
 
     <!-- Scripts de Survival Guide -->
-    <script src="/js/survival-guide.js"></script>
-    <script src="/js/survival-ui.js"></script>
+    <script type="module" src="/js/features/japan/survival-guide.js"></script>
+    <script type="module" src="/js/features/japan/survival-ui.js"></script>
 
     <!-- Scripts de JR Pass Calculator -->
-    <script src="/js/jr-pass-calculator.js"></script>
-    <script src="/js/jr-pass-ui.js"></script>
+    <script type="module" src="/js/features/japan/jr-pass-calculator.js"></script>
+    <script type="module" src="/js/features/japan/jr-pass-ui.js"></script>
 
     <!-- Scripts de Ramen Passport -->
-    <script src="/js/ramen-passport.js"></script>
-    <script src="/js/ramen-passport-ui.js"></script>
+    <script type="module" src="/js/features/japan/ramen-passport.js"></script>
+    <script type="module" src="/js/features/japan/ramen-passport-ui.js"></script>
 
     <!-- Scripts de Goshuin Book -->
-    <script src="/js/goshuin-book.js"></script>
-    <script src="/js/goshuin-book-ui.js"></script>
+    <script type="module" src="/js/features/japan/goshuin-book.js"></script>
+    <script type="module" src="/js/features/japan/goshuin-book-ui.js"></script>
 
     <!-- 🏥 Health Dashboard - Diagnóstico del Itinerario -->
     <script type="module" src="/js/tools/health-calculator.js"></script>
@@ -1040,100 +884,97 @@
 
     <!-- 🤖 SISTEMA DE INTELIGENCIA ARTIFICIAL - Mini IA Local -->
     <!-- 🧠 Predictor de Preferencias ML -->
-    <script src="/js/preference-predictor.js"></script>
+    <script type="module" src="/js/ai/preference-predictor.js"></script>
 
     <!-- 🎓 Motor de Decisiones Sistema Experto -->
-    <script src="/js/expert-decision-engine.js"></script>
+    <script type="module" src="/js/ai/expert-decision-engine.js"></script>
 
     <!-- 🧬 Algoritmo Genético para Optimización de Rutas -->
-    <script src="/js/genetic-route-optimizer.js"></script>
+    <script type="module" src="/js/map/genetic-route-optimizer.js"></script>
 
     <!-- 📊 Simulador de Ritmo Visual -->
-    <script src="/js/visual-pace-simulator.js"></script>
+    <script type="module" src="/js/ai/visual-pace-simulator.js"></script>
 
     <!-- ⛅ Integración de Clima en Tiempo Real -->
-    <script src="/js/weather-integration.js"></script>
+    <script type="module" src="/js/api/weather-integration.js"></script>
 
     <!-- 🔄 Regenerador de Días -->
-    <script src="/js/day-regenerator.js"></script>
+    <script type="module" src="/js/features/itinerary/day-regenerator.js"></script>
 
     <!-- 🤖 Integración ML - Conecta todo el sistema de IA -->
-    <script src="/js/ml-integration.js"></script>
+    <script type="module" src="/js/ai/ml-integration.js"></script>
 
     <!-- 🔍 Detector de Anomalías en Itinerarios -->
-    <script src="/js/itinerary-anomaly-detector.js"></script>
+    <script type="module" src="/js/features/itinerary/itinerary-anomaly-detector.js"></script>
 
     <!-- ⚡ Predictor de Energía y Burnout -->
-    <script src="/js/energy-burnout-predictor.js"></script>
+    <script type="module" src="/js/ai/energy-burnout-predictor.js"></script>
 
     <!-- 🤝 Sistema de Recomendaciones Colaborativas -->
-    <script src="/js/collaborative-recommender.js"></script>
+    <script type="module" src="/js/ai/collaborative-recommender.js"></script>
 
     <!-- ✍️ Generador Inteligente de Descripciones -->
-    <script src="/js/smart-description-generator.js"></script>
+    <script type="module" src="/js/ai/smart-description-generator.js"></script>
 
     <!-- 🗣️ Parser de Comandos en Lenguaje Natural -->
-    <script src="/js/nlp-command-parser.js"></script>
+    <script type="module" src="/js/ai/nlp-command-parser.js"></script>
 
     <!-- 🗺️ GEOGRAPHIC ROUTE OPTIMIZATION -->
-    <script src="/js/geo-optimizer.js"></script>
-    <script src="/js/geo-optimizer-ui.js"></script>
+    <script type="module" src="/js/map/geo-optimizer.js"></script>
+    <script type="module" src="/js/map/geo-optimizer-ui.js"></script>
 
     <!-- 💰 BUDGET INTELLIGENCE SYSTEM -->
-    <script src="/js/budget-intelligence.js"></script>
-    <script src="/js/budget-intelligence-ui.js"></script>
+    <script type="module" src="/js/features/budget/budget-intelligence.js"></script>
+    <script type="module" src="/js/features/budget/budget-intelligence-ui.js"></script>
 
     <!-- ⛩️ CULTURAL KNOWLEDGE SYSTEM -->
-    <script src="/js/cultural-knowledge.js"></script>
-    <script src="/js/cultural-knowledge-ui.js"></script>
+    <script type="module" src="/js/features/japan/cultural-knowledge.js"></script>
+    <script type="module" src="/js/features/japan/cultural-knowledge-ui.js"></script>
 
     <!-- 📱 MOBILE-FIRST SYSTEM -->
-    <script src="/js/mobile-first.js"></script>
+    <script type="module" src="/js/ui/mobile-first.js"></script>
 
     <!-- 👤 TRAVELER PROFILES SYSTEM -->
-    <script src="/js/traveler-profiles.js"></script>
-    <script src="/js/traveler-profiles-ui.js"></script>
+    <script type="module" src="/js/ai/traveler-profiles.js"></script>
+    <script type="module" src="/js/ai/traveler-profiles-ui.js"></script>
 
     <!-- 📍 LIVE MODE SYSTEM -->
-    <script src="/js/live-mode.js"></script>
-    <script src="/js/live-mode-ui.js"></script>
+    <script type="module" src="/js/features/planning/live-mode.js"></script>
+    <script type="module" src="/js/features/planning/live-mode-ui.js"></script>
 
     <!-- 🤖 Panel Central de IA -->
-    <script type="module" src="/js/ai-control-panel.js"></script>
+    <script type="module" src="/js/ai/ai-control-panel.js"></script>
 
-    <!-- 🍞 Toast Notifications -->
-    <script src="/js/toast-notifications.js"></script>
+    <!-- 🍞 Toast Notifications handled by core/notifications.js -->
 
-    <!-- 🎓 Onboarding Tutorial -->
-    <script src="/js/onboarding-tutorial.js"></script>
+    <!-- 🎓 Onboarding handled by utils/onboarding-tour.js -->
 
     <!-- 🔄 Loading States -->
-    <script src="/js/loading-states.js"></script>
+    <script type="module" src="/js/ui/loading-states.js"></script>
 
     <!-- 📊 Visual Dashboard -->
-    <script src="/js/visual-dashboard.js"></script>
+    <script type="module" src="/js/ui/visual-dashboard.js"></script>
 
     <!-- 🔍 Global Search -->
-    <script src="/js/global-search.js"></script>
+    <script type="module" src="/js/ui/global-search.js"></script>
 
     <!-- 🎨 Empty States -->
-    <script src="/js/empty-states.js"></script>
+    <script type="module" src="/js/ui/empty-states.js"></script>
 
-    <!-- 📱 Mobile Gestures -->
-    <script src="/js/mobile-gestures.js"></script>
+    <!-- 📱 Mobile Gestures handled by mobile-first.js -->
 
     <!-- ⚙️ SISTEMA DE CONFIGURACIONES DE USUARIO -->
     <!-- Sistema de configuraciones completo -->
-    <script type="module" src="/js/user-settings.js"></script>
+    <script type="module" src="/js/ui/user-settings.js"></script>
 
     <!-- UI de configuraciones -->
-    <script type="module" src="/js/settings-ui.js"></script>
+    <script type="module" src="/js/ui/settings-ui.js"></script>
 
     <!-- 💱 Currency Converter con API Real -->
-    <script type="module" src="/js/currency-converter.js"></script>
+    <script type="module" src="/js/features/budget/currency-converter.js"></script>
 
     <!-- 📦 Export/Import System -->
-    <script type="module" src="/js/export-import-system.js"></script>
+    <script type="module" src="/js/features/trips/export-import-system.js"></script>
 
     <!-- 🧠 ML BRAIN - FASE 1 -->
     <script type="module" src="/js/ml/ml-storage.js"></script>
@@ -1155,11 +996,8 @@
     <script type="module" src="/js/ml/collaborative-filtering.js"></script>
     <script type="module" src="/js/ml/swarm-intelligence.js"></script>
 
-    <!-- 🧪 ML TEST PANEL - Panel de Pruebas Interactivo -->
-    <script src="/js/ml-test-panel.js"></script>
-
     <!-- 🧠 ML ITINERARY ENHANCER - Integración Real del ML Brain -->
-    <script src="/js/ml-itinerary-enhancer.js"></script>
+    <script type="module" src="/js/ai/ml-itinerary-enhancer.js"></script>
 
     <!-- 🗣️ FASE 4: NATURAL LANGUAGE UNDERSTANDING -->
     <script type="module" src="/js/ml/semantic-intent-recognition.js"></script>
@@ -1221,7 +1059,7 @@
     <script type="module" src="/js/ml/long-term-memory.js"></script>
 
     <!-- 🌐 JAPAN DATA INTEGRATION -->
-    <script src="/js/data-integration.js"></script>
+    <script type="module" src="/js/core/data-integration.js"></script>
 
     <!-- 🔍 FASE 10: VISUAL INTELLIGENCE - Image Search & Recognition -->
     <script type="module" src="/js/ml/visual-intelligence.js"></script>
@@ -1254,34 +1092,28 @@
     <script type="module" src="/js/ml/adaptive-response-generation.js"></script>
 
     <!-- 💬 AI CHAT UI - Interface for talking to the AI -->
-    <script src="/js/ai-chat-ui.js"></script>
+    <script type="module" src="/js/ai/ai-chat-ui.js"></script>
 
     <!-- 📸 INSTAGRAM TIMELINE - Visual timeline of your trip -->
-    <script src="/js/instagram-timeline.js"></script>
-
-    <!-- 📊 CHART.JS - Interactive charts library -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script type="module" src="/js/features/journal/instagram-timeline.js"></script>
 
     <!-- 📊 ANALYTICS DASHBOARD - Data visualizations -->
-    <script src="/js/analytics-dashboard.js"></script>
+    <script type="module" src="/js/analytics/analytics-dashboard.js"></script>
 
     <!-- 📊 ANALYTICS INTEGRATION - Connect charts to app -->
-    <script src="/js/analytics-integration.js"></script>
+    <script type="module" src="/js/analytics/analytics-integration.js"></script>
 
     <!-- 📔 TRAVEL JOURNAL - Personal travel diary -->
-    <script type="module" src="/js/travel-journal.js"></script>
-
-    <!-- 🏆 GAMIFICATION SYSTEM - Achievements and badges -->
-    <script src="/js/gamification-system.js"></script>
+    <script type="module" src="/js/features/journal/travel-journal.js"></script>
 
     <!-- 🎯 ENHANCED DASHBOARD - Main dashboard with widgets -->
-    <script src="/js/dashboard-enhanced.js"></script>
+    <script type="module" src="/js/ui/dashboard-enhanced.js"></script>
 
     <!-- 💰 BUDGET VISUAL CHARTS - Beautiful budget visualizations -->
-    <script src="/js/budget-visual-charts.js"></script>
+    <script type="module" src="/js/features/budget/budget-visual-charts.js"></script>
 
     <!-- 🔍 GLOBAL SEARCH & FILTERS - Advanced search and filtering -->
-    <script src="/js/global-search-filters.js"></script>
+    <script type="module" src="/js/ui/global-search-filters.js"></script>
 
 </body>
 </html>

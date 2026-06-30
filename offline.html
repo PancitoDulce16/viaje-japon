@@ -3,125 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sin Conexión - Japitin</title>
+    <title>Sin Conexión — Japitin</title>
+    <meta name="theme-color" content="#7c3aed">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #fef3f8 0%, #fce7f3 100%);
-        }
-
-        .offline-container {
-            text-align: center;
+            background: #0f0a1e;
+            color: #fff;
             padding: 2rem;
-            max-width: 500px;
         }
 
-        .offline-icon {
-            font-size: 80px;
-            margin-bottom: 1rem;
+        .container {
+            text-align: center;
+            max-width: 480px;
+            width: 100%;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            margin-bottom: 2.5rem;
+            opacity: 0.6;
+        }
+        .brand-flag { font-size: 1.6rem; }
+        .brand-name { font-size: 1.4rem; font-weight: 900; letter-spacing: -0.03em; }
+
+        .icon-wrap {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: rgba(124,58,237,0.15);
+            border: 2px solid rgba(124,58,237,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            margin: 0 auto 1.5rem;
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(124,58,237,0.3); }
+            50%       { box-shadow: 0 0 0 16px rgba(124,58,237,0); }
         }
 
         h1 {
-            font-size: 32px;
-            color: #1f2937;
-            margin-bottom: 1rem;
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.75rem;
         }
 
-        p {
-            font-size: 18px;
-            color: #6b7280;
-            margin-bottom: 2rem;
+        p.subtitle {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.5);
             line-height: 1.6;
+            margin-bottom: 2rem;
         }
 
-        button {
-            background: #9333ea;
-            color: white;
+        .retry-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding: 0.85rem 2rem;
+            border-radius: 12px;
             border: none;
-            padding: 12px 32px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 2.5rem;
         }
-
-        button:hover {
-            background: #7e22ce;
+        .retry-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(124,58,237,0.35);
         }
 
         .tips {
-            margin-top: 2rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
             padding: 1.5rem;
-            background: white;
-            border-radius: 12px;
             text-align: left;
         }
-
         .tips h3 {
-            font-size: 18px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(255,255,255,0.35);
             margin-bottom: 1rem;
-            color: #1f2937;
         }
-
-        .tips ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
+        .tips ul { list-style: none; }
         .tips li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
             padding: 0.5rem 0;
-            color: #4b5563;
+            color: rgba(255,255,255,0.55);
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .tips li:last-child { border-bottom: none; }
+        .tip-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #7c3aed;
+            flex-shrink: 0;
         }
 
-        .tips li::before {
-            content: "✓ ";
-            color: #9333ea;
-            font-weight: bold;
+        .status {
+            margin-top: 2rem;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.2);
+        }
+        .status span {
+            display: inline-block;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #ef4444;
+            margin-right: 0.4rem;
+            vertical-align: middle;
+            animation: blink 1.5s ease-in-out infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.2; }
         }
     </style>
 </head>
 <body>
-    <div class="offline-container">
-        <div class="offline-icon">📡</div>
-        <h1>Sin Conexión</h1>
-        <p>
-            No pudimos conectarnos a internet. Pero no te preocupes,
-            puedes seguir usando Japitin con las funciones que ya tienes guardadas.
+    <div class="container">
+        <div class="brand">
+            <span class="brand-flag">🇯🇵</span>
+            <span class="brand-name">Japitin</span>
+        </div>
+
+        <div class="icon-wrap">📡</div>
+
+        <h1>Sin conexión</h1>
+        <p class="subtitle">
+            No hay internet en este momento, pero tu itinerario guardado sigue disponible.
         </p>
 
-        <button onclick="window.location.reload()">
-            Reintentar Conexión
+        <button class="retry-btn" onclick="window.location.reload()">
+            ↺ Reintentar conexión
         </button>
 
         <div class="tips">
-            <h3>💡 Mientras tanto...</h3>
+            <h3>Disponible sin conexión</h3>
             <ul>
-                <li>Puedes ver tu itinerario guardado</li>
-                <li>Revisar tu presupuesto</li>
-                <li>Ver lugares marcados</li>
-                <li>Explorar tus fotos</li>
+                <li><span class="tip-dot"></span>Tu itinerario guardado</li>
+                <li><span class="tip-dot"></span>Presupuesto y gastos</li>
+                <li><span class="tip-dot"></span>Lugares marcados como favoritos</li>
+                <li><span class="tip-dot"></span>Lista de packing</li>
             </ul>
         </div>
+
+        <p class="status"><span></span>Reconectando automáticamente…</p>
     </div>
 
     <script>
-        // Retry connection every 5 seconds
         setInterval(() => {
             fetch('/', { method: 'HEAD', cache: 'no-store' })
-                .then(() => {
-                    window.location.reload();
-                })
-                .catch(() => {
-                    // Still offline
-                });
+                .then(() => window.location.reload())
+                .catch(() => {});
         }, 5000);
     </script>
 </body>

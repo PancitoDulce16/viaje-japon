@@ -4,28 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- SEO & Metadata -->
     <title>Japitin - El Mejor Planificador de Viajes a Japón con IA 🇯🇵</title>
     <meta name="description" content="Planifica tu viaje perfecto a Japón con IA que entiende TU estilo. 17 ciudades, 56+ actividades, itinerarios personalizados, JR Pass calculator, Ramen Passport, optimización de rutas. Gratis y colaborativo.">
-    <meta name="keywords" content="viaje japon, planificador japon, itinerario japon, JR Pass, viaje tokio, kyoto, osaka, hiroshima, nara, hakone, kanazawa, guia japon, actividades japon">
-    <meta name="theme-color" content="#9333ea">
+    <meta name="keywords" content="viaje japon, planificador japon, itinerario japon, JR Pass, viaje tokio, kyoto, osaka">
+    <meta name="theme-color" content="#7c3aed">
     <meta name="author" content="Japitin">
 
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://japan-itin-dev.web.app/">
     <meta property="og:title" content="Japitin - Planifica tu viaje a Japón con IA">
     <meta property="og:description" content="La app más completa para planificar tu aventura japonesa. 17 ciudades, 56+ actividades. IA que aprende, JR Pass calculator, Ramen Passport y más.">
     <meta property="og:image" content="https://japan-itin-dev.web.app/images/og-image.png">
 
-    <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://japan-itin-dev.web.app/">
     <meta property="twitter:title" content="Japitin - El Mejor Planificador de Viajes a Japón">
     <meta property="twitter:description" content="Planifica tu viaje perfecto a Japón con IA. Gratis y fácil.">
-    <meta property="twitter:image" content="https://japan-itin-dev.web.app/images/og-image.png">
 
-    <!-- Structured Data for SEO -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -35,136 +29,186 @@
       "url": "https://japan-itin-dev.web.app",
       "applicationCategory": "TravelApplication",
       "operatingSystem": "Web",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.9",
-        "ratingCount": "127"
-      },
-      "featureList": [
-        "Planificación de itinerarios con IA",
-        "JR Pass Calculator",
-        "Ramen Passport",
-        "Optimización de rutas",
-        "Control de presupuesto",
-        "Modo colaborativo"
-      ]
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.9", "ratingCount": "127" }
     }
     </script>
 
-    <!-- Favicon -->
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/png" href="/images/icons/icon-192.png">
     <link rel="apple-touch-icon" href="/images/icons/icon-192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
                     colors: {
-                        'japan-purple': '#9333ea',
-                        'japan-pink': '#fce7f3',
-                        'japan-dark': '#1a1a2e'
+                        'jp-purple': '#7c3aed',
+                        'jp-purple-light': '#a855f7',
+                        'jp-red': '#dc2626',
+                        'jp-pink': '#db2777',
+                        'jp-dark': '#0f0a1e',
                     }
                 }
             }
         }
     </script>
 
-    <!-- Critical CSS Inline -->
     <style>
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        * { box-sizing: border-box; }
+
+        body { font-family: 'Inter', system-ui, sans-serif; }
+
+        /* ── Hero ── */
+        .hero-section {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background-image: url('https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1920&q=85');
+            background-size: cover;
+            background-position: center 30%;
+            transform: scale(1.05);
+            transition: transform 8s ease-out;
+        }
+        .hero-bg.loaded { transform: scale(1); }
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                135deg,
+                rgba(15, 10, 30, 0.82) 0%,
+                rgba(124, 58, 237, 0.45) 50%,
+                rgba(15, 10, 30, 0.75) 100%
+            );
+        }
+        .hero-content { position: relative; z-index: 10; }
+
+        /* ── Nav ── */
+        .nav-glass {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
+        .nav-scrolled {
+            background: rgba(15, 10, 30, 0.92) !important;
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+        /* ── Headline gradient text ── */
+        .gradient-text {
+            background: linear-gradient(135deg, #c084fc 0%, #f472b6 50%, #fb7185 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .animate-fade-in-up {
-            animation: fadeInUp 0.8s ease-out forwards;
-        }
-
-        .animate-float {
-            animation: float 3s ease-in-out infinite;
-        }
-
-        .hero-gradient {
-            background: linear-gradient(135deg, #fef3f8 0%, #fce7f3 50%, #e9d5ff 100%);
-        }
-
-        html.dark .hero-gradient {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-        }
-
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.9);
+        /* ── Stats bar ── */
+        .stats-bar {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        html.dark .glass-effect {
-            background: rgba(22, 33, 62, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
+        /* ── Feature cards ── */
         .feature-card {
-            transition: transform 0.3s, box-shadow 0.3s;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            border: 1px solid rgba(0,0,0,0.06);
         }
-
         .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            transform: translateY(-6px);
+            box-shadow: 0 24px 48px rgba(124, 58, 237, 0.12);
+            border-color: rgba(124, 58, 237, 0.2);
+        }
+        .icon-pill {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            flex-shrink: 0;
         }
 
-        html.dark .feature-card:hover {
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        /* ── Steps timeline ── */
+        .steps-line {
+            position: absolute;
+            top: 28px;
+            left: calc(50% + 80px);
+            right: calc(-50% + 80px);
+            height: 2px;
+            background: linear-gradient(90deg, #7c3aed, #db2777);
         }
 
-        /* Smooth scroll */
-        html {
-            scroll-behavior: smooth;
+        /* ── CTA glow ── */
+        .btn-glow {
+            box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.5);
+            transition: box-shadow 0.3s ease, transform 0.2s ease;
         }
+        .btn-glow:hover {
+            box-shadow: 0 0 30px 4px rgba(124, 58, 237, 0.35);
+            transform: translateY(-2px);
+        }
+
+        /* ── Scroll animations ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.65s ease, transform 0.65s ease;
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ── Sakura decoration ── */
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-16px) rotate(5deg); }
+        }
+        .float-anim { animation: float-slow 5s ease-in-out infinite; }
+
+        /* ── Scroll indicator ── */
+        @keyframes bounce-arrow {
+            0%, 100% { transform: translateY(0); opacity: 0.7; }
+            50% { transform: translateY(8px); opacity: 1; }
+        }
+        .scroll-arrow { animation: bounce-arrow 2s ease-in-out infinite; }
     </style>
 </head>
-<body class="antialiased">
-    <!-- Navigation -->
-    <nav class="fixed top-0 w-full z-50 glass-effect">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- Logo -->
-                <div class="flex items-center space-x-2">
-                    <span class="text-3xl">🇯🇵</span>
-                    <span class="text-2xl font-bold text-japan-purple">Japitin</span>
-                </div>
+<body class="antialiased bg-white text-gray-900">
 
-                <!-- Desktop Navigation -->
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="#features" class="text-gray-700 dark:text-gray-300 hover:text-japan-purple transition">Características</a>
-                    <a href="#how-it-works" class="text-gray-700 dark:text-gray-300 hover:text-japan-purple transition">Cómo Funciona</a>
-                    <a href="#pricing" class="text-gray-700 dark:text-gray-300 hover:text-japan-purple transition">Precio</a>
-                    <a href="/login.html" class="px-6 py-2 bg-japan-purple text-white rounded-lg hover:bg-purple-700 transition font-medium">
-                        Empezar Gratis
+    <!-- ══════════════ NAV ══════════════ -->
+    <nav id="main-nav" class="fixed top-0 w-full z-50 nav-glass transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-5 sm:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/" class="flex items-center gap-2.5 group">
+                    <span class="text-2xl">🇯🇵</span>
+                    <span class="text-xl font-black text-white tracking-tight">Japitin</span>
+                </a>
+
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="#features" class="text-white/75 hover:text-white text-sm font-medium transition">Características</a>
+                    <a href="#how-it-works" class="text-white/75 hover:text-white text-sm font-medium transition">Cómo Funciona</a>
+                    <a href="#pricing" class="text-white/75 hover:text-white text-sm font-medium transition">Precio</a>
+                    <a href="/login.html" class="px-5 py-2 bg-jp-purple hover:bg-jp-purple-light text-white rounded-lg text-sm font-semibold transition btn-glow">
+                        Empezar gratis →
                     </a>
                 </div>
 
-                <!-- Mobile Menu Button -->
-                <button id="mobile-menu-btn" class="md:hidden p-2">
+                <button id="mobile-menu-btn" class="md:hidden p-2 text-white">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
@@ -172,386 +216,457 @@
             </div>
         </div>
 
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-japan-dark border-t dark:border-gray-700">
-            <div class="px-4 py-4 space-y-3">
-                <a href="#features" class="block text-gray-700 dark:text-gray-300 hover:text-japan-purple transition">Características</a>
-                <a href="#how-it-works" class="block text-gray-700 dark:text-gray-300 hover:text-japan-purple transition">Cómo Funciona</a>
-                <a href="#pricing" class="block text-gray-700 dark:text-gray-300 hover:text-japan-purple transition">Precio</a>
-                <a href="/login.html" class="block px-6 py-2 bg-japan-purple text-white rounded-lg hover:bg-purple-700 transition font-medium text-center">
-                    Empezar Gratis
+        <div id="mobile-menu" class="hidden md:hidden bg-jp-dark/95 backdrop-blur-md border-t border-white/10">
+            <div class="px-5 py-5 space-y-4">
+                <a href="#features" class="block text-white/75 hover:text-white text-sm font-medium transition">Características</a>
+                <a href="#how-it-works" class="block text-white/75 hover:text-white text-sm font-medium transition">Cómo Funciona</a>
+                <a href="#pricing" class="block text-white/75 hover:text-white text-sm font-medium transition">Precio</a>
+                <a href="/login.html" class="block px-5 py-3 bg-jp-purple text-white rounded-lg text-sm font-semibold text-center transition">
+                    Empezar gratis →
                 </a>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero-gradient pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-7xl mx-auto">
-            <div class="grid lg:grid-cols-2 gap-12 items-center">
-                <!-- Hero Content -->
-                <div class="animate-fade-in-up">
-                    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
-                        Tu viaje perfecto a
-                        <span class="text-japan-purple">Japón</span> empieza aquí
-                    </h1>
+    <!-- ══════════════ HERO ══════════════ -->
+    <section class="hero-section">
+        <div class="hero-bg" id="hero-bg"></div>
+        <div class="hero-overlay"></div>
 
-                    <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-                        Planificador inteligente con IA que <strong>aprende tu estilo</strong> y crea itinerarios personalizados.
-                        JR Pass calculator, optimización de rutas, y features únicas que no encontrarás en ningún otro lado.
-                    </p>
-
-                    <!-- CTA Buttons -->
-                    <div class="flex flex-col sm:flex-row gap-4 mb-8">
-                        <a href="/login.html" class="px-8 py-4 bg-japan-purple text-white rounded-lg hover:bg-purple-700 transition font-bold text-lg text-center shadow-lg hover:shadow-xl transform hover:scale-105">
-                            🚀 Crear mi itinerario gratis
-                        </a>
-                        <a href="#demo" class="px-8 py-4 bg-white dark:bg-japan-dark text-japan-purple dark:text-white border-2 border-japan-purple rounded-lg hover:bg-japan-pink dark:hover:bg-gray-800 transition font-bold text-lg text-center">
-                            ▶️ Ver demo
-                        </a>
-                    </div>
-
-                    <!-- Social Proof -->
-                    <div class="flex items-center space-x-6 text-sm text-gray-600 dark:text-gray-400">
-                        <div class="flex items-center">
-                            <div class="flex -space-x-2">
-                                <div class="w-8 h-8 rounded-full bg-purple-200 dark:bg-purple-900 border-2 border-white dark:border-gray-800"></div>
-                                <div class="w-8 h-8 rounded-full bg-pink-200 dark:bg-pink-900 border-2 border-white dark:border-gray-800"></div>
-                                <div class="w-8 h-8 rounded-full bg-blue-200 dark:bg-blue-900 border-2 border-white dark:border-gray-800"></div>
-                            </div>
-                            <span class="ml-3"><strong>127+</strong> viajeros felices</span>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="text-yellow-400">⭐⭐⭐⭐⭐</span>
-                            <span class="ml-2"><strong>4.9</strong>/5</span>
-                        </div>
-                    </div>
+        <div class="hero-content max-w-7xl mx-auto px-5 sm:px-8 w-full py-32">
+            <div class="max-w-3xl">
+                <!-- Badge -->
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-white/90 text-sm font-medium mb-8 backdrop-blur-sm">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Más de 127 viajeros planificando ahora mismo
                 </div>
 
-                <!-- Hero Image/Animation -->
-                <div class="animate-fade-in-up" style="animation-delay: 0.2s; opacity: 0;">
-                    <div class="relative">
-                        <div class="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-3xl blur-2xl opacity-30 animate-float"></div>
-                        <img src="https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=800&q=80"
-                             alt="Tokyo cityscape"
-                             class="relative rounded-3xl shadow-2xl w-full">
+                <!-- Headline -->
+                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.05] tracking-tight mb-6">
+                    Tu viaje perfecto<br>
+                    a <span class="gradient-text">Japón</span><br>
+                    empieza aquí
+                </h1>
+
+                <p class="text-lg sm:text-xl text-white/70 mb-10 leading-relaxed max-w-xl">
+                    IA que aprende tu estilo de viaje y construye itinerarios personalizados.
+                    JR Pass calculator, Ramen Passport, rutas optimizadas y mucho más.
+                </p>
+
+                <!-- CTAs -->
+                <div class="flex flex-col sm:flex-row gap-4 mb-14">
+                    <a href="/login.html"
+                       class="px-8 py-4 bg-jp-purple hover:bg-jp-purple-light text-white font-bold text-base rounded-xl shadow-2xl btn-glow text-center transition">
+                        🚀 Crear mi itinerario gratis
+                    </a>
+                    <a href="#features"
+                       class="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-semibold text-base rounded-xl border border-white/20 text-center transition backdrop-blur-sm">
+                        Ver características ↓
+                    </a>
+                </div>
+
+                <!-- Social proof -->
+                <div class="flex items-center gap-5">
+                    <div class="flex -space-x-2.5">
+                        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 border-2 border-white/20 flex items-center justify-center text-white text-xs font-bold">A</div>
+                        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 border-2 border-white/20 flex items-center justify-center text-white text-xs font-bold">M</div>
+                        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-red-400 border-2 border-white/20 flex items-center justify-center text-white text-xs font-bold">S</div>
+                        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-green-400 to-teal-400 border-2 border-white/20 flex items-center justify-center text-white text-xs font-bold">R</div>
                     </div>
+                    <div class="text-white/70 text-sm">
+                        <span class="text-yellow-400">★★★★★</span>
+                        <span class="ml-2"><strong class="text-white">4.9</strong>/5 · 127+ viajeros felices</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50 scroll-arrow">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- ══════════════ STATS BAR ══════════════ -->
+    <section class="bg-jp-dark py-6 px-5 sm:px-8">
+        <div class="max-w-5xl mx-auto">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                <div>
+                    <div class="text-2xl font-black text-white">17</div>
+                    <div class="text-xs text-white/50 mt-0.5 font-medium uppercase tracking-wide">Ciudades</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-black text-white">56+</div>
+                    <div class="text-xs text-white/50 mt-0.5 font-medium uppercase tracking-wide">Actividades</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-black text-white">18</div>
+                    <div class="text-xs text-white/50 mt-0.5 font-medium uppercase tracking-wide">Fases de IA</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-black text-white">100%</div>
+                    <div class="text-xs text-white/50 mt-0.5 font-medium uppercase tracking-wide">Gratis</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Features Section -->
-    <section id="features" class="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-japan-dark">
+    <!-- ══════════════ FEATURES ══════════════ -->
+    <section id="features" class="py-24 px-5 sm:px-8 bg-gray-50">
         <div class="max-w-7xl mx-auto">
-            <!-- Section Header -->
-            <div class="text-center mb-16">
-                <h2 class="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-                    ¿Por qué Japitin es diferente?
+            <div class="text-center mb-16 reveal">
+                <span class="inline-block px-4 py-1.5 bg-jp-purple/10 text-jp-purple text-sm font-semibold rounded-full mb-4">
+                    ¿Por qué Japitin?
+                </span>
+                <h2 class="text-4xl sm:text-5xl font-black text-gray-900 mb-4 tracking-tight">
+                    Features que no<br>encontrarás en ningún otro lado
                 </h2>
-                <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                    No somos solo otro planificador. Tenemos features únicas diseñadas específicamente para viajeros a Japón.
+                <p class="text-lg text-gray-500 max-w-2xl mx-auto">
+                    Diseñado específicamente para viajeros a Japón, no un planificador genérico.
                 </p>
             </div>
 
-            <!-- Features Grid -->
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Feature 1: AI -->
-                <div class="feature-card bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                    <div class="text-5xl mb-4">🧠</div>
-                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                        IA que te entiende
-                    </h3>
-                    <p class="text-gray-600 dark:text-gray-300 mb-4">
-                        Aprende tu estilo de viaje y adapta recomendaciones. Si eres foodie, otaku, nature lover... ¡la IA lo sabe!
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- AI -->
+                <div class="feature-card bg-white rounded-2xl p-7 shadow-sm reveal">
+                    <div class="icon-pill mb-5" style="background: linear-gradient(135deg, #7c3aed20, #a855f720);">
+                        🧠
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">IA que te entiende</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-5">
+                        Aprende tu estilo de viaje y adapta cada recomendación. Foodie, otaku, nature lover… la IA lo detecta y personaliza todo.
                     </p>
-                    <div class="text-sm text-japan-purple font-semibold">
-                        ✓ 18 fases de Machine Learning
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-jp-purple"></span>
+                        <span class="text-xs font-semibold text-jp-purple">18 fases de Machine Learning</span>
                     </div>
                 </div>
 
-                <!-- Feature 2: JR Pass -->
-                <div class="feature-card bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                    <div class="text-5xl mb-4">🚄</div>
-                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                        JR Pass Calculator
-                    </h3>
-                    <p class="text-gray-600 dark:text-gray-300 mb-4">
-                        ¿Te conviene comprarlo? Calculamos automáticamente si ahorras dinero basado en tu itinerario real.
+                <!-- JR Pass -->
+                <div class="feature-card bg-white rounded-2xl p-7 shadow-sm reveal">
+                    <div class="icon-pill mb-5" style="background: linear-gradient(135deg, #1d4ed820, #3b82f620);">
+                        🚄
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">JR Pass Calculator</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-5">
+                        ¿Te conviene comprar el JR Pass? Lo calculamos automáticamente basado en tu itinerario real. Sin suposiciones.
                     </p>
-                    <div class="text-sm text-japan-purple font-semibold">
-                        ✓ Ahorra hasta ¥50,000
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                        <span class="text-xs font-semibold text-blue-600">Ahorra hasta ¥50,000</span>
                     </div>
                 </div>
 
-                <!-- Feature 3: Ramen Passport -->
-                <div class="feature-card bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                    <div class="text-5xl mb-4">🍜</div>
-                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                        Ramen Passport
-                    </h3>
-                    <p class="text-gray-600 dark:text-gray-300 mb-4">
-                        Registra todos los ramens que pruebes, colecciona sellos virtuales y conviértete en un Ramen Master.
+                <!-- Ramen Passport -->
+                <div class="feature-card bg-white rounded-2xl p-7 shadow-sm reveal">
+                    <div class="icon-pill mb-5" style="background: linear-gradient(135deg, #ea580c20, #f9731620);">
+                        🍜
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Ramen Passport</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-5">
+                        Registra cada ramen que pruebes, colecciona sellos virtuales y conviértete en Ramen Master. Feature exclusiva.
                     </p>
-                    <div class="text-sm text-japan-purple font-semibold">
-                        ✓ Feature exclusiva
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-orange-600"></span>
+                        <span class="text-xs font-semibold text-orange-600">Feature exclusiva de Japitin</span>
                     </div>
                 </div>
 
-                <!-- Feature 4: Route Optimization -->
-                <div class="feature-card bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                    <div class="text-5xl mb-4">🗺️</div>
-                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                        Optimización de Rutas
-                    </h3>
-                    <p class="text-gray-600 dark:text-gray-300 mb-4">
-                        Agrupa actividades por zona geográfica y calcula la ruta más eficiente. No pierdas tiempo en traslados.
+                <!-- Route Optimizer -->
+                <div class="feature-card bg-white rounded-2xl p-7 shadow-sm reveal">
+                    <div class="icon-pill mb-5" style="background: linear-gradient(135deg, #05966920, #10b98120);">
+                        🗺️
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Rutas Optimizadas</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-5">
+                        Agrupa actividades por zona geográfica y calcula la ruta más eficiente. Sin traslados innecesarios entre barrios.
                     </p>
-                    <div class="text-sm text-japan-purple font-semibold">
-                        ✓ Ahorra 2-3 horas/día
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        <span class="text-xs font-semibold text-emerald-600">Ahorra 2–3 horas al día</span>
                     </div>
                 </div>
 
-                <!-- Feature 5: Cultural Intelligence -->
-                <div class="feature-card bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                    <div class="text-5xl mb-4">⛩️</div>
-                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                        Guía Cultural
-                    </h3>
-                    <p class="text-gray-600 dark:text-gray-300 mb-4">
-                        Etiqueta en templos, onsens, restaurantes. Frases útiles en japonés. La IA te guía culturalmente.
+                <!-- Cultural Guide -->
+                <div class="feature-card bg-white rounded-2xl p-7 shadow-sm reveal">
+                    <div class="icon-pill mb-5" style="background: linear-gradient(135deg, #dc262620, #ef444420);">
+                        ⛩️
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Guía Cultural</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-5">
+                        Etiqueta en templos, onsens y restaurantes. Frases clave en japonés. 30 reglas para no meter la pata.
                     </p>
-                    <div class="text-sm text-japan-purple font-semibold">
-                        ✓ 30 reglas culturales
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                        <span class="text-xs font-semibold text-red-600">30 reglas culturales esenciales</span>
                     </div>
                 </div>
 
-                <!-- Feature 6: Collaborative -->
-                <div class="feature-card bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
-                    <div class="text-5xl mb-4">👥</div>
-                    <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                        Modo Colaborativo
-                    </h3>
-                    <p class="text-gray-600 dark:text-gray-300 mb-4">
-                        Planifica con amigos o familia en tiempo real. Presupuesto compartido, votaciones, y sincronización automática.
+                <!-- Collaborative -->
+                <div class="feature-card bg-white rounded-2xl p-7 shadow-sm reveal">
+                    <div class="icon-pill mb-5" style="background: linear-gradient(135deg, #db277720, #ec489920);">
+                        👥
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Modo Colaborativo</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed mb-5">
+                        Planifica con amigos o familia en tiempo real. Presupuesto compartido, votaciones y sincronización automática.
                     </p>
-                    <div class="text-sm text-japan-purple font-semibold">
-                        ✓ Hasta 10 personas
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-pink-600"></span>
+                        <span class="text-xs font-semibold text-pink-600">Hasta 10 personas</span>
                     </div>
                 </div>
+
             </div>
         </div>
     </section>
 
-    <!-- How It Works Section -->
-    <section id="how-it-works" class="py-20 px-4 sm:px-6 lg:px-8 hero-gradient">
+    <!-- ══════════════ HOW IT WORKS ══════════════ -->
+    <section id="how-it-works" class="py-24 px-5 sm:px-8 bg-white">
         <div class="max-w-5xl mx-auto">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-                    3 pasos para tu viaje perfecto
+            <div class="text-center mb-16 reveal">
+                <span class="inline-block px-4 py-1.5 bg-jp-purple/10 text-jp-purple text-sm font-semibold rounded-full mb-4">
+                    Así de fácil
+                </span>
+                <h2 class="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight">
+                    Tu viaje perfecto<br>en 3 pasos
                 </h2>
             </div>
 
-            <div class="space-y-12">
+            <div class="grid md:grid-cols-3 gap-10 relative">
+                <!-- Connecting line (desktop) -->
+                <div class="hidden md:block absolute top-10 left-[calc(16.6%+2rem)] right-[calc(16.6%+2rem)] h-px bg-gradient-to-r from-jp-purple via-jp-pink to-jp-red opacity-30"></div>
+
                 <!-- Step 1 -->
-                <div class="flex flex-col md:flex-row items-center gap-8">
-                    <div class="w-20 h-20 rounded-full bg-japan-purple text-white flex items-center justify-center text-3xl font-bold flex-shrink-0">
+                <div class="text-center reveal">
+                    <div class="relative inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-jp-purple to-jp-purple-light text-white text-3xl font-black mb-6 shadow-lg shadow-jp-purple/25">
                         1
+                        <div class="absolute -top-2 -right-2 w-6 h-6 bg-jp-purple rounded-full flex items-center justify-center">
+                            <span class="text-xs">✓</span>
+                        </div>
                     </div>
-                    <div class="flex-1 text-center md:text-left">
-                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Cuéntanos tu estilo</h3>
-                        <p class="text-gray-600 dark:text-gray-300">
-                            ¿Eres foodie? ¿Otaku? ¿Nature lover? La IA aprende tus preferencias en segundos.
-                        </p>
-                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Cuéntanos tu estilo</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">
+                        ¿Foodie? ¿Otaku? ¿Nature lover? El quiz tarda 2 minutos y la IA aprende exactamente qué tipo de viajero eres.
+                    </p>
                 </div>
 
                 <!-- Step 2 -->
-                <div class="flex flex-col md:flex-row items-center gap-8">
-                    <div class="w-20 h-20 rounded-full bg-japan-purple text-white flex items-center justify-center text-3xl font-bold flex-shrink-0">
+                <div class="text-center reveal" style="transition-delay: 0.1s;">
+                    <div class="relative inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-jp-pink to-jp-red text-white text-3xl font-black mb-6 shadow-lg shadow-jp-pink/25">
                         2
                     </div>
-                    <div class="flex-1 text-center md:text-left">
-                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">La IA crea tu itinerario</h3>
-                        <p class="text-gray-600 dark:text-gray-300">
-                            Basado en tu perfil, fechas, presupuesto e intereses. Todo optimizado geográficamente.
-                        </p>
-                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">La IA crea tu itinerario</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">
+                        Basado en tu perfil, fechas y presupuesto. Rutas optimizadas geográficamente para no perder tiempo en traslados.
+                    </p>
                 </div>
 
                 <!-- Step 3 -->
-                <div class="flex flex-col md:flex-row items-center gap-8">
-                    <div class="w-20 h-20 rounded-full bg-japan-purple text-white flex items-center justify-center text-3xl font-bold flex-shrink-0">
+                <div class="text-center reveal" style="transition-delay: 0.2s;">
+                    <div class="relative inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-500 to-jp-red text-white text-3xl font-black mb-6 shadow-lg shadow-orange-500/25">
                         3
                     </div>
-                    <div class="flex-1 text-center md:text-left">
-                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">¡Disfruta tu viaje!</h3>
-                        <p class="text-gray-600 dark:text-gray-300">
-                            La app te asiste en tiempo real. Sugerencias contextuales, guía cultural, y más.
-                        </p>
-                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Disfruta tu aventura</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">
+                        La app te asiste en tiempo real con sugerencias contextuales, guía cultural y todas las features únicas de Japitin.
+                    </p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Pricing Section -->
-    <section id="pricing" class="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-japan-dark">
-        <div class="max-w-4xl mx-auto text-center">
-            <h2 class="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-                Precio simple y justo
+    <!-- ══════════════ PRICING ══════════════ -->
+    <section id="pricing" class="py-24 px-5 sm:px-8 bg-jp-dark">
+        <div class="max-w-2xl mx-auto text-center reveal">
+            <span class="inline-block px-4 py-1.5 bg-white/10 text-white/80 text-sm font-semibold rounded-full mb-6 border border-white/10">
+                Precio
+            </span>
+            <h2 class="text-4xl sm:text-5xl font-black text-white mb-4 tracking-tight">
+                Simple y honesto
             </h2>
-            <p class="text-xl text-gray-600 dark:text-gray-300 mb-12">
-                Porque planificar tu viaje no debería costarte dinero
+            <p class="text-white/50 text-lg mb-12">
+                Planificar tu viaje no debería costarte dinero.
             </p>
 
-            <div class="bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl p-12 text-white shadow-2xl">
-                <div class="text-6xl font-bold mb-4">GRATIS</div>
-                <div class="text-2xl mb-8">Para siempre. Sin trucos.</div>
+            <div class="relative bg-gradient-to-br from-jp-purple via-purple-700 to-jp-pink rounded-3xl p-10 shadow-2xl overflow-hidden">
+                <!-- Background decoration -->
+                <div class="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
-                <ul class="text-left max-w-md mx-auto space-y-3 mb-8">
-                    <li class="flex items-center">
-                        <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                        </svg>
-                        Itinerarios ilimitados
-                    </li>
-                    <li class="flex items-center">
-                        <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                        </svg>
-                        IA completa (18 fases ML)
-                    </li>
-                    <li class="flex items-center">
-                        <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                        </svg>
-                        Todas las features únicas
-                    </li>
-                    <li class="flex items-center">
-                        <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                        </svg>
-                        Modo colaborativo
-                    </li>
-                    <li class="flex items-center">
-                        <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                        </svg>
-                        Sin anuncios
-                    </li>
-                </ul>
+                <div class="relative">
+                    <div class="text-7xl font-black text-white mb-2 tracking-tight">GRATIS</div>
+                    <div class="text-white/70 text-lg mb-8">Para siempre. Sin trucos. Sin tarjeta de crédito.</div>
 
-                <a href="/login.html" class="inline-block px-12 py-4 bg-white text-japan-purple rounded-lg hover:bg-gray-100 transition font-bold text-lg shadow-lg">
-                    Empezar ahora
-                </a>
+                    <div class="grid sm:grid-cols-2 gap-3 text-left mb-10">
+                        <div class="flex items-center gap-3 text-white/90">
+                            <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm">Itinerarios ilimitados</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-white/90">
+                            <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm">IA completa (18 fases ML)</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-white/90">
+                            <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm">Ramen Passport + JR Pass calc</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-white/90">
+                            <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm">Modo colaborativo</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-white/90">
+                            <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm">Sin anuncios</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-white/90">
+                            <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm">Funciona offline (PWA)</span>
+                        </div>
+                    </div>
+
+                    <a href="/login.html"
+                       class="inline-block w-full sm:w-auto px-12 py-4 bg-white text-jp-purple rounded-xl font-bold text-base hover:bg-gray-100 transition shadow-xl">
+                        Empezar ahora — es gratis
+                    </a>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Final CTA -->
-    <section class="py-20 px-4 sm:px-6 lg:px-8 hero-gradient">
-        <div class="max-w-4xl mx-auto text-center">
-            <h2 class="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-                ¿Listo para tu aventura japonesa?
+    <!-- ══════════════ FINAL CTA ══════════════ -->
+    <section class="relative py-28 px-5 sm:px-8 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50"></div>
+        <div class="absolute top-8 right-10 text-6xl float-anim opacity-30 select-none">🌸</div>
+        <div class="absolute bottom-8 left-10 text-5xl float-anim opacity-20 select-none" style="animation-delay: 1.5s;">⛩️</div>
+        <div class="absolute top-1/2 right-1/4 text-4xl float-anim opacity-15 select-none" style="animation-delay: 0.8s;">🗻</div>
+
+        <div class="relative max-w-3xl mx-auto text-center reveal">
+            <h2 class="text-4xl sm:text-5xl font-black text-gray-900 mb-5 tracking-tight">
+                ¿Listo para tu<br>
+                <span class="gradient-text">aventura japonesa?</span>
             </h2>
-            <p class="text-xl text-gray-600 dark:text-gray-300 mb-8">
-                Únete a 127+ viajeros que ya están planeando su viaje perfecto
+            <p class="text-gray-500 text-lg mb-10">
+                Únete a 127+ viajeros que ya están planificando su viaje perfecto. Sin tarjeta de crédito.
             </p>
-            <a href="/login.html" class="inline-block px-12 py-4 bg-japan-purple text-white rounded-lg hover:bg-purple-700 transition font-bold text-xl shadow-2xl hover:shadow-3xl transform hover:scale-105">
-                🚀 Crear mi itinerario gratis
+            <a href="/login.html"
+               class="inline-flex items-center gap-3 px-10 py-4 bg-jp-purple hover:bg-jp-purple-light text-white font-bold text-lg rounded-xl shadow-2xl btn-glow transition">
+                <span>🚀</span>
+                <span>Crear mi itinerario gratis</span>
             </a>
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-gray-300 py-12 px-4 sm:px-6 lg:px-8">
+    <!-- ══════════════ FOOTER ══════════════ -->
+    <footer class="bg-jp-dark border-t border-white/5 py-14 px-5 sm:px-8">
         <div class="max-w-7xl mx-auto">
-            <div class="grid md:grid-cols-4 gap-8 mb-8">
-                <div>
-                    <div class="flex items-center space-x-2 mb-4">
-                        <span class="text-3xl">🇯🇵</span>
-                        <span class="text-2xl font-bold text-white">Japitin</span>
+            <div class="grid md:grid-cols-4 gap-10 mb-12">
+                <div class="md:col-span-1">
+                    <div class="flex items-center gap-2.5 mb-4">
+                        <span class="text-2xl">🇯🇵</span>
+                        <span class="text-xl font-black text-white">Japitin</span>
                     </div>
-                    <p class="text-sm">
-                        El planificador de viajes a Japón más completo del mundo.
+                    <p class="text-white/40 text-sm leading-relaxed">
+                        El planificador de viajes a Japón más completo. Diseñado con amor para viajeros apasionados.
                     </p>
                 </div>
 
                 <div>
-                    <h4 class="font-bold text-white mb-4">Producto</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="#features" class="hover:text-white transition">Características</a></li>
-                        <li><a href="#pricing" class="hover:text-white transition">Precio</a></li>
-                        <li><a href="/login.html" class="hover:text-white transition">Empezar</a></li>
+                    <h4 class="font-bold text-white text-sm mb-4 uppercase tracking-wide">Producto</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#features" class="text-white/40 hover:text-white text-sm transition">Características</a></li>
+                        <li><a href="#pricing" class="text-white/40 hover:text-white text-sm transition">Precio</a></li>
+                        <li><a href="/login.html" class="text-white/40 hover:text-white text-sm transition">Empezar</a></li>
                     </ul>
                 </div>
 
                 <div>
-                    <h4 class="font-bold text-white mb-4">Recursos</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="#" class="hover:text-white transition">Blog</a></li>
-                        <li><a href="#" class="hover:text-white transition">Guías</a></li>
-                        <li><a href="#" class="hover:text-white transition">FAQ</a></li>
+                    <h4 class="font-bold text-white text-sm mb-4 uppercase tracking-wide">Recursos</h4>
+                    <ul class="space-y-3">
+                        <li><a href="/login.html" class="text-white/40 hover:text-white text-sm transition">Dashboard</a></li>
+                        <li><a href="#how-it-works" class="text-white/40 hover:text-white text-sm transition">Cómo funciona</a></li>
+                        <li><a href="#features" class="text-white/40 hover:text-white text-sm transition">Features</a></li>
                     </ul>
                 </div>
 
                 <div>
-                    <h4 class="font-bold text-white mb-4">Legal</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="#" class="hover:text-white transition">Privacidad</a></li>
-                        <li><a href="#" class="hover:text-white transition">Términos</a></li>
-                        <li><a href="#" class="hover:text-white transition">Cookies</a></li>
+                    <h4 class="font-bold text-white text-sm mb-4 uppercase tracking-wide">Legal</h4>
+                    <ul class="space-y-3">
+                        <li><span class="text-white/20 text-sm">Privacidad</span></li>
+                        <li><span class="text-white/20 text-sm">Términos</span></li>
+                        <li><span class="text-white/20 text-sm">Cookies</span></li>
                     </ul>
                 </div>
             </div>
 
-            <div class="border-t border-gray-800 pt-8 text-center text-sm">
-                <p>© 2024 Japitin. Made with 💜 for Japan travelers.</p>
+            <div class="border-t border-white/10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <p class="text-white/30 text-sm">© 2026 Japitin. Made with 💜 for Japan travelers.</p>
+                <p class="text-white/20 text-xs">Powered by Firebase · Vite · Tailwind</p>
             </div>
         </div>
     </footer>
 
-    <!-- Scripts -->
     <script>
-        // Mobile menu toggle
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-
-        mobileMenuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
+        // Nav scroll effect
+        const nav = document.getElementById('main-nav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('nav-scrolled', window.scrollY > 60);
         });
 
-        // Close mobile menu when clicking a link
-        mobileMenu.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                mobileMenu.classList.add('hidden');
+        // Mobile menu
+        document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+        document.querySelectorAll('#mobile-menu a').forEach(a => {
+            a.addEventListener('click', () => document.getElementById('mobile-menu').classList.add('hidden'));
+        });
+
+        // Hero image load animation
+        const heroBg = document.getElementById('hero-bg');
+        const img = new Image();
+        img.onload = () => heroBg.classList.add('loaded');
+        img.src = heroBg.style.backgroundImage?.match(/url\(['"]?([^'"]+)['"]?\)/)?.[1] || '';
+
+        // Scroll reveal
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', e => {
+                const target = document.querySelector(a.getAttribute('href'));
+                if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
             });
         });
-
-        // Animate elements on scroll
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -100px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.animate-fade-in-up').forEach(el => {
-            observer.observe(el);
-        });
-
-        // Track page view (if analytics loaded)
-        if (window.Analytics) {
-            window.Analytics.trackEvent('Landing', 'page_view', 'index');
-        }
     </script>
 </body>
 </html>

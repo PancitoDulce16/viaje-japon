@@ -1066,8 +1066,39 @@ export const activities = {
   ]
 };
 
-// Export alias para compatibilidad con código existente
-export const ACTIVITIES_DATABASE = activities;
+// City display names (key → proper name)
+const CITY_NAMES = {
+  tokyo: 'Tokyo',
+  kyoto: 'Kyoto',
+  osaka: 'Osaka',
+  hiroshima: 'Hiroshima',
+  nara: 'Nara',
+  hakone: 'Hakone',
+  kamakura: 'Kamakura',
+  yokohama: 'Yokohama',
+  sapporo: 'Sapporo',
+  nagoya: 'Nagoya',
+  kobe: 'Kobe',
+  nikko: 'Nikko',
+  takayama: 'Takayama',
+  kanazawa: 'Kanazawa',
+  fukuoka: 'Fukuoka',
+  sendai: 'Sendai',
+  matsumoto: 'Matsumoto',
+  shirakawago: 'Shirakawa-go',
+  himeji: 'Himeji'
+};
+
+// Structured format expected by itinerary-builder: { cityKey: { city, activities } }
+export const ACTIVITIES_DATABASE = Object.fromEntries(
+  Object.entries(activities).map(([key, acts]) => [
+    key,
+    {
+      city: CITY_NAMES[key] || (key.charAt(0).toUpperCase() + key.slice(1)),
+      activities: acts
+    }
+  ])
+);
 
 /**
  * Obtiene actividades filtradas por categoría

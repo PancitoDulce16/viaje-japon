@@ -1,8 +1,8 @@
-// js/MODULE_TEMPLATE.js - Template para nuevos módulos con Firestore
+﻿// js/MODULE_TEMPLATE.js - Template para nuevos módulos con Firestore
 // Copia este archivo y reemplaza [MODULE_NAME] con el nombre de tu módulo
 
-import { db, auth } from './firebase-config.js';
-import { SafeFirestore } from './firestore-wrapper.js';
+import { db, auth } from './js/core/firebase-config.js';
+import { SafeFirestore } from './js/core/firestore-wrapper.js';
 import {
   doc,
   collection,
@@ -10,7 +10,7 @@ import {
   where,
   orderBy,
   limit
-} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+} from 'firebase/firestore';
 
 /**
  * 🎯 [MODULE_NAME] Handler

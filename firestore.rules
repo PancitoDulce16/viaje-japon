@@ -63,9 +63,8 @@ service cloud.firestore {
                     resource.data.members is list &&
                     request.auth.uid in resource.data.members;
 
-      // QUERIES/LISTADO: Permitir a usuarios autenticados hacer queries
-      // (Solo verán trips donde sean miembros debido al WHERE clause)
-      allow list: if isSignedIn();
+      // QUERIES/LISTADO: Solo el propio usuario puede listar sus viajes
+      allow list: if isSignedIn() && request.auth.uid != null;
 
       // CREACIÓN: Cualquier usuario autenticado puede crear un nuevo viaje.
       allow create: if isSignedIn() &&
@@ -126,7 +125,8 @@ service cloud.firestore {
       match /chat/{messageId} {
         allow read: if isTripMember(tripId);
         allow create: if isTripMember(tripId);
-        allow update, delete: if isTripMember(tripId);
+        allow update: if isTripMember(tripId) && resource.data.senderId == request.auth.uid;
+        allow delete: if isTripMember(tripId) && resource.data.senderId == request.auth.uid;
       }
 
       // --- Sub-colección de Timeline ---

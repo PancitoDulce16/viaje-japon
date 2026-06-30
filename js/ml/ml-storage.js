@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 💾 ML STORAGE MANAGER
  * ======================
  *
@@ -519,8 +519,8 @@ class MLStorage {
       const predictions = await this.getPredictions(userId);
 
       // Guardar en Firebase
-      const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-      const { db } = await import('/js/firebase-config.js');
+      const { doc, setDoc } = await import('firebase/firestore');
+      const { db } = await import('../core/firebase-config.js');
 
       const mlDataRef = doc(db, 'ml_data', userId);
 
@@ -549,8 +549,8 @@ class MLStorage {
     }
 
     try {
-      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-      const { db } = await import('/js/firebase-config.js');
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('../core/firebase-config.js');
 
       const mlDataRef = doc(db, 'ml_data', userId);
       const mlDataSnap = await getDoc(mlDataRef);

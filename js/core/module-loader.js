@@ -43,7 +43,7 @@ class ModuleLoader {
         priority: 'immediate',
         modules: [
           '/js/auth.js',
-          '/js/firebase-config.js',
+          '/js/core/firebase-config.js',
           '/js/dashboard-core.js',
           '/js/ui-manager.js'
         ]

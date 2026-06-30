@@ -1,11 +1,11 @@
-/* ========================================
+﻿/* ========================================
    HEALTH DASHBOARD - Panel de Salud del Itinerario
    Visualiza problemas, métricas y permite quick fixes
    ======================================== */
 
 import { HealthCalculator } from './health-calculator.js';
 import { QuickFixes } from './quick-fixes.js';
-import { Notifications } from '/js/notifications.js';
+import { Notifications } from '../core/notifications.js';
 
 export class HealthDashboard {
   constructor() {
@@ -743,8 +743,8 @@ export class HealthDashboard {
     if (!this.tripId) return;
 
     try {
-      const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-      const { db } = await import('/js/firebase-config.js');
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('../core/firebase-config.js');
 
       const itineraryRef = doc(db, `trips/${this.tripId}/data`, 'itinerary');
       const itinerarySnap = await getDoc(itineraryRef);

@@ -567,7 +567,7 @@ export class TravelerProfiler {
    * Guardar perfil en localStorage
    */
   saveProfile() {
-    import('/js/utils/safe-helpers.js').then(({ safeLocalStorageSet }) => {
+    import('../utils/safe-helpers.js').then(({ safeLocalStorageSet }) => {
       safeLocalStorageSet('traveler_profile', this.profile);
       console.log('💾 Profile saved to localStorage');
     });
@@ -577,7 +577,7 @@ export class TravelerProfiler {
    * Cargar perfil desde localStorage
    */
   loadProfile() {
-    import('/js/utils/safe-helpers.js').then(({ safeLocalStorageGet }) => {
+    import('../utils/safe-helpers.js').then(({ safeLocalStorageGet }) => {
       const saved = safeLocalStorageGet('traveler_profile', null);
       if (saved) {
         this.profile = { ...this.getDefaultProfile(), ...saved };

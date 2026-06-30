@@ -1,12 +1,12 @@
-/* ========================================
+﻿/* ========================================
    QUICK FIXES - Auto-reparación de Problemas
    Funciones para resolver automáticamente issues del Health Calculator
    ======================================== */
 
-import { ACTIVITIES_DATABASE } from '/data/activities-database.js';
-import { db, auth } from '/js/firebase-config.js';
-import { doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { Notifications } from '/js/notifications.js';
+import { ACTIVITIES_DATABASE } from '../../data/activities-database.js';
+import { db, auth } from '../core/firebase-config.js';
+import { doc, updateDoc } from 'firebase/firestore';
+import { Notifications } from '../core/notifications.js';
 
 export class QuickFixes {
   constructor(itinerary, tripId) {

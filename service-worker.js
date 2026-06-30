@@ -9,8 +9,8 @@
 // 📦 --- CONFIGURACIÓN DEL CACHÉ ---
 // IMPORTANTE: Cambia este número de versión CADA VEZ que hagas un cambio en los
 // archivos de la aplicación (JS, CSS, HTML) para forzar la actualización.
-const STATIC_CACHE_VERSION = 'japan-trip-planner-static-v10.1-FIX-FONTS';
-const DYNAMIC_CACHE_VERSION = 'japan-trip-planner-dynamic-v10.0-NO-JS-CACHE';
+const STATIC_CACHE_VERSION = 'japan-trip-planner-static-v12.0';
+const DYNAMIC_CACHE_VERSION = 'japan-trip-planner-dynamic-v12.0';
 const STATIC_CACHE_NAME = `static-${STATIC_CACHE_VERSION}`;
 const DYNAMIC_CACHE_NAME = `dynamic-${DYNAMIC_CACHE_VERSION}`;
 
@@ -28,7 +28,7 @@ const APP_SHELL_URLS = [
 // 📜 --- FASE 1: INSTALACIÓN ---
 // Se ejecuta una sola vez cuando el navegador instala el Service Worker.
 self.addEventListener('install', event => {
-    console.log(`[SW] ✅ Evento INSTALL: Iniciando instalación para la versión ${CACHE_VERSION}`);
+    console.log(`[SW] ✅ Evento INSTALL: Iniciando instalación para la versión ${STATIC_CACHE_VERSION}`);
     event.waitUntil(
         caches.open(STATIC_CACHE_NAME)
             .then(cache => {
@@ -87,18 +87,16 @@ const networkFirst = (request) => {
 const cacheFirst = (request, cacheName) => {
     return caches.match(request).then(cachedResponse => {
         if (cachedResponse) {
-            // console.log(`[SW] ⚡️ Sirviendo desde caché: ${request.url}`);
             return cachedResponse;
         }
-        // Si no está en caché, vamos a la red y lo guardamos.
         return fetch(request).then(networkResponse => {
-            return caches.open(cacheName).then(cache => {
-                cache.put(request, networkResponse.clone());
-                // console.log(`[SW] 📥 Guardado en caché dinámico: ${request.url}`);
-                return networkResponse;
-            });
-        });
-    });
+            // Only cache successful responses — never cache 404s or errors
+            if (networkResponse.ok) {
+                caches.open(cacheName).then(cache => cache.put(request, networkResponse.clone()));
+            }
+            return networkResponse;
+        }).catch(() => new Response('', { status: 404, statusText: 'Not Found' }));
+    }).catch(() => new Response('', { status: 404, statusText: 'Not Found' }));
 };
 
 // 📡 --- FASE 3: INTERCEPTACIÓN DE PETICIONES (FETCH) ---
@@ -134,7 +132,9 @@ self.addEventListener('fetch', event => {
     // ⚠️ CRÍTICO: Los archivos .js SIEMPRE deben venir de la red para evitar problemas de versiones
     if (url.pathname.endsWith('.js')) {
         console.log(`[SW] 🚫 NEVER CACHE: ${url.pathname} - Siempre desde la red`);
-        event.respondWith(fetch(request));
+        event.respondWith(
+            fetch(request).catch(() => new Response('', { status: 404, statusText: 'Not Found' }))
+        );
         return;
     }
 

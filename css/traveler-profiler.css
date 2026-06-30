@@ -48,9 +48,7 @@
 /* Interest Sliders */
 .interest-slider {
   background: white;
-  dark:background: rgb(31, 41, 55);
   border: 1px solid rgba(229, 231, 235, 1);
-  dark:border: rgba(75, 85, 99, 1);
   border-radius: 8px;
   padding: 16px;
   transition: all 0.2s ease;

@@ -1,0 +1,65 @@
+/* app.css — single entry point for all styles */
+
+/* 1. Base */
+@import './critical.css';
+@import './main.css';
+@import './forms.css';
+
+/* 2. Brand & theme */
+@import './japan-theme.css';
+@import './sakura.css';
+
+/* 3. Animations */
+@import './animations.css';
+@import './enhanced-animations.css';
+@import './smooth-animations.css';
+@import './kawaii-animations.css';
+
+/* 4. UI components */
+@import './tooltips.css';
+@import './micro-interactions.css';
+
+/* 5. Theme variants */
+@import './theme-kawaii.css';
+@import './theme-ninja.css';
+@import './wallpapers.css';
+@import './dashboard-background.css';
+
+/* 6. Features */
+@import './calendar-planner.css';
+@import './ai-planner.css';
+@import './japan-rules.css';
+@import './horarios-system.css';
+@import './zonas-system.css';
+@import './survival-guide.css';
+@import './jr-pass-calculator.css';
+@import './ramen-passport.css';
+@import './goshuin-book.css';
+@import './health-dashboard.css';
+@import './analytics-dashboard.css';
+@import './travel-journal.css';
+@import './gamification-system.css';
+@import './budget-visual-charts.css';
+@import './global-search-filters.css';
+@import './traveler-profiler.css';
+@import './itinerary-visual-timeline.css';
+
+/* 7. Dashboard */
+@import './dashboard-visual-upgrade.css';
+@import './dashboard-enhanced.css';
+
+/* 8. UI improvements */
+@import './visual-redesign.css';
+@import './ui-improvements.css';
+@import './viral-features-aesthetic.css';
+
+/* 9. Mobile */
+@import './mobile-optimizations.css';
+@import './mobile-first-redesign.css';
+@import './mobile-ux-enhanced.css';
+
+/* 10. Overrides & fixes — must be last */
+@import './calendar-fix.css';
+@import './contrast-fixes.css';
+@import './dark-mode-fixes.css';
+@import './dark-mode-ultra-contrast.css';

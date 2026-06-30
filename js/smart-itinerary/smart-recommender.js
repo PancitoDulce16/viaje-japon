@@ -2,7 +2,7 @@
    SMART RECOMMENDER - Motor de Recomendación Inteligente
    ======================================== */
 
-import { ACTIVITIES_DATABASE } from '/data/activities-database.js';
+import { ACTIVITIES_DATABASE } from '../../data/activities-database.js';
 
 /**
  * Motor que recomienda actividades basadas en el perfil del viajero

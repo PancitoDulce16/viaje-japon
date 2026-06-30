@@ -3,199 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- SEO & Metadata -->
-    <title>🇯🇵 Japan Trip Planner - Iniciar Sesión</title>
-    <meta name="description" content="Inicia sesión en Japan Trip Planner para planificar tu viaje colaborativo a Japón.">
-    <meta name="theme-color" content="#dc2626">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://japan-itin-dev.web.app/">
-    <meta property="og:title" content="🇯🇵 Japan Trip Planner - Iniciar Sesión">
-    <meta property="og:description" content="Inicia sesión en Japan Trip Planner para planificar tu viaje colaborativo a Japón.">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&q=80">
-    
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://japan-itin-dev.web.app/">
-    <meta property="twitter:title" content="🇯🇵 Japan Trip Planner - Iniciar Sesión">
-    <meta property="twitter:description" content="Inicia sesión en Japan Trip Planner para planificar tu viaje colaborativo a Japón.">
-    <meta property="twitter:image" content="https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&q=80">
 
-    <!-- CSS necesario para login -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
-    
-    <!-- CSS principal y específico para login -->
-    <link rel="stylesheet" href="/css/main.css">
-    <link rel="stylesheet" href="/css/japan-theme.css">
-    <link rel="stylesheet" href="/css/sakura.css">
-    <link rel="stylesheet" href="/css/animations.css">
-    <link rel="stylesheet" href="/css/forms.css">
-    
+    <title>Japitin — Iniciar Sesión</title>
+    <meta name="description" content="Inicia sesión en Japitin para planificar tu viaje perfecto a Japón.">
+    <meta name="theme-color" content="#7c3aed">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://japan-itin-dev.web.app/login">
+    <meta property="og:title" content="Japitin — Iniciar Sesión">
+    <meta property="og:description" content="Planifica tu aventura japonesa con IA personalizada.">
+    <meta property="og:image" content="https://japan-itin-dev.web.app/images/icons/japitin%20banner.png">
+
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/png" href="/images/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="/images/icons/icon-192.png">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="./images/icons/icon-192.png">
+
+    <!-- Import map: resolves firebase/app etc. in native ES module scripts -->
+    <script type="importmap">
+    {
+      "imports": {
+        "firebase/app": "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js",
+        "firebase/auth": "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js",
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js",
+        "firebase/storage": "https://www.gstatic.com/firebasejs/11.1.0/firebase-storage.js"
+      }
+    }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        'jp-purple': '#7c3aed',
+                        'jp-purple-light': '#a855f7',
+                        'jp-dark': '#0f0a1e',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', system-ui, sans-serif; }
+
+        /* Background */
+        .login-bg {
+            position: fixed;
+            inset: 0;
+            background-image: url('https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1920&q=85');
+            background-size: cover;
+            background-position: center;
+            z-index: 0;
+        }
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg,
+                rgba(15,10,30,0.88) 0%,
+                rgba(124,58,237,0.55) 50%,
+                rgba(15,10,30,0.80) 100%
+            );
+            z-index: 1;
+        }
+
+        /* Card */
+        .login-card {
+            background: rgba(255,255,255,0.97);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        /* Tab active */
+        .tab-btn { transition: color 0.2s, border-color 0.2s; }
+        .tab-btn.active {
+            color: #7c3aed;
+            border-bottom-color: #7c3aed;
+        }
+        .tab-btn:not(.active) {
+            color: #9ca3af;
+            border-bottom-color: transparent;
+        }
+
+        /* Input focus */
+        .form-input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+        }
+
+        /* Sakura petals */
+        #sakura-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 2;
+        }
+        @keyframes sakura-fall {
+            0%   { transform: translateY(-20px) rotate(0deg) translateX(0);   opacity: 0; }
+            10%  { opacity: 0.8; }
+            90%  { opacity: 0.6; }
+            100% { transform: translateY(110vh) rotate(720deg) translateX(60px); opacity: 0; }
+        }
+        .petal {
+            position: absolute;
+            top: -30px;
+            background: radial-gradient(ellipse at 50% 40%, #fda4c8 0%, #f472b6 60%, #ec4899 100%);
+            border-radius: 50% 0 50% 0;
+            animation: sakura-fall linear infinite;
+            opacity: 0;
+        }
+
+        /* Fade in */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up { animation: fadeUp 0.6s ease-out both; }
+        .fade-up-1 { animation-delay: 0.1s; }
+        .fade-up-2 { animation-delay: 0.25s; }
+        .fade-up-3 { animation-delay: 0.4s; }
+
+        /* Glow button */
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(124,58,237,0.35);
+        }
+    </style>
 </head>
-<body>
-    <!-- LOGIN PAGE -->
-    <div id="loginPage" class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-        <!-- Background Image with Overlay -->
-        <div class="absolute inset-0 z-0">
-            <img
-                src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1920&q=80"
-                alt="Kyoto Japan"
-                class="w-full h-full object-cover"
-            />
-            <div class="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-purple-900/60 to-pink-900/70"></div>
+<body class="antialiased min-h-screen">
+
+    <!-- Background -->
+    <div class="login-bg"></div>
+    <div class="login-overlay"></div>
+
+    <!-- Sakura petals -->
+    <div id="sakura-container"></div>
+
+    <!-- Content -->
+    <div class="relative z-10 min-h-screen flex flex-col items-center justify-center p-5">
+
+        <!-- Brand -->
+        <div class="text-center mb-8 fade-up">
+            <a href="/" class="inline-flex items-center gap-2.5 mb-3">
+                <span class="text-3xl">🇯🇵</span>
+                <span class="text-3xl font-black text-white tracking-tight">Japitin</span>
+            </a>
+            <p class="text-white/60 text-sm">Tu planificador de viajes a Japón</p>
         </div>
-        <div id="sakura-container" class="z-10"></div>
-        <div class="max-w-6xl w-full z-10 relative">
-            <!-- Hero Section -->
-            <div class="text-center mb-12">
-                <h1 class="text-4xl md:text-6xl font-bold text-white mb-4 animate__animated animate__fadeInDown" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
-                    <i class="fas fa-torii-gate text-red-500"></i> Japan Trip Planner
-                </h1>
-                <p class="text-xl md:text-2xl text-white/90 mb-2 animate__animated animate__fadeInDown" style="animation-delay: 0.2s;">
-                    Planifica tu viaje a Japón de manera colaborativa
-                </p>
-                <p class="text-lg text-white/80 animate__animated animate__fadeInDown" style="animation-delay: 0.4s;">
-                    <i class="fas fa-sparkles text-yellow-300"></i> Crea itinerarios •
-                    <i class="fas fa-yen-sign text-green-400"></i> Controla gastos •
-                    <i class="fas fa-users text-blue-400"></i> Colabora en tiempo real
-                </p>
+
+        <!-- Card -->
+        <div class="login-card rounded-2xl shadow-2xl w-full max-w-md fade-up fade-up-1">
+
+            <!-- Card header -->
+            <div class="px-8 pt-8 pb-6 border-b border-gray-100 text-center">
+                <h1 class="text-xl font-bold text-gray-900 mb-1">ようこそ — Bienvenido</h1>
+                <p class="text-sm text-gray-500">Inicia sesión para comenzar a planificar</p>
             </div>
 
-            <!-- Login Card -->
-            <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 animate__animated animate__fadeInUp max-w-md mx-auto" style="animation-delay: 0.6s;">
-                <div class="text-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2" style="font-family: 'Noto Sans JP', sans-serif;">
-                        ようこそ Bienvenido
-                    </h2>
-                    <p class="text-gray-600">
-                        Inicia sesión para comenzar a planificar
-                    </p>
-                </div>
+            <div class="px-8 py-6">
 
-                <!-- Tabs de Login/Registro -->
-                <div class="flex gap-2 mb-6 border-b-2 border-gray-200">
-                    <button 
-                        id="loginTabBtn" 
-                        class="flex-1 px-4 py-2 font-semibold border-b-2 border-blue-500 text-blue-600 transition-colors"
-                        type="button"
-                    >
-                        Iniciar Sesión
+                <!-- Tabs -->
+                <div class="flex border-b border-gray-200 mb-6">
+                    <button id="loginTabBtn" type="button"
+                        class="tab-btn active flex-1 pb-3 text-sm font-semibold border-b-2">
+                        Iniciar sesión
                     </button>
-                    <button 
-                        id="registerTabBtn" 
-                        class="flex-1 px-4 py-2 font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors"
-                        type="button"
-                    >
+                    <button id="registerTabBtn" type="button"
+                        class="tab-btn flex-1 pb-3 text-sm font-semibold border-b-2">
                         Registrarse
                     </button>
                 </div>
 
-                <!-- Login Form -->
+                <!-- Login form -->
                 <form id="loginForm" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Email
-                        </label>
-                        <input 
-                            id="loginEmail" 
-                            type="email" 
-                            required
-                            class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none focus:border-blue-500"
+                        <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Email</label>
+                        <input id="loginEmail" type="email" required
                             placeholder="tu@email.com"
-                        >
+                            class="form-input w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 bg-gray-50 transition">
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Contraseña
-                        </label>
-                        <input 
-                            id="loginPassword" 
-                            type="password" 
-                            required
-                            class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none focus:border-blue-500"
+                        <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Contraseña</label>
+                        <input id="loginPassword" type="password" required
                             placeholder="••••••••"
-                        >
+                            class="form-input w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 bg-gray-50 transition">
                     </div>
-                    <button
-                        type="submit"
-                        class="w-full bg-gradient-to-r from-red-500 to-red-600 text-white font-bold py-3 px-6 rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-lg"
-                    >
-                        <i class="fas fa-sign-in-alt mr-2"></i> Iniciar Sesión
+                    <button type="submit"
+                        class="btn-primary w-full text-white font-bold py-3 px-6 rounded-xl text-sm">
+                        Iniciar sesión →
                     </button>
                 </form>
 
-                <!-- Register Form (Hidden by default) -->
+                <!-- Register form -->
                 <form id="registerForm" class="space-y-4 hidden">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Email
-                        </label>
-                        <input 
-                            id="registerEmail" 
-                            type="email" 
-                            required
-                            class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none focus:border-green-500"
+                        <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Email</label>
+                        <input id="registerEmail" type="email" required
                             placeholder="tu@email.com"
-                        >
+                            class="form-input w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 bg-gray-50 transition">
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Contraseña (mínimo 6 caracteres)
-                        </label>
-                        <input 
-                            id="registerPassword" 
-                            type="password" 
-                            required
-                            minlength="6"
-                            class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none focus:border-green-500"
+                        <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Contraseña <span class="normal-case font-normal text-gray-400">(mín. 6 caracteres)</span></label>
+                        <input id="registerPassword" type="password" required minlength="6"
                             placeholder="••••••••"
-                        >
+                            class="form-input w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 bg-gray-50 transition">
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Confirmar Contraseña
-                        </label>
-                        <input 
-                            id="registerConfirmPassword" 
-                            type="password" 
-                            required
-                            minlength="6"
-                            class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-green-500 focus:outline-none focus:border-green-500"
+                        <label class="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Confirmar contraseña</label>
+                        <input id="registerConfirmPassword" type="password" required minlength="6"
                             placeholder="••••••••"
-                        >
+                            class="form-input w-full px-4 py-3 border border-gray-200 rounded-xl text-sm text-gray-900 bg-gray-50 transition">
                     </div>
-                    <button
-                        type="submit"
-                        class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white font-bold py-3 px-6 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 shadow-lg"
-                    >
-                        <i class="fas fa-user-plus mr-2"></i> Crear Cuenta
+                    <button type="submit"
+                        class="btn-primary w-full text-white font-bold py-3 px-6 rounded-xl text-sm">
+                        Crear cuenta →
                     </button>
                 </form>
 
                 <!-- Divider -->
-                <div class="my-6 flex items-center">
-                    <div class="flex-1 border-t border-gray-300"></div>
-                    <span class="px-4 text-gray-500 bg-white">または</span>
-                    <div class="flex-1 border-t border-gray-300"></div>
+                <div class="my-5 flex items-center gap-3">
+                    <div class="flex-1 h-px bg-gray-200"></div>
+                    <span class="text-xs text-gray-400 font-medium">または</span>
+                    <div class="flex-1 h-px bg-gray-200"></div>
                 </div>
 
-                <!-- Google Login -->
-                <button
-                    id="googleLogin"
-                    type="button"
-                    class="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-md"
-                >
-                    <svg width="20" height="20" viewBox="0 0 20 20">
+                <!-- Google -->
+                <button id="googleLogin" type="button"
+                    class="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-xl text-sm hover:bg-gray-50 hover:border-gray-300 transition shadow-sm">
+                    <svg width="18" height="18" viewBox="0 0 20 20">
                         <path fill="#4285F4" d="M19.6 10.23c0-.82-.1-1.42-.25-2.05H10v3.72h5.5c-.15.96-.74 2.31-2.04 3.22v2.45h3.16c1.89-1.73 2.98-4.3 2.98-7.34z"/>
                         <path fill="#34A853" d="M13.46 15.13c-.83.59-1.96 1-3.46 1-2.64 0-4.88-1.74-5.68-4.15H1.07v2.52C2.72 17.75 6.09 20 10 20c2.7 0 4.96-.89 6.62-2.42l-3.16-2.45z"/>
                         <path fill="#FBBC05" d="M3.99 10c0-.69.12-1.35.32-1.97V5.51H1.07A9.973 9.973 0 000 10c0 1.61.39 3.14 1.07 4.49l3.24-2.52c-.2-.62-.32-1.28-.32-1.97z"/>
@@ -204,112 +258,75 @@
                     Continuar con Google
                 </button>
             </div>
+        </div>
 
-            <!-- Features -->
-            <div class="mt-12 grid md:grid-cols-3 gap-6">
-                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center animate__animated animate__fadeInUp" style="animation-delay: 0.8s;">
-                    <div class="w-16 h-16 bg-gradient-to-r from-pink-400 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-map-marked-alt text-white text-2xl"></i>
-                    </div>
-                    <h3 class="font-bold text-lg mb-2 text-white" style="font-family: 'Noto Sans JP', sans-serif;">Itinerarios Personalizados</h3>
-                    <p class="text-sm text-white/90">Crea tu propio itinerario día a día o usa nuestras plantillas</p>
-                </div>
-                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center animate__animated animate__fadeInUp" style="animation-delay: 1.0s;">
-                    <div class="w-16 h-16 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-users text-white text-2xl"></i>
-                    </div>
-                    <h3 class="font-bold text-lg mb-2 text-white" style="font-family: 'Noto Sans JP', sans-serif;">Modo Colaborativo</h3>
-                    <p class="text-sm text-white/90">Planifica con amigos o familia en tiempo real</p>
-                </div>
-                <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center animate__animated animate__fadeInUp" style="animation-delay: 1.2s;">
-                    <div class="w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-yen-sign text-white text-2xl"></i>
-                    </div>
-                    <h3 class="font-bold text-lg mb-2 text-white" style="font-family: 'Noto Sans JP', sans-serif;">Control de Gastos</h3>
-                    <p class="text-sm text-white/90">Lleva el control de tu presupuesto compartido</p>
-                </div>
+        <!-- Mini features -->
+        <div class="mt-8 grid grid-cols-3 gap-4 w-full max-w-md fade-up fade-up-2">
+            <div class="text-center">
+                <div class="text-2xl mb-1">🗺️</div>
+                <p class="text-white/60 text-xs">Itinerarios con IA</p>
             </div>
+            <div class="text-center">
+                <div class="text-2xl mb-1">🍜</div>
+                <p class="text-white/60 text-xs">Ramen Passport</p>
+            </div>
+            <div class="text-center">
+                <div class="text-2xl mb-1">👥</div>
+                <p class="text-white/60 text-xs">Colaborativo</p>
+            </div>
+        </div>
+
+        <!-- Back link -->
+        <div class="mt-6 fade-up fade-up-3">
+            <a href="/" class="text-white/40 hover:text-white/70 text-xs transition">← Volver al inicio</a>
         </div>
     </div>
 
-    <!-- Scripts específicos para login -->
-    <!-- 🔥 CACHE BUSTER - Detecta y corrige automáticamente problemas de cache -->
-    <script type="module" src="/js/cache-buster.js"></script>
-    <script type="module" src="/js/login.js"></script>
-    
+    <script type="module" src="/js/utils/cache-buster.js"></script>
+    <script type="module" src="/js/ui/login.js"></script>
+
     <script>
+        // Tabs
+        const loginTab = document.getElementById('loginTabBtn');
+        const registerTab = document.getElementById('registerTabBtn');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+
+        loginTab.addEventListener('click', () => {
+            loginTab.classList.add('active');
+            registerTab.classList.remove('active');
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+        });
+        registerTab.addEventListener('click', () => {
+            registerTab.classList.add('active');
+            loginTab.classList.remove('active');
+            registerForm.classList.remove('hidden');
+            loginForm.classList.add('hidden');
+        });
+
+        // Sakura petals
+        const container = document.getElementById('sakura-container');
+        function createPetal() {
+            const p = document.createElement('div');
+            p.className = 'petal';
+            const size = 10 + Math.random() * 14;
+            p.style.cssText = `
+                width:${size}px; height:${size*1.4}px;
+                left:${Math.random()*100}vw;
+                animation-duration:${14+Math.random()*10}s;
+                animation-delay:${Math.random()*8}s;
+            `;
+            container.appendChild(p);
+            setTimeout(() => p.remove(), 26000);
+        }
+        for (let i = 0; i < 30; i++) createPetal();
+        setInterval(createPetal, 1500);
+
+        // Service worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
-                    .then(registration => {
-                        console.log('✅ Service Worker registrado:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('❌ Error al registrar Service Worker:', error);
-                    });
-            });
-        }
-
-        // Script para la animación de Sakura - Solo en login page
-        let sakuraInterval = null;
-
-        function createSakura() {
-            const container = document.getElementById('sakura-container');
-            if (!container) return;
-
-            const petal = document.createElement('div');
-            petal.classList.add('petal');
-
-            // Posición y tamaño variables
-            const size = 14 + Math.random() * 14; // 14px a 28px
-            petal.style.width = size + 'px';
-            petal.style.height = size * 1.5 + 'px';
-            petal.style.left = Math.random() * 100 + 'vw';
-
-            // Ritmo de caída suave
-            const durationSec = 15 + Math.random() * 10; // 15s a 25s
-            const delaySec = Math.random() * 10; // 0s a 10s
-            petal.style.animationDuration = durationSec + 's';
-            petal.style.animationDelay = delaySec + 's';
-
-            container.appendChild(petal);
-
-            // Eliminar el pétalo después de su animación
-            const maxLifetimeMs = (durationSec + delaySec + 1) * 1000;
-            setTimeout(() => {
-                petal.remove();
-            }, maxLifetimeMs);
-        }
-
-        function spawnInitialSakura(count = 50) {
-            for (let i = 0; i < count; i++) {
-                createSakura();
-            }
-        }
-
-        // Iniciar animación
-        function startSakuraAnimation() {
-            if (!sakuraInterval) {
-                spawnInitialSakura(50);
-                sakuraInterval = setInterval(createSakura, 1200);
-            }
-        }
-
-        // Iniciar animación cuando carga la página
-        startSakuraAnimation();
-    </script>
-
-    <!-- 📱 PWA Service Worker -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
-                    .then(registration => {
-                        console.log('✅ PWA: Service Worker registrado:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.error('❌ PWA: Error al registrar Service Worker:', error);
-                    });
+                navigator.serviceWorker.register('./service-worker.js').catch(() => {});
             });
         }
     </script>

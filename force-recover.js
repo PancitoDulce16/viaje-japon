@@ -1,4 +1,4 @@
-// force-recover.js - Script de recuperación de emergencia
+﻿// force-recover.js - Script de recuperación de emergencia
 // Ejecuta esto en la consola del navegador si perdiste el itinerario
 
 (async function forceRecover() {
@@ -36,7 +36,7 @@
     console.log('✅ Usuario autenticado:', user.email);
 
     // Importar Firestore
-    const { collection, getDocs, query, where, getDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const { collection, getDocs, query, where, getDoc, doc } = await import('firebase/firestore');
 
     try {
         // Buscar trips del usuario

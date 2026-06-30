@@ -173,7 +173,7 @@ export async function safeFirestoreOperation(operation, options = {}) {
 
   // Verificar autenticación
   if (requireAuth) {
-    const auth = await import('../firebase-config.js').then(m => m.auth);
+    const auth = await import('../core/firebase-config.js').then(m => m.auth);
     if (!auth.currentUser) {
       if (showNotifications && window.Notifications) {
         window.Notifications.error('Debes iniciar sesión para esta operación');
