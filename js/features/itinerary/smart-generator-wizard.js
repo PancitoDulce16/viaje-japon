@@ -1782,7 +1782,7 @@ export const SmartGeneratorWizard = {
                             ` : ''}
                           </div>
                           <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between text-xs">
-                            <span class="text-gray-600 dark:text-gray-400">💰 ${day.dailyBudget?.toLocaleString() || '0'} ¥</span>
+                            <span class="text-gray-600 dark:text-gray-400">💰 ${(day.budgetBreakdown?.total ?? day.budget)?.toLocaleString() || '0'} ¥</span>
                             <span class="text-gray-600 dark:text-gray-400">${day.activities.length} act.</span>
                           </div>
                         </div>
@@ -1908,7 +1908,7 @@ export const SmartGeneratorWizard = {
 
                           <!-- Stats -->
                           <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between text-xs">
-                            <span class="text-gray-600 dark:text-gray-400">💰 ¥${day.dailyBudget?.toLocaleString() || '0'}</span>
+                            <span class="text-gray-600 dark:text-gray-400">💰 ¥${(day.budgetBreakdown?.total ?? day.budget)?.toLocaleString() || '0'}</span>
                             <span class="text-gray-600 dark:text-gray-400">${day.activities.length} actividades</span>
                           </div>
 
@@ -1981,7 +1981,7 @@ export const SmartGeneratorWizard = {
 
       if (day) {
         hybridItinerary.days.push({...day});
-        totalBudget += (day.dailyBudget || 0);
+        totalBudget += (day.budgetBreakdown?.total ?? day.budget ?? 0);
       }
     });
 

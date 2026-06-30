@@ -818,6 +818,14 @@ export const SmartItineraryGenerator = {
     console.log(`🚫 Duplicados: ${totalActivities - uniqueActivities}`);
     console.log('==========================================');
 
+    // 💰 Recalcular totalBudget como suma real de los días generados
+    // (antes era solo dailyBudget * totalDays, igual para cualquier itinerario
+    // sin importar qué actividades se eligieron realmente).
+    itinerary.totalBudget = itinerary.days.reduce(
+      (sum, day) => sum + (day.budgetBreakdown?.total ?? day.budget ?? 0),
+      0
+    );
+
     return itinerary;
   },
 
