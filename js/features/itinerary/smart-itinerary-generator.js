@@ -998,7 +998,20 @@ export const SmartItineraryGenerator = {
     // PASO 1: Actividades de la base de datos
     const cityKey = city.toLowerCase();
     const dbActivities = ACTIVITY_DATABASE[cityKey] || [];
-    candidateActivities = [...dbActivities];
+    // 🏷️ La base de datos guarda `categories` (array) e `interest_vectors`
+    // (mapa de pesos), pero el scoring y las alternativas de este generador
+    // comparan `category` (singular, ===) y `interests` (array, .includes())
+    // en varios puntos - sin esto, esas comparaciones siempre fallan. Derivar
+    // ambos sin mutar los objetos originales (pueden venir de un caché
+    // compartido).
+    candidateActivities = dbActivities.map(act => {
+      if (act.category && act.interests) return act;
+      return {
+        ...act,
+        category: act.category || act.categories?.[0],
+        interests: act.interests || (act.interest_vectors ? Object.keys(act.interest_vectors) : [])
+      };
+    });
 
     // ⚠️ ADVERTENCIA: Si la ciudad tiene pocas actividades
     if (candidateActivities.length < 20) {
