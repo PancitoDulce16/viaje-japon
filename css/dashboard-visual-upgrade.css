@@ -10,7 +10,7 @@
 .dashboard-hero {
     position: relative;
     min-height: 400px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background: var(--gradient-primary);
     border-radius: 24px;
     padding: 48px 32px;
     margin-bottom: 32px;
@@ -145,7 +145,7 @@
 
 .hero-button-primary {
     background: white;
-    color: #667eea;
+    color: var(--accent-primary);
     box-shadow: 0 8px 24px rgba(255, 255, 255, 0.3);
 }
 
@@ -197,7 +197,7 @@
 
 /* Animated gradient backgrounds for each stat card */
 .stat-card-visual.stat-days {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--gradient-primary);
     color: white;
 }
 
@@ -345,7 +345,7 @@
     top: 0;
     bottom: 0;
     width: 4px;
-    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    background: var(--gradient-primary);
     transition: width 0.3s ease;
 }
 
@@ -369,7 +369,7 @@
     width: 64px;
     height: 64px;
     border-radius: 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--gradient-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -397,7 +397,7 @@
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
-    color: #667eea;
+    color: var(--accent-primary);
     margin-bottom: 8px;
 }
 

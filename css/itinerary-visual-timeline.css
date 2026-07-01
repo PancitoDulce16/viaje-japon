@@ -41,8 +41,8 @@
 }
 
 .view-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
+  background: var(--gradient-primary);
+  border-color: var(--accent-primary);
   color: white;
 }
 
@@ -94,7 +94,7 @@
 .day-number {
   font-size: 2rem;
   font-weight: 900;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 0.25rem;
@@ -200,7 +200,7 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   border-radius: 2px;
 }
 
@@ -245,7 +245,7 @@
   width: 60px;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #667eea;
+  color: var(--accent-primary);
   padding: 0.5rem;
   background: #ede9fe;
   border-radius: 8px;
@@ -266,7 +266,7 @@
   width: 44px;
   height: 44px;
   background: white;
-  border: 3px solid #667eea;
+  border: 3px solid var(--accent-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -320,7 +320,7 @@
 }
 
 .activity-card:hover {
-  border-color: #667eea;
+  border-color: var(--accent-primary);
   box-shadow: 0 8px 16px rgba(102, 126, 234, 0.15);
   transform: translateY(-2px);
 }
@@ -468,7 +468,7 @@
 .city-tag {
   padding: 0.375rem 0.75rem;
   background: #ede9fe;
-  color: #667eea;
+  color: var(--accent-primary);
   border-radius: 20px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -656,7 +656,7 @@
 
 .btn-create-itinerary {
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   color: white;
   border: none;
   border-radius: 12px;
@@ -694,7 +694,7 @@
 }
 
 .dark .activity-card:hover {
-  border-color: #667eea;
+  border-color: var(--accent-primary);
 }
 
 .dark .day-stat {

@@ -172,14 +172,14 @@
    🎨 GRADIENT TEXT
 ======================================== */
 .gradient-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .gradient-text-animated {
-  background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #4facfe);
+  background: linear-gradient(90deg, #E91E63, #FF6B9D, #D4AF37, #E91E63);
   background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -442,7 +442,7 @@
 ======================================== */
 .stat-number {
   font-variant-numeric: tabular-nums;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -453,7 +453,7 @@
    💬 CHAT BUBBLE
 ======================================== */
 .chat-bubble {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   color: white;
   padding: 12px 20px;
   border-radius: 20px 20px 20px 4px;
@@ -470,7 +470,7 @@
   width: 0;
   height: 0;
   border: 8px solid transparent;
-  border-right-color: #667eea;
+  border-right-color: var(--accent-primary);
   border-bottom: 0;
   margin-bottom: -8px;
 }
@@ -605,12 +605,12 @@
 }
 
 .aesthetic-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient-primary);
   border-radius: 10px;
 }
 
 .aesthetic-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  background: var(--gradient-primary);
 }
 
 /* ========================================
