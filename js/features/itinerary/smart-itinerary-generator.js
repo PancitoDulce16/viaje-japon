@@ -17,6 +17,36 @@ const MEAL_TYPE_CATEGORIES = {
   dinner: ['izakayas', 'yakinikuRestaurants', 'sushiRestaurants', 'ramenRestaurants', 'moreRestaurants', 'veganVegetarian']
 };
 
+// 🏝️ Sub-áreas conocidas que, aunque están etiquetadas con la ciudad "padre" (ej. Uji
+// figura como parte de Kyoto, Miyajima como parte de Hiroshima), son en la práctica
+// excursiones aparte - lejos del centro, a menudo requieren tren/ferry dedicado. No
+// deben combinarse en el mismo día con actividades del centro de la ciudad, ni con
+// otra sub-área remota distinta.
+const REMOTE_SUBAREAS = ['uji', 'miyajima'];
+
+/**
+ * Determina si combinar `candidateArea` con las áreas YA seleccionadas para el día
+ * generaría un choque de sub-área remota (ej. Uji + centro de Kyoto, o Miyajima +
+ * centro de Hiroshima en el mismo día).
+ * @param {string} candidateArea
+ * @param {string[]} selectedAreas - áreas de las actividades ya elegidas para el día
+ * @returns {boolean}
+ */
+function hasRemoteAreaConflict(candidateArea, selectedAreas) {
+  const candNormalized = (candidateArea || '').toLowerCase();
+  const candIsRemote = REMOTE_SUBAREAS.includes(candNormalized);
+
+  for (const existingArea of selectedAreas) {
+    const existNormalized = (existingArea || '').toLowerCase();
+    const existIsRemote = REMOTE_SUBAREAS.includes(existNormalized);
+
+    if (candIsRemote && existIsRemote && candNormalized !== existNormalized) return true; // dos sub-áreas remotas distintas
+    if (candIsRemote && !existIsRemote) return true; // remota + centro
+    if (!candIsRemote && existIsRemote) return true; // centro + remota
+  }
+  return false;
+}
+
 /**
  * ----------------------------------------------------------------
  * ADAPTER FOR NEW DATABASE
@@ -1251,6 +1281,16 @@ export const SmartItineraryGenerator = {
         continue;
       }
 
+      // 🏝️ Sub-áreas remotas (Uji, Miyajima): nunca combinar con actividades del centro
+      // ni con otra sub-área remota distinta, aunque la distancia cruda no dispare el
+      // filtro de abajo (esto es un chequeo por NOMBRE de área, más confiable que
+      // distancia sola cuando varios días de la misma ciudad comparten hotel/centro).
+      if (hasRemoteAreaConflict(activity.area, selectedActivities.map(a => a.area))) {
+        console.log(`⏭️ Saltando "${activity.name}" (choque de sub-área: "${activity.area}")`);
+        skippedForDistance.push(activity);
+        continue;
+      }
+
       // 📍 Coherencia geográfica: si ya hay actividades seleccionadas con coordenadas,
       // exigir que la candidata esté razonablemente cerca de ellas (excepto la primera
       // actividad del día, que define el punto de partida)
@@ -1281,24 +1321,40 @@ export const SmartItineraryGenerator = {
       console.log(`📍 Reincorporando ${skippedForDistance.length} actividades descartadas por distancia (no hay suficientes cercanas)`);
       for (const activity of skippedForDistance) {
         if (selectedActivities.length >= targetActivities) break;
-        if (!usedActivities.has(activity.name) && !selectedActivities.includes(activity)) {
-          selectedActivities.push(activity);
-          usedActivities.add(activity.name);
-        }
+        if (usedActivities.has(activity.name) || selectedActivities.includes(activity)) continue;
+        // No reincorporar si SIGUE chocando de sub-área remota (Uji/Miyajima) - eso lo
+        // maneja únicamente el fallback de última instancia más abajo, no aquí.
+        if (hasRemoteAreaConflict(activity.area, selectedActivities.map(a => a.area))) continue;
+        selectedActivities.push(activity);
+        usedActivities.add(activity.name);
       }
     }
 
     console.log(`📊 Día ${dayNumber}: ${selectedActivities.length} actividades seleccionadas (target: ${targetActivities})`);
 
-    // 🚨 CALIDAD: Si no llegamos al target, intentar agregar actividades SIN restricción de categoría
+    // 🚨 CALIDAD: Si no llegamos al target, intentar agregar actividades SIN restricción de
+    // categoría. Primera pasada: aún respeta el choque de sub-área remota (Uji/Miyajima) -
+    // solo si TODAVÍA queda corto después de esa pasada se permite mezclar sub-áreas,
+    // porque un día geográficamente incoherente sigue siendo mejor que uno incompleto.
     if (selectedActivities.length < targetActivities - 1) {
       console.log(`⚠️ Solo ${selectedActivities.length}/${targetActivities} actividades - buscando más sin restricciones...`);
       for (const activity of scoredActivities) {
         if (selectedActivities.length >= targetActivities) break;
-        if (!usedActivities.has(activity.name) && !selectedActivities.includes(activity)) {
-          selectedActivities.push(activity);
-          usedActivities.add(activity.name);
-          console.log(`   ✅ Agregada: "${activity.name}" (completando día)`);
+        if (usedActivities.has(activity.name) || selectedActivities.includes(activity)) continue;
+        if (hasRemoteAreaConflict(activity.area, selectedActivities.map(a => a.area))) continue;
+        selectedActivities.push(activity);
+        usedActivities.add(activity.name);
+        console.log(`   ✅ Agregada: "${activity.name}" (completando día)`);
+      }
+      // Segunda pasada (último recurso): si sigue corto, ya sin el filtro de área
+      if (selectedActivities.length < targetActivities - 1) {
+        for (const activity of scoredActivities) {
+          if (selectedActivities.length >= targetActivities) break;
+          if (!usedActivities.has(activity.name) && !selectedActivities.includes(activity)) {
+            selectedActivities.push(activity);
+            usedActivities.add(activity.name);
+            console.log(`   ✅ Agregada: "${activity.name}" (completando día, sub-área mixta)`);
+          }
         }
       }
     }
@@ -1372,6 +1428,7 @@ export const SmartItineraryGenerator = {
           rating: act.rating || null,
           source: act.source || 'database',
           city: act.city || city, // 🏙️ requerido por MasterItineraryOptimizer y otros chequeos de salud
+          area: act.area || null, // 🏝️ sub-área (ej. Uji, Miyajima) para el chequeo de clustering geográfico
           // 🎯 SMART ALTERNATIVES
           alternatives: alternatives.length > 0 ? alternatives.map(alt => ({
             name: alt.name,

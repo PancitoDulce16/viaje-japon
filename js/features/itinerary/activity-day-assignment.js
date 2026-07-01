@@ -4,6 +4,35 @@
 import { HotelBaseSystem } from '../../api/hotel-base-system.js';
 import { RouteOptimizer } from '../../map/route-optimizer-v2.js';
 
+// 🏝️ Sub-áreas conocidas que, aunque están etiquetadas con la ciudad "padre" (ej. Uji
+// como parte de Kyoto, Miyajima como parte de Hiroshima), son en la práctica
+// excursiones aparte, lejos del centro. Nunca deben combinarse en el mismo día con
+// actividades del centro ni con otra sub-área remota distinta. Debe coincidir con la
+// misma lista en smart-itinerary-generator.js.
+const REMOTE_SUBAREAS = ['uji', 'miyajima'];
+
+/**
+ * Determina si combinar `candidateArea` con las áreas YA presentes en un día
+ * generaría un choque de sub-área remota.
+ * @param {string} candidateArea
+ * @param {string[]} existingAreas
+ * @returns {boolean}
+ */
+function hasRemoteAreaConflict(candidateArea, existingAreas) {
+  const candNormalized = (candidateArea || '').toLowerCase();
+  const candIsRemote = REMOTE_SUBAREAS.includes(candNormalized);
+
+  for (const existingArea of existingAreas) {
+    const existNormalized = (existingArea || '').toLowerCase();
+    const existIsRemote = REMOTE_SUBAREAS.includes(existNormalized);
+
+    if (candIsRemote && existIsRemote && candNormalized !== existNormalized) return true;
+    if (candIsRemote && !existIsRemote) return true;
+    if (!candIsRemote && existIsRemote) return true;
+  }
+  return false;
+}
+
 /**
  * Sistema de Asignación Inteligente de Actividades
  * Resuelve el problema de actividades mal ubicadas y días vacíos
@@ -229,9 +258,38 @@ export const ActivityDayAssignment = {
       // actividades YA asignadas estén geográficamente más cerca de esta - evita que
       // una actividad de una sub-zona alejada (ej. Miyajima) caiga en un día al azar
       // entre varios posibles, mezclándose con actividades de otra sub-zona.
-      const tiedDays = candidateDays.filter(d => d.distance <= minDistance + 2);
+      let tiedDays = candidateDays.filter(d => d.distance <= minDistance + 2);
+
+      // 🏝️ Descartar de entrada cualquier día empatado cuyas actividades YA asignadas
+      // choquen por sub-área remota (Uji/Miyajima) con esta actividad.
       let bestDay = null;
-      if (tiedDays.length > 1) {
+      let areaConflictResolved = false;
+      if (tiedDays.length > 1 && activity.area) {
+        const withoutConflict = tiedDays.filter(({ dayNum }) => {
+          const day = days.find(d => d.day === dayNum);
+          const existingAreas = (day?.activities || []).map(a => a.area).filter(Boolean);
+          return !hasRemoteAreaConflict(activity.area, existingAreas);
+        });
+        if (withoutConflict.length > 0) {
+          tiedDays = withoutConflict;
+        } else {
+          // TODOS los días empatados ya tienen actividades de una sub-área distinta (ej.
+          // llegamos a repartir Uji después de que los 4 días de Kyoto ya se llenaron de
+          // actividades del centro). En vez de usar cluster-distance (que elegiría el día
+          // "más cercano" pese al choque, replicando el problema), preferir el día con
+          // MENOS actividades ya asignadas - el más disponible para "ceder" su espacio a
+          // esta sub-área en vez de forzarla dentro de un día ya consolidado como central.
+          const leastLoaded = [...tiedDays].sort((a, b) => {
+            const dayA = days.find(d => d.day === a.dayNum);
+            const dayB = days.find(d => d.day === b.dayNum);
+            return (dayA?.activities.length || 0) - (dayB?.activities.length || 0);
+          })[0];
+          bestDay = leastLoaded.dayNum;
+          areaConflictResolved = true;
+        }
+      }
+
+      if (!areaConflictResolved && tiedDays.length > 1) {
         let bestClusterDistance = Infinity;
         tiedDays.forEach(({ dayNum }) => {
           const day = days.find(d => d.day === dayNum);
@@ -761,8 +819,10 @@ export const ActivityDayAssignment = {
 
       console.log(`   Día ${day.day} (${city}): buscando ${needed} actividades cercanas...`);
 
+      const existingAreas = (day.activities || []).map(a => a.area).filter(Boolean);
+
       // Filtrar actividades disponibles para esta ciudad
-      const cityActivities = availableActivities.filter(act => {
+      let cityActivities = availableActivities.filter(act => {
         // No usar actividades ya agregadas
         if (usedActivityIds.has(act.id)) return false;
 
@@ -773,6 +833,11 @@ export const ActivityDayAssignment = {
         return actCity.toLowerCase().includes(city.toLowerCase()) ||
                city.toLowerCase().includes(actCity.toLowerCase());
       });
+
+      // 🏝️ Evitar añadir una sub-área remota (Uji/Miyajima) a un día que ya tiene
+      // actividades del centro, o viceversa - a menos que descartar deje sin candidatas.
+      const withoutAreaConflict = cityActivities.filter(act => !hasRemoteAreaConflict(act.area, existingAreas));
+      if (withoutAreaConflict.length > 0) cityActivities = withoutAreaConflict;
 
       if (cityActivities.length === 0) {
         console.warn(`   ⚠️ No hay actividades disponibles para ${city}`);
@@ -823,6 +888,7 @@ export const ActivityDayAssignment = {
           coordinates: rawActivity.coordinates || (rawActivity.lat && rawActivity.lng ? { lat: rawActivity.lat, lng: rawActivity.lng } : null),
           rating: rawActivity.rating || rawActivity.quality_rating || null,
           city: rawActivity.city,
+          area: rawActivity.area || null,
           source: 'auto-complete'
         };
         day.activities.push(activity);
