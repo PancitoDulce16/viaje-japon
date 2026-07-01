@@ -11,6 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Write config-local.js from secrets
+        run: |
+          cat > js/config-local.js << 'EOF'
+          export const LOCAL_CONFIG = {
+            GOOGLE_PLACES_API_KEY: '${{ secrets.GOOGLE_PLACES_API_KEY }}',
+            EXCHANGE_RATE_API_KEY: '${{ secrets.EXCHANGE_RATE_API_KEY }}',
+            OPENWEATHER_API_KEY: '${{ secrets.OPENWEATHER_API_KEY }}'
+          };
+          EOF
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}

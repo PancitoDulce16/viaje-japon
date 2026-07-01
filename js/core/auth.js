@@ -121,7 +121,15 @@ export const AuthHandler = {
 
         } catch (error) {
             console.error('🛑 Error procesando el resultado de la redirección:', error);
-            this.handleAuthError(error);
+            // auth/missing-initial-state: getRedirectResult() se llama en TODA carga de
+            // página (no solo cuando el usuario realmente vuelve de una redirección de
+            // Google), y Firebase lanza este error específico -en vez de simplemente
+            // devolver null- cuando no encuentra el estado pendiente que dejó signInWithRedirect,
+            // algo común en navegadores con almacenamiento particionado (Safari ITP, etc.)
+            // No indica que la sesión actual del usuario esté rota, así que no se le muestra.
+            if (error.code !== 'auth/missing-initial-state') {
+                this.handleAuthError(error);
+            }
             // Aunque falle la redirección, continuamos para ver si hay una sesión activa.
         }
 
