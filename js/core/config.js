@@ -2,29 +2,19 @@
 // ⚠️ NOTA: Este archivo SÍ debe estar en Git
 // Solo contiene configuración no sensible
 
-// 🔐 IMPORTANTE: Para API keys sensibles, usar variables de entorno o config local
-// Las API keys se pueden configurar de 3 formas (en orden de prioridad):
-// 1. Variable de entorno (más seguro)
-// 2. Firebase Remote Config (recomendado para producción)
-// 3. Archivo local config-local.js (para desarrollo)
+// 🔐 IMPORTANTE: Firebase Hosting sirve el código fuente SIN procesar por Vite
+// (firebase.json usa "public": "."), así que import.meta.env.VITE_* NUNCA
+// está disponible en producción (solo existe durante `npm run dev` / `vite build`).
+// Las API keys reales viven en js/config-local.js, un archivo NO trackeado en
+// git (ver .gitignore) que sí está presente en disco al desplegar, por lo que
+// se sube con `firebase deploy` sin llegar nunca al repositorio de GitHub.
 
 export const APP_CONFIG = {
-  // Google Places API Key — injected at build time from .env (gitignored, see .env.example)
-  GOOGLE_PLACES_API_KEY: import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '',
+  // Valor por defecto seguro; se sobreescribe con la key real por loadLocalConfig()
+  GOOGLE_PLACES_API_KEY: '',
 
-  // Se cargará desde config-local.js si existe (no trackeado en git)
+  // Carga las keys reales desde config-local.js (no trackeado en git, pero sí desplegado)
   async loadLocalConfig() {
-    // Solo intentar cargar en desarrollo (localhost)
-    const isLocalhost = window.location.hostname === 'localhost' ||
-                       window.location.hostname === '127.0.0.1' ||
-                       window.location.hostname.includes('localhost');
-
-    if (!isLocalhost) {
-      // En producción, usar las API keys hardcodeadas arriba
-      return;
-    }
-
-    // Solo en desarrollo: intentar cargar config-local.js
     try {
       const localConfig = await import('../config-local.js');
       if (localConfig.LOCAL_CONFIG) {
@@ -32,8 +22,8 @@ export const APP_CONFIG = {
         console.log('✅ Configuración local cargada');
       }
     } catch (e) {
-      // config-local.js no existe en desarrollo - usar valores por defecto
-      console.log('ℹ️ No hay configuración local en desarrollo');
+      // config-local.js no existe (ej. clon nuevo del repo) - usar valores por defecto
+      console.log('ℹ️ No hay configuración local (config-local.js no encontrado)');
     }
   }
 };

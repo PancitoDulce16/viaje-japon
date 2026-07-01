@@ -88,12 +88,16 @@ class DashboardManager {
         try {
             console.log('🚀 Iniciando dashboard...');
 
-            // 🔐 Cargar configuración local (API keys) - opcional en producción
+            // 🔐 Cargar configuración local (API keys) - opcional si config-local.js no existe
             try {
                 await APP_CONFIG.loadLocalConfig();
             } catch (error) {
-                // config-local.js no existe en producción - esto es normal
-                console.log('ℹ️ No hay configuración local (normal en producción)');
+                console.log('ℹ️ No hay configuración local (config-local.js no encontrado)');
+            }
+            try {
+                await window.AppUtils?.loadLocalConfig?.();
+            } catch (error) {
+                console.log('ℹ️ AppUtils: no hay configuración local (config-local.js no encontrado)');
             }
 
             // 🔔 Inicializar sistema de notificaciones

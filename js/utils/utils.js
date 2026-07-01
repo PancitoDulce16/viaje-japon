@@ -1,13 +1,30 @@
 // js/utils.js - Con APIs reales
 
 export const AppUtils = {
-    EXCHANGE_RATE_API_KEY: import.meta.env.VITE_EXCHANGE_RATE_API_KEY || '',
-    OPENWEATHER_API_KEY: import.meta.env.VITE_OPENWEATHER_API_KEY || '',
+    // Valores por defecto seguros; se sobreescriben con las keys reales por loadLocalConfig()
+    // (Firebase Hosting sirve el código sin procesar por Vite, así que import.meta.env
+    // nunca está disponible en producción — ver js/config-local.js)
+    EXCHANGE_RATE_API_KEY: '',
+    OPENWEATHER_API_KEY: '',
     exchangeRate: 143, // Fallback
     clockInterval: null,
     weatherCache: {},
     rateCache: null,
     rateCacheTime: null,
+
+    // Carga las keys reales desde config-local.js (no trackeado en git, pero sí desplegado)
+    async loadLocalConfig() {
+        try {
+            const localConfig = await import('../config-local.js');
+            if (localConfig.LOCAL_CONFIG) {
+                this.EXCHANGE_RATE_API_KEY = localConfig.LOCAL_CONFIG.EXCHANGE_RATE_API_KEY || '';
+                this.OPENWEATHER_API_KEY = localConfig.LOCAL_CONFIG.OPENWEATHER_API_KEY || '';
+            }
+        } catch (e) {
+            // config-local.js no existe (ej. clon nuevo del repo) - usar valores por defecto
+            console.log('ℹ️ AppUtils: no hay configuración local (config-local.js no encontrado)');
+        }
+    },
 
     async fetchExchangeRate() {
         // Cachear por 1 hora
