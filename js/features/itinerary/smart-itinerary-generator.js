@@ -765,6 +765,7 @@ export const SmartItineraryGenerator = {
   async generateCompleteItinerary(profile) {
     const {
       cities = [],
+      cityStops = null, // 🆕 [{city, days}] - ruta manual ordenada, permite repetir ciudad. Si es null/vacío, se usa distribución automática.
       totalDays = 7,
       dailyBudget = 10000,
       interests = [],
@@ -799,8 +800,12 @@ export const SmartItineraryGenerator = {
     // 🍽️ Tracker global de restaurantes ya sugeridos para no repetir comidas en el viaje
     const usedMeals = new Set();
 
-    // Distribuir días entre ciudades (basado en intereses, ponderados por prioridad)
-    const cityDistribution = this.distributeDaysAcrossCities(cities, totalDays, interests, interestWeights);
+    // Distribuir días entre ciudades: si el usuario armó una ruta manual (cityStops,
+    // permite repetir ciudad - ej. Tokyo -> Kyoto -> Osaka -> Tokyo), se respeta tal
+    // cual sin pasar por el scoring automático. Si no, se reparte por intereses.
+    const cityDistribution = (cityStops && cityStops.length > 0)
+      ? cityStops.map(stop => ({ city: stop.city, days: stop.days }))
+      : this.distributeDaysAcrossCities(cities, totalDays, interests, interestWeights);
 
     const itinerary = {
       title: `Viaje a Japón - ${totalDays} días`,

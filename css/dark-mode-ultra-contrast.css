@@ -24,9 +24,16 @@
    ======================================== */
 
 html.dark,
-html.dark body,
-html.dark #appDashboard {
+html.dark body {
   background-color: var(--ultra-dark-bg) !important;
+  color: var(--ultra-white-text) !important;
+}
+
+/* #appDashboard queda SIN background-color propio a propósito: si lo pinta
+   opaco (como antes) tapa por completo el wallpaper de Osucuro.png que
+   wallpapers.css pone en <html> - la razón por la que el modo oscuro no
+   mostraba el wallpaper aunque el claro sí. */
+html.dark #appDashboard {
   color: var(--ultra-white-text) !important;
 }
 
