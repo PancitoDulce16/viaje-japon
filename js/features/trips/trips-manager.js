@@ -1458,26 +1458,17 @@ export const TripsManager = {
       // Calcular ciudades del viaje
       const cities = this.currentTrip.cities || [];
 
-      // Pre-cargar datos en el wizard
-      window.SmartGeneratorWizard.wizardData = {
-        cities: cities.length > 0 ? cities : [],
-        totalDays: totalDays,
-        dailyBudget: 10000, // Default
-        interests: [], // Usuario los seleccionará
-        pace: 'moderate',
-        startTime: 9,
-        companionType: null,
-        hotels: {},
-        mustSee: [],
-        avoid: []
-      };
-
       // Notificar al usuario
       Notifications.info('🧠 Abriendo generador inteligente...');
 
-      // Abrir el wizard
+      // Abrir el wizard con datos del viaje actual pre-cargados
+      // (open() resetea a defaults completos y aplica este override encima,
+      // en vez de reemplazar wizardData entero y perder campos nuevos)
       setTimeout(() => {
-        window.SmartGeneratorWizard.open();
+        window.SmartGeneratorWizard.open({
+          cities: cities.length > 0 ? cities : [],
+          totalDays: totalDays
+        });
       }, 300);
 
     } catch (error) {

@@ -768,10 +768,14 @@ export const ActivityDayAssignment = {
     // normalDaysFinal se marca arriba). Si genuinamente están vacíos o muy ligeros -no
     // porque se hayan vaciado a propósito, sino porque nunca tuvieron actividades- también
     // merecen rellenarse, respetando sus topes más bajos (día 1: jetlag, último día: salida).
-    if (day1Count < MIN_ACTIVITIES_DAY1) {
+    // Excepción: si el día 1 quedó vacío por llegada nocturna (lateArrival, ver
+    // generateSingleDay), es intencional - no rellenar o se pierde el propósito del jetlag.
+    if (day1Count < MIN_ACTIVITIES_DAY1 && !day1.lateArrival) {
       const needed = MIN_ACTIVITIES_DAY1 - day1Count;
       console.log(`   Día 1: agregando ${needed} actividad(es) automáticamente (mín ${MIN_ACTIVITIES_DAY1})...`);
       day1._needsActivities = needed;
+    } else if (day1.lateArrival) {
+      console.log(`   Día 1: vacío intencionalmente (llegada nocturna/jetlag) - no se rellena`);
     }
     if (lastDay.activities.length < MIN_ACTIVITIES_LASTDAY && lastDay.day !== day1.day) {
       const needed = MIN_ACTIVITIES_LASTDAY - lastDay.activities.length;

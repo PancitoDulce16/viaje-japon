@@ -777,6 +777,7 @@ export const SmartItineraryGenerator = {
       companionType = null, // solo, couple, family, seniors, friends
       themedDays = {}, // { 1: 'traditional', 3: 'foodie', ... }
       tripStartDate = null, // Para detectar temporada
+      arrivalTime = null, // 🆕 'HH:MM' - hora de aterrizaje día 1 (jetlag-aware)
       // 🆕 Nuevos parámetros de contexto
       groupSize = 1,
       travelerAges = [],
@@ -842,6 +843,7 @@ export const SmartItineraryGenerator = {
           companionType: companionType,
           themedDay: themedDay,
           tripStartDate: tripStartDate,
+          arrivalTime: arrivalTime, // 🆕 Solo afecta al día 1 (isArrivalDay)
           usedActivities: usedActivities, // 🚨 Pasar tracker global
           usedMeals: usedMeals, // 🍽️ Pasar tracker global de restaurantes
           // 🆕 Nuevos parámetros de contexto
@@ -1032,6 +1034,7 @@ export const SmartItineraryGenerator = {
       companionType,
       themedDay,
       tripStartDate,
+      arrivalTime = null, // 🆕 'HH:MM' - hora de aterrizaje día 1 (jetlag-aware)
       usedActivities = new Set(), // 🚨 NUEVO: Tracker de actividades usadas
       usedMeals = new Set(), // 🍽️ Tracker de restaurantes ya sugeridos
       // 🆕 Nuevos parámetros de contexto
@@ -1068,10 +1071,25 @@ export const SmartItineraryGenerator = {
       console.log(`👥 Companion: ${companionConfig.name}, Activities ajustadas a ${targetActivities}`);
     }
 
-    // 🛫 DÍA 1 JETLAG-FRIENDLY: Reducir drásticamente actividades y filtrar inapropiadas
+    // 🛫 DÍA 1 JETLAG-FRIENDLY: Reducir actividades según hora de aterrizaje real
+    // (si no se especificó hora, se asume llegada temprana y se usa el comportamiento
+    // conservador anterior: día ligero de 2-3 actividades)
+    let lateArrival = false;
     if (isArrivalDay) {
-      targetActivities = Math.min(3, Math.max(2, Math.floor(targetActivities * 0.3))); // Máximo 3 actividades
-      console.log(`🛫 Día 1 (JETLAG): Reducido a ${targetActivities} actividades`);
+      const arrivalHour = arrivalTime ? parseInt(arrivalTime.split(':')[0], 10) : null;
+
+      if (arrivalHour !== null && arrivalHour >= 17) {
+        // Llegada de noche: directo al hotel, sin actividades por el jetlag
+        targetActivities = 0;
+        lateArrival = true;
+      } else if (arrivalHour !== null && arrivalHour >= 12) {
+        // Llegada de tarde: como mucho 1 actividad muy ligera cerca del hotel/aeropuerto
+        targetActivities = 1;
+      } else {
+        // Llegada de mañana o sin hora especificada: día ligero normal
+        targetActivities = Math.min(3, Math.max(2, Math.floor(targetActivities * 0.3)));
+      }
+      console.log(`🛫 Día 1 (JETLAG, llegada ${arrivalTime || 'sin hora'}): ${targetActivities} actividades`);
     } else if (isDepartureDay) {
       targetActivities = Math.max(2, Math.floor(targetActivities * 0.4));
     }
@@ -1392,7 +1410,7 @@ export const SmartItineraryGenerator = {
     // actividades en vez de dejar el día completamente vacío - un día vacío es
     // peor experiencia que una actividad repetida. Solo repite las que no estén
     // ya en ESTE día.
-    if (selectedActivities.length === 0 && scoredActivities.length > 0) {
+    if (selectedActivities.length === 0 && scoredActivities.length > 0 && targetActivities > 0) {
       console.log(`🔁 Pool de actividades agotado para "${city}" - permitiendo repetir para no dejar el día vacío`);
       for (const activity of scoredActivities) {
         if (selectedActivities.length >= targetActivities) break;
@@ -1416,13 +1434,15 @@ export const SmartItineraryGenerator = {
     const day = {
       day: dayNumber,
       date: '',
-      title: isArrivalDay ? `Llegada a ${city}` :
+      title: lateArrival ? `Llegada a ${city} (noche) - Directo al hotel` :
+             isArrivalDay ? `Llegada a ${city}` :
              isFirstDayInCity ? `Primer día en ${city}` :
              isDepartureDay ? `Último día - Regreso` :
              themedDay && THEMED_DAYS[themedDay] ? THEMED_DAYS[themedDay].name :
              `Explorando ${city}`,
       city: city,
       cities: [{ cityId: city }],
+      lateArrival: lateArrival, // 🆕 día 1 con llegada nocturna: balanceEmptyDays no debe rellenarlo
       budget: dailyBudget,
       budgetBreakdown: budgetBreakdown, // 💰 NUEVO: Presupuesto detallado
       hotel: hotel,

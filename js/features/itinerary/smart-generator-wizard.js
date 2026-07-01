@@ -29,6 +29,7 @@ export const SmartGeneratorWizard = {
     travelerAges: [],          // 🆕 Edades de los viajeros [25, 30, 5]
     tripStartDate: null,       // 🆕 Fecha de inicio (para eventos estacionales)
     tripEndDate: null,         // 🆕 Fecha de fin
+    arrivalTime: null,         // 🆕 'HH:MM' - hora de aterrizaje día 1 (jetlag-aware)
     dietaryRestrictions: [],   // 🆕 ['vegetarian', 'halal', 'gluten-free']
     mobilityNeeds: null,       // 🆕 'wheelchair', 'limited', null
 
@@ -46,18 +47,28 @@ export const SmartGeneratorWizard = {
 
   /**
    * Abre el wizard
+   * @param {Object|null} prefill - Si se pasa, ignora el progreso guardado en
+   *   sessionStorage y arranca con datos frescos (defaults completos +
+   *   overrides de prefill). Usado por "Regenerar Itinerario" para inyectar
+   *   cities/totalDays del viaje actual sin arrastrar campos faltantes de un
+   *   wizardData parcial.
    */
-  open() {
+  open(prefill = null) {
     this.currentStep = 1;
 
-    // Intentar cargar datos guardados
-    const hasStoredData = this.loadFromSessionStorage();
-
-    if (!hasStoredData) {
+    if (prefill) {
       this.resetWizardData();
+      Object.assign(this.wizardData, prefill);
     } else {
-      // Mostrar notificación de que se recuperó progreso
-      window.Notifications?.show('✅ Se recuperó tu progreso anterior', 'success');
+      // Intentar cargar datos guardados
+      const hasStoredData = this.loadFromSessionStorage();
+
+      if (!hasStoredData) {
+        this.resetWizardData();
+      } else {
+        // Mostrar notificación de que se recuperó progreso
+        window.Notifications?.show('✅ Se recuperó tu progreso anterior', 'success');
+      }
     }
 
     this.renderWizard();
@@ -75,6 +86,7 @@ export const SmartGeneratorWizard = {
       travelerAges: [],
       tripStartDate: null,
       tripEndDate: null,
+      arrivalTime: null,
       dietaryRestrictions: [],
       mobilityNeeds: null,
       interests: [],
@@ -245,6 +257,20 @@ export const SmartGeneratorWizard = {
               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition"
             >
           </div>
+        </div>
+
+        <!-- Hora de llegada (jetlag-aware día 1) -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            🛬 ¿A qué hora aterrizas en Japón el día 1? (Opcional)
+          </label>
+          <input
+            type="time"
+            id="arrivalTime"
+            value="${this.wizardData.arrivalTime || ''}"
+            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition"
+          >
+          <p class="text-xs text-gray-500 mt-1">Si llegas en la tarde/noche, el día 1 se deja ligero o vacío por el jetlag. Si llegas temprano, se agregan 2-3 actividades suaves.</p>
         </div>
 
         <!-- Días totales -->
@@ -806,7 +832,8 @@ export const SmartGeneratorWizard = {
               <button
                 type="button"
                 onclick="window.SmartGeneratorWizard.setInterestWeight('${interest.id}', ${n})"
-                class="text-lg leading-none transition ${n <= weight ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}"
+                class="text-lg leading-none transition"
+                style="color: ${n <= weight ? '#facc15' : '#d1d5db'}"
                 title="Prioridad ${n}/5"
               >★</button>
             `).join('')}
@@ -1122,6 +1149,11 @@ export const SmartGeneratorWizard = {
     const tripEndDateInput = document.getElementById('tripEndDate');
     if (tripEndDateInput) {
       this.wizardData.tripEndDate = tripEndDateInput.value || null;
+    }
+
+    const arrivalTimeInput = document.getElementById('arrivalTime');
+    if (arrivalTimeInput) {
+      this.wizardData.arrivalTime = arrivalTimeInput.value || null;
     }
 
     // Dietary restrictions
@@ -1668,6 +1700,7 @@ export const SmartGeneratorWizard = {
         travelerAges: this.wizardData.travelerAges,
         tripStartDate: this.wizardData.tripStartDate,
         tripEndDate: this.wizardData.tripEndDate,
+        arrivalTime: this.wizardData.arrivalTime,
         dietaryRestrictions: this.wizardData.dietaryRestrictions,
         mobilityNeeds: this.wizardData.mobilityNeeds
       };
