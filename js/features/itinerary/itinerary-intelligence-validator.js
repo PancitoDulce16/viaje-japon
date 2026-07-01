@@ -16,6 +16,29 @@ export const DistanceValidator = {
     SHINKANSEN: 50     // Shinkansen = CAMBIO DE CIUDAD (nunca en mismo día)
   },
 
+  // Palabras clave que identifican una actividad de TRASLADO AL/DESDE AEROPUERTO
+  // (vuelo, tren expreso al aeropuerto, etc.) en vez de una parada turística normal.
+  // Estas actividades LEGÍTIMAMENTE pueden estar a 50-100km de la siguiente/anterior
+  // actividad (el aeropuerto está lejos del centro) y no deben evaluarse con los
+  // mismos límites de "actividades del mismo barrio".
+  AIRPORT_TRANSFER_KEYWORDS: [
+    'narita', 'haneda', 'kansai airport', 'kansai international',
+    'aeropuerto', 'airport', 'vuelo', 'flight', 'skyliner',
+    'keikyu limousine', 'limousine bus', 'llegada vuelo', 'salida vuelo'
+  ],
+
+  /**
+   * Determina si una actividad representa un traslado al/desde el aeropuerto
+   * (vuelo, tren/bus expreso al aeropuerto), no una parada turística normal.
+   * @param {Object} activity
+   * @returns {boolean}
+   */
+  isAirportTransfer(activity) {
+    if (!activity) return false;
+    const text = `${activity.title || activity.name || ''} ${activity.category || ''}`.toLowerCase();
+    return this.AIRPORT_TRANSFER_KEYWORDS.some(keyword => text.includes(keyword));
+  },
+
   /**
    * Valida que un día NO tenga distancias absurdas
    * @param {Object} day
@@ -47,6 +70,24 @@ export const DistanceValidator = {
 
       if (distance > result.maxDistance) {
         result.maxDistance = distance;
+      }
+
+      // ✈️ Un traslado al/desde el aeropuerto (vuelo, Narita Express, etc.) NO es una
+      // parada turística - es normal y esperado que esté a 50-100km de la actividad
+      // anterior/siguiente. Evaluarlo con los mismos límites que "actividades del mismo
+      // barrio" genera falsos positivos ("ILÓGICO") en cualquier día de llegada/salida.
+      if (this.isAirportTransfer(act1) || this.isAirportTransfer(act2)) {
+        if (distance > this.DISTANCE_LIMITS.LOCAL_TRAIN) {
+          result.warnings.push({
+            type: 'AIRPORT_TRANSFER',
+            severity: 'LOW',
+            message: `✈️ Traslado al aeropuerto: ${act1.title || act1.name} → ${act2.title || act2.name} (${distance.toFixed(1)}km)`,
+            detail: 'Distancia normal para un traslado al/desde el aeropuerto.',
+            activities: [act1, act2],
+            distance: distance
+          });
+        }
+        continue; // No aplicar los límites de "misma zona" a un traslado de aeropuerto
       }
 
       // 🚨 CRÍTICO: Distancia de Shinkansen en mismo día

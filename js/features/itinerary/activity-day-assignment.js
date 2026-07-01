@@ -747,13 +747,28 @@ export const ActivityDayAssignment = {
         return;
       }
 
-      // Ordenar por proximidad al hotel
-      if (hotel && hotel.coordinates) {
+      // 📍 Punto de referencia para elegir candidatas CERCANAS ENTRE SÍ, no solo cercanas
+      // al hotel por separado. Ordenar solo por distancia al hotel puede elegir N
+      // actividades que individualmente están "cerca del hotel" pero dispersas entre sí
+      // (ej. Ikebukuro + Odaiba + Mitaka en el mismo día) - usar el centroide de las
+      // actividades YA existentes en el día como referencia mantiene las nuevas
+      // agrupadas con lo que ya está planeado, y solo cae al hotel si el día está
+      // completamente vacío.
+      const existingWithCoords = (day.activities || []).filter(a => a.coordinates?.lat && a.coordinates?.lng);
+      let referencePoint = hotel?.coordinates || null;
+      if (existingWithCoords.length > 0) {
+        referencePoint = {
+          lat: existingWithCoords.reduce((s, a) => s + a.coordinates.lat, 0) / existingWithCoords.length,
+          lng: existingWithCoords.reduce((s, a) => s + a.coordinates.lng, 0) / existingWithCoords.length
+        };
+      }
+
+      if (referencePoint) {
         cityActivities.sort((a, b) => {
           if (!a.coordinates || !b.coordinates) return 0;
 
-          const distA = RouteOptimizer.calculateDistance(a.coordinates, hotel.coordinates);
-          const distB = RouteOptimizer.calculateDistance(b.coordinates, hotel.coordinates);
+          const distA = RouteOptimizer.calculateDistance(a.coordinates, referencePoint);
+          const distB = RouteOptimizer.calculateDistance(b.coordinates, referencePoint);
           return distA - distB;
         });
       }
@@ -860,14 +875,18 @@ export const ActivityDayAssignment = {
       }
 
       const hotel = hotelsByDay[day.day];
+      // 🗺️ Sin hotel configurado para este día, seguir optimizando la ruta ENTRE las
+      // actividades (RouteOptimizer acepta startPoint: null y ordena por proximidad
+      // mutua). Antes esto se saltaba el día por completo, dejando el orden de
+      // inserción tal cual - por eso días recién auto-completados (cada actividad
+      // elegida individualmente por cercanía al hotel, no entre sí) podían terminar con
+      // saltos de 10-20km entre actividades consecutivas sin que nada los reordenara.
       if (!hotel) {
-        console.warn(`⚠️ Día ${day.day}: Sin hotel para optimización`);
-        return;
+        console.warn(`⚠️ Día ${day.day}: Sin hotel, optimizando solo por proximidad mutua entre actividades`);
       }
 
-      // Optimizar usando el hotel como punto de inicio
       const result = RouteOptimizer.optimizeRoute(day.activities, {
-        startPoint: hotel.coordinates,
+        startPoint: hotel?.coordinates || null,
         optimizationMode: 'balanced',
         shouldRecalculateTimings: true
       });
