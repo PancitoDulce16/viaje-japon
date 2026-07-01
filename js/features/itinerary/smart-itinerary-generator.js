@@ -1218,6 +1218,21 @@ export const SmartItineraryGenerator = {
       }
     }
 
+    // 🚨 ÚLTIMO RECURSO: Si el pool único de la ciudad ya se agotó (viajes largos
+    // o de una sola ciudad con base de datos pequeña), permitir repetir
+    // actividades en vez de dejar el día completamente vacío - un día vacío es
+    // peor experiencia que una actividad repetida. Solo repite las que no estén
+    // ya en ESTE día.
+    if (selectedActivities.length === 0 && scoredActivities.length > 0) {
+      console.log(`🔁 Pool de actividades agotado para "${city}" - permitiendo repetir para no dejar el día vacío`);
+      for (const activity of scoredActivities) {
+        if (selectedActivities.length >= targetActivities) break;
+        if (!selectedActivities.includes(activity)) {
+          selectedActivities.push({ ...activity, isRepeated: true });
+        }
+      }
+    }
+
     // 3. Optimizar ruta
     const dayStartTime = intensityConfig.startTime;
     const optimizedActivities = this.optimizeActivityOrder(selectedActivities, hotel, dayStartTime, city);
