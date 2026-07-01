@@ -290,10 +290,15 @@ function analyzeItineraryBalance(days, itinerary = null) {
             }
         }
 
+        // 🏙️ Ciudad del día: campo directo si existe, si no usar el detector robusto
+        // (funciona incluso en itinerarios viejos sin cityName/city guardado, vía
+        // coordenadas de las actividades - ver HotelBaseSystem.detectCityForDay)
+        const resolvedCity = day.city || window.HotelBaseSystem?.detectCityForDay?.(day) || null;
+
         return {
             day: day.day,
             date: day.date,
-            city: day.city || (day.activities || []).find(a => a.city)?.city || null, // 🏙️ ciudad del día, para no mezclar actividades entre ciudades
+            city: resolvedCity,
             analysis: analyzeDayLoad(day),
             activities: day.activities || [],
             hotelCoordinates: hotelCoords // 🔥 Incluir coordenadas del hotel
@@ -1018,11 +1023,11 @@ function applySuggestion(days, suggestion, options = {}) {
 
         // 🏙️ GUARDIA DE SEGURIDAD (defensa en profundidad): sin importar qué generador de
         // sugerencias haya creado este 'move', NUNCA mover una actividad a un día de otra
-        // ciudad. Compara ciudad del día destino contra la ciudad del día origen Y contra la
-        // ciudad propia de la actividad (más precisa en días de transición mixtos).
-        const targetCity = targetDay.city;
-        const activityCity = suggestion.activity.city;
-        const sourceCity = sourceDay.city;
+        // ciudad. Usa el resolvedor robusto (cityName/city → coordenadas → texto) para que
+        // esto funcione también en itinerarios viejos que nunca guardaron esos campos.
+        const targetCity = targetDay.city || window.HotelBaseSystem?.detectCityForDay?.(targetDay);
+        const activityCity = window.HotelBaseSystem?.resolveActivityCity?.(suggestion.activity) || suggestion.activity.city;
+        const sourceCity = sourceDay.city || window.HotelBaseSystem?.detectCityForDay?.(sourceDay);
         const relevantCity = activityCity || sourceCity;
         if (targetCity && relevantCity && String(targetCity).trim().toLowerCase() !== String(relevantCity).trim().toLowerCase()) {
             console.warn(`⚠️ BLOQUEADO: "${suggestion.activity.title || suggestion.activity.name}" es de ${relevantCity}, pero el Día ${targetDay.day} es de ${targetCity}. Rechazando movimiento entre ciudades distintas.`);

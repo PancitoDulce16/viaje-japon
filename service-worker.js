@@ -9,8 +9,8 @@
 // 📦 --- CONFIGURACIÓN DEL CACHÉ ---
 // IMPORTANTE: Cambia este número de versión CADA VEZ que hagas un cambio en los
 // archivos de la aplicación (JS, CSS, HTML) para forzar la actualización.
-const STATIC_CACHE_VERSION = 'japan-trip-planner-static-v12.0';
-const DYNAMIC_CACHE_VERSION = 'japan-trip-planner-dynamic-v12.0';
+const STATIC_CACHE_VERSION = 'japan-trip-planner-static-v13.0';
+const DYNAMIC_CACHE_VERSION = 'japan-trip-planner-dynamic-v13.0';
 const STATIC_CACHE_NAME = `static-${STATIC_CACHE_VERSION}`;
 const DYNAMIC_CACHE_NAME = `dynamic-${DYNAMIC_CACHE_VERSION}`;
 
@@ -125,6 +125,14 @@ self.addEventListener('fetch', event => {
 
     if (request.method !== 'GET' || url.protocol.startsWith('chrome-extension') || isExternalDomain) {
         return; // Dejar que el navegador maneje estas solicitudes directamente
+    }
+
+    // --- REGLA 1.5: NUNCA interceptar config-local.js ---
+    // Se carga vía dynamic import() para las API keys locales; interceptarlo con
+    // respondWith() ha producido NS_ERROR_CORRUPTED_CONTENT en algunos navegadores.
+    // Dejar que el navegador lo pida directamente a la red, sin pasar por el SW.
+    if (url.pathname.endsWith('/config-local.js')) {
+        return;
     }
 
     // --- REGLA 2: ESTRATEGIA PARA NAVEGACIÓN (HTML) ---

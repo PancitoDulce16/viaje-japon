@@ -8,6 +8,82 @@ import { APP_CONFIG } from '../core/config.js';
  * Sistema de Hotel Base - Gestiona hoteles por ciudad
  */
 export const HotelBaseSystem = {
+  // 🏙️ Coordenadas aproximadas del centro de cada ciudad cubierta por la app.
+  // Se usan como último recurso para inferir la ciudad de actividades ANTIGUAS que no
+  // tienen cityName/city guardado (itinerarios creados antes de que ese campo existiera).
+  CITY_CENTERS: {
+    tokyo: { lat: 35.6762, lng: 139.6503 },
+    kyoto: { lat: 35.0116, lng: 135.7681 },
+    osaka: { lat: 34.6937, lng: 135.5023 },
+    hiroshima: { lat: 34.3853, lng: 132.4553 },
+    nara: { lat: 34.6851, lng: 135.8048 },
+    hakone: { lat: 35.2323, lng: 139.1069 },
+    kamakura: { lat: 35.3193, lng: 139.5466 },
+    yokohama: { lat: 35.4437, lng: 139.6380 },
+    sapporo: { lat: 43.0618, lng: 141.3545 },
+    nagoya: { lat: 35.1815, lng: 136.9066 },
+    kobe: { lat: 34.6901, lng: 135.1955 },
+    nikko: { lat: 36.7199, lng: 139.6982 },
+    takayama: { lat: 36.1461, lng: 137.2521 },
+    kanazawa: { lat: 36.5613, lng: 136.6562 },
+    fukuoka: { lat: 33.5904, lng: 130.4017 },
+    sendai: { lat: 38.2682, lng: 140.8694 },
+    matsumoto: { lat: 36.2380, lng: 137.9720 },
+    shirakawago: { lat: 36.2578, lng: 136.9059 },
+    himeji: { lat: 34.8154, lng: 134.6853 }
+  },
+
+  /**
+   * Encuentra la ciudad conocida más cercana a unas coordenadas (distancia euclidiana
+   * simple, suficiente para esta escala - no necesita precisión de metros)
+   * @param {Object} coordinates - {lat, lng}
+   * @returns {string|null} Ciudad normalizada o null si no hay coordenadas válidas
+   */
+  findNearestCityCenter(coordinates) {
+    if (!coordinates || typeof coordinates.lat !== 'number' || typeof coordinates.lng !== 'number') {
+      return null;
+    }
+
+    let bestCity = null;
+    let bestDistance = Infinity;
+
+    Object.entries(this.CITY_CENTERS).forEach(([key, center]) => {
+      const distance = Math.sqrt(
+        Math.pow(coordinates.lat - center.lat, 2) +
+        Math.pow(coordinates.lng - center.lng, 2)
+      );
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestCity = key;
+      }
+    });
+
+    return bestCity ? this.normalizeCityName(bestCity) : null;
+  },
+
+  /**
+   * Resuelve la ciudad de UNA actividad individual con la mejor información disponible:
+   * 1. cityName / city explícitos (más confiable)
+   * 2. Coordenadas → ciudad conocida más cercana (funciona con itinerarios viejos que
+   *    tienen coordenadas geocodificadas pero nunca guardaron el campo city/cityName)
+   * 3. Texto del título/descripción (menos confiable, último recurso)
+   * @param {Object} activity
+   * @returns {string|null} Ciudad normalizada, o null si no se pudo determinar
+   */
+  resolveActivityCity(activity) {
+    if (!activity) return null;
+    if (activity.cityName) return this.normalizeCityName(activity.cityName);
+    if (activity.city) return this.normalizeCityName(activity.city);
+
+    const coords = activity.coordinates || (activity.lat && activity.lng ? { lat: activity.lat, lng: activity.lng } : null);
+    if (coords) {
+      const byCoords = this.findNearestCityCenter(coords);
+      if (byCoords) return byCoords;
+    }
+
+    return this.extractCityFromText(activity);
+  },
+
   /**
    * Busca hoteles usando Google Places
    * @param {string} query - Búsqueda (ej: "Hotel Shinjuku Tokyo")
@@ -231,7 +307,16 @@ export const HotelBaseSystem = {
         const normalized = this.normalizeCityName(activity.city);
         cityVotes[normalized] = (cityVotes[normalized] || 0) + 80; // Peso alto
       }
-      // Prioridad 3: Analizar el título/nombre de la actividad
+      // Prioridad 3: Coordenadas → ciudad conocida más cercana (itinerarios viejos que
+      // nunca guardaron cityName/city pero SÍ tienen coordenadas geocodificadas)
+      else if (activity.coordinates || (activity.lat && activity.lng)) {
+        const coords = activity.coordinates || { lat: activity.lat, lng: activity.lng };
+        const byCoords = this.findNearestCityCenter(coords);
+        if (byCoords) {
+          cityVotes[byCoords] = (cityVotes[byCoords] || 0) + 50; // Peso medio
+        }
+      }
+      // Prioridad 4: Analizar el título/nombre de la actividad
       else {
         // Extraer ciudad del texto de la actividad
         const extractedCity = this.extractCityFromText(activity);

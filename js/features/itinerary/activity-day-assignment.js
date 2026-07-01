@@ -43,6 +43,18 @@ export const ActivityDayAssignment = {
       return itinerary;
     }
 
+    // 🏙️ RESOLVER Y GUARDAR la ciudad de cada día ANTES de vaciarlo. Si no lo hacemos
+    // aquí, el paso 2 deja cada día sin actividades, y cualquier intento posterior de
+    // "¿qué ciudad es este día?" (via detectCityForDay, que analiza day.activities) ya
+    // no tiene nada que analizar - quedan todos indistinguibles entre sí. Esto también
+    // sirve para "reparar" permanentemente itinerarios viejos que nunca guardaron
+    // day.city, dejándolo escrito para futuras operaciones.
+    itinerary.days.forEach(day => {
+      if (!day.city) {
+        day.city = HotelBaseSystem.detectCityForDay(day);
+      }
+    });
+
     // 2. Vaciar todos los días (vamos a reasignar desde cero)
     itinerary.days.forEach(day => {
       day.activities = [];
@@ -133,12 +145,16 @@ export const ActivityDayAssignment = {
       let closestDistance = Infinity;
       let closestDay = null;
 
+      // 🏙️ Resolver la ciudad real de la actividad, incluso si el itinerario es viejo y
+      // nunca guardó cityName/city (usa coordenadas como respaldo - ver hotel-base-system.js)
+      const activityCity = HotelBaseSystem.resolveActivityCity(activity);
+
       // 🏙️ RESTRINGIR a hoteles de la MISMA CIUDAD que la actividad. Sin este filtro,
       // una actividad de Kyoto puede terminar "asignada" a un día de Tokyo solo porque
       // ese hotel resultó geográficamente más cercano en el cálculo bruto (ej. si faltan
       // hoteles configurados para algunos días). Nunca mezclar ciudades entre sí.
       Object.entries(hotelsByDay).forEach(([dayNum, hotel]) => {
-        if (activity.city && hotel.city && String(activity.city).toLowerCase() !== String(hotel.city).toLowerCase()) {
+        if (activityCity && hotel.city && String(activityCity).toLowerCase() !== String(hotel.city).toLowerCase()) {
           return; // ciudad distinta, no es candidato
         }
 
@@ -187,10 +203,11 @@ export const ActivityDayAssignment = {
 
       let bestDay = null;
       let minDistance = Infinity;
+      const activityCity = HotelBaseSystem.resolveActivityCity(activity);
 
       // 🏙️ Igual que en PASO 1: nunca considerar hoteles de otra ciudad
       Object.entries(hotelsByDay).forEach(([dayNum, hotel]) => {
-        if (activity.city && hotel.city && String(activity.city).toLowerCase() !== String(hotel.city).toLowerCase()) {
+        if (activityCity && hotel.city && String(activityCity).toLowerCase() !== String(hotel.city).toLowerCase()) {
           return;
         }
 
@@ -221,7 +238,7 @@ export const ActivityDayAssignment = {
         const fallbackDay = this.findFallbackDayForActivity(activity, days);
         fallbackDay.activities.push(activity);
         unassigned++;
-        console.log(`⚠️ "${activity.title || activity.name}" sin hotel en su ciudad (${activity.city || 'desconocida'}) → Día ${fallbackDay.day} (fallback)`);
+        console.log(`⚠️ "${activity.title || activity.name}" sin hotel en su ciudad (${activityCity || 'desconocida'}) → Día ${fallbackDay.day} (fallback)`);
       }
     });
 
@@ -238,8 +255,12 @@ export const ActivityDayAssignment = {
    * @returns {Object} día del itinerario
    */
   findFallbackDayForActivity(activity, days) {
-    if (activity.city) {
-      const sameCityDays = days.filter(d => d.city && String(d.city).toLowerCase() === String(activity.city).toLowerCase());
+    const activityCity = HotelBaseSystem.resolveActivityCity(activity);
+    if (activityCity) {
+      const sameCityDays = days.filter(d => {
+        const dayCity = d.city || HotelBaseSystem.detectCityForDay(d);
+        return dayCity && String(dayCity).toLowerCase() === String(activityCity).toLowerCase();
+      });
       if (sameCityDays.length > 0) {
         // Preferir su día original si sigue siendo de la misma ciudad
         const original = sameCityDays.find(d => d.day === activity.originalDay);
@@ -265,9 +286,13 @@ export const ActivityDayAssignment = {
     const middleDays = itinerary.days.slice(1, -1);
     if (middleDays.length === 0) return null;
 
-    if (activity.city) {
+    const activityCity = HotelBaseSystem.resolveActivityCity(activity);
+    if (activityCity) {
       const sameCity = middleDays
-        .filter(d => d.city && String(d.city).toLowerCase() === String(activity.city).toLowerCase())
+        .filter(d => {
+          const dayCity = d.city || HotelBaseSystem.detectCityForDay(d);
+          return dayCity && String(dayCity).toLowerCase() === String(activityCity).toLowerCase();
+        })
         .sort((a, b) => a.activities.length - b.activities.length);
       // Si la actividad tiene ciudad conocida, SOLO se puede mover a un día de esa
       // ciudad. Si no hay ninguno (o ningún día intermedio tiene ciudad registrada),
@@ -379,10 +404,13 @@ export const ActivityDayAssignment = {
       movedActivities.forEach(activity => {
         const targetDay = this.findLeastLoadedMiddleDay(itinerary, activity);
 
+        const activityCity = HotelBaseSystem.resolveActivityCity(activity);
+        const firstDayCity = firstDay.city || HotelBaseSystem.detectCityForDay(firstDay);
+
         if (targetDay) {
           targetDay.activities.push(activity);
           console.log(`   ↪ "${activity.title || activity.name}" movida a Día ${targetDay.day}`);
-        } else if (!activity.city || (firstDay.city && String(activity.city).toLowerCase() === String(firstDay.city).toLowerCase())) {
+        } else if (!activityCity || (firstDayCity && String(activityCity).toLowerCase() === String(firstDayCity).toLowerCase())) {
           // Solo es seguro caer al Día 1 si es la MISMA ciudad (o no se sabe la ciudad)
           firstDay.activities.push(activity);
           console.warn(`   ⚠️ "${activity.title || activity.name}" movida a Día 1 (no hay días intermedios de su ciudad)`);
@@ -391,7 +419,7 @@ export const ActivityDayAssignment = {
           // ciudad del viaje que solo tiene este día. Preferible dejarla en el último día
           // (rompe la regla "día de salida vacío") a mandarla a la ciudad equivocada.
           lastDay.activities.push(activity);
-          console.warn(`   ⚠️ "${activity.title || activity.name}" (${activity.city}) se queda en el Día ${lastDay.day}: es la única ciudad del viaje sin otro día disponible.`);
+          console.warn(`   ⚠️ "${activity.title || activity.name}" (${activityCity}) se queda en el Día ${lastDay.day}: es la única ciudad del viaje sin otro día disponible.`);
         }
       });
 
@@ -551,10 +579,15 @@ export const ActivityDayAssignment = {
       if (activitiesToMove > 0) {
         console.log(`📤 Día ${overloadedDay.day} tiene ${overloadedDay.activities.length} actividades - redistribuyendo ${activitiesToMove}`);
 
+        const overloadedCity = overloadedDay.city || HotelBaseSystem.detectCityForDay(overloadedDay);
+
         // Mover actividades a días ligeros/vacíos de la MISMA CIUDAD (nunca mezclar ciudades)
         const targetDays = [...emptyDays, ...lightDays, ...fullDays]
-          .filter(d => d.day !== overloadedDay.day && d.activities.length < MAX_ACTIVITIES &&
-                       (!d.city || !overloadedDay.city || String(d.city).toLowerCase() === String(overloadedDay.city).toLowerCase()))
+          .filter(d => {
+            if (d.day === overloadedDay.day || d.activities.length >= MAX_ACTIVITIES) return false;
+            const dCity = d.city || HotelBaseSystem.detectCityForDay(d);
+            return !dCity || !overloadedCity || String(dCity).toLowerCase() === String(overloadedCity).toLowerCase();
+          })
           .sort((a, b) => a.activities.length - b.activities.length);
 
         for (let i = 0; i < activitiesToMove && targetDays.length > 0; i++) {
@@ -580,13 +613,16 @@ export const ActivityDayAssignment = {
 
       console.log(`📥 Día ${needyDay.day} necesita ${needed} actividades más (mín ${MIN_ACTIVITIES_NORMAL})`);
 
+      const needyCity = needyDay.city || HotelBaseSystem.detectCityForDay(needyDay);
+
       // Buscar días donantes de la MISMA CIUDAD (que tengan MÁS de MIN_ACTIVITIES_NORMAL)
       const donorDays = itinerary.days
-        .filter(d => d.day !== needyDay.day &&
-                     d.day !== 1 && // No quitar del día 1
-                     d.day !== itinerary.days.length && // No quitar del último día
-                     d.activities.length > MIN_ACTIVITIES_NORMAL &&
-                     (!d.city || !needyDay.city || String(d.city).toLowerCase() === String(needyDay.city).toLowerCase()))
+        .filter(d => {
+          if (d.day === needyDay.day || d.day === 1 || d.day === itinerary.days.length) return false; // No quitar del día 1 ni último
+          if (d.activities.length <= MIN_ACTIVITIES_NORMAL) return false;
+          const dCity = d.city || HotelBaseSystem.detectCityForDay(d);
+          return !dCity || !needyCity || String(dCity).toLowerCase() === String(needyCity).toLowerCase();
+        })
         .sort((a, b) => b.activities.length - a.activities.length);
 
       let filled = 0;

@@ -108,8 +108,10 @@ export const ItineraryHealthChecker = {
       day.activities.forEach(activity => {
         totalActivities++;
 
-        // Verificar cityName o city
-        const hasCity = !!(activity.cityName || activity.city);
+        // Verificar cityName/city, o inferirla por coordenadas si el itinerario es viejo
+        // y nunca guardó esos campos (ver HotelBaseSystem.resolveActivityCity)
+        const resolvedCity = HotelBaseSystem.resolveActivityCity(activity);
+        const hasCity = !!resolvedCity;
         if (hasCity) {
           activitiesWithCity++;
         } else {
@@ -181,8 +183,10 @@ export const ItineraryHealthChecker = {
       const cityCounts = {};
 
       day.activities.forEach(activity => {
-        const city = HotelBaseSystem.normalizeCityName(activity.cityName || activity.city || '');
-        if (!city || city === 'Tokyo') return; // Skip desconocidas o Tokyo (por defecto)
+        const resolved = HotelBaseSystem.resolveActivityCity(activity);
+        if (!resolved) return; // Ciudad realmente desconocida, no se puede evaluar
+        const city = HotelBaseSystem.normalizeCityName(resolved);
+        if (!city) return;
 
         cityCounts[city] = (cityCounts[city] || 0) + 1;
       });
