@@ -532,12 +532,22 @@ export const JourneyArcOptimizer = {
    * @param {Array} clusters
    * @param {Array} days
    * @param {Object} context
+   * @param {string} [city] - Ciudad de estos clusters; si se provee, SOLO se consideran
+   *   días de esa misma ciudad (evita mezclar actividades de una ciudad en el día de otra
+   *   en itinerarios multi-ciudad)
    * @returns {Object} Asignación optimizada
    */
-  assignClustersToOptimalDays(clusters, days, context) {
+  assignClustersToOptimalDays(clusters, days, context, city = null) {
     console.log('📖 Asignando clusters según narrativa del viaje...');
 
     const assignments = new Map(); // day -> clusters[]
+
+    // 🏙️ Restringir a días de la misma ciudad que estos clusters (si se conoce la ciudad
+    // y al menos un día del itinerario tiene ciudad registrada)
+    const cityDays = city
+      ? days.filter(d => d.city && String(d.city).toLowerCase() === String(city).toLowerCase())
+      : days;
+    const effectiveDays = cityDays.length > 0 ? cityDays : days; // fallback si no hay match
 
     // Ordenar clusters por emblematicidad
     const sortedClusters = [...clusters].sort((a, b) => b.iconicScore - a.iconicScore);
@@ -546,6 +556,7 @@ export const JourneyArcOptimizer = {
     const arrivalPhase = context.phases.find(p => p.name === 'arrival');
     if (arrivalPhase) {
       arrivalPhase.days.forEach(dayNum => {
+        if (!effectiveDays.some(d => d.day === dayNum)) return; // día de otra ciudad, saltar
         const cluster = sortedClusters.shift();
         if (cluster) {
           assignments.set(dayNum, [cluster]);
@@ -554,8 +565,8 @@ export const JourneyArcOptimizer = {
       });
     }
 
-    // FASES 2-3: Exploration & Deep Dive - Distribuir rest restantes
-    const remainingDays = days.filter(d =>
+    // FASES 2-3: Exploration & Deep Dive - Distribuir el resto SOLO entre días de esta ciudad
+    const remainingDays = effectiveDays.filter(d =>
       !assignments.has(d.day) &&
       d.day !== days.length // Excluir último día
     );
@@ -837,7 +848,7 @@ export const MasterItineraryOptimizer = {
       // PASO 3: Asignar clusters a días según narrativa
       console.log('\n📍 PASO 3: Asignando actividades según narrativa del viaje...');
       Object.entries(clustersByCity).forEach(([city, clusters]) => {
-        JourneyArcOptimizer.assignClustersToOptimalDays(clusters, itinerary.days, context);
+        JourneyArcOptimizer.assignClustersToOptimalDays(clusters, itinerary.days, context, city);
       });
 
       // PASO 4: Optimizar días de transición

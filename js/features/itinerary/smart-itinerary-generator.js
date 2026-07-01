@@ -2,6 +2,20 @@
 // Sistema inteligente que genera itinerarios completos basados en preferencias del usuario
 
 import { activities as NEW_ACTIVITY_DATABASE } from '../../../data/activities-database.js';
+import { ATTRACTIONS_DATA } from '../../../data/attractions-data.js';
+
+// Categorías de ATTRACTIONS_DATA que son restaurantes/comida reales (no atracciones turísticas)
+const MEAL_CATEGORY_KEYS = [
+  'ramenRestaurants', 'sushiRestaurants', 'yakinikuRestaurants', 'cafesAndDesserts',
+  'izakayas', 'markets', 'moreRestaurants', 'veganVegetarian'
+];
+
+// Qué categorías son apropiadas para cada tipo de comida
+const MEAL_TYPE_CATEGORIES = {
+  breakfast: ['cafesAndDesserts', 'markets', 'veganVegetarian'],
+  lunch: ['ramenRestaurants', 'sushiRestaurants', 'markets', 'moreRestaurants', 'veganVegetarian', 'cafesAndDesserts'],
+  dinner: ['izakayas', 'yakinikuRestaurants', 'sushiRestaurants', 'ramenRestaurants', 'moreRestaurants', 'veganVegetarian']
+};
 
 /**
  * ----------------------------------------------------------------
@@ -749,6 +763,8 @@ export const SmartItineraryGenerator = {
 
     // 🚨 NUEVO: Tracker global de actividades usadas para prevenir duplicados
     const usedActivities = new Set();
+    // 🍽️ Tracker global de restaurantes ya sugeridos para no repetir comidas en el viaje
+    const usedMeals = new Set();
 
     // Distribuir días entre ciudades (basado en intereses)
     const cityDistribution = this.distributeDaysAcrossCities(cities, totalDays, interests);
@@ -794,6 +810,7 @@ export const SmartItineraryGenerator = {
           themedDay: themedDay,
           tripStartDate: tripStartDate,
           usedActivities: usedActivities, // 🚨 Pasar tracker global
+          usedMeals: usedMeals, // 🍽️ Pasar tracker global de restaurantes
           // 🆕 Nuevos parámetros de contexto
           groupSize: groupSize,
           travelerAges: travelerAges,
@@ -950,6 +967,7 @@ export const SmartItineraryGenerator = {
       themedDay,
       tripStartDate,
       usedActivities = new Set(), // 🚨 NUEVO: Tracker de actividades usadas
+      usedMeals = new Set(), // 🍽️ Tracker de restaurantes ya sugeridos
       // 🆕 Nuevos parámetros de contexto
       groupSize = 1,
       travelerAges = [],
@@ -1238,7 +1256,7 @@ export const SmartItineraryGenerator = {
     const optimizedActivities = this.optimizeActivityOrder(selectedActivities, hotel, dayStartTime, city);
 
     // 4. Insertar comidas
-    const withMeals = await this.insertMealsIntoDay(optimizedActivities, hotel, googlePlacesAPI, dailyBudget);
+    const withMeals = await this.insertMealsIntoDay(optimizedActivities, hotel, googlePlacesAPI, dailyBudget, city, usedMeals);
 
     // 4.5 💰 Calcular presupuesto real predictivo
     const budgetBreakdown = this.calculateDayBudget(withMeals, dailyBudget);
@@ -2296,9 +2314,53 @@ export const SmartItineraryGenerator = {
   },
 
   /**
+   * Busca un restaurante REAL (de ATTRACTIONS_DATA) para una ciudad y tipo de comida.
+   * Prioriza los que no se hayan usado ya en el itinerario y, si hay coordenadas de
+   * referencia (actividad cercana u hotel), los más cercanos a esa referencia.
+   * @param {string} city - Ciudad del día (ej. 'tokyo', 'kyoto')
+   * @param {string} mealType - 'breakfast' | 'lunch' | 'dinner'
+   * @param {Set} usedMeals - Nombres de restaurantes ya usados en este itinerario
+   * @param {Object} referenceCoords - {lat, lng} de la actividad más cercana u hotel
+   * @returns {Object|null} Restaurante encontrado o null si no hay match
+   */
+  findRealRestaurant(city, mealType, usedMeals = new Set(), referenceCoords = null) {
+    if (!city) return null;
+    const cityLower = String(city).toLowerCase();
+    const allowedCategories = MEAL_TYPE_CATEGORIES[mealType] || MEAL_CATEGORY_KEYS;
+
+    const candidates = [];
+    allowedCategories.forEach(categoryKey => {
+      const category = ATTRACTIONS_DATA[categoryKey];
+      if (!category || !category.items) return;
+
+      category.items.forEach(item => {
+        const itemCity = String(item.city || '').toLowerCase();
+        if (!itemCity.includes(cityLower)) return;
+        if (usedMeals.has(item.name)) return;
+        candidates.push(item);
+      });
+    });
+
+    if (candidates.length === 0) return null;
+
+    // Si tenemos coordenadas de referencia Y del candidato, ordenar por distancia.
+    // Si no, ordenar por rating (mejor calificado primero).
+    candidates.sort((a, b) => {
+      if (referenceCoords && a.coordinates && b.coordinates) {
+        const distA = this.calculateDistance(referenceCoords, a.coordinates);
+        const distB = this.calculateDistance(referenceCoords, b.coordinates);
+        return distA - distB;
+      }
+      return (b.rating || 0) - (a.rating || 0);
+    });
+
+    return candidates[0];
+  },
+
+  /**
    * Inserta comidas en el día
    */
-  async insertMealsIntoDay(activities, hotel, googlePlacesAPI, dailyBudget) {
+  async insertMealsIntoDay(activities, hotel, googlePlacesAPI, dailyBudget, city = null, usedMeals = new Set()) {
     if (activities.length === 0) return activities;
 
     const result = [];
@@ -2331,15 +2393,26 @@ export const SmartItineraryGenerator = {
         }
 
         if (currentTime >= mealStartMinutes && currentTime <= mealEndMinutes) {
-          // Insertar comida antes de esta actividad
+          // Insertar comida antes de esta actividad (con restaurante real si hay match)
+          const referenceCoords = currentActivity.lat && currentActivity.lng
+            ? { lat: currentActivity.lat, lng: currentActivity.lng }
+            : (hotel?.coordinates || null);
+          const restaurant = this.findRealRestaurant(city, mealConfig.type, usedMeals, referenceCoords);
+          if (restaurant) usedMeals.add(restaurant.name);
+
           const mealActivity = {
-            name: `${mealConfig.type.charAt(0).toUpperCase() + mealConfig.type.slice(1)} (a definir)`,
+            name: restaurant ? restaurant.name : `${mealConfig.type.charAt(0).toUpperCase() + mealConfig.type.slice(1)} (a definir)`,
             time: this.formatTime(Math.max(mealStartMinutes, currentTime - 30)),
             duration: mealConfig.duration,
-            cost: mealConfig.cost,
+            cost: restaurant?.price ?? mealConfig.cost,
             category: 'meal',
             isMeal: true,
-            desc: 'Comida sugerida - puedes buscar restaurantes cercanos'
+            rating: restaurant?.rating || null,
+            lat: restaurant?.coordinates?.lat,
+            lng: restaurant?.coordinates?.lng,
+            desc: restaurant
+              ? `${restaurant.description || 'Restaurante recomendado'}${restaurant.tips ? ` · 💡 ${restaurant.tips}` : ''}`
+              : 'Comida sugerida - puedes buscar restaurantes cercanos'
           };
 
           result.push(mealActivity);
@@ -2357,14 +2430,25 @@ export const SmartItineraryGenerator = {
         if (lastActivity) {
           const lastTime = this.parseTime(lastActivity.time) + lastActivity.duration;
           if (lastTime < mealEndMinutes) {
+            const referenceCoords = lastActivity.lat && lastActivity.lng
+              ? { lat: lastActivity.lat, lng: lastActivity.lng }
+              : (hotel?.coordinates || null);
+            const restaurant = this.findRealRestaurant(city, mealConfig.type, usedMeals, referenceCoords);
+            if (restaurant) usedMeals.add(restaurant.name);
+
             result.push({
-              name: `${mealConfig.type.charAt(0).toUpperCase() + mealConfig.type.slice(1)} (a definir)`,
+              name: restaurant ? restaurant.name : `${mealConfig.type.charAt(0).toUpperCase() + mealConfig.type.slice(1)} (a definir)`,
               time: this.formatTime(Math.max(mealStartMinutes, lastTime + 15)),
               duration: mealConfig.duration,
-              cost: mealConfig.cost,
+              cost: restaurant?.price ?? mealConfig.cost,
               category: 'meal',
               isMeal: true,
-              desc: 'Comida sugerida - puedes buscar restaurantes cercanos'
+              rating: restaurant?.rating || null,
+              lat: restaurant?.coordinates?.lat,
+              lng: restaurant?.coordinates?.lng,
+              desc: restaurant
+                ? `${restaurant.description || 'Restaurante recomendado'}${restaurant.tips ? ` · 💡 ${restaurant.tips}` : ''}`
+                : 'Comida sugerida - puedes buscar restaurantes cercanos'
             });
           }
         }

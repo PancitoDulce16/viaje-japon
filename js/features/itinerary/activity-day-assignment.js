@@ -133,7 +133,15 @@ export const ActivityDayAssignment = {
       let closestDistance = Infinity;
       let closestDay = null;
 
+      // 🏙️ RESTRINGIR a hoteles de la MISMA CIUDAD que la actividad. Sin este filtro,
+      // una actividad de Kyoto puede terminar "asignada" a un día de Tokyo solo porque
+      // ese hotel resultó geográficamente más cercano en el cálculo bruto (ej. si faltan
+      // hoteles configurados para algunos días). Nunca mezclar ciudades entre sí.
       Object.entries(hotelsByDay).forEach(([dayNum, hotel]) => {
+        if (activity.city && hotel.city && String(activity.city).toLowerCase() !== String(hotel.city).toLowerCase()) {
+          return; // ciudad distinta, no es candidato
+        }
+
         const distance = RouteOptimizer.calculateDistance(
           activity.coordinates,
           hotel.coordinates
@@ -167,11 +175,11 @@ export const ActivityDayAssignment = {
       }
     });
 
-    // 🔥 PASO 2: Asignar resto de actividades por proximidad
+    // 🔥 PASO 2: Asignar resto de actividades por proximidad (misma ciudad SIEMPRE)
     console.log('📍 Asignando actividades restantes por proximidad...');
     remainingActivities.forEach(activity => {
       if (!activity.coordinates || !activity.coordinates.lat) {
-        const targetDay = days.find(d => d.day === activity.originalDay) || days[0];
+        const targetDay = this.findFallbackDayForActivity(activity, days);
         targetDay.activities.push(activity);
         assigned++;
         return;
@@ -180,7 +188,12 @@ export const ActivityDayAssignment = {
       let bestDay = null;
       let minDistance = Infinity;
 
+      // 🏙️ Igual que en PASO 1: nunca considerar hoteles de otra ciudad
       Object.entries(hotelsByDay).forEach(([dayNum, hotel]) => {
+        if (activity.city && hotel.city && String(activity.city).toLowerCase() !== String(hotel.city).toLowerCase()) {
+          return;
+        }
+
         const distance = RouteOptimizer.calculateDistance(
           activity.coordinates,
           hotel.coordinates
@@ -202,12 +215,68 @@ export const ActivityDayAssignment = {
           unassigned++;
         }
       } else {
-        days[0].activities.push(activity);
+        // 🏙️ No hay hotel conocido en la ciudad de esta actividad (ej. hoteles sin
+        // configurar). En vez de mandarla al Día 1 (que puede ser de OTRA ciudad),
+        // buscar el día más apropiado que sí coincida en ciudad.
+        const fallbackDay = this.findFallbackDayForActivity(activity, days);
+        fallbackDay.activities.push(activity);
         unassigned++;
+        console.log(`⚠️ "${activity.title || activity.name}" sin hotel en su ciudad (${activity.city || 'desconocida'}) → Día ${fallbackDay.day} (fallback)`);
       }
     });
 
     return { assigned, unassigned };
+  },
+
+  /**
+   * Encuentra el mejor día "de respaldo" para una actividad cuando no se pudo asignar
+   * por proximidad de hotel. SIEMPRE prioriza un día de la MISMA CIUDAD que la actividad
+   * (aunque no tenga hotel configurado) antes que caer en el día 1 por defecto, que
+   * podría ser de otra ciudad por completo.
+   * @param {Object} activity
+   * @param {Array} days
+   * @returns {Object} día del itinerario
+   */
+  findFallbackDayForActivity(activity, days) {
+    if (activity.city) {
+      const sameCityDays = days.filter(d => d.city && String(d.city).toLowerCase() === String(activity.city).toLowerCase());
+      if (sameCityDays.length > 0) {
+        // Preferir su día original si sigue siendo de la misma ciudad
+        const original = sameCityDays.find(d => d.day === activity.originalDay);
+        return original || sameCityDays[0];
+      }
+    }
+    // Sin dato de ciudad (o ningún día coincide): comportamiento anterior como último recurso
+    return days.find(d => d.day === activity.originalDay) || days[0];
+  },
+
+  /**
+   * Encuentra el día intermedio (no primero/último) menos cargado que sea de la MISMA
+   * CIUDAD que la actividad. A propósito devuelve null (en vez de caer a cualquier ciudad)
+   * cuando la actividad tiene ciudad conocida pero ningún día intermedio la comparte -
+   * ej. una ciudad con un solo día en todo el viaje, que además resultó ser el último día.
+   * En ese caso es preferible que el llamador MANTENGA la actividad donde está a que la
+   * traslademos a la ciudad equivocada.
+   * @param {Object} itinerary
+   * @param {Object} activity
+   * @returns {Object|null} día destino, o null si no hay un día intermedio seguro
+   */
+  findLeastLoadedMiddleDay(itinerary, activity) {
+    const middleDays = itinerary.days.slice(1, -1);
+    if (middleDays.length === 0) return null;
+
+    if (activity.city) {
+      const sameCity = middleDays
+        .filter(d => d.city && String(d.city).toLowerCase() === String(activity.city).toLowerCase())
+        .sort((a, b) => a.activities.length - b.activities.length);
+      // Si la actividad tiene ciudad conocida, SOLO se puede mover a un día de esa
+      // ciudad. Si no hay ninguno (o ningún día intermedio tiene ciudad registrada),
+      // no se mueve - null le indica al llamador que la deje donde está.
+      return sameCity.length > 0 ? sameCity[0] : null;
+    }
+
+    // Actividad sin ciudad conocida (dato legado): comportamiento anterior como último recurso
+    return [...middleDays].sort((a, b) => a.activities.length - b.activities.length)[0];
   },
 
   /**
@@ -304,26 +373,29 @@ export const ActivityDayAssignment = {
       console.log(`🛬 ÚLTIMO DÍA (${lastDay.day}): Vaciando completamente (${lastDay.activities.length} actividades a mover)`);
 
       const movedActivities = [...lastDay.activities];
-      lastDay.activities = []; // ❗ VACIAR COMPLETAMENTE
+      lastDay.activities = []; // ❗ VACIAR (se rellenará de vuelta si alguna no tiene destino seguro)
 
-      // Mover TODAS las actividades a días anteriores
+      // Mover TODAS las actividades a días anteriores de la MISMA CIUDAD
       movedActivities.forEach(activity => {
-        // Encontrar día con menos actividades (pero no día 1 ni último)
-        const targetDays = itinerary.days
-          .slice(1, -1) // Excluir día 1 y último
-          .sort((a, b) => a.activities.length - b.activities.length);
+        const targetDay = this.findLeastLoadedMiddleDay(itinerary, activity);
 
-        if (targetDays.length > 0) {
-          targetDays[0].activities.push(activity);
-          console.log(`   ↪ "${activity.title || activity.name}" movida a Día ${targetDays[0].day}`);
-        } else {
-          // Si no hay días intermedios, mover a día 1 como último recurso
+        if (targetDay) {
+          targetDay.activities.push(activity);
+          console.log(`   ↪ "${activity.title || activity.name}" movida a Día ${targetDay.day}`);
+        } else if (!activity.city || (firstDay.city && String(activity.city).toLowerCase() === String(firstDay.city).toLowerCase())) {
+          // Solo es seguro caer al Día 1 si es la MISMA ciudad (o no se sabe la ciudad)
           firstDay.activities.push(activity);
-          console.warn(`   ⚠️ "${activity.title || activity.name}" movida a Día 1 (no hay días intermedios)`);
+          console.warn(`   ⚠️ "${activity.title || activity.name}" movida a Día 1 (no hay días intermedios de su ciudad)`);
+        } else {
+          // 🏙️ Ningún día (ni Día 1) comparte ciudad con esta actividad - es la ÚNICA
+          // ciudad del viaje que solo tiene este día. Preferible dejarla en el último día
+          // (rompe la regla "día de salida vacío") a mandarla a la ciudad equivocada.
+          lastDay.activities.push(activity);
+          console.warn(`   ⚠️ "${activity.title || activity.name}" (${activity.city}) se queda en el Día ${lastDay.day}: es la única ciudad del viaje sin otro día disponible.`);
         }
       });
 
-      console.log(`✅ Último día ${lastDay.day} ahora VACÍO (reservado para aeropuerto)`);
+      console.log(`✅ Último día ${lastDay.day}: ${lastDay.activities.length} actividad(es) restante(s) tras intentar vaciarlo para salida`);
     }
 
     // 🛫 DÍA 1: Máximo 3 actividades (jetlag-friendly)
@@ -340,14 +412,12 @@ export const ActivityDayAssignment = {
         return true;
       });
 
-      // Mover actividades inapropiadas a días posteriores
+      // Mover actividades inapropiadas a días posteriores de la MISMA CIUDAD
       inappropriateActivities.forEach(activity => {
-        const targetDays = itinerary.days
-          .slice(1, -1)
-          .sort((a, b) => a.activities.length - b.activities.length);
+        const targetDay = this.findLeastLoadedMiddleDay(itinerary, activity);
 
-        if (targetDays.length > 0) {
-          targetDays[0].activities.push(activity);
+        if (targetDay) {
+          targetDay.activities.push(activity);
           console.log(`   ↪ "${activity.title || activity.name}" movida del día 1 (inapropiada para jetlag)`);
         } else {
           // Viaje corto sin días intermedios: no hay dónde moverla, mantenerla en día 1
@@ -385,13 +455,11 @@ export const ActivityDayAssignment = {
         console.log(`   Reduciendo de ${firstDay.activities.length} a 3 actividades`);
         const extraActivities = firstDay.activities.splice(3);
         extraActivities.forEach(activity => {
-          const targetDays = itinerary.days
-            .slice(1, -1)
-            .sort((a, b) => a.activities.length - b.activities.length);
+          const targetDay = this.findLeastLoadedMiddleDay(itinerary, activity);
 
-          if (targetDays.length > 0) {
-            targetDays[0].activities.push(activity);
-            console.log(`   ↪ "${activity.title || activity.name}" movida a Día ${targetDays[0].day}`);
+          if (targetDay) {
+            targetDay.activities.push(activity);
+            console.log(`   ↪ "${activity.title || activity.name}" movida a Día ${targetDay.day}`);
           } else {
             // Viaje corto sin días intermedios: no hay dónde moverla, mantenerla en día 1
             // en vez de perderla (excede el límite de 3, pero es preferible a borrarla).
@@ -423,17 +491,20 @@ export const ActivityDayAssignment = {
         });
       }
 
-      // Mover las actividades extras a días anteriores
+      // Mover las actividades extras a días anteriores de la MISMA CIUDAD
       const extraActivities = lastDay.activities.splice(2);
       extraActivities.forEach(activity => {
-        // Encontrar el día con menos actividades (pero no el primero ni el último)
-        const targetDays = itinerary.days
-          .slice(1, -1) // Excluir primer y último día
-          .sort((a, b) => a.activities.length - b.activities.length);
+        const targetDay = this.findLeastLoadedMiddleDay(itinerary, activity);
 
-        if (targetDays.length > 0) {
-          targetDays[0].activities.push(activity);
-          console.log(`   ↪ "${activity.title || activity.name}" movida a Día ${targetDays[0].day}`);
+        if (targetDay) {
+          targetDay.activities.push(activity);
+          console.log(`   ↪ "${activity.title || activity.name}" movida a Día ${targetDay.day}`);
+        } else {
+          // 🏙️ Sin día intermedio de la misma ciudad: dejarla en el último día en vez de
+          // perderla (rompe el límite de 2 actividades, pero es preferible a extraviarla
+          // o mandarla a la ciudad equivocada).
+          lastDay.activities.push(activity);
+          console.warn(`   ⚠️ "${activity.title || activity.name}" (${activity.city || 'ciudad desconocida'}) se queda en el Día ${lastDay.day}: no hay otro día de su ciudad.`);
         }
       });
     }
@@ -480,9 +551,10 @@ export const ActivityDayAssignment = {
       if (activitiesToMove > 0) {
         console.log(`📤 Día ${overloadedDay.day} tiene ${overloadedDay.activities.length} actividades - redistribuyendo ${activitiesToMove}`);
 
-        // Mover actividades a días ligeros/vacíos
+        // Mover actividades a días ligeros/vacíos de la MISMA CIUDAD (nunca mezclar ciudades)
         const targetDays = [...emptyDays, ...lightDays, ...fullDays]
-          .filter(d => d.day !== overloadedDay.day && d.activities.length < MAX_ACTIVITIES)
+          .filter(d => d.day !== overloadedDay.day && d.activities.length < MAX_ACTIVITIES &&
+                       (!d.city || !overloadedDay.city || String(d.city).toLowerCase() === String(overloadedDay.city).toLowerCase()))
           .sort((a, b) => a.activities.length - b.activities.length);
 
         for (let i = 0; i < activitiesToMove && targetDays.length > 0; i++) {
@@ -508,12 +580,13 @@ export const ActivityDayAssignment = {
 
       console.log(`📥 Día ${needyDay.day} necesita ${needed} actividades más (mín ${MIN_ACTIVITIES_NORMAL})`);
 
-      // Buscar días donantes (que tengan MÁS de MIN_ACTIVITIES_NORMAL)
+      // Buscar días donantes de la MISMA CIUDAD (que tengan MÁS de MIN_ACTIVITIES_NORMAL)
       const donorDays = itinerary.days
         .filter(d => d.day !== needyDay.day &&
                      d.day !== 1 && // No quitar del día 1
                      d.day !== itinerary.days.length && // No quitar del último día
-                     d.activities.length > MIN_ACTIVITIES_NORMAL)
+                     d.activities.length > MIN_ACTIVITIES_NORMAL &&
+                     (!d.city || !needyDay.city || String(d.city).toLowerCase() === String(needyDay.city).toLowerCase()))
         .sort((a, b) => b.activities.length - a.activities.length);
 
       let filled = 0;

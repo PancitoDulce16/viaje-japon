@@ -293,6 +293,7 @@ function analyzeItineraryBalance(days, itinerary = null) {
         return {
             day: day.day,
             date: day.date,
+            city: day.city || (day.activities || []).find(a => a.city)?.city || null, // 🏙️ ciudad del día, para no mezclar actividades entre ciudades
             analysis: analyzeDayLoad(day),
             activities: day.activities || [],
             hotelCoordinates: hotelCoords // 🔥 Incluir coordenadas del hotel
@@ -386,6 +387,17 @@ function detectDuplicateActivities(days) {
 }
 
 /**
+ * Verifica si dos días pertenecen a la misma ciudad. Si a alguno le falta el dato de
+ * ciudad (itinerarios viejos/manuales sin ese campo), no bloqueamos el movimiento —
+ * pero si AMBOS días tienen ciudad conocida y son distintas, nunca deben mezclarse.
+ * @returns {boolean}
+ */
+function isSameCity(dayA, dayB) {
+    if (!dayA?.city || !dayB?.city) return true; // dato desconocido, no bloquear
+    return String(dayA.city).trim().toLowerCase() === String(dayB.city).trim().toLowerCase();
+}
+
+/**
  * Genera sugerencias concretas para balancear el itinerario
  */
 function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays, lightDays }) {
@@ -400,9 +412,9 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
         if (firstDay.activities.length > 3) {
             console.log(`🛫 Día ${firstDay.day} (PRIMER DÍA/LLEGADA): tiene ${firstDay.activities.length} actividades - debería ser ligero`);
 
-            // Encontrar días con espacio para mover actividades
+            // Encontrar días con espacio para mover actividades (misma ciudad que el día de llegada)
             const daysWithSpace = daysAnalysis
-                .filter(d => d.day !== firstDay.day && d.day !== lastDay.day && d.activities.length < 5)
+                .filter(d => d.day !== firstDay.day && d.day !== lastDay.day && d.activities.length < 5 && isSameCity(d, firstDay))
                 .sort((a, b) => a.activities.length - b.activities.length);
 
             // Mover actividades del primer día a días con espacio
@@ -427,9 +439,9 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
         if (lastDay.activities.length > 2) {
             console.log(`🛬 Día ${lastDay.day} (ÚLTIMO DÍA/SALIDA): tiene ${lastDay.activities.length} actividades - debería tener máx 2`);
 
-            // Encontrar días con espacio
+            // Encontrar días con espacio (misma ciudad que el día de salida)
             const daysWithSpace = daysAnalysis
-                .filter(d => d.day !== lastDay.day && d.day !== firstDay.day && d.activities.length < 6)
+                .filter(d => d.day !== lastDay.day && d.day !== firstDay.day && d.activities.length < 6 && isSameCity(d, lastDay))
                 .sort((a, b) => a.activities.length - b.activities.length);
 
             // Mover actividades del último día a días anteriores
@@ -477,9 +489,9 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
         if (overLimitActivities.length > 0) {
             console.log(`🚨 Día ${dayAnalysis.day}: ${overLimitActivities.length} actividades NO caben (sobrepasan 23:00)`);
 
-            // Encontrar días con espacio (días ligeros o vacíos)
+            // Encontrar días con espacio (días ligeros o vacíos, misma ciudad)
             const daysWithSpace = daysAnalysis
-                .filter(d => d.day !== dayAnalysis.day && d.activities.length < 6 && !d.activities.some(a => a.overLimit))
+                .filter(d => d.day !== dayAnalysis.day && d.activities.length < 6 && !d.activities.some(a => a.overLimit) && isSameCity(d, dayAnalysis))
                 .sort((a, b) => a.activities.length - b.activities.length);
 
             overLimitActivities.forEach(activity => {
@@ -521,30 +533,38 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
         console.log('📊 Distribución:', daysWithActivities.map(d => `Día ${d.day}: ${d.activities.length} actividades`).join(', '));
 
         emptyDays.forEach(emptyDay => {
-            console.log(`\n🔍 Procesando Día ${emptyDay.day} (vacío)`);
+            console.log(`\n🔍 Procesando Día ${emptyDay.day} (vacío, ciudad: ${emptyDay.city || 'desconocida'})`);
+
+            // 🏙️ Restringir SIEMPRE a días de la MISMA CIUDAD - mover actividades entre
+            // ciudades distintas (ej. Kyoto → Tokyo) produce itinerarios geográficamente
+            // imposibles, aunque numéricamente "balanceados".
+            const sameCityPool = daysWithActivities.filter(d => isSameCity(d, emptyDay));
+            if (sameCityPool.length < daysWithActivities.length) {
+                console.log(`   🏙️ Filtrado por ciudad "${emptyDay.city}": ${sameCityPool.length}/${daysWithActivities.length} días candidatos`);
+            }
 
             // Intentar primero con días con 4+ actividades, luego 3+, luego 2+
-            let donorDays = daysWithActivities
+            let donorDays = sameCityPool
                 .filter(d => d.activities.length >= 4)
                 .sort((a, b) => b.activities.length - a.activities.length);
 
             // Si no hay días con 4+, intentar con 3+
             if (donorDays.length === 0) {
-                donorDays = daysWithActivities
+                donorDays = sameCityPool
                     .filter(d => d.activities.length >= 3)
                     .sort((a, b) => b.activities.length - a.activities.length);
             }
 
             // Si no hay días con 3+, intentar con 2+
             if (donorDays.length === 0) {
-                donorDays = daysWithActivities
+                donorDays = sameCityPool
                     .filter(d => d.activities.length >= 2)
                     .sort((a, b) => b.activities.length - a.activities.length);
             }
 
             // 🆕 Si no hay días con 2+, intentar con días con AL MENOS 1 actividad
             if (donorDays.length === 0) {
-                donorDays = daysWithActivities
+                donorDays = sameCityPool
                     .filter(d => d.activities.length >= 1)
                     .sort((a, b) => b.activities.length - a.activities.length);
                 console.log(`⚠️ No hay días con 2+ actividades. Intentando con días con 1+ actividades: ${donorDays.length} días encontrados`);
@@ -573,13 +593,17 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
                 });
                 console.log(`✅ Sugerencia creada: Mover de Día ${donorDay.day} → Día ${emptyDay.day}`);
             } else {
-                console.error(`❌ NO hay días donantes para Día ${emptyDay.day}. Todos los días tienen 0 actividades.`);
-                // Si NO hay días donantes, sugerir al usuario agregar actividades manualmente
+                const noDonorsAtAll = daysWithActivities.length === 0;
+                const reason = noDonorsAtAll
+                    ? `No hay días con suficientes actividades para redistribuir. Por favor agrega actividades al Día ${emptyDay.day} manualmente.`
+                    : `Los demás días con actividades son de otra ciudad, así que no podemos moverlas al Día ${emptyDay.day} (${emptyDay.city || 'ciudad desconocida'}) sin romper la geografía del viaje. Por favor agrega actividades de ${emptyDay.city || 'esta ciudad'} manualmente.`;
+                console.error(`❌ NO hay días donantes de la misma ciudad para Día ${emptyDay.day} (${emptyDay.city || 'desconocida'}).`);
+                // Si NO hay días donantes compatibles, sugerir al usuario agregar actividades manualmente
                 suggestions.push({
                     type: 'manual-action',
                     priority: 'high',
                     description: `⚠️ Día ${emptyDay.day} vacío - Agrega actividades manualmente`,
-                    reason: `No hay días con suficientes actividades para redistribuir. Por favor agrega actividades al Día ${emptyDay.day} manualmente.`,
+                    reason,
                     day: emptyDay.day
                 });
             }
@@ -589,7 +613,7 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
     // Sugerencia 2: Balancear días sobrecargados con días ligeros (después de llenar vacíos)
     if (overloadedDays.length > 0 && lightDays.length > 0) {
         overloadedDays.forEach(overloadedDay => {
-            const targetDays = lightDays.filter(d => d.day !== overloadedDay.day && d.activities.length < 6);
+            const targetDays = lightDays.filter(d => d.day !== overloadedDay.day && d.activities.length < 6 && isSameCity(d, overloadedDay));
 
             if (targetDays.length > 0 && overloadedDay.activities.length > 6) {
                 const candidates = findMovableCandidates(overloadedDay.activities);
@@ -668,9 +692,9 @@ function generateBalancingSuggestions(daysAnalysis, { emptyDays, overloadedDays,
                 .sort((a, b) => (b.cost || 0) - (a.cost || 0))[0];
 
             if (mostExpensiveActivity && mostExpensiveActivity.cost > avgCost * 0.3) {
-                // Encontrar mejor día barato para moverla
+                // Encontrar mejor día barato para moverla (misma ciudad)
                 const targetDay = cheapDays
-                    .filter(d => d.activities.length < 7) // No sobrecargar
+                    .filter(d => d.activities.length < 7 && isSameCity(d, expensiveDay)) // No sobrecargar, no cambiar de ciudad
                     .sort((a, b) => a.analysis.factors.totalCost - b.analysis.factors.totalCost)[0];
 
                 if (targetDay) {
@@ -991,6 +1015,19 @@ function applySuggestion(days, suggestion, options = {}) {
         }
 
         console.log(`✅ Días encontrados: Origen (${sourceDay.activities.length} act) → Destino (${targetDay.activities.length} act)`);
+
+        // 🏙️ GUARDIA DE SEGURIDAD (defensa en profundidad): sin importar qué generador de
+        // sugerencias haya creado este 'move', NUNCA mover una actividad a un día de otra
+        // ciudad. Compara ciudad del día destino contra la ciudad del día origen Y contra la
+        // ciudad propia de la actividad (más precisa en días de transición mixtos).
+        const targetCity = targetDay.city;
+        const activityCity = suggestion.activity.city;
+        const sourceCity = sourceDay.city;
+        const relevantCity = activityCity || sourceCity;
+        if (targetCity && relevantCity && String(targetCity).trim().toLowerCase() !== String(relevantCity).trim().toLowerCase()) {
+            console.warn(`⚠️ BLOQUEADO: "${suggestion.activity.title || suggestion.activity.name}" es de ${relevantCity}, pero el Día ${targetDay.day} es de ${targetCity}. Rechazando movimiento entre ciudades distintas.`);
+            return newDays; // NO mover entre ciudades distintas
+        }
 
         const activityIndex = sourceDay.activities.findIndex(act => {
             // 1. Match by title ALWAYS (más confiable)
