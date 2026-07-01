@@ -12,6 +12,8 @@ export const AttractionsHandler = {
     savedAttractions: JSON.parse(localStorage.getItem(STORAGE_KEYS.SAVED_ATTRACTIONS) || '[]'),
     currentFilter: 'all',
     searchTerm: '',
+    // Categorías con acordeón abierto (colapsadas por defecto para no abrumar con 200+ atracciones)
+    expandedCategories: new Set(),
     
     renderAttractions() {
         const container = document.getElementById('content-attractions');
@@ -79,7 +81,19 @@ export const AttractionsHandler = {
                     </div>
 
                     <!-- 🔥 Advanced Filters -->
-                    <div class="grid md:grid-cols-3 gap-4 mb-6">
+                    <div class="grid md:grid-cols-4 gap-4 mb-6">
+                        <!-- Category Filter -->
+                        <div>
+                            <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">🗂️ Categoría</label>
+                            <select
+                                id="categoryFilter"
+                                onchange="AttractionsHandler.applyAdvancedFilters()"
+                                class="w-full p-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 text-sm"
+                            >
+                                <option value="all">Todas las categorías</option>${Object.entries(ATTRACTIONS_DATA).map(([key, cat]) => `<option value="${key}">${cat.icon} ${cat.category} (${cat.items.length})</option>`).join('')}
+                            </select>
+                        </div>
+
                         <!-- City Filter -->
                         <div>
                             <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">📍 Ciudad</label>
@@ -124,14 +138,38 @@ export const AttractionsHandler = {
                         </div>
                     </div>
 
-                    <!-- Clear Filters Button -->
-                    <div class="mb-6">
+                    <!-- Clear Filters + Expand/Collapse Buttons -->
+                    <div class="flex flex-wrap gap-2 mb-6">
                         <button
                             onclick="AttractionsHandler.clearAllFilters()"
-                            class="w-full md:w-auto px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg font-semibold text-sm transition"
+                            class="px-6 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg font-semibold text-sm transition"
                         >
                             🔄 Limpiar Filtros
                         </button>
+                        <button
+                            onclick="AttractionsHandler.expandAllCategories()"
+                            class="px-6 py-2 bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-lg font-semibold text-sm transition"
+                        >
+                            ⬇️ Expandir Todo
+                        </button>
+                        <button
+                            onclick="AttractionsHandler.collapseAllCategories()"
+                            class="px-6 py-2 bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-lg font-semibold text-sm transition"
+                        >
+                            ⬆️ Colapsar Todo
+                        </button>
+                    </div>
+
+                    <!-- 🗂️ Category Quick-Nav -->
+                    <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mb-6">
+                        ${Object.entries(ATTRACTIONS_DATA).map(([key, cat]) => `
+                            <button
+                                onclick="AttractionsHandler.jumpToCategory('${key}')"
+                                class="flex-shrink-0 px-3 py-2 bg-gray-50 dark:bg-gray-700/60 border border-gray-200 dark:border-gray-600 rounded-lg text-xs font-semibold whitespace-nowrap hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition"
+                            >
+                                ${cat.icon} ${cat.category} <span class="text-gray-400 dark:text-gray-500">(${cat.items.length})</span>
+                            </button>
+                        `).join('')}
                     </div>
                 </div>
 
@@ -168,27 +206,74 @@ export const AttractionsHandler = {
             indigo: 'from-indigo-500 to-purple-500'
         };
 
+        const isExpanded = this.expandedCategories.has(key);
+
         return `
-        <div class="category-section bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden" data-category="${key}">
-                <!-- Category Header -->
-                <div class="bg-gradient-to-r ${colorClasses[category.color]} p-6 text-white">
-                    <div class="flex items-center gap-3">
-                        <span class="text-4xl">${category.icon}</span>
-                        <div>
-                            <h3 class="text-2xl font-bold">${category.category}</h3>
-                            <p class="text-sm opacity-90">${category.items.length} atracciones</p>
+        <div class="category-section bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden" data-category="${key}" id="cat-section-${key}">
+                <!-- Category Header (clickable toggle) -->
+                <button
+                    onclick="AttractionsHandler.toggleCategory('${key}')"
+                    class="w-full text-left bg-gradient-to-r ${colorClasses[category.color]} p-6 text-white hover:brightness-105 transition"
+                >
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-4xl">${category.icon}</span>
+                            <div>
+                                <h3 class="text-2xl font-bold">${category.category}</h3>
+                                <p class="text-sm opacity-90">${category.items.length} atracciones</p>
+                            </div>
                         </div>
+                        <span class="text-2xl category-chevron transition-transform" id="chevron-${key}" style="transform: rotate(${isExpanded ? '180deg' : '0deg'})">▼</span>
                     </div>
-                </div>
+                </button>
 
                 <!-- Items Grid -->
-                <div class="p-6">
+                <div class="p-6 category-items" id="cat-items-${key}" style="display: ${isExpanded ? 'block' : 'none'}">
                     <div class="grid md:grid-cols-2 gap-4">
                         ${category.items.map(item => this.renderAttractionCard(item, key)).join('')}
                     </div>
                 </div>
             </div>
         `;
+    },
+
+    toggleCategory(key) {
+        const itemsEl = document.getElementById(`cat-items-${key}`);
+        const chevronEl = document.getElementById(`chevron-${key}`);
+        if (!itemsEl) return;
+
+        if (this.expandedCategories.has(key)) {
+            this.expandedCategories.delete(key);
+            itemsEl.style.display = 'none';
+            if (chevronEl) chevronEl.style.transform = 'rotate(0deg)';
+        } else {
+            this.expandedCategories.add(key);
+            itemsEl.style.display = 'block';
+            if (chevronEl) chevronEl.style.transform = 'rotate(180deg)';
+        }
+    },
+
+    expandAllCategories() {
+        Object.keys(ATTRACTIONS_DATA).forEach(key => this.expandedCategories.add(key));
+        document.querySelectorAll('.category-items').forEach(el => el.style.display = 'block');
+        document.querySelectorAll('.category-chevron').forEach(el => el.style.transform = 'rotate(180deg)');
+    },
+
+    collapseAllCategories() {
+        this.expandedCategories.clear();
+        document.querySelectorAll('.category-items').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.category-chevron').forEach(el => el.style.transform = 'rotate(0deg)');
+    },
+
+    jumpToCategory(key) {
+        this.expandedCategories.add(key);
+        const itemsEl = document.getElementById(`cat-items-${key}`);
+        const chevronEl = document.getElementById(`chevron-${key}`);
+        if (itemsEl) itemsEl.style.display = 'block';
+        if (chevronEl) chevronEl.style.transform = 'rotate(180deg)';
+
+        const section = document.getElementById(`cat-section-${key}`);
+        if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     },
 
     renderAttractionCard(item, categoryKey) {
@@ -202,7 +287,7 @@ export const AttractionsHandler = {
         return `
             <div class="attraction-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all ${
                 isSaved ? 'border-2 border-yellow-400' : 'border border-gray-200 dark:border-gray-700'
-            }" data-attraction="${item.name}" data-price="${item.price}" data-reservation="${needsReservation}" data-city="${item.city}" data-rating="${item.rating}">
+            }" data-attraction="${item.name}" data-price="${item.price}" data-reservation="${needsReservation}" data-city="${item.city}" data-rating="${item.rating}" data-category="${categoryKey}">
                 
                 <!-- Imagen -->
                 <div class="relative h-40 w-full group">
@@ -340,6 +425,17 @@ export const AttractionsHandler = {
         `;
     },
 
+    // Muestra/oculta el contenido de una categoría y sincroniza el chevron + el set de expandidas
+    setCategoryExpanded(section, expanded) {
+        const key = section.dataset.category;
+        const itemsEl = section.querySelector('.category-items');
+        const chevronEl = section.querySelector('.category-chevron');
+        if (itemsEl) itemsEl.style.display = expanded ? 'block' : 'none';
+        if (chevronEl) chevronEl.style.transform = `rotate(${expanded ? '180deg' : '0deg'})`;
+        if (expanded) this.expandedCategories.add(key);
+        else this.expandedCategories.delete(key);
+    },
+
     filterCategory(filter) {
         // Update active button
         document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -350,7 +446,10 @@ export const AttractionsHandler = {
 
         if (filter === 'all') {
             cards.forEach(card => card.style.display = 'block');
-            sections.forEach(section => section.style.display = 'block');
+            sections.forEach(section => {
+                section.style.display = 'block';
+                this.setCategoryExpanded(section, false);
+            });
         } else if (filter === 'saved') {
             sections.forEach(section => {
                 const visibleCards = Array.from(section.querySelectorAll('.attraction-card')).filter(card => {
@@ -359,6 +458,7 @@ export const AttractionsHandler = {
                     return isSaved;
                 });
                 section.style.display = visibleCards.length > 0 ? 'block' : 'none';
+                this.setCategoryExpanded(section, visibleCards.length > 0);
             });
         } else if (filter === 'free') {
             sections.forEach(section => {
@@ -368,6 +468,7 @@ export const AttractionsHandler = {
                     return isFree;
                 });
                 section.style.display = visibleCards.length > 0 ? 'block' : 'none';
+                this.setCategoryExpanded(section, visibleCards.length > 0);
             });
         } else if (filter === 'reservation') {
             sections.forEach(section => {
@@ -377,6 +478,7 @@ export const AttractionsHandler = {
                     return needsReservation;
                 });
                 section.style.display = visibleCards.length > 0 ? 'block' : 'none';
+                this.setCategoryExpanded(section, visibleCards.length > 0);
             });
         }
     },
@@ -595,9 +697,14 @@ export const AttractionsHandler = {
                 const cards = document.querySelectorAll('.attraction-card');
                 const sections = document.querySelectorAll('.category-section');
 
+                AttractionsHandler.toggleNoResultsMessage(false);
+
                 if (!searchTerm) {
                     cards.forEach(card => card.style.display = 'block');
-                    sections.forEach(section => section.style.display = 'block');
+                    sections.forEach(section => {
+                        section.style.display = 'block';
+                        AttractionsHandler.setCategoryExpanded(section, false);
+                    });
                     Logger.info('Búsqueda limpiada, mostrando todas las atracciones');
                     return;
                 }
@@ -634,7 +741,10 @@ export const AttractionsHandler = {
                     });
                     totalResults += visibleCards.length;
                     section.style.display = visibleCards.length > 0 ? 'block' : 'none';
+                    AttractionsHandler.setCategoryExpanded(section, visibleCards.length > 0);
                 });
+
+                AttractionsHandler.toggleNoResultsMessage(totalResults === 0, searchTerm);
 
                 Logger.info(`Búsqueda completada: "${searchTerm}" - ${totalResults} resultados`);
                 document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -646,6 +756,28 @@ export const AttractionsHandler = {
                 Logger.error('Error en búsqueda de atracciones', error);
             }
         }, 300);
+    },
+
+    // Muestra/oculta un mensaje de "sin resultados" cuando ningún filtro/búsqueda encuentra atracciones
+    toggleNoResultsMessage(show, term = '') {
+        const container = document.getElementById('categoriesContainer');
+        if (!container) return;
+        let msg = document.getElementById('noResultsMessage');
+        if (show) {
+            if (!msg) {
+                msg = document.createElement('div');
+                msg.id = 'noResultsMessage';
+                msg.className = 'text-center py-16 bg-white dark:bg-gray-800 rounded-xl shadow-lg';
+                container.prepend(msg);
+            }
+            msg.innerHTML = `
+                <p class="text-5xl mb-3">🔍</p>
+                <p class="text-lg font-semibold text-gray-700 dark:text-gray-300">Sin resultados${term ? ` para "${term}"` : ''}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Prueba con otro término o quita algunos filtros</p>
+            `;
+        } else if (msg) {
+            msg.remove();
+        }
     },
 
     toggleSave(attractionName) {
@@ -678,13 +810,20 @@ export const AttractionsHandler = {
 
     applyAdvancedFilters() {
         try {
+            const categoryFilter = document.getElementById('categoryFilter')?.value || 'all';
             const cityFilter = document.getElementById('cityFilter')?.value || 'all';
             const priceFilter = document.getElementById('priceFilter')?.value || 'all';
             const ratingFilter = parseFloat(document.getElementById('ratingFilter')?.value || '0');
             const cards = document.querySelectorAll('.attraction-card');
             const sections = document.querySelectorAll('.category-section');
+            let totalResults = 0;
 
             sections.forEach(section => {
+                if (categoryFilter !== 'all' && section.dataset.category !== categoryFilter) {
+                    section.style.display = 'none';
+                    return;
+                }
+
                 const visibleCards = Array.from(section.querySelectorAll('.attraction-card')).filter(card => {
                     const cardCity = card.dataset.city || '';
                     const cardPrice = parseFloat(card.dataset.price || '0');
@@ -705,15 +844,19 @@ export const AttractionsHandler = {
                     card.style.display = matches ? 'block' : 'none';
                     return matches;
                 });
+                totalResults += visibleCards.length;
                 section.style.display = visibleCards.length > 0 ? 'block' : 'none';
+                this.setCategoryExpanded(section, visibleCards.length > 0);
             });
+
+            this.toggleNoResultsMessage(totalResults === 0);
 
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
             const firstFilterBtn = document.querySelector('.filter-btn');
             if (firstFilterBtn) {
                 firstFilterBtn.classList.add('active');
             }
-            Logger.info(`Filtros aplicados - Ciudad: ${cityFilter}, Precio: ${priceFilter}, Rating: ${ratingFilter}`);
+            Logger.info(`Filtros aplicados - Categoría: ${categoryFilter}, Ciudad: ${cityFilter}, Precio: ${priceFilter}, Rating: ${ratingFilter}`);
         } catch (error) {
             Logger.error('Error aplicando filtros avanzados', error);
         }
@@ -721,10 +864,12 @@ export const AttractionsHandler = {
 
     clearAllFilters() {
         try {
+            const categoryFilter = document.getElementById('categoryFilter');
             const cityFilter = document.getElementById('cityFilter');
             const priceFilter = document.getElementById('priceFilter');
             const ratingFilter = document.getElementById('ratingFilter');
             const searchInput = document.getElementById('attractionSearch');
+            if (categoryFilter) categoryFilter.value = 'all';
             if (cityFilter) cityFilter.value = 'all';
             if (priceFilter) priceFilter.value = 'all';
             if (ratingFilter) ratingFilter.value = '0';
@@ -733,7 +878,11 @@ export const AttractionsHandler = {
             const cards = document.querySelectorAll('.attraction-card');
             const sections = document.querySelectorAll('.category-section');
             cards.forEach(card => card.style.display = 'block');
-            sections.forEach(section => section.style.display = 'block');
+            sections.forEach(section => {
+                section.style.display = 'block';
+                this.setCategoryExpanded(section, false);
+            });
+            this.toggleNoResultsMessage(false);
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
             const allBtn = document.querySelector('.filter-btn');
             if (allBtn) allBtn.classList.add('active');

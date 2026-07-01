@@ -4,6 +4,15 @@
 import { db } from '../../core/firebase-config.js';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { sanitizeForFirestore } from './itinerary-v3.js';
+import { ACTIVITIES_DATABASE } from '../../../data/activities-database.js';
+
+// Icono representativo por ciudad (clave = key en ACTIVITIES_DATABASE)
+const CITY_ICONS = {
+  tokyo: '🗼', kyoto: '⛩️', osaka: '🏯', hiroshima: '🕊️', nara: '🦌',
+  hakone: '♨️', kamakura: '🗿', yokohama: '⚓', sapporo: '❄️', nagoya: '🏯',
+  kobe: '🐄', nikko: '🌲', takayama: '🏘️', kanazawa: '🎋', fukuoka: '🍜',
+  sendai: '🌳', matsumoto: '🐦', shirakawago: '🏔️', himeji: '🦅'
+};
 
 /**
  * Smart Generator Wizard
@@ -198,12 +207,10 @@ export const SmartGeneratorWizard = {
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             ¿Qué ciudades quieres visitar? <span class="text-red-500">*</span>
           </label>
-          <div class="grid grid-cols-3 gap-3" id="citiesContainer">
-            ${this.renderCityCheckbox('Tokyo', '🗼')}
-            ${this.renderCityCheckbox('Kyoto', '⛩️')}
-            ${this.renderCityCheckbox('Osaka', '🏯')}
+          <div class="grid grid-cols-3 gap-3 max-h-80 overflow-y-auto pr-1" id="citiesContainer">
+            ${Object.keys(ACTIVITIES_DATABASE).map(cityKey => this.renderCityCheckbox(cityKey)).join('')}
           </div>
-          <p class="text-xs text-gray-500 mt-2">Selecciona al menos una ciudad</p>
+          <p class="text-xs text-gray-500 mt-2">Selecciona al menos una ciudad (${Object.keys(ACTIVITIES_DATABASE).length} disponibles)</p>
           <div id="citiesError" class="hidden mt-2 p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
             <p class="text-sm text-red-600 dark:text-red-400">⚠️ Debes seleccionar al menos una ciudad</p>
           </div>
@@ -399,23 +406,37 @@ export const SmartGeneratorWizard = {
 
   /**
    * Helper para renderizar checkbox de ciudad
+   * @param {string} cityKey - clave en ACTIVITIES_DATABASE (ej. 'tokyo', 'shirakawago')
+   *
+   * NOTA: wizardData.cities guarda el NOMBRE VISIBLE (ej. "Tokyo"), no la clave,
+   * porque el generador y otras partes del código hacen city.toLowerCase() para
+   * volver a obtener la clave de ACTIVITIES_DATABASE (mismo patrón que ya existía).
    */
-  renderCityCheckbox(city, icon) {
-    const isChecked = this.wizardData.cities.includes(city);
+  renderCityCheckbox(cityKey) {
+    const displayName = this.cityLabel(cityKey);
+    const isChecked = this.wizardData.cities.includes(displayName);
+    const icon = CITY_ICONS[cityKey] || '📍';
     return `
       <label class="flex items-center gap-2 p-4 border-2 ${isChecked ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-300 dark:border-gray-600'}
                      rounded-lg cursor-pointer hover:border-blue-400 transition">
         <input
           type="checkbox"
           class="city-checkbox w-5 h-5"
-          data-city="${city}"
+          data-city="${displayName}"
           onchange="window.SmartGeneratorWizard.validateField('cities')"
           ${isChecked ? 'checked' : ''}
         >
         <span class="text-2xl">${icon}</span>
-        <span class="font-semibold text-gray-700 dark:text-gray-200">${city}</span>
+        <span class="font-semibold text-gray-700 dark:text-gray-200">${displayName}</span>
       </label>
     `;
+  },
+
+  /**
+   * Nombre de ciudad para mostrar (fallback: capitaliza la clave)
+   */
+  cityLabel(cityKey) {
+    return ACTIVITIES_DATABASE[cityKey]?.city || (cityKey.charAt(0).toUpperCase() + cityKey.slice(1));
   },
 
   /**
@@ -860,7 +881,7 @@ export const SmartGeneratorWizard = {
     return `
       <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
         <div class="flex items-center gap-2 mb-3">
-          <span class="text-xl">${city === 'Tokyo' ? '🗼' : city === 'Kyoto' ? '⛩️' : '🏯'}</span>
+          <span class="text-xl">${CITY_ICONS[city.toLowerCase()] || '📍'}</span>
           <span class="font-semibold text-gray-700 dark:text-gray-200">${city}</span>
         </div>
         <div class="space-y-2">
