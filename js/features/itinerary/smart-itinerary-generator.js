@@ -1477,6 +1477,7 @@ export const SmartItineraryGenerator = {
           source: act.source || 'database',
           city: act.city || city, // 🏙️ requerido por MasterItineraryOptimizer y otros chequeos de salud
           area: act.area || null, // 🏝️ sub-área (ej. Uji, Miyajima) para el chequeo de clustering geográfico
+          openingHours: act.opening_hours || null, // ⏰ {start, end} en horas - para validar que el horario asignado no caiga fuera
           // 🎯 SMART ALTERNATIVES
           alternatives: alternatives.length > 0 ? alternatives.map(alt => ({
             name: alt.name,

@@ -140,6 +140,58 @@ export const DistanceValidator = {
   },
 
   /**
+   * ⏰ Valida que cada actividad esté programada dentro de su horario de apertura real.
+   * A diferencia de scoreTimeAppropriatenessAdvanced (que evalúa candidatos ANTES de
+   * conocer su hora final asignada, usando siempre las 9am como aproximación), esto
+   * corre DESPUÉS de optimizeActivityOrder/insertMealsIntoDay, cuando cada actividad
+   * ya tiene su `.time` real - así que es la única validación que puede comparar la
+   * hora efectivamente asignada contra opening_hours.
+   * @param {Object} day
+   * @returns {Object} { valid: boolean, errors: [], warnings: [] }
+   */
+  validateOpeningHours(day) {
+    const result = { valid: true, errors: [], warnings: [] };
+
+    if (!day.activities || day.activities.length === 0) return result;
+
+    day.activities.forEach(activity => {
+      // Las comidas no tienen datos de opening_hours en la base de actividades
+      if (activity.isMeal || !activity.openingHours || !activity.time) return;
+
+      const { start, end } = activity.openingHours;
+      if (start == null || end == null) return;
+
+      const [h, m] = activity.time.split(':').map(Number);
+      if (Number.isNaN(h)) return;
+      const visitStart = h + (m || 0) / 60;
+      const visitEnd = visitStart + (activity.duration || 60) / 60;
+
+      const completelyClosed = visitStart >= end || visitEnd <= start;
+
+      if (completelyClosed) {
+        result.valid = false;
+        result.errors.push({
+          type: 'OUTSIDE_OPENING_HOURS',
+          severity: 'HIGH',
+          message: `❌ "${activity.title}" programado a las ${activity.time} pero abre de ${start}h a ${end}h`,
+          detail: 'La actividad está cerrada por completo a la hora en que quedó agendada.',
+          activities: [activity]
+        });
+      } else if (visitStart < start || visitEnd > end) {
+        result.warnings.push({
+          type: 'PARTIAL_OUTSIDE_OPENING_HOURS',
+          severity: 'MEDIUM',
+          message: `⚠️ "${activity.title}" (${activity.time}) se pasa del horario (${start}h-${end}h)`,
+          detail: 'Empieza antes de abrir o termina después de cerrar - considera moverla o acortarla.',
+          activities: [activity]
+        });
+      }
+    });
+
+    return result;
+  },
+
+  /**
    * Valida todo el itinerario
    * @param {Object} itinerary
    * @returns {Object} Reporte completo
@@ -157,24 +209,29 @@ export const DistanceValidator = {
 
     itinerary.days.forEach(day => {
       const validation = this.validateDayDistances(day);
+      const hoursValidation = this.validateOpeningHours(day);
 
-      if (!validation.valid) {
+      const errors = [...validation.errors, ...hoursValidation.errors];
+      const warnings = [...validation.warnings, ...hoursValidation.warnings];
+      const dayValid = validation.valid && hoursValidation.valid;
+
+      if (!dayValid) {
         report.valid = false;
         report.daysWithErrors.push({
           day: day.day,
-          errors: validation.errors,
+          errors: errors,
           maxDistance: validation.maxDistance
         });
-        report.totalErrors += validation.errors.length;
+        report.totalErrors += errors.length;
       }
 
-      if (validation.warnings.length > 0) {
+      if (warnings.length > 0) {
         report.daysWithWarnings.push({
           day: day.day,
-          warnings: validation.warnings,
+          warnings: warnings,
           maxDistance: validation.maxDistance
         });
-        report.totalWarnings += validation.warnings.length;
+        report.totalWarnings += warnings.length;
       }
     });
 
