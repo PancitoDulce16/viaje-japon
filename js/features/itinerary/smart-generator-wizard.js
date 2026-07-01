@@ -34,6 +34,7 @@ export const SmartGeneratorWizard = {
 
     // Step 2
     interests: [],
+    interestWeights: {}, // 🆕 {interestId: 1-5} - qué tanto pesa cada interés seleccionado
     pace: 'moderate',
     startTime: 9,
 
@@ -77,6 +78,7 @@ export const SmartGeneratorWizard = {
       dietaryRestrictions: [],
       mobilityNeeds: null,
       interests: [],
+      interestWeights: {}, // 🆕 {interestId: 1-5}
       pace: 'moderate', // light, moderate, packed, extreme, maximum
       startTime: 9,
       companionType: null, // solo, couple, family, seniors, friends
@@ -776,24 +778,91 @@ export const SmartGeneratorWizard = {
   },
 
   /**
-   * Helper para renderizar checkbox de interés
+   * Helper para renderizar checkbox de interés + selector de peso (1-5 estrellas)
+   * cuando está seleccionado. El peso deja de ser "todo o nada" - un interés en 5
+   * estrellas domina el orden de actividades sugeridas mucho más que uno en 1 estrella.
    */
   renderInterestCheckbox(interest) {
     const isChecked = this.wizardData.interests.includes(interest.id);
+    const weight = this.wizardData.interestWeights[interest.id] || 3;
     return `
-      <label class="flex items-center gap-3 p-3 border-2 ${isChecked ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-300 dark:border-gray-600'}
-                     rounded-lg cursor-pointer hover:border-blue-400 transition">
-        <input
-          type="checkbox"
-          class="interest-checkbox w-5 h-5"
-          data-interest="${interest.id}"
-          onchange="window.SmartGeneratorWizard.validateField('interests')"
-          ${isChecked ? 'checked' : ''}
-        >
-        <span class="text-xl">${interest.icon}</span>
-        <span class="text-sm font-medium text-gray-700 dark:text-gray-200">${interest.label}</span>
-      </label>
+      <div class="border-2 ${isChecked ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-300 dark:border-gray-600'}
+                   rounded-lg hover:border-blue-400 transition">
+        <label class="flex items-center gap-3 p-3 cursor-pointer">
+          <input
+            type="checkbox"
+            class="interest-checkbox w-5 h-5"
+            data-interest="${interest.id}"
+            onchange="window.SmartGeneratorWizard.toggleInterest('${interest.id}')"
+            ${isChecked ? 'checked' : ''}
+          >
+          <span class="text-xl">${interest.icon}</span>
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-200">${interest.label}</span>
+        </label>
+        ${isChecked ? `
+          <div class="flex items-center gap-1 px-3 pb-3 -mt-1" onclick="event.stopPropagation()">
+            <span class="text-xs text-gray-500 dark:text-gray-400 mr-1">Prioridad:</span>
+            ${[1, 2, 3, 4, 5].map(n => `
+              <button
+                type="button"
+                onclick="window.SmartGeneratorWizard.setInterestWeight('${interest.id}', ${n})"
+                class="text-lg leading-none transition ${n <= weight ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}"
+                title="Prioridad ${n}/5"
+              >★</button>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
     `;
+  },
+
+  /**
+   * Selecciona/deselecciona un interés y sincroniza su peso por defecto (3/5)
+   */
+  toggleInterest(interestId) {
+    const idx = this.wizardData.interests.indexOf(interestId);
+    if (idx === -1) {
+      this.wizardData.interests.push(interestId);
+      if (!this.wizardData.interestWeights[interestId]) {
+        this.wizardData.interestWeights[interestId] = 3; // peso neutral por defecto
+      }
+    } else {
+      this.wizardData.interests.splice(idx, 1);
+      delete this.wizardData.interestWeights[interestId];
+    }
+    this.validateField('interests');
+    this.saveToSessionStorage();
+    this.refreshInterestsContainer();
+  },
+
+  /**
+   * Cambia la prioridad (1-5) de un interés ya seleccionado
+   */
+  setInterestWeight(interestId, weight) {
+    this.wizardData.interestWeights[interestId] = weight;
+    this.saveToSessionStorage();
+    this.refreshInterestsContainer();
+  },
+
+  /**
+   * Re-renderiza solo la grilla de intereses (sin reconstruir todo el wizard)
+   */
+  refreshInterestsContainer() {
+    const container = document.getElementById('interestsContainer');
+    if (!container) return;
+    const allInterests = [
+      { id: 'cultural', label: 'Cultura & Templos', icon: '⛩️' },
+      { id: 'food', label: 'Gastronomía', icon: '🍜' },
+      { id: 'shopping', label: 'Compras', icon: '🛍️' },
+      { id: 'nature', label: 'Naturaleza', icon: '🌸' },
+      { id: 'art', label: 'Arte & Museos', icon: '🎨' },
+      { id: 'anime', label: 'Anime & Manga', icon: '🎌' },
+      { id: 'nightlife', label: 'Vida Nocturna', icon: '🌃' },
+      { id: 'technology', label: 'Tecnología', icon: '🤖' },
+      { id: 'history', label: 'Historia', icon: '📜' },
+      { id: 'photography', label: 'Fotografía', icon: '📸' }
+    ];
+    container.innerHTML = allInterests.map(interest => this.renderInterestCheckbox(interest)).join('');
   },
 
   /**
@@ -1587,6 +1656,7 @@ export const SmartGeneratorWizard = {
         totalDays: this.wizardData.totalDays,
         dailyBudget: this.wizardData.dailyBudget,
         interests: this.wizardData.interests,
+        interestWeights: this.wizardData.interestWeights, // 🆕 {interestId: 1-5}
         pace: this.wizardData.pace,
         startTime: this.wizardData.startTime,
         companionType: this.wizardData.companionType, // 👥 Companion-aware generation

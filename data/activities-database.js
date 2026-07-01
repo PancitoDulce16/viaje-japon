@@ -87,6 +87,7 @@ export const activities = {
       best_time: ['any'],
       coordinates: { lat: 35.7060, lng: 139.5701 },
       accessibility: { reduced_mobility_friendly: false },
+      closed_days: [2], // Cierra los martes (0=domingo...6=sábado)
       tags: ['anime', 'family_friendly', 'requires_booking'],
       booking_details: { // Información estructurada para reservas
         required: true,
@@ -808,6 +809,7 @@ export const activities = {
       best_time: ['afternoon'],
       coordinates: { lat: 34.9857, lng: 135.7454 },
       accessibility: { reduced_mobility_friendly: true },
+      closed_days: [3], // Cierra los miércoles
       tags: ['museum', 'trains', 'family_friendly', 'indoor'],
       interest_vectors: { culture: 0.5, family: 0.8 }
     },
@@ -840,6 +842,7 @@ export const activities = {
       best_time: ['afternoon'],
       coordinates: { lat: 34.9917, lng: 135.7716 },
       accessibility: { reduced_mobility_friendly: true },
+      closed_days: [1], // Cierra los lunes
       tags: ['museum', 'art', 'artifacts', 'indoor'],
       interest_vectors: { culture: 0.8, art: 0.8, history: 0.7 }
     }
@@ -1215,6 +1218,7 @@ export const activities = {
       best_time: ['afternoon'],
       coordinates: { lat: 34.3986, lng: 132.4636 },
       accessibility: { reduced_mobility_friendly: true },
+      closed_days: [1], // Cierra los lunes
       tags: ['art', 'museum', 'impressionist']
     }
   ],
@@ -2150,6 +2154,7 @@ export const activities = {
       best_time: ['afternoon'],
       coordinates: { lat: 36.5613, lng: 136.6583 },
       accessibility: { reduced_mobility_friendly: true },
+      closed_days: [1], // Cierra los lunes
       tags: ['museum', 'contemporary_art', 'iconic_pool']
     },
     {
@@ -2366,6 +2371,7 @@ export const activities = {
       best_time: ['afternoon'],
       coordinates: { lat: 36.2331, lng: 137.9744 },
       accessibility: { reduced_mobility_friendly: true },
+      closed_days: [1], // Cierra los lunes
       tags: ['museum', 'contemporary_art', 'polka_dots']
     }
   ],

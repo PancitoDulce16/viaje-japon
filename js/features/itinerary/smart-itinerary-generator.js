@@ -135,7 +135,8 @@ function adaptNewToOldDB(newDb) {
             quality_rating: activity.quality_rating,
             accessibility: activity.accessibility,
             tags: activity.tags,
-            crowd_level: activity.crowd_level
+            crowd_level: activity.crowd_level,
+            closed_days: activity.closed_days // 🗓️ días de la semana cerrados (0=domingo...6=sábado)
           };
         });
     }
@@ -767,6 +768,7 @@ export const SmartItineraryGenerator = {
       totalDays = 7,
       dailyBudget = 10000,
       interests = [],
+      interestWeights = {}, // 🆕 {interestId: 1-5} - qué tanto pesa cada interés (default 3 = neutral)
       pace = 'moderate', // light, moderate, packed, extreme, maximum
       startTime = 9,
       hotels = {},
@@ -796,8 +798,8 @@ export const SmartItineraryGenerator = {
     // 🍽️ Tracker global de restaurantes ya sugeridos para no repetir comidas en el viaje
     const usedMeals = new Set();
 
-    // Distribuir días entre ciudades (basado en intereses)
-    const cityDistribution = this.distributeDaysAcrossCities(cities, totalDays, interests);
+    // Distribuir días entre ciudades (basado en intereses, ponderados por prioridad)
+    const cityDistribution = this.distributeDaysAcrossCities(cities, totalDays, interests, interestWeights);
 
     const itinerary = {
       title: `Viaje a Japón - ${totalDays} días`,
@@ -827,6 +829,7 @@ export const SmartItineraryGenerator = {
           hotel: hotel,
           dailyBudget: dailyBudget,
           interests: interests,
+          interestWeights: interestWeights, // 🆕 {interestId: 1-5}
           pace: pace,
           startTime: startTime,
           isArrivalDay: isArrivalDay,
@@ -880,7 +883,7 @@ export const SmartItineraryGenerator = {
    * 🎯 DISTRIBUCIÓN INTELIGENTE DE CIUDADES - Basada en intereses
    * No distribución uniforme, sino optimizada por match de intereses
    */
-  distributeDaysAcrossCities(cities, totalDays, interests = []) {
+  distributeDaysAcrossCities(cities, totalDays, interests = [], interestWeights = {}) {
     if (cities.length === 0) return [];
     if (cities.length === 1) return [{ city: cities[0], days: totalDays }];
 
@@ -922,13 +925,16 @@ export const SmartItineraryGenerator = {
         return { city, score: 50, days: 0 };
       }
 
-      // Calcular match score
+      // Calcular match score, ponderado por prioridad (1-5, default 3 = neutral) de
+      // cada interés - una ciudad fuerte en el interés marcado como prioridad 5 sube
+      // mucho más que una fuerte en uno de prioridad 1.
       let matchScore = 0;
       let matchCount = 0;
 
       for (const interest of interests) {
         if (profile.score[interest]) {
-          matchScore += profile.score[interest];
+          const priorityMultiplier = (interestWeights[interest] || 3) / 3; // 3 = neutral
+          matchScore += profile.score[interest] * priorityMultiplier;
           matchCount++;
         }
       }
@@ -1013,6 +1019,7 @@ export const SmartItineraryGenerator = {
       hotel,
       dailyBudget,
       interests,
+      interestWeights = {}, // 🆕 {interestId: 1-5}
       pace,
       startTime,
       isArrivalDay,
@@ -1181,10 +1188,31 @@ export const SmartItineraryGenerator = {
       console.log(`🍽️ Dietary filter (${dietaryRestrictions.join(', ')}): ${beforeFilter} → ${candidateActivities.length} actividades`);
     }
 
+    // 🗓️ CLOSED DAY FILTER: Descartar actividades cerradas ese día de la semana (ej.
+    // "museo cerrado los lunes"). Solo aplica si conocemos la fecha real del viaje - sin
+    // tripStartDate no hay forma de saber a qué día de la semana cae el "Día N".
+    if (tripStartDate) {
+      const realDate = new Date(tripStartDate);
+      realDate.setDate(realDate.getDate() + (dayNumber - 1));
+      const weekday = realDate.getDay(); // 0=domingo...6=sábado
+      const beforeFilter = candidateActivities.length;
+      candidateActivities = candidateActivities.filter(activity => {
+        if (!activity.closed_days || activity.closed_days.length === 0) return true;
+        const isClosed = activity.closed_days.includes(weekday);
+        if (isClosed) {
+          console.log(`🗓️ Filtrando "${activity.name}" (cerrado los ${['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'][weekday]})`);
+        }
+        return !isClosed;
+      });
+      if (beforeFilter !== candidateActivities.length) {
+        console.log(`🗓️ Closed-day filter: ${beforeFilter} → ${candidateActivities.length} actividades`);
+      }
+    }
+
     // Filtrar y puntuar actividades
     const scoredActivities = candidateActivities
       .map(activity => {
-        let score = this.scoreActivity(activity, interests, dailyBudget, avoid, hotel, companionType, themedDay, 9, groupSize, travelerAges);
+        let score = this.scoreActivity(activity, interests, dailyBudget, avoid, hotel, companionType, themedDay, 9, groupSize, travelerAges, interestWeights);
 
         // 🌸 SEASON BONUS: Bonus por actividades recomendadas en temporada
         if (season && season.recommendations) {
@@ -1963,7 +1991,7 @@ export const SmartItineraryGenerator = {
    * 🎯 SCORING MULTI-FACTOR - Versión mejorada
    * Evalúa actividades con múltiples factores ponderados
    */
-  scoreActivity(activity, interests, dailyBudget, avoid, hotel, companionType, themedDay, currentTime = 9, groupSize = 1, travelerAges = []) {
+  scoreActivity(activity, interests, dailyBudget, avoid, hotel, companionType, themedDay, currentTime = 9, groupSize = 1, travelerAges = [], interestWeights = {}) {
     let score = 0;
     const weights = {
       interestMatch: 0.25,      // 25% - Match con intereses
@@ -1975,14 +2003,20 @@ export const SmartItineraryGenerator = {
       seasonality: 0.05         //  5% - Temporada/clima
     };
 
-    // 1️⃣ INTEREST MATCH (25%)
+    // 1️⃣ INTEREST MATCH (25%) - ponderado por prioridad (1-5, default 3 = neutral).
+    // Un match en un interés marcado como prioridad 5 pesa mucho más que uno en
+    // prioridad 1, en vez de tratar "seleccionado" como todo-o-nada.
     let interestScore = 0;
     if (activity.interests && interests && interests.length > 0) {
-      const matchCount = activity.interests.filter(i => interests.includes(i)).length;
-      const matchRatio = matchCount / Math.max(interests.length, activity.interests.length);
-      interestScore = matchRatio * 100;
+      const matchedInterests = activity.interests.filter(i => interests.includes(i));
+      if (matchedInterests.length > 0) {
+        const weightedMatchSum = matchedInterests.reduce((sum, i) => sum + (interestWeights[i] || 3), 0);
+        const maxPossibleWeight = interests.length * 5; // si matcheara TODOS los intereses del usuario a máxima prioridad
+        interestScore = (weightedMatchSum / Math.max(maxPossibleWeight, 1)) * 100;
+      }
     } else if (interests.includes(activity.category)) {
-      interestScore = 70; // Match parcial si solo matchea categoría
+      const categoryWeight = interestWeights[activity.category] || 3;
+      interestScore = 70 * (categoryWeight / 3); // Match parcial, también escalado por prioridad
     }
     score += interestScore * weights.interestMatch;
 
