@@ -252,7 +252,7 @@ export const ItineraryOrchestrator = {
     if (!window.MasterValidator) return;
 
     try {
-      const validation = window.MasterValidator.validateCompleteItinerary(itinerary);
+      const validation = window.MasterValidator.validateCompleteItinerary(itinerary, { verbose: true });
 
       if (!validation.valid) {
         console.warn('� Validaci�n encontr� problemas:', {

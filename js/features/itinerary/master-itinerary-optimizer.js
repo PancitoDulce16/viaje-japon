@@ -906,7 +906,7 @@ export const MasterItineraryOptimizer = {
 
       // PASO 8: VALIDAR el itinerario resultante
       console.log('\n📍 PASO 8: Validando itinerario resultante...');
-      let validation = MasterValidator.validateCompleteItinerary(itinerary);
+      let validation = MasterValidator.validateCompleteItinerary(itinerary, { verbose: true });
 
       // 🔍 DEBUG: Mostrar estructura completa de validación (sin imprimir objetos grandes)
       console.log('\n🔍 DEBUG - Estructura de validación recibida:');
