@@ -601,6 +601,16 @@ async function showBalanceAnalysis() {
       }
     }
 
+    // 🔄 CRÍTICO: smartBalanceItinerary ya reasigna actividades por proximidad y rellena
+    // días vacíos/ligeros (Paso 1 de assignActivitiesOptimally), y el bloque de arriba
+    // puede aplicar sugerencias críticas también - todo ANTES de que el usuario siquiera
+    // vea el modal de abajo. Sin este render(), esos cambios quedan guardados en
+    // Firestore pero las tarjetas de día en pantalla nunca se actualizan a menos que el
+    // usuario además confirme "Aplicar Todo" en el modal (y solo si quedaron sugerencias
+    // pendientes) - dando la falsa impresión de que Balancear "no hizo nada" cuando en
+    // realidad sí corrigió el itinerario.
+    render();
+
     // Construir mensaje del modal
     let message = `<div class="space-y-4">`;
 
