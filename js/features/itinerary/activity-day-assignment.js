@@ -154,7 +154,7 @@ export const ActivityDayAssignment = {
       // ese hotel resultó geográficamente más cercano en el cálculo bruto (ej. si faltan
       // hoteles configurados para algunos días). Nunca mezclar ciudades entre sí.
       Object.entries(hotelsByDay).forEach(([dayNum, hotel]) => {
-        if (activityCity && hotel.city && String(activityCity).toLowerCase() !== String(hotel.city).toLowerCase()) {
+        if (!HotelBaseSystem.isCityCompatible(hotel.city, activityCity)) {
           return; // ciudad distinta, no es candidato
         }
 
@@ -207,7 +207,7 @@ export const ActivityDayAssignment = {
 
       // 🏙️ Igual que en PASO 1: nunca considerar hoteles de otra ciudad
       Object.entries(hotelsByDay).forEach(([dayNum, hotel]) => {
-        if (activityCity && hotel.city && String(activityCity).toLowerCase() !== String(hotel.city).toLowerCase()) {
+        if (!HotelBaseSystem.isCityCompatible(hotel.city, activityCity)) {
           return;
         }
 
@@ -259,7 +259,7 @@ export const ActivityDayAssignment = {
     if (activityCity) {
       const sameCityDays = days.filter(d => {
         const dayCity = d.city || HotelBaseSystem.detectCityForDay(d);
-        return dayCity && String(dayCity).toLowerCase() === String(activityCity).toLowerCase();
+        return dayCity && HotelBaseSystem.isCityCompatible(dayCity, activityCity);
       });
       if (sameCityDays.length > 0) {
         // Preferir su día original si sigue siendo de la misma ciudad
@@ -291,7 +291,7 @@ export const ActivityDayAssignment = {
       const sameCity = middleDays
         .filter(d => {
           const dayCity = d.city || HotelBaseSystem.detectCityForDay(d);
-          return dayCity && String(dayCity).toLowerCase() === String(activityCity).toLowerCase();
+          return dayCity && HotelBaseSystem.isCityCompatible(dayCity, activityCity);
         })
         .sort((a, b) => a.activities.length - b.activities.length);
       // Si la actividad tiene ciudad conocida, SOLO se puede mover a un día de esa
@@ -561,7 +561,7 @@ export const ActivityDayAssignment = {
           .filter(d => {
             if (d.day === overloadedDay.day || d.activities.length >= MAX_ACTIVITIES) return false;
             const dCity = d.city || HotelBaseSystem.detectCityForDay(d);
-            return !dCity || !overloadedCity || String(dCity).toLowerCase() === String(overloadedCity).toLowerCase();
+            return !dCity || !overloadedCity || HotelBaseSystem.isCityCompatible(dCity, overloadedCity) || HotelBaseSystem.isCityCompatible(overloadedCity, dCity);
           })
           .sort((a, b) => a.activities.length - b.activities.length);
 
@@ -596,7 +596,7 @@ export const ActivityDayAssignment = {
           if (d.day === needyDay.day || d.day === 1 || d.day === itinerary.days.length) return false; // No quitar del día 1 ni último
           if (d.activities.length <= MIN_ACTIVITIES_NORMAL) return false;
           const dCity = d.city || HotelBaseSystem.detectCityForDay(d);
-          return !dCity || !needyCity || String(dCity).toLowerCase() === String(needyCity).toLowerCase();
+          return !dCity || !needyCity || HotelBaseSystem.isCityCompatible(dCity, needyCity) || HotelBaseSystem.isCityCompatible(needyCity, dCity);
         })
         .sort((a, b) => b.activities.length - a.activities.length);
 

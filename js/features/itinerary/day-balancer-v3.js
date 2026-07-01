@@ -395,10 +395,17 @@ function detectDuplicateActivities(days) {
  * Verifica si dos días pertenecen a la misma ciudad. Si a alguno le falta el dato de
  * ciudad (itinerarios viejos/manuales sin ese campo), no bloqueamos el movimiento —
  * pero si AMBOS días tienen ciudad conocida y son distintas, nunca deben mezclarse.
+ * Reconoce días de transición con ciudad compuesta (ej. "Tokyo/Kyoto") vía
+ * HotelBaseSystem.isCityCompatible, para no vaciarlos al no poder "coincidir" nunca
+ * con un string de una sola ciudad.
  * @returns {boolean}
  */
 function isSameCity(dayA, dayB) {
     if (!dayA?.city || !dayB?.city) return true; // dato desconocido, no bloquear
+    if (window.HotelBaseSystem?.isCityCompatible) {
+        return window.HotelBaseSystem.isCityCompatible(dayA.city, dayB.city) ||
+               window.HotelBaseSystem.isCityCompatible(dayB.city, dayA.city);
+    }
     return String(dayA.city).trim().toLowerCase() === String(dayB.city).trim().toLowerCase();
 }
 
@@ -1029,7 +1036,10 @@ function applySuggestion(days, suggestion, options = {}) {
         const activityCity = window.HotelBaseSystem?.resolveActivityCity?.(suggestion.activity) || suggestion.activity.city;
         const sourceCity = sourceDay.city || window.HotelBaseSystem?.detectCityForDay?.(sourceDay);
         const relevantCity = activityCity || sourceCity;
-        if (targetCity && relevantCity && String(targetCity).trim().toLowerCase() !== String(relevantCity).trim().toLowerCase()) {
+        const isCompatible = !targetCity || !relevantCity || (window.HotelBaseSystem?.isCityCompatible
+            ? window.HotelBaseSystem.isCityCompatible(targetCity, relevantCity)
+            : String(targetCity).trim().toLowerCase() === String(relevantCity).trim().toLowerCase());
+        if (!isCompatible) {
             console.warn(`⚠️ BLOQUEADO: "${suggestion.activity.title || suggestion.activity.name}" es de ${relevantCity}, pero el Día ${targetDay.day} es de ${targetCity}. Rechazando movimiento entre ciudades distintas.`);
             return newDays; // NO mover entre ciudades distintas
         }

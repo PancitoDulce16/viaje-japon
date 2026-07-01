@@ -85,6 +85,29 @@ export const HotelBaseSystem = {
   },
 
   /**
+   * Compara la ciudad de un día contra la de una actividad para decidir si pueden
+   * convivir. A diferencia de una simple comparación de strings, esto reconoce los
+   * DÍAS DE TRANSICIÓN (ej. "Tokyo/Kyoto", día en que se viaja de una ciudad a otra) y
+   * los trata como compatibles con CUALQUIER ciudad - de lo contrario, un día de
+   * transición nunca podría "ganar" ninguna actividad de ninguna de sus dos ciudades
+   * (ninguna coincide con el string compuesto completo) y terminaría vacío tras
+   * cualquier reasignación.
+   * @param {string|null} dayCity
+   * @param {string|null} activityCity
+   * @returns {boolean}
+   */
+  isCityCompatible(dayCity, activityCity) {
+    if (!dayCity || !activityCity) return true; // dato desconocido, no bloquear
+    const dayStr = String(dayCity);
+    // Día de transición (ej. "Tokyo/Kyoto", "Kyoto-Osaka", "Kyoto → Osaka"): acepta
+    // actividades de cualquiera de las ciudades que menciona.
+    if (/[/\-→]/.test(dayStr)) {
+      return dayStr.toLowerCase().includes(String(activityCity).toLowerCase());
+    }
+    return dayStr.toLowerCase().trim() === String(activityCity).toLowerCase().trim();
+  },
+
+  /**
    * Busca hoteles usando Google Places
    * @param {string} query - Búsqueda (ej: "Hotel Shinjuku Tokyo")
    * @param {Object} coordinates - {lat, lng} para búsqueda cercana
@@ -281,6 +304,16 @@ export const HotelBaseSystem = {
    * @returns {string} Ciudad detectada (Tokyo, Kyoto, Osaka, etc.)
    */
   detectCityForDay(day) {
+    // Prioridad 0: Si el día YA tiene una ciudad explícita guardada, usarla directamente
+    // sin volver a analizar actividades. Esto es crítico durante una reasignación: pasos
+    // como ActivityDayAssignment vacían day.activities temporalmente antes de repartir
+    // las actividades de nuevo, y sin este atajo detectCityForDay caía siempre en el
+    // fallback "sin actividades" y devolvía 'Tokyo' para TODOS los días por igual,
+    // rompiendo el emparejamiento por ciudad para el resto del proceso.
+    if (day.city) {
+      return this.normalizeCityName(day.city);
+    }
+
     if (!day.activities || day.activities.length === 0) {
       // Fallback 1: Usar day.location si existe
       if (day.location) {
