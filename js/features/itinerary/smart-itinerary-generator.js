@@ -1222,6 +1222,14 @@ export const SmartItineraryGenerator = {
 
     // 2. Completar con top-scored (prevenir duplicados y mejorar diversidad)
     const categoriesUsed = new Map(); // Tracking de categorías por día
+    // 📍 Distancia máxima (km) de un candidato al centroide de lo YA seleccionado ese
+    // día. Sin esto, un día puede juntar actividades de sub-zonas alejadas dentro de la
+    // misma ciudad (ej. Kinkaku-ji + Uji a 18km, o centro de Hiroshima + Miyajima a
+    // 20km - una isla aparte) solo porque ambas puntuaron alto por interés, sin
+    // considerar si tiene sentido geográfico visitarlas el mismo día.
+    const MAX_CLUSTER_DISTANCE_KM = 12;
+    const skippedForDistance = [];
+
     for (const activity of scoredActivities) {
       if (selectedActivities.length >= targetActivities) break;
 
@@ -1243,11 +1251,41 @@ export const SmartItineraryGenerator = {
         continue;
       }
 
+      // 📍 Coherencia geográfica: si ya hay actividades seleccionadas con coordenadas,
+      // exigir que la candidata esté razonablemente cerca de ellas (excepto la primera
+      // actividad del día, que define el punto de partida)
+      const selectedWithCoords = selectedActivities.filter(a => a.lat && a.lng);
+      if (selectedWithCoords.length > 0 && activity.lat && activity.lng) {
+        const centroidLat = selectedWithCoords.reduce((s, a) => s + a.lat, 0) / selectedWithCoords.length;
+        const centroidLng = selectedWithCoords.reduce((s, a) => s + a.lng, 0) / selectedWithCoords.length;
+        const dist = this.calculateDistance({ lat: activity.lat, lng: activity.lng }, { lat: centroidLat, lng: centroidLng });
+        if (dist > MAX_CLUSTER_DISTANCE_KM) {
+          console.log(`⏭️ Saltando "${activity.name}" (${dist.toFixed(1)}km del resto del día - fuera de zona)`);
+          skippedForDistance.push(activity);
+          continue;
+        }
+      }
+
       // Agregar actividad
       selectedActivities.push(activity);
       usedActivities.add(activity.name); // 🚨 Marcar como usada globalmente
       categoriesUsed.set(activity.category, categoryCount + 1);
       console.log(`✅ Actividad ${selectedActivities.length}/${targetActivities}: "${activity.name}" (${activity.category})`);
+    }
+
+    // Si el día quedó corto SOLO por el filtro de distancia (no hay suficientes
+    // actividades cercanas entre sí en esta ciudad), permitir las descartadas por
+    // distancia antes de repetir actividades - es mejor un salto largo ocasional que
+    // repetir una actividad ya vista.
+    if (selectedActivities.length < targetActivities - 1 && skippedForDistance.length > 0) {
+      console.log(`📍 Reincorporando ${skippedForDistance.length} actividades descartadas por distancia (no hay suficientes cercanas)`);
+      for (const activity of skippedForDistance) {
+        if (selectedActivities.length >= targetActivities) break;
+        if (!usedActivities.has(activity.name) && !selectedActivities.includes(activity)) {
+          selectedActivities.push(activity);
+          usedActivities.add(activity.name);
+        }
+      }
     }
 
     console.log(`📊 Día ${dayNumber}: ${selectedActivities.length} actividades seleccionadas (target: ${targetActivities})`);

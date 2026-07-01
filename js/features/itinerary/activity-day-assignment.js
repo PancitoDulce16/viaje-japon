@@ -201,11 +201,14 @@ export const ActivityDayAssignment = {
         return;
       }
 
-      let bestDay = null;
       let minDistance = Infinity;
       const activityCity = HotelBaseSystem.resolveActivityCity(activity);
 
-      // 🏙️ Igual que en PASO 1: nunca considerar hoteles de otra ciudad
+      // 🏙️ Igual que en PASO 1: nunca considerar hoteles de otra ciudad. Recopilar TODOS
+      // los días candidatos (no solo el de menor distancia) porque una ciudad con varios
+      // días de estadía comparte el MISMO hotel entre ellos - la distancia al hotel por
+      // sí sola no distingue en qué día conviene poner esta actividad.
+      const candidateDays = [];
       Object.entries(hotelsByDay).forEach(([dayNum, hotel]) => {
         if (!HotelBaseSystem.isCityCompatible(hotel.city, activityCity)) {
           return;
@@ -215,12 +218,41 @@ export const ActivityDayAssignment = {
           activity.coordinates,
           hotel.coordinates
         );
-
+        candidateDays.push({ dayNum: parseInt(dayNum), distance });
         if (distance < minDistance) {
           minDistance = distance;
-          bestDay = parseInt(dayNum);
         }
       });
+
+      // 📍 De los días "empatados" (dentro de 2km del mejor hotel-match - típicamente
+      // TODOS los días de la misma ciudad si comparten hotel), preferir aquel cuyas
+      // actividades YA asignadas estén geográficamente más cerca de esta - evita que
+      // una actividad de una sub-zona alejada (ej. Miyajima) caiga en un día al azar
+      // entre varios posibles, mezclándose con actividades de otra sub-zona.
+      const tiedDays = candidateDays.filter(d => d.distance <= minDistance + 2);
+      let bestDay = null;
+      if (tiedDays.length > 1) {
+        let bestClusterDistance = Infinity;
+        tiedDays.forEach(({ dayNum }) => {
+          const day = days.find(d => d.day === dayNum);
+          const withCoords = (day?.activities || []).filter(a => a.coordinates?.lat && a.coordinates?.lng);
+          if (withCoords.length === 0) {
+            // Día sin actividades geolocalizadas aún: candidato neutral, tratar como
+            // distancia 0 solo si no hay ningún otro día con actividades ya cercanas
+            if (bestDay === null) bestDay = dayNum;
+            return;
+          }
+          const centroidLat = withCoords.reduce((s, a) => s + a.coordinates.lat, 0) / withCoords.length;
+          const centroidLng = withCoords.reduce((s, a) => s + a.coordinates.lng, 0) / withCoords.length;
+          const clusterDist = RouteOptimizer.calculateDistance(activity.coordinates, { lat: centroidLat, lng: centroidLng });
+          if (clusterDist < bestClusterDistance) {
+            bestClusterDistance = clusterDist;
+            bestDay = dayNum;
+          }
+        });
+      } else if (tiedDays.length === 1) {
+        bestDay = tiedDays[0].dayNum;
+      }
 
       if (bestDay !== null) {
         const day = days.find(d => d.day === bestDay);

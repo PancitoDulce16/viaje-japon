@@ -82,6 +82,58 @@ export const ATTRACTIONS_DATA = {
         rating: 4.9,
         description: "Tantanmen (ramen picante) con estrella Michelin. Increíble.",
         tips: "Solo efectivo. Máquina de tickets. Fila desde temprano."
+      },
+      {
+        name: "Ganso Ramen Yokocho (Sapporo Ramen Alley)",
+        city: "Sapporo - Susukino",
+        price: 900,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "30-40 min",
+        rating: 4.5,
+        coordinates: { lat: 43.0554, lng: 141.3536 },
+        description: "Callejón histórico con ~17 puestos de ramen miso, el estilo que nació en Sapporo.",
+        tips: "Prueba el miso ramen con mantequilla y maíz, típico de Hokkaido."
+      },
+      {
+        name: "Ichiran Ramen Sapporo",
+        city: "Sapporo",
+        price: 1000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "30 min",
+        rating: 4.5,
+        coordinates: { lat: 43.0618, lng: 141.3545 },
+        description: "Misma cadena de Tokyo con cabinas individuales, versión Hokkaido con toque local.",
+        tips: "Ideal si viajas solo. Personaliza intensidad del caldo."
+      },
+      {
+        name: "Ichiran Ramen Fukuoka (Original)",
+        city: "Fukuoka - Tenjin",
+        price: 980,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "25-30 min",
+        rating: 4.7,
+        coordinates: { lat: 33.5904, lng: 130.4017 },
+        description: "La sucursal ORIGINAL de la famosa cadena de tonkotsu ramen - Fukuoka es su ciudad natal.",
+        tips: "Caldo tonkotsu clásico de Hakata. Fideos finos, se puede pedir 'kaedama' (porción extra)."
+      },
+      {
+        name: "Hakata Issou",
+        city: "Fukuoka - Hakata",
+        price: 850,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "20-30 min",
+        rating: 4.6,
+        coordinates: { lat: 33.5902, lng: 130.4207 },
+        description: "Tonkotsu ramen local, muy querido por residentes de Fukuoka. Caldo intenso y cremoso.",
+        tips: "Menos turístico que Ichiran, experiencia más auténtica."
       }
     ]
   },
@@ -196,6 +248,32 @@ export const ATTRACTIONS_DATA = {
         rating: 5.0,
         description: "EL MEJOR yakiniku de Tokyo. Imposible de reservar pero vale cada yen.",
         tips: "Reservas 2 meses antes. Se agotan en segundos. Muy caro pero legendary."
+      },
+      {
+        name: "Steakland Kobe",
+        city: "Kobe - Sannomiya",
+        price: 6000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60-90 min",
+        rating: 4.5,
+        coordinates: { lat: 34.6913, lng: 135.1955 },
+        description: "Teppanyaki de Kobe beef auténtico a precio relativamente accesible, cortado y cocinado frente a ti.",
+        tips: "Sin reserva, aceptan walk-ins. Pide el filete A5 para la experiencia completa."
+      },
+      {
+        name: "Wakkoqu",
+        city: "Kobe - Kitano",
+        price: 15000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 3,
+        duration: "90-120 min",
+        rating: 4.8,
+        coordinates: { lat: 34.7025, lng: 135.1955 },
+        description: "Uno de los restaurantes de Kobe beef más prestigiosos, teppanyaki de alta gama con carne certificada.",
+        tips: "Reserva con unos días de anticipación. Splurge que vale la pena para probar el Kobe beef real."
       }
     ]
   },
@@ -277,6 +355,32 @@ export const ATTRACTIONS_DATA = {
         rating: 4.7,
         description: "Matcha parfait legendario. Desde 1860. Auténtico matcha de Uji.",
         tips: "El parfait más famoso: ¥1200. Verde intenso y cremoso."
+      },
+      {
+        name: "Nakatanidou (Mochi Pounding Show)",
+        city: "Nara",
+        price: 200,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "20-30 min",
+        rating: 4.6,
+        coordinates: { lat: 34.6812, lng: 135.8280 },
+        description: "Famosa tienda de mochi con show de machacado ultra-rápido (récord Guinness). El mochi recién hecho es delicioso.",
+        tips: "El show ocurre varias veces al día, sin horario fijo - si lo ves, detente a mirar."
+      },
+      {
+        name: "Hakuza Kanazawa (Gold Leaf Soft Cream)",
+        city: "Kanazawa - Higashi Chaya",
+        price: 900,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "20-30 min",
+        rating: 4.4,
+        coordinates: { lat: 36.5705, lng: 136.6700 },
+        description: "Helado suave cubierto con una hoja entera de oro comestible - Kanazawa produce el 99% del oro laminado de Japón.",
+        tips: "Foto icónica de Kanazawa. Cómelo con cuidado, la hoja de oro es delicada."
       }
     ]
   },
@@ -322,6 +426,32 @@ export const ATTRACTIONS_DATA = {
         rating: 4.7,
         description: "Callejón con 60+ tiny izakayas. Post-war vibes. Piss Alley (nombre antiguo).",
         tips: "Explora y elige uno. Yakitori en todos. Cash only. Experiencia auténtica."
+      },
+      {
+        name: "Sekai no Yamachan (Tebasaki)",
+        city: "Nagoya - Sakae",
+        price: 2500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60-90 min",
+        rating: 4.5,
+        coordinates: { lat: 35.1709, lng: 136.9084 },
+        description: "Cadena famosa por tebasaki (alitas de pollo picantes estilo Nagoya), especialidad local imprescindible.",
+        tips: "Pide las alitas 'extra' si te gusta más picante. Ambiente ruidoso y divertido."
+      },
+      {
+        name: "Yakitori Ippei",
+        city: "Osaka - Namba",
+        price: 2500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60-90 min",
+        rating: 4.5,
+        coordinates: { lat: 34.6656, lng: 135.5013 },
+        description: "Izakaya local con excelente yakitori y ambiente auténtico cerca de Dotonbori.",
+        tips: "Pide el 'omakase' de brochetas para probar variedad. Cash-friendly."
       }
     ]
   },
@@ -2128,6 +2258,32 @@ export const ATTRACTIONS_DATA = {
         rating: 4.6,
         description: "Centro comercial de lujo. Marcas premium. Rooftop garden gratis.",
         tips: "Tax-free. Art installations rotan. Tsutaya bookstore en piso 6."
+      },
+      {
+        name: "Omicho Market",
+        city: "Kanazawa",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "90-120 min",
+        rating: 4.6,
+        coordinates: { lat: 36.5680, lng: 136.6547 },
+        description: "El mercado de mariscos más grande de Kanazawa, con 300+ años de historia. Puestos de sushi y kaisendon (bowl de mariscos crudos).",
+        tips: "Prueba el kaisendon para desayuno/almuerzo. Los cangrejos de Kanazawa son famosos en invierno."
+      },
+      {
+        name: "Nijo Market (Nijo Ichiba)",
+        city: "Sapporo",
+        price: 0,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60-90 min",
+        rating: 4.4,
+        coordinates: { lat: 43.0592, lng: 141.3564 },
+        description: "Mercado de mariscos histórico en el centro de Sapporo. Erizo de mar, salmón e ikura (huevas) fresquísimos.",
+        tips: "Muchos puestos ofrecen desayuno de mariscos. Mejor visitarlo por la mañana."
       }
     ]
   },
@@ -2317,6 +2473,84 @@ export const ATTRACTIONS_DATA = {
         rating: 4.9,
         description: "¡Omurice viral de YouTube! Chef Motokichi. Show cooking.",
         tips: "RESERVA 1 MES ANTES. Solo 1 chef, 1 mesa. Experiencia única."
+      },
+      {
+        name: "Okonomimura (Okonomiyaki Village)",
+        city: "Hiroshima",
+        price: 1200,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60-90 min",
+        rating: 4.6,
+        coordinates: { lat: 34.3941, lng: 132.4597 },
+        description: "Edificio de 4 pisos con ~25 puestos de okonomiyaki estilo Hiroshima (con fideos yakisoba en capas).",
+        tips: "Cada puesto tiene su estilo propio. Pisos 2-4 tienen los locales más auténticos."
+      },
+      {
+        name: "Hassei (Ostras de Miyajima)",
+        city: "Hiroshima - Miyajima",
+        price: 2000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "45-60 min",
+        rating: 4.5,
+        coordinates: { lat: 34.2977, lng: 132.3200 },
+        description: "Especialista en ostras de Miyajima (una de las mejores zonas ostrícolas de Japón) a la parrilla y fritas.",
+        tips: "Prueba el kaki-fry (ostra empanizada) y las ostras a la parrilla directo del carbón."
+      },
+      {
+        name: "Atsuta Horaiken (Hitsumabushi)",
+        city: "Nagoya",
+        price: 4000,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "60-90 min",
+        rating: 4.7,
+        coordinates: { lat: 35.1280, lng: 136.9082 },
+        description: "El restaurante original de hitsumabushi (anguila a la parrilla sobre arroz, servida en 3 estilos), especialidad icónica de Nagoya desde 1873.",
+        tips: "Sigue las instrucciones para comerlo en 3 formas distintas - simple, con condimentos, y como ochazuke."
+      },
+      {
+        name: "Komachi-dokoro Shirasuya (Shirasu de Kamakura)",
+        city: "Kamakura",
+        price: 1800,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "45-60 min",
+        rating: 4.4,
+        coordinates: { lat: 35.3097, lng: 139.5469 },
+        description: "Restaurante especializado en shirasu (whitebait), la especialidad marina de Kamakura, cruda o hervida sobre arroz.",
+        tips: "Kama-age shirasu-don (recién hervido) es la versión más tradicional y fresca."
+      },
+      {
+        name: "Hatsuhana Soba",
+        city: "Hakone - Yumoto",
+        price: 1500,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "45-60 min",
+        rating: 4.5,
+        coordinates: { lat: 35.2323, lng: 139.1069 },
+        description: "Soba (fideos de trigo sarraceno) hecho a mano, ideal después de un día en los onsen de Hakone.",
+        tips: "El zaru soba frío es refrescante en verano; el soba caliente en invierno."
+      },
+      {
+        name: "Kamameshi Musashino",
+        city: "Nara",
+        price: 1800,
+        currency: "JPY",
+        reservationUrl: null,
+        reserveDays: 0,
+        duration: "45-60 min",
+        rating: 4.4,
+        coordinates: { lat: 34.6851, lng: 135.8048 },
+        description: "Kamameshi (arroz cocido en olla individual con toppings de temporada), plato reconfortante cerca del Parque de Nara.",
+        tips: "El arroz se sirve en la misma olla de hierro donde se cocinó - déjalo reposar unos minutos."
       }
     ]
   },
