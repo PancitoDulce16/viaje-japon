@@ -626,12 +626,16 @@ export const ActivityDayAssignment = {
     const finalBalanced = normalDaysFinal.filter(d => d.activities.length >= MIN_ACTIVITIES_NORMAL && d.activities.length <= MAX_ACTIVITIES).length;
 
     // Verificar día 1
-    const day1Count = itinerary.days[0].activities.length;
+    const day1 = itinerary.days[0];
+    const day1Count = day1.activities.length;
     const day1Status = day1Count >= MIN_ACTIVITIES_DAY1 && day1Count <= MAX_ACTIVITIES_DAY1 ? '✅' : '⚠️';
 
     // Verificar último día
     const lastDay = itinerary.days[itinerary.days.length - 1];
-    const lastDayStatus = lastDay.activities.length === 0 ? '✅ VACÍO (aeropuerto)' : '❌ TIENE ACTIVIDADES (debe estar vacío)';
+    // Un último día vacío ya NO es el objetivo (ver applySpecialDayRules) - si quedó en 0
+    // es porque genuinamente no tenía actividades, no porque se vació a propósito.
+    const MIN_ACTIVITIES_LASTDAY = 1;
+    const lastDayStatus = lastDay.activities.length > 0 ? '✅' : '⚠️ vacío';
 
     console.log(`✅ Balance final:
       - Día 1: ${day1Count} actividades ${day1Status} (debe tener ${MIN_ACTIVITIES_DAY1}-${MAX_ACTIVITIES_DAY1})
@@ -639,7 +643,7 @@ export const ActivityDayAssignment = {
         * Vacíos (0): ${finalEmpty}
         * Ligeros (< ${MIN_ACTIVITIES_NORMAL}): ${finalLight}
         * Balanceados (${MIN_ACTIVITIES_NORMAL}-${MAX_ACTIVITIES}): ${finalBalanced}
-      - Último día: ${lastDayStatus}
+      - Último día: ${lastDay.activities.length} actividades ${lastDayStatus}
 
       ${finalEmpty > 0 || finalLight > 0 ? '❌ CRÍTICO: Días insuficientes - AGREGA MÁS ACTIVIDADES' : '✨ Todos los días están balanceados'}`);
 
@@ -668,6 +672,21 @@ export const ActivityDayAssignment = {
           3000
         );
       }
+    }
+
+    // 🏙️ Día 1 y último día quedaban SIEMPRE excluidos del auto-completado (solo
+    // normalDaysFinal se marca arriba). Si genuinamente están vacíos o muy ligeros -no
+    // porque se hayan vaciado a propósito, sino porque nunca tuvieron actividades- también
+    // merecen rellenarse, respetando sus topes más bajos (día 1: jetlag, último día: salida).
+    if (day1Count < MIN_ACTIVITIES_DAY1) {
+      const needed = MIN_ACTIVITIES_DAY1 - day1Count;
+      console.log(`   Día 1: agregando ${needed} actividad(es) automáticamente (mín ${MIN_ACTIVITIES_DAY1})...`);
+      day1._needsActivities = needed;
+    }
+    if (lastDay.activities.length < MIN_ACTIVITIES_LASTDAY && lastDay.day !== day1.day) {
+      const needed = MIN_ACTIVITIES_LASTDAY - lastDay.activities.length;
+      console.log(`   Último día: agregando ${needed} actividad(es) automáticamente (mín ${MIN_ACTIVITIES_LASTDAY})...`);
+      lastDay._needsActivities = needed;
     }
   },
 
@@ -739,13 +758,30 @@ export const ActivityDayAssignment = {
         });
       }
 
-      // Agregar las N más cercanas
+      // Agregar las N más cercanas (mapeadas al esquema que espera el resto de la app:
+      // .title en vez de .name, .category en vez de .categories[], .rating en vez de
+      // .quality_rating - de lo contrario estas actividades se agregan "de verdad" pero
+      // se renderizan en blanco/rotas en la UI, dando la sensación de que el hueco sigue
+      // sin llenarse)
       const toAdd = cityActivities.slice(0, needed);
-      toAdd.forEach(activity => {
+      toAdd.forEach(rawActivity => {
+        const activity = {
+          id: rawActivity.id,
+          title: rawActivity.title || rawActivity.name,
+          time: rawActivity.time || null, // se recalcula después en optimizeAllDaysFromHotel
+          duration: rawActivity.duration || 60,
+          category: rawActivity.category || rawActivity.categories?.[0] || 'general',
+          desc: rawActivity.desc || rawActivity.description || (rawActivity.tags ? rawActivity.tags.join(', ') : ''),
+          cost: rawActivity.cost || 0,
+          coordinates: rawActivity.coordinates || (rawActivity.lat && rawActivity.lng ? { lat: rawActivity.lat, lng: rawActivity.lng } : null),
+          rating: rawActivity.rating || rawActivity.quality_rating || null,
+          city: rawActivity.city,
+          source: 'auto-complete'
+        };
         day.activities.push(activity);
         usedActivityIds.add(activity.id);
         totalAdded++;
-        console.log(`      ✅ "${activity.title || activity.name}" agregada`);
+        console.log(`      ✅ "${activity.title}" agregada`);
       });
 
       delete day._needsActivities; // Limpiar flag
@@ -761,14 +797,40 @@ export const ActivityDayAssignment = {
    * @returns {Promise<Array>} Lista de actividades
    */
   async getAvailableActivities() {
-    // Intentar obtener de window.UNIFIED_DATABASE
+    // 🥇 PRIORIDAD 1: activities-database.js - la base de datos REAL de la app (148
+    // actividades reales en 19 ciudades). Antes esta función probaba primero
+    // window.UNIFIED_DATABASE / data/database.js, que nunca tiene más de 12 actividades
+    // y SOLO de Tokyo (nada se asigna nunca a window.UNIFIED_DATABASE en todo el
+    // proyecto) - por eso el auto-completado nunca lograba llenar huecos en ninguna
+    // ciudad que no fuera Tokyo. También se corrige que `activities` es un objeto
+    // {ciudad: [...]}, no un array - hay que aplanarlo.
+    try {
+      const { ACTIVITIES_DATABASE } = await import('../../../data/activities-database.js');
+      if (ACTIVITIES_DATABASE) {
+        const flattened = [];
+        Object.values(ACTIVITIES_DATABASE).forEach(cityData => {
+          (cityData.activities || []).forEach(act => {
+            flattened.push({ ...act, city: act.city || cityData.city });
+          });
+        });
+        if (flattened.length > 0) {
+          console.log(`📦 Actividades cargadas desde activities-database.js: ${flattened.length}`);
+          return flattened;
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ No se pudo cargar activities-database.js', error);
+    }
+
+    // Fallback: window.UNIFIED_DATABASE (nunca se asigna actualmente, pero se deja por
+    // si algún día se popula en runtime)
     if (typeof window !== 'undefined' && window.UNIFIED_DATABASE) {
       const activities = Object.values(window.UNIFIED_DATABASE);
       console.log(`📦 Actividades cargadas desde UNIFIED_DATABASE: ${activities.length}`);
       return activities;
     }
 
-    // Intentar obtener de database.js
+    // Último fallback: database.js (base legada, solo 12 actividades de Tokyo)
     try {
       const { UNIFIED_DATABASE } = await import('../../../data/database.js');
       if (UNIFIED_DATABASE) {
@@ -778,17 +840,6 @@ export const ActivityDayAssignment = {
       }
     } catch (error) {
       console.warn('⚠️ No se pudo cargar database.js');
-    }
-
-    // Intentar obtener de activities-database.js
-    try {
-      const { activities } = await import('../../../data/activities-database.js');
-      if (activities) {
-        console.log(`📦 Actividades cargadas desde activities-database.js: ${activities.length}`);
-        return activities;
-      }
-    } catch (error) {
-      console.warn('⚠️ No se pudo cargar activities-database.js');
     }
 
     console.error('❌ No se encontró ninguna base de datos de actividades');
