@@ -393,38 +393,13 @@ export const ActivityDayAssignment = {
 
     console.log('🛫 Aplicando reglas especiales para días 1 y último...');
 
-    // 🛬 ÚLTIMO DÍA: DEBE ESTAR COMPLETAMENTE VACÍO (solo aeropuerto)
-    if (lastDay && lastDay.activities && lastDay.activities.length > 0) {
-      console.log(`🛬 ÚLTIMO DÍA (${lastDay.day}): Vaciando completamente (${lastDay.activities.length} actividades a mover)`);
-
-      const movedActivities = [...lastDay.activities];
-      lastDay.activities = []; // ❗ VACIAR (se rellenará de vuelta si alguna no tiene destino seguro)
-
-      // Mover TODAS las actividades a días anteriores de la MISMA CIUDAD
-      movedActivities.forEach(activity => {
-        const targetDay = this.findLeastLoadedMiddleDay(itinerary, activity);
-
-        const activityCity = HotelBaseSystem.resolveActivityCity(activity);
-        const firstDayCity = firstDay.city || HotelBaseSystem.detectCityForDay(firstDay);
-
-        if (targetDay) {
-          targetDay.activities.push(activity);
-          console.log(`   ↪ "${activity.title || activity.name}" movida a Día ${targetDay.day}`);
-        } else if (!activityCity || (firstDayCity && String(activityCity).toLowerCase() === String(firstDayCity).toLowerCase())) {
-          // Solo es seguro caer al Día 1 si es la MISMA ciudad (o no se sabe la ciudad)
-          firstDay.activities.push(activity);
-          console.warn(`   ⚠️ "${activity.title || activity.name}" movida a Día 1 (no hay días intermedios de su ciudad)`);
-        } else {
-          // 🏙️ Ningún día (ni Día 1) comparte ciudad con esta actividad - es la ÚNICA
-          // ciudad del viaje que solo tiene este día. Preferible dejarla en el último día
-          // (rompe la regla "día de salida vacío") a mandarla a la ciudad equivocada.
-          lastDay.activities.push(activity);
-          console.warn(`   ⚠️ "${activity.title || activity.name}" (${activityCity}) se queda en el Día ${lastDay.day}: es la única ciudad del viaje sin otro día disponible.`);
-        }
-      });
-
-      console.log(`✅ Último día ${lastDay.day}: ${lastDay.activities.length} actividad(es) restante(s) tras intentar vaciarlo para salida`);
-    }
+    // NOTA: Antes había una regla que VACIABA COMPLETAMENTE el último día ("solo
+    // aeropuerto"). Se eliminó porque asumía que el último día del viaje es siempre un
+    // día de puro traslado sin tiempo para nada más, lo cual no es cierto en la mayoría
+    // de los viajes reales (ej. un vuelo de tarde deja toda una mañana libre) y además
+    // le quitaba al usuario actividades que había planeado deliberadamente. La regla de
+    // "Máximo 2 actividades" más abajo ya cubre la idea de mantener el último día ligero,
+    // sin vaciarlo por completo.
 
     // 🛫 DÍA 1: Máximo 3 actividades (jetlag-friendly)
     if (firstDay && firstDay.activities.length > 0) {
