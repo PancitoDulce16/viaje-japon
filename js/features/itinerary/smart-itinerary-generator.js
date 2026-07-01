@@ -919,13 +919,42 @@ export const SmartItineraryGenerator = {
       cityData.days = Math.max(1, Math.round(totalDays * proportion)); // Mínimo 1 día
     });
 
+    // 🗂️ TOPE POR CONTENIDO DISPONIBLE: el scoring de arriba solo mira qué tan bien
+    // encajan los intereses del usuario con cada ciudad, sin considerar si esa ciudad
+    // tiene suficientes actividades REALES en la base de datos para sostener tantos
+    // días. Una ciudad pequeña (ej. Nara, ~10 actividades) puede tener un match de
+    // intereses altísimo y terminar con 4 días completos - imposible de llenar sin
+    // repetir "Parque de Nara" 3 veces. Limitar cada ciudad a ~5 actividades/día de
+    // contenido único disponible, y redistribuir cualquier día "liberado" a otras
+    // ciudades que aún tengan margen.
+    const ACTIVITIES_PER_DAY_ESTIMATE = 5;
+    cityScores.forEach(cityData => {
+      const cityKey = cityData.city.toLowerCase();
+      const availableCount = NEW_ACTIVITY_DATABASE[cityKey]?.length || 0;
+      if (availableCount === 0) return; // sin datos de esta ciudad, no limitar (mejor no bloquear que limitar mal)
+
+      const maxSustainableDays = Math.max(1, Math.ceil(availableCount / ACTIVITIES_PER_DAY_ESTIMATE));
+      if (cityData.days > maxSustainableDays) {
+        console.log(`📦 ${cityData.city}: reduciendo de ${cityData.days} a ${maxSustainableDays} días (solo ${availableCount} actividades disponibles en la BD)`);
+        cityData.days = maxSustainableDays;
+      }
+    });
+
     // Ajustar si la suma no coincide con totalDays
     let assignedDays = cityScores.reduce((sum, c) => sum + c.days, 0);
 
     while (assignedDays !== totalDays) {
       if (assignedDays < totalDays) {
-        // Agregar días a la ciudad con mayor score
-        const topCity = cityScores.reduce((max, c) => c.score > max.score ? c : max);
+        // Agregar días a la ciudad con mayor score que AÚN no llegó a su tope de contenido
+        const cityKey2 = (c) => c.city.toLowerCase();
+        const underCap = cityScores.filter(c => {
+          const availableCount = NEW_ACTIVITY_DATABASE[cityKey2(c)]?.length || 0;
+          if (availableCount === 0) return true; // sin dato de tope, no restringir
+          const maxSustainableDays = Math.max(1, Math.ceil(availableCount / ACTIVITIES_PER_DAY_ESTIMATE));
+          return c.days < maxSustainableDays;
+        });
+        const pool = underCap.length > 0 ? underCap : cityScores; // si TODAS llegaron a su tope, seguir repartiendo igual (mejor repetir que dejar días sin ciudad)
+        const topCity = pool.reduce((max, c) => c.score > max.score ? c : max);
         topCity.days++;
         assignedDays++;
       } else {
