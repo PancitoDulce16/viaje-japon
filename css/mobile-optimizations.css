@@ -43,9 +43,12 @@
    MEJORAS PARA FLOATING BUTTONS EN MÓVIL
    ======================================== */
 
-/* OCULTAR todos los floating buttons individuales en móvil */
+/* OCULTAR floating buttons individuales en móvil (clutter con el bottom
+   nav) - EXCEPTO #chatBtn: el chat grupal no tiene otro punto de entrada
+   en móvil (no es un tab de DashboardApp, es un modal independiente), así
+   que ocultarlo lo dejaba completamente inalcanzable. */
 @media (max-width: 768px) {
-    .floating-btn-container .floating-btn {
+    .floating-btn-container .floating-btn:not(#chatBtn) {
         display: none !important;
     }
 }

@@ -23,14 +23,21 @@ export const ChatHandler = {
     let container = document.querySelector('.floating-btn-container');
     if (!container) {
       container = document.createElement('div');
-      container.className = 'z-40 fixed flex flex-col gap-3 stagger-fade-in floating-btn-container';
-      // style inline (no clases bottom-24/right-8 de Tailwind): el runtime CDN de
-      // Tailwind no siempre genera la regla CSS para clases insertadas dinámicamente
-      // vía JS - ya pasó antes con otro componente esta sesión. bottom:96px en vez de
-      // 32px porque #main-fab-button ya ocupa esa esquina (bottom:20px, 60px alto) -
-      // con 32px quedaban exactamente superpuestos.
+      container.id = 'chatBtnContainer';
+      container.className = 'fixed flex flex-col gap-3 stagger-fade-in floating-btn-container';
+      // Posición base para desktop (sin bottom-nav): mobile-ux-enhanced.css
+      // sube #chatBtnContainer por encima del FAB vía @media (max-width:768px)
+      // con !important - un style inline no le puede ganar a eso, así que la
+      // posición real en móvil vive en ese CSS, no aquí.
       container.style.bottom = '96px';
       container.style.right = '32px';
+      // z-index inline, NO clase Tailwind "z-40": el runtime CDN de Tailwind
+      // no siempre genera la regla para clases insertadas dinámicamente vía
+      // JS (ya confirmado varias veces esta sesión) - sin el z-index real
+      // aplicado, el botón quedaba detrás del contenido de #dashboardTopSection
+      // (z-index:10 !important) y era intomable en cualquier tab con el hero
+      // visible.
+      container.style.zIndex = '9999';
       document.body.appendChild(container);
     }
 

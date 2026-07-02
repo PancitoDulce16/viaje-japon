@@ -127,6 +127,16 @@ html.dark .mobile-bottom-nav {
   #a11yButton {
     bottom: calc(var(--bottom-nav-height) + var(--safe-area-inset-bottom) + 12px) !important;
   }
+
+  /* 🔧 #chatBtnContainer (botón de chat grupal, único floating-btn que
+     mobile-optimizations.css deja visible en móvil) - sin esta regla queda
+     en bottom:20px/right:16px (ver .floating-btn-container ahí), justo
+     encima/superpuesto con #main-fab-button (mismo rincón, 60px de alto).
+     Lo sube por encima del FAB con el mismo patrón que #main-fab-button. */
+  #chatBtnContainer {
+    bottom: calc(var(--bottom-nav-height) + var(--safe-area-inset-bottom) + 84px) !important;
+    right: 20px !important;
+  }
 }
 
 .mobile-bottom-nav__items {
