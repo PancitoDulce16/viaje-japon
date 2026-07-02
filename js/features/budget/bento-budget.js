@@ -415,7 +415,23 @@ export const BentoBudget = {
         <input id="bentoAmount" type="number" inputmode="numeric" min="0" placeholder="0"
                class="w-full text-center text-4xl font-extrabold py-3 mb-1 bg-transparent border-b-2 border-gray-200 dark:border-gray-600 focus:border-pink-400 outline-none dark:text-white"
                oninput="document.getElementById('bentoUsdHint').textContent = this.value ? '~$' + Math.round(this.value / ${JPY_TO_USD}) + ' USD' : ''">
-        <div class="text-center text-xs text-gray-400 mb-4"><span>¥ yenes · </span><span id="bentoUsdHint"></span></div>
+        <div class="text-center text-xs text-gray-400 mb-3"><span>¥ yenes · </span><span id="bentoUsdHint"></span></div>
+
+        <!-- Montos rápidos: suman al valor actual (¥1000 + ¥500 = ¥1500) -->
+        <div class="flex justify-center gap-2 mb-4 flex-wrap">
+          ${[500, 1000, 3000, 10000].map(v => `
+            <button type="button"
+                    onclick="const i = document.getElementById('bentoAmount'); i.value = (parseInt(i.value) || 0) + ${v}; i.dispatchEvent(new Event('input'));"
+                    class="px-3 py-1.5 rounded-full text-sm font-bold bg-pink-50 dark:bg-gray-700 text-pink-600 dark:text-amber-300 border border-pink-200 dark:border-gray-600 hover:scale-105 transition">
+              +¥${v.toLocaleString()}
+            </button>
+          `).join('')}
+          <button type="button"
+                  onclick="const i = document.getElementById('bentoAmount'); i.value = ''; i.dispatchEvent(new Event('input')); i.focus();"
+                  class="px-3 py-1.5 rounded-full text-sm font-bold bg-gray-100 dark:bg-gray-700 text-gray-400 border border-gray-200 dark:border-gray-600 hover:scale-105 transition" title="Borrar monto">
+            ↺
+          </button>
+        </div>
 
         <div class="grid grid-cols-3 gap-2 mb-4">
           ${BENTO_COMPARTMENTS.map(c => `
