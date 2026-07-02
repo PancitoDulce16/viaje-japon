@@ -332,20 +332,20 @@ textarea::placeholder {
    BUTTONS - Botones con buen contraste
    ================================================================= */
 
-/* Botones primarios */
+/* Botones primarios.
+   OJO: antes esto también repintaba button.bg-red-600 y bg-green-600 de
+   AZUL "por contraste" — borraba el color semántico (rojo = peligro/SOS,
+   verde = confirmar) en toda la app. Blanco sobre red-600/green-600 ya
+   cumple contraste; no remapear. */
 .btn-primary,
-button.bg-blue-600,
-button.bg-red-600,
-button.bg-green-600 {
+button.bg-blue-600 {
     background-color: #2563eb;
     color: #ffffff;
     font-weight: 500;
 }
 
 .dark .btn-primary,
-.dark button.bg-blue-600,
-.dark button.bg-red-600,
-.dark button.bg-green-600 {
+.dark button.bg-blue-600 {
     background-color: #3b82f6;
     color: #ffffff;
 }

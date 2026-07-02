@@ -7,6 +7,7 @@ import { sanitizeForFirestore } from './itinerary-v3.js';
 import { ACTIVITIES_DATABASE } from '../../../data/activities-database.js';
 import { getAirportByCode, getAirportSelectOptions } from '../../../data/japan-airports.js';
 import { YamanoteHelper } from './yamanote-helper.js';
+import { OsakaLoopHelper } from './osaka-loop-helper.js';
 
 // Icono representativo por ciudad (clave = key en ACTIVITIES_DATABASE)
 const CITY_ICONS = {
@@ -1273,12 +1274,14 @@ export const SmartGeneratorWizard = {
   renderStep3() {
     const selectedCities = this.wizardData.cities;
     const includesTokyo = selectedCities.some(c => c.toLowerCase() === 'tokyo');
+    const includesOsaka = selectedCities.some(c => c.toLowerCase() === 'osaka');
 
     return `
       <div class="space-y-6">
         <h3 class="text-xl font-bold text-gray-900 dark:text-white">🏨 Hoteles & Lugares Imperdibles</h3>
 
         ${includesTokyo ? YamanoteHelper.render() : ''}
+        ${includesOsaka ? OsakaLoopHelper.render() : ''}
 
         <!-- Hoteles por ciudad -->
         <div>
