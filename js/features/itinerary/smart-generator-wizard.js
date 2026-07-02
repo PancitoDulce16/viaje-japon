@@ -554,7 +554,7 @@ export const SmartGeneratorWizard = {
     this.wizardData.cityStops = this.wizardData.cityStops.filter(stop => cities.includes(stop.city));
     cities.forEach(city => {
       if (!this.wizardData.cityStops.some(stop => stop.city === city)) {
-        this.wizardData.cityStops.push({ city, days: null });
+        this.wizardData.cityStops.push({ city, days: null, isDayTrip: false });
       }
     });
   },
@@ -584,7 +584,8 @@ export const SmartGeneratorWizard = {
     const isBalanced = totalAssigned === totalDays;
 
     return `
-      <p class="text-xs text-gray-500 mb-2">Ordena tu ruta y, si quieres, repite una ciudad (ej. Tokyo → Kyoto → Osaka → Tokyo si vuelves antes del vuelo de salida).</p>
+      <p class="text-xs text-gray-500 mb-1">Ordena tu ruta y, si quieres, repite una ciudad (ej. Tokyo → Kyoto → Osaka → Tokyo si vuelves antes del vuelo de salida).</p>
+      <p class="text-xs text-gray-500 mb-2">💡 El día que viajas de una ciudad a otra ya cuenta como el primer día en la ciudad de destino - no le sumes un día aparte solo por el traslado. Para un day trip (ej. Nara desde Kyoto sin cambiar de hotel) marca esa parada como "excursión" en vez de agregarla como ciudad nueva.</p>
       <div id="cityStopsList" class="space-y-2 mb-3">
         ${stops.map((stop, idx) => this.renderCityStopRow(stop, idx)).join('')}
       </div>
@@ -608,20 +609,33 @@ export const SmartGeneratorWizard = {
    */
   renderCityStopRow(stop, idx) {
     const icon = CITY_ICONS[stop.city.toLowerCase()] || '📍';
+    // 🆕 Day trip: excursión de un día a otra ciudad SIN cambiar de hotel (ej. Nara
+    // desde Kyoto). No tiene sentido en la primera parada (no hay hotel previo del
+    // que salir), así que el toggle solo aparece a partir de la segunda.
+    const canBeDayTrip = idx > 0;
     return `
-      <div class="flex items-center gap-2 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-        <span class="text-xs text-gray-400 w-5">${idx + 1}.</span>
-        <span class="text-lg">${icon}</span>
-        <span class="flex-1 font-medium text-gray-700 dark:text-gray-200 text-sm">${stop.city}</span>
-        <input type="number" min="1" max="30" value="${stop.days ?? ''}" placeholder="días"
-          onchange="window.SmartGeneratorWizard.setCityStopDays(${idx}, this.value)"
-          class="w-16 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-800 dark:text-white text-center">
-        <button type="button" onclick="window.SmartGeneratorWizard.moveCityStop(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}
-          class="p-1 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed">▲</button>
-        <button type="button" onclick="window.SmartGeneratorWizard.moveCityStop(${idx}, 1)" ${idx === this.wizardData.cityStops.length - 1 ? 'disabled' : ''}
-          class="p-1 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed">▼</button>
-        <button type="button" onclick="window.SmartGeneratorWizard.removeCityStop(${idx})"
-          class="p-1 text-red-500 hover:text-red-700">✕</button>
+      <div class="border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50 ${stop.isDayTrip ? 'border-l-4 border-l-amber-400' : ''}">
+        <div class="flex items-center gap-2 p-2">
+          <span class="text-xs text-gray-400 w-5">${idx + 1}.</span>
+          <span class="text-lg">${icon}</span>
+          <span class="flex-1 font-medium text-gray-700 dark:text-gray-200 text-sm">${stop.city}${stop.isDayTrip ? ' <span class="text-xs font-normal text-amber-600 dark:text-amber-400">(excursión)</span>' : ''}</span>
+          <input type="number" min="1" max="30" value="${stop.days ?? ''}" placeholder="días"
+            onchange="window.SmartGeneratorWizard.setCityStopDays(${idx}, this.value)"
+            class="w-16 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-800 dark:text-white text-center">
+          <button type="button" onclick="window.SmartGeneratorWizard.moveCityStop(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}
+            class="p-1 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed">▲</button>
+          <button type="button" onclick="window.SmartGeneratorWizard.moveCityStop(${idx}, 1)" ${idx === this.wizardData.cityStops.length - 1 ? 'disabled' : ''}
+            class="p-1 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed">▼</button>
+          <button type="button" onclick="window.SmartGeneratorWizard.removeCityStop(${idx})"
+            class="p-1 text-red-500 hover:text-red-700">✕</button>
+        </div>
+        ${canBeDayTrip ? `
+          <label class="flex items-center gap-2 px-2 pb-2 text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
+            <input type="checkbox" ${stop.isDayTrip ? 'checked' : ''}
+              onchange="window.SmartGeneratorWizard.setCityStopDayTrip(${idx}, this.checked)">
+            Es un day trip (excursión sin cambiar de hotel - se queda en el hotel de "${this.wizardData.cityStops[idx - 1]?.city || 'la parada anterior'}")
+          </label>
+        ` : ''}
       </div>
     `;
   },
@@ -631,7 +645,17 @@ export const SmartGeneratorWizard = {
    * volver a una ciudad ya visitada, ej. Tokyo -> Kyoto -> Tokyo).
    */
   addCityStop(city) {
-    this.wizardData.cityStops.push({ city, days: null });
+    this.wizardData.cityStops.push({ city, days: null, isDayTrip: false });
+    this.saveToSessionStorage();
+    this.refreshCityStopsBuilder();
+  },
+
+  /**
+   * 🆕 Marca/desmarca una parada como day trip (excursión de un día sin cambiar
+   * de hotel - usa el hotel de la parada anterior en vez de pedir uno propio).
+   */
+  setCityStopDayTrip(idx, isDayTrip) {
+    this.wizardData.cityStops[idx].isDayTrip = isDayTrip;
     this.saveToSessionStorage();
     this.refreshCityStopsBuilder();
   },

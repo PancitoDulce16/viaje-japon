@@ -135,46 +135,33 @@ class GlobalSearch {
       { type: 'command', name: 'Health Dashboard', keywords: 'salud health itinerario', icon: '🏥', action: () => window.HealthDashboard?.toggle() }
     );
 
-    // Lugares comunes de Japón
-    const places = [
-      'Senso-ji Temple', 'Shibuya Crossing', 'Tokyo Skytree', 'Meiji Jingu',
-      'Fushimi Inari', 'Kinkakuji', 'Osaka Castle', 'Dotonbori',
-      'Nara Park', 'Mount Fuji', 'Kyoto', 'Tokyo', 'Osaka', 'Hokkaido'
-    ];
-
-    places.forEach(place => {
-      this.searchIndex.push({
-        type: 'place',
-        name: place,
-        keywords: place.toLowerCase(),
-        icon: '📍',
-        action: () => {
-          this.close();
-          if (window.showToast) {
-            window.showToast(`Buscando "${place}" en tu itinerario...`, 'info');
-          }
-        }
+    // 🔧 Antes esto era una lista fija de ~14 lugares y 7 comidas hardcodeadas,
+    // cuya acción era solo mostrar un toast que decía "buscando..." sin buscar ni
+    // navegar a ningún lado - no reflejaba el itinerario real del usuario y no
+    // servía para nada útil. Ahora indexa las actividades REALES del itinerario
+    // actual (nombre, día, categoría) y el click te lleva directo a ese día.
+    const itinerary = window.getCurrentItinerary?.();
+    if (itinerary?.days) {
+      itinerary.days.forEach(day => {
+        (day.activities || []).forEach(activity => {
+          const name = activity.title || activity.name;
+          if (!name) return;
+          this.searchIndex.push({
+            type: 'actividad',
+            name: name,
+            keywords: `${name} ${activity.category || ''} ${day.city || ''} dia ${day.day}`.toLowerCase(),
+            icon: activity.isMeal ? '🍜' : '📍',
+            action: () => {
+              this.close();
+              window.DashboardApp?.switchTab('itinerary');
+              window.selectDay?.(day.day);
+            }
+          });
+        });
       });
-    });
+    }
 
-    // Tipos de comida
-    const foods = ['Ramen', 'Sushi', 'Tempura', 'Takoyaki', 'Okonomiyaki', 'Udon', 'Tonkatsu'];
-    foods.forEach(food => {
-      this.searchIndex.push({
-        type: 'food',
-        name: food,
-        keywords: food.toLowerCase() + ' comida restaurante',
-        icon: '🍜',
-        action: () => {
-          this.close();
-          if (window.showToast) {
-            window.showToast(`Buscando restaurantes de ${food}...`, 'info');
-          }
-        }
-      });
-    });
-
-    console.log(`🔍 Search index built: ${this.searchIndex.length} items`);
+    console.log(`🔍 Search index built: ${this.searchIndex.length} items (${itinerary?.days ? 'con itinerario real' : 'sin itinerario cargado todavía'})`);
   }
 
   /**
@@ -276,6 +263,10 @@ class GlobalSearch {
     const input = document.getElementById('global-search-input');
 
     if (container && input) {
+      // El índice se construyó una vez al cargar la página, cuando normalmente
+      // todavía no hay ningún viaje/itinerario cargado - reconstruirlo acá para
+      // que siempre refleje las actividades reales del viaje actual.
+      this.buildSearchIndex();
       container.classList.remove('hidden');
       setTimeout(() => input.focus(), 100);
       this.isOpen = true;

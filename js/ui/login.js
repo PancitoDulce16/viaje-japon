@@ -71,15 +71,22 @@ class LoginManager {
             this.showLoading('Iniciando sesión...');
             
             const user = await AuthHandler.signIn(email, password);
-            
+
             if (user) {
                 console.log('✅ Login exitoso:', user.email);
                 Notifications.show('¡Bienvenido! Redirigiendo al dashboard...', 'success');
-                
+
                 // Redirigir al dashboard después de un breve delay
                 setTimeout(() => {
                     this.redirectToDashboard();
                 }, 1500);
+            } else {
+                // 🔧 AuthHandler.signIn() atrapa sus propios errores (credenciales
+                // incorrectas, cuenta inexistente, etc.) y devuelve null en vez de
+                // lanzar - ya mostró su propio mensaje de error, pero el overlay de
+                // "Iniciando sesión..." de ESTA página seguía sin quitarse nunca,
+                // dejando al usuario viendo un spinner colgado para siempre.
+                this.hideLoading();
             }
         } catch (error) {
             console.error('❌ Error en login:', error);
@@ -113,15 +120,19 @@ class LoginManager {
             this.showLoading('Creando cuenta...');
             
             const user = await AuthHandler.signUp(email, password);
-            
+
             if (user) {
                 console.log('✅ Registro exitoso:', user.email);
                 Notifications.show('¡Cuenta creada exitosamente! Redirigiendo al dashboard...', 'success');
-                
+
                 // Redirigir al dashboard después de un breve delay
                 setTimeout(() => {
                     this.redirectToDashboard();
                 }, 1500);
+            } else {
+                // Mismo problema que en handleLogin: AuthHandler.signUp() devuelve
+                // null en vez de lanzar cuando falla.
+                this.hideLoading();
             }
         } catch (error) {
             console.error('❌ Error en registro:', error);
@@ -134,15 +145,21 @@ class LoginManager {
             this.showLoading('Iniciando sesión con Google...');
             
             const user = await AuthHandler.loginWithGoogle();
-            
+
             if (user) {
                 console.log('✅ Login con Google exitoso:', user.email);
                 Notifications.show('¡Bienvenido! Redirigiendo al dashboard...', 'success');
-                
+
                 // Redirigir al dashboard después de un breve delay
                 setTimeout(() => {
                     this.redirectToDashboard();
                 }, 1500);
+            } else {
+                // Mismo problema que en handleLogin: AuthHandler.loginWithGoogle()
+                // devuelve null en vez de lanzar cuando falla (popup cerrado,
+                // bloqueado, etc.) - y además ya limpia su propio loading overlay
+                // (showAuthLoading/hideAuthLoading), pero no el de esta página.
+                this.hideLoading();
             }
         } catch (error) {
             console.error('❌ Error en login con Google:', error);

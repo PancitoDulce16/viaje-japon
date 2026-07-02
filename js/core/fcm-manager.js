@@ -31,6 +31,16 @@ export const FCMManager = {
             return;
         }
 
+        // 🔧 vapidKey todavía es el placeholder de ejemplo - sin una clave VAPID real
+        // (Firebase Console > Configuración del proyecto > Cloud Messaging > Certificados
+        // push web), getToken() siempre va a fallar. Cortar acá con un mensaje claro en
+        // vez de dejar que el usuario vea un stack trace de Firebase sin contexto.
+        if (!this.vapidKey || this.vapidKey.includes('YOUR_VAPID_KEY_HERE')) {
+            console.warn('⚠️ Notificaciones push no configuradas todavía (falta la VAPID key real de Firebase Console).');
+            Notifications.info('🔔 Las notificaciones push aún no están configuradas para este proyecto.', 5000);
+            return;
+        }
+
         console.log('🙏 Solicitando permiso para notificaciones...');
         try {
             const permission = await Notification.requestPermission();

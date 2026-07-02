@@ -652,10 +652,10 @@ export const SmartItineraryGenerator = {
         tags: ['Hiking', 'Aventura', 'Deportes', 'Activo']
       },
       balanced: {
-        icon: '⚖️', name: 'Experiencia Completa',
-        description: 'Mix equilibrado de todo lo mejor',
-        interests: userInterests, // Usar todos los intereses del usuario
-        tags: ['Equilibrado', 'Variado', 'Completo', 'Recomendado']
+        icon: '✨', name: 'Basado en tus gustos exactos',
+        description: 'Usa exactamente los intereses (y sus prioridades) que elegiste, sin sustituir nada',
+        interests: userInterests, // Usar todos los intereses del usuario, tal cual los eligió
+        tags: ['Tus intereses', 'Tus prioridades', 'Recomendado']
       }
     };
 
@@ -737,13 +737,16 @@ export const SmartItineraryGenerator = {
     // Ordenar por score descendente
     scores.sort((a, b) => b.matchScore - a.matchScore);
 
-    // Tomar top 2 + balanced
+    // 🆕 La variación basada en tus gustos EXACTOS va primero - las otras dos son
+    // reinterpretaciones creativas con arquetipos predefinidos, no lo que el
+    // usuario realmente pidió. Antes iba al final y con un nombre genérico
+    // ("Experiencia Completa"), fácil de confundir con "otra plantilla más".
     const top2 = scores.slice(0, 2);
-    const result = [...top2, templates.balanced];
+    const result = [templates.balanced, ...top2];
 
     // Si no hay buenos matches, usar defaults
     if (top2.every(v => v.matchScore === 0)) {
-      return [templates.cultural, templates.foodie, templates.balanced];
+      return [templates.balanced, templates.cultural, templates.foodie];
     }
 
     return result;
@@ -806,7 +809,7 @@ export const SmartItineraryGenerator = {
     // permite repetir ciudad - ej. Tokyo -> Kyoto -> Osaka -> Tokyo), se respeta tal
     // cual sin pasar por el scoring automático. Si no, se reparte por intereses.
     const cityDistribution = (cityStops && cityStops.length > 0)
-      ? cityStops.map(stop => ({ city: stop.city, days: stop.days }))
+      ? cityStops.map(stop => ({ city: stop.city, days: stop.days, isDayTrip: !!stop.isDayTrip }))
       : this.distributeDaysAcrossCities(cities, totalDays, interests, interestWeights);
 
     // 🛬🛫 Ordenar la ruta automática según los aeropuertos: el día 1 (jetlag)
@@ -842,11 +845,16 @@ export const SmartItineraryGenerator = {
     };
 
     let currentDayNumber = 1;
+    let lastRealHotel = null; // 🆕 último hotel de una parada NO day-trip (para excursiones)
 
     // Generar días para cada ciudad
     for (const cityAllocation of cityDistribution) {
-      const { city, days: daysInCity } = cityAllocation;
-      const hotel = hotels[city.toLowerCase()] || null;
+      const { city, days: daysInCity, isDayTrip } = cityAllocation;
+      // 🆕 Day trip (excursión de un día, ej. Nara desde Kyoto): no tiene hotel
+      // propio, se queda en el de la parada anterior - así que el punto de partida
+      // de las rutas de ese día sigue siendo el hotel real donde se está durmiendo.
+      const hotel = isDayTrip ? lastRealHotel : (hotels[city.toLowerCase()] || null);
+      if (!isDayTrip) lastRealHotel = hotel;
 
       for (let dayInCity = 1; dayInCity <= daysInCity; dayInCity++) {
         const isArrivalDay = currentDayNumber === 1;
@@ -868,6 +876,7 @@ export const SmartItineraryGenerator = {
           isArrivalDay: isArrivalDay,
           isDepartureDay: isDepartureDay,
           isFirstDayInCity: isFirstDayInCity,
+          isDayTrip: !!isDayTrip, // 🆕 excursión de un día, sin hotel propio
           mustSee: mustSee.filter(m => m.city === city),
           avoid: avoid,
           googlePlacesAPI: window.GooglePlacesAPI,
@@ -1059,6 +1068,7 @@ export const SmartItineraryGenerator = {
       isArrivalDay,
       isDepartureDay,
       isFirstDayInCity,
+      isDayTrip = false, // 🆕 excursión de un día sin hotel propio (ej. Nara desde Kyoto)
       mustSee,
       avoid,
       googlePlacesAPI,
@@ -1467,6 +1477,7 @@ export const SmartItineraryGenerator = {
       day: dayNumber,
       date: '',
       title: lateArrival ? `Llegada a ${city} (noche) - Directo al hotel` :
+             isDayTrip ? `🚃 Excursión a ${city}` :
              isArrivalDay ? `Llegada a ${city}` :
              isFirstDayInCity ? `Primer día en ${city}` :
              isDepartureDay ? `Último día - Regreso` :
@@ -1474,6 +1485,7 @@ export const SmartItineraryGenerator = {
              `Explorando ${city}`,
       city: city,
       cities: [{ cityId: city }],
+      isDayTrip: isDayTrip, // 🆕 excursión de un día sin hotel propio
       lateArrival: lateArrival, // 🆕 día 1 con llegada nocturna: balanceEmptyDays no debe rellenarlo
       budget: dailyBudget,
       budgetBreakdown: budgetBreakdown, // 💰 NUEVO: Presupuesto detallado

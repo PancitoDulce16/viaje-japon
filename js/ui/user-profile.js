@@ -1,7 +1,7 @@
 ﻿// js/user-profile.js - Sistema de perfiles de usuario con foto, bio y stats
 
 import { auth, db, storage } from '../core/firebase-config.js';
-import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp, collection, getDocs, query, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updateProfile } from 'firebase/auth';
 
@@ -299,8 +299,14 @@ export const UserProfile = {
         if (!container) return;
 
         if (window.GamificationSystem) {
-            container.innerHTML = '<div id="gamification-container"></div>';
-            window.GamificationSystem.renderPanel('gamification-container');
+            // renderGamificationPanel() devuelve el HTML directamente (no inyecta
+            // solo, ni acepta un id de contenedor) - renderPanel() nunca existió.
+            container.innerHTML = window.GamificationSystem.renderGamificationPanel() || `
+                <div class="text-center py-8">
+                    <div class="text-4xl mb-3">🎮</div>
+                    <p class="text-gray-600 dark:text-gray-400">Aún no hay datos de progreso para este viaje.</p>
+                </div>
+            `;
         } else {
             container.innerHTML = `
                 <div class="text-center py-8">
@@ -331,28 +337,27 @@ export const UserProfile = {
             let latestAchievements = [];
 
             if (tripId) {
-                // Photos count
-                const photosRef = doc(db, `trips/${tripId}/photos`);
+                // Photos count - trips/{tripId}/photos es una SUBCOLECCIÓN (un doc por
+                // foto, ver photo-gallery.js), no un documento único con un mapa adentro.
+                // doc(db, 'trips/{tripId}/photos') con 3 segmentos era una referencia de
+                // documento inválida (siempre necesita un número PAR de segmentos) -
+                // crasheaba con "Invalid document reference" antes de este fix.
                 try {
-                    const photosSnap = await getDoc(photosRef);
-                    if (photosSnap.exists()) {
-                        const photosData = photosSnap.data();
-                        photosUploaded = Object.keys(photosData).filter(key => photosData[key]?.userId === userId).length;
-                    }
+                    const photosQuery = query(collection(db, 'trips', tripId, 'photos'), where('userId', '==', userId));
+                    const photosSnap = await getDocs(photosQuery);
+                    photosUploaded = photosSnap.size;
                 } catch (e) {
-                    // Collection might not exist yet
+                    // Colección podría no existir todavía
                 }
 
-                // Journal entries count
-                const journalRef = doc(db, `trips/${tripId}/journal`);
+                // Journal entries count - misma corrección, trips/{tripId}/journal
+                // también es una subcolección (ver travel-journal.js).
                 try {
-                    const journalSnap = await getDoc(journalRef);
-                    if (journalSnap.exists()) {
-                        const journalData = journalSnap.data();
-                        journalEntries = Object.keys(journalData).filter(key => journalData[key]?.userId === userId).length;
-                    }
+                    const journalQuery = query(collection(db, 'trips', tripId, 'journal'), where('userId', '==', userId));
+                    const journalSnap = await getDocs(journalQuery);
+                    journalEntries = journalSnap.size;
                 } catch (e) {
-                    // Collection might not exist yet
+                    // Colección podría no existir todavía
                 }
 
                 // Achievements

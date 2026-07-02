@@ -4119,6 +4119,12 @@ window.insertMealSuggestion = insertMealSuggestion;
 window.closeGapFillerModal = closeGapFillerModal;
 window.insertGapFiller = insertGapFiller;
 
+// 🔍 Getter para que módulos externos (ej. global-search.js) lean el
+// itinerario actual sin acoplarse por import - currentItinerary es una
+// variable de módulo, no estaba expuesta de ninguna forma.
+window.getCurrentItinerary = () => currentItinerary;
+window.selectDay = selectDay;
+
 // ========================================
 // 👥 CROWD DETECTOR INTEGRATION FUNCTIONS
 // ========================================
