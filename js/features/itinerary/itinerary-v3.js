@@ -4131,7 +4131,20 @@ function renderDayCrowdAnalysisCollapsible(day) {
         return '';
     }
 
-    const startDate = window.TimeUtils.parseDate(currentItinerary.startDate);
+    // currentItinerary.startDate nunca se setea en ningún lado (es un documento
+    // separado de trips/{tripId}/data/itinerary) - la fecha real de inicio vive en
+    // el documento del viaje (currentTrip.info.dateStart), igual que en el header
+    // de arriba (línea ~1167). Sin este fallback, el análisis de multitudes nunca
+    // funcionaba (crasheaba antes de este fix).
+    const startDate = window.TimeUtils.parseDate(
+        currentItinerary.startDate || window.TripsManager?.currentTrip?.info?.dateStart
+    );
+    if (!startDate) {
+        // Ni el itinerario ni el viaje tienen fecha de inicio - no se puede saber
+        // en qué fecha real cae este día, así que simplemente no se muestra el
+        // análisis en vez de crashear el render del día.
+        return '';
+    }
     const dayDate = new Date(startDate);
     dayDate.setDate(startDate.getDate() + (day.day - 1));
 
@@ -4194,7 +4207,12 @@ function renderActivityCrowdBadge(day, activity) {
         return '';
     }
 
-    const startDate = window.TimeUtils.parseDate(currentItinerary.startDate);
+    const startDate = window.TimeUtils.parseDate(
+        currentItinerary.startDate || window.TripsManager?.currentTrip?.info?.dateStart
+    );
+    if (!startDate) {
+        return '';
+    }
     const dayDate = new Date(startDate);
     dayDate.setDate(startDate.getDate() + (day.day - 1));
 
@@ -4209,8 +4227,13 @@ function renderTripCrowdBadge() {
         return '';
     }
 
-    const startDate = currentItinerary.startDate;
-    const endDate = currentItinerary.endDate;
+    // Mismo problema que en renderDayCrowdAnalysisCollapsible: currentItinerary.startDate/
+    // endDate nunca se setean, la fecha real vive en el documento del viaje.
+    const startDate = currentItinerary.startDate || window.TripsManager?.currentTrip?.info?.dateStart;
+    const endDate = currentItinerary.endDate || window.TripsManager?.currentTrip?.info?.dateEnd;
+    if (!startDate || !endDate) {
+        return '';
+    }
 
     const badgeHTML = window.crowdDetectorUI.generateTripCrowdBadge(startDate, endDate);
 
