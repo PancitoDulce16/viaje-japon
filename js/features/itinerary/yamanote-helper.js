@@ -91,10 +91,33 @@ export const YamanoteHelper = {
       const dy = p.sin > 0.3 ? -2 : (p.sin < -0.3 ? 9 : 4);
 
       if (st.recommended) {
+        // 🎯 El hit-target real no puede ser solo un círculo chico centrado en el
+        // punto: el label de texto queda desplazado hacia afuera (lx/ly, en
+        // dirección `anchor`), así que el centro visual "estación + nombre" que un
+        // usuario espera poder tocar casi nunca coincide con el centro del punto.
+        // Se construye un <rect> invisible que cubre la unión de ambas áreas (punto
+        // + texto estimado), en vez de un círculo pequeño que deja un "hueco muerto"
+        // entre el punto y su etiqueta - confirmado con Playwright que ese hueco
+        // efectivamente no dispara el click en un navegador real.
+        const textWidthEstimate = st.name.length * 7 + 4; // ~7px/carácter a font-size 12 bold
+        let textLeft, textRight;
+        if (anchor === 'start') { textLeft = lx; textRight = lx + textWidthEstimate; }
+        else if (anchor === 'end') { textLeft = lx - textWidthEstimate; textRight = lx; }
+        else { textLeft = lx - textWidthEstimate / 2; textRight = lx + textWidthEstimate / 2; }
+        const textTop = ly + dy - 11;
+        const textBottom = ly + dy + 4;
+
+        const hitLeft = Math.min(p.x - 14, textLeft - 4);
+        const hitRight = Math.max(p.x + 14, textRight + 4);
+        const hitTop = Math.min(p.y - 14, textTop);
+        const hitBottom = Math.max(p.y + 14, textBottom);
+
         return `
           <g class="yamanote-station cursor-pointer" data-station="${st.id}"
              onclick="window.YamanoteHelper.selectStation('${st.id}')">
-            <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="12" fill="transparent"/>
+            <rect x="${hitLeft.toFixed(1)}" y="${hitTop.toFixed(1)}"
+                  width="${(hitRight - hitLeft).toFixed(1)}" height="${(hitBottom - hitTop).toFixed(1)}"
+                  fill="transparent"/>
             <circle class="station-dot" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="7"
                     fill="white" stroke="#059669" stroke-width="3.5"/>
             <text x="${lx.toFixed(1)}" y="${(ly + dy).toFixed(1)}" text-anchor="${anchor}"
