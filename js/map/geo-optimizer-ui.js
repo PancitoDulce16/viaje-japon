@@ -120,7 +120,7 @@ class GeoOptimizerUI {
                 />
                 <div class="flex-1">
                   <div class="font-semibold">
-                    Día ${index + 1}${day.date ? ` - ${new Date(day.date).toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' })}` : ''}
+                    Día ${index + 1}${day.date ? ` - ${window.TimeUtils.formatDate(day.date, { weekday: 'short', day: 'numeric', month: 'short' })}` : ''}
                   </div>
                   <div class="text-sm text-gray-600 dark:text-gray-400">
                     ${day.activities ? day.activities.length : 0} actividades

@@ -375,8 +375,14 @@ export function handleError(error, context = '') {
  * Formateo de fechas
  */
 export const DateFormatter = {
+    // window.TimeUtils.parseDate interpreta 'YYYY-MM-DD' como fecha local;
+    // new Date() la tomaría como UTC y correría un día en América
+    _parse(date) {
+        return window.TimeUtils?.parseDate(date) || new Date(date);
+    },
+
     toLocaleDateString(date, locale = 'es') {
-        return new Date(date).toLocaleDateString(locale, {
+        return this._parse(date).toLocaleDateString(locale, {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
@@ -384,7 +390,7 @@ export const DateFormatter = {
     },
 
     toShortDate(date, locale = 'es') {
-        return new Date(date).toLocaleDateString(locale, {
+        return this._parse(date).toLocaleDateString(locale, {
             month: 'short',
             day: 'numeric'
         });

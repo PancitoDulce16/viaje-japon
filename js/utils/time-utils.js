@@ -184,6 +184,63 @@ const TimeUtils = {
   getCurrentTimeInMinutes() {
     const now = new Date();
     return now.getHours() * 60 + now.getMinutes();
+  },
+
+  /**
+   * Parses a date value as LOCAL time.
+   *
+   * new Date('YYYY-MM-DD') is parsed as UTC midnight, which shifts one day
+   * BACK when displayed in negative-offset timezones (America/*). This parses
+   * date-only strings as local midday, which is DST-safe and never shifts.
+   *
+   * @param {string|Date|number} value - 'YYYY-MM-DD', Date, or timestamp
+   * @returns {Date|null} Local Date, or null if invalid
+   */
+  parseDate(value) {
+    if (value === null || value === undefined || value === '') return null;
+    if (value instanceof Date) return isNaN(value) ? null : new Date(value);
+    if (typeof value === 'string') {
+      const m = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (m) return new Date(+m[1], +m[2] - 1, +m[3], 12, 0, 0);
+    }
+    const d = new Date(value);
+    return isNaN(d) ? null : d;
+  },
+
+  /**
+   * Formats a date value for display, parsing date-only strings as local time
+   * @param {string|Date|number} value - Date value ('YYYY-MM-DD' safe)
+   * @param {object} options - toLocaleDateString options
+   * @param {string} locale - Locale (default 'es-ES')
+   * @returns {string} Formatted date or '' if invalid
+   */
+  formatDate(value, options = { day: 'numeric', month: 'short', year: 'numeric' }, locale = 'es-ES') {
+    const d = this.parseDate(value);
+    return d ? d.toLocaleDateString(locale, options) : '';
+  },
+
+  /**
+   * Formats a Date as local 'YYYY-MM-DD' (no UTC shift, unlike toISOString)
+   * @param {string|Date|number} value - Date value
+   * @returns {string} 'YYYY-MM-DD' or '' if invalid
+   */
+  toISODate(value) {
+    const d = this.parseDate(value);
+    if (!d) return '';
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  },
+
+  /**
+   * Whole-day difference between two date values (b - a), parsing local
+   * @returns {number} Days difference (positive if b is after a)
+   */
+  daysBetween(a, b) {
+    const da = this.parseDate(a);
+    const db = this.parseDate(b);
+    if (!da || !db) return 0;
+    da.setHours(12, 0, 0, 0);
+    db.setHours(12, 0, 0, 0);
+    return Math.round((db - da) / (1000 * 60 * 60 * 24));
   }
 };
 

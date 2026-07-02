@@ -1160,11 +1160,11 @@ function renderTripSelector(){
   const currentTrip=window.TripsManager?.currentTrip; if(!currentTrip){ container.innerHTML=''; return; }
   const userTrips=window.TripsManager?.userTrips||[];
   container.innerHTML = `
-    <div class="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-6 rounded-xl mb-6 shadow-lg">
+    <div class="trip-header-banner text-white p-6 rounded-xl mb-6 shadow-lg">
       <!-- Banner centrado y grande sin icono -->
       <div class="text-center mb-4">
         <h3 class="font-bold text-3xl mb-2">${currentTrip.info.name}</h3>
-        <p class="text-sm text-white/90">📅 ${new Date(currentTrip.info.dateStart).toLocaleDateString('es')} - ${new Date(currentTrip.info.dateEnd).toLocaleDateString('es')} • 👥 ${currentTrip.info.tripType === 'individual' ? 'Viaje Individual' : 'Viaje Grupal'}</p>
+        <p class="text-sm text-white/90">📅 ${window.TimeUtils.formatDate(currentTrip.info.dateStart)} - ${window.TimeUtils.formatDate(currentTrip.info.dateEnd)} • 👥 ${currentTrip.info.tripType === 'individual' ? 'Viaje Individual' : 'Viaje Grupal'}</p>
         <div class="mt-2">${renderTripCrowdBadge()}</div>
       </div>
 
@@ -2370,32 +2370,30 @@ function renderActivities(day){
     const normalizedName = (act.name && act.name !== 'undefined' && act.name !== 'null') ? act.name : null;
     const activityTitle = normalizedTitle || normalizedName || 'Sin título';
 
+    // Los generadores usan nombres de campo distintos (price/description/
+    // categoryIcon vs cost/desc/icon) — normalizar aquí para que la tarjeta
+    // muestre toda la info disponible
+    const actIcon = act.icon || act.categoryIcon || '📍';
+    const actCost = (act.cost ?? act.price);
+    const actDesc = act.desc || act.description || '';
+    const actDuration = typeof act.duration === 'number'
+      ? window.TimeUtils.formatDuration(act.duration)
+      : (act.duration || '');
+    const actCategory = act.categoryName || '';
+
     // Agregar la actividad
     activitiesHTML.push(`
     <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden fade-in transition-all hover:shadow-xl border-l-4 border-purple-500 dark:border-purple-400 ${checkedActivities[act.id]?'opacity-60':''}" style="animation-delay:${i*0.05}s">
-      <div class="p-5 flex items-start gap-4">
+      <div class="p-3 sm:p-4 flex items-start gap-2 sm:gap-4">
         <div class="flex flex-col gap-2 items-center">
           <div class="drag-handle text-gray-400 dark:text-gray-500 text-xs cursor-grab active:cursor-grabbing" title="Arrastra para reordenar">⋮⋮</div>
           <input type="checkbox" data-id="${act.id}" ${checkedActivities[act.id]?'checked':''} class="activity-checkbox w-5 h-5 cursor-pointer accent-purple-600 flex-shrink-0" />
         </div>
-        <div class="bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 p-3 rounded-lg text-2xl flex-shrink-0">${act.icon||'📍'}</div>
+        <div class="hidden sm:flex bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 p-3 rounded-lg text-2xl flex-shrink-0">${actIcon}</div>
         <div class="flex-1 min-w-0">
-          <div class="flex justify-between items-start">
-            <div>
-              <div class="flex items-center gap-2 mb-1 flex-wrap">
-                <span class="text-xs font-semibold text-gray-500 dark:text-gray-200">${act.time && act.time !== 'NaN:NaN' && !act.time.includes('NaN') ? act.time : '09:00'}</span>
-                ${act.cost>0?`<span class="text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-white px-2 py-1 rounded font-semibold">¥${Number(act.cost).toLocaleString()}</span>`:''}
-              </div>
-              <h3 class="text-lg font-bold dark:text-white mb-1">${activityTitle}</h3>
-              ${renderActivityCrowdBadge(day, act)}
-              ${act.photographyInfo ? `
-                <div class="inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50 rounded-full text-xs font-semibold text-purple-700 dark:text-purple-300">
-                  <span>📸</span>
-                  <span>${act.photographyInfo.name}</span>
-                </div>
-              ` : ''}
-            </div>
-            <div class="flex gap-2 flex-shrink-0">
+          <div class="flex justify-between items-start gap-2">
+            <h3 class="text-lg font-bold dark:text-white mb-1 min-w-0"><span class="sm:hidden">${actIcon} </span>${activityTitle}</h3>
+            <div class="flex gap-1 flex-shrink-0">
               ${act.alternatives && act.alternatives.length > 0 ? `
                 <button
                   type="button"
@@ -2422,12 +2420,29 @@ function renderActivities(day){
               <button type="button" data-action="delete" data-activity-id="${act.id}" data-day="${day.day}" class="activity-delete-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition">🗑️</button>
             </div>
           </div>
-          <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">${act.desc||''}</p>
+          <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+            <span class="text-xs font-bold text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/40 px-2 py-1 rounded whitespace-nowrap">🕐 ${act.time && act.time !== 'NaN:NaN' && !act.time.includes('NaN') ? act.time : '09:00'}</span>
+            ${actDuration?`<span class="text-xs bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 px-2 py-1 rounded font-semibold whitespace-nowrap">⏱️ ${actDuration}</span>`:''}
+            ${actCost>0?`<span class="text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-white px-2 py-1 rounded font-semibold whitespace-nowrap">¥${Number(actCost).toLocaleString()}</span>`:''}
+            ${actCost===0?`<span class="text-xs bg-green-50 dark:bg-green-900/40 text-green-600 dark:text-green-300 px-2 py-1 rounded font-semibold whitespace-nowrap">Gratis</span>`:''}
+            ${act.rating?`<span class="text-xs bg-yellow-50 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded font-semibold whitespace-nowrap">⭐ ${act.rating}</span>`:''}
+            ${actCategory?`<span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">${actCategory}</span>`:''}
+          </div>
+          ${renderActivityCrowdBadge(day, act)}
+          ${act.photographyInfo ? `
+            <div class="inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50 rounded-full text-xs font-semibold text-purple-700 dark:text-purple-300">
+              <span>📸</span>
+              <span>${act.photographyInfo.name}</span>
+            </div>
+          ` : ''}
+          ${actDesc?`<p class="text-sm text-gray-600 dark:text-gray-300 mt-2">${actDesc}</p>`:''}
+          ${act.tips?`<p class="text-xs text-amber-700 dark:text-amber-300 mt-2 bg-amber-50 dark:bg-amber-900/20 px-2 py-1.5 rounded-lg inline-block">💡 ${act.tips}</p>`:''}
           ${act.photographyInfo ? `
             <div class="mt-2 p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg border-l-2 border-purple-400 dark:border-purple-500">
               <p class="text-xs text-purple-700 dark:text-purple-300">📸 ${act.photographyInfo.description}</p>
             </div>
           ` : ''}
+          ${act.location?`<p class="text-xs text-gray-400 dark:text-gray-400 mt-2 truncate" title="${String(act.location).replace(/"/g,'&quot;')}">📍 ${act.location}</p>`:''}
           ${act.station?`<p class="text-xs text-gray-500 dark:text-gray-200 mt-2">🚉 ${act.station}</p>`:''}
           ${act.train?`
             <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-800 rounded-lg border-l-2 border-blue-500 dark:border-blue-400">
@@ -4116,7 +4131,7 @@ function renderDayCrowdAnalysisCollapsible(day) {
         return '';
     }
 
-    const startDate = new Date(currentItinerary.startDate);
+    const startDate = window.TimeUtils.parseDate(currentItinerary.startDate);
     const dayDate = new Date(startDate);
     dayDate.setDate(startDate.getDate() + (day.day - 1));
 
@@ -4179,7 +4194,7 @@ function renderActivityCrowdBadge(day, activity) {
         return '';
     }
 
-    const startDate = new Date(currentItinerary.startDate);
+    const startDate = window.TimeUtils.parseDate(currentItinerary.startDate);
     const dayDate = new Date(startDate);
     dayDate.setDate(startDate.getDate() + (day.day - 1));
 

@@ -114,11 +114,9 @@ class AppHealthChecker {
    * Check event listeners setup
    */
   checkEventListeners() {
-    // Check if keyboard shortcuts are working
-    const testKeyEvent = new KeyboardEvent('keydown', { key: '?' });
-    const hasKeyListener = document.dispatchEvent(testKeyEvent);
-
-    if (hasKeyListener) {
+    // Verificar que el sistema de atajos esté cargado SIN disparar eventos:
+    // despachar un keydown '?' real abría el modal de ayuda en cada carga
+    if (window.KeyboardShortcuts) {
       this.checks.push({
         category: 'Event Listeners',
         name: 'Keyboard Shortcuts',

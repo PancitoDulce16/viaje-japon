@@ -779,6 +779,8 @@ export const SmartItineraryGenerator = {
       themedDays = {}, // { 1: 'traditional', 3: 'foodie', ... }
       tripStartDate = null, // Para detectar temporada
       arrivalTime = null, // 🆕 'HH:MM' - hora de aterrizaje día 1 (jetlag-aware)
+      arrivalCityKey = null,   // 🛬 Ciudad del aeropuerto de llegada (la ruta auto empieza ahí)
+      departureCityKey = null, // 🛫 Ciudad del aeropuerto de salida (la ruta auto termina ahí)
       // 🆕 Nuevos parámetros de contexto
       groupSize = 1,
       travelerAges = [],
@@ -806,6 +808,31 @@ export const SmartItineraryGenerator = {
     const cityDistribution = (cityStops && cityStops.length > 0)
       ? cityStops.map(stop => ({ city: stop.city, days: stop.days }))
       : this.distributeDaysAcrossCities(cities, totalDays, interests, interestWeights);
+
+    // 🛬🛫 Ordenar la ruta automática según los aeropuertos: el día 1 (jetlag)
+    // ocurre en la ciudad donde el usuario realmente aterriza, y el último día
+    // termina cerca de su vuelo de salida. Solo aplica en modo auto — la ruta
+    // manual del usuario se respeta tal cual (el wizard ya avisó si no cuadra).
+    if (!(cityStops && cityStops.length > 0)) {
+      if (arrivalCityKey) {
+        const idx = cityDistribution.findIndex(c => c.city.toLowerCase() === arrivalCityKey.toLowerCase());
+        if (idx > 0) {
+          const [entry] = cityDistribution.splice(idx, 1);
+          cityDistribution.unshift(entry);
+          console.log(`🛬 Ruta reordenada: empieza en ${entry.city} (aeropuerto de llegada)`);
+        }
+      }
+      if (departureCityKey && cityDistribution.length > 1) {
+        const lastIdx = cityDistribution.length - 1;
+        const idx = cityDistribution.findIndex(c => c.city.toLowerCase() === departureCityKey.toLowerCase());
+        // No mover si es la primera parada y también la ciudad de llegada (viaje corto)
+        if (idx >= 0 && idx !== lastIdx && !(idx === 0 && arrivalCityKey && arrivalCityKey.toLowerCase() === departureCityKey.toLowerCase())) {
+          const [entry] = cityDistribution.splice(idx, 1);
+          cityDistribution.push(entry);
+          console.log(`🛫 Ruta reordenada: termina en ${entry.city} (aeropuerto de salida)`);
+        }
+      }
+    }
 
     const itinerary = {
       title: `Viaje a Japón - ${totalDays} días`,

@@ -113,15 +113,6 @@
             <i class="fas fa-th"></i>
         </button>
 
-        <!-- 🔍 Search Hint (visible en desktop) -->
-        <div class="hidden md:block fixed top-20 right-4 z-[100]">
-            <button onclick="window.GlobalSearch?.open()" class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">
-                <span>🔍</span>
-                <span>Buscar</span>
-                <kbd class="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs">Ctrl+K</kbd>
-            </button>
-        </div>
-
         <!-- Header Mejorado con más espacio -->
         <header class="japan-header text-white shadow-lg sticky top-0 z-40">
             <div class="max-w-7xl mx-auto px-6 py-4">
@@ -143,6 +134,18 @@
                     <div class="hidden lg:flex items-center gap-4">
                         <!-- Botones de acción simplificados -->
                         <div class="flex items-center gap-3">
+                            <!-- 🔍 Buscar (integrado en el header, antes flotaba sobre otros botones) -->
+                            <button
+                                onclick="window.GlobalSearch?.open()"
+                                class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all hover:scale-105 text-sm"
+                                aria-label="Buscar"
+                                title="Buscar (Ctrl+K)"
+                            >
+                                <i class="fas fa-search"></i>
+                                <span>Buscar</span>
+                                <kbd class="px-2 py-0.5 bg-white/15 rounded text-xs">Ctrl+K</kbd>
+                            </button>
+
                             <button
                                 id="enableNotificationsBtn"
                                 class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all hover:scale-105"
@@ -261,10 +264,10 @@
         <!-- Contenido Principal -->
         <main id="main-content">
             <!-- Contador de días para Japón -->
-            <div class="countdown-widget">
-                <h2>¡Faltan</h2>
-                <div class="days" id="days">––</div>
-                <h2>para Japón! 🇯🇵</h2>
+            <div class="countdown-widget" id="countdownWidget">
+                <h2 id="countdownPrefix">Tu aventura</h2>
+                <div class="days" id="days">🗾</div>
+                <h2 id="countdownSuffix">te espera</h2>
                 <p id="message">¡Tokio, Kioto y mucho ramen te están esperando! ✈️🍜</p>
             </div>
 

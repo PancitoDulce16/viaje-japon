@@ -702,7 +702,7 @@ export const ItineraryBuilder = {
     // Add day cells
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(state.currentMonth.getFullYear(), state.currentMonth.getMonth(), day);
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = window.TimeUtils.toISODate(date);
 
       const dayCell = document.createElement('button');
       dayCell.type = 'button';
@@ -719,8 +719,8 @@ export const ItineraryBuilder = {
                             normalizedDate >= normalizedTripStart && normalizedDate <= normalizedTripEnd;
 
       // Check if date is selected
-      const isStartDate = state.selectedStartDate && dateStr === state.selectedStartDate.toISOString().split('T')[0];
-      const isEndDate = state.selectedEndDate && dateStr === state.selectedEndDate.toISOString().split('T')[0];
+      const isStartDate = state.selectedStartDate && dateStr === window.TimeUtils.toISODate(state.selectedStartDate);
+      const isEndDate = state.selectedEndDate && dateStr === window.TimeUtils.toISODate(state.selectedEndDate);
       const isInSelectedRange = state.selectedStartDate && state.selectedEndDate &&
                                 date >= state.selectedStartDate && date <= state.selectedEndDate;
 
@@ -821,7 +821,9 @@ export const ItineraryBuilder = {
         });
 
         if (!alreadyHasCity) {
-          const dateStr = new Date(tripStart.getTime() + (day - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          const blockDate = new Date(tripStart);
+          blockDate.setDate(blockDate.getDate() + (day - 1));
+          const dateStr = window.TimeUtils.toISODate(blockDate);
           this.addCityBlock(day, dateStr);
 
           // Auto-select the city in the newly created block
@@ -1059,7 +1061,7 @@ export const ItineraryBuilder = {
     // Generate HTML for each date with multiple city blocks support
     const container = document.getElementById('cityByDateContainer');
     container.innerHTML = dates.map((date, index) => {
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = window.TimeUtils.toISODate(date);
       const dayOfWeek = date.toLocaleDateString('es-ES', { weekday: 'short' });
       const dayMonth = date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
       const dayNumber = index + 1;
@@ -1430,15 +1432,17 @@ export const ItineraryBuilder = {
 
       // ===== VALIDACIÓN AVANZADA DE FECHAS =====
 
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+      // parseDate interpreta 'YYYY-MM-DD' como fecha local (new Date() la
+      // tomaría como UTC y restaría un día en zonas horarias de América)
+      const start = window.TimeUtils.parseDate(startDate);
+      const end = window.TimeUtils.parseDate(endDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Resetear a medianoche
-      start.setHours(0, 0, 0, 0);
-      end.setHours(0, 0, 0, 0);
+      if (start) start.setHours(0, 0, 0, 0);
+      if (end) end.setHours(0, 0, 0, 0);
 
       // 1. Validar que las fechas sean válidas
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) {
         Notifications.error('❌ Formato de fecha inválido. Por favor selecciona fechas válidas.');
         return false;
       }
@@ -1802,9 +1806,11 @@ export const ItineraryBuilder = {
       });
       
       if (dayAssignments.length > 0) {
+        const assignmentDate = new Date(start);
+        assignmentDate.setDate(assignmentDate.getDate() + (dayNumber - 1));
         allAssignments.push({
           day: dayNumber,
-          date: new Date(start.getTime() + (dayNumber - 1) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          date: window.TimeUtils.toISODate(assignmentDate),
           cities: dayAssignments,
           cityCount: dayAssignments.length,
           isMultiCity: dayAssignments.length > 1
@@ -1846,10 +1852,8 @@ export const ItineraryBuilder = {
     const selectedCategories = Array.from(document.querySelectorAll('input[name="categories"]:checked')).map(cb => cb.value);
     const templateId = document.querySelector('input[name="template"]:checked')?.value || 'blank';
 
-    // Calcular estadísticas
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    // Calcular estadísticas (parseo local para evitar corrimiento de un día)
+    const totalDays = window.TimeUtils.daysBetween(startDate, endDate) + 1;
     const uniqueCities = new Set();
     cityDayAssignments.forEach(assignment => {
       assignment.cities.forEach(city => uniqueCities.add(city.cityName));
@@ -1884,8 +1888,8 @@ export const ItineraryBuilder = {
             <div class="text-sm text-gray-500 dark:text-gray-400">Duración</div>
             <div class="text-2xl font-bold dark:text-white">${totalDays} días</div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              ${new Date(startDate).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })} -
-              ${new Date(endDate).toLocaleDateString('es-ES', { month: 'short', day: 'numeric', year: 'numeric' })}
+              ${window.TimeUtils.formatDate(startDate, { month: 'short', day: 'numeric' })} -
+              ${window.TimeUtils.formatDate(endDate, { month: 'short', day: 'numeric', year: 'numeric' })}
             </div>
           </div>
 
@@ -2276,7 +2280,9 @@ export const ItineraryBuilder = {
     while (current <= end) {
       days.push({
         day: dayNumber,
-        date: current.toISOString().split('T')[0],
+        // toISODate usa componentes locales; toISOString() corría un día
+        // en zonas UTC+ (p.ej. usando la app desde Japón)
+        date: window.TimeUtils.toISODate(current),
         activities: []
       });
 

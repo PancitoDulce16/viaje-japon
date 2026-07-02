@@ -12,9 +12,41 @@ class BudgetIntelligenceUI {
   }
 
   /**
+   * Obtiene los datos REALES del viaje activo (fechas, gastos, presupuesto).
+   * Devuelve null si no hay viaje seleccionado.
+   */
+  getRealTripData() {
+    const trip = window.TripsManager?.currentTrip;
+    if (!trip?.info?.dateStart) return null;
+
+    const expenses = (trip.expenses || []).map(e => ({
+      amount: Number(e.amount) || 0,
+      category: e.category || 'other',
+      description: e.description || e.name || 'Gasto'
+    }));
+
+    const days = (window.TimeUtils?.daysBetween(trip.info.dateStart, trip.info.dateEnd) || 0) + 1;
+    const members = trip.members?.length || 1;
+    // Presupuesto explícito del viaje, o estimación estándar (¥15.000/día/persona)
+    const budget = Number(trip.info.budget) || days * 15000 * members;
+
+    return {
+      budget,
+      startDate: trip.info.dateStart,
+      endDate: trip.info.dateEnd,
+      expenses
+    };
+  }
+
+  /**
    * Show budget dashboard
    */
   showDashboard(tripData) {
+    // Sin datos explícitos: usar el viaje real; el mock queda solo como
+    // último recurso para desarrollo (antes se mostraban gastos falsos
+    // de 2024 a usuarios reales)
+    tripData = tripData || this.getRealTripData() || window.BudgetIntelligenceUI.getMockTripData();
+
     // Analyze budget
     const analysis = this.intelligence.analyzeBudget(tripData);
     const prediction = this.intelligence.predictSpending(tripData);
@@ -440,9 +472,8 @@ if (typeof window !== 'undefined') {
     const openBtn = document.getElementById('open-budget-intelligence');
     if (openBtn) {
       openBtn.addEventListener('click', () => {
-        // Get trip data (mock for now)
-        const tripData = window.BudgetIntelligenceUI.getMockTripData();
-        window.BudgetIntelligenceUI.showDashboard(tripData);
+        // Sin args: showDashboard usa los datos del viaje real
+        window.BudgetIntelligenceUI.showDashboard();
       });
     }
   });

@@ -280,6 +280,11 @@ export const TripsManager = {
 
         this.updateTripHeader();
 
+        // Notificar a widgets (countdown, etc.) que hay un viaje activo
+        window.dispatchEvent(new CustomEvent('tripSelected', {
+          detail: { trip: this.currentTrip }
+        }));
+
         // 🔧 FIX: Re-inicializar módulos EN PARALELO con await
         const initPromises = [];
 
@@ -609,12 +614,10 @@ export const TripsManager = {
 
     // ===== CALCULAR STATS DE CADA VIAJE =====
     const tripsWithStats = this.userTrips.map(trip => {
-      const start = new Date(trip.info.dateStart);
-      const end = new Date(trip.info.dateEnd);
       const today = new Date();
-      const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-      const daysUntil = Math.ceil((start - today) / (1000 * 60 * 60 * 24));
-      const daysRemaining = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+      const totalDays = window.TimeUtils.daysBetween(trip.info.dateStart, trip.info.dateEnd) + 1;
+      const daysUntil = window.TimeUtils.daysBetween(today, trip.info.dateStart);
+      const daysRemaining = window.TimeUtils.daysBetween(today, trip.info.dateEnd);
 
       let status = 'upcoming'; // upcoming, ongoing, past
       let statusText = 'Próximo';
@@ -738,9 +741,9 @@ export const TripsManager = {
           <!-- Fechas -->
           <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
             <i class="fas fa-calendar-alt"></i>
-            <span>${new Date(trip.info.dateStart).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            <span>${window.TimeUtils.formatDate(trip.info.dateStart)}</span>
             <span>→</span>
-            <span>${new Date(trip.info.dateEnd).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            <span>${window.TimeUtils.formatDate(trip.info.dateEnd)}</span>
           </div>
         </div>
 
@@ -1048,14 +1051,12 @@ export const TripsManager = {
     const headerContainer = document.getElementById('currentTripHeader');
     if (!headerContainer || !this.currentTrip) return;
 
-    const startDate = new Date(this.currentTrip.info.dateStart);
-    const endDate = new Date(this.currentTrip.info.dateEnd);
     const today = new Date();
-    const daysUntil = Math.ceil((startDate - today) / (1000 * 60 * 60 * 24));
-    const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+    const daysUntil = window.TimeUtils.daysBetween(today, this.currentTrip.info.dateStart);
+    const totalDays = window.TimeUtils.daysBetween(this.currentTrip.info.dateStart, this.currentTrip.info.dateEnd) + 1;
 
     // Calcular días pasados si el viaje ya comenzó
-    const daysElapsed = Math.max(0, Math.ceil((today - startDate) / (1000 * 60 * 60 * 24)));
+    const daysElapsed = Math.max(0, window.TimeUtils.daysBetween(this.currentTrip.info.dateStart, today));
     const tripProgress = daysUntil <= 0 ? Math.min(100, (daysElapsed / totalDays) * 100) : 0;
 
     const collaborationStatus = this.currentTrip.members.length > 1
@@ -1070,10 +1071,10 @@ export const TripsManager = {
         </div>
 
         <!-- Botones de acción -->
-        <div class="flex items-center justify-center gap-3">
+        <div class="flex items-center justify-center gap-2 sm:gap-3 flex-wrap px-2">
           <button
             onclick="TripsManager.showCreateTripModal()"
-            class="bg-white/20 hover:bg-white/30 text-white font-semibold py-2.5 px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-white/10 text-sm"
+            class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2.5 px-6 rounded-lg transition hover:scale-105 shadow-md text-sm"
           >
             ➕ Agregar Viaje
           </button>
@@ -1207,9 +1208,7 @@ export const TripsManager = {
       const totalBudget = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
 
       // Calcular presupuesto estimado (ejemplo: ¥15000 por día por persona)
-      const startDate = new Date(this.currentTrip.info.dateStart);
-      const endDate = new Date(this.currentTrip.info.dateEnd);
-      const tripDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+      const tripDays = window.TimeUtils.daysBetween(this.currentTrip.info.dateStart, this.currentTrip.info.dateEnd) + 1;
       const estimatedBudget = tripDays * 15000 * this.currentTrip.members.length;
       const budgetProgress = estimatedBudget > 0 ? (totalBudget / estimatedBudget) * 100 : 0;
 
@@ -1223,8 +1222,8 @@ export const TripsManager = {
 
       // Calcular progreso del viaje (días)
       const today = new Date();
-      const daysUntil = Math.ceil((startDate - today) / (1000 * 60 * 60 * 24));
-      const daysElapsed = Math.max(0, Math.ceil((today - startDate) / (1000 * 60 * 60 * 24)));
+      const daysUntil = window.TimeUtils.daysBetween(today, this.currentTrip.info.dateStart);
+      const daysElapsed = Math.max(0, window.TimeUtils.daysBetween(this.currentTrip.info.dateStart, today));
       const totalDays = tripDays;
       const tripProgress = daysUntil <= 0 ? Math.min(100, (daysElapsed / totalDays) * 100) : 0;
 
@@ -1327,12 +1326,53 @@ export const TripsManager = {
           >
             ➕ Crear Viaje
           </button>
-          <button 
+          <button
             onclick="TripsManager.joinTripWithCode()"
             class="text-xs bg-green-500/80 hover:bg-green-500 px-4 py-2 rounded transition font-semibold"
           >
             🔗 Unirse
           </button>
+        </div>
+      </div>
+    `;
+
+    // Estado vacío en el área del itinerario (antes quedaba en blanco)
+    this.renderEmptyItineraryState();
+  },
+
+  // Estado vacío con CTA cuando el usuario no tiene ningún viaje
+  renderEmptyItineraryState() {
+    const container = document.getElementById('content-itinerary');
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="max-w-2xl mx-auto my-10 px-4">
+        <div class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl p-10 text-center border border-purple-100 dark:border-purple-900/40">
+          <div class="text-7xl mb-4">🗾</div>
+          <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Tu aventura en Japón empieza aquí</h2>
+          <p class="text-gray-500 dark:text-gray-400 mb-8">
+            Crea tu primer viaje y genera un itinerario completo con actividades,
+            rutas optimizadas y presupuesto en menos de 3 minutos.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onclick="TripsManager.showCreateTripModal()"
+              class="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all hover:scale-105"
+            >
+              ✨ Crear mi primer viaje
+            </button>
+            <button
+              onclick="TripsManager.joinTripWithCode()"
+              class="px-8 py-4 bg-white dark:bg-gray-700 text-purple-600 dark:text-purple-300 font-bold rounded-2xl border-2 border-purple-200 dark:border-purple-700 hover:border-purple-400 transition-all hover:scale-105"
+            >
+              🔗 Unirme con código
+            </button>
+          </div>
+          <div class="grid grid-cols-3 gap-4 mt-10 text-sm text-gray-500 dark:text-gray-400">
+            <div><div class="text-2xl mb-1">🏯</div>17 ciudades</div>
+            <div><div class="text-2xl mb-1">🎯</div>Itinerario automático</div>
+            <div><div class="text-2xl mb-1">👥</div>Modo colaborativo</div>
+          </div>
         </div>
       </div>
     `;
@@ -1646,6 +1686,7 @@ export const TripsManager = {
       if (this.currentTrip && this.currentTrip.id === tripId) {
         this.currentTrip = null;
         localStorage.removeItem('currentTripId');
+        window.dispatchEvent(new CustomEvent('tripSelected', { detail: { trip: null } }));
 
         // Si quedan más viajes, selecciona el primero. Si no, muestra el estado vacío.
         if (this.userTrips.length > 0) {
@@ -1669,6 +1710,7 @@ export const TripsManager = {
     }
     this.currentTrip = null;
     this.userTrips = [];
+    window.dispatchEvent(new CustomEvent('tripSelected', { detail: { trip: null } }));
 
     // 🛡️ PROTECCIÓN: Solo borrar currentTripId si es un logout REAL
     // NO borrarlo durante reinicios o cambios de estado temporal

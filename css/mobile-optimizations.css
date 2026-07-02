@@ -265,8 +265,11 @@
         padding: 12px !important;
     }
 
-    /* Botones más grandes */
-    button:not(.floating-btn):not(.tab-btn) {
+    /* Botones más grandes.
+       Excluir .rounded-full: son botones-icono compactos (votar/editar/
+       borrar en las tarjetas, cerrar modales) — inflarlos a 48px con
+       padding 12/20 rompía el layout de las activity cards en mobile */
+    button:not(.floating-btn):not(.tab-btn):not(.rounded-full) {
         min-height: 48px !important;
         padding: 12px 20px !important;
         font-size: 15px !important;

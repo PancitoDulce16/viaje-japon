@@ -629,7 +629,7 @@ export const MapHandler = {
 
         itinerary.days.forEach(day => {
             const dayNumber = day.day;
-            const dayDate = day.date ? ` - ${new Date(day.date).toLocaleDateString('es', { month: 'short', day: 'numeric' })}` : '';
+            const dayDate = day.date ? ` - ${window.TimeUtils.formatDate(day.date, { month: 'short', day: 'numeric' })}` : '';
             const cityName = day.city || day.cityName || '';
             const activityCount = day.activities ? day.activities.filter(a => a.coordinates).length : 0;
 

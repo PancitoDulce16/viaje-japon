@@ -377,7 +377,9 @@ class CrowdDetector {
 
     // UTILIDADES
     formatDate(date) {
-        const d = new Date(date);
+        // parseDate interpreta 'YYYY-MM-DD' como fecha local (new Date() la
+        // tomaría como UTC y correría el día en zonas horarias de América)
+        const d = window.TimeUtils?.parseDate(date) || new Date(date);
         const year = d.getFullYear();
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
@@ -386,7 +388,8 @@ class CrowdDetector {
 
     getDayOfWeek(date) {
         const days = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-        return days[new Date(date).getDay()];
+        const d = window.TimeUtils?.parseDate(date) || new Date(date);
+        return days[d.getDay()];
     }
 
     // Generar reporte visual para UI

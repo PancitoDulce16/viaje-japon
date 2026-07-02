@@ -127,10 +127,9 @@ class MobileFirst {
 
     // Handle special tabs
     if (tabName === 'budget') {
-      // Open budget intelligence
+      // Open budget intelligence (sin args: usa los datos del viaje real)
       if (window.BudgetIntelligenceUI) {
-        const tripData = window.BudgetIntelligenceUI.getMockTripData();
-        window.BudgetIntelligenceUI.showDashboard(tripData);
+        window.BudgetIntelligenceUI.showDashboard();
       }
     } else if (tabName === 'tools') {
       // Show tools menu

@@ -5,6 +5,8 @@ import { db } from '../../core/firebase-config.js';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { sanitizeForFirestore } from './itinerary-v3.js';
 import { ACTIVITIES_DATABASE } from '../../../data/activities-database.js';
+import { getAirportByCode, getAirportSelectOptions } from '../../../data/japan-airports.js';
+import { YamanoteHelper } from './yamanote-helper.js';
 
 // Icono representativo por ciudad (clave = key en ACTIVITIES_DATABASE)
 const CITY_ICONS = {
@@ -32,6 +34,8 @@ export const SmartGeneratorWizard = {
     tripStartDate: null,       // 🆕 Fecha de inicio (para eventos estacionales)
     tripEndDate: null,         // 🆕 Fecha de fin
     arrivalTime: null,         // 🆕 'HH:MM' - hora de aterrizaje día 1 (jetlag-aware)
+    arrivalAirport: null,      // 🆕 IATA (NRT, HND, KIX...) - sugiere primera ciudad de la ruta
+    departureAirport: null,    // 🆕 IATA - sugiere última ciudad de la ruta
     dietaryRestrictions: [],   // 🆕 ['vegetarian', 'halal', 'gluten-free']
     mobilityNeeds: null,       // 🆕 'wheelchair', 'limited', null
 
@@ -91,6 +95,8 @@ export const SmartGeneratorWizard = {
       tripStartDate: null,
       tripEndDate: null,
       arrivalTime: null,
+      arrivalAirport: null,
+      departureAirport: null,
       dietaryRestrictions: [],
       mobilityNeeds: null,
       interests: [],
@@ -109,15 +115,15 @@ export const SmartGeneratorWizard = {
    */
   renderWizard() {
     const modalHTML = `
-      <div id="smartGeneratorWizard" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div id="smartGeneratorWizard" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
 
           <!-- Header -->
-          <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+          <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 sm:p-6 text-white">
             <div class="flex items-center justify-between">
               <div>
-                <h2 class="text-2xl font-bold">🧠 Generador Inteligente de Itinerarios</h2>
-                <p class="text-blue-100 mt-1">Crea un itinerario completo basado en tus preferencias</p>
+                <h2 class="text-lg sm:text-2xl font-bold">🧠 Generador Inteligente de Itinerarios</h2>
+                <p class="text-blue-100 mt-1 hidden sm:block">Crea un itinerario completo basado en tus preferencias</p>
               </div>
               <button onclick="window.SmartGeneratorWizard.close()" class="text-white hover:bg-white/20 rounded-lg p-2 transition">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,18 +133,18 @@ export const SmartGeneratorWizard = {
             </div>
 
             <!-- Progress Bar -->
-            <div class="mt-6 flex items-center gap-2">
+            <div class="mt-3 sm:mt-6 flex items-center gap-2">
               ${this.renderProgressBar()}
             </div>
           </div>
 
           <!-- Content -->
-          <div class="flex-1 overflow-y-auto p-6">
+          <div class="flex-1 overflow-y-auto p-4 sm:p-6">
             ${this.renderStepContent()}
           </div>
 
           <!-- Footer Navigation -->
-          <div class="border-t border-gray-200 dark:border-gray-700 p-6 flex justify-between">
+          <div class="border-t border-gray-200 dark:border-gray-700 p-3 sm:p-6 flex justify-between gap-2">
             ${this.renderFooterButtons()}
           </div>
 
@@ -286,6 +292,36 @@ export const SmartGeneratorWizard = {
               onchange="window.SmartGeneratorWizard.updateTripDates()"
               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition"
             >
+          </div>
+        </div>
+
+        <!-- Aeropuertos de llegada/salida -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              🛬 ¿A qué aeropuerto llegas? (Opcional)
+            </label>
+            <select
+              id="arrivalAirport"
+              onchange="window.SmartGeneratorWizard.updateAirports()"
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition"
+            >
+              ${this.renderAirportOptions(this.wizardData.arrivalAirport)}
+            </select>
+            <p id="arrivalAirportNote" class="text-xs text-gray-500 mt-1">${this.getAirportNote(this.wizardData.arrivalAirport) || 'Usamos esto para que tu ruta empiece donde aterrizas'}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              🛫 ¿Desde cuál sales? (Opcional)
+            </label>
+            <select
+              id="departureAirport"
+              onchange="window.SmartGeneratorWizard.updateAirports()"
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition"
+            >
+              ${this.renderAirportOptions(this.wizardData.departureAirport)}
+            </select>
+            <p id="departureAirportNote" class="text-xs text-gray-500 mt-1">${this.getAirportNote(this.wizardData.departureAirport) || 'Para que el último día termines cerca de tu vuelo'}</p>
           </div>
         </div>
 
@@ -631,6 +667,130 @@ export const SmartGeneratorWizard = {
     container.innerHTML = this.wizardData.dayAllocationMode === 'manual'
       ? this.renderCityStopsBuilder()
       : `<p class="text-xs text-gray-500">El generador reparte los días según tus intereses y cuánto contenido real tiene cada ciudad.</p>`;
+  },
+
+  // ===========================================================================
+  // 🛬 AEROPUERTOS (llegada/salida): sugieren primera/última parada de la ruta
+  // ===========================================================================
+
+  /**
+   * 🆕 Opciones del <select> de aeropuerto, internacionales primero
+   */
+  renderAirportOptions(selectedCode) {
+    const { international, domestic } = getAirportSelectOptions();
+    const opt = (a) => `<option value="${a.code}" ${selectedCode === a.code ? 'selected' : ''}>${a.label}</option>`;
+    return `
+      <option value="">No sé todavía / no aplica</option>
+      <optgroup label="✈️ Internacionales (llegadas del extranjero)">
+        ${international.map(opt).join('')}
+      </optgroup>
+      <optgroup label="🇯🇵 Domésticos">
+        ${domestic.map(opt).join('')}
+      </optgroup>
+    `;
+  },
+
+  /**
+   * 🆕 Nota descriptiva del aeropuerto seleccionado
+   */
+  getAirportNote(code) {
+    const airport = getAirportByCode(code);
+    return airport ? `💡 ${airport.note}` : '';
+  },
+
+  /**
+   * 🆕 Guarda los aeropuertos elegidos y reordena la ruta manual para que
+   * empiece en la ciudad de llegada y termine en la de salida (solo mueve
+   * paradas existentes, nunca borra ni agrega días).
+   */
+  updateAirports() {
+    const arrivalSelect = document.getElementById('arrivalAirport');
+    const departureSelect = document.getElementById('departureAirport');
+    if (arrivalSelect) this.wizardData.arrivalAirport = arrivalSelect.value || null;
+    if (departureSelect) this.wizardData.departureAirport = departureSelect.value || null;
+
+    // Actualizar notas descriptivas
+    const arrivalNote = document.getElementById('arrivalAirportNote');
+    if (arrivalNote) arrivalNote.textContent = this.getAirportNote(this.wizardData.arrivalAirport) || 'Usamos esto para que tu ruta empiece donde aterrizas';
+    const departureNote = document.getElementById('departureAirportNote');
+    if (departureNote) departureNote.textContent = this.getAirportNote(this.wizardData.departureAirport) || 'Para que el último día termines cerca de tu vuelo';
+
+    this.applyAirportOrderingToStops();
+    this.saveToSessionStorage();
+    this.refreshCityStopsBuilder();
+  },
+
+  /**
+   * 🆕 Si hay ruta manual, mueve la parada de la ciudad del aeropuerto de
+   * llegada al inicio y la del de salida al final (si esas ciudades están
+   * en la ruta). No fuerza nada si el usuario eligió otras ciudades.
+   */
+  applyAirportOrderingToStops() {
+    const stops = this.wizardData.cityStops;
+    if (!stops || stops.length < 2) return;
+
+    const arrivalCity = getAirportByCode(this.wizardData.arrivalAirport)?.cityKey;
+    const departureCity = getAirportByCode(this.wizardData.departureAirport)?.cityKey;
+
+    if (arrivalCity && stops[0].city.toLowerCase() !== arrivalCity) {
+      const idx = stops.findIndex(s => s.city.toLowerCase() === arrivalCity);
+      if (idx > 0) {
+        const [stop] = stops.splice(idx, 1);
+        stops.unshift(stop);
+      }
+    }
+
+    if (departureCity && stops[stops.length - 1].city.toLowerCase() !== departureCity) {
+      // Buscar desde el final (por si la ciudad se repite, mover la última instancia)
+      let idx = -1;
+      for (let i = stops.length - 1; i >= 0; i--) {
+        if (stops[i].city.toLowerCase() === departureCity) { idx = i; break; }
+      }
+      // No mover la parada que ya es la primera (llegada) salvo que haya más de una
+      if (idx >= 0 && idx < stops.length - 1 && !(idx === 0 && arrivalCity === departureCity && stops.length > 1 && !stops.slice(1).some(s => s.city.toLowerCase() === departureCity))) {
+        if (idx > 0 || stops.filter(s => s.city.toLowerCase() === departureCity).length > 1) {
+          const [stop] = stops.splice(idx, 1);
+          stops.push(stop);
+        }
+      }
+    }
+  },
+
+  /**
+   * 🆕 Warning suave (no bloquea) si la ruta no empieza/termina cerca de los
+   * aeropuertos elegidos. Devuelve lista de mensajes para mostrar.
+   */
+  getAirportRouteWarnings() {
+    const warnings = [];
+    const arrival = getAirportByCode(this.wizardData.arrivalAirport);
+    const departure = getAirportByCode(this.wizardData.departureAirport);
+
+    // Determinar primera/última ciudad efectiva de la ruta
+    let firstCity = null, lastCity = null;
+    if (this.wizardData.dayAllocationMode === 'manual' && this.wizardData.cityStops.length > 0) {
+      firstCity = this.wizardData.cityStops[0].city.toLowerCase();
+      lastCity = this.wizardData.cityStops[this.wizardData.cityStops.length - 1].city.toLowerCase();
+    } else if (this.wizardData.cities.length > 0) {
+      // En modo auto el generador ya ordena por aeropuerto, solo avisar si la
+      // ciudad del aeropuerto NI SIQUIERA está entre las elegidas
+      firstCity = lastCity = null;
+      if (arrival?.cityKey && !this.wizardData.cities.some(c => arrival.nearbyCities.includes(c.toLowerCase()))) {
+        warnings.push(`🛬 Llegas a ${arrival.label} pero ninguna ciudad de tu viaje está cerca de ese aeropuerto. Considera agregar ${arrival.cityKey.charAt(0).toUpperCase() + arrival.cityKey.slice(1)} o revisar tu aeropuerto.`);
+      }
+      if (departure?.cityKey && !this.wizardData.cities.some(c => departure.nearbyCities.includes(c.toLowerCase()))) {
+        warnings.push(`🛫 Sales desde ${departure.label} pero ninguna ciudad de tu viaje está cerca. El último día podrías necesitar un traslado largo.`);
+      }
+      return warnings;
+    }
+
+    const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+    if (arrival?.cityKey && firstCity && !arrival.nearbyCities.includes(firstCity)) {
+      warnings.push(`🛬 Tu ruta empieza en ${cap(firstCity)} pero aterrizas en ${arrival.label}. El día 1 tendrás un traslado largo con el jetlag encima — considera empezar en ${cap(arrival.cityKey)}.`);
+    }
+    if (departure?.cityKey && lastCity && !departure.nearbyCities.includes(lastCity)) {
+      warnings.push(`🛫 Tu ruta termina en ${cap(lastCity)} pero tu vuelo sale de ${departure.label}. Deja margen para el traslado el último día.`);
+    }
+    return warnings;
   },
 
   /**
@@ -1088,10 +1248,13 @@ export const SmartGeneratorWizard = {
    */
   renderStep3() {
     const selectedCities = this.wizardData.cities;
+    const includesTokyo = selectedCities.some(c => c.toLowerCase() === 'tokyo');
 
     return `
       <div class="space-y-6">
         <h3 class="text-xl font-bold text-gray-900 dark:text-white">🏨 Hoteles & Lugares Imperdibles</h3>
+
+        ${includesTokyo ? YamanoteHelper.render() : ''}
 
         <!-- Hoteles por ciudad -->
         <div>
@@ -1323,6 +1486,16 @@ export const SmartGeneratorWizard = {
     const arrivalTimeInput = document.getElementById('arrivalTime');
     if (arrivalTimeInput) {
       this.wizardData.arrivalTime = arrivalTimeInput.value || null;
+    }
+
+    // 🛬🛫 Aeropuertos de llegada/salida
+    const arrivalAirportSelect = document.getElementById('arrivalAirport');
+    if (arrivalAirportSelect) {
+      this.wizardData.arrivalAirport = arrivalAirportSelect.value || null;
+    }
+    const departureAirportSelect = document.getElementById('departureAirport');
+    if (departureAirportSelect) {
+      this.wizardData.departureAirport = departureAirportSelect.value || null;
     }
 
     // Dietary restrictions
@@ -1745,6 +1918,10 @@ export const SmartGeneratorWizard = {
 
     console.log('🚀 Generando itinerarios con:', this.wizardData);
 
+    // 🛬 Warning suave si la ruta no cuadra con los aeropuertos (no bloquea)
+    const airportWarnings = this.getAirportRouteWarnings();
+    airportWarnings.forEach(w => window.Notifications?.show(w, 'warning', 9000));
+
     // Mostrar loading con pasos detallados
     const modal = document.getElementById('smartGeneratorWizard');
     if (modal) {
@@ -1887,6 +2064,10 @@ export const SmartGeneratorWizard = {
         tripStartDate: this.wizardData.tripStartDate,
         tripEndDate: this.wizardData.tripEndDate,
         arrivalTime: this.wizardData.arrivalTime,
+        // 🛬🛫 Ciudades de los aeropuertos: en modo auto el generador ordena la
+        // ruta para empezar/terminar ahí (día 1 con jetlag = ciudad de llegada)
+        arrivalCityKey: getAirportByCode(this.wizardData.arrivalAirport)?.cityKey || null,
+        departureCityKey: getAirportByCode(this.wizardData.departureAirport)?.cityKey || null,
         dietaryRestrictions: this.wizardData.dietaryRestrictions,
         mobilityNeeds: this.wizardData.mobilityNeeds
       };

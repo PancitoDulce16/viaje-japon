@@ -66,8 +66,8 @@ const ExportManager = {
         <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #3b82f6; padding-bottom: 20px;">
           <h1 style="color: #3b82f6; margin: 0; font-size: 28px;">🗾 ${info.name}</h1>
           <p style="color: #6b7280; margin: 10px 0 0 0; font-size: 14px;">
-            ${new Date(info.dateStart).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })} -
-            ${new Date(info.dateEnd).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
+            ${window.TimeUtils.formatDate(info.dateStart, { year: 'numeric', month: 'long', day: 'numeric' })} -
+            ${window.TimeUtils.formatDate(info.dateEnd, { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
           <p style="color: #6b7280; margin: 5px 0 0 0; font-size: 12px;">
             ${trip.cities?.join(' → ') || 'Multi-ciudad'} • ${itinerary?.days?.length || 0} días
@@ -151,7 +151,7 @@ const ExportManager = {
       icsContent += `X-WR-CALNAME:${info.name}\n`;
       icsContent += `X-WR-CALDESC:Itinerario de viaje a Japón\n`;
 
-      const startDate = new Date(info.dateStart);
+      const startDate = window.TimeUtils.parseDate(info.dateStart);
 
       (itinerary?.days || []).forEach((day, dayIdx) => {
         const dayDate = new Date(startDate);
@@ -293,7 +293,7 @@ const ExportManager = {
 
       const { info, itinerary } = trip;
       let markdown = `# ✅ Checklist - ${info.name}\n\n`;
-      markdown += `**Fechas:** ${new Date(info.dateStart).toLocaleDateString()} - ${new Date(info.dateEnd).toLocaleDateString()}\n\n`;
+      markdown += `**Fechas:** ${window.TimeUtils.formatDate(info.dateStart)} - ${window.TimeUtils.formatDate(info.dateEnd)}\n\n`;
       markdown += `---\n\n`;
 
       (itinerary?.days || []).forEach((day, idx) => {

@@ -341,15 +341,13 @@ class AIActionExecutor {
         params: [],
         execute: async (params) => {
           if (window.BudgetIntelligenceUI) {
-            const data = window.BudgetIntelligenceUI.getMockTripData();
-            if (data) {
-              window.BudgetIntelligenceUI.showDashboard(data);
-              return {
-                success: true,
-                message: '💰 Abrí el panel de presupuesto',
-                action: 'ui_opened'
-              };
-            }
+            // Sin args: showDashboard usa los datos del viaje real
+            window.BudgetIntelligenceUI.showDashboard();
+            return {
+              success: true,
+              message: '💰 Abrí el panel de presupuesto',
+              action: 'ui_opened'
+            };
           }
 
           return {

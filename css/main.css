@@ -343,11 +343,19 @@ textarea::placeholder {
   color: #dc2626;
 }
 
+/* Banner del viaje en el itinerario: usa el gradiente del tema
+   (sakura en claro, índigo ninja en oscuro) en vez del azul/morado genérico */
+.trip-header-banner {
+  background: var(--gradient-primary, linear-gradient(135deg, #E91E63 0%, #FF6B9D 100%));
+}
+
 .activity-card {
   transition: all 0.3s ease;
   background: white;
   border-radius: 0.75rem;
-  padding: 1rem;
+  /* Sin padding aquí: el template de la tarjeta (itinerary-v3.js) ya trae
+     su propio padding interno (p-3 sm:p-4) — sumarlos aplastaba el
+     contenido en mobile */
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
@@ -763,9 +771,9 @@ body {
     touch-action: manipulation;
   }
 
-  /* Cards más compactas */
+  /* Cards más compactas: sin padding extra, el template ya trae el suyo */
   .activity-card {
-    padding: 0.75rem;
+    padding: 0;
   }
 
   /* Grids a 1 columna */
@@ -774,11 +782,10 @@ body {
     gap: 0.75rem !important;
   }
 
-  /* Flex column en móvil */
-  .flex.flex-wrap {
-    flex-direction: column;
-    align-items: stretch !important;
-  }
+  /* (Eliminado) Antes: ".flex.flex-wrap { flex-direction: column }" —
+     forzaba a columna TODOS los flex-wrap de la app en mobile (chips,
+     badges, filas de botones), apilando todo verticalmente. flex-wrap
+     ya envuelve solo cuando no hay espacio; no hay que forzar nada. */
 
   /* Inputs más grandes */
   input,

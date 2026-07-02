@@ -91,12 +91,19 @@
   position: absolute;
   inset: -2px;
   border-radius: inherit;
-  background: linear-gradient(45deg, #a855f7, #ec4899, #3b82f6, #10b981);
+  /* Glow con la identidad del tema (sakura en claro), no arcoíris genérico */
+  background: var(--gradient-kawaii-sunset, linear-gradient(45deg, #E91E63, #FF6B9D, #FFB7C5));
   background-size: 400% 400%;
   z-index: -1;
   opacity: 0;
   transition: opacity 0.3s ease;
   animation: gradient-shift 3s ease infinite;
+}
+
+.dark .hover-glow::before {
+  /* Ninja: oro y carmesí */
+  background: linear-gradient(45deg, #D4AF37, #DC143C, #8B7355);
+  background-size: 400% 400%;
 }
 
 .hover-glow:hover::before {
@@ -115,10 +122,17 @@
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  background: linear-gradient(45deg, #a855f7, #ec4899, #f59e0b);
+  /* Anillo con identidad del tema: sakura/durazno en claro */
+  background: linear-gradient(45deg, #FF6B9D, #FFB7C5, #FFA07A);
   background-size: 200% 200%;
   animation: gradient-shift 3s ease infinite;
   z-index: -1;
+}
+
+.dark .avatar-ring::before {
+  /* Ninja: anillo dorado con destello carmesí */
+  background: linear-gradient(45deg, #D4AF37, #8B7355, #DC143C);
+  background-size: 200% 200%;
 }
 
 .avatar-glow {
@@ -429,7 +443,7 @@
   inset: 0;
   border-radius: inherit;
   padding: 2px;
-  background: linear-gradient(135deg, #a855f7, #ec4899);
+  background: var(--gradient-primary, linear-gradient(135deg, #E91E63, #FF6B9D));
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
@@ -457,7 +471,7 @@
   color: white;
   padding: 12px 20px;
   border-radius: 20px 20px 20px 4px;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
   position: relative;
   animation: float 3s ease-in-out infinite;
 }

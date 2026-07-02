@@ -48,58 +48,89 @@ window.addEventListener('load', () => {
 // ===================================
 // COUNTDOWN - Contador de días
 // ===================================
-function getFechaViaje() {
-  // Intentar obtener fecha del viaje actual
-  if (window.currentItinerary && window.currentItinerary.days && window.currentItinerary.days.length > 0) {
-    const firstDay = window.currentItinerary.days[0];
-    if (firstDay.date) {
-      return new Date(firstDay.date);
-    }
+
+// Parsea 'YYYY-MM-DD' como fecha LOCAL (new Date('YYYY-MM-DD') sería UTC
+// y resta un día en zonas horarias negativas)
+function parseFechaLocal(str) {
+  if (!str) return null;
+  if (str instanceof Date) return isNaN(str) ? null : new Date(str);
+  const m = String(str).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  const d = new Date(str);
+  return isNaN(d) ? null : d;
+}
+
+function getFechasViaje() {
+  // Fuente principal: el viaje activo en TripsManager
+  const info = window.TripsManager?.currentTrip?.info;
+  if (info?.dateStart) {
+    return { start: parseFechaLocal(info.dateStart), end: parseFechaLocal(info.dateEnd || info.dateStart) };
   }
 
-  // Si no hay itinerario, usar fecha de ejemplo
-  return new Date("2025-04-01");
+  // Fallback: itinerario cargado
+  const days = window.currentItinerary?.days;
+  if (days?.length && days[0].date) {
+    return {
+      start: parseFechaLocal(days[0].date),
+      end: parseFechaLocal(days[days.length - 1].date || days[0].date)
+    };
+  }
+
+  return null; // Sin viaje: no inventar fechas
 }
 
 function actualizarContador() {
+  const prefixElement = document.getElementById("countdownPrefix");
   const daysElement = document.getElementById("days");
+  const suffixElement = document.getElementById("countdownSuffix");
   const messageElement = document.getElementById("message");
 
   if (!daysElement || !messageElement) return;
 
-  const fechaViaje = getFechaViaje();
+  const setTexts = (prefix, days, suffix, message) => {
+    if (prefixElement) prefixElement.textContent = prefix;
+    daysElement.textContent = days;
+    if (suffixElement) suffixElement.textContent = suffix;
+    messageElement.textContent = message;
+  };
 
-  // Obtener solo la fecha (sin hora) para comparación precisa
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
+  const fechas = getFechasViaje();
 
-  // Asegurar que fechaViaje también esté en hora 0
-  fechaViaje.setHours(0, 0, 0, 0);
-
-  const diferencia = fechaViaje - hoy;
-  const dias = Math.ceil(diferencia / (1000 * 60 * 60 * 24));
-
-  // Actualizar número de días
-  if (dias > 0) {
-    daysElement.textContent = `${dias} días`;
-  } else if (dias === 0) {
-    daysElement.textContent = "¡HOY!";
-  } else {
-    daysElement.textContent = `¡Hace ${Math.abs(dias)} días!`;
+  // Sin viaje activo: invitar a crear uno en vez de mostrar datos falsos
+  if (!fechas || !fechas.start) {
+    setTexts('Tu aventura', '🗾', 'te espera', 'Crea tu primer viaje para empezar la cuenta regresiva ✈️');
+    return;
   }
 
-  // Actualizar mensaje según días restantes
-  if (dias > 30) {
-    messageElement.textContent = "¡Todavía hay tiempo para practicar con los palillos! 🍥";
-  } else if (dias > 7) {
-    messageElement.textContent = "¡Ya huele a salsa de soja desde aquí! 😋";
-  } else if (dias > 0) {
-    messageElement.textContent = "¡Modo maleta ON! ¡Esto se pone serio! 🧳✈️";
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const inicio = new Date(fechas.start);
+  inicio.setHours(0, 0, 0, 0);
+  const fin = new Date(fechas.end || fechas.start);
+  fin.setHours(0, 0, 0, 0);
+
+  const MS_DIA = 1000 * 60 * 60 * 24;
+  const dias = Math.round((inicio - hoy) / MS_DIA);
+
+  if (dias > 0) {
+    // Antes del viaje: cuenta regresiva
+    let msg;
+    if (dias > 30) msg = "¡Todavía hay tiempo para practicar con los palillos! 🍥";
+    else if (dias > 7) msg = "¡Ya huele a salsa de soja desde aquí! 😋";
+    else msg = "¡Modo maleta ON! ¡Esto se pone serio! 🧳✈️";
+    setTexts('¡Faltan', dias === 1 ? '1 día' : `${dias} días`, 'para Japón! 🇯🇵', msg);
   } else if (dias === 0) {
-    messageElement.innerHTML = "¡LLEGASTE A JAPÓN! ¡Que empiece la aventura! 🎌🎉";
+    setTexts('¡Es', 'HOY', '! 🎌', '¡LLEGASTE A JAPÓN! ¡Que empiece la aventura! 🎉');
     lanzarConfeti();
+  } else if (hoy <= fin) {
+    // Durante el viaje
+    const diaActual = Math.round((hoy - inicio) / MS_DIA) + 1;
+    const totalDias = Math.round((fin - inicio) / MS_DIA) + 1;
+    setTexts('¡Estás en Japón!', `Día ${diaActual} de ${totalDias}`, '🇯🇵', '¡Hora de comer, caminar y flipar todo el día! 🗾❤️');
   } else {
-    messageElement.textContent = "¡Estás aquí! Hora de comer, caminar y flipar todo el día 🗾❤️";
+    // Después del viaje
+    const diasDesde = Math.abs(Math.round((fin - hoy) / MS_DIA));
+    setTexts('Tu viaje terminó', diasDesde === 1 ? 'hace 1 día' : `hace ${diasDesde} días`, '🌸', '¡Hasta la próxima aventura! Revive tus recuerdos en el diario 📔');
   }
 }
 
@@ -142,4 +173,8 @@ document.head.appendChild(style);
 if (document.getElementById("days")) {
   actualizarContador();
   setInterval(actualizarContador, 3600000); // Actualizar cada hora
+
+  // Re-renderizar cuando se selecciona/carga un viaje
+  window.addEventListener('tripSelected', actualizarContador);
+  window.addEventListener('itineraryLoaded', actualizarContador);
 }

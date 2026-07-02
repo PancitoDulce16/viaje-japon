@@ -287,7 +287,7 @@ class CrowdDetectorUI {
                             ${analysis.isHoliday ? '<span class="crowd-badge extreme">🎌 FESTIVO</span>' : ''}
                         </div>
                         <div class="crowd-warning-subtitle">
-                            ${analysis.dayOfWeek}, ${new Date(analysis.date).toLocaleDateString('es-ES', {
+                            ${analysis.dayOfWeek}, ${window.TimeUtils.formatDate(analysis.date, {
                                 day: 'numeric',
                                 month: 'long',
                                 year: 'numeric'
@@ -338,7 +338,7 @@ class CrowdDetectorUI {
             return ''; // No hay información para esta actividad
         }
 
-        const dayOfWeek = new Date(date).toLocaleDateString('es-ES', { weekday: 'long' });
+        const dayOfWeek = window.TimeUtils.formatDate(date, { weekday: 'long' });
 
         // Check si está cerrado
         if (dayAnalysis.closedDays && dayAnalysis.closedDays.includes(dayOfWeek)) {
