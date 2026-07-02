@@ -967,26 +967,39 @@ export const TripsManager = {
 
           await this.createTrip(formData);
           this.closeCreateTripModal();
+
+          // 🆕 Si el viaje se creó sin template, no queda ningún itinerario - en vez
+          // de dejar al usuario con un viaje vacío hasta que descubra "Regenerar
+          // Itinerario" por su cuenta, se abre directamente el mismo generador
+          // inteligente (ciudades, intereses, ruta, aeropuertos, hoteles) que usa
+          // esa opción, ya con las fechas de este viaje precargadas.
+          if (!formData.useTemplate && window.SmartGeneratorWizard) {
+            const startDate = new Date(formData.dateStart);
+            const endDate = new Date(formData.dateEnd);
+            const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            setTimeout(() => {
+              Notifications.info('🧠 Vamos a armar tu itinerario...');
+              window.SmartGeneratorWizard.open({
+                totalDays,
+                tripStartDate: formData.dateStart,
+                tripEndDate: formData.dateEnd
+              });
+            }, 900); // Después del setTimeout(500ms) de createTrip() que selecciona/renderiza el viaje nuevo
+          }
         });
       }
     }, 100);
   },
 
-  // Mostrar wizard completo (llama al ItineraryBuilder)
+  // Mostrar wizard completo
+  // 🔧 Antes abría ItineraryBuilder.showCreateItineraryWizard() - un wizard
+  // paralelo y separado que nunca recibió ninguna de las mejoras de esta
+  // sesión (intereses ponderados, ruta manual con ciudades repetidas,
+  // aeropuertos, ayuda de hotel Yamanote, jetlag, validación de horarios...).
+  // Ahora usa el mismo flujo "Viaje Simple" (nombre+fechas) seguido del
+  // SmartGeneratorWizard real, en vez de mantener dos wizards divergentes.
   showFullTripWizard() {
-    // Cerrar modal de crear viaje
-    this.closeCreateTripModal();
-
-    // Esperar un momento y abrir el wizard completo
-    setTimeout(() => {
-      if (window.ItineraryBuilder && window.ItineraryBuilder.showCreateItineraryWizard) {
-        // 🔥 NUEVO: Pasar flag para que el wizard sepa que debe crear el trip
-        window.ItineraryBuilder.showCreateItineraryWizard(true);
-      } else {
-        console.error('ItineraryBuilder no está disponible');
-        Notifications.error('Error: El wizard de itinerario no está disponible');
-      }
-    }, 300);
+    this.showSimpleTripForm();
   },
 
   // Cerrar modal de crear viaje

@@ -502,7 +502,7 @@ function renderNoItinerary(){
       <div class="text-6xl mb-6">✈️</div>
       <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-4">¡Crea tu Itinerario!</h2>
       <p class="text-gray-600 dark:text-gray-200 mb-8 text-lg">Planifica tu viaje perfecto. Elige entre plantillas o crea uno desde cero.</p>
-      <button onclick="ItineraryBuilder.showCreateItineraryWizard()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition font-bold text-lg shadow-lg">✨ Crear Itinerario</button>
+      <button onclick="TripsManager.regenerateItinerary()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition font-bold text-lg shadow-lg">✨ Crear Itinerario</button>
     </div>
   </div>`;
 
@@ -1176,7 +1176,7 @@ function renderTripSelector(){
         ${currentItinerary ? `<button onclick="window.PDFExporter?.exportToPDF()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">📄 Exportar PDF</button>`:''}
         ${currentItinerary ? `<button onclick="window.runMasterOptimization?.()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">🚀 Optimizar Todo</button>`:''}
         ${currentItinerary ? `<button onclick="window.showBalanceAnalysis?.()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">⚖️ Balancear</button>`:''}
-        ${!currentItinerary ? `<button onclick="ItineraryBuilder.showCreateItineraryWizard()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition text-sm font-bold shadow-md">✨ Crear Itinerario</button>`:''}
+        ${!currentItinerary ? `<button onclick="TripsManager.regenerateItinerary()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition text-sm font-bold shadow-md">✨ Crear Itinerario</button>`:''}
       </div>
     </div>`;
 }
