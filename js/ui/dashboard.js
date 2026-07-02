@@ -88,6 +88,16 @@ class DashboardManager {
         try {
             console.log('🚀 Iniciando dashboard...');
 
+            // 🔧 Enganchar los botones de tabs YA, antes de esperar auth/carga de
+            // datos/los ~100 módulos de "IA" que se importan arriba (varios con
+            // inicialización async - IndexedDB, knowledge graphs, etc.). Antes esto
+            // corría al FINAL de init(), así que un click en un tab durante esa
+            // ventana (que puede tardar varios segundos) no hacía nada - sin error,
+            // simplemente el botón todavía no tenía listener. setupDashboardEvents()
+            // solo lee el HTML estático de los botones, no depende de auth ni datos,
+            // así que es seguro correrlo de una vez.
+            this.setupDashboardEvents();
+
             // 🔐 Cargar configuración local (API keys) - opcional si config-local.js no existe
             try {
                 await APP_CONFIG.loadLocalConfig();
@@ -124,9 +134,6 @@ class DashboardManager {
 
             // Inicializar el resto de la app
             await this.initializeApp();
-
-            // Configurar eventos del dashboard
-            this.setupDashboardEvents();
 
             this.isInitialized = true;
             console.log('✅ Dashboard inicializado correctamente');
