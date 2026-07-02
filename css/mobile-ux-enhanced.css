@@ -33,8 +33,8 @@
    ========================================== */
 
 @media (max-width: 768px) {
-  /* Buttons (excluir .rounded-full: botones-icono compactos) */
-  button:not(.rounded-full),
+  /* Buttons (excluir .rounded-full/.sos-button/.header-chip: compactos) */
+  button:not(.rounded-full):not(.sos-button):not(.header-chip),
   .btn,
   a.btn {
     min-height: 44px;

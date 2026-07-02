@@ -349,6 +349,155 @@ textarea::placeholder {
   background: var(--gradient-primary, linear-gradient(135deg, #E91E63 0%, #FF6B9D 100%));
 }
 
+/* =================================================================
+   TOP BAR — marca, chips de acción y botón SOS estilo hanko
+   ================================================================= */
+
+/* Marca: emblema torii en placa blanca + wordmark */
+.header-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  font-size: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+}
+
+html.dark .header-brand-mark {
+  background: rgba(26, 26, 26, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(212, 175, 55, 0.5);
+}
+
+.header-brand-name {
+  font-weight: 900;
+  font-size: 1.15rem;
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  white-space: nowrap;
+}
+
+/* Chips de acción: vidrio con borde real (no pill plano genérico) */
+.header-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.header-chip:hover {
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.55);
+  transform: translateY(-1px);
+}
+
+.header-chip-icon {
+  padding: 9px 11px;
+}
+
+html.dark .header-chip {
+  background: rgba(26, 26, 26, 0.6);
+  border-color: rgba(212, 175, 55, 0.35);
+}
+
+html.dark .header-chip:hover {
+  border-color: var(--ninja-gold, #D4AF37);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.25);
+}
+
+.header-chip-badge {
+  background: rgba(255, 255, 255, 0.9);
+  color: #be185d;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+html.dark .header-chip-badge {
+  background: var(--ninja-gold, #D4AF37);
+  color: #0a0a0a;
+}
+
+.header-kbd {
+  font-family: monospace;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* SOS: sello hanko circular — urgente pero japonés, no un pill más */
+.sos-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: radial-gradient(circle at 32% 28%, #ef4444 0%, #dc2626 45%, #991b1b 100%);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 3px 12px rgba(153, 27, 27, 0.5);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  flex-shrink: 0;
+}
+
+.sos-button:hover {
+  transform: scale(1.08);
+  box-shadow: 0 5px 18px rgba(153, 27, 27, 0.65);
+}
+
+/* Anillo de pulso sutil para que se encuentre de un vistazo */
+.sos-button::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 2px solid rgba(239, 68, 68, 0.7);
+  animation: sos-pulse 2.6s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sos-pulse {
+  0%   { transform: scale(1); opacity: 0.7; }
+  70%  { transform: scale(1.45); opacity: 0; }
+  100% { transform: scale(1.45); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sos-button::after { animation: none; }
+}
+
+.sos-button-sm {
+  width: 40px;
+  height: 40px;
+  font-size: 0.62rem;
+}
+
+html.dark .sos-button {
+  border-color: rgba(212, 175, 55, 0.8);
+  box-shadow: 0 3px 12px rgba(139, 0, 0, 0.7);
+}
+
 .activity-card {
   transition: all 0.3s ease;
   background: white;

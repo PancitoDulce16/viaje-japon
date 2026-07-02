@@ -21,8 +21,9 @@ html[data-theme="dark"] .japan-header {
     padding: 0rem !important;
 }
 
-/* Botones en header - MÁS GRANDES */
-.japan-header button {
+/* Botones en header - MÁS GRANDES
+   (excluir sos-button/header-chip: llevan su propio estilo) */
+.japan-header button:not(.sos-button):not(.header-chip) {
     padding: 0.6rem 1rem !important;
     font-size: 0.9rem !important;
     line-height: 1.4 !important;
@@ -81,27 +82,9 @@ html[data-theme="dark"] .japan-header button[aria-label="Notificaciones"]:hover 
     box-shadow: 0 4px 12px rgba(255, 107, 157, 0.4) !important;
 }
 
-/* Botón SOS - AMARILLO (solo modo oscuro) */
-html.dark .japan-header button[data-modal="emergency"],
-html[data-theme="dark"] .japan-header button[data-modal="emergency"],
-html.dark .japan-header button[aria-label="Emergencias"],
-html[data-theme="dark"] .japan-header button[aria-label="Emergencias"] {
-    background: linear-gradient(135deg, #ffd93d 0%, #ffe89f 100%) !important;
-    color: #1a0b2e !important;
-    border: none !important;
-    box-shadow: 0 2px 8px rgba(255, 217, 61, 0.3) !important;
-    transition: all 0.2s ease !important;
-    font-weight: 600 !important;
-}
-
-html.dark .japan-header button[data-modal="emergency"]:hover,
-html[data-theme="dark"] .japan-header button[data-modal="emergency"]:hover,
-html.dark .japan-header button[aria-label="Emergencias"]:hover,
-html[data-theme="dark"] .japan-header button[aria-label="Emergencias"]:hover {
-    background: linear-gradient(135deg, #ffcd1f 0%, #ffe080 100%) !important;
-    transform: translateY(-1px) !important;
-    box-shadow: 0 4px 12px rgba(255, 217, 61, 0.4) !important;
-}
+/* (Eliminado) Botón SOS amarillo en dark: un botón de emergencia debe leerse
+   ROJO. El estilo actual es .sos-button (sello hanko carmesí, main.css) con
+   anillo dorado en modo ninja — no sobreescribir aquí. */
 
 /* Dashboard section con background */
 #dashboardTopSection {

@@ -113,70 +113,90 @@
             <i class="fas fa-th"></i>
         </button>
 
-        <!-- Header Mejorado con más espacio -->
-        <header class="japan-header text-white shadow-lg sticky top-0 z-40">
-            <div class="max-w-7xl mx-auto px-6 py-4">
-                <!-- Primera fila: Controles principales (sin logo, está en el centro del dashboard) -->
-                <div class="flex justify-between items-center w-full">
-                    <!-- 🆕 BOTÓN MIS VIAJES - Lado Izquierdo -->
-                    <button
-                        onclick="window.TripsManager?.showTripsListModal()"
-                        class="hidden lg:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all hover:scale-105 font-semibold backdrop-blur-sm"
-                        aria-label="Mis Viajes"
-                        title="Ver todos mis viajes"
-                    >
-                        <i class="fas fa-suitcase-rolling text-lg"></i>
-                        <span>Mis Viajes</span>
-                        <span id="tripsCountBadge" class="ml-1 bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
-                    </button>
+        <!-- Header con identidad de marca + acciones -->
+        <header class="japan-header text-white sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5">
+                <div class="flex justify-between items-center w-full gap-3">
 
-                    <!-- Controles Desktop con mejor espaciado -->
-                    <div class="hidden lg:flex items-center gap-4">
-                        <!-- Botones de acción simplificados -->
-                        <div class="flex items-center gap-3">
-                            <!-- 🔍 Buscar (integrado en el header, antes flotaba sobre otros botones) -->
-                            <button
-                                onclick="window.GlobalSearch?.open()"
-                                class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all hover:scale-105 text-sm"
-                                aria-label="Buscar"
-                                title="Buscar (Ctrl+K)"
-                            >
-                                <i class="fas fa-search"></i>
-                                <span>Buscar</span>
-                                <kbd class="px-2 py-0.5 bg-white/15 rounded text-xs">Ctrl+K</kbd>
-                            </button>
-
-                            <button
-                                id="enableNotificationsBtn"
-                                class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-all hover:scale-105"
-                                aria-label="Notificaciones"
-                                title="Notificaciones"
-                            >
-                                <i class="fas fa-bell text-lg"></i>
-                            </button>
-
-                            <button
-                                data-modal="emergency"
-                                class="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 transition-all hover:scale-105 font-semibold shadow-md"
-                                aria-label="Emergencias"
-                            >
-                                <i class="fas fa-exclamation-triangle mr-2"></i>SOS
-                            </button>
-                        </div>
+                    <!-- Marca (visible en todos los tamaños; la barra sticky lleva la identidad) -->
+                    <div class="header-brand flex items-center gap-2.5 min-w-0 select-none">
+                        <span class="header-brand-mark" aria-hidden="true">⛩️</span>
+                        <span class="header-brand-name">Japitin</span>
                     </div>
 
-                    <!-- Menú Hamburguesa Mobile/Tablet -->
-                    <button
-                        id="menuToggle"
-                        class="lg:hidden p-3 rounded-xl bg-white/10 hover:bg-white/20 transition"
-                        aria-label="Abrir menú"
-                    >
-                        <i class="fas fa-bars text-2xl"></i>
-                    </button>
+                    <!-- Cluster Desktop -->
+                    <div class="hidden lg:flex items-center gap-2.5">
+                        <button
+                            onclick="window.TripsManager?.showTripsListModal()"
+                            class="header-chip"
+                            aria-label="Mis Viajes"
+                            title="Ver todos mis viajes"
+                        >
+                            <i class="fas fa-suitcase-rolling"></i>
+                            <span>Mis Viajes</span>
+                            <span id="tripsCountBadge" class="header-chip-badge">0</span>
+                        </button>
+
+                        <button
+                            onclick="window.GlobalSearch?.open()"
+                            class="header-chip"
+                            aria-label="Buscar"
+                            title="Buscar (Ctrl+K)"
+                        >
+                            <i class="fas fa-search"></i>
+                            <span>Buscar</span>
+                            <kbd class="header-kbd">Ctrl+K</kbd>
+                        </button>
+
+                        <button
+                            id="enableNotificationsBtn"
+                            class="header-chip header-chip-icon"
+                            aria-label="Notificaciones"
+                            title="Notificaciones"
+                        >
+                            <i class="fas fa-bell"></i>
+                        </button>
+
+                        <button
+                            data-modal="emergency"
+                            class="sos-button"
+                            aria-label="Emergencias — teléfonos y frases de auxilio"
+                            title="Emergencias"
+                        >
+                            SOS
+                        </button>
+                    </div>
+
+                    <!-- Cluster Mobile/Tablet -->
+                    <div class="flex lg:hidden items-center gap-2">
+                        <button
+                            onclick="window.GlobalSearch?.open()"
+                            class="header-chip header-chip-icon"
+                            aria-label="Buscar"
+                        >
+                            <i class="fas fa-search"></i>
+                        </button>
+
+                        <button
+                            data-modal="emergency"
+                            class="sos-button sos-button-sm"
+                            aria-label="Emergencias"
+                        >
+                            SOS
+                        </button>
+
+                        <button
+                            id="menuToggle"
+                            class="header-chip header-chip-icon"
+                            aria-label="Abrir menú"
+                        >
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Segunda fila: Información del viaje (con margen superior) -->
-                <div id="currentTripHeader" class="mt-4"></div>
+                <!-- Segunda fila: Información del viaje -->
+                <div id="currentTripHeader" class="mt-3"></div>
             </div>
         </header>
 

@@ -93,8 +93,9 @@
     box-shadow: var(--shadow-pink);
 }
 
-/* Botones kawaii - redondeados y suaves */
-button:not(.floating-btn):not([class*="bg-"]) {
+/* Botones kawaii - redondeados y suaves
+   (excluir sos-button/header-chip: llevan su propio estilo de header) */
+button:not(.floating-btn):not([class*="bg-"]):not(.sos-button):not(.header-chip) {
     background: var(--gradient-kawaii-sakura);
     border: none;
     border-radius: 12px;

@@ -89,15 +89,16 @@
     transform: translateY(-2px);
 }
 
-/* Botones estilo ninja */
-.dark button:not(.floating-btn):not([class*="bg-"]) {
+/* Botones estilo ninja
+   (excluir sos-button/header-chip: llevan su propio estilo de header) */
+.dark button:not(.floating-btn):not([class*="bg-"]):not(.sos-button):not(.header-chip) {
     background: var(--gradient-ninja-steel);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
     transition: all 0.2s ease-out;
 }
 
-.dark button:not(.floating-btn):hover {
+.dark button:not(.floating-btn):not(.sos-button):not(.header-chip):hover {
     border-color: var(--ninja-gold);
     box-shadow: var(--shadow-gold);
 }
