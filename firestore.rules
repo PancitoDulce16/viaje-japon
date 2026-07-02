@@ -26,7 +26,9 @@ service cloud.firestore {
                data.amount is number && data.amount > 0 &&
                data.category is string &&
                data.timestamp is number &&
-               data.addedBy == request.auth.email;
+               // OJO: es request.auth.token.email — "request.auth.email" no
+               // existe en las reglas y hacía fallar TODAS las altas de gastos
+               data.addedBy == request.auth.token.email;
     }
 
     // =====================================================================

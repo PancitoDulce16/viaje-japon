@@ -126,12 +126,7 @@ class MobileFirst {
     this.hapticFeedback('light');
 
     // Handle special tabs
-    if (tabName === 'budget') {
-      // Open budget intelligence (sin args: usa los datos del viaje real)
-      if (window.BudgetIntelligenceUI) {
-        window.BudgetIntelligenceUI.showDashboard();
-      }
-    } else if (tabName === 'tools') {
+    if (tabName === 'tools') {
       // Show tools menu
       this.showToolsMenu();
     } else if (tabName === 'more') {

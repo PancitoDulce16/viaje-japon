@@ -84,6 +84,10 @@ export const BudgetTracker = {
   },
 
   renderInTab() {
+    // Notificar a otras vistas (Bento Budget) que los gastos cambiaron —
+    // renderInTab se invoca tras cada sync/alta/baja, es el hook natural
+    window.dispatchEvent(new CustomEvent('expensesUpdated'));
+
     const container = document.getElementById('budgetTrackerContent');
     if (!container) return;
 

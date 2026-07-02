@@ -222,6 +222,10 @@
                     <i class="far fa-calendar-alt"></i>
                     <span class="hidden md:inline ml-2">Itinerario</span>
                 </button>
+                <button data-tab="budget" class="tab-btn">
+                    <span>🍱</span>
+                    <span class="hidden md:inline ml-2">Presupuesto</span>
+                </button>
                 <button data-tab="preparation" class="tab-btn">
                     <i class="fas fa-tasks"></i>
                     <span class="hidden md:inline ml-2">Preparación</span>
@@ -299,6 +303,7 @@
             </div>
 
             <div id="content-itinerary" class="tab-content"></div>
+            <div id="content-budget" class="tab-content hidden"></div>
             <div id="content-preparation" class="tab-content hidden"></div>
             <div id="content-flights" class="tab-content hidden"></div>
             <div id="content-hotels" class="tab-content hidden"></div>
@@ -412,6 +417,9 @@
 
     <!-- 💰 BUDGET TRACKER - Sistema de tracking de gastos -->
     <script type="module" src="/js/features/budget/budget-tracker.js"></script>
+
+    <!-- 🍱 BENTO BUDGET - Presupuesto visual interactivo (tab Presupuesto) -->
+    <script type="module" src="/js/features/budget/bento-budget.js"></script>
 
     <!-- 🎫 RESERVATIONS MANAGER - Gestor de reservas -->
     <script type="module" src="/js/features/trips/reservations-manager.js"></script>
