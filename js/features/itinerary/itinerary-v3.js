@@ -1230,9 +1230,22 @@ function renderDaySelector(){
     </button>`;
   }).join('');
 
-  // Mantener el día activo a la vista
-  container.querySelector('.day-btn.bg-red-600, .day-btn[class*="bg-red-600"]')
-    ?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  // Mantener el día activo a la vista dentro del selector horizontal (#daySelector
+  // solo tiene overflow-x-auto, sin overflow-y) - scrollIntoView({block:'nearest'})
+  // evalúa AMBOS ejes contra el ancestro scrolleable más cercano en cada uno, y como
+  // este contenedor no scrollea verticalmente, ese ancestro termina siendo la propia
+  // página. Si el header sticky de arriba (~200px) tapa parcialmente el botón, el
+  // navegador "corrige" moviendo el scroll de TODA la página en vez de solo el de
+  // este selector - la página se abría scrolleada a un punto random cada vez que se
+  // renderizaba el itinerario (cada balance, cada edición...). Mover solo scrollLeft
+  // del contenedor evita tocar el scroll vertical de la página por completo.
+  const activeBtn = container.querySelector('.day-btn.bg-red-600, .day-btn[class*="bg-red-600"]');
+  if (activeBtn) {
+    const containerRect = container.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+    const offset = (btnRect.left + btnRect.width / 2) - (containerRect.left + containerRect.width / 2);
+    container.scrollBy({ left: offset, behavior: 'smooth' });
+  }
 }
 
 /**
