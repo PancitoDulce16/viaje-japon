@@ -20,8 +20,10 @@ const JRPassUI = {
           </p>
         </div>
 
+        <div id="jrPassRealTripSection"></div>
+
         <div class="ejemplos-section">
-          <h4 style="font-weight: 700; margin-bottom: 12px;">📍 Itinerarios de Ejemplo:</h4>
+          <h4 style="font-weight: 700; margin-bottom: 12px;">📍 O prueba con un itinerario de ejemplo:</h4>
           <div class="ejemplos-grid">
             <button class="ejemplo-btn" onclick="JRPassUI.cargarEjemplo('clasico')">
               Ruta Clásica (7 días)
@@ -69,10 +71,62 @@ const JRPassUI = {
       </div>
     `;
 
+    this.renderRealTripSection();
+
     // Agregar primer viaje por defecto
     if (this.viajes.length === 0) {
       this.agregarViaje();
     }
+  },
+
+  /**
+   * 🆕 Si hay un itinerario real cargado (window.getCurrentItinerary, ver
+   * itinerary-v3.js), ofrece usarlo directamente en vez de forzar al
+   * usuario a re-escribir su ruta a mano o elegir un ejemplo genérico que
+   * no tiene nada que ver con su viaje.
+   */
+  renderRealTripSection() {
+    const container = document.getElementById('jrPassRealTripSection');
+    if (!container) return;
+
+    const itinerary = window.getCurrentItinerary?.();
+    const derivado = window.JRPassCalculator.derivarViajesDeItinerario(itinerary);
+
+    if (!derivado) {
+      container.innerHTML = '';
+      return;
+    }
+
+    container.innerHTML = `
+      <div style="background: rgba(16, 185, 129, 0.1); border: 2px solid rgba(16, 185, 129, 0.4); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+        <p style="font-weight: 700; margin-bottom: 4px;">🎯 Usa tu itinerario real</p>
+        <p style="font-size: 0.85rem; margin-bottom: 12px; opacity: 0.85;">
+          Detectamos ${derivado.viajes.length} traslado${derivado.viajes.length === 1 ? '' : 's'} entre ciudades en tu itinerario actual (${derivado.dias} días) - nada de rutas genéricas.
+        </p>
+        <button class="ejemplo-btn" onclick="JRPassUI.usarItinerarioReal()">
+          ✅ Calcular con MI itinerario
+        </button>
+      </div>
+    `;
+  },
+
+  /**
+   * 🆕 Carga los traslados reales del itinerario actual y calcula de una.
+   */
+  usarItinerarioReal() {
+    const itinerary = window.getCurrentItinerary?.();
+    const derivado = window.JRPassCalculator.derivarViajesDeItinerario(itinerary);
+    if (!derivado) return;
+
+    this.viajes = derivado.viajes;
+    // Redondear a la duración de pase más cercana disponible (7/14/21)
+    this.diasSeleccionados = derivado.dias <= 7 ? 7 : (derivado.dias <= 14 ? 14 : 21);
+
+    this.renderViajesLista();
+    document.querySelectorAll('.btn-dias').forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.dias) === this.diasSeleccionados);
+    });
+    this.calcular();
   },
 
   cargarEjemplo(tipo) {

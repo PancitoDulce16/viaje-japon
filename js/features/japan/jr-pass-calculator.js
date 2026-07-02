@@ -181,6 +181,48 @@ const ITINERARIOS_EJEMPLO = {
   }
 };
 
+/**
+ * 🆕 Deriva los "viajes" (traslados entre ciudades) directamente del
+ * itinerario REAL del usuario, en vez de obligarlo a re-escribir su ruta a
+ * mano o elegir uno de los 4 itinerarios de ejemplo genéricos. Recorre los
+ * días en orden y registra un viaje cada vez que la ciudad cambia de un día
+ * al siguiente (incluye los day trips: is DayTrip también cuenta como un
+ * traslado ida-y-vuelta real en tren, aunque no cambie de hotel).
+ * @param {Object} itinerary - el itinerario actual (itinerary.days)
+ * @returns {{ viajes: Array, dias: number } | null}
+ */
+function derivarViajesDeItinerario(itinerary) {
+  if (!itinerary?.days || itinerary.days.length < 2) return null;
+
+  const normalizarCiudad = (rawCity) => {
+    if (!rawCity) return null;
+    // Días de transición pueden venir como "Tokyo/Kyoto" - usar la ciudad del día en sí
+    const clean = String(rawCity).split(/[/\-→]/)[0].trim();
+    const match = CIUDADES.find(c => c.toLowerCase() === clean.toLowerCase());
+    return match || clean; // si no está en la lista, se usa tal cual (calcularPrecioRuta estima)
+  };
+
+  const legCounts = new Map(); // "origen|destino" -> veces
+
+  for (let i = 0; i < itinerary.days.length - 1; i++) {
+    const desde = normalizarCiudad(itinerary.days[i].city);
+    const hacia = normalizarCiudad(itinerary.days[i + 1].city);
+    if (!desde || !hacia || desde === hacia) continue;
+
+    const key = `${desde}|${hacia}`;
+    legCounts.set(key, (legCounts.get(key) || 0) + 1);
+  }
+
+  const viajes = Array.from(legCounts.entries()).map(([key, veces]) => {
+    const [origen, destino] = key.split('|');
+    return { origen, destino, veces };
+  });
+
+  if (viajes.length === 0) return null;
+
+  return { viajes, dias: itinerary.days.length };
+}
+
 // Export
 if (typeof window !== 'undefined') {
   window.JRPassCalculator = {
@@ -190,6 +232,7 @@ if (typeof window !== 'undefined') {
     ejemplos: ITINERARIOS_EJEMPLO,
     calcularPrecio: calcularPrecioRuta,
     calcularValor: calcularValorJRPass,
-    generarRecomendaciones
+    generarRecomendaciones,
+    derivarViajesDeItinerario
   };
 }
