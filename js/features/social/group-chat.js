@@ -66,6 +66,30 @@ export const GroupChat = {
     return localStorage.getItem('currentTripId');
   },
 
+  /**
+   * 🆕 Abre el modal de chat (#modal-chat, definido en modals.js pero nunca
+   * mostrado por nadie - GroupChat.init() no tenía ningún trigger real en
+   * toda la app, era código completamente muerto pese a ser la implementación
+   * más completa de las dos que existían).
+   */
+  open() {
+    const modal = document.getElementById('modal-chat');
+    if (!modal) return;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    this.init();
+  },
+
+  /**
+   * 🆕 Cierra el modal y desuscribe el listener de Firestore.
+   */
+  close() {
+    const modal = document.getElementById('modal-chat');
+    if (modal) modal.classList.remove('active');
+    document.body.style.overflow = '';
+    this.cleanup();
+  },
+
   init() {
     const tripId = this.getCurrentTripId();
     if (!tripId) {
@@ -202,9 +226,24 @@ export const GroupChat = {
 
     const currentUserId = auth.currentUser?.uid;
 
-    container.innerHTML = this.messages.map((msg, index) => {
+    // 🔧 Antes había DOS implementaciones de chat separadas escribiendo en la misma
+    // colección Firestore (trips/{tripId}/chat) con esquemas de campo distintos -
+    // ChatHandler (chat.js, ahora retirado) usaba {text, createdAt, uid, author} y
+    // este módulo usa {message, timestamp, userId, userEmail, userName}. Si alguien
+    // ya mandó mensajes con el esquema viejo, se leen acá con fallback en vez de
+    // desaparecer o mostrarse en blanco.
+    const normalized = this.messages.map(msg => ({
+      ...msg,
+      message: msg.message ?? msg.text ?? '',
+      userId: msg.userId ?? msg.uid ?? null,
+      userEmail: msg.userEmail ?? msg.author ?? null,
+      userName: msg.userName ?? (msg.author ? msg.author.split('@')[0] : null),
+      timestamp: msg.timestamp ?? msg.createdAt ?? null
+    }));
+
+    container.innerHTML = normalized.map((msg, index) => {
       const isCurrentUser = msg.userId === currentUserId;
-      const showAvatar = index === 0 || this.messages[index - 1].userId !== msg.userId;
+      const showAvatar = index === 0 || normalized[index - 1].userId !== msg.userId;
       const username = msg.userName || msg.userEmail?.split('@')[0] || 'Usuario';
       const time = this.formatTime(msg.timestamp);
 

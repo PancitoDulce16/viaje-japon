@@ -125,6 +125,19 @@ html:not(.dark) #dashboardTopSection {
     }
 }
 
+/* 🔧 Este "hero" (min-height:80vh en móvil) es fijo y con !important, así que
+   vive fuera de cualquier .tab-content - aparecía completo arriba de CUALQUIER
+   tab (Mapa, Presupuesto...), no solo Itinerario, ocupando el 80% de la
+   pantalla en móvil antes de llegar al contenido real de esa tab. dashboard.js
+   alterna esta clase al cambiar de tab en vez de solo esconder el tab-content.
+   Necesita selector con la MISMA especificidad (#id) + !important para poder
+   ganarle a las reglas de arriba - un style.display inline no alcanza contra
+   reglas #id !important. */
+#dashboardTopSection.js-tab-hidden {
+    display: none !important;
+    min-height: 0 !important;
+}
+
 /* Content layer */
 #dashboardTopSection > * {
     position: relative !important;

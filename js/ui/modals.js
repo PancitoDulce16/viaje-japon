@@ -656,7 +656,7 @@ export const ModalRenderer = {
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-3xl w-full">
                     <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
                         <h2 class="text-2xl font-bold dark:text-white">💬 Chat Grupal</h2>
-                        <button class="modal-close text-3xl hover:text-red-600 transition" data-modal-close="chat" aria-label="Cerrar">&times;</button>
+                        <button class="modal-close text-3xl hover:text-red-600 transition" onclick="window.GroupChat.close()" aria-label="Cerrar">&times;</button>
                     </div>
                     <div id="chatModalContent"></div>
                 </div>

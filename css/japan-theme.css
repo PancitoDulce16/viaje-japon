@@ -1065,18 +1065,22 @@ a:focus {
    ======================================== */
 
 /* 🔧 FIX: Prevenir overflow horizontal */
-/* clip, NO hidden: "overflow-x: hidden" fuerza overflow-y:auto (spec) y
-   creaba TRES scrollers anidados (html > body > #appDashboard) — la causa
-   del scroll errático en móvil y desktop. clip recorta sin crear scroller.
-   En html sí se permite el scroller vertical (es el scroll de la página). */
+/* overflow-x:clip SIN overflow-y explícito rompe el scroll vertical de TODA
+   la página: el spec computa el eje 'visible' (el default de overflow-y) a
+   'hidden' cuando el otro eje es 'clip' - lo opuesto de lo que se buscaba
+   aquí. Confirmado con Playwright: window.scrollTo()/wheel no hacían nada,
+   scrollY quedaba en 0 siempre, en móvil Y desktop. overflow-y:auto
+   explícito evita que se dispare esa regla de interop. */
 html {
   overflow-x: clip;
+  overflow-y: auto;
   max-width: 100vw;
   position: relative;
 }
 
 body {
   overflow-x: clip;
+  overflow-y: auto;
   max-width: 100vw;
   position: relative;
 }

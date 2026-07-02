@@ -27,10 +27,14 @@ body {
   min-height: 100vh;
   background: #fef3f8;
   color: #1f2937;
-  /* clip, NO hidden: "overflow-x: hidden" fuerza overflow-y a "auto" (spec)
-     y convertía a body en un scroller anidado dentro de html — causa del
-     scroll roto en móvil y desktop. clip recorta sin crear scroller. */
+  /* overflow-x:clip SIN overflow-y explícito rompe el scroll vertical de
+     TODA la página: la regla de interop del spec dice que 'clip' en un eje
+     fuerza el otro eje (si está en su valor inicial 'visible') a computar
+     como 'hidden', no 'auto' - lo opuesto de lo que se buscaba. Confirmado
+     con Playwright: window.scrollTo() no hacía nada, scrollY quedaba en 0
+     siempre. overflow-y:auto explícito evita que se dispare esa regla. */
   overflow-x: clip;
+  overflow-y: auto;
 }
 
 /* Dark mode */

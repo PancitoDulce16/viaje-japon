@@ -407,10 +407,11 @@
     }
 
     /* Ocultar scrollbar horizontal innecesaria.
-       clip, NO hidden: hidden fuerza overflow-y:auto y convierte a body
-       en scroller anidado (scroll roto en móvil) */
+       overflow-x:clip SIN overflow-y explícito rompe el scroll vertical
+       (ver critical.css) - overflow-y:auto explícito lo evita. */
     body {
         overflow-x: clip !important;
+        overflow-y: auto !important;
     }
 }
 

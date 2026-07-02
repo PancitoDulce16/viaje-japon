@@ -1078,8 +1078,10 @@ export const TripsManager = {
 
     headerContainer.innerHTML = `
       <div id="dashboardTopSection" class="space-y-6">
-        <!-- Banner JAPITIN grande centrado -->
-        <div class="flex justify-center mb-4">
+        <!-- Banner JAPITIN grande centrado - oculto en móvil: el header de arriba ya
+             muestra la marca "Japitin", este banner solo añadía ~100px+ de alto
+             redundante empujando el itinerario real fuera de la pantalla inicial. -->
+        <div class="hidden md:flex justify-center mb-4">
           <img src="/images/icons/japitin banner.png" alt="Japitin" class="h-20 md:h-24 rounded-lg border-2 border-white/20 bg-white/95 px-4 py-2 shadow-lg">
         </div>
 
@@ -1087,21 +1089,21 @@ export const TripsManager = {
         <div class="flex items-center justify-center gap-2 sm:gap-3 flex-wrap px-2">
           <button
             onclick="TripsManager.showCreateTripModal()"
-            class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2.5 px-6 rounded-lg transition hover:scale-105 shadow-md text-sm"
+            class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2.5 px-3 sm:px-6 rounded-lg transition hover:scale-105 shadow-md text-sm"
           >
-            ➕ Agregar Viaje
+            ➕ <span class="hidden sm:inline">Agregar Viaje</span>
           </button>
           <button
             onclick="TripsManager.regenerateItinerary()"
-            class="bg-purple-500/80 hover:bg-purple-600 text-white font-semibold py-2.5 px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-purple-400/30 text-sm shadow-lg"
+            class="bg-purple-500/80 hover:bg-purple-600 text-white font-semibold py-2.5 px-3 sm:px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-purple-400/30 text-sm shadow-lg"
           >
-            🧠 Regenerar Itinerario
+            🧠 <span class="hidden sm:inline">Regenerar Itinerario</span>
           </button>
           <button
             onclick="TripsManager.clearItinerary()"
-            class="bg-red-500/80 hover:bg-red-600 text-white font-semibold py-2.5 px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-red-400/30 text-sm shadow-lg"
+            class="bg-red-500/80 hover:bg-red-600 text-white font-semibold py-2.5 px-3 sm:px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-red-400/30 text-sm shadow-lg"
           >
-            🗑️ Vaciar Itinerario
+            🗑️ <span class="hidden sm:inline">Vaciar Itinerario</span>
           </button>
 
           <!-- 🆕 Botón de Exportar con Dropdown -->
@@ -1109,9 +1111,9 @@ export const TripsManager = {
             <button
               onclick="TripsManager.toggleExportMenu()"
               id="exportButton"
-              class="bg-green-500/80 hover:bg-green-600 text-white font-semibold py-2.5 px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-green-400/30 text-sm shadow-lg flex items-center gap-2"
+              class="bg-green-500/80 hover:bg-green-600 text-white font-semibold py-2.5 px-3 sm:px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-green-400/30 text-sm shadow-lg flex items-center gap-2"
             >
-              📤 Exportar
+              📤 <span class="hidden sm:inline">Exportar</span>
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
               </svg>
@@ -1173,7 +1175,7 @@ export const TripsManager = {
         </div>
 
         <!-- Fila 2: Dashboard de Estadísticas Visuales -->
-        <div id="tripStatsDashboard" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 animate-fade-in">
+        <div id="tripStatsDashboard" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 animate-fade-in">
           <!-- Loading placeholder -->
           <div class="col-span-full text-center text-white/60 text-sm py-4">
             <i class="fas fa-spinner animate-spin mr-2"></i>Cargando estadísticas...
@@ -1181,6 +1183,20 @@ export const TripsManager = {
         </div>
       </div>
     `;
+
+    // 🔧 Este header (banner + botones + tarjetas de stats) vuelve a renderizarse
+    // cada vez que llega una actualización del listener de Firestore del viaje -
+    // no solo una vez al cargar. Si el usuario está en otro tab (ej. Mapa) cuando
+    // eso pasa, este re-render deshacía el display:none que switchTab() le había
+    // puesto, y el header volvía a taparlo todo. Aplicar el estado correcto acá
+    // también, no solo en switchTab().
+    const topSection = document.getElementById('dashboardTopSection');
+    if (topSection) {
+      const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab
+        || document.querySelector('.mobile-nav-item.active')?.dataset.tab
+        || 'itinerary';
+      topSection.classList.toggle('js-tab-hidden', activeTab !== 'itinerary');
+    }
 
     // Cargar estadísticas de forma asíncrona
     this.loadTripStatistics();

@@ -481,6 +481,19 @@ class DashboardManager {
             console.error(`❌ Tab content not found: content-${tabName}`);
         }
 
+        // 🔧 El header de resumen del viaje (banner, botones de acción, tarjetas de
+        // Progreso/Actividades/Presupuesto - #dashboardTopSection) es PERSISTENTE:
+        // vive en #currentTripHeader, fuera de cualquier .tab-content, así que
+        // aparecía completo arriba de CUALQUIER tab, no solo Itinerario. En móvil
+        // ocupaba más de una pantalla completa antes de llegar al mapa, presupuesto,
+        // etc. - "cambiaba de tab" pero se veía exactamente igual porque lo único
+        // visible en el primer scroll era este header repetido. Solo tiene sentido
+        // mostrarlo en el tab de Itinerario.
+        const topSection = document.getElementById('dashboardTopSection');
+        if (topSection) {
+            topSection.classList.toggle('js-tab-hidden', tabName !== 'itinerary');
+        }
+
         // 📊 Refrescar los charts de Analytics con datos actuales al entrar al tab
         if (tabName === 'analytics' && window.AnalyticsIntegration) {
             window.AnalyticsIntegration.showAnalytics();
