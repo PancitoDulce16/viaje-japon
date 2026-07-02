@@ -1181,17 +1181,58 @@ function renderTripSelector(){
     </div>`;
 }
 
+// Emoji representativo por ciudad para las tarjetas del selector de días
+const DAY_CITY_EMOJI = {
+  tokyo: '🗼', kyoto: '⛩️', osaka: '🏯', hiroshima: '🕊️', nara: '🦌',
+  hakone: '♨️', kamakura: '🗿', yokohama: '⚓', sapporo: '❄️', nagoya: '🏯',
+  kobe: '🐄', nikko: '🌲', takayama: '🏘️', kanazawa: '🎋', fukuoka: '🍜',
+  sendai: '🌳', matsumoto: '🐦', shirakawago: '🏔️', himeji: '🦅'
+};
+
 function renderDaySelector(){
   const container=document.getElementById('daySelector'); if(!container) return;
   const itinerary=currentItinerary; if(!itinerary||!itinerary.days){ container.innerHTML=''; return; }
   const days=itinerary.days||[];
 
   // Agregar clases para scroll horizontal
-  container.className = 'flex gap-3 overflow-x-auto pb-2 px-2 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent';
+  container.className = 'flex gap-2.5 overflow-x-auto pb-2 px-2 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent';
 
-  container.innerHTML = days.map(day => `
-    <button data-day="${day.day}" class="day-btn px-5 py-2.5 rounded-xl whitespace-nowrap font-semibold transition-all hover:scale-105 flex-shrink-0 ${ currentDay===day.day ? 'bg-red-600 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-500 shadow-md' }">Día ${day.day}</button>
-  `).join('');
+  // Mini-tarjetas con info de un vistazo (fecha, ciudad, actividades, costo)
+  // en vez de píldoras que solo decían "Día N"
+  container.innerHTML = days.map(day => {
+    const active = currentDay === day.day;
+    const count = day.activities?.length || 0;
+    const cost = calculateDayTotalCost(day);
+    // Los días guardan la ciudad en campos distintos según el generador:
+    // city/cityName (template), location, o cities[] (wizard multi-ciudad)
+    const firstCity = Array.isArray(day.cities) ? day.cities[0] : null;
+    const cityKey = String(day.cityId || firstCity?.cityId || day.city || firstCity?.cityName || day.location || '').toLowerCase();
+    const icon = DAY_CITY_EMOJI[cityKey] || '📍';
+    const cityName = day.city || day.cityName || firstCity?.cityName || day.location || '';
+    const dateStr = day.date ? window.TimeUtils.formatDate(day.date, { weekday: 'short', day: 'numeric' }) : '';
+
+    return `
+    <button data-day="${day.day}"
+      class="day-btn flex flex-col items-start px-3.5 py-2 rounded-xl whitespace-nowrap transition-all hover:scale-[1.03] flex-shrink-0 text-left border-2 ${
+        active
+          ? 'bg-red-600 border-red-600 text-white shadow-lg'
+          : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:border-red-300 dark:hover:border-red-400 shadow-sm'
+      }">
+      <span class="flex items-center gap-1.5 font-extrabold text-sm leading-tight pointer-events-none">
+        <span>${icon}</span> Día ${day.day}
+      </span>
+      <span class="text-[10px] leading-tight capitalize pointer-events-none ${active ? 'text-white/85' : 'text-gray-500 dark:text-gray-400'}">
+        ${dateStr}${cityName ? ' · ' + cityName : ''}
+      </span>
+      <span class="text-[10px] font-bold leading-tight pointer-events-none ${active ? 'text-white/90' : 'text-red-500 dark:text-amber-300'}">
+        ${count === 0 ? 'día libre' : count + ' actividades'}${cost > 0 ? ' · ¥' + Math.round(cost).toLocaleString() : ''}
+      </span>
+    </button>`;
+  }).join('');
+
+  // Mantener el día activo a la vista
+  container.querySelector('.day-btn.bg-red-600, .day-btn[class*="bg-red-600"]')
+    ?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
 
 /**
@@ -1217,7 +1258,7 @@ function renderQuickStats(day) {
     const firstTime = sorted[0].time || '09:00';
     const lastActivity = sorted[sorted.length - 1];
     const lastTime = lastActivity.time || '18:00';
-    const lastDuration = lastActivity.duration || 90;
+    const lastDuration = getActivityDurationMinutes(lastActivity);
 
     const [firstH, firstM] = firstTime.split(':').map(Number);
     const [lastH, lastM] = lastTime.split(':').map(Number);
@@ -1268,7 +1309,7 @@ function renderQuickStats(day) {
         <div class="flex flex-col items-center">
           <span class="text-green-600 dark:text-green-400 text-xl mb-1">💰</span>
           <span class="text-xs text-gray-600 dark:text-gray-400">Costo</span>
-          <span class="font-bold text-gray-900 dark:text-white">¥${(totalCost / 1000).toFixed(1)}k</span>
+          <span class="font-bold text-gray-900 dark:text-white">${totalCost > 0 ? '¥' + Math.round(totalCost).toLocaleString() : 'Gratis'}</span>
         </div>
         <div class="flex flex-col items-center">
           <span class="${alertColor} text-xl mb-1">${alertsCount > 0 ? '🚨' : '✅'}</span>
@@ -1312,7 +1353,7 @@ function renderMiniTimeline(day) {
     const actMinutes = h * 60 + m;
     const offsetMinutes = actMinutes - (startHour * 60);
     const leftPercent = Math.max(0, (offsetMinutes / totalMinutes) * 100);
-    const widthPercent = Math.min(5, ((act.duration || 90) / totalMinutes) * 100);
+    const widthPercent = Math.min(5, (getActivityDurationMinutes(act) / totalMinutes) * 100);
 
     // Color según tipo de actividad
     let color = 'bg-purple-500';
@@ -1975,9 +2016,23 @@ function renderDayIntelligence(day) {
 function calculateDayTotalCost(day) {
   if (!day || !day.activities) return 0;
   return day.activities.reduce((total, activity) => {
-    const cost = parseFloat(activity.cost) || 0;
+    // Los generadores guardan el precio como "price"; el editor manual como
+    // "cost" — sin el fallback, los días generados sumaban ¥0
+    const cost = parseFloat(activity.cost ?? activity.price) || 0;
     return total + cost;
   }, 0);
+}
+
+/**
+ * Duración de una actividad en minutos. El campo `duration` puede ser un
+ * número (min) o un string tipo "30 min" / "2-3 horas" — sumarlo directo
+ * a números producía "NaNh" en las estadísticas del día.
+ */
+function getActivityDurationMinutes(activity, fallback = 90) {
+  const d = activity?.duration;
+  if (typeof d === 'number' && isFinite(d)) return d;
+  const parsed = window.TimeUtils.parseDuration(String(d || ''));
+  return parsed > 0 ? parsed : fallback;
 }
 
 /**
