@@ -406,9 +406,11 @@
         -webkit-overflow-scrolling: touch;
     }
 
-    /* Ocultar scrollbar horizontal innecesaria */
+    /* Ocultar scrollbar horizontal innecesaria.
+       clip, NO hidden: hidden fuerza overflow-y:auto y convierte a body
+       en scroller anidado (scroll roto en móvil) */
     body {
-        overflow-x: hidden !important;
+        overflow-x: clip !important;
     }
 }
 

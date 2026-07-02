@@ -1065,8 +1065,18 @@ a:focus {
    ======================================== */
 
 /* 🔧 FIX: Prevenir overflow horizontal */
-html, body {
-  overflow-x: hidden;
+/* clip, NO hidden: "overflow-x: hidden" fuerza overflow-y:auto (spec) y
+   creaba TRES scrollers anidados (html > body > #appDashboard) — la causa
+   del scroll errático en móvil y desktop. clip recorta sin crear scroller.
+   En html sí se permite el scroller vertical (es el scroll de la página). */
+html {
+  overflow-x: clip;
+  max-width: 100vw;
+  position: relative;
+}
+
+body {
+  overflow-x: clip;
   max-width: 100vw;
   position: relative;
 }
@@ -1074,7 +1084,7 @@ html, body {
 #appDashboard,
 #landingPage {
   max-width: 100vw;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* Asegurar que los containers no causen overflow */

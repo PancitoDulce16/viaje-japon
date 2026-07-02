@@ -27,7 +27,10 @@ body {
   min-height: 100vh;
   background: #fef3f8;
   color: #1f2937;
-  overflow-x: hidden;
+  /* clip, NO hidden: "overflow-x: hidden" fuerza overflow-y a "auto" (spec)
+     y convertía a body en un scroller anidado dentro de html — causa del
+     scroll roto en móvil y desktop. clip recorta sin crear scroller. */
+  overflow-x: clip;
 }
 
 /* Dark mode */
