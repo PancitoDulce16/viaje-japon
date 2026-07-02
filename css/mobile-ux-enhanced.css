@@ -101,6 +101,32 @@ html.dark .mobile-bottom-nav {
   body {
     padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-inset-bottom) + 20px);
   }
+
+  /* 🔧 #tabSelector (la barra de tabs horizontal de arriba, 11 tabs) se
+     queda visible además del bottom nav - dos sistemas de navegación
+     compitiendo, y varios tabs (ej. "Mapa") quedan scrolleados fuera de
+     la pantalla en el horizontal-scroll, así que un tap real del usuario
+     ahí nunca llega a registrar el click (confirmado con Playwright: el
+     botón renderiza en coordenadas x > ancho de viewport). El bottom nav
+     ya cubre Itinerario/Mapa/Presupuesto directamente y el resto de tabs
+     vía el menú "Más" (ver mobile-first.js showMoreMenu) - la barra de
+     arriba ahora se oculta en vez de convivir rota con el bottom nav. */
+  #tabSelector {
+    display: none !important;
+  }
+
+  /* 🔧 #main-fab-button (menú principal) y #a11yButton (accesibilidad) están
+     fijos a bottom:20px/bottom-4 sin importar el bottom nav de 60px+safe-area
+     que ahora vive ahí abajo - se superponían con el nav y con el contenido
+     justo encima de él. Subirlos por encima del bottom nav en vez de dejarlos
+     flotando en su mismo espacio. */
+  #main-fab-button {
+    bottom: calc(var(--bottom-nav-height) + var(--safe-area-inset-bottom) + 12px) !important;
+  }
+
+  #a11yButton {
+    bottom: calc(var(--bottom-nav-height) + var(--safe-area-inset-bottom) + 12px) !important;
+  }
 }
 
 .mobile-bottom-nav__items {

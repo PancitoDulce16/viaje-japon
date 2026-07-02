@@ -205,34 +205,47 @@ class MobileFirst {
 
   /**
    * Show more menu
+   *
+   * 🔧 El bottom nav solo trae 5 accesos directos (Itinerario, Mapa,
+   * Presupuesto, Herramientas, Más), pero la barra de tabs de arriba
+   * (#tabSelector, escondida en móvil - ver css/mobile-ux-enhanced.css)
+   * tiene 11 tabs reales. Este menú antes solo tenía botones placeholder
+   * (alert('Settings'), alert('Export')...) que no llevaban a ningún lado
+   * y NINGUNO de los 7 tabs que faltan (Preparación, Vuelos, Hoteles,
+   * Transporte, Atracciones, Esenciales, Analytics) - con la barra de
+   * arriba oculta en móvil, esos tabs habrían quedado completamente
+   * inalcanzables. Ahora lista todos los tabs reales que faltan primero.
    */
   showMoreMenu() {
+    const tabsFaltantes = [
+      { tab: 'preparation', icon: 'fa-tasks', label: 'Preparación' },
+      { tab: 'flights', icon: 'fa-plane', label: 'Vuelos' },
+      { tab: 'hotels', icon: 'fa-hotel', label: 'Hoteles' },
+      { tab: 'transport', icon: 'fa-train', label: 'Transporte' },
+      { tab: 'attractions', icon: 'fa-landmark', label: 'Atracciones' },
+      { tab: 'essentials', icon: 'fa-store', label: 'Esenciales' },
+      { tab: 'analytics', icon: 'fa-chart-pie', label: 'Analytics' }
+    ];
+
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black/50 flex items-end justify-center z-50';
     modal.innerHTML = `
-      <div class="bg-white dark:bg-gray-800 rounded-t-3xl w-full p-6 slide-in-bottom">
+      <div class="bg-white dark:bg-gray-800 rounded-t-3xl w-full p-6 slide-in-bottom max-h-[80vh] overflow-y-auto">
         <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
         <h3 class="text-xl font-bold mb-4">⚙️ Más Opciones</h3>
+        <div class="grid grid-cols-3 gap-3 mb-4">
+          ${tabsFaltantes.map(t => `
+            <button class="flex flex-col items-center gap-2 p-3 rounded-lg bg-gray-50 dark:bg-gray-700"
+              onclick="document.querySelector('[data-tab=&quot;${t.tab}&quot;]')?.click(); this.closest('.fixed').remove();">
+              <i class="fas ${t.icon} text-xl text-purple-600 dark:text-purple-400"></i>
+              <span class="text-xs text-center">${t.label}</span>
+            </button>
+          `).join('')}
+        </div>
         <div class="space-y-3 mb-4">
           <button class="w-full flex items-center gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700" onclick="window.TravelerProfilesUI?.showProfileSelector(); this.closest('.fixed').remove();">
             <i class="fas fa-user-circle text-xl text-purple-600"></i>
             <span>Mi Perfil de Viajero</span>
-          </button>
-          <button class="w-full flex items-center gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700" onclick="alert('Settings'); this.closest('.fixed').remove();">
-            <i class="fas fa-cog text-xl"></i>
-            <span>Configuración</span>
-          </button>
-          <button class="w-full flex items-center gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700" onclick="alert('Export'); this.closest('.fixed').remove();">
-            <i class="fas fa-download text-xl"></i>
-            <span>Exportar Itinerario</span>
-          </button>
-          <button class="w-full flex items-center gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700" onclick="alert('Share'); this.closest('.fixed').remove();">
-            <i class="fas fa-share text-xl"></i>
-            <span>Compartir Viaje</span>
-          </button>
-          <button class="w-full flex items-center gap-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700" onclick="alert('Help'); this.closest('.fixed').remove();">
-            <i class="fas fa-question-circle text-xl"></i>
-            <span>Ayuda</span>
           </button>
         </div>
         <button class="w-full py-3 bg-gray-200 dark:bg-gray-700 rounded-lg font-semibold" onclick="this.closest('.fixed').remove();">
