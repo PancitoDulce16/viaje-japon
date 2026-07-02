@@ -10,6 +10,8 @@ class GlobalSearch {
   constructor() {
     this.searchIndex = [];
     this.isOpen = false;
+    this.currentResults = [];   // resultados del query actual
+    this.selectedIndex = 0;     // navegación con flechas
   }
 
   /**
@@ -126,13 +128,13 @@ class GlobalSearch {
 
     // Comandos
     this.searchIndex.push(
-      { type: 'command', name: 'Optimizar Ruta', keywords: 'optimizar ruta geo mapa', icon: '🗺️', action: () => window.GeoOptimizerUI?.runOptimization() },
-      { type: 'command', name: 'Presupuesto Inteligente', keywords: 'presupuesto dinero gastos budget', icon: '💰', action: () => window.BudgetIntelligenceUI?.showDashboard() },
-      { type: 'command', name: 'AI Chat', keywords: 'chat ai asistente inteligencia', icon: '🤖', action: () => window.AIChatUI?.open() },
-      { type: 'command', name: 'Modo Live', keywords: 'live japon en vivo ahora', icon: '📍', action: () => window.LiveModeUI?.activate() },
-      { type: 'command', name: 'Guía Cultural', keywords: 'cultura etiqueta tradiciones', icon: '⛩️', action: () => window.CulturalKnowledgeUI?.showGuide() },
-      { type: 'command', name: 'Mi Perfil', keywords: 'perfil usuario tipo viajero', icon: '👤', action: () => window.TravelerProfilesUI?.showProfileSelector() },
-      { type: 'command', name: 'Health Dashboard', keywords: 'salud health itinerario', icon: '🏥', action: () => window.HealthDashboard?.toggle() }
+      { type: 'command', name: 'Optimizar Ruta', subtitle: 'Reordena el día por cercanía', keywords: 'optimizar ruta geo mapa', icon: '🗺️', action: () => window.GeoOptimizerUI?.runOptimization() },
+      { type: 'command', name: 'Bento Budget', subtitle: 'Presupuesto y gastos del viaje', keywords: 'presupuesto dinero gastos budget bento', icon: '🍱', action: () => document.querySelector('.tab-btn[data-tab="budget"]')?.click() },
+      { type: 'command', name: 'AI Chat', subtitle: 'Asistente del viaje', keywords: 'chat ai asistente inteligencia', icon: '🤖', action: () => window.AIChatUI?.open() },
+      { type: 'command', name: 'Modo Live', subtitle: 'Para usar durante el viaje', keywords: 'live japon en vivo ahora', icon: '📍', action: () => window.LiveModeUI?.activate() },
+      { type: 'command', name: 'Guía Cultural', subtitle: 'Etiqueta y tradiciones', keywords: 'cultura etiqueta tradiciones', icon: '⛩️', action: () => window.CulturalKnowledgeUI?.showGuide() },
+      { type: 'command', name: 'Mi Perfil', subtitle: 'Tipo de viajero', keywords: 'perfil usuario tipo viajero', icon: '👤', action: () => window.TravelerProfilesUI?.showProfileSelector() },
+      { type: 'command', name: 'Health Dashboard', subtitle: 'Salud del itinerario', keywords: 'salud health itinerario', icon: '🏥', action: () => window.HealthDashboard?.toggle() }
     );
 
     // 🔧 Antes esto era una lista fija de ~14 lugares y 7 comidas hardcodeadas,
@@ -146,11 +148,13 @@ class GlobalSearch {
         (day.activities || []).forEach(activity => {
           const name = activity.title || activity.name;
           if (!name) return;
+          const dayCity = day.city || day.cityName || day.location || '';
           this.searchIndex.push({
             type: 'actividad',
             name: name,
-            keywords: `${name} ${activity.category || ''} ${day.city || ''} dia ${day.day}`.toLowerCase(),
-            icon: activity.isMeal ? '🍜' : '📍',
+            subtitle: `Día ${day.day}${dayCity ? ' · ' + dayCity : ''}${activity.time ? ' · ' + activity.time : ''}`,
+            keywords: `${name} ${activity.category || ''} ${dayCity} dia ${day.day}`.toLowerCase(),
+            icon: activity.icon || activity.categoryIcon || (activity.isMeal ? '🍜' : '📍'),
             action: () => {
               this.close();
               window.DashboardApp?.switchTab('itinerary');
@@ -182,56 +186,107 @@ class GlobalSearch {
     }
 
     // Filtrar resultados
-    const results = this.searchIndex.filter(item =>
-      item.name.toLowerCase().includes(query.toLowerCase()) ||
-      item.keywords.toLowerCase().includes(query.toLowerCase())
+    const q = query.toLowerCase();
+    this.currentResults = this.searchIndex.filter(item =>
+      item.name.toLowerCase().includes(q) ||
+      item.keywords.toLowerCase().includes(q)
     ).slice(0, 10);
+    this.selectedIndex = 0;
+    this._lastQuery = query;
 
-    if (results.length === 0) {
+    if (this.currentResults.length === 0) {
       resultsContainer.innerHTML = `
         <div class="p-8 text-center text-gray-400 dark:text-gray-500">
-          <span class="text-4xl mb-2 block">🤷</span>
-          <p class="font-semibold">No se encontraron resultados</p>
-          <p class="text-sm mt-2 text-gray-500 dark:text-gray-600">"${query}"</p>
+          <span class="text-4xl mb-2 block">🍙</span>
+          <p class="font-semibold">Nada por aquí para "${this.escapeHtml(query)}"</p>
+          <p class="text-xs mt-2">Prueba con el nombre de una actividad, un día ("dia 3") o un comando</p>
         </div>
       `;
       return;
     }
 
-    // Renderizar resultados
-    resultsContainer.innerHTML = results.map((item, index) => `
-      <div class="search-result-item ${index === 0 ? 'bg-purple-50 dark:bg-purple-900/20' : ''} p-4 hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer transition-all border-b border-gray-100 dark:border-gray-700 last:border-0 transform hover:scale-[1.02]" onclick="window.GlobalSearch.selectResult(${this.searchIndex.indexOf(item)})">
+    this.renderResults();
+  }
+
+  escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  /** Resalta la parte del nombre que coincide con el query */
+  highlightMatch(name, query) {
+    const safe = this.escapeHtml(name);
+    if (!query) return safe;
+    const idx = name.toLowerCase().indexOf(query.toLowerCase());
+    if (idx < 0) return safe;
+    const pre = this.escapeHtml(name.slice(0, idx));
+    const hit = this.escapeHtml(name.slice(idx, idx + query.length));
+    const post = this.escapeHtml(name.slice(idx + query.length));
+    return `${pre}<mark class="bg-pink-200 dark:bg-amber-500/40 text-inherit rounded px-0.5">${hit}</mark>${post}`;
+  }
+
+  /** Renderiza this.currentResults con el seleccionado resaltado */
+  renderResults() {
+    const resultsContainer = document.getElementById('global-search-results');
+    resultsContainer.innerHTML = this.currentResults.map((item, index) => `
+      <div class="search-result-item ${index === this.selectedIndex ? 'bg-pink-50 dark:bg-amber-900/15 border-l-4 border-l-pink-500 dark:border-l-amber-400' : 'border-l-4 border-l-transparent'} px-4 py-3 hover:bg-pink-50/70 dark:hover:bg-amber-900/10 cursor-pointer transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+           data-result-idx="${index}"
+           onclick="window.GlobalSearch.selectResult(${index})"
+           onmouseenter="window.GlobalSearch.setSelected(${index})">
         <div class="flex items-center gap-3">
-          <span class="text-3xl">${item.icon}</span>
-          <div class="flex-1">
-            <div class="font-semibold text-gray-900 dark:text-white">${item.name}</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 capitalize flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
-              ${item.type}
+          <span class="text-2xl flex-shrink-0">${item.icon}</span>
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold text-gray-900 dark:text-white truncate">${this.highlightMatch(item.name, this._lastQuery)}</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
+              ${item.subtitle ? this.escapeHtml(item.subtitle) : `<span class="capitalize">${item.type}</span>`}
             </div>
           </div>
-          <kbd class="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600">Enter</kbd>
+          <span class="text-[10px] uppercase tracking-wide font-bold flex-shrink-0 px-2 py-0.5 rounded-full ${item.type === 'command' ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300' : 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'}">
+            ${item.type === 'command' ? '⚡ acción' : '📅 itinerario'}
+          </span>
         </div>
       </div>
     `).join('');
   }
 
-  /**
-   * Manejar teclas
-   */
-  handleKeyDown(e) {
-    // TODO: Implementar navegación con flechas
-    if (e.key === 'Enter') {
-      const firstResult = document.querySelector('.search-result-item');
-      if (firstResult) firstResult.click();
-    }
+  /** Cambia el seleccionado (hover o flechas) sin reconstruir todo */
+  setSelected(index) {
+    if (index === this.selectedIndex) return;
+    this.selectedIndex = index;
+    this.renderResults();
   }
 
   /**
-   * Seleccionar resultado
+   * Manejar teclas: ↑↓ navegan, Enter abre el seleccionado
+   */
+  handleKeyDown(e) {
+    if (!this.currentResults.length) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      this.selectedIndex = (this.selectedIndex + 1) % this.currentResults.length;
+      this.renderResults();
+      this.scrollSelectedIntoView();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      this.selectedIndex = (this.selectedIndex - 1 + this.currentResults.length) % this.currentResults.length;
+      this.renderResults();
+      this.scrollSelectedIntoView();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      this.selectResult(this.selectedIndex);
+    }
+  }
+
+  scrollSelectedIntoView() {
+    document.querySelector(`[data-result-idx="${this.selectedIndex}"]`)
+      ?.scrollIntoView({ block: 'nearest' });
+  }
+
+  /**
+   * Seleccionar resultado (índice dentro de currentResults)
    */
   selectResult(index) {
-    const item = this.searchIndex[index];
+    const item = this.currentResults[index];
     if (item && item.action) {
       item.action();
       this.close();
@@ -244,7 +299,7 @@ class GlobalSearch {
   executeCommand(command) {
     const commands = {
       '/optimizar': () => window.GeoOptimizerUI?.runOptimization(),
-      '/presupuesto': () => window.BudgetIntelligenceUI?.showDashboard(),
+      '/presupuesto': () => document.querySelector('.tab-btn[data-tab="budget"]')?.click(),
       '/chat': () => window.AIChatUI?.open(),
       '/live': () => window.LiveModeUI?.activate()
     };
