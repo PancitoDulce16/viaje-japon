@@ -64,6 +64,14 @@ export const SmartGeneratorWizard = {
   open(prefill = null) {
     this.currentStep = 1;
     this.step1Phase = 'basics';
+    // 🆕 Si el viaje ya se creó con fechas reales (entry point "trip creado
+    // sin plantilla, abrimos el wizard para armar el itinerario"), mostrar
+    // otra vez un formulario de fecha editable completo se siente como
+    // "me lo vuelven a preguntar" para el usuario, aunque técnicamente ya
+    // esté prellenado - se reemplaza por un resumen compacto con opción de
+    // cambiarlas si hace falta.
+    this.datesPrefilled = !!(prefill?.tripStartDate && prefill?.tripEndDate);
+    this.showDateEditor = false;
 
     if (prefill) {
       this.resetWizardData();
@@ -274,13 +282,22 @@ export const SmartGeneratorWizard = {
   },
 
   /**
-   * 🆕 Ciudad tocada en el mapa: agrega (si no estaba) y mantiene cityStops
-   * sincronizado - reusa syncCityStopsWithCities() tal cual, sin cambios.
+   * 🆕 Ciudad tocada en el mapa: toggle real (agrega si no estaba, quita si
+   * ya estaba - incluye todas sus paradas repetidas, ya que "deseleccionar
+   * una ciudad" es un concepto binario para el usuario). La primera versión
+   * solo agregaba por tap (nunca quitaba, solo vía el "×" del chip) para
+   * evitar ambigüedad - probado con usuarios reales, resultó poco intuitivo:
+   * tocar una ciudad ya elegida y que no pase nada se siente roto. Repetir
+   * una ciudad sigue siendo exclusivamente vía el "+" del chip (eso sí
+   * necesita ser una acción explícita, separada de un tap normal).
    */
   toggleCityFromMap(cityKey) {
     const displayName = this.cityLabel(cityKey);
-    if (!this.wizardData.cities.includes(displayName)) {
+    const idx = this.wizardData.cities.indexOf(displayName);
+    if (idx === -1) {
       this.wizardData.cities.push(displayName);
+    } else {
+      this.wizardData.cities.splice(idx, 1);
     }
     this.syncCityStopsWithCities();
     this.applyAirportOrderingToStops();
@@ -315,6 +332,23 @@ export const SmartGeneratorWizard = {
         </div>
 
         <!-- Fechas del viaje -->
+        ${this.datesPrefilled && !this.showDateEditor ? `
+        <div class="flex items-center justify-between gap-3 p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-lg">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">📅</span>
+            <div>
+              <p class="font-semibold text-gray-800 dark:text-white">
+                ${this.formatDateRangeEs(this.wizardData.tripStartDate, this.wizardData.tripEndDate)}
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Ya tenemos las fechas de tu viaje (${this.wizardData.totalDays} días)</p>
+            </div>
+          </div>
+          <button type="button" onclick="window.SmartGeneratorWizard.toggleDateEditor()"
+                  class="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap">
+            Cambiar
+          </button>
+        </div>
+        ` : `
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -342,6 +376,7 @@ export const SmartGeneratorWizard = {
             >
           </div>
         </div>
+        `}
 
         <!-- Aeropuertos de llegada/salida -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1153,6 +1188,30 @@ export const SmartGeneratorWizard = {
     if (endInput) this.wizardData.tripEndDate = endInput.value || null;
 
     this.saveToSessionStorage();
+  },
+
+  /**
+   * 🆕 Muestra los inputs de fecha editables en vez del resumen compacto
+   * (solo relevante cuando datesPrefilled=true, ver open()).
+   */
+  toggleDateEditor() {
+    this.showDateEditor = true;
+    this.renderWizard();
+  },
+
+  /**
+   * 🆕 Formatea un rango de fechas 'YYYY-MM-DD' en español legible
+   * (ej. "1 - 10 dic 2026"), para el resumen compacto de fechas ya conocidas.
+   */
+  formatDateRangeEs(startStr, endStr) {
+    const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const start = new Date(startStr + 'T00:00:00');
+    const end = new Date(endStr + 'T00:00:00');
+    const sameMonth = start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear();
+    if (sameMonth) {
+      return `${start.getDate()} - ${end.getDate()} ${meses[end.getMonth()]} ${end.getFullYear()}`;
+    }
+    return `${start.getDate()} ${meses[start.getMonth()]} - ${end.getDate()} ${meses[end.getMonth()]} ${end.getFullYear()}`;
   },
 
   /**

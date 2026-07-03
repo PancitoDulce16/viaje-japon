@@ -136,31 +136,41 @@ html.dark .city-route-chip-btn-remove {
   );
 }
 
-.day-segment-daytrip-toggle {
-  position: absolute;
-  bottom: 4px;
-  right: 4px;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 6px;
+.day-trip-toggles {
+  margin-top: 12px;
+}
+
+.day-trip-toggles-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+html.dark .day-trip-toggles-hint {
+  color: #9ca3af;
+}
+
+.day-trip-toggle-chip {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 2px solid #ddd6fe;
+  background: white;
+  color: #4c1d95;
   min-width: 0;
-  padding: 0;
-  opacity: 0.6;
 }
 
-.day-segment-daytrip-toggle:hover {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.4);
+html.dark .day-trip-toggle-chip {
+  background: rgba(76, 29, 149, 0.2);
+  border-color: #6d28d9;
+  color: #e9d5ff;
 }
 
-.day-segment.is-day-trip .day-segment-daytrip-toggle {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.5);
+.day-trip-toggle-chip.is-active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: white;
 }
 
 .day-segment-drag-handle {

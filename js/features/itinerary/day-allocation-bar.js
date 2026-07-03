@@ -13,6 +13,14 @@
 
 import { CITY_ICONS } from '../../../data/city-coordinates.js';
 
+// 🔧 Paleta curada en vez de ciclar hue algorítmicamente (hue = idx*47%360):
+// el ciclo de HSL producía combinaciones de bajo contraste con el texto
+// blanco (ej. amarillo/rosa adyacentes, reportado por un usuario real como
+// ilegible). Todos estos tonos son suficientemente oscuros/saturados para
+// texto blanco encima, y coherentes con la paleta morado/rosa del resto de
+// la app.
+const SEGMENT_COLORS = ['#7c3aed', '#ec4899', '#2563eb', '#059669', '#ea580c', '#0891b2', '#dc2626', '#9333ea'];
+
 export const DayAllocationBar = {
 
   dragState: null,
@@ -21,10 +29,37 @@ export const DayAllocationBar = {
     return `
       <div class="day-allocation-total">
         <span>Repartiendo ${totalDays} día${totalDays === 1 ? '' : 's'} entre ${cityStops.length} parada${cityStops.length === 1 ? '' : 's'}</span>
-        <span>Arrastra los divisores o el ícono ⋮⋮ para reordenar</span>
+        <span>Arrastra la línea | entre dos bloques para repartir días, o el ícono ⋮⋮ para reordenar</span>
       </div>
       <div class="day-allocation-bar" id="dayAllocationBar" data-total-days="${totalDays}">
         ${cityStops.map((stop, idx) => this.renderSegmentAndDivider(stop, idx, cityStops.length)).join('')}
+      </div>
+      ${this.renderDayTripToggles(cityStops)}
+    `;
+  },
+
+  /**
+   * 🔧 Antes había un botón 🚃 diminuto DENTRO de cada segmento, sin texto
+   * visible (solo un title="" que nunca se ve en touch) - un usuario real no
+   * entendía para qué servía. Ahora es su propia fila de chips con texto
+   * explícito, fuera de la barra (que ya tiene bastante pasando con el drag).
+   */
+  renderDayTripToggles(cityStops) {
+    const eligible = cityStops
+      .map((stop, idx) => ({ stop, idx }))
+      .filter(({ idx }) => idx > 0);
+    if (eligible.length === 0) return '';
+    return `
+      <div class="day-trip-toggles">
+        <p class="day-trip-toggles-hint">🚃 Marca si alguna parada es una excursión de un día, sin cambiar de hotel:</p>
+        <div class="flex flex-wrap gap-2">
+          ${eligible.map(({ stop, idx }) => `
+            <button type="button" class="day-trip-toggle-chip ${stop.isDayTrip ? 'is-active' : ''}"
+                    onclick="window.SmartGeneratorWizard.setCityStopDayTrip(${idx}, ${!stop.isDayTrip})">
+              🚃 ${stop.city}: ${stop.isDayTrip ? 'es excursión ✓' : 'marcar como excursión'}
+            </button>
+          `).join('')}
+        </div>
       </div>
     `;
   },
@@ -40,22 +75,12 @@ export const DayAllocationBar = {
   renderSegment(stop, idx) {
     const cityKey = stop.city.toLowerCase();
     const icon = CITY_ICONS[cityKey] || '📍';
-    const hue = (idx * 47) % 360; // colores distintos por parada, deterministas
-    // Day trip (excursión sin cambiar de hotel) no tiene sentido en la
-    // primera parada - no hay hotel previo del que salir.
-    const canBeDayTrip = idx > 0;
+    const color = SEGMENT_COLORS[idx % SEGMENT_COLORS.length];
     return `
       <div class="day-segment ${stop.isDayTrip ? 'is-day-trip' : ''}" data-segment-idx="${idx}"
-           style="flex: ${stop.days} 1 0%; background: hsl(${hue}, 65%, 55%);">
+           style="flex: ${stop.days} 1 0%; background: ${color};">
         <span class="day-segment-drag-handle" data-drag-handle-idx="${idx}">⋮⋮</span>
         <span class="day-segment-label">${icon} ${stop.city} · ${stop.days}d${stop.isDayTrip ? ' 🚃' : ''}</span>
-        ${canBeDayTrip ? `
-          <button type="button" class="day-segment-daytrip-toggle"
-                  title="${stop.isDayTrip ? 'Quitar excursión' : 'Marcar como excursión (sin cambiar de hotel)'}"
-                  onclick="window.SmartGeneratorWizard.setCityStopDayTrip(${idx}, ${!stop.isDayTrip})">
-            🚃
-          </button>
-        ` : ''}
       </div>
     `;
   },
