@@ -1,0 +1,199 @@
+/* css/city-route-map.css
+   Mapa de selección de ciudades del wizard (Step 1, fase "map"). */
+
+.city-route-map-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.city-route-map-canvas {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #f3e8ff 0%, #fce7f3 100%);
+  padding: 12px;
+}
+
+html.dark .city-route-map-canvas {
+  background: linear-gradient(160deg, #2e1065 0%, #4a1d3f 100%);
+}
+
+.city-route-map-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+#cityRouteSvg {
+  position: relative;
+  z-index: 1;
+}
+
+.city-hotspot {
+  cursor: pointer;
+}
+
+.city-hotspot-dot {
+  transition: r 0.2s ease, fill 0.2s ease, stroke 0.2s ease;
+}
+
+.city-hotspot:hover .city-hotspot-dot {
+  stroke: #7c3aed;
+}
+
+.city-hotspot.is-selected .city-hotspot-dot {
+  filter: drop-shadow(0 2px 6px rgba(124, 58, 237, 0.5));
+}
+
+.city-route-chips {
+  min-height: 40px;
+}
+
+.city-route-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  border: 2px solid #ddd6fe;
+  border-radius: 999px;
+  padding: 6px 8px 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4c1d95;
+}
+
+html.dark .city-route-chip {
+  background: rgba(76, 29, 149, 0.3);
+  border-color: #6d28d9;
+  color: #e9d5ff;
+}
+
+.city-route-chip-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ede9fe;
+  color: #7c3aed;
+  font-weight: 800;
+  line-height: 1;
+  min-width: 0;
+  padding: 0;
+}
+
+html.dark .city-route-chip-btn {
+  background: #4c1d95;
+  color: #ddd6fe;
+}
+
+.city-route-chip-btn-remove {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+html.dark .city-route-chip-btn-remove {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
+/* ==========================================
+   Barra de días arrastrable (Step 1, fase "days")
+   ========================================== */
+
+.day-allocation-bar {
+  display: flex;
+  width: 100%;
+  height: 64px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.day-segment {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+  transition: background-color 0.2s ease;
+  overflow: hidden;
+}
+
+.day-segment.is-day-trip {
+  background-image: repeating-linear-gradient(
+    45deg, rgba(255,255,255,0.25), rgba(255,255,255,0.25) 6px,
+    transparent 6px, transparent 12px
+  );
+}
+
+.day-segment-drag-handle {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  opacity: 0.7;
+  /* Permite drag vertical/tap normal en el resto de la página; el gesto de
+     reordenar SortableJS necesita capturar el pointer sin que el navegador
+     lo interprete como scroll - scoped solo a este handle, NO global (ver
+     historial de bugs de scroll roto por overflow/touch-action globales
+     esta sesión). */
+  touch-action: none;
+}
+
+.day-segment-drag-handle:active {
+  cursor: grabbing;
+}
+
+.day-divider {
+  position: relative;
+  width: 10px;
+  flex-shrink: 0;
+  cursor: ew-resize;
+  touch-action: none;
+  z-index: 2;
+}
+
+.day-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.day-divider:hover::after,
+.day-divider.is-dragging::after {
+  background: white;
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.3);
+}
+
+.day-allocation-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+html.dark .day-allocation-total {
+  color: #9ca3af;
+}

@@ -44,6 +44,7 @@
 @import './global-search-filters.css';
 @import './traveler-profiler.css';
 @import './itinerary-visual-timeline.css';
+@import './city-route-map.css';
 
 /* 7. Dashboard */
 @import './dashboard-visual-upgrade.css';

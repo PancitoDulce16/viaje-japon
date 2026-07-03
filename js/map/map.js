@@ -6,24 +6,6 @@ let map = null;
 let markersLayer = null;
 let nearbyPlacesLayer = null;
 
-// Coordenadas de ciudades principales de Japón
-const CITY_COORDINATES = {
-    tokyo: [35.6762, 139.6503],
-    kyoto: [35.0116, 135.7681],
-    osaka: [34.6937, 135.5023],
-    nara: [34.6851, 135.8048],
-    hiroshima: [34.3853, 132.4553],
-    hakone: [35.2324, 139.1070],
-    nikko: [36.7564, 139.6054],
-    kamakura: [35.3192, 139.5466],
-    yokohama: [35.4437, 139.6380],
-    kanazawa: [36.5947, 136.6256],
-    nagoya: [35.1815, 136.9066],
-    sapporo: [43.0642, 141.3469],
-    fukuoka: [33.5904, 130.4017],
-    takayama: [36.1408, 137.2526]
-};
-
 // Ubicaciones de hoteles
 const HOTEL_LOCATIONS = [
     {

@@ -8,6 +8,7 @@ import { ACTIVITIES_DATABASE } from '../../../data/activities-database.js';
 import { getAirportByCode, getAirportSelectOptions } from '../../../data/japan-airports.js';
 import { YamanoteHelper } from './yamanote-helper.js';
 import { OsakaLoopHelper } from './osaka-loop-helper.js';
+import { CityRouteMap } from './city-route-map.js';
 
 // Icono representativo por ciudad (clave = key en ACTIVITIES_DATABASE)
 const CITY_ICONS = {
@@ -23,6 +24,12 @@ const CITY_ICONS = {
 export const SmartGeneratorWizard = {
 
   currentStep: 1,
+  // 🆕 Mini-flow interno del Step 1: 'basics' (fechas/presupuesto/etc, todo
+  // lo que ya vivía en renderStep1()) -> 'map' (mapa de ciudades) -> 'days'
+  // (reparto de días, solo si aplica). Vive fuera de wizardData a propósito:
+  // es navegación transitoria de la UI, no un dato de negocio que le importe
+  // a generateItinerary().
+  step1Phase: 'basics',
   wizardData: {
     // Step 1 - Información básica del viaje
     cities: [],
@@ -62,6 +69,7 @@ export const SmartGeneratorWizard = {
    */
   open(prefill = null) {
     this.currentStep = 1;
+    this.step1Phase = 'basics';
 
     if (prefill) {
       this.resetWizardData();
@@ -204,11 +212,88 @@ export const SmartGeneratorWizard = {
   },
 
   /**
-   * STEP 1: Básico (Ciudades, Días, Presupuesto)
+   * STEP 1: mini-flow interno (basics -> map -> days). Firma sin cambios -
+   * sigue siendo lo único que renderStepContent() llama para el caso 1, así
+   * que la barra de progreso externa y el resto del wizard no se enteran de
+   * este split.
    */
   renderStep1() {
+    switch (this.step1Phase) {
+      case 'map': return this.renderStep1Map();
+      case 'days': return this.renderStep1Days();
+      case 'basics':
+      default: return this.renderStep1Basics();
+    }
+  },
+
+  /**
+   * 🆕 Decide a qué fase interna del Step 1 avanzar/retroceder, validando lo
+   * mínimo necesario en cada transición y sembrando el reparto de días antes
+   * de mostrar la fase 'days' (para que la suma nunca empiece desbalanceada).
+   */
+  goToStep1Phase(phase) {
+    if (phase === 'map' && this.step1Phase === 'basics') {
+      this.saveStep1Data();
+      if (!this.validateField('totalDays')) return;
+      if (!this.validateField('dailyBudget')) return;
+    }
+    if (phase === 'days' && this.step1Phase === 'map') {
+      if (this.wizardData.cities.length === 0) {
+        window.Notifications?.show('❌ Selecciona al menos una ciudad', 'error');
+        return;
+      }
+      if (this.wizardData.totalDays < this.wizardData.cities.length) {
+        window.Notifications?.show(`❌ Necesitas al menos ${this.wizardData.cities.length} días para ${this.wizardData.cities.length} ciudades (1 día mínimo por ciudad)`, 'error');
+        return;
+      }
+      // Ciudad única + modo auto: el reparto de días no aplica, saltar directo al Step 2
+      if (this.wizardData.cityStops.length <= 1 && this.wizardData.dayAllocationMode === 'auto') {
+        this.step1Phase = 'days'; // por si el usuario vuelve atrás desde Step 2
+        this.saveToSessionStorage();
+        this.currentStep = 2;
+        this.renderWizard();
+        return;
+      }
+      // Solo sembrar si falta info (días nulos o la suma no cuadra) - si el
+      // usuario ya ajustó el reparto y vuelve a entrar a esta fase, NO
+      // queremos pisar sus cambios con un reseeding determinístico.
+      if (this.wizardData.dayAllocationMode === 'manual') {
+        const stops = this.wizardData.cityStops;
+        const hasNulls = stops.some(s => !s.days || s.days < 1);
+        const sum = stops.reduce((s, x) => s + (x.days || 0), 0);
+        if (hasNulls || sum !== this.wizardData.totalDays) {
+          this.seedEvenDayAllocation();
+        }
+      }
+    }
+    this.step1Phase = phase;
+    this.saveToSessionStorage();
+    this.renderWizard();
+  },
+
+  /**
+   * 🆕 Ciudad tocada en el mapa: agrega (si no estaba) y mantiene cityStops
+   * sincronizado - reusa syncCityStopsWithCities() tal cual, sin cambios.
+   */
+  toggleCityFromMap(cityKey) {
+    const displayName = this.cityLabel(cityKey);
+    if (!this.wizardData.cities.includes(displayName)) {
+      this.wizardData.cities.push(displayName);
+    }
+    this.syncCityStopsWithCities();
+    this.applyAirportOrderingToStops();
+    this.saveToSessionStorage();
+    CityRouteMap.refresh();
+  },
+
+  /**
+   * FASE 1a: todo lo que antes vivía en un único Step 1 gigante, MENOS
+   * ciudades y reparto de días (ahora son sus propias fases). Sin cambios de
+   * contenido/validación respecto al Step 1 original.
+   */
+  renderStep1Basics() {
     return `
-      <div class="space-y-6">
+      <div class="space-y-6 animate-fadeInUp">
         <h3 class="text-xl font-bold text-gray-900 dark:text-white">📍 Configuración Básica</h3>
 
         <!-- 🆕 Load from Template Button -->
@@ -226,46 +311,6 @@ export const SmartGeneratorWizard = {
             </button>
           </div>
         </div>
-
-        <!-- Ciudades -->
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            ¿Qué ciudades quieres visitar? <span class="text-red-500">*</span>
-          </label>
-          <div class="grid grid-cols-3 gap-3 max-h-80 overflow-y-auto pr-1" id="citiesContainer">
-            ${Object.keys(ACTIVITIES_DATABASE).map(cityKey => this.renderCityCheckbox(cityKey)).join('')}
-          </div>
-          <p class="text-xs text-gray-500 mt-2">Selecciona al menos una ciudad (${Object.keys(ACTIVITIES_DATABASE).length} disponibles)</p>
-          <div id="citiesError" class="hidden mt-2 p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
-            <p class="text-sm text-red-600 dark:text-red-400">⚠️ Debes seleccionar al menos una ciudad</p>
-          </div>
-        </div>
-
-        <!-- 🆕 Ruta y reparto de días -->
-        ${this.wizardData.cities.length > 0 ? `
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            ¿Cómo repartimos los días entre ciudades?
-          </label>
-          <div class="flex gap-2 mb-3">
-            <button
-              type="button"
-              onclick="window.SmartGeneratorWizard.setDayAllocationMode('auto')"
-              class="flex-1 py-2 px-3 rounded-lg border-2 font-medium text-sm transition ${this.wizardData.dayAllocationMode === 'auto' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300'}"
-            >🎲 Automático (recomendado)</button>
-            <button
-              type="button"
-              onclick="window.SmartGeneratorWizard.setDayAllocationMode('manual')"
-              class="flex-1 py-2 px-3 rounded-lg border-2 font-medium text-sm transition ${this.wizardData.dayAllocationMode === 'manual' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300'}"
-            >✋ Yo elijo la ruta y los días</button>
-          </div>
-          <div id="cityStopsBuilder">
-            ${this.wizardData.dayAllocationMode === 'manual' ? this.renderCityStopsBuilder() : `
-              <p class="text-xs text-gray-500">El generador reparte los días según tus intereses y cuánto contenido real tiene cada ciudad.</p>
-            `}
-          </div>
-        </div>
-        ` : ''}
 
         <!-- Fechas del viaje -->
         <div class="grid grid-cols-2 gap-4">
@@ -495,35 +540,101 @@ export const SmartGeneratorWizard = {
             ${this.renderMobilityOption('wheelchair', '♿ Silla de ruedas')}
           </div>
         </div>
+
+        <div class="flex justify-end pt-2">
+          <button
+            onclick="window.SmartGeneratorWizard.goToStep1Phase('map')"
+            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+          >
+            Elegir ciudades →
+          </button>
+        </div>
       </div>
     `;
   },
 
   /**
-   * Helper para renderizar checkbox de ciudad
-   * @param {string} cityKey - clave en ACTIVITIES_DATABASE (ej. 'tokyo', 'shirakawago')
-   *
-   * NOTA: wizardData.cities guarda el NOMBRE VISIBLE (ej. "Tokyo"), no la clave,
-   * porque el generador y otras partes del código hacen city.toLowerCase() para
-   * volver a obtener la clave de ACTIVITIES_DATABASE (mismo patrón que ya existía).
+   * FASE 1b: mapa clicable de ciudades (reemplaza el grid de checkboxes de
+   * texto). CityRouteMap.render() maneja el SVG + los chips de la ruta.
    */
-  renderCityCheckbox(cityKey) {
-    const displayName = this.cityLabel(cityKey);
-    const isChecked = this.wizardData.cities.includes(displayName);
-    const icon = CITY_ICONS[cityKey] || '📍';
+  renderStep1Map() {
     return `
-      <label class="flex items-center gap-2 p-4 border-2 ${isChecked ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-300 dark:border-gray-600'}
-                     rounded-lg cursor-pointer hover:border-blue-400 transition">
-        <input
-          type="checkbox"
-          class="city-checkbox w-5 h-5"
-          data-city="${displayName}"
-          onchange="window.SmartGeneratorWizard.onCityCheckboxChange()"
-          ${isChecked ? 'checked' : ''}
-        >
-        <span class="text-2xl">${icon}</span>
-        <span class="font-semibold text-gray-700 dark:text-gray-200">${displayName}</span>
-      </label>
+      <div class="space-y-4 animate-fadeInUp">
+        <div>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white">🗺️ ¿Qué ciudades quieres visitar?</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Toca las ciudades en el mapa para armar tu ruta. Puedes repetir una ciudad (ej. si vuelves antes del vuelo de salida) desde su chip.</p>
+        </div>
+
+        ${CityRouteMap.render(this.wizardData)}
+
+        <div id="citiesError" class="hidden mt-2 p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+          <p class="text-sm text-red-600 dark:text-red-400">⚠️ Debes seleccionar al menos una ciudad</p>
+        </div>
+
+        <div class="flex justify-between pt-2">
+          <button
+            onclick="window.SmartGeneratorWizard.goToStep1Phase('basics')"
+            class="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+          >
+            ← Atrás
+          </button>
+          <button
+            onclick="window.SmartGeneratorWizard.goToStep1Phase('days')"
+            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+          >
+            Siguiente →
+          </button>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * FASE 1c: reparto de días entre las paradas elegidas. TEMPORAL: reusa
+   * renderCityStopsBuilder() (numérico, con validación de suma exacta) hasta
+   * que la barra arrastrable la reemplace. El wrapper #cityStopsBuilder se
+   * mantiene para que refreshCityStopsBuilder() (sin cambios) lo siga
+   * encontrando durante esta transición.
+   */
+  renderStep1Days() {
+    return `
+      <div class="space-y-4 animate-fadeInUp">
+        <div>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white">📅 ¿Cómo repartimos los días?</h3>
+          <div class="flex gap-2 mt-3 mb-3">
+            <button
+              type="button"
+              onclick="window.SmartGeneratorWizard.setDayAllocationMode('auto')"
+              class="flex-1 py-2 px-3 rounded-lg border-2 font-medium text-sm transition ${this.wizardData.dayAllocationMode === 'auto' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300'}"
+            >🎲 Automático (recomendado)</button>
+            <button
+              type="button"
+              onclick="window.SmartGeneratorWizard.setDayAllocationMode('manual')"
+              class="flex-1 py-2 px-3 rounded-lg border-2 font-medium text-sm transition ${this.wizardData.dayAllocationMode === 'manual' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300'}"
+            >✋ Yo elijo la ruta y los días</button>
+          </div>
+          <div id="cityStopsBuilder">
+            ${this.wizardData.dayAllocationMode === 'manual' ? this.renderCityStopsBuilder() : `
+              <p class="text-xs text-gray-500">El generador reparte los días según tus intereses y cuánto contenido real tiene cada ciudad.</p>
+            `}
+          </div>
+        </div>
+
+        <div class="flex justify-between pt-2">
+          <button
+            onclick="window.SmartGeneratorWizard.goToStep1Phase('map')"
+            class="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+          >
+            ← Atrás
+          </button>
+          <button
+            onclick="window.SmartGeneratorWizard.nextStep()"
+            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+          >
+            Siguiente →
+          </button>
+        </div>
+      </div>
     `;
   },
 
@@ -532,17 +643,6 @@ export const SmartGeneratorWizard = {
    */
   cityLabel(cityKey) {
     return ACTIVITIES_DATABASE[cityKey]?.city || (cityKey.charAt(0).toUpperCase() + cityKey.slice(1));
-  },
-
-  /**
-   * 🆕 Se dispara al (des)marcar una ciudad: guarda el paso 1, mantiene cityStops
-   * sincronizado con las ciudades marcadas, y re-renderiza (la sección de
-   * "ruta y reparto de días" solo aparece cuando hay al menos una ciudad).
-   */
-  onCityCheckboxChange() {
-    this.validateField('cities');
-    this.syncCityStopsWithCities();
-    this.renderWizard();
   },
 
   /**
@@ -566,11 +666,30 @@ export const SmartGeneratorWizard = {
    */
   setDayAllocationMode(mode) {
     this.wizardData.dayAllocationMode = mode;
-    if (mode === 'manual' && this.wizardData.cityStops.length === 0) {
-      this.syncCityStopsWithCities();
+    if (mode === 'manual') {
+      if (this.wizardData.cityStops.length === 0) this.syncCityStopsWithCities();
+      this.seedEvenDayAllocation();
     }
     this.saveToSessionStorage();
     this.renderWizard();
+  },
+
+  /**
+   * 🆕 Reparte totalDays entre cityStops lo más parejo posible (piso +1 a las
+   * primeras paradas si no divide exacto), garantizando que la suma sea
+   * correcta ANTES de que el usuario toque nada - la barra de días arrastrable
+   * solo transfiere días entre pares adyacentes, así que si arranca correcta
+   * se mantiene correcta en cualquier secuencia de arrastres.
+   */
+  seedEvenDayAllocation() {
+    const stops = this.wizardData.cityStops;
+    const n = stops.length;
+    if (n === 0) return;
+    const base = Math.floor(this.wizardData.totalDays / n);
+    const remainder = this.wizardData.totalDays % n;
+    stops.forEach((stop, idx) => {
+      stop.days = base + (idx < remainder ? 1 : 0);
+    });
   },
 
   /**
@@ -1395,6 +1514,11 @@ export const SmartGeneratorWizard = {
   renderFooterButtons() {
     const isFirstStep = this.currentStep === 1;
     const isLastStep = this.currentStep === 3;
+    // 🆕 Las fases 'basics'/'map' del Step 1 traen su propio botón de avance
+    // inline (goToStep1Phase), así que el "Siguiente →" externo se oculta
+    // para esas fases - mostrarlo permitiría saltarse el mapa/reparto de
+    // días directo a validateCurrentStep()+currentStep++ del Step 1 externo.
+    const hideOuterNext = this.currentStep === 1 && this.step1Phase !== 'days';
 
     return `
       <button
@@ -1412,7 +1536,7 @@ export const SmartGeneratorWizard = {
             ← Anterior
           </button>
         ` : ''}
-        ${!isLastStep ? `
+        ${hideOuterNext ? '' : !isLastStep ? `
           <button
             onclick="window.SmartGeneratorWizard.nextStep()"
             class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
@@ -1435,10 +1559,8 @@ export const SmartGeneratorWizard = {
    * Restaura valores del form desde wizardData
    */
   restoreFormValues() {
-    // Step 1
-    document.querySelectorAll('.city-checkbox').forEach(checkbox => {
-      checkbox.addEventListener('change', () => this.saveStep1Data());
-    });
+    // Step 1: ciudades ahora se manejan vía el mapa (toggleCityFromMap),
+    // no hay .city-checkbox que escuchar.
 
     // 🆕 Event listeners para nuevos campos
     document.querySelectorAll('.dietary-checkbox').forEach(checkbox => {
@@ -1469,12 +1591,13 @@ export const SmartGeneratorWizard = {
   },
 
   /**
-   * Guarda datos del Step 1
+   * Guarda datos del Step 1 (fase 'basics'). wizardData.cities/cityStops ya
+   * NO se leen del DOM aquí - se mutan directamente vía toggleCityFromMap()
+   * y los handlers de chips del mapa. Leerlos de checkboxes que ya no
+   * existen los habría vaciado silenciosamente en cada llamada (bug real
+   * del código anterior).
    */
   saveStep1Data() {
-    this.wizardData.cities = Array.from(document.querySelectorAll('.city-checkbox:checked'))
-      .map(cb => cb.dataset.city);
-
     const totalDaysInput = document.getElementById('totalDays');
     if (totalDaysInput) {
       this.wizardData.totalDays = parseInt(totalDaysInput.value) || 7;
@@ -1867,6 +1990,7 @@ export const SmartGeneratorWizard = {
     try {
       const dataToSave = {
         currentStep: this.currentStep,
+        step1Phase: this.step1Phase,
         wizardData: this.wizardData,
         timestamp: Date.now()
       };
@@ -1898,6 +2022,9 @@ export const SmartGeneratorWizard = {
 
       // Restaurar datos
       this.currentStep = data.currentStep || 1;
+      // default 'basics' para compatibilidad con sesiones guardadas antes
+      // de que existiera step1Phase
+      this.step1Phase = data.step1Phase || 'basics';
       this.wizardData = data.wizardData || this.wizardData;
 
       console.log('📂 Progreso cargado desde sessionStorage:', data);
