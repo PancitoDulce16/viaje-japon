@@ -604,52 +604,52 @@ export const SmartItineraryGenerator = {
     // Definir arquetipos de variaciones basados en combinaciones de intereses
     const VARIATION_TEMPLATES = {
       cultural: {
-        icon: '⛩️', name: 'Cultural Explorer',
+        icon: '⛩️', name: 'Alma Tradicional',
         description: 'Templos, historia y arte tradicional japonés',
         interests: ['cultural', 'history', 'art'],
         tags: ['Templos', 'Historia', 'Arte', 'Tradición']
       },
       foodie: {
-        icon: '🍜', name: 'Ultimate Foodie',
+        icon: '🍜', name: 'Ruta del Sabor',
         description: 'Gastronomía, mercados y experiencias culinarias',
         interests: ['food', 'market'],
         tags: ['Comida', 'Mercados', 'Restaurantes', 'Street Food']
       },
       nature: {
-        icon: '🌸', name: 'Nature Lover',
+        icon: '🌸', name: 'Naturaleza & Calma',
         description: 'Jardines, onsen, naturaleza y relax',
         interests: ['nature', 'relax'],
         tags: ['Jardines', 'Onsen', 'Naturaleza', 'Relax']
       },
       popculture: {
-        icon: '🎮', name: 'Otaku Paradise',
+        icon: '🎮', name: 'Paraíso Otaku',
         description: 'Anime, manga, gaming y cultura pop',
         interests: ['anime', 'pop-culture', 'technology'],
-        tags: ['Anime', 'Gaming', 'Akihabara', 'Pop Culture']
+        tags: ['Anime', 'Gaming', 'Akihabara', 'Cultura Pop']
       },
       shopping: {
-        icon: '🛍️', name: 'Shopping Spree',
-        description: 'Fashion, electrónicos y souvenirs',
+        icon: '🛍️', name: 'Modo Compras',
+        description: 'Moda, electrónicos y souvenirs',
         interests: ['shopping', 'fashion'],
-        tags: ['Shopping', 'Fashion', 'Electrónicos', 'Souvenirs']
+        tags: ['Compras', 'Moda', 'Electrónicos', 'Souvenirs']
       },
       nightlife: {
-        icon: '🌃', name: 'Night Owl',
+        icon: '🌃', name: 'Tokio de Noche',
         description: 'Bares, karaoke, clubes y vida nocturna',
         interests: ['nightlife', 'food'],
-        tags: ['Bares', 'Karaoke', 'Clubes', 'Nightlife']
+        tags: ['Bares', 'Karaoke', 'Clubes', 'Vida nocturna']
       },
       photography: {
-        icon: '📸', name: 'Instagram Perfect',
+        icon: '📸', name: 'Foto Perfecta',
         description: 'Spots fotogénicos y escénicos',
         interests: ['photography', 'nature', 'cultural'],
         tags: ['Fotografía', 'Paisajes', 'Instagrameable']
       },
       adventure: {
-        icon: '🏃', name: 'Adventure Seeker',
-        description: 'Hiking, actividades físicas y aventuras',
+        icon: '🏃', name: 'Espíritu Aventurero',
+        description: 'Senderismo, actividades físicas y aventuras',
         interests: ['adventure', 'nature'],
-        tags: ['Hiking', 'Aventura', 'Deportes', 'Activo']
+        tags: ['Senderismo', 'Aventura', 'Deportes', 'Activo']
       },
       balanced: {
         icon: '✨', name: 'Basado en tus gustos exactos',

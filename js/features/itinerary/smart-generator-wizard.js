@@ -130,7 +130,7 @@ export const SmartGeneratorWizard = {
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
 
           <!-- Header -->
-          <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 sm:p-6 text-white">
+          <div class="wizard-hero-banner p-4 sm:p-6 text-white">
             <div class="flex items-center justify-between">
               <div>
                 <h2 class="text-lg sm:text-2xl font-bold">🧠 Generador Inteligente de Itinerarios</h2>
@@ -1064,11 +1064,11 @@ export const SmartGeneratorWizard = {
     // Intensity levels data
     const intensityLevels = ['light', 'moderate', 'packed', 'extreme', 'maximum'];
     const intensityLabels = {
-      light: { icon: '🐢', label: 'Light', desc: '2-3/día' },
-      moderate: { icon: '🚶', label: 'Moderate', desc: '4-5/día' },
-      packed: { icon: '🏃', label: 'Packed', desc: '6-8/día' },
-      extreme: { icon: '⚡', label: 'Extreme', desc: '9-11/día' },
-      maximum: { icon: '🌪️', label: 'Maximum', desc: '12-15/día' }
+      light: { icon: '🐢', label: 'Tranquilo', desc: '2-3/día' },
+      moderate: { icon: '🚶', label: 'Moderado', desc: '4-5/día' },
+      packed: { icon: '🏃', label: 'Intenso', desc: '6-8/día' },
+      extreme: { icon: '⚡', label: 'Extremo', desc: '9-11/día' },
+      maximum: { icon: '🌪️', label: 'Máximo', desc: '12-15/día' }
     };
     const currentIntensityIndex = intensityLevels.indexOf(this.wizardData.pace);
 
@@ -1127,7 +1127,7 @@ export const SmartGeneratorWizard = {
           </label>
           <div class="grid grid-cols-2 gap-3">
             ${this.renderCompanionOption(null, 'Sin especificar', '👤', 'Genérico')}
-            ${this.renderCompanionOption('solo', 'Solo Traveler', '🧍', 'Flexible')}
+            ${this.renderCompanionOption('solo', 'Viajo sola/o', '🧍', 'Flexible')}
             ${this.renderCompanionOption('couple', 'Pareja', '❤️', 'Romántico')}
             ${this.renderCompanionOption('family', 'Familia', '👨‍👩‍👧‍👦', 'Pausado')}
             ${this.renderCompanionOption('seniors', 'Seniors', '👴👵', 'Relajado')}
@@ -1170,11 +1170,11 @@ export const SmartGeneratorWizard = {
   updateIntensity(value) {
     const intensityLevels = ['light', 'moderate', 'packed', 'extreme', 'maximum'];
     const intensityLabels = {
-      light: { icon: '🐢', label: 'Light' },
-      moderate: { icon: '🚶', label: 'Moderate' },
-      packed: { icon: '🏃', label: 'Packed (¡Días llenos!)' },
-      extreme: { icon: '⚡', label: 'Extreme' },
-      maximum: { icon: '🌪️', label: 'Maximum' }
+      light: { icon: '🐢', label: 'Tranquilo' },
+      moderate: { icon: '🚶', label: 'Moderado' },
+      packed: { icon: '🏃', label: 'Intenso (¡días llenos!)' },
+      extreme: { icon: '⚡', label: 'Extremo' },
+      maximum: { icon: '🌪️', label: 'Máximo' }
     };
 
     this.wizardData.pace = intensityLevels[parseInt(value)];

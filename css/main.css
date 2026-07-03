@@ -349,6 +349,21 @@ textarea::placeholder {
   background: var(--gradient-primary, linear-gradient(135deg, #E91E63 0%, #FF6B9D 100%));
 }
 
+/* Cabecera del wizard: acuarela kawaii (Fuji + torii, generada a juego con
+   el wallpaper) bajo un velo del gradiente para que el texto respire.
+   En modo ninja se queda el índigo del tema — la acuarela rosa desentona. */
+.wizard-hero-banner {
+  background: var(--gradient-primary, linear-gradient(135deg, #E91E63 0%, #FF6B9D 100%));
+}
+
+html:not(.dark) .wizard-hero-banner {
+  background-image:
+    linear-gradient(to right, rgba(216, 27, 96, 0.92) 0%, rgba(233, 30, 99, 0.72) 45%, rgba(255, 107, 157, 0.45) 100%),
+    url('/images/wizard/wizard-header-sakura.jpg');
+  background-size: cover;
+  background-position: center 40%;
+}
+
 /* =================================================================
    TOP BAR — marca, chips de acción y botón SOS estilo hanko
    ================================================================= */
