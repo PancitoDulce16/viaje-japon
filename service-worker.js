@@ -9,8 +9,8 @@
 // 📦 --- CONFIGURACIÓN DEL CACHÉ ---
 // IMPORTANTE: Cambia este número de versión CADA VEZ que hagas un cambio en los
 // archivos de la aplicación (JS, CSS, HTML) para forzar la actualización.
-const STATIC_CACHE_VERSION = 'japan-trip-planner-static-v16.1';
-const DYNAMIC_CACHE_VERSION = 'japan-trip-planner-dynamic-v16.1';
+const STATIC_CACHE_VERSION = 'japan-trip-planner-static-v17.0';
+const DYNAMIC_CACHE_VERSION = 'japan-trip-planner-dynamic-v17.0';
 const STATIC_CACHE_NAME = `static-${STATIC_CACHE_VERSION}`;
 const DYNAMIC_CACHE_NAME = `dynamic-${DYNAMIC_CACHE_VERSION}`;
 
