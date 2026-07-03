@@ -1430,11 +1430,13 @@ export const SmartGeneratorWizard = {
   renderFooterButtons() {
     const isFirstStep = this.currentStep === 1;
     const isLastStep = this.currentStep === 3;
-    // 🆕 Las fases 'basics'/'map' del Step 1 traen su propio botón de avance
-    // inline (goToStep1Phase), así que el "Siguiente →" externo se oculta
-    // para esas fases - mostrarlo permitiría saltarse el mapa/reparto de
-    // días directo a validateCurrentStep()+currentStep++ del Step 1 externo.
-    const hideOuterNext = this.currentStep === 1 && this.step1Phase !== 'days';
+    // 🆕 Las 3 fases internas del Step 1 (basics/map/days) traen su propio
+    // botón de avance inline - basics/map llaman a goToStep1Phase(), y days
+    // llama directo a nextStep() (la navegación externa). Mostrar TAMBIÉN el
+    // "Siguiente →" del footer externo mientras currentStep===1 duplicaba el
+    // botón en pantalla (confirmado visualmente) - se oculta siempre para
+    // las 3 fases, no solo basics/map.
+    const hideOuterNext = this.currentStep === 1;
 
     return `
       <button
