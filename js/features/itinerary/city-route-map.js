@@ -28,8 +28,8 @@ import { CITY_COORDINATES, CITY_ICONS } from '../../../data/city-coordinates.js'
 // centroide. Coherente con la decisión ya tomada de que este es un diagrama
 // de ruta no-literal, no un mapa preciso.
 const FISHEYE_POWER = 0.55;
-const CANVAS_SIZE = 620;
-const PADDING = 70;
+const CANVAS_SIZE = 720;
+const PADDING = 80;
 
 function equirectRaw(lat, lng) {
   // Corrección de longitud por coseno de latitud media, para no estirar el
@@ -96,7 +96,10 @@ const FISHEYE_RAW_BOUNDS = (() => {
   const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
   return { w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
 })();
-const MIN_DIST = Math.max(FISHEYE_RAW_BOUNDS.w, FISHEYE_RAW_BOUNDS.h) * 0.11;
+// 0.11 -> 0.16: ahora TODAS las ciudades muestran su nombre siempre (antes
+// solo las seleccionadas), así que necesitan más espacio vertical debajo
+// del punto para el label, no solo espacio para el punto mismo.
+const MIN_DIST = Math.max(FISHEYE_RAW_BOUNDS.w, FISHEYE_RAW_BOUNDS.h) * 0.16;
 
 const FISHEYE_POINTS = relaxCollisions(FISHEYE_POINTS_RAW, MIN_DIST);
 
@@ -198,18 +201,21 @@ export const CityRouteMap = {
     const icon = CITY_ICONS[cityKey] || '📍';
     const r = isSelected ? 16 : 11;
 
-    // 🎯 Mismo criterio que yamanote-helper.js: el hit-target real es un rect
-    // invisible que cubre punto + label (cuando el label está visible, solo
-    // para ciudades seleccionadas - ver comentario abajo sobre por qué no se
-    // muestra texto permanente para TODAS las ciudades), no solo un círculo
-    // chico centrado en el punto.
-    const showLabel = isSelected;
+    // 🔧 Antes el nombre de la ciudad SOLO se mostraba si ya estaba
+    // seleccionada (para evitar que el diagrama se sintiera apretado con 19
+    // labels) - un usuario real lo señaló como el problema #1 del mapa: "hay
+    // emojis, no hay nombres, que pasa si no sé dónde queda cada ciudad y
+    // tengo que dar click en cada una a ver cuál es cuál". El propósito de
+    // un mapa de SELECCIÓN es justamente dejar identificar antes de elegir -
+    // ocultar el nombre hasta seleccionar rompía ese propósito. Ahora
+    // siempre se muestra (MIN_DIST ya deja espacio de sobra desde el fix del
+    // cluster de Kanto), con menor peso visual para las no seleccionadas.
     const labelY = y + r + 12;
-    const textWidthEstimate = showLabel ? displayName.length * 6.5 + 6 : 0;
+    const textWidthEstimate = displayName.length * 6 + 6;
     const hitLeft = x - Math.max(r + 6, textWidthEstimate / 2);
     const hitRight = x + Math.max(r + 6, textWidthEstimate / 2);
     const hitTop = y - r - 6;
-    const hitBottom = showLabel ? labelY + 4 : y + r + 6;
+    const hitBottom = labelY + 4;
 
     return `
       <g class="city-hotspot ${isSelected ? 'is-selected' : ''}" data-city-hotspot="${cityKey}"
@@ -227,10 +233,10 @@ export const CityRouteMap = {
           <text x="${(x + r - 2).toFixed(1)}" y="${(y - r + 6).toFixed(1)}" text-anchor="middle"
                 font-size="9" font-weight="800" fill="white">×${stopCount}</text>
         ` : ''}
-        ${showLabel ? `
-          <text x="${x.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle"
-                font-size="12" font-weight="700" fill="currentColor">${displayName}</text>
-        ` : ''}
+        <text x="${x.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle"
+              font-size="${isSelected ? 12 : 10.5}" font-weight="${isSelected ? 700 : 600}"
+              fill="currentColor" opacity="${isSelected ? 1 : 0.75}"
+              class="city-hotspot-label">${displayName}</text>
       </g>
     `;
   },

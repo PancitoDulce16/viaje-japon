@@ -29,39 +29,79 @@ export const DayAllocationBar = {
     return `
       <div class="day-allocation-total">
         <span>Repartiendo ${totalDays} día${totalDays === 1 ? '' : 's'} entre ${cityStops.length} parada${cityStops.length === 1 ? '' : 's'}</span>
-        <span>Arrastra la línea | entre dos bloques para repartir días, o el ícono ⋮⋮ para reordenar</span>
+        <span>Arrastra un bloque por el ícono ⋮⋮ para reordenar</span>
       </div>
       <div class="day-allocation-bar" id="dayAllocationBar" data-total-days="${totalDays}">
         ${cityStops.map((stop, idx) => this.renderSegmentAndDivider(stop, idx, cityStops.length)).join('')}
       </div>
-      ${this.renderDayTripToggles(cityStops)}
+      ${this.renderStopControls(cityStops)}
     `;
   },
 
   /**
-   * 🔧 Antes había un botón 🚃 diminuto DENTRO de cada segmento, sin texto
-   * visible (solo un title="" que nunca se ve en touch) - un usuario real no
-   * entendía para qué servía. Ahora es su propia fila de chips con texto
-   * explícito, fuera de la barra (que ya tiene bastante pasando con el drag).
+   * 🔧 Un usuario real probó la barra y no entendió cómo cambiar los días
+   * ("puedo elegir qué hacer primero pero no elegir cuántos días voy a estar
+   * en esa ciudad... es muy poco intuitivo") - arrastrar la línea divisora
+   * entre dos bloques de color no es un gesto obvio/descubrible por sí solo.
+   * Esta lista es el fallback explícito y garantizado de entender: un
+   * stepper −/+ con el número visible, uno por parada. La barra de arriba
+   * sigue sirviendo para power users que sí descubran el drag, pero ya no es
+   * la ÚNICA forma de cambiar los días.
    */
-  renderDayTripToggles(cityStops) {
-    const eligible = cityStops
-      .map((stop, idx) => ({ stop, idx }))
-      .filter(({ idx }) => idx > 0);
-    if (eligible.length === 0) return '';
+  renderStopControls(cityStops) {
     return `
-      <div class="day-trip-toggles">
-        <p class="day-trip-toggles-hint">🚃 Marca si alguna parada es una excursión de un día, sin cambiar de hotel:</p>
-        <div class="flex flex-wrap gap-2">
-          ${eligible.map(({ stop, idx }) => `
-            <button type="button" class="day-trip-toggle-chip ${stop.isDayTrip ? 'is-active' : ''}"
-                    onclick="window.SmartGeneratorWizard.setCityStopDayTrip(${idx}, ${!stop.isDayTrip})">
-              🚃 ${stop.city}: ${stop.isDayTrip ? 'es excursión ✓' : 'marcar como excursión'}
-            </button>
-          `).join('')}
-        </div>
+      <div class="day-stop-controls">
+        ${cityStops.map((stop, idx) => {
+          const cityKey = stop.city.toLowerCase();
+          const icon = CITY_ICONS[cityKey] || '📍';
+          const canBeDayTrip = idx > 0;
+          const canDecrease = stop.days > 1;
+          return `
+            <div class="day-stop-control-row">
+              <span class="day-stop-control-city">${icon} ${stop.city}</span>
+              <div class="day-stop-stepper">
+                <button type="button" class="day-stop-stepper-btn" ${!canDecrease ? 'disabled' : ''}
+                        onclick="window.DayAllocationBar.nudgeSegmentDays(${idx}, -1)" aria-label="Quitar un día">−</button>
+                <span class="day-stop-stepper-value">${stop.days} día${stop.days === 1 ? '' : 's'}</span>
+                <button type="button" class="day-stop-stepper-btn"
+                        onclick="window.DayAllocationBar.nudgeSegmentDays(${idx}, 1)" aria-label="Agregar un día">+</button>
+              </div>
+              ${canBeDayTrip ? `
+                <button type="button" class="day-trip-toggle-chip ${stop.isDayTrip ? 'is-active' : ''}"
+                        onclick="window.SmartGeneratorWizard.setCityStopDayTrip(${idx}, ${!stop.isDayTrip})">
+                  🚃 ${stop.isDayTrip ? 'Es excursión ✓' : 'Marcar excursión'}
+                </button>
+              ` : '<span></span>'}
+            </div>
+          `;
+        }).join('')}
       </div>
     `;
+  },
+
+  /**
+   * Mismo invariante que el drag de divisores (transferir SOLO entre un par
+   * de paradas, nunca crear/destruir días), pero disparado por un botón en
+   * vez de arrastrar - garantiza que la suma siga siendo exacta.
+   */
+  nudgeSegmentDays(idx, direction) {
+    const stops = window.SmartGeneratorWizard.wizardData.cityStops;
+    // Preferir intercambiar con la parada siguiente; si idx es la última,
+    // usar la anterior.
+    const neighborIdx = idx < stops.length - 1 ? idx + 1 : idx - 1;
+    if (neighborIdx < 0) return;
+
+    if (direction > 0) {
+      if (stops[neighborIdx].days <= 1) return; // el vecino no puede bajar de 1
+      stops[idx].days += 1;
+      stops[neighborIdx].days -= 1;
+    } else {
+      if (stops[idx].days <= 1) return; // esta parada no puede bajar de 1
+      stops[idx].days -= 1;
+      stops[neighborIdx].days += 1;
+    }
+    window.SmartGeneratorWizard.saveToSessionStorage();
+    this.refresh();
   },
 
   renderSegmentAndDivider(stop, idx, count) {
