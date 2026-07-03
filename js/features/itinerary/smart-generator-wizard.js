@@ -9,14 +9,8 @@ import { getAirportByCode, getAirportSelectOptions } from '../../../data/japan-a
 import { YamanoteHelper } from './yamanote-helper.js';
 import { OsakaLoopHelper } from './osaka-loop-helper.js';
 import { CityRouteMap } from './city-route-map.js';
-
-// Icono representativo por ciudad (clave = key en ACTIVITIES_DATABASE)
-const CITY_ICONS = {
-  tokyo: '🗼', kyoto: '⛩️', osaka: '🏯', hiroshima: '🕊️', nara: '🦌',
-  hakone: '♨️', kamakura: '🗿', yokohama: '⚓', sapporo: '❄️', nagoya: '🏯',
-  kobe: '🐄', nikko: '🌲', takayama: '🏘️', kanazawa: '🎋', fukuoka: '🍜',
-  sendai: '🌳', matsumoto: '🐦', shirakawago: '🏔️', himeji: '🦅'
-};
+import { DayAllocationBar } from './day-allocation-bar.js';
+import { CITY_ICONS } from '../../../data/city-coordinates.js';
 
 /**
  * Smart Generator Wizard
@@ -170,6 +164,14 @@ export const SmartGeneratorWizard = {
 
     // Restaurar valores guardados en los inputs
     this.restoreFormValues();
+
+    // 🆕 La barra de días arrastrable necesita listeners de pointer events +
+    // SortableJS que no se pueden expresar como atributos inline onclick=""
+    // (a diferencia del resto del wizard) - solo hace algo si el DOM de la
+    // fase 'days' existe (attachHandlers() retorna temprano si no).
+    if (this.currentStep === 1 && this.step1Phase === 'days' && this.wizardData.dayAllocationMode === 'manual') {
+      DayAllocationBar.attachHandlers();
+    }
   },
 
   /**
@@ -590,11 +592,11 @@ export const SmartGeneratorWizard = {
   },
 
   /**
-   * FASE 1c: reparto de días entre las paradas elegidas. TEMPORAL: reusa
-   * renderCityStopsBuilder() (numérico, con validación de suma exacta) hasta
-   * que la barra arrastrable la reemplace. El wrapper #cityStopsBuilder se
-   * mantiene para que refreshCityStopsBuilder() (sin cambios) lo siga
-   * encontrando durante esta transición.
+   * FASE 1c: reparto de días entre las paradas elegidas, vía la barra
+   * segmentada arrastrable (DayAllocationBar) - el reparto siempre suma
+   * exacto a totalDays por construcción (seedEvenDayAllocation + clamp en
+   * cada drag), así que no hace falta la validación "asignados X/Y" que
+   * tenía el builder numérico anterior.
    */
   renderStep1Days() {
     return `
@@ -613,8 +615,8 @@ export const SmartGeneratorWizard = {
               class="flex-1 py-2 px-3 rounded-lg border-2 font-medium text-sm transition ${this.wizardData.dayAllocationMode === 'manual' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300'}"
             >✋ Yo elijo la ruta y los días</button>
           </div>
-          <div id="cityStopsBuilder">
-            ${this.wizardData.dayAllocationMode === 'manual' ? this.renderCityStopsBuilder() : `
+          <div id="dayAllocationBarWrap">
+            ${this.wizardData.dayAllocationMode === 'manual' ? DayAllocationBar.render(this.wizardData.cityStops, this.wizardData.totalDays) : `
               <p class="text-xs text-gray-500">El generador reparte los días según tus intereses y cuánto contenido real tiene cada ciudad.</p>
             `}
           </div>
@@ -693,124 +695,35 @@ export const SmartGeneratorWizard = {
   },
 
   /**
-   * 🆕 Renderiza el constructor de ruta manual: lista ordenada de paradas
-   * (con soporte para repetir ciudad), input de días por parada, y un
-   * indicador de cuántos días llevas asignados vs. el total del viaje.
-   */
-  renderCityStopsBuilder() {
-    const stops = this.wizardData.cityStops;
-    const totalAssigned = stops.reduce((sum, s) => sum + (parseInt(s.days) || 0), 0);
-    const totalDays = this.wizardData.totalDays;
-    const isBalanced = totalAssigned === totalDays;
-
-    return `
-      <p class="text-xs text-gray-500 mb-1">Ordena tu ruta y, si quieres, repite una ciudad (ej. Tokyo → Kyoto → Osaka → Tokyo si vuelves antes del vuelo de salida).</p>
-      <p class="text-xs text-gray-500 mb-2">💡 El día que viajas de una ciudad a otra ya cuenta como el primer día en la ciudad de destino - no le sumes un día aparte solo por el traslado. Para un day trip (ej. Nara desde Kyoto sin cambiar de hotel) marca esa parada como "excursión" en vez de agregarla como ciudad nueva.</p>
-      <div id="cityStopsList" class="space-y-2 mb-3">
-        ${stops.map((stop, idx) => this.renderCityStopRow(stop, idx)).join('')}
-      </div>
-      <div class="flex flex-wrap gap-2 mb-3">
-        ${this.wizardData.cities.map(city => `
-          <button type="button" onclick="window.SmartGeneratorWizard.addCityStop('${city}')"
-            class="text-xs px-3 py-1.5 rounded-full border border-dashed border-gray-400 dark:border-gray-500 text-gray-600 dark:text-gray-300 hover:border-blue-400 hover:text-blue-600 transition">
-            + Repetir ${city}
-          </button>
-        `).join('')}
-      </div>
-      <div class="p-2 rounded-lg text-sm font-medium ${isBalanced ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'}">
-        ${isBalanced ? '✅' : '⚠️'} Asignados: ${totalAssigned} / ${totalDays} días
-        ${!isBalanced ? (totalAssigned < totalDays ? ` (faltan ${totalDays - totalAssigned})` : ` (sobran ${totalAssigned - totalDays})`) : ''}
-      </div>
-    `;
-  },
-
-  /**
-   * 🆕 Renderiza una fila de parada dentro del constructor de ruta manual.
-   */
-  renderCityStopRow(stop, idx) {
-    const icon = CITY_ICONS[stop.city.toLowerCase()] || '📍';
-    // 🆕 Day trip: excursión de un día a otra ciudad SIN cambiar de hotel (ej. Nara
-    // desde Kyoto). No tiene sentido en la primera parada (no hay hotel previo del
-    // que salir), así que el toggle solo aparece a partir de la segunda.
-    const canBeDayTrip = idx > 0;
-    return `
-      <div class="border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50 ${stop.isDayTrip ? 'border-l-4 border-l-amber-400' : ''}">
-        <div class="flex items-center gap-2 p-2">
-          <span class="text-xs text-gray-400 w-5">${idx + 1}.</span>
-          <span class="text-lg">${icon}</span>
-          <span class="flex-1 font-medium text-gray-700 dark:text-gray-200 text-sm">${stop.city}${stop.isDayTrip ? ' <span class="text-xs font-normal text-amber-600 dark:text-amber-400">(excursión)</span>' : ''}</span>
-          <input type="number" min="1" max="30" value="${stop.days ?? ''}" placeholder="días"
-            onchange="window.SmartGeneratorWizard.setCityStopDays(${idx}, this.value)"
-            class="w-16 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-800 dark:text-white text-center">
-          <button type="button" onclick="window.SmartGeneratorWizard.moveCityStop(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}
-            class="p-1 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed">▲</button>
-          <button type="button" onclick="window.SmartGeneratorWizard.moveCityStop(${idx}, 1)" ${idx === this.wizardData.cityStops.length - 1 ? 'disabled' : ''}
-            class="p-1 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed">▼</button>
-          <button type="button" onclick="window.SmartGeneratorWizard.removeCityStop(${idx})"
-            class="p-1 text-red-500 hover:text-red-700">✕</button>
-        </div>
-        ${canBeDayTrip ? `
-          <label class="flex items-center gap-2 px-2 pb-2 text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
-            <input type="checkbox" ${stop.isDayTrip ? 'checked' : ''}
-              onchange="window.SmartGeneratorWizard.setCityStopDayTrip(${idx}, this.checked)">
-            Es un day trip (excursión sin cambiar de hotel - se queda en el hotel de "${this.wizardData.cityStops[idx - 1]?.city || 'la parada anterior'}")
-          </label>
-        ` : ''}
-      </div>
-    `;
-  },
-
-  /**
    * 🆕 Agrega otra parada de la misma ciudad al final de la ruta (soporta
-   * volver a una ciudad ya visitada, ej. Tokyo -> Kyoto -> Tokyo).
+   * volver a una ciudad ya visitada, ej. Tokyo -> Kyoto -> Tokyo). Llamado
+   * desde los chips del mapa (fase 'map'), así que refresca CityRouteMap.
    */
   addCityStop(city) {
     this.wizardData.cityStops.push({ city, days: null, isDayTrip: false });
     this.saveToSessionStorage();
-    this.refreshCityStopsBuilder();
+    CityRouteMap.refresh();
   },
 
   /**
    * 🆕 Marca/desmarca una parada como day trip (excursión de un día sin cambiar
    * de hotel - usa el hotel de la parada anterior en vez de pedir uno propio).
+   * Llamado desde el toggle 🚃 de la barra de días (fase 'days').
    */
   setCityStopDayTrip(idx, isDayTrip) {
     this.wizardData.cityStops[idx].isDayTrip = isDayTrip;
     this.saveToSessionStorage();
-    this.refreshCityStopsBuilder();
-  },
-
-  removeCityStop(idx) {
-    this.wizardData.cityStops.splice(idx, 1);
-    this.saveToSessionStorage();
-    this.refreshCityStopsBuilder();
-  },
-
-  moveCityStop(idx, direction) {
-    const stops = this.wizardData.cityStops;
-    const newIdx = idx + direction;
-    if (newIdx < 0 || newIdx >= stops.length) return;
-    [stops[idx], stops[newIdx]] = [stops[newIdx], stops[idx]];
-    this.saveToSessionStorage();
-    this.refreshCityStopsBuilder();
-  },
-
-  setCityStopDays(idx, value) {
-    const n = parseInt(value);
-    this.wizardData.cityStops[idx].days = (isNaN(n) || n < 1) ? null : n;
-    this.saveToSessionStorage();
-    this.refreshCityStopsBuilder();
+    DayAllocationBar.refresh();
   },
 
   /**
-   * 🆕 Re-renderiza solo el bloque de ruta/días (sin reconstruir todo el wizard).
+   * Quita una parada de la ruta. Llamado desde los chips del mapa (fase
+   * 'map'), así que refresca CityRouteMap.
    */
-  refreshCityStopsBuilder() {
-    const container = document.getElementById('cityStopsBuilder');
-    if (!container) return;
-    container.innerHTML = this.wizardData.dayAllocationMode === 'manual'
-      ? this.renderCityStopsBuilder()
-      : `<p class="text-xs text-gray-500">El generador reparte los días según tus intereses y cuánto contenido real tiene cada ciudad.</p>`;
+  removeCityStop(idx) {
+    this.wizardData.cityStops.splice(idx, 1);
+    this.saveToSessionStorage();
+    CityRouteMap.refresh();
   },
 
   // ===========================================================================
@@ -861,7 +774,9 @@ export const SmartGeneratorWizard = {
 
     this.applyAirportOrderingToStops();
     this.saveToSessionStorage();
-    this.refreshCityStopsBuilder();
+    // Nota: esto corre en la fase 'basics' (los selects de aeropuerto viven
+    // ahí), donde el DOM de la barra de días todavía no existe - se
+    // reconstruye solo cuando el usuario llega a la fase 'days'.
   },
 
   /**
@@ -1028,9 +943,10 @@ export const SmartGeneratorWizard = {
         }
         // 🆕 Actualizar preview de presupuesto
         this.updateBudgetPreview();
-        // 🆕 El indicador "asignados X/Y días" del constructor de ruta depende de totalDays
         this.wizardData.totalDays = days;
-        this.refreshCityStopsBuilder();
+        // Nota: esto corre en la fase 'basics' - la barra de días (fase
+        // 'days') se reconstruye desde wizardData cuando el usuario llega
+        // ahí, así que no hace falta refrescarla mientras no es visible.
         break;
 
       case 'dailyBudget':
@@ -1748,20 +1664,10 @@ export const SmartGeneratorWizard = {
         window.Notifications?.show(`❌ Necesitas al menos ${this.wizardData.cities.length} días para ${this.wizardData.cities.length} ciudades (1 día mínimo por ciudad)`, 'error');
         return false;
       }
-      // 🆕 Ruta manual: cada parada debe tener días asignados y deben sumar exactamente totalDays
-      if (this.wizardData.dayAllocationMode === 'manual') {
-        const stops = this.wizardData.cityStops;
-        const missingDays = stops.some(s => !s.days || s.days < 1);
-        if (missingDays) {
-          window.Notifications?.show('❌ Falta asignar días a alguna parada de tu ruta', 'error');
-          return false;
-        }
-        const totalAssigned = stops.reduce((sum, s) => sum + s.days, 0);
-        if (totalAssigned !== this.wizardData.totalDays) {
-          window.Notifications?.show(`❌ Los días de tu ruta suman ${totalAssigned}, pero el viaje dura ${this.wizardData.totalDays}`, 'error');
-          return false;
-        }
-      }
+      // 🆕 La validación "los días deben sumar exacto" ya no aplica: la barra
+      // de días arrastrable (seedEvenDayAllocation + clamp en cada drag)
+      // garantiza que cityStops siempre sume exactamente totalDays por
+      // construcción - no hay forma de dejarla desbalanceada desde la UI.
     } else if (this.currentStep === 2) {
       this.saveStep2Data();
       if (this.wizardData.interests.length === 0) {

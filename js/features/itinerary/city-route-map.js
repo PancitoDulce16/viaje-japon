@@ -156,7 +156,7 @@ export const CityRouteMap = {
 
   /**
    * Reemplazo dirigido (no re-render completo del modal) - misma convención
-   * que refreshCityStopsBuilder() en el wizard.
+   * que DayAllocationBar.refresh().
    */
   refresh() {
     const wizardData = window.SmartGeneratorWizard?.wizardData;
