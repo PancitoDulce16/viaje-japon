@@ -9,8 +9,8 @@
 // 📦 --- CONFIGURACIÓN DEL CACHÉ ---
 // IMPORTANTE: Cambia este número de versión CADA VEZ que hagas un cambio en los
 // archivos de la aplicación (JS, CSS, HTML) para forzar la actualización.
-const STATIC_CACHE_VERSION = 'japan-trip-planner-static-v15.0';
-const DYNAMIC_CACHE_VERSION = 'japan-trip-planner-dynamic-v15.0';
+const STATIC_CACHE_VERSION = 'japan-trip-planner-static-v16.0';
+const DYNAMIC_CACHE_VERSION = 'japan-trip-planner-dynamic-v16.0';
 const STATIC_CACHE_NAME = `static-${STATIC_CACHE_VERSION}`;
 const DYNAMIC_CACHE_NAME = `dynamic-${DYNAMIC_CACHE_VERSION}`;
 
@@ -83,6 +83,24 @@ const networkFirst = (request) => {
         });
 };
 
+// Estrategia: Stale-While-Revalidate (sirve caché al instante y actualiza en
+// segundo plano). Para CSS: con cache-first puro, cada fix de estilos que se
+// desplegaba SIN bumpear la versión del SW nunca llegaba a navegadores que ya
+// habían visitado la app — la causa recurrente de "sigo viendo la versión rota".
+const staleWhileRevalidate = (request, cacheName) => {
+    return caches.match(request).then(cachedResponse => {
+        const fetchPromise = fetch(request).then(networkResponse => {
+            if (networkResponse.ok) {
+                const responseToCache = networkResponse.clone();
+                caches.open(cacheName).then(cache => cache.put(request, responseToCache));
+            }
+            return networkResponse;
+        }).catch(() => cachedResponse || new Response('', { status: 404, statusText: 'Not Found' }));
+
+        return cachedResponse || fetchPromise;
+    });
+};
+
 // Estrategia: Cache First, falling back to Network (para App Shell y recursos estáticos)
 const cacheFirst = (request, cacheName) => {
     return caches.match(request).then(cachedResponse => {
@@ -151,14 +169,24 @@ self.addEventListener('fetch', event => {
         return;
     }
 
+    // --- REGLA 3.5: CSS SIEMPRE STALE-WHILE-REVALIDATE ---
+    // Se sirve del caché (rápido) pero se refresca de la red en segundo plano:
+    // los fixes de estilos llegan a todos en la siguiente visita, sin depender
+    // de que alguien se acuerde de bumpear la versión del SW.
+    if (url.pathname.endsWith('.css')) {
+        event.respondWith(staleWhileRevalidate(request, DYNAMIC_CACHE_NAME));
+        return;
+    }
+
     // --- REGLA 4: ESTRATEGIA PARA RECURSOS DEL APP SHELL ---
     // Si la petición es para un recurso que ya debería estar en el caché estático.
     if (APP_SHELL_URLS.includes(url.pathname)) {
-        event.respondWith(cacheFirst(request, STATIC_CACHE_NAME));
+        event.respondWith(staleWhileRevalidate(request, STATIC_CACHE_NAME));
         return;
     }
 
     // --- REGLA 5: ESTRATEGIA PARA RECURSOS DINÁMICOS (Imágenes, Fuentes, etc.) ---
-    // Para cualquier otra petición, usamos el caché dinámico.
+    // Para cualquier otra petición (imágenes, fuentes), caché primero: casi
+    // nunca cambian y ahorra datos.
     event.respondWith(cacheFirst(request, DYNAMIC_CACHE_NAME));
 });

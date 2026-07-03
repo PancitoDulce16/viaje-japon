@@ -323,9 +323,20 @@
         for (let i = 0; i < 30; i++) createPetal();
         setInterval(createPetal, 1500);
 
-        // Service worker
+        // Service worker (+ limpieza de SWs zombie de versiones viejas)
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
+            window.addEventListener('load', async () => {
+                try {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    for (const reg of regs) {
+                        const scriptURL = (reg.active || reg.waiting || reg.installing)?.scriptURL || '';
+                        if (scriptURL && !scriptURL.endsWith('/service-worker.js')) {
+                            console.warn('[SW] 🧟 Desregistrando service worker zombie:', scriptURL);
+                            await reg.unregister();
+                        }
+                    }
+                } catch (e) { /* no bloquear el registro */ }
+
                 navigator.serviceWorker.register('./service-worker.js').catch(() => {});
             });
         }
