@@ -782,8 +782,13 @@ html {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Pull-to-refresh mejorado */
-body {
+/* Pull-to-refresh mejorado.
+   OJO: esto va en html (el scroller raíz), NO en body. body es un scroll
+   container (overflow-y:auto) que nunca puede scrollear él mismo — con
+   "contain" ahí, la rueda del mouse sobre el contenido moría en body sin
+   encadenar hacia html: el scroll solo funcionaba sobre elementos fixed
+   (maneki-neko, FABs), que van directo al scroller raíz. */
+html {
   overscroll-behavior-y: contain;
 }
 
