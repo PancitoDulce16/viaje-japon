@@ -61,9 +61,20 @@ export const AppUtils = {
         // Cachear por 30 minutos
         const cacheKey = city.toLowerCase();
         const now = Date.now();
-        
+
         if (this.weatherCache[cacheKey] && (now - this.weatherCache[cacheKey].timestamp < 1800000)) {
             return this.weatherCache[cacheKey].data;
+        }
+
+        // 🔧 A diferencia de weather-integration.js (que sí valida esto antes
+        // de hacer fetch), este método llamaba directo a la API con
+        // this.OPENWEATHER_API_KEY vacío ('' por defecto - nunca se
+        // configuró un secret real en producción) - generaba un 401 y un
+        // error de red en consola en cada generación de itinerario en vez
+        // de fallar en silencio con un guard, como ya se hace en otras
+        // integraciones opcionales de este proyecto (ver fcm-manager.js).
+        if (!this.OPENWEATHER_API_KEY || this.OPENWEATHER_API_KEY === 'YOUR_OPENWEATHER_API_KEY_HERE') {
+            return null;
         }
 
         try {

@@ -1065,7 +1065,7 @@ export const SmartGeneratorWizard = {
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
             ¿Qué te interesa? (Selecciona varios) <span class="text-red-500">*</span>
           </label>
-          <div class="grid grid-cols-2 gap-3" id="interestsContainer">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="interestsContainer">
             ${allInterests.map(interest => this.renderInterestCheckbox(interest)).join('')}
           </div>
           <p class="text-xs text-gray-500 mt-2">Selecciona al menos un interés para personalizar tu itinerario</p>
@@ -1274,13 +1274,13 @@ export const SmartGeneratorWizard = {
           <span class="text-sm font-medium text-gray-700 dark:text-gray-200">${interest.label}</span>
         </label>
         ${isChecked ? `
-          <div class="flex items-center gap-1 px-3 pb-3 -mt-1" onclick="event.stopPropagation()">
-            <span class="text-xs text-gray-500 dark:text-gray-400 mr-1">Prioridad:</span>
+          <div class="flex flex-wrap items-center gap-1 px-3 pb-3 -mt-1" onclick="event.stopPropagation()">
+            <span class="text-xs text-gray-500 dark:text-gray-400 mr-1 whitespace-nowrap">Prioridad:</span>
             ${[1, 2, 3, 4, 5].map(n => `
               <button
                 type="button"
                 onclick="window.SmartGeneratorWizard.setInterestWeight('${interest.id}', ${n})"
-                class="text-lg leading-none transition"
+                class="text-lg leading-none transition shrink-0"
                 style="color: ${n <= weight ? '#facc15' : '#d1d5db'}"
                 title="Prioridad ${n}/5"
               >★</button>
