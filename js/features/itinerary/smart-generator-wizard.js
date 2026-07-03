@@ -1119,24 +1119,33 @@ export const SmartGeneratorWizard = {
           </div>
         </div>
 
-        <!-- Hora de inicio -->
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            ¿A qué hora prefieres empezar tus días?
-          </label>
-          <select
-            id="startTime"
-            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-          >
-            <option value="7" ${this.wizardData.startTime === 7 ? 'selected' : ''}>7:00 AM (Madrugador)</option>
-            <option value="8" ${this.wizardData.startTime === 8 ? 'selected' : ''}>8:00 AM</option>
-            <option value="9" ${this.wizardData.startTime === 9 ? 'selected' : ''}>9:00 AM (Recomendado)</option>
-            <option value="10" ${this.wizardData.startTime === 10 ? 'selected' : ''}>10:00 AM</option>
-            <option value="11" ${this.wizardData.startTime === 11 ? 'selected' : ''}>11:00 AM (Relajado)</option>
-          </select>
+        <!-- 🔧 Antes había un <select> "¿A qué hora prefieres empezar tus días?"
+             que el usuario podía cambiar libremente, pero smart-itinerary-
+             generator.js (generateSingleDay(), línea ~1466) SIEMPRE usa
+             intensityConfig.startTime (derivado del ritmo/intensidad de
+             arriba) para armar el día - la selección del usuario nunca
+             llegaba a afectar nada. Mostrar un control editable que en
+             realidad no hace nada rompe la confianza en el resto de los
+             controles que sí funcionan. En vez de arreglar esto tocando la
+             lógica central de generación (mayor riesgo, sin poder probarlo
+             contigo ahora), se reemplaza por un indicador honesto: la hora
+             real que va a usar, derivada del ritmo elegido, actualizada en
+             vivo si cambias el slider de arriba. -->
+        <div id="startTimeInfo" class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-800 dark:text-blue-300">
+          ${this.renderStartTimeInfo()}
         </div>
       </div>
     `;
+  },
+
+  /**
+   * 🆕 Hora real de inicio del día, derivada del ritmo elegido (la única
+   * que el generador realmente usa) - ver comentario arriba.
+   */
+  renderStartTimeInfo() {
+    const hour = window.INTENSITY_LEVELS?.[this.wizardData.pace]?.startTime ?? 9;
+    const hourLabel = hour === 12 ? '12:00 PM' : hour > 12 ? `${hour - 12}:00 PM` : `${hour}:00 AM`;
+    return `⏰ Con el ritmo que elegiste, tus días suelen empezar cerca de las <strong>${hourLabel}</strong>.`;
   },
 
   /**
@@ -1159,6 +1168,13 @@ export const SmartGeneratorWizard = {
     if (labelElement) {
       labelElement.textContent = `${label.icon} ${label.label}`;
     }
+
+    const startTimeInfoElement = document.getElementById('startTimeInfo');
+    if (startTimeInfoElement) {
+      startTimeInfoElement.innerHTML = this.renderStartTimeInfo();
+    }
+
+    this.saveToSessionStorage();
   },
 
   /**
