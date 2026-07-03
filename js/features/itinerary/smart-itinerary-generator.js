@@ -666,9 +666,20 @@ export const SmartItineraryGenerator = {
 
     // Generar las 3 variaciones
     for (const template of relevantVariations.slice(0, 3)) {
+      // ⚖️ Diferenciación REAL: con solo cambiar `interests`, el 75% del score
+      // (rating/cercanía/presupuesto/popularidad) era idéntico entre variaciones
+      // y las 3 salían ~95% iguales (día 3 100% idéntico, verificado). El boost
+      // multiplicativo por arquetipo hace que cada variación priorice de verdad
+      // su temática. La variación "personal" (usa los intereses del usuario tal
+      // cual) no lleva boost: es la línea base honesta.
+      const isPersonal = template.interests === userInterests;
       const variationProfile = {
         ...profile,
         interests: template.interests,
+        interestWeights: isPersonal
+          ? profile.interestWeights
+          : Object.fromEntries(template.interests.map(i => [i, 5])),
+        archetypeInterests: isPersonal ? null : template.interests,
         _variationType: template.icon
       };
 
@@ -784,6 +795,7 @@ export const SmartItineraryGenerator = {
       arrivalTime = null, // 🆕 'HH:MM' - hora de aterrizaje día 1 (jetlag-aware)
       arrivalCityKey = null,   // 🛬 Ciudad del aeropuerto de llegada (la ruta auto empieza ahí)
       departureCityKey = null, // 🛫 Ciudad del aeropuerto de salida (la ruta auto termina ahí)
+      archetypeInterests = null, // ⚖️ Intereses del arquetipo de variación (boost multiplicativo)
       // 🆕 Nuevos parámetros de contexto
       groupSize = 1,
       travelerAges = [],
@@ -885,6 +897,7 @@ export const SmartItineraryGenerator = {
           themedDay: themedDay,
           tripStartDate: tripStartDate,
           arrivalTime: arrivalTime, // 🆕 Solo afecta al día 1 (isArrivalDay)
+          archetypeInterests: archetypeInterests, // ⚖️ Boost temático de la variación
           usedActivities: usedActivities, // 🚨 Pasar tracker global
           usedMeals: usedMeals, // 🍽️ Pasar tracker global de restaurantes
           // 🆕 Nuevos parámetros de contexto
@@ -1077,6 +1090,7 @@ export const SmartItineraryGenerator = {
       themedDay,
       tripStartDate,
       arrivalTime = null, // 🆕 'HH:MM' - hora de aterrizaje día 1 (jetlag-aware)
+      archetypeInterests = null, // ⚖️ Intereses del arquetipo (boost multiplicativo)
       usedActivities = new Set(), // 🚨 NUEVO: Tracker de actividades usadas
       usedMeals = new Set(), // 🍽️ Tracker de restaurantes ya sugeridos
       // 🆕 Nuevos parámetros de contexto
@@ -1273,6 +1287,13 @@ export const SmartItineraryGenerator = {
     const scoredActivities = candidateActivities
       .map(activity => {
         let score = this.scoreActivity(activity, interests, dailyBudget, avoid, hotel, companionType, themedDay, 9, groupSize, travelerAges, interestWeights);
+
+        // ⚖️ ARCHETYPE BOOST: multiplicador para la temática de la variación.
+        // El interest-match aditivo (25% del score) no alcanzaba a mover el
+        // ranking y las 3 variaciones salían casi idénticas.
+        if (archetypeInterests?.length && activity.interests?.some(i => archetypeInterests.includes(i))) {
+          score *= 1.4;
+        }
 
         // 🌸 SEASON BONUS: Bonus por actividades recomendadas en temporada
         if (season && season.recommendations) {

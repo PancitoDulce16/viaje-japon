@@ -791,6 +791,22 @@ export const SmartGeneratorWizard = {
   },
 
   /**
+   * Traduce las categorías internas (en inglés) a etiquetas para el usuario.
+   * Se mostraban crudas ("meal", "nature") en la comparación de variaciones.
+   */
+  translateCategory(cat) {
+    const map = {
+      meal: '🍽️ Comida', food: '🍜 Gastronomía', nature: '🌿 Naturaleza',
+      cultural: '⛩️ Cultura', culture: '⛩️ Cultura', history: '📜 Historia',
+      shopping: '🛍️ Compras', anime: '🎮 Anime', technology: '🤖 Tecnología',
+      nightlife: '🌃 Vida nocturna', photography: '📸 Fotografía',
+      relax: '🧘 Relax', adventure: '🏔️ Aventura', art: '🎨 Arte',
+      market: '🏮 Mercado', entertainment: '🎡 Entretenimiento', other: '📍 Otro'
+    };
+    return map[String(cat || '').toLowerCase()] || (cat || 'Actividad');
+  },
+
+  /**
    * 🆕 Guarda los aeropuertos elegidos y reordena la ruta manual para que
    * empiece en la ciudad de llegada y termine en la de salida (solo mueve
    * paradas existentes, nunca borra ni agrega días).
@@ -2275,16 +2291,49 @@ export const SmartGeneratorWizard = {
         </div>
 
         <!-- Footer -->
-        <div class="border-t border-gray-200 dark:border-gray-700 p-6 flex justify-between">
+        <div class="border-t border-gray-200 dark:border-gray-700 p-4 sm:p-6 flex justify-between items-center gap-2">
           <button
-            onclick="window.SmartGeneratorWizard.close()"
-            class="px-6 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+            onclick="window.SmartGeneratorWizard.cancelFromVariations()"
+            class="px-4 sm:px-6 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition text-sm"
           >
-            Cancelar
+            Descartar
+          </button>
+          <button
+            onclick="window.SmartGeneratorWizard.backToWizardFromVariations()"
+            class="px-4 sm:px-6 py-3 rounded-lg border-2 border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/30 font-semibold transition text-sm"
+            title="Vuelve al asistente con todo lo que elegiste intacto"
+          >
+            ← Ajustar preferencias
           </button>
         </div>
       </div>
     `;
+  },
+
+  /**
+   * Cancelar desde el selector de variaciones: los 3 itinerarios generados
+   * se pierden — antes se cerraba en seco sin avisar.
+   */
+  async cancelFromVariations() {
+    const confirmed = window.Dialogs?.confirm
+      ? await window.Dialogs.confirm({
+          title: '¿Descartar los itinerarios?',
+          message: 'Se perderán las 3 opciones generadas. Si solo quieres cambiar algo, usa "Ajustar preferencias" y conserva todo lo que ya elegiste.',
+          okText: 'Sí, descartar',
+          isDestructive: true
+        })
+      : confirm('¿Descartar los itinerarios generados?');
+    if (confirmed) this.close();
+  },
+
+  /**
+   * Volver al asistente (paso 3) con wizardData intacto, sin perder la
+   * configuración — antes la única salida era el Cancelar destructivo.
+   */
+  backToWizardFromVariations() {
+    this.currentVariations = null;
+    this.currentStep = 3;
+    this.renderWizard();
   },
 
   /**
@@ -2420,9 +2469,9 @@ export const SmartGeneratorWizard = {
                           <div class="space-y-2">
                             ${day.activities.slice(0, 4).map(act => `
                               <div class="text-sm">
-                                <div class="font-semibold text-gray-900 dark:text-white">${act.name}</div>
+                                <div class="font-semibold text-gray-900 dark:text-white">${act.title || act.name || 'Actividad'}</div>
                                 <div class="text-xs text-gray-500 dark:text-gray-400">
-                                  ${act.category} • ${Math.floor(act.duration / 60)}h ${act.duration % 60}m
+                                  ${this.translateCategory(act.category)} • ${Math.floor(act.duration / 60)}h ${act.duration % 60}m
                                 </div>
                               </div>
                             `).join('')}
@@ -2433,7 +2482,7 @@ export const SmartGeneratorWizard = {
                             ` : ''}
                           </div>
                           <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between text-xs">
-                            <span class="text-gray-600 dark:text-gray-400">💰 ${(day.budgetBreakdown?.total ?? day.budget)?.toLocaleString() || '0'} ¥</span>
+                            <span class="text-gray-600 dark:text-gray-400">💰 ¥${((day.budgetBreakdown?.total ?? day.budget) || 0).toLocaleString()}</span>
                             <span class="text-gray-600 dark:text-gray-400">${day.activities.length} act.</span>
                           </div>
                         </div>
@@ -2689,10 +2738,34 @@ export const SmartGeneratorWizard = {
   /**
    * Renderiza una tarjeta de variación
    */
+  /**
+   * Actividades "emblema" de una variación: prioriza las que SOLO están en
+   * esta opción (vs. las otras dos), ordenadas por rating. Sin esto, las 3
+   * tarjetas mostraban stats casi idénticos y elegir era una lotería.
+   */
+  getSignatureActivities(variation, count = 3) {
+    const others = new Set();
+    (this.currentVariations || []).forEach(v => {
+      if (v.id === variation.id) return;
+      v.itinerary.days.forEach(d => (d.activities || []).forEach(a => others.add(a.title || a.name)));
+    });
+
+    const all = [];
+    variation.itinerary.days.forEach(d => (d.activities || []).forEach(a => {
+      if (!a.isMeal) all.push(a);
+    }));
+
+    const uniques = all.filter(a => !others.has(a.title || a.name));
+    const pool = uniques.length >= count ? uniques : all;
+    const picks = [...pool].sort((x, y) => (y.rating || 0) - (x.rating || 0)).slice(0, count);
+    return { picks, uniqueCount: uniques.length };
+  },
+
   renderVariationCard(variation) {
     const itinerary = variation.itinerary;
     const totalActivities = itinerary.days.reduce((sum, day) => sum + day.activities.length, 0);
     const totalBudget = itinerary.totalBudget || 0;
+    const { picks, uniqueCount } = this.getSignatureActivities(variation);
 
     return `
       <div class="border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-purple-500 dark:hover:border-purple-400 transition cursor-pointer overflow-hidden"
@@ -2713,6 +2786,24 @@ export const SmartGeneratorWizard = {
             </span>
           `).join('')}
         </div>
+
+        <!-- Actividades emblema: lo que REALMENTE distingue esta opción -->
+        ${picks.length > 0 ? `
+        <div class="px-6 py-3 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
+          <div class="text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2">
+            ${uniqueCount > 0 ? `⭐ Solo en esta opción (${uniqueCount})` : '⭐ Destacados'}
+          </div>
+          <div class="space-y-1.5">
+            ${picks.map(a => `
+              <div class="flex items-center gap-2 text-sm min-w-0">
+                <span class="flex-shrink-0">${a.rating ? '★' : '·'}</span>
+                <span class="truncate text-gray-800 dark:text-gray-200 font-medium" title="${String(a.title || a.name || '').replace(/"/g, '&quot;')}">${a.title || a.name}</span>
+                ${a.rating ? `<span class="ml-auto flex-shrink-0 text-xs text-amber-600 dark:text-amber-400 font-semibold">${a.rating}</span>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
 
         <!-- Stats -->
         <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 space-y-2">
