@@ -52,7 +52,16 @@ class AIControlPanel {
     // Crear panel lateral
     const panel = document.createElement('div');
     panel.id = 'ai-control-panel';
-    panel.className = 'fixed top-0 right-0 h-full w-full md:w-[500px] bg-white dark:bg-gray-800 shadow-2xl z-[70] transform translate-x-full transition-transform duration-300 overflow-y-auto';
+    panel.className = 'fixed top-0 right-0 h-full w-full md:w-[500px] bg-white dark:bg-gray-800 shadow-2xl transition-transform duration-300 overflow-y-auto';
+    // z-index y transform (posición cerrada) inline, NO clases Tailwind
+    // "z-[70]"/"translate-x-full": el runtime CDN de Tailwind no siempre
+    // compila clases de valor arbitrario para elementos creados vía JS (bug
+    // confirmado varias veces esta sesión). Si "translate-x-full" no se
+    // compila, este panel (w-full en móvil, sin botón real para abrirlo -
+    // ver comentario abajo) queda VISIBLE Y BLOQUEANDO TODA LA PANTALLA de
+    // forma permanente, sin ninguna manera de cerrarlo.
+    panel.style.zIndex = '70';
+    panel.style.transform = 'translateX(100%)';
     panel.innerHTML = `
       <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 z-10 shadow-lg">
         <div class="flex items-center justify-between mb-2">
@@ -541,7 +550,7 @@ class AIControlPanel {
   open() {
     const panel = document.getElementById('ai-control-panel');
     if (panel) {
-      panel.classList.remove('translate-x-full');
+      panel.style.transform = 'translateX(0)';
       this.isOpen = true;
 
       // Recargar datos si hay itinerario
@@ -557,7 +566,7 @@ class AIControlPanel {
   close() {
     const panel = document.getElementById('ai-control-panel');
     if (panel) {
-      panel.classList.add('translate-x-full');
+      panel.style.transform = 'translateX(100%)';
       this.isOpen = false;
     }
   }

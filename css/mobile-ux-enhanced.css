@@ -565,8 +565,12 @@ html.dark .mobile-bottom-nav__item {
    ========================================== */
 
 @media (max-width: 768px) {
-  /* Reduce animations on mobile for performance */
-  * {
+  /* Reduce animations on mobile for performance
+     🔧 Excluir animaciones decorativas de fondo (maneki-neko, burbujas
+     flotantes): estaban diseñadas para 3s/20s (movimiento suave, gentle)
+     y este "*" las forzaba a 0.2s !important - se veían "moviéndose muy
+     rápido"/tembloroso en vez de flotar. */
+  *:not(.maneki-neko):not(.floating-shape) {
     animation-duration: 0.2s !important;
   }
 
