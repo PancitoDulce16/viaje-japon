@@ -2100,54 +2100,18 @@ export const SmartGeneratorWizard = {
         </div>
       `;
 
-      // Simular progreso de pasos
-      setTimeout(() => {
-        const step1 = document.getElementById('step1');
-        if (step1) {
-          step1.innerHTML = '<div>✅</div><span class="text-gray-600 dark:text-gray-300">Preferencias analizadas</span>';
-          step1.classList.remove('text-blue-600', 'dark:text-blue-400');
-          step1.classList.add('text-gray-600', 'dark:text-gray-300');
-        }
-        const step2 = document.getElementById('step2');
-        if (step2) {
-          step2.classList.remove('text-gray-400');
-          step2.classList.add('text-blue-600', 'dark:text-blue-400');
-          step2.querySelector('div').classList.add('animate-pulse');
-        }
-      }, 2000);
-
-      setTimeout(() => {
-        const step2 = document.getElementById('step2');
-        if (step2) {
-          step2.innerHTML = '<div>✅</div><span class="text-gray-600 dark:text-gray-300">Coordenadas encontradas</span>';
-          step2.classList.remove('text-blue-600', 'dark:text-blue-400');
-          step2.classList.add('text-gray-600', 'dark:text-gray-300');
-        }
-        const step3 = document.getElementById('step3');
-        if (step3) {
-          step3.classList.remove('text-gray-400');
-          step3.classList.add('text-blue-600', 'dark:text-blue-400');
-          step3.querySelector('div').classList.add('animate-pulse');
-        }
-      }, 5000);
-
-      setTimeout(() => {
-        const step3 = document.getElementById('step3');
-        if (step3) {
-          step3.innerHTML = '<div>✅</div><span class="text-gray-600 dark:text-gray-300">Rutas optimizadas</span>';
-          step3.classList.remove('text-blue-600', 'dark:text-blue-400');
-          step3.classList.add('text-gray-600', 'dark:text-gray-300');
-        }
-        const step4 = document.getElementById('step4');
-        if (step4) {
-          step4.classList.remove('text-gray-400');
-          step4.classList.add('text-blue-600', 'dark:text-blue-400');
-          step4.querySelector('div').classList.add('animate-pulse');
-        }
-      }, 10000);
+      // 🔧 Antes esto era 3 setTimeout fijos (2s/5s/10s) totalmente
+      // desconectados del trabajo real - podía mostrar "optimizando rutas"
+      // cuando la generación ya había terminado hace rato, o seguir en
+      // "analizando preferencias" con el trabajo real recién a la mitad,
+      // según cuánto tardara la red/el generador ese día. markStepDone()/
+      // markStepActive() ahora se llaman en los puntos reales del código
+      // donde cada fase efectivamente empieza/termina.
+      this.markStepDone('step1', 'Preferencias analizadas');
     }
 
     try {
+      this.markStepActive('step2');
       // Convertir hoteles a formato con coordenadas
       const hotelsWithCoords = {};
       for (const [city, hotelData] of Object.entries(this.wizardData.hotels)) {
@@ -2176,6 +2140,8 @@ export const SmartGeneratorWizard = {
           }
         }
       }
+      this.markStepDone('step2', Object.keys(hotelsWithCoords).length > 0 ? 'Coordenadas encontradas' : 'Sin hoteles que geocodificar');
+      this.markStepActive('step3');
 
       // Preparar perfil para el generador
       const profile = {
@@ -2209,10 +2175,14 @@ export const SmartGeneratorWizard = {
 
       console.log('📋 Perfil final:', profile);
 
+      this.markStepDone('step3', 'Ruta y perfil listos');
+      this.markStepActive('step4');
+
       // Generar MÚLTIPLES VARIACIONES
       const variations = await window.SmartItineraryGenerator.generateMultipleVariations(profile);
 
       console.log('✅ 3 variaciones generadas:', variations);
+      this.markStepDone('step4', '3 itinerarios generados');
 
       // Mostrar selector de variaciones
       this.showVariationsSelector(variations);
@@ -2222,6 +2192,33 @@ export const SmartGeneratorWizard = {
       window.Notifications?.show('❌ Error al generar itinerario: ' + error.message, 'error');
       this.close();
     }
+  },
+
+  /**
+   * 🆕 Marca un paso del checklist de generación como "en progreso" (spinner
+   * animado). Usado en los puntos REALES del código donde cada fase
+   * efectivamente arranca, no en un setTimeout con un tiempo inventado.
+   */
+  markStepActive(stepId) {
+    const el = document.getElementById(stepId);
+    if (!el) return;
+    el.classList.remove('text-gray-400');
+    el.classList.add('text-blue-600', 'dark:text-blue-400');
+    el.querySelector('div')?.classList.add('animate-pulse');
+  },
+
+  /**
+   * 🆕 Marca un paso del checklist de generación como completado (✅), con
+   * el texto final que refleja lo que realmente pasó (ej. "sin hoteles que
+   * geocodificar" si el usuario no cargó ninguno, en vez de un texto fijo
+   * que asume que sí).
+   */
+  markStepDone(stepId, text) {
+    const el = document.getElementById(stepId);
+    if (!el) return;
+    el.innerHTML = `<div>✅</div><span class="text-gray-600 dark:text-gray-300">${text}</span>`;
+    el.classList.remove('text-blue-600', 'dark:text-blue-400');
+    el.classList.add('text-gray-600', 'dark:text-gray-300');
   },
 
   /**
@@ -2342,9 +2339,20 @@ export const SmartGeneratorWizard = {
             `).join('')}
 
             <div class="text-gray-600 dark:text-gray-400">⚡ Ritmo</div>
-            ${variations.map(v => {
-              const pace = v.name.includes('Relajado') ? '🐢 Tranquilo' :
-                          v.name.includes('Equilibrado') ? '🚶 Moderado' : '🏃 Intenso';
+            ${variations.map(() => {
+              // 🔧 v.name.includes('Relajado'/'Equilibrado') (versión anterior) no
+              // coincidía con NINGÚN nombre real de las 9 plantillas de arquetipo
+              // (Cultural Explorer, Ultimate Foodie, etc.) - siempre caía en
+              // "🏃 Intenso" sin importar el ritmo real, para las 3 columnas.
+              // Además el ritmo NO varía entre variaciones (viene de una sola
+              // config del wizard, no del arquetipo) - se muestra el valor real
+              // (this.wizardData.pace), igual en las 3 columnas porque
+              // genuinamente es el mismo, en vez de fingir que difiere.
+              const paceLabels = {
+                light: '🐢 Ligero', moderate: '🚶 Moderado', packed: '🏃 Intenso',
+                extreme: '⚡ Extremo', maximum: '🔥 Máximo'
+              };
+              const pace = paceLabels[this.wizardData.pace] || '🚶 Moderado';
               return `<div class="text-center font-semibold text-gray-900 dark:text-white">${pace}</div>`;
             }).join('')}
           </div>
