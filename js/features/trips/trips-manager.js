@@ -146,12 +146,22 @@ export const TripsManager = {
       const tripId = `trip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const shareCode = this.generateTripCode();
 
+      // 🔧 Firestore rechaza el documento COMPLETO si cualquier campo es
+      // literalmente undefined (no null) - un solo llamador de createTrip()
+      // que se olvide de mandar fechas (confirmado con la carga de
+      // plantillas del wizard) tumbaba toda la creación del viaje con
+      // "Unsupported field value: undefined". Fallback a hoy/+6 días en vez
+      // de dejar que undefined llegue a setDoc().
+      const todayISO = new Date().toISOString().split('T')[0];
+      const fallbackEnd = new Date();
+      fallbackEnd.setDate(fallbackEnd.getDate() + 6);
+
       const newTrip = {
         info: {
           name: tripData.name,
           destination: tripData.destination || 'Japón',
-          dateStart: tripData.dateStart,
-          dateEnd: tripData.dateEnd,
+          dateStart: tripData.dateStart || todayISO,
+          dateEnd: tripData.dateEnd || fallbackEnd.toISOString().split('T')[0],
           createdBy: userId,
           createdAt: new Date().toISOString(),
           shareCode: shareCode, // Código compartible

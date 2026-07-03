@@ -1856,11 +1856,25 @@ export const SmartGeneratorWizard = {
         return;
       }
 
+      // 🔧 TripsManager.createTrip() escribe tripData.dateStart/dateEnd
+      // directo a Firestore (info.dateStart: tripData.dateStart, sin
+      // default) - esta plantilla nunca las incluía, así que setDoc()
+      // rechazaba el documento entero con "Unsupported field value:
+      // undefined". Como el template no trae fechas reales, se usa hoy
+      // como inicio y se calcula el fin según la duración del template.
+      const duration = data.templateInfo.duration || 7;
+      const dateStart = new Date();
+      const dateEnd = new Date(dateStart);
+      dateEnd.setDate(dateEnd.getDate() + duration - 1);
+      const toISODate = (d) => d.toISOString().split('T')[0];
+
       // Crear un nuevo trip con el template
       const tripData = {
         name: data.templateInfo.name,
         cities: data.templateInfo.cities,
-        totalDays: data.templateInfo.duration,
+        dateStart: toISODate(dateStart),
+        dateEnd: toISODate(dateEnd),
+        totalDays: duration,
         budget: data.templateInfo.totalBudget,
         status: 'draft',
         templateId: templateId,
