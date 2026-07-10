@@ -333,6 +333,14 @@ export const PackingList = {
   // Re-inicializar cuando cambie el trip
   reinitialize() {
     this.initSync();
+  },
+
+  // Limpiar listener de Firestore (ej. antes de borrar el trip actual)
+  cleanup() {
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
+    }
   }
 };
 

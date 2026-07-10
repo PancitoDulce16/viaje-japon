@@ -395,6 +395,7 @@ export const SmartGeneratorWizard = {
               type="date"
               id="tripEndDate"
               value="${this.wizardData.tripEndDate || ''}"
+              min="${this.wizardData.tripStartDate || ''}"
               onchange="window.SmartGeneratorWizard.updateTripDates()"
               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition"
             >
@@ -1225,6 +1226,21 @@ export const SmartGeneratorWizard = {
     const endInput = document.getElementById('tripEndDate');
     const totalDaysInput = document.getElementById('totalDays');
 
+    // 🆕 El date picker nativo de "fecha de fin" abría siempre en el mes
+    // actual, obligando a navegar desde cero aunque ya se hubiera elegido
+    // el inicio (ej. inicio 15 feb, el picker de fin seguía mostrando el
+    // mes de hoy). Se ata min=inicio (limita fechas inválidas) y, si el
+    // usuario aún no eligió fin o quedó antes del nuevo inicio, se sugiere
+    // inicio+6 días como valor de partida - editable, no forzado.
+    if (startInput && endInput && startInput.value) {
+      endInput.min = startInput.value;
+      if (!endInput.value || endInput.value < startInput.value) {
+        const suggestedEnd = new Date(startInput.value + 'T00:00:00');
+        suggestedEnd.setDate(suggestedEnd.getDate() + 6);
+        endInput.value = suggestedEnd.toISOString().split('T')[0];
+      }
+    }
+
     if (startInput && endInput && startInput.value && endInput.value) {
       const startDate = new Date(startInput.value);
       const endDate = new Date(endInput.value);
@@ -1447,7 +1463,8 @@ export const SmartGeneratorWizard = {
             ¿En qué hoteles te quedarás? (Opcional pero recomendado)
           </label>
           <p class="text-sm text-gray-500 mb-4">
-            Esto permite que el itinerario empiece cerca de tu hotel cada día 🎯
+            Ordenamos las actividades de cada día para que empiecen y terminen cerca de donde te hospedas 🎯
+            El <strong>área/barrio</strong> (ej. Shinjuku, Gion) es el dato más importante - si el nombre exacto del hotel no se encuentra, igual usamos el barrio como referencia.
           </p>
           <div class="space-y-3">
             ${selectedCities.map(city => this.renderHotelInput(city)).join('')}
@@ -2185,21 +2202,58 @@ export const SmartGeneratorWizard = {
           console.log(`🔍 Buscando coordenadas para: ${query}`);
 
           if (window.IntelligentGeocoder) {
-            const result = await window.IntelligentGeocoder.getCoordinates(
-              hotelData.name,
-              `${hotelData.area}, ${city}, Japan`
-            );
+            // 🔧 FIX: esto rompía la generación entera y cerraba el wizard.
+            // Bugs reales que tenía:
+            // 1. Pasaba un string suelto como 2do argumento en vez de
+            //    {city}, que es lo que getCoordinates() espera (mismo
+            //    patrón que ya usa hotels.js) - degradaba la precisión.
+            // 2. Comprobaba `result.success`, un campo que ese método NUNCA
+            //    devuelve (sus resultados exitosos son {lat,lng,name,
+            //    source,...}), así que esta condición era siempre falsa -
+            //    el hotel JAMÁS llegaba a usarse para nada, aunque la
+            //    geocodificación funcionara perfecto.
+            // 3. Cuando no encontraba nada, getCoordinates() devuelve
+            //    `null` (no un objeto con success:false) - leer
+            //    `result.success` sobre `null` lanzaba un TypeError que
+            //    escapaba hasta el catch de generateItinerary() y cerraba
+            //    todo el wizard, aunque fuera un solo hotel el que no se
+            //    pudo geocodificar.
+            try {
+              let result = await window.IntelligentGeocoder.getCoordinates(
+                query,
+                { city }
+              );
 
-            if (result.success && result.lat && result.lng) {
-              hotelsWithCoords[city] = {
-                name: hotelData.name,
-                lat: result.lat,
-                lng: result.lng,
-                area: hotelData.area
-              };
-              console.log(`✅ Hotel encontrado en ${city}:`, hotelsWithCoords[city]);
-            } else {
-              console.warn(`⚠️ No se encontraron coordenadas para hotel en ${city}`);
+              // 🆕 Si el nombre exacto del hotel no matchea en ninguna fuente
+              // (muy común - la mayoría de hoteles no están en la base de
+              // atracciones ni tienen presencia fuerte en OSM/Nominatim),
+              // reintentar solo con el barrio + ciudad. Un barrio real
+              // ("Shinjuku, Tokyo, Japan") es mucho más fácil de geocodificar
+              // que el nombre de un hotel específico, y sigue siendo un
+              // ancla mucho mejor que no tener ninguna.
+              if (!result || !result.lat || !result.lng) {
+                console.log(`🔍 Hotel no encontrado, reintentando solo con el área: ${hotelData.area}, ${city}, Japan`);
+                result = await window.IntelligentGeocoder.getCoordinates(
+                  `${hotelData.area}, ${city}, Japan`,
+                  { city }
+                );
+              }
+
+              if (result && result.lat && result.lng) {
+                hotelsWithCoords[city] = {
+                  name: hotelData.name,
+                  lat: result.lat,
+                  lng: result.lng,
+                  area: hotelData.area
+                };
+                console.log(`✅ Hotel encontrado en ${city}:`, hotelsWithCoords[city]);
+              } else {
+                console.warn(`⚠️ No se encontraron coordenadas para hotel en ${city}`);
+              }
+            } catch (geocodeError) {
+              // No dejar que un solo hotel sin coordenadas tumbe toda la
+              // generación - simplemente se genera sin ese anclaje de hotel.
+              console.warn(`⚠️ Error geocodificando hotel en ${city}:`, geocodeError);
             }
           }
         }

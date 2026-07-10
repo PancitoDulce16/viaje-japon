@@ -134,7 +134,7 @@
                         >
                             <i class="fas fa-suitcase-rolling"></i>
                             <span>Mis Viajes</span>
-                            <span id="tripsCountBadge" class="header-chip-badge">0</span>
+                            <span id="tripsCountBadge" class="header-chip-badge">…</span>
                         </button>
 
                         <button
@@ -196,7 +196,11 @@
                 </div>
 
                 <!-- Segunda fila: Información del viaje -->
-                <div id="currentTripHeader" class="mt-3"></div>
+                <div id="currentTripHeader" class="mt-3">
+                    <div class="flex items-center gap-2 text-white/70 text-sm">
+                        <i class="fas fa-circle-notch fa-spin"></i> Cargando tus viajes…
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -217,7 +221,7 @@
                     <button onclick="window.TripsManager?.showTripsListModal(); document.getElementById('menuClose').click()" class="w-full flex items-center gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition text-left border-2 border-purple-200 dark:border-purple-700">
                         <i class="fas fa-suitcase-rolling w-5 text-purple-600 dark:text-purple-400"></i>
                         <span class="text-purple-600 dark:text-purple-400 font-bold">Mis Viajes</span>
-                        <span id="tripsCountBadgeMobile" class="ml-auto bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                        <span id="tripsCountBadgeMobile" class="ml-auto bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">…</span>
                     </button>
 
                     <!-- Notifications Mobile -->

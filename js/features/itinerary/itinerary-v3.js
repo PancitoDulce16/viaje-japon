@@ -2737,6 +2737,14 @@ export const ItineraryHandler = {
     await this.init();
   },
 
+  // Detiene el listener de Firestore sin volver a suscribirse (ej. antes de borrar el trip actual)
+  cleanup() {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+  },
+
   // Mostrar modal de actividad (añadir o editar)
   showActivityModal(activityId, day) {
     console.log('🔍 showActivityModal called with:', { activityId, day });

@@ -1716,13 +1716,38 @@ export const TripsManager = {
       return;
     }
     try {
+      // 🔥 FIX: Si el viaje que se borra es el que está abierto ahora mismo,
+      // desconectar TODOS los listeners de Firestore (onSnapshot) que apuntan
+      // a sus subcolecciones ANTES de borrar el documento padre. Si el doc se
+      // borra primero, la Cloud Function que borra en cascada revoca el acceso
+      // mientras esos listeners siguen activos, y Firestore les dispara un
+      // error "permission-denied" en consola (favoritos, hoteles, vuelos,
+      // gastos compartidos, packing list...). Desconectar antes elimina la
+      // carrera de raíz en vez de solo silenciar el error.
+      const isCurrentTrip = this.currentTrip && this.currentTrip.id === tripId;
+      if (isCurrentTrip) {
+        const tripScopedHandlers = [
+          'FavoritesManager', 'HotelsHandler', 'FlightsHandler', 'BudgetTracker',
+          'PreparationHandler', 'PackingList', 'ItineraryHandler', 'ChatHandler',
+          'GroupChat', 'SocialFeatures', 'ReservationsManager', 'ActivityTimeline',
+          'ExpenseSplitter', 'PhotoGallery', 'PreTripChecklist'
+        ];
+        tripScopedHandlers.forEach(name => {
+          try {
+            window[name]?.cleanup?.();
+          } catch (cleanupError) {
+            console.warn(`⚠️ Error limpiando ${name} antes de borrar el viaje:`, cleanupError);
+          }
+        });
+      }
+
       // Eliminar el documento principal del viaje. La Cloud Function se encargará del resto.
       await deleteDoc(doc(db, 'trips', tripId));
 
       Notifications.success(`Viaje "${tripToDelete.info.name}" eliminado.`);
 
       // Si el viaje eliminado era el actual, limpiar el estado local
-      if (this.currentTrip && this.currentTrip.id === tripId) {
+      if (isCurrentTrip) {
         this.currentTrip = null;
         localStorage.removeItem('currentTripId');
         window.dispatchEvent(new CustomEvent('tripSelected', { detail: { trip: null } }));
