@@ -222,11 +222,9 @@ export const EmergencyAssistant = {
 
         const html = `
             <div class="emergency-assistant">
-                <!-- Header -->
+                <!-- Header: el título ya lo muestra el modal wrapper (#emergencyModal en
+                     dashboard.html) - aquí solo queda la descripción para no duplicarlo -->
                 <div class="emergency-header mb-6">
-                    <h2 class="text-2xl font-bold text-red-600 dark:text-red-400 mb-2">
-                        🚨 Asistente de Emergencias
-                    </h2>
                     <p class="text-gray-600 dark:text-gray-400">
                         Información crítica para emergencias en Japón. Guarda esta página como favorito.
                     </p>

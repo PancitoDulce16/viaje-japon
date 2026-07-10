@@ -28,6 +28,7 @@ import { RecommendationEngine } from '../ai/recommendation-engine.js';
 import { FeedbackTracker } from '../analytics/feedback-tracker.js';
 import { CostCalculator } from '../features/budget/cost-calculator.js';
 import { EssentialsHandler } from '../features/planning/essentials-handler.js';
+import { EmergencyAssistant } from '../features/planning/emergency-assistant.js'; // 🚨 Asistente de emergencias (SOS) - antes nunca se importaba, el botón SOS no hacía nada
 import { BudgetCalculator } from '../features/budget/budget-calculator.js';
 import { RouteOptimizer } from '../map/route-optimizer-v2.js'; // 🗺️ Optimizador de rutas
 import { DayBalancer } from '../features/itinerary/day-balancer-v3.js'; // ⚖️ Balanceador inteligente de días

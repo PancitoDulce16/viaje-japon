@@ -155,7 +155,7 @@ export const EssentialsHandler = {
                                 Japan Helpline (inglés): <strong class="text-xl">0570-000-911</strong>
                             </p>
                         </div>
-                        <button onclick="document.getElementById('emergencyModal')?.classList.remove('hidden'); window.EmergencyAssistant?.init();"
+                        <button onclick="document.getElementById('emergencyModal')?.classList.add('active'); window.EmergencyAssistant?.init();"
                                 class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors">
                             Ver Info Completa
                         </button>
