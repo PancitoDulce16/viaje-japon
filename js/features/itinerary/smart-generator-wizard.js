@@ -12,6 +12,30 @@ import { CityRouteMap } from './city-route-map.js';
 import { DayAllocationBar } from './day-allocation-bar.js';
 import { CITY_ICONS } from '../../../data/city-coordinates.js';
 
+// Fotos generadas para cada tile de interés (Step 2) - estilo kawaii
+// consistente con el resto del wizard rediseñado.
+const INTEREST_IMAGES = {
+  cultural: '/images/wizard/interest-cultural.png',
+  food: '/images/wizard/interest-food.png',
+  shopping: '/images/wizard/interest-shopping.png',
+  nature: '/images/wizard/interest-nature.png',
+  art: '/images/wizard/interest-art.png',
+  anime: '/images/wizard/interest-popculture.png',
+  nightlife: '/images/wizard/interest-nightlife.png',
+  technology: '/images/wizard/interest-technology.png',
+  history: '/images/wizard/interest-history.png',
+  photography: '/images/wizard/interest-photography.png',
+};
+
+// Fotos generadas para cada tarjeta de "¿con quién viajas?" (Step 2).
+const COMPANION_IMAGES = {
+  solo: '/images/wizard/companion-solo.png',
+  couple: '/images/wizard/companion-couple.png',
+  family: '/images/wizard/companion-family.png',
+  seniors: '/images/wizard/companion-seniors.png',
+  friends: '/images/wizard/companion-friends.png',
+};
+
 /**
  * Smart Generator Wizard
  */
@@ -1264,18 +1288,22 @@ export const SmartGeneratorWizard = {
    */
   renderCompanionOption(type, label, icon, desc) {
     const isSelected = this.wizardData.companionType === type;
+    const img = COMPANION_IMAGES[type] || null;
     return `
-      <label class="flex items-center gap-2 p-3 border-2 ${isSelected ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30' : 'border-gray-300 dark:border-gray-600'}
-                     rounded-lg cursor-pointer hover:border-purple-400 transition">
+      <label class="relative flex items-center gap-3 p-2 pr-3 border-2 ${isSelected ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30' : 'border-gray-300 dark:border-gray-600'}
+                     rounded-xl cursor-pointer hover:border-purple-400 transition overflow-hidden">
         <input
           type="radio"
           name="companionType"
-          class="companion-radio"
+          class="companion-radio absolute top-2 right-2 w-4 h-4 z-10"
           data-companion="${type}"
           ${isSelected ? 'checked' : ''}
         >
-        <span class="text-2xl">${icon}</span>
-        <div class="flex-1">
+        ${img
+          ? `<img src="${img}" alt="${label}" class="w-14 h-14 rounded-lg object-cover shrink-0" loading="lazy">`
+          : `<span class="text-2xl w-14 h-14 flex items-center justify-center shrink-0">${icon}</span>`
+        }
+        <div class="flex-1 min-w-0">
           <div class="font-semibold text-sm text-gray-700 dark:text-gray-200">${label}</div>
           <div class="text-xs text-gray-500">${desc}</div>
         </div>
@@ -1291,18 +1319,22 @@ export const SmartGeneratorWizard = {
   renderInterestCheckbox(interest) {
     const isChecked = this.wizardData.interests.includes(interest.id);
     const weight = this.wizardData.interestWeights[interest.id] || 3;
+    const img = INTEREST_IMAGES[interest.id] || null;
     return `
       <div class="border-2 ${isChecked ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-300 dark:border-gray-600'}
-                   rounded-lg hover:border-blue-400 transition">
-        <label class="flex items-center gap-3 p-3 cursor-pointer">
+                   rounded-xl hover:border-blue-400 transition overflow-hidden">
+        <label class="flex items-center gap-3 p-2 pr-3 cursor-pointer">
           <input
             type="checkbox"
-            class="interest-checkbox w-5 h-5"
+            class="interest-checkbox w-5 h-5 shrink-0"
             data-interest="${interest.id}"
             onchange="window.SmartGeneratorWizard.toggleInterest('${interest.id}')"
             ${isChecked ? 'checked' : ''}
           >
-          <span class="text-xl">${interest.icon}</span>
+          ${img
+            ? `<img src="${img}" alt="" class="w-12 h-12 rounded-lg object-cover shrink-0" loading="lazy">`
+            : `<span class="text-xl w-12 h-12 flex items-center justify-center shrink-0">${interest.icon}</span>`
+          }
           <span class="text-sm font-medium text-gray-700 dark:text-gray-200">${interest.label}</span>
         </label>
         ${isChecked ? `
