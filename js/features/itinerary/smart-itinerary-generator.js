@@ -32,7 +32,7 @@ const REMOTE_SUBAREAS = ['uji', 'miyajima'];
  * @param {string[]} selectedAreas - áreas de las actividades ya elegidas para el día
  * @returns {boolean}
  */
-function hasRemoteAreaConflict(candidateArea, selectedAreas) {
+export function hasRemoteAreaConflict(candidateArea, selectedAreas) {
   const candNormalized = (candidateArea || '').toLowerCase();
   const candIsRemote = REMOTE_SUBAREAS.includes(candNormalized);
 
@@ -45,6 +45,24 @@ function hasRemoteAreaConflict(candidateArea, selectedAreas) {
     if (!candIsRemote && existIsRemote) return true; // centro + remota
   }
   return false;
+}
+
+/**
+ * 🍽️ Deriva la sub-área remota (Uji/Miyajima) de un restaurante de ATTRACTIONS_DATA,
+ * cuyas entradas NUNCA tienen un campo `.area` propio (solo `city`, a veces compuesto
+ * como "Hiroshima - Miyajima"). Sin esto, TODO restaurante insertado como comida queda
+ * con `area: null` en el itinerario final, invisible para hasRemoteAreaConflict() -
+ * causa real confirmada de que un restaurante de Miyajima (ej. "Hassei") apareciera el
+ * mismo día que actividades del centro de Hiroshima, a pesar de todas las demás
+ * protecciones de sub-área ya existentes.
+ * @param {Object} restaurant - resultado de findRealRestaurant()
+ * @returns {string|null}
+ */
+export function deriveRestaurantArea(restaurant) {
+  if (!restaurant) return null;
+  if (restaurant.area) return restaurant.area;
+  const cityText = (restaurant.city || '').toLowerCase();
+  return REMOTE_SUBAREAS.find(sub => cityText.includes(sub)) || null;
 }
 
 /**
@@ -1442,11 +1460,17 @@ export const SmartItineraryGenerator = {
     console.log(`📊 Día ${dayNumber}: ${selectedActivities.length} actividades seleccionadas (target: ${targetActivities})`);
 
     // 🚨 CALIDAD: Si no llegamos al target, intentar agregar actividades SIN restricción de
-    // categoría. Primera pasada: aún respeta el choque de sub-área remota (Uji/Miyajima) -
-    // solo si TODAVÍA queda corto después de esa pasada se permite mezclar sub-áreas,
-    // porque un día geográficamente incoherente sigue siendo mejor que uno incompleto.
+    // categoría (el límite de 2 por categoría). El choque de sub-área remota (Uji/
+    // Miyajima) se sigue respetando SIEMPRE, incluso en este último recurso -
+    // mezclar una sub-área que requiere tren/ferry dedicado con el centro de la
+    // ciudad es una experiencia mucho peor que un día con una actividad menos.
+    // 🔧 FIX: antes había una "segunda pasada" que sí dejaba de chequear
+    // hasRemoteAreaConflict - esa era la fuente real de días mezclando Uji con
+    // el centro de Kyoto o Miyajima con el centro de Hiroshima (confirmado con
+    // el audit de test24: Kinkaku-ji → Templo Byodo-in a 18.2km, Castillo de
+    // Hiroshima → Templo Daisho-in de Miyajima a 17.5km).
     if (selectedActivities.length < targetActivities - 1) {
-      console.log(`⚠️ Solo ${selectedActivities.length}/${targetActivities} actividades - buscando más sin restricciones...`);
+      console.log(`⚠️ Solo ${selectedActivities.length}/${targetActivities} actividades - buscando más sin límite de categoría...`);
       for (const activity of scoredActivities) {
         if (selectedActivities.length >= targetActivities) break;
         if (usedActivities.has(activity.name) || selectedActivities.includes(activity)) continue;
@@ -1454,17 +1478,6 @@ export const SmartItineraryGenerator = {
         selectedActivities.push(activity);
         usedActivities.add(activity.name);
         console.log(`   ✅ Agregada: "${activity.name}" (completando día)`);
-      }
-      // Segunda pasada (último recurso): si sigue corto, ya sin el filtro de área
-      if (selectedActivities.length < targetActivities - 1) {
-        for (const activity of scoredActivities) {
-          if (selectedActivities.length >= targetActivities) break;
-          if (!usedActivities.has(activity.name) && !selectedActivities.includes(activity)) {
-            selectedActivities.push(activity);
-            usedActivities.add(activity.name);
-            console.log(`   ✅ Agregada: "${activity.name}" (completando día, sub-área mixta)`);
-          }
-        }
       }
     }
 
@@ -1477,9 +1490,9 @@ export const SmartItineraryGenerator = {
       console.log(`🔁 Pool de actividades agotado para "${city}" - permitiendo repetir para no dejar el día vacío`);
       for (const activity of scoredActivities) {
         if (selectedActivities.length >= targetActivities) break;
-        if (!selectedActivities.includes(activity)) {
-          selectedActivities.push({ ...activity, isRepeated: true });
-        }
+        if (selectedActivities.includes(activity)) continue;
+        if (hasRemoteAreaConflict(activity.area, selectedActivities.map(a => a.area))) continue;
+        selectedActivities.push({ ...activity, isRepeated: true });
       }
     }
 
@@ -2341,16 +2354,25 @@ export const SmartItineraryGenerator = {
       orderedClusters = this.orderClustersByProximity(clusters, hotel);
     }
 
-    // PASO 3: Dentro de cada cluster, optimizar ruta con TSP
+    // PASO 3: Dentro de cada cluster, optimizar ruta con TSP y luego aplicar
+    // la preferencia de time-of-day - SOLO dentro de ese cluster, nunca
+    // globalmente. Antes, PASO 4 hacía un sortByTimeOfDay() sobre la lista
+    // completa DESPUÉS de agrupar por área, lo que deshacía el agrupamiento:
+    // actividades del mismo cluster con distinto timeOfDay quedaban
+    // separadas, y actividades de clusters DISTINTOS con el mismo timeOfDay
+    // quedaban pegadas una junto a otra - el patrón exacto detrás de saltos
+    // sin sentido como Jardín Shinjuku Gyoen → Sensoji (barrios opuestos) o
+    // Teleférico de Miyajima → Okonomimura (isla aparte → centro de
+    // Hiroshima). Ordenar por horario DENTRO de cada cluster ya agrupado
+    // preserva la contigüidad geográfica sin perder la lógica de horario.
     let optimizedActivities = [];
     for (const clusterName of orderedClusters) {
       const clusterActivities = clusters[clusterName];
       const optimizedCluster = this.optimizeClusterRoute(clusterActivities, hotel);
-      optimizedActivities = optimizedActivities.concat(optimizedCluster);
+      optimizedActivities = optimizedActivities.concat(
+        this.sortByTimeOfDay(optimizedCluster, startTime)
+      );
     }
-
-    // PASO 4: Ordenar por time-of-day preference
-    optimizedActivities = this.sortByTimeOfDay(optimizedActivities, startTime);
 
     // PASO 5: Asignar horarios
     let currentTime = startTime * 60; // En minutos desde medianoche
@@ -2598,7 +2620,25 @@ export const SmartItineraryGenerator = {
       return (b.rating || 0) - (a.rating || 0);
     });
 
-    return candidates[0];
+    const best = candidates[0];
+
+    // 🔧 FIX: sin esto, cuando NINGÚN restaurante de la ciudad quedaba cerca
+    // de la actividad de referencia (ej. un día centrado en Miyajima, isla
+    // aparte de Hiroshima), igual se devolvía el "menos lejano" de la lista
+    // aunque estuviera a 15-20km - un salto sin sentido que además el
+    // itinerario mismo marca como "traslado largo" al calcular la ruta.
+    // Mejor un restaurante genérico "(a definir)" (fallback ya existente en
+    // insertMealsIntoDay) que uno real pero absurdamente lejos.
+    const MAX_MEAL_DISTANCE_KM = 6;
+    if (referenceCoords && best?.coordinates) {
+      const dist = this.calculateDistance(referenceCoords, best.coordinates);
+      if (dist > MAX_MEAL_DISTANCE_KM) {
+        console.log(`⏭️ Restaurante más cercano para ${mealType} en ${city} está a ${dist.toFixed(1)}km - descartado, se usa placeholder genérico`);
+        return null;
+      }
+    }
+
+    return best;
   },
 
   /**
@@ -2640,7 +2680,15 @@ export const SmartItineraryGenerator = {
           // Insertar comida antes de esta actividad (con restaurante real si hay match)
           const referenceCoords = currentActivity.lat && currentActivity.lng
             ? { lat: currentActivity.lat, lng: currentActivity.lng }
-            : (hotel?.coordinates || null);
+            // 🔧 FIX: `hotel` guarda lat/lng planos ({name,lat,lng,area}, ver
+            // wizard/generateItinerary), nunca un objeto anidado `.coordinates`
+            // - ese campo no existe en ningún punto del código. Este fallback
+            // siempre evaluaba a null, así que cualquier comida cuya actividad
+            // de referencia no tuviera coordenadas propias perdía el anclaje
+            // geográfico por completo y el restaurante se elegía solo por
+            // rating, sin importar la distancia (fuente real de restaurantes
+            // "al otro lado de la ciudad").
+            : (hotel?.lat && hotel?.lng ? { lat: hotel.lat, lng: hotel.lng } : null);
           const restaurant = this.findRealRestaurant(city, mealConfig.type, usedMeals, referenceCoords);
           if (restaurant) usedMeals.add(restaurant.name);
 
@@ -2654,6 +2702,7 @@ export const SmartItineraryGenerator = {
             rating: restaurant?.rating || null,
             lat: restaurant?.coordinates?.lat,
             lng: restaurant?.coordinates?.lng,
+            area: deriveRestaurantArea(restaurant), // 🏝️ ver comentario en deriveRestaurantArea()
             desc: restaurant
               ? `${restaurant.description || 'Restaurante recomendado'}${restaurant.tips ? ` · 💡 ${restaurant.tips}` : ''}`
               : 'Comida sugerida - puedes buscar restaurantes cercanos'
@@ -2676,7 +2725,15 @@ export const SmartItineraryGenerator = {
           if (lastTime < mealEndMinutes) {
             const referenceCoords = lastActivity.lat && lastActivity.lng
               ? { lat: lastActivity.lat, lng: lastActivity.lng }
-              : (hotel?.coordinates || null);
+              // 🔧 FIX: `hotel` guarda lat/lng planos ({name,lat,lng,area}, ver
+            // wizard/generateItinerary), nunca un objeto anidado `.coordinates`
+            // - ese campo no existe en ningún punto del código. Este fallback
+            // siempre evaluaba a null, así que cualquier comida cuya actividad
+            // de referencia no tuviera coordenadas propias perdía el anclaje
+            // geográfico por completo y el restaurante se elegía solo por
+            // rating, sin importar la distancia (fuente real de restaurantes
+            // "al otro lado de la ciudad").
+            : (hotel?.lat && hotel?.lng ? { lat: hotel.lat, lng: hotel.lng } : null);
             const restaurant = this.findRealRestaurant(city, mealConfig.type, usedMeals, referenceCoords);
             if (restaurant) usedMeals.add(restaurant.name);
 
@@ -2690,6 +2747,7 @@ export const SmartItineraryGenerator = {
               rating: restaurant?.rating || null,
               lat: restaurant?.coordinates?.lat,
               lng: restaurant?.coordinates?.lng,
+              area: deriveRestaurantArea(restaurant), // 🏝️ ver comentario en deriveRestaurantArea()
               desc: restaurant
                 ? `${restaurant.description || 'Restaurante recomendado'}${restaurant.tips ? ` · 💡 ${restaurant.tips}` : ''}`
                 : 'Comida sugerida - puedes buscar restaurantes cercanos'

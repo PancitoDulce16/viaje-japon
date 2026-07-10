@@ -3,6 +3,7 @@
 
 import { RouteOptimizer } from '../../map/route-optimizer-v2.js';
 import { ActivityDayAssignment } from './activity-day-assignment.js';
+import { hasRemoteAreaConflict } from './smart-itinerary-generator.js';
 
 // Safe wrapper para TimeUtils
 const SafeTimeUtils = {
@@ -1042,6 +1043,18 @@ function applySuggestion(days, suggestion, options = {}) {
         if (!isCompatible) {
             console.warn(`⚠️ BLOQUEADO: "${suggestion.activity.title || suggestion.activity.name}" es de ${relevantCity}, pero el Día ${targetDay.day} es de ${targetCity}. Rechazando movimiento entre ciudades distintas.`);
             return newDays; // NO mover entre ciudades distintas
+        }
+
+        // 🏝️ GUARDIA DE SUB-ÁREA REMOTA (Uji, Miyajima): la guardia de ciudad de arriba
+        // no alcanza porque Uji sigue siendo "Kyoto" y Miyajima sigue siendo "Hiroshima"
+        // a nivel de ciudad - esta es la fuente real confirmada de itinerarios mezclando
+        // Templo Byodo-in (Uji) con el resto del centro de Kyoto en el mismo día DESPUÉS
+        // de correr "Balancear" (el generador ya protege esto en la selección inicial,
+        // pero el balanceador movía actividades sin este chequeo).
+        const targetAreas = targetDay.activities.map(a => a.area).filter(Boolean);
+        if (hasRemoteAreaConflict(suggestion.activity.area, targetAreas)) {
+            console.warn(`⚠️ BLOQUEADO: "${suggestion.activity.title || suggestion.activity.name}" (área "${suggestion.activity.area}") chocaría con la sub-área remota del Día ${targetDay.day}. Rechazando movimiento.`);
+            return newDays; // NO mezclar sub-área remota (Uji/Miyajima) con el resto de la ciudad
         }
 
         const activityIndex = sourceDay.activities.findIndex(act => {

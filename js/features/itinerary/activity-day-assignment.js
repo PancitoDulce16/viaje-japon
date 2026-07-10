@@ -352,9 +352,22 @@ export const ActivityDayAssignment = {
         return dayCity && HotelBaseSystem.isCityCompatible(dayCity, activityCity);
       });
       if (sameCityDays.length > 0) {
-        // Preferir su día original si sigue siendo de la misma ciudad
-        const original = sameCityDays.find(d => d.day === activity.originalDay);
-        return original || sameCityDays[0];
+        // 🏝️ FIX: este fallback (usado cuando no hay datos de hotel para calcular
+        // distancia - confirmado como la causa real de que "Templo Byodo-in (Uji)"
+        // terminara junto a "Bosque de Bambú de Arashiyama" el mismo día tras correr
+        // Balancear) nunca consideraba el choque de sub-área remota (Uji/Miyajima).
+        // Preferir un día de la misma ciudad que además no choque; solo si NINGUNO
+        // califica, caer al comportamiento anterior (día original o el primero).
+        const activityArea = activity.area;
+        const withoutConflict = sameCityDays.filter(d => {
+          const existingAreas = (d.activities || []).map(a => a.area).filter(Boolean);
+          return !hasRemoteAreaConflict(activityArea, existingAreas);
+        });
+        const pool = withoutConflict.length > 0 ? withoutConflict : sameCityDays;
+
+        // Preferir su día original si sigue siendo de la misma ciudad y no choca
+        const original = pool.find(d => d.day === activity.originalDay);
+        return original || pool[0];
       }
     }
     // Sin dato de ciudad (o ningún día coincide): comportamiento anterior como último recurso
@@ -656,8 +669,25 @@ export const ActivityDayAssignment = {
           .sort((a, b) => a.activities.length - b.activities.length);
 
         for (let i = 0; i < activitiesToMove && targetDays.length > 0; i++) {
-          const activity = overloadedDay.activities.pop();
+          // 🏝️ Igual que en PASO 2: no tomar ciegamente la última actividad - buscar una
+          // que no choque de sub-área remota (Uji/Miyajima) con el día destino.
           const targetDay = targetDays[0];
+          const targetAreas = targetDay.activities.map(a => a.area).filter(Boolean);
+          let moveIndex = -1;
+          for (let j = overloadedDay.activities.length - 1; j >= 0; j--) {
+            if (!hasRemoteAreaConflict(overloadedDay.activities[j].area, targetAreas)) {
+              moveIndex = j;
+              break;
+            }
+          }
+          if (moveIndex === -1) {
+            // Nada movible sin choque hacia este destino - probar el siguiente día objetivo
+            targetDays.shift();
+            i--; // no contar este intento fallido contra activitiesToMove
+            continue;
+          }
+
+          const [activity] = overloadedDay.activities.splice(moveIndex, 1);
           targetDay.activities.push(activity);
           console.log(`   ↪ "${activity.title || activity.name}" → Día ${targetDay.day}`);
 
@@ -696,7 +726,34 @@ export const ActivityDayAssignment = {
 
         // Mover 1 actividad del donante al necesitado
         if (donorDay.activities.length > MIN_ACTIVITIES_NORMAL) {
-          const activity = donorDay.activities.pop();
+          // 🏝️📍 FIX: tomar ciegamente la última actividad del donante (sin mirar su
+          // área ni distancia) era la causa real confirmada de que "Templo Byodo-in
+          // (Uji)" y "Bosque de Bambú de Arashiyama" terminaran juntos el mismo día
+          // (choque de sub-área) - esta ruta de "rellenar día ligero" no tenía NINGÚN
+          // chequeo geográfico. Ahora: descartar candidatas que choquen de sub-área
+          // remota, y entre las que quedan, preferir la geográficamente más cercana
+          // al centroide de lo que ya tiene el día necesitado (mismo criterio que usa
+          // el generador original vía MAX_CLUSTER_DISTANCE_KM), no solo "la última".
+          const needyAreas = needyDay.activities.map(a => a.area).filter(Boolean);
+          const movable = donorDay.activities.filter(a => !hasRemoteAreaConflict(a.area, needyAreas));
+          if (movable.length === 0) continue; // este donante solo tiene actividades que chocarían - probar el siguiente
+
+          const needyWithCoords = needyDay.activities.filter(a => a.coordinates?.lat && a.coordinates?.lng);
+          let activity;
+          if (needyWithCoords.length > 0) {
+            const centroid = {
+              lat: needyWithCoords.reduce((s, a) => s + a.coordinates.lat, 0) / needyWithCoords.length,
+              lng: needyWithCoords.reduce((s, a) => s + a.coordinates.lng, 0) / needyWithCoords.length
+            };
+            activity = [...movable].sort((a, b) => {
+              if (!a.coordinates || !b.coordinates) return 0;
+              return RouteOptimizer.calculateDistance(a.coordinates, centroid) - RouteOptimizer.calculateDistance(b.coordinates, centroid);
+            })[0];
+          } else {
+            activity = movable[movable.length - 1]; // sin coords de referencia: comportamiento anterior (la última)
+          }
+
+          donorDay.activities.splice(donorDay.activities.indexOf(activity), 1);
           needyDay.activities.push(activity);
           console.log(`   ↪ "${activity.title || activity.name}" del Día ${donorDay.day} → Día ${needyDay.day}`);
           filled++;
@@ -839,9 +896,13 @@ export const ActivityDayAssignment = {
       });
 
       // 🏝️ Evitar añadir una sub-área remota (Uji/Miyajima) a un día que ya tiene
-      // actividades del centro, o viceversa - a menos que descartar deje sin candidatas.
-      const withoutAreaConflict = cityActivities.filter(act => !hasRemoteAreaConflict(act.area, existingAreas));
-      if (withoutAreaConflict.length > 0) cityActivities = withoutAreaConflict;
+      // actividades del centro, o viceversa. 🔧 FIX: antes, si NINGÚN candidato
+      // libre de conflicto quedaba disponible, se caía de vuelta a la lista SIN
+      // filtrar (permitiendo el choque) - esta era la causa real confirmada de
+      // "Templo Byodo-in (Uji)" terminando junto a actividades del centro de
+      // Kyoto después de correr Balancear. Es mejor completar el día con menos
+      // actividades de las pedidas que romper la coherencia geográfica.
+      cityActivities = cityActivities.filter(act => !hasRemoteAreaConflict(act.area, existingAreas));
 
       if (cityActivities.length === 0) {
         console.warn(`   ⚠️ No hay actividades disponibles para ${city}`);
