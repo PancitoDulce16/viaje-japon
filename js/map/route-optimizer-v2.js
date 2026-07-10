@@ -295,7 +295,54 @@ function optimizeByGeography(activities, options) {
         current = nearest;
     }
 
-    return optimized;
+    // 🔧 Nearest-neighbor es voraz (mira solo el paso siguiente) y puede dejar una
+    // parada "aislada" que solo se visita al final con un salto largo innecesario -
+    // causa real confirmada de saltos como "Camino del Filósofo → Bosque de Bambú
+    // de Arashiyama" el mismo día, pese a que la selección de actividades ya las
+    // había agrupado bien. 2-opt es la corrección estándar para este defecto
+    // conocido: solo aplica intercambios que ACORTAN la distancia total de la
+    // ruta, así que nunca puede empeorarla.
+    return twoOptImprove(optimized);
+}
+
+/**
+ * 🔧 2-OPT: mejora una ruta ya construida revisando pares de tramos y, si
+ * invertir el segmento entre ellos acorta la distancia total, aplica el
+ * cambio. No toca la parada inicial (índice 0) - el llamador puede haberla
+ * fijado a propósito (ej. la más cercana al hotel).
+ * @param {Array} route - Ruta ya ordenada (ej. por nearest-neighbor)
+ * @returns {Array} Ruta igual o más corta que la de entrada
+ */
+function twoOptImprove(route) {
+    if (route.length < 4) return route;
+    if (!route.every(a => a.coordinates?.lat && a.coordinates?.lng)) return route;
+
+    let result = [...route];
+    let improved = true;
+    let iterations = 0;
+    const maxIterations = 60; // rutas de un día son cortas (<20 paradas); converge mucho antes, esto es solo un límite de seguridad
+
+    while (improved && iterations < maxIterations) {
+        improved = false;
+        iterations++;
+        for (let i = 0; i < result.length - 3; i++) {
+            for (let j = i + 2; j < result.length - 1; j++) {
+                const distBefore =
+                    calculateDistance(result[i].coordinates, result[i + 1].coordinates) +
+                    calculateDistance(result[j].coordinates, result[j + 1].coordinates);
+                const distAfter =
+                    calculateDistance(result[i].coordinates, result[j].coordinates) +
+                    calculateDistance(result[i + 1].coordinates, result[j + 1].coordinates);
+
+                if (distAfter < distBefore - 0.01) {
+                    const segment = result.slice(i + 1, j + 1).reverse();
+                    result = [...result.slice(0, i + 1), ...segment, ...result.slice(j + 1)];
+                    improved = true;
+                }
+            }
+        }
+    }
+    return result;
 }
 
 /**
