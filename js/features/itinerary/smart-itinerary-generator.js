@@ -1284,7 +1284,7 @@ export const SmartItineraryGenerator = {
     // "museo cerrado los lunes"). Solo aplica si conocemos la fecha real del viaje - sin
     // tripStartDate no hay forma de saber a qué día de la semana cae el "Día N".
     if (tripStartDate) {
-      const realDate = new Date(tripStartDate);
+      const realDate = window.TimeUtils.parseDate(tripStartDate);
       realDate.setDate(realDate.getDate() + (dayNumber - 1));
       const weekday = realDate.getDay(); // 0=domingo...6=sábado
       const beforeFilter = candidateActivities.length;
@@ -1645,7 +1645,7 @@ export const SmartItineraryGenerator = {
   detectSeason(tripStartDate) {
     if (!tripStartDate) return null;
 
-    const date = new Date(tripStartDate);
+    const date = window.TimeUtils.parseDate(tripStartDate);
     const month = date.getMonth() + 1; // 1-12
     const day = date.getDate();
 

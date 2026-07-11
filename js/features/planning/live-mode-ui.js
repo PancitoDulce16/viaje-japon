@@ -19,7 +19,7 @@ class LiveModeUI {
     try {
       await this.liveMode.init();
       this.isActive = true;
-      this.showLiveDashboard();
+      await this.showLiveDashboard();
     } catch (error) {
       this.showLocationError(error);
     }
@@ -28,10 +28,11 @@ class LiveModeUI {
   /**
    * Show live dashboard
    */
-  showLiveDashboard() {
+  async showLiveDashboard() {
     const modal = this.createModal();
+    modal.innerHTML = `<div class="text-center py-16"><i class="fas fa-spinner fa-spin text-3xl text-purple-600"></i><p class="mt-4 text-gray-600 dark:text-gray-400">Buscando lugares cerca de ti...</p></div>`;
 
-    const recommendations = this.liveMode.getNearbyRecommendations();
+    const recommendations = await this.liveMode.getNearbyRecommendations();
     const emergencyContacts = this.liveMode.getEmergencyContacts();
     const quickPhrases = this.liveMode.getQuickPhrases();
     const businessHours = this.liveMode.isDuringBusinessHours();
@@ -153,7 +154,9 @@ class LiveModeUI {
               <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${restaurant.type}</p>
               <div class="flex items-center justify-between">
                 <span class="text-sm text-blue-600">📍 ${restaurant.distance}</span>
-                <button class="text-xs px-3 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full hover:bg-blue-200" onclick="alert('Opening maps...')">
+                <button class="text-xs px-3 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full hover:bg-blue-200"
+                        data-name="${restaurant.name}"
+                        onclick="window.LiveModeUI.openDirections(${restaurant.lat ?? 'null'}, ${restaurant.lng ?? 'null'}, this.dataset.name)">
                   Cómo llegar
                 </button>
               </div>
@@ -295,16 +298,19 @@ class LiveModeUI {
   /**
    * Show nearby services
    */
-  showNearbyServices() {
-    const services = this.liveMode.getNearbyServices();
-
+  async showNearbyServices() {
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `<div class="bg-white dark:bg-gray-800 rounded-lg p-8"><i class="fas fa-spinner fa-spin text-2xl text-purple-600"></i></div>`;
+    document.body.appendChild(modal);
+
+    const services = await this.liveMode.getNearbyServices();
+
     modal.innerHTML = `
       <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full">
         <h3 class="text-2xl font-bold mb-4">🗺️ Servicios Cerca de Ti</h3>
         <div class="space-y-3">
-          ${services.map(service => `
+          ${services.length > 0 ? services.map(service => `
             <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <div class="flex items-center gap-3">
                 <div class="text-2xl">${this.getServiceIcon(service.type)}</div>
@@ -317,7 +323,7 @@ class LiveModeUI {
               </div>
               <span class="text-sm text-blue-600">📍 ${service.distance}</span>
             </div>
-          `).join('')}
+          `).join('') : '<p class="text-gray-500 dark:text-gray-400 text-center py-4">No se encontraron servicios cercanos.</p>'}
         </div>
         <button class="w-full mt-6 py-3 bg-gray-200 dark:bg-gray-700 rounded-lg font-semibold" onclick="this.closest('.fixed').remove()">
           Cerrar
@@ -328,8 +334,6 @@ class LiveModeUI {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) modal.remove();
     });
-
-    document.body.appendChild(modal);
   }
 
   /**
@@ -349,7 +353,9 @@ class LiveModeUI {
               <div class="text-2xl font-bold mb-2">${phrase.japanese}</div>
               <div class="text-lg text-purple-600 mb-1">${phrase.romaji}</div>
               <div class="text-sm text-gray-600 dark:text-gray-400">${phrase.english}</div>
-              <button class="mt-2 text-xs px-3 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full" onclick="alert('🔊 Pronunciando...')">
+              <button class="mt-2 text-xs px-3 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-full"
+                      data-jp="${phrase.japanese}"
+                      onclick="window.LiveModeUI.speakJapanese(this.dataset.jp)">
                 <i class="fas fa-volume-up mr-1"></i>
                 Escuchar
               </button>
@@ -379,19 +385,19 @@ class LiveModeUI {
       <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
         <h3 class="text-2xl font-bold mb-4">🚄 Transporte</h3>
         <div class="space-y-3">
-          <button class="w-full p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-left hover:bg-blue-100" onclick="alert('Abriendo Google Maps...')">
+          <button class="w-full p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-left hover:bg-blue-100" onclick="window.LiveModeUI.openMapsSearch('estación de tren')">
             <i class="fas fa-train text-blue-600 mr-3"></i>
             <span class="font-semibold">Estación más cercana</span>
           </button>
-          <button class="w-full p-4 bg-green-50 dark:bg-green-900/20 rounded-lg text-left hover:bg-green-100" onclick="alert('Abriendo app de taxis...')">
+          <button class="w-full p-4 bg-green-50 dark:bg-green-900/20 rounded-lg text-left hover:bg-green-100" onclick="window.LiveModeUI.openMapsSearch('parada de taxi')">
             <i class="fas fa-taxi text-green-600 mr-3"></i>
             <span class="font-semibold">Llamar taxi</span>
           </button>
-          <button class="w-full p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-left hover:bg-purple-100" onclick="alert('Mostrando rutas...')">
+          <button class="w-full p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-left hover:bg-purple-100" onclick="window.LiveModeUI.openMapsSearch('parada de autobús')">
             <i class="fas fa-bus text-purple-600 mr-3"></i>
             <span class="font-semibold">Rutas de bus</span>
           </button>
-          <button class="w-full p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-left hover:bg-orange-100" onclick="alert('Abriendo Hyperdia...')">
+          <button class="w-full p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-left hover:bg-orange-100" onclick="window.LiveModeUI.openMapsAtCurrentLocation()">
             <i class="fas fa-route text-orange-600 mr-3"></i>
             <span class="font-semibold">Planificador de rutas</span>
           </button>
@@ -414,6 +420,50 @@ class LiveModeUI {
    */
   showLocationError(error) {
     alert(`No se pudo obtener tu ubicación:\n${error.message}\n\nPor favor, activa el GPS y permite el acceso a la ubicación.`);
+  }
+
+  /**
+   * Abre Google Maps con direcciones reales hacia un lugar (coordenadas si
+   * están disponibles, si no busca por nombre) desde la ubicación actual
+   */
+  openDirections(lat, lng, name) {
+    const destination = (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng))
+      ? `${lat},${lng}`
+      : encodeURIComponent(name || '');
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=transit`;
+    window.open(url, '_blank', 'noopener');
+  }
+
+  /**
+   * Busca algo en Google Maps cerca de la ubicación actual
+   */
+  openMapsSearch(query) {
+    const loc = this.liveMode.currentLocation;
+    const q = loc ? `${query} cerca de ${loc.lat},${loc.lng}` : query;
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`, '_blank', 'noopener');
+  }
+
+  /**
+   * Abre Google Maps centrado en la ubicación actual (para explorar rutas)
+   */
+  openMapsAtCurrentLocation() {
+    const loc = this.liveMode.currentLocation;
+    const url = loc ? `https://www.google.com/maps/@${loc.lat},${loc.lng},15z` : 'https://www.google.com/maps';
+    window.open(url, '_blank', 'noopener');
+  }
+
+  /**
+   * Lee en voz alta una frase en japonés usando la Web Speech API
+   */
+  speakJapanese(text) {
+    if (!window.speechSynthesis) {
+      window.Notifications?.show('❌ Tu navegador no soporta lectura de voz', 'error');
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ja-JP';
+    window.speechSynthesis.speak(utterance);
   }
 
   /**

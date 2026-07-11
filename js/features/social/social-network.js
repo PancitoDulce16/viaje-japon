@@ -1,5 +1,14 @@
 ﻿// js/social-network.js - Sistema de Red Social Interna tipo Instagram
 
+import { db, auth, storage } from '../../core/firebase-config.js';
+import {
+  collection, doc, addDoc, setDoc, deleteDoc, getDoc, getDocs,
+  query, orderBy, limit, onSnapshot, serverTimestamp,
+  arrayUnion, arrayRemove, increment
+} from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { escapeHTML } from '../../utils/helpers.js';
+
 /**
  * Japitin Social - Red Social para viajeros de Japón
  * Features: Feed, Posts, Profiles, Explore, Collections, Stories
@@ -8,6 +17,17 @@ export const JapitinSocial = {
   currentUser: null,
   feed: [],
   currentPost: null,
+  feedUnsubscribe: null,
+  selectedImageFile: null,
+  savedPostIds: new Set(),
+
+  LOCATIONS: {
+    shibuya: { name: 'Shibuya Crossing', city: 'Tokyo' },
+    sensoji: { name: 'Senso-ji Temple', city: 'Tokyo' },
+    fushimi: { name: 'Fushimi Inari', city: 'Kyoto' },
+    arashiyama: { name: 'Arashiyama Bamboo', city: 'Kyoto' },
+    dotonbori: { name: 'Dotonbori', city: 'Osaka' }
+  },
 
   /**
    * Inicializa el sistema social
@@ -330,56 +350,66 @@ export const JapitinSocial = {
   },
 
   /**
-   * Carga el feed de posts
+   * Carga el feed de posts en tiempo real desde Firestore
    */
   async loadFeed() {
     try {
-      // Simular posts (después conectar con Firestore)
-      const mockPosts = [
-        {
-          id: 'post1',
-          user: { username: 'maria_traveler', avatar: 'M' },
-          location: { name: 'Shibuya Crossing', city: 'Tokyo' },
-          image: 'https://picsum.photos/600/600?random=1',
-          caption: 'First time at the famous Shibuya Crossing! 🚶‍♀️ The energy here is incredible!',
-          hashtags: ['#Tokyo', '#Shibuya', '#JapanTravel'],
-          likes: 234,
-          comments: 12,
-          timeAgo: '2 hours ago',
-          tripDay: 3
-        },
-        {
-          id: 'post2',
-          user: { username: 'juan_foodie', avatar: 'J' },
-          location: { name: 'Ichiran Ramen', city: 'Tokyo' },
-          image: 'https://picsum.photos/600/600?random=2',
-          caption: 'Best ramen I\'ve ever had! 🍜 The customization system is genius',
-          hashtags: ['#Ramen', '#TokyoFood', '#Ichiran'],
-          likes: 456,
-          comments: 28,
-          timeAgo: '5 hours ago',
-          tripDay: 2
-        },
-        {
-          id: 'post3',
-          user: { username: 'ana_temples', avatar: 'A' },
-          location: { name: 'Fushimi Inari Taisha', city: 'Kyoto' },
-          image: 'https://picsum.photos/600/600?random=3',
-          caption: 'Climbed all 10,000 torii gates! ⛩️ My legs are dying but so worth it!',
-          hashtags: ['#Kyoto', '#FushimiInari', '#Temples'],
-          likes: 789,
-          comments: 45,
-          timeAgo: '1 day ago',
-          tripDay: 6
-        }
-      ];
+      if (this.feedUnsubscribe) this.feedUnsubscribe();
 
-      this.feed = mockPosts;
-      this.renderPosts();
+      await this.loadSavedPostIds();
 
+      const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(30));
+      this.feedUnsubscribe = onSnapshot(postsQuery, (snapshot) => {
+        this.feed = snapshot.docs.map(docSnap => {
+          const data = docSnap.data();
+          return {
+            id: docSnap.id,
+            user: { username: data.authorUsername, avatar: data.authorAvatar },
+            authorId: data.authorId,
+            location: data.location,
+            image: data.imageUrl,
+            caption: data.caption,
+            hashtags: data.hashtags || [],
+            likes: data.likes || [],
+            commentCount: data.commentCount || 0,
+            createdAt: data.createdAt,
+            tripDay: data.tripDay || null
+          };
+        });
+        this.renderPosts();
+      }, (error) => {
+        console.error('❌ Error escuchando el feed:', error);
+      });
     } catch (error) {
       console.error('❌ Error cargando feed:', error);
     }
+  },
+
+  /**
+   * Carga qué posts guardó el usuario actual (para pintar el ícono de guardado)
+   */
+  async loadSavedPostIds() {
+    if (!auth.currentUser) return;
+    try {
+      const snap = await getDocs(collection(db, 'users', auth.currentUser.uid, 'savedPosts'));
+      this.savedPostIds = new Set(snap.docs.map(d => d.id));
+    } catch (error) {
+      console.error('❌ Error cargando posts guardados:', error);
+    }
+  },
+
+  /**
+   * Texto relativo simple ("hace 2h") a partir de un Firestore Timestamp
+   */
+  timeAgo(timestamp) {
+    if (!timestamp?.toDate) return '';
+    const diffMs = Date.now() - timestamp.toDate().getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'ahora';
+    if (mins < 60) return `hace ${mins}min`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `hace ${hours}h`;
+    return `hace ${Math.floor(hours / 24)}d`;
   },
 
   /**
@@ -396,6 +426,10 @@ export const JapitinSocial = {
    * Renderiza un post individual (estilo Instagram)
    */
   renderPost(post) {
+    const liked = auth.currentUser && post.likes.includes(auth.currentUser.uid);
+    const saved = this.savedPostIds.has(post.id);
+    const canDelete = auth.currentUser && post.authorId === auth.currentUser.uid;
+
     return `
       <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
 
@@ -403,34 +437,36 @@ export const JapitinSocial = {
         <div class="p-4 flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold">
-              ${post.user.avatar}
+              ${escapeHTML(post.user.avatar)}
             </div>
             <div>
-              <p class="font-semibold text-sm text-gray-900 dark:text-white">${post.user.username}</p>
+              <p class="font-semibold text-sm text-gray-900 dark:text-white">${escapeHTML(post.user.username)}</p>
               <p class="text-xs text-gray-500 dark:text-gray-400">
-                📍 ${post.location.name}, ${post.location.city}
+                ${post.location ? `📍 ${escapeHTML(post.location.name)}, ${escapeHTML(post.location.city)}` : ''}
                 ${post.tripDay ? ` • Day ${post.tripDay}` : ''}
               </p>
             </div>
           </div>
-          <button class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-            </svg>
-          </button>
+          ${canDelete ? `
+            <button onclick="window.JapitinSocial.deletePost('${post.id}')" class="text-gray-500 hover:text-red-600 dark:hover:text-red-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          ` : ''}
         </div>
 
         <!-- Post Image -->
         <div class="aspect-square bg-gray-200 dark:bg-gray-700">
-          <img src="${post.image}" alt="${post.caption}" class="w-full h-full object-cover">
+          <img src="${post.image}" alt="${escapeHTML(post.caption)}" class="w-full h-full object-cover">
         </div>
 
         <!-- Post Actions -->
         <div class="p-4">
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-4">
-              <button onclick="window.JapitinSocial.likePost('${post.id}')" class="hover:text-red-500 transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button onclick="window.JapitinSocial.likePost('${post.id}')" class="${liked ? 'text-red-500' : ''} hover:text-red-500 transition">
+                <svg class="w-6 h-6" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                 </svg>
               </button>
@@ -445,8 +481,8 @@ export const JapitinSocial = {
                 </svg>
               </button>
             </div>
-            <button onclick="window.JapitinSocial.savePost('${post.id}')" class="hover:text-yellow-500 transition">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button onclick="window.JapitinSocial.savePost('${post.id}')" class="${saved ? 'text-yellow-500' : ''} hover:text-yellow-500 transition">
+              <svg class="w-6 h-6" fill="${saved ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
               </svg>
             </button>
@@ -454,42 +490,43 @@ export const JapitinSocial = {
 
           <!-- Likes Count -->
           <p class="font-semibold text-sm text-gray-900 dark:text-white mb-2">
-            ${post.likes.toLocaleString()} me gusta
+            ${post.likes.length.toLocaleString()} me gusta
           </p>
 
           <!-- Caption -->
           <p class="text-sm text-gray-900 dark:text-white mb-2">
-            <span class="font-semibold">${post.user.username}</span>
-            ${post.caption}
+            <span class="font-semibold">${escapeHTML(post.user.username)}</span>
+            ${escapeHTML(post.caption)}
           </p>
 
           <!-- Hashtags -->
           <div class="flex flex-wrap gap-1 mb-2">
             ${post.hashtags.map(tag => `
-              <a href="#" class="text-sm text-purple-600 dark:text-purple-400 hover:underline">${tag}</a>
+              <a href="#" class="text-sm text-purple-600 dark:text-purple-400 hover:underline">${escapeHTML(tag)}</a>
             `).join('')}
           </div>
 
           <!-- Comments Preview -->
-          ${post.comments > 0 ? `
+          ${post.commentCount > 0 ? `
             <button onclick="window.JapitinSocial.viewComments('${post.id}')" class="text-sm text-gray-500 dark:text-gray-400 hover:underline mb-2">
-              Ver los ${post.comments} comentarios
+              Ver los ${post.commentCount} comentarios
             </button>
           ` : ''}
 
           <!-- Time -->
           <p class="text-xs text-gray-500 dark:text-gray-400 uppercase">
-            ${post.timeAgo}
+            ${this.timeAgo(post.createdAt)}
           </p>
         </div>
 
         <!-- Add Comment -->
         <div class="border-t border-gray-200 dark:border-gray-700 p-3 flex items-center gap-3">
-          <input type="text"
+          <input type="text" id="commentInput-${post.id}"
                  placeholder="Agrega un comentario..."
                  class="flex-1 text-sm bg-transparent focus:outline-none text-gray-900 dark:text-white"
-                 onkeypress="if(event.key === 'Enter') window.JapitinSocial.addComment('${post.id}', this.value)">
-          <button class="text-sm font-semibold text-purple-600 hover:text-purple-700">
+                 onkeypress="if(event.key === 'Enter') window.JapitinSocial.addComment('${post.id}', this.value, this)">
+          <button onclick="window.JapitinSocial.addComment('${post.id}', document.getElementById('commentInput-${post.id}').value, document.getElementById('commentInput-${post.id}'))"
+                  class="text-sm font-semibold text-purple-600 hover:text-purple-700">
             Publicar
           </button>
         </div>
@@ -544,11 +581,9 @@ export const JapitinSocial = {
               </label>
               <select id="postLocation" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                 <option value="">Seleccionar ubicación...</option>
-                <option value="shibuya">Shibuya Crossing, Tokyo</option>
-                <option value="sensoji">Senso-ji Temple, Tokyo</option>
-                <option value="fushimi">Fushimi Inari, Kyoto</option>
-                <option value="arashiyama">Arashiyama Bamboo, Kyoto</option>
-                <option value="dotonbori">Dotonbori, Osaka</option>
+                ${Object.entries(this.LOCATIONS).map(([key, loc]) => `
+                  <option value="${key}">${loc.name}, ${loc.city}</option>
+                `).join('')}
               </select>
             </div>
 
@@ -563,14 +598,16 @@ export const JapitinSocial = {
             </div>
 
             <!-- Link to Trip Day -->
-            <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
-              <label class="flex items-center gap-3">
-                <input type="checkbox" id="linkToTrip" class="w-4 h-4">
-                <span class="text-sm text-gray-700 dark:text-gray-300">
-                  ✈️ Vincular con mi itinerario (Día 3 - Tokyo)
-                </span>
-              </label>
-            </div>
+            ${this.getCurrentTripDay() ? `
+              <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
+                <label class="flex items-center gap-3">
+                  <input type="checkbox" id="linkToTrip" class="w-4 h-4" checked>
+                  <span class="text-sm text-gray-700 dark:text-gray-300">
+                    ✈️ Vincular con mi itinerario (Día ${this.getCurrentTripDay()})
+                  </span>
+                </label>
+              </div>
+            ` : ''}
           </div>
 
           <div class="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex gap-3">
@@ -592,10 +629,23 @@ export const JapitinSocial = {
   },
 
   /**
+   * Calcula el día de viaje actual (para "vincular con mi itinerario"), o
+   * null si no hay un viaje activo con fechas
+   */
+  getCurrentTripDay() {
+    const trip = window.TripsManager?.currentTrip;
+    if (!trip?.info?.dateStart || !window.TimeUtils) return null;
+    const today = window.TimeUtils.toISODate(new Date());
+    const day = window.TimeUtils.daysBetween(trip.info.dateStart, today) + 1;
+    return day >= 1 ? day : null;
+  },
+
+  /**
    * Preview de imagen antes de subir
    */
   previewImage(input) {
     if (input.files && input.files[0]) {
+      this.selectedImageFile = input.files[0];
       const reader = new FileReader();
       reader.onload = (e) => {
         document.getElementById('previewImg').src = e.target.result;
@@ -607,56 +657,198 @@ export const JapitinSocial = {
   },
 
   /**
-   * Publica un nuevo post
+   * Publica un nuevo post: sube la imagen a Storage y crea el post en Firestore
    */
   async publishPost() {
-    const caption = document.getElementById('postCaption')?.value;
-    const location = document.getElementById('postLocation')?.value;
-    const hashtags = document.getElementById('postHashtags')?.value;
+    const caption = document.getElementById('postCaption')?.value?.trim();
+    const locationKey = document.getElementById('postLocation')?.value;
+    const hashtagsRaw = document.getElementById('postHashtags')?.value;
+    const linkToTrip = document.getElementById('linkToTrip')?.checked;
 
     if (!caption) {
       window.Notifications?.show('❌ Agrega una descripción', 'error');
       return;
     }
+    if (!this.selectedImageFile) {
+      window.Notifications?.show('❌ Sube una foto', 'error');
+      return;
+    }
+    if (!auth.currentUser) {
+      window.Notifications?.show('❌ Debes iniciar sesión', 'error');
+      return;
+    }
 
     window.Notifications?.show('⏳ Publicando post...', 'info');
 
-    // TODO: Subir imagen a Firebase Storage
-    // TODO: Crear documento en Firestore
+    try {
+      const fileName = `${Date.now()}_${this.selectedImageFile.name}`;
+      const storagePath = `social/${auth.currentUser.uid}/${fileName}`;
+      const storageRef = ref(storage, storagePath);
+      await uploadBytes(storageRef, this.selectedImageFile);
+      const imageUrl = await getDownloadURL(storageRef);
 
-    setTimeout(() => {
+      const hashtags = (hashtagsRaw || '')
+        .split(/\s+/)
+        .map(t => t.trim())
+        .filter(t => t.startsWith('#'));
+
+      await addDoc(collection(db, 'posts'), {
+        authorId: auth.currentUser.uid,
+        authorUsername: this.currentUser?.username || auth.currentUser.displayName || auth.currentUser.email?.split('@')[0] || 'Viajero',
+        authorAvatar: (this.currentUser?.username || auth.currentUser.displayName || 'V').charAt(0).toUpperCase(),
+        imageUrl,
+        storagePath,
+        caption,
+        hashtags,
+        location: this.LOCATIONS[locationKey] || null,
+        tripDay: linkToTrip ? this.getCurrentTripDay() : null,
+        likes: [],
+        commentCount: 0,
+        createdAt: serverTimestamp()
+      });
+
+      this.selectedImageFile = null;
       window.Notifications?.show('✅ Post publicado con éxito!', 'success');
       document.getElementById('createPostModal')?.remove();
-      this.loadFeed(); // Recargar feed
-    }, 1500);
+    } catch (error) {
+      console.error('❌ Error publicando post:', error);
+      window.Notifications?.show('❌ No se pudo publicar el post', 'error');
+    }
   },
 
   /**
-   * Placeholder functions
+   * Toggle de like en un post
    */
-  likePost(postId) {
-    console.log('❤️ Like post:', postId);
+  async likePost(postId) {
+    if (!auth.currentUser) return;
+    const post = this.feed.find(p => p.id === postId);
+    if (!post) return;
+
+    const alreadyLiked = post.likes.includes(auth.currentUser.uid);
+    try {
+      await setDoc(doc(db, 'posts', postId), {
+        likes: alreadyLiked ? arrayRemove(auth.currentUser.uid) : arrayUnion(auth.currentUser.uid)
+      }, { merge: true });
+    } catch (error) {
+      console.error('❌ Error dando like:', error);
+    }
   },
 
+  /**
+   * Foco directo al input de comentario del post (acción real del botón 💬)
+   */
   commentPost(postId) {
-    console.log('💬 Comment on post:', postId);
+    document.getElementById(`commentInput-${postId}`)?.focus();
   },
 
-  sharePost(postId) {
-    console.log('📤 Share post:', postId);
+  /**
+   * Comparte el post (Web Share API o portapapeles, igual que otras
+   * features de export de la app)
+   */
+  async sharePost(postId) {
+    const post = this.feed.find(p => p.id === postId);
+    if (!post) return;
+
+    const shareText = `${post.caption} - vía Japitin Social`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Japitin Social', text: shareText, url: post.image });
+      } catch (error) {
+        if (error.name !== 'AbortError') console.error('❌ Error compartiendo:', error);
+      }
+    } else {
+      await navigator.clipboard.writeText(`${shareText}\n${post.image}`);
+      window.Notifications?.show('📋 Copiado al portapapeles', 'success');
+    }
   },
 
-  savePost(postId) {
-    console.log('🔖 Save post:', postId);
+  /**
+   * Toggle de guardado del post (users/{uid}/savedPosts/{postId})
+   */
+  async savePost(postId) {
+    if (!auth.currentUser) return;
+    const savedRef = doc(db, 'users', auth.currentUser.uid, 'savedPosts', postId);
+
+    try {
+      if (this.savedPostIds.has(postId)) {
+        await deleteDoc(savedRef);
+        this.savedPostIds.delete(postId);
+        window.Notifications?.show('🔖 Quitado de guardados', 'info');
+      } else {
+        await setDoc(savedRef, { postId, savedAt: serverTimestamp() });
+        this.savedPostIds.add(postId);
+        window.Notifications?.show('🔖 Guardado', 'success');
+      }
+      this.renderPosts();
+    } catch (error) {
+      console.error('❌ Error guardando post:', error);
+    }
   },
 
-  viewComments(postId) {
-    console.log('👁️ View comments:', postId);
+  /**
+   * Elimina un post propio (imagen en Storage se queda huérfana - fuera de
+   * alcance de esta pasada, igual que el resto de features de borrado en la app)
+   */
+  async deletePost(postId) {
+    if (!confirm('¿Eliminar esta publicación?')) return;
+    try {
+      await deleteDoc(doc(db, 'posts', postId));
+      window.Notifications?.show('🗑️ Post eliminado', 'success');
+    } catch (error) {
+      console.error('❌ Error eliminando post:', error);
+      window.Notifications?.show('❌ No se pudo eliminar', 'error');
+    }
   },
 
-  addComment(postId, text) {
-    if (!text.trim()) return;
-    console.log('💬 Add comment to', postId, ':', text);
+  /**
+   * Muestra los comentarios reales de un post
+   */
+  async viewComments(postId) {
+    const snap = await getDocs(query(collection(db, 'posts', postId, 'comments'), orderBy('createdAt', 'asc')));
+    const comments = snap.docs.map(d => d.data());
+
+    const html = `
+      <div id="commentsModal" class="fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col">
+          <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <h3 class="font-bold text-gray-900 dark:text-white">Comentarios</h3>
+            <button onclick="document.getElementById('commentsModal').remove()" class="text-gray-500 hover:text-gray-700">✕</button>
+          </div>
+          <div class="flex-1 overflow-y-auto p-4 space-y-3">
+            ${comments.length > 0 ? comments.map(c => `
+              <div class="text-sm">
+                <span class="font-semibold text-gray-900 dark:text-white">${escapeHTML(c.authorUsername)}</span>
+                <span class="text-gray-700 dark:text-gray-300"> ${escapeHTML(c.text)}</span>
+              </div>
+            `).join('') : '<p class="text-gray-500 text-center py-4">Sé el primero en comentar</p>'}
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+  },
+
+  /**
+   * Agrega un comentario real a un post
+   */
+  async addComment(postId, text, inputEl) {
+    if (!text?.trim() || !auth.currentUser) return;
+
+    const username = this.currentUser?.username || auth.currentUser.displayName || auth.currentUser.email?.split('@')[0] || 'Viajero';
+
+    try {
+      await addDoc(collection(db, 'posts', postId, 'comments'), {
+        authorId: auth.currentUser.uid,
+        authorUsername: username,
+        text: text.trim(),
+        createdAt: serverTimestamp()
+      });
+      await setDoc(doc(db, 'posts', postId), { commentCount: increment(1) }, { merge: true });
+      if (inputEl) inputEl.value = '';
+      window.Notifications?.show('💬 Comentario publicado', 'success');
+    } catch (error) {
+      console.error('❌ Error agregando comentario:', error);
+    }
   },
 
   switchTab(tab) {
@@ -679,6 +871,10 @@ export const JapitinSocial = {
    * Cierra el feed social
    */
   close() {
+    if (this.feedUnsubscribe) {
+      this.feedUnsubscribe();
+      this.feedUnsubscribe = null;
+    }
     const modal = document.getElementById('socialFeedModal');
     if (modal) modal.remove();
   }

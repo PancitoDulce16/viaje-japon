@@ -160,7 +160,9 @@ class ExpertDecisionEngine {
         id: 'cherry_blossom_season',
         priority: 9,
         condition: (context) => {
-          const month = new Date(context.startDate).getMonth() + 1;
+          const date = window.TimeUtils?.parseDate(context.startDate) || new Date(context.startDate);
+          if (isNaN(date)) return false;
+          const month = date.getMonth() + 1;
           return month >= 3 && month <= 4; // Marzo-Abril
         },
         actions: {
@@ -179,7 +181,9 @@ class ExpertDecisionEngine {
         id: 'autumn_foliage',
         priority: 9,
         condition: (context) => {
-          const month = new Date(context.startDate).getMonth() + 1;
+          const date = window.TimeUtils?.parseDate(context.startDate) || new Date(context.startDate);
+          if (isNaN(date)) return false;
+          const month = date.getMonth() + 1;
           return month >= 10 && month <= 11; // Octubre-Noviembre
         },
         actions: {

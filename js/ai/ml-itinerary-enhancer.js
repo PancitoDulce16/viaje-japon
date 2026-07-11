@@ -22,6 +22,8 @@
  * - Swarm Intelligence: Optimiza rutas y distribución
  */
 
+import { hasRemoteAreaConflict } from '../features/itinerary/smart-itinerary-generator.js';
+
 class MLItineraryEnhancer {
   constructor() {
     this.initialized = false;
@@ -287,9 +289,24 @@ class MLItineraryEnhancer {
       // Mover última actividad al día siguiente si existe
       const nextDay = peakDay + 1;
       if (optimized.days[nextDay]) {
-        const activityToMove = peakDayActivities.pop();
         optimized.days[nextDay].activities = optimized.days[nextDay].activities || [];
-        optimized.days[nextDay].activities.unshift(activityToMove);
+
+        // 🏝️ GUARDIA DE SUB-ÁREA REMOTA (Uji, Miyajima): no mover ciegamente la
+        // última actividad si choca con la sub-área remota ya presente en el
+        // día destino - buscar desde el final la primera que no choque.
+        const targetAreas = optimized.days[nextDay].activities.map(a => a.area).filter(Boolean);
+        let moveIndex = -1;
+        for (let i = peakDayActivities.length - 1; i >= 0; i--) {
+          if (!hasRemoteAreaConflict(peakDayActivities[i].area, targetAreas)) {
+            moveIndex = i;
+            break;
+          }
+        }
+
+        if (moveIndex !== -1) {
+          const [activityToMove] = peakDayActivities.splice(moveIndex, 1);
+          optimized.days[nextDay].activities.unshift(activityToMove);
+        }
       }
     }
 

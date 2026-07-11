@@ -51,10 +51,12 @@ exports.onNewExpenseAdded = onDocumentCreated('trips/{tripId}/expenses/{expenseI
     const tripMembers = tripSnap.data().members || [];
 
     // 2. Obtener los tokens de los miembros (excluyendo a quien agregó el gasto)
+    const memberSnaps = await Promise.all(
+        tripMembers.map(memberId => admin.firestore().doc(`users/${memberId}`).get())
+    );
     const tokens = [];
-    for (const memberId of tripMembers) {
-        const userSnap = await admin.firestore().doc(`users/${memberId}`).get();
-        if (userSnap.exists() && userSnap.data().fcmTokens) {
+    for (const userSnap of memberSnaps) {
+        if (userSnap.exists && userSnap.data().fcmTokens) {
             tokens.push(...userSnap.data().fcmTokens);
         }
     }

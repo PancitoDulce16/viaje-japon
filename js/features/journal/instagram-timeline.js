@@ -335,7 +335,7 @@ class InstagramTimeline {
 
           ${post.date ? `
             <p class="text-white/50 text-xs mt-2">
-              ${new Date(post.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              ${(window.TimeUtils ? window.TimeUtils.parseDate(post.date) : new Date(post.date)).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           ` : ''}
         </div>

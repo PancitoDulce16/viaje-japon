@@ -311,16 +311,133 @@ export const ReservationsManager = {
      * Mostrar modal para agregar reserva
      */
     showAddReservationModal() {
-        // TODO: Implementar modal
-        Notifications.info('Modal de agregar reserva - Por implementar');
+        this.showReservationModal(null);
     },
 
     /**
      * Mostrar modal para editar reserva
      */
     showEditReservationModal(id) {
-        // TODO: Implementar modal
-        Notifications.info('Modal de editar reserva - Por implementar');
+        const reservation = this.reservations.find(r => r.id === id);
+        if (!reservation) {
+            Notifications.error('No se encontró la reserva');
+            return;
+        }
+        this.showReservationModal(reservation);
+    },
+
+    /**
+     * Modal compartido para crear o editar una reserva
+     */
+    showReservationModal(reservation) {
+        const isEdit = !!reservation;
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4';
+        modal.innerHTML = `
+            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+                <h3 class="text-2xl font-bold mb-4">${isEdit ? '✏️ Editar Reserva' : '➕ Nueva Reserva'}</h3>
+                <form id="reservationForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo</label>
+                        <select name="type" required class="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                            <option value="hotel" ${reservation?.type === 'hotel' ? 'selected' : ''}>🏨 Hotel</option>
+                            <option value="restaurant" ${reservation?.type === 'restaurant' ? 'selected' : ''}>🍜 Restaurante</option>
+                            <option value="activity" ${reservation?.type === 'activity' ? 'selected' : ''}>🎮 Actividad</option>
+                            <option value="transport" ${reservation?.type === 'transport' ? 'selected' : ''}>🚄 Transporte</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre</label>
+                        <input type="text" name="name" required value="${reservation?.name || ''}"
+                               class="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha</label>
+                            <input type="date" name="date" required value="${reservation?.date || ''}"
+                                   class="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hora</label>
+                            <input type="time" name="time" value="${reservation?.time || ''}"
+                                   class="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ubicación</label>
+                        <input type="text" name="location" value="${reservation?.location || ''}"
+                               class="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Número de confirmación</label>
+                        <input type="text" name="confirmationNumber" value="${reservation?.confirmationNumber || ''}"
+                               class="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL (opcional)</label>
+                        <input type="url" name="url" value="${reservation?.url || ''}"
+                               class="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notas</label>
+                        <textarea name="notes" rows="2"
+                                  class="w-full px-4 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">${reservation?.notes || ''}</textarea>
+                    </div>
+                    <div class="flex gap-3 pt-2">
+                        <button type="button" class="flex-1 py-3 bg-gray-200 dark:bg-gray-700 rounded-lg font-semibold" onclick="this.closest('.fixed').remove()">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold">
+                            ${isEdit ? 'Guardar cambios' : 'Agregar'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        modal.querySelector('#reservationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.handleReservationFormSubmit(e.target, reservation?.id || null);
+            modal.remove();
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
+
+        document.body.appendChild(modal);
+    },
+
+    /**
+     * Procesa el submit del formulario de agregar/editar reserva
+     */
+    async handleReservationFormSubmit(form, editId) {
+        const data = new FormData(form);
+        const reservation = {
+            id: editId || `res_${Date.now()}`,
+            type: data.get('type'),
+            name: data.get('name').trim(),
+            date: data.get('date'),
+            time: data.get('time') || '',
+            location: data.get('location')?.trim() || '',
+            confirmationNumber: data.get('confirmationNumber')?.trim() || '',
+            url: data.get('url')?.trim() || '',
+            notes: data.get('notes')?.trim() || ''
+        };
+
+        try {
+            if (editId) {
+                const idx = this.reservations.findIndex(r => r.id === editId);
+                if (idx >= 0) this.reservations[idx] = reservation;
+            } else {
+                this.reservations.push(reservation);
+            }
+            await this.saveReservations();
+            Notifications.success(editId ? 'Reserva actualizada' : 'Reserva agregada');
+        } catch (error) {
+            Logger.error('Error saving reservation:', error);
+            Notifications.error('Error al guardar la reserva');
+        }
     },
 
     /**
@@ -359,7 +476,73 @@ export const ReservationsManager = {
      * Exportar a PDF
      */
     exportToPDF() {
-        Notifications.info('Exportar a PDF - Por implementar');
+        if (this.reservations.length === 0) {
+            Notifications.error('No hay reservas para exportar');
+            return;
+        }
+        if (typeof window.jspdf === 'undefined') {
+            Notifications.error('No se pudo cargar el generador de PDF. Intenta de nuevo.');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const margin = 20;
+        const pageHeight = doc.internal.pageSize.height;
+        let yPos = 20;
+
+        doc.setFontSize(20);
+        doc.setTextColor(147, 51, 234);
+        doc.text('MIS RESERVAS - JAPITIN', margin, yPos);
+        yPos += 12;
+
+        const typeLabels = { hotel: '🏨 Hoteles', restaurant: '🍜 Restaurantes', activity: '🎮 Actividades', transport: '🚄 Transporte' };
+        const byType = this.groupReservationsByType();
+
+        Object.entries(typeLabels).forEach(([type, label]) => {
+            const items = (byType[type] || []).sort((a, b) => new Date(a.date) - new Date(b.date));
+            if (items.length === 0) return;
+
+            if (yPos > pageHeight - 40) { doc.addPage(); yPos = 20; }
+
+            doc.setFontSize(14);
+            doc.setTextColor(0, 0, 0);
+            doc.text(label.replace(/^\S+\s/, ''), margin, yPos);
+            yPos += 8;
+
+            items.forEach(r => {
+                if (yPos > pageHeight - 30) { doc.addPage(); yPos = 20; }
+
+                doc.setFontSize(11);
+                doc.setTextColor(20, 20, 20);
+                doc.text(`${r.name}`, margin + 3, yPos);
+                yPos += 5;
+
+                doc.setFontSize(9);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`${r.date}${r.time ? ' - ' + r.time : ''}`, margin + 5, yPos);
+                yPos += 4;
+
+                if (r.location) {
+                    doc.text(`Ubicación: ${r.location}`, margin + 5, yPos);
+                    yPos += 4;
+                }
+                if (r.confirmationNumber) {
+                    doc.text(`Confirmación: ${r.confirmationNumber}`, margin + 5, yPos);
+                    yPos += 4;
+                }
+                if (r.notes) {
+                    doc.text(`Notas: ${r.notes}`, margin + 5, yPos);
+                    yPos += 4;
+                }
+                yPos += 4;
+            });
+
+            yPos += 4;
+        });
+
+        doc.save(`reservas_japon_${new Date().toISOString().split('T')[0]}.pdf`);
+        Notifications.success('PDF descargado');
     },
 
     /**

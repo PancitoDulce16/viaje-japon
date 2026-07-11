@@ -484,7 +484,8 @@ export class TravelJournal {
       'challenging': '😅'
     }[entry.mood] || '🙂';
 
-    const formattedDate = new Date(entry.date).toLocaleDateString('es-ES', {
+    const entryDate = window.TimeUtils ? window.TimeUtils.parseDate(entry.date) : new Date(entry.date);
+    const formattedDate = (entryDate || new Date(entry.date)).toLocaleDateString('es-ES', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',

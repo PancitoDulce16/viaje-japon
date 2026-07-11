@@ -1,15 +1,20 @@
 /**
  * WhatsApp Trip Updater
- * Sistema para enviar actualizaciones automáticas del viaje por WhatsApp
+ * Compone mensajes de actualización del viaje y los abre en WhatsApp (wa.me)
+ * listos para enviar. No existe una API pública para enviar WhatsApp sin
+ * intervención del usuario, así que el flujo real es: elegir contacto → se
+ * abre WhatsApp con el mensaje precargado → el usuario confirma el envío.
  */
+import { escapeHTML } from '../../utils/helpers.js';
 
 class WhatsAppUpdater {
   constructor() {
     this.currentTrip = null;
     this.contactGroups = [];
     this.scheduledMessages = [];
-    this.messageTemplates = [];
     this.sentMessages = [];
+    this.pendingSend = null;
+    this.reminderTimers = [];
 
     // Templates de mensajes
     this.MESSAGE_TEMPLATES = {
@@ -85,7 +90,7 @@ class WhatsAppUpdater {
         category: 'safety',
         templates: [
           '✅ Daily check-in! Todo bien por {city} 🙌',
-          '✅ Update rápido: Estoy bien! Hoy en {location}',
+          '✅ Update rápido: Estoy bien! Hoy en {city}',
           '✅ All good! Día {dayNumber} completado ✨',
           '✅ Check-in: Safe and having fun en {city}!'
         ]
@@ -125,147 +130,98 @@ class WhatsAppUpdater {
       }
     };
 
-    // Grupos de contactos predefinidos
-    this.CONTACT_GROUPS = [
-      { id: 'family', name: 'Familia', icon: '👨‍👩‍👧‍👦', contacts: [] },
-      { id: 'close_friends', name: 'Amigos cercanos', icon: '👯‍♀️', contacts: [] },
-      { id: 'work', name: 'Trabajo', icon: '💼', contacts: [] },
-      { id: 'all', name: 'Todos', icon: '📢', contacts: [] }
-    ];
-
-    this.initMockData();
+    this.loadState();
+    this.scheduleReminders();
   }
 
   /**
-   * Inicializa datos mock
+   * Clave de almacenamiento local, aislada por viaje
    */
-  initMockData() {
-    // Trip actual mock
-    this.currentTrip = {
-      startDate: '2025-02-15',
-      endDate: '2025-02-24',
-      currentDay: 3,
-      totalDays: 10,
-      currentCity: 'Tokyo'
+  get storageKey() {
+    const tripId = window.TripsManager?.currentTrip?.id || 'default';
+    return `whatsappUpdater_${tripId}`;
+  }
+
+  /**
+   * Carga contactos, recordatorios e historial desde localStorage
+   */
+  loadState() {
+    let saved = null;
+    try {
+      saved = JSON.parse(localStorage.getItem(this.storageKey) || 'null');
+    } catch (error) {
+      saved = null;
+    }
+
+    this.contactGroups = saved?.contactGroups || [
+      { id: 'family', name: 'Familia', icon: '👨‍👩‍👧‍👦', contacts: [] },
+      { id: 'close_friends', name: 'Amigos cercanos', icon: '👯‍♀️', contacts: [] },
+      { id: 'work', name: 'Trabajo', icon: '💼', contacts: [] }
+    ];
+    this.scheduledMessages = saved?.scheduledMessages || [];
+    this.sentMessages = saved?.sentMessages || [];
+  }
+
+  /**
+   * Persiste el estado actual en localStorage
+   */
+  saveState() {
+    localStorage.setItem(this.storageKey, JSON.stringify({
+      contactGroups: this.contactGroups,
+      scheduledMessages: this.scheduledMessages,
+      sentMessages: this.sentMessages
+    }));
+  }
+
+  /**
+   * Calcula el estado real del viaje (día actual, ciudad, etc) a partir
+   * de los datos reales del viaje/itinerario, no de datos de ejemplo
+   */
+  getTripStatus() {
+    const trip = window.TripsManager?.currentTrip;
+    const destination = trip?.info?.destination || 'Japón';
+
+    if (!trip?.info?.dateStart || !trip?.info?.dateEnd || !window.TimeUtils) {
+      return { startDate: null, endDate: null, currentDay: 0, totalDays: 0, currentCity: destination };
+    }
+
+    const today = window.TimeUtils.toISODate(new Date());
+    const totalDays = window.TimeUtils.daysBetween(trip.info.dateStart, trip.info.dateEnd) + 1;
+    const rawDay = window.TimeUtils.daysBetween(trip.info.dateStart, today) + 1;
+    const currentDay = Math.min(Math.max(rawDay, 1), totalDays);
+
+    const days = window.ItineraryHandler?.currentItinerary?.days || [];
+    const todayEntry = days.find(d => d.date === today);
+    const currentCity = todayEntry?.city || days[Math.min(currentDay, days.length) - 1]?.city || destination;
+
+    return { startDate: trip.info.dateStart, endDate: trip.info.dateEnd, currentDay, totalDays, currentCity };
+  }
+
+  /**
+   * Variables automáticas disponibles para rellenar templates
+   */
+  getTemplateVariables() {
+    const status = this.currentTrip || this.getTripStatus();
+    const daysLeft = status.endDate && window.TimeUtils
+      ? Math.max(0, window.TimeUtils.daysBetween(window.TimeUtils.toISODate(new Date()), status.endDate))
+      : 0;
+
+    return {
+      city: status.currentCity,
+      dayNumber: status.currentDay || 1,
+      days: daysLeft
     };
-
-    // Mensajes programados
-    this.scheduledMessages = [
-      {
-        id: 'sched1',
-        template: 'evening_recap',
-        scheduledFor: '2025-02-17 20:00',
-        recipients: ['family'],
-        status: 'pending',
-        variables: {
-          dayNumber: 3,
-          city: 'Tokyo',
-          highlights: 'Shibuya, teamLab, mejor ramen ever'
-        }
-      },
-      {
-        id: 'sched2',
-        template: 'safety_checkin',
-        scheduledFor: '2025-02-18 10:00',
-        recipients: ['family'],
-        status: 'pending',
-        variables: {
-          city: 'Tokyo',
-          dayNumber: 4
-        }
-      },
-      {
-        id: 'sched3',
-        template: 'daily_highlight',
-        scheduledFor: '2025-02-18 18:00',
-        recipients: ['close_friends', 'family'],
-        status: 'pending',
-        variables: {
-          city: 'Kyoto',
-          activity: 'Fushimi Inari',
-          location: 'Kyoto'
-        }
-      }
-    ];
-
-    // Mensajes enviados
-    this.sentMessages = [
-      {
-        id: 'sent1',
-        template: 'arrival',
-        sentAt: '2025-02-15 08:30',
-        recipients: ['family', 'close_friends'],
-        message: '✈️ Aterricé en Tokyo! Todo bien, el hotel es increíble 🏨',
-        delivered: true
-      },
-      {
-        id: 'sent2',
-        template: 'food_find',
-        sentAt: '2025-02-15 19:45',
-        recipients: ['close_friends'],
-        message: '🍜 ALERTA RAMEN: Acabo de probar el mejor ramen de mi vida en Shibuya!',
-        delivered: true
-      },
-      {
-        id: 'sent3',
-        template: 'evening_recap',
-        sentAt: '2025-02-15 22:00',
-        recipients: ['family'],
-        message: '🌙 Día 1 done! Highlights: Llegada, ramen increíble, primeras impresiones. Buenas noches desde Tokyo!',
-        delivered: true
-      },
-      {
-        id: 'sent4',
-        template: 'daily_highlight',
-        sentAt: '2025-02-16 17:30',
-        recipients: ['close_friends'],
-        message: '✨ Hoy en Tokyo: Akihabara! Fue increíble 🎉',
-        delivered: true
-      }
-    ];
-
-    // Grupos de contactos con datos
-    this.contactGroups = [
-      {
-        id: 'family',
-        name: 'Familia',
-        icon: '👨‍👩‍👧‍👦',
-        contacts: [
-          { name: 'Mamá', phone: '+34 XXX XXX XXX' },
-          { name: 'Papá', phone: '+34 XXX XXX XXX' },
-          { name: 'Hermana', phone: '+34 XXX XXX XXX' }
-        ]
-      },
-      {
-        id: 'close_friends',
-        name: 'Amigos cercanos',
-        icon: '👯‍♀️',
-        contacts: [
-          { name: 'Ana', phone: '+34 XXX XXX XXX' },
-          { name: 'Carlos', phone: '+34 XXX XXX XXX' },
-          { name: 'Laura', phone: '+34 XXX XXX XXX' }
-        ]
-      },
-      {
-        id: 'work',
-        name: 'Trabajo',
-        icon: '💼',
-        contacts: [
-          { name: 'Jefe', phone: '+34 XXX XXX XXX' }
-        ]
-      }
-    ];
   }
 
   /**
    * Abre el WhatsApp Updater
    */
   open() {
+    this.currentTrip = this.getTripStatus();
+
     const modal = document.createElement('div');
     modal.id = 'whatsappUpdaterModal';
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 backdrop-blur-strong flex items-center justify-center z-50 p-4 animate-fadeInUp';
-
-    const daysRemaining = Math.ceil((new Date(this.currentTrip.endDate) - new Date()) / (1000 * 60 * 60 * 24));
 
     modal.innerHTML = `
       <div class="glass-card rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col glow-green hover-lift">
@@ -276,7 +232,7 @@ class WhatsAppUpdater {
           <div class="flex items-center justify-between">
             <div>
               <h2 class="text-3xl font-bold mb-2">📱 WhatsApp Trip Updater</h2>
-              <p class="text-white/90">Mantén a todos informados automáticamente</p>
+              <p class="text-white/90">Prepara el mensaje y ábrelo directo en WhatsApp</p>
             </div>
             <button onclick="window.whatsappUpdater?.close()" class="text-white hover:bg-white/20 rounded-lg p-2 transition-all">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -288,7 +244,7 @@ class WhatsAppUpdater {
           <!-- Trip Status -->
           <div class="mt-4 grid grid-cols-3 gap-4">
             <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-              <div class="text-2xl font-bold">Día ${this.currentTrip.currentDay}/${this.currentTrip.totalDays}</div>
+              <div class="text-2xl font-bold">${this.currentTrip.totalDays ? `Día ${this.currentTrip.currentDay}/${this.currentTrip.totalDays}` : '—'}</div>
               <div class="text-sm text-white/80">Progreso</div>
             </div>
             <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
@@ -297,7 +253,7 @@ class WhatsAppUpdater {
             </div>
             <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
               <div class="text-2xl font-bold">${this.scheduledMessages.length}</div>
-              <div class="text-sm text-white/80">Programados</div>
+              <div class="text-sm text-white/80">Recordatorios</div>
             </div>
           </div>
         </div>
@@ -313,7 +269,7 @@ class WhatsAppUpdater {
             <button onclick="window.whatsappUpdater?.showTab('scheduled')"
                     id="tab-scheduled"
                     class="px-6 py-3 font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 tab-button">
-              📅 Programados
+              📅 Recordatorios
             </button>
             <button onclick="window.whatsappUpdater?.showTab('templates')"
                     id="tab-templates"
@@ -351,21 +307,21 @@ class WhatsAppUpdater {
       <div class="space-y-6">
         <!-- Quick Actions -->
         <div class="grid md:grid-cols-3 gap-4">
-          <button onclick="window.whatsappUpdater?.quickSend('safety_checkin')"
+          <button onclick="window.whatsappUpdater?.selectTemplate('safety_checkin')"
                   class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-300 dark:border-green-700 rounded-xl p-6 hover:shadow-lg transition-all text-left">
             <div class="text-4xl mb-3">✅</div>
             <div class="font-bold text-gray-900 dark:text-white mb-1">Estoy bien!</div>
             <div class="text-sm text-gray-600 dark:text-gray-400">Check-in de seguridad rápido</div>
           </button>
 
-          <button onclick="window.whatsappUpdater?.quickSend('daily_highlight')"
+          <button onclick="window.whatsappUpdater?.selectTemplate('daily_highlight')"
                   class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-300 dark:border-purple-700 rounded-xl p-6 hover:shadow-lg transition-all text-left">
             <div class="text-4xl mb-3">✨</div>
             <div class="font-bold text-gray-900 dark:text-white mb-1">Highlight del día</div>
             <div class="text-sm text-gray-600 dark:text-gray-400">Comparte tu momento favorito</div>
           </button>
 
-          <button onclick="window.whatsappUpdater?.quickSend('food_find')"
+          <button onclick="window.whatsappUpdater?.selectTemplate('food_find')"
                   class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-2 border-orange-300 dark:border-orange-700 rounded-xl p-6 hover:shadow-lg transition-all text-left">
             <div class="text-4xl mb-3">🍜</div>
             <div class="font-bold text-gray-900 dark:text-white mb-1">Food find!</div>
@@ -414,7 +370,7 @@ class WhatsAppUpdater {
 
               <button type="submit"
                       class="px-8 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-all">
-                📤 Enviar ahora
+                📤 Continuar
               </button>
             </div>
           </form>
@@ -424,16 +380,181 @@ class WhatsAppUpdater {
   }
 
   /**
-   * Renderiza tab de mensajes programados
+   * Muestra el formulario para personalizar y enviar un template
+   */
+  selectTemplate(templateKey) {
+    const template = this.MESSAGE_TEMPLATES[templateKey];
+    if (!template) return;
+
+    const autoFields = this.getTemplateVariables();
+    const placeholders = [...new Set((template.templates.join(' ').match(/\{(\w+)\}/g) || []).map(p => p.slice(1, -1)))];
+    const manualFields = placeholders.filter(p => !(p in autoFields));
+
+    const content = document.getElementById('whatsappContent');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="space-y-6">
+        <button onclick="window.whatsappUpdater?.showTab('quick')" class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">← Volver</button>
+        <div class="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="text-4xl">${template.icon}</div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white">${template.name}</h3>
+          </div>
+
+          <form onsubmit="window.whatsappUpdater?.previewTemplateMessage(event, '${templateKey}')" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Elige una variante</label>
+              <select name="variantIndex" class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                ${template.templates.map((t, i) => `<option value="${i}">${t}</option>`).join('')}
+              </select>
+            </div>
+
+            ${manualFields.map(field => `
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 capitalize">${field}</label>
+                <input name="field_${field}" type="text" required
+                       class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
+              </div>
+            `).join('')}
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Destinatarios</label>
+              <select name="recipientGroup" class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" required>
+                <option value="">Selecciona...</option>
+                ${this.contactGroups.map(g => `<option value="${g.id}">${g.icon} ${g.name} (${g.contacts.length})</option>`).join('')}
+              </select>
+            </div>
+
+            <button type="submit" class="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-all">
+              Continuar →
+            </button>
+          </form>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Rellena el mensaje con la variante y campos elegidos y pasa al selector de contacto
+   */
+  previewTemplateMessage(event, templateKey) {
+    event.preventDefault();
+    const data = new FormData(event.target);
+    const template = this.MESSAGE_TEMPLATES[templateKey];
+    const variant = template.templates[Number(data.get('variantIndex')) || 0];
+    const groupId = data.get('recipientGroup');
+
+    const variables = { ...this.getTemplateVariables() };
+    for (const [key, value] of data.entries()) {
+      if (key.startsWith('field_')) variables[key.slice(6)] = value;
+    }
+
+    const message = this.fillTemplate(variant, variables);
+    this.showRecipientPicker(templateKey, message, groupId);
+  }
+
+  /**
+   * Envía mensaje personalizado: pasa directo al selector de contacto
+   */
+  sendCustomMessage(event) {
+    event.preventDefault();
+    const form = event.target;
+    const message = form.querySelector('textarea').value.trim();
+    const groupId = form.querySelector('select').value;
+    if (!message || !groupId) return;
+
+    form.reset();
+    this.showRecipientPicker('custom', message, groupId);
+  }
+
+  /**
+   * Construye el link wa.me para un contacto y mensaje dados
+   */
+  buildWaLink(phone, message) {
+    const digits = (phone || '').replace(/[^\d]/g, '');
+    return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+  }
+
+  /**
+   * Muestra la lista de contactos del grupo elegido; cada uno abre WhatsApp
+   * directamente con el mensaje precargado
+   */
+  showRecipientPicker(templateKey, message, groupId) {
+    const group = this.contactGroups.find(g => g.id === groupId);
+    const content = document.getElementById('whatsappContent');
+    if (!content) return;
+
+    this.pendingSend = { templateKey, groupId, message };
+
+    if (!group || group.contacts.length === 0) {
+      content.innerHTML = `
+        <div class="text-center py-12">
+          <p class="text-gray-600 dark:text-gray-400 mb-4">El grupo "${group?.name || groupId}" todavía no tiene contactos.</p>
+          <button onclick="window.whatsappUpdater?.showTab('contacts')" class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-all">Añadir contactos</button>
+        </div>
+      `;
+      return;
+    }
+
+    content.innerHTML = `
+      <div class="space-y-6">
+        <button onclick="window.whatsappUpdater?.showTab('quick')" class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">← Volver</button>
+
+        <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-4">
+          <p class="text-gray-800 dark:text-gray-200">${escapeHTML(message)}</p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-gray-900 dark:text-white mb-3">Toca un contacto para abrir WhatsApp con el mensaje listo:</h4>
+          <div class="space-y-2">
+            ${group.contacts.map((c, i) => `
+              <a href="${this.buildWaLink(c.phone, message)}" target="_blank" rel="noopener"
+                 onclick="window.whatsappUpdater?.recordSent(${i})"
+                 class="flex items-center justify-between bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:border-green-400 transition-all">
+                <span class="font-medium text-gray-900 dark:text-white">${c.name}</span>
+                <span class="text-green-600">📤 Enviar</span>
+              </a>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Registra en el historial que se abrió WhatsApp para un contacto concreto
+   */
+  recordSent(contactIndex) {
+    if (!this.pendingSend) return;
+    const { templateKey, groupId, message } = this.pendingSend;
+    const group = this.contactGroups.find(g => g.id === groupId);
+    const contact = group?.contacts[contactIndex];
+
+    this.sentMessages.unshift({
+      id: `sent_${Date.now()}`,
+      template: templateKey,
+      sentAt: new Date().toISOString(),
+      recipient: contact?.name || 'Desconocido',
+      recipientGroup: groupId,
+      message
+    });
+
+    this.saveState();
+    window.Notifications?.show(`📤 WhatsApp abierto para ${contact?.name || 'el contacto'}`, 'success');
+  }
+
+  /**
+   * Renderiza tab de recordatorios
    */
   renderScheduledTab() {
     return `
       <div class="space-y-6">
         <div class="flex items-center justify-between">
-          <h3 class="text-2xl font-bold text-gray-900 dark:text-white">📅 Mensajes Programados</h3>
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white">📅 Recordatorios</h3>
           <button onclick="window.whatsappUpdater?.scheduleNewMessage()"
                   class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-all">
-            ➕ Programar mensaje
+            ➕ Programar recordatorio
           </button>
         </div>
 
@@ -444,10 +565,10 @@ class WhatsAppUpdater {
         ` : `
           <div class="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-xl">
             <div class="text-6xl mb-4">📅</div>
-            <p class="text-gray-600 dark:text-gray-400 mb-4">No hay mensajes programados</p>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">No hay recordatorios programados</p>
             <button onclick="window.whatsappUpdater?.scheduleNewMessage()"
                     class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-all">
-              Programar primer mensaje
+              Programar el primero
             </button>
           </div>
         `}
@@ -456,57 +577,181 @@ class WhatsAppUpdater {
   }
 
   /**
-   * Renderiza un mensaje programado
+   * Renderiza un recordatorio programado
    */
   renderScheduledMessage(msg) {
     const template = this.MESSAGE_TEMPLATES[msg.template];
+    const group = this.contactGroups.find(g => g.id === msg.recipientGroup);
     const scheduledDate = new Date(msg.scheduledFor);
-    const now = new Date();
-    const isPast = scheduledDate < now;
+    const isDue = scheduledDate <= new Date();
+    // Vista previa con los datos actuales del viaje (la variante/campos
+    // personalizados todavía no se eligen a esta altura del flujo, así que
+    // se muestra la primera variante rellenada con las variables automáticas).
+    const previewVariant = template?.templates?.[0];
+    const preview = previewVariant ? this.fillTemplate(previewVariant, this.getTemplateVariables()) : '';
 
     return `
-      <div class="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
+      <div class="bg-white dark:bg-gray-800 border-2 ${isDue ? 'border-green-400 dark:border-green-600' : 'border-gray-200 dark:border-gray-700'} rounded-xl p-6">
         <div class="flex items-start gap-4">
-          <div class="text-4xl">${template.icon}</div>
+          <div class="text-4xl">${template?.icon || '💬'}</div>
           <div class="flex-1">
             <div class="flex items-start justify-between mb-2">
               <div>
-                <h4 class="font-bold text-gray-900 dark:text-white">${template.name}</h4>
-                <div class="text-sm text-gray-600 dark:text-gray-400">
-                  Para: ${msg.recipients.map(r => this.contactGroups.find(g => g.id === r)?.name).join(', ')}
-                </div>
+                <h4 class="font-bold text-gray-900 dark:text-white">${template?.name || 'Mensaje'}</h4>
+                <div class="text-sm text-gray-600 dark:text-gray-400">Para: ${group?.name || 'Grupo eliminado'}</div>
               </div>
-              <span class="px-3 py-1 ${isPast ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'} rounded-full text-xs font-medium">
-                ${msg.status === 'pending' ? '⏰ Pendiente' : '✓ Enviado'}
+              <span class="px-3 py-1 ${isDue ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300'} rounded-full text-xs font-medium">
+                ${isDue ? '🔔 Listo para enviar' : '⏰ Pendiente'}
               </span>
             </div>
 
-            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 mb-3">
-              <p class="text-gray-700 dark:text-gray-300">
-                ${this.fillTemplate(template.templates[0], msg.variables)}
-              </p>
+            <div class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              📅 ${scheduledDate.toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' })}
             </div>
 
-            <div class="flex items-center justify-between">
-              <div class="text-sm text-gray-600 dark:text-gray-400">
-                📅 ${scheduledDate.toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' })}
+            ${preview ? `
+              <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-3">
+                <p class="text-gray-700 dark:text-gray-300 text-sm">${escapeHTML(preview)}</p>
               </div>
+            ` : ''}
 
-              <div class="flex gap-2">
-                <button onclick="window.whatsappUpdater?.editScheduled('${msg.id}')"
-                        class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all text-sm">
-                  ✏️ Editar
-                </button>
-                <button onclick="window.whatsappUpdater?.deleteScheduled('${msg.id}')"
-                        class="px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all text-sm">
-                  🗑️ Eliminar
-                </button>
-              </div>
+            <div class="flex gap-2 flex-wrap">
+              <button onclick="window.whatsappUpdater?.selectTemplate('${msg.template}')"
+                      class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all text-sm">
+                📤 Enviar ahora
+              </button>
+              <button onclick="window.whatsappUpdater?.scheduleNewMessage('${msg.id}')"
+                      class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all text-sm">
+                ✏️ Editar
+              </button>
+              <button onclick="window.whatsappUpdater?.deleteScheduled('${msg.id}')"
+                      class="px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all text-sm">
+                🗑️ Eliminar
+              </button>
             </div>
           </div>
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Formulario para programar o editar un recordatorio
+   */
+  scheduleNewMessage(editId = null) {
+    const editing = editId ? this.scheduledMessages.find(m => m.id === editId) : null;
+    const content = document.getElementById('whatsappContent');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="space-y-6">
+        <button onclick="window.whatsappUpdater?.showTab('scheduled')" class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">← Volver</button>
+        <div class="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">${editing ? 'Editar recordatorio' : 'Programar recordatorio'}</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Japitin te avisará dentro de la app a la hora elegida para que compongas y envíes el mensaje (necesita la app abierta).</p>
+
+          <form onsubmit="window.whatsappUpdater?.saveScheduledMessage(event, ${editing ? `'${editing.id}'` : 'null'})" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Template</label>
+              <select name="template" class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" required>
+                ${Object.entries(this.MESSAGE_TEMPLATES).map(([key, t]) => `
+                  <option value="${key}" ${editing?.template === key ? 'selected' : ''}>${t.icon} ${t.name}</option>
+                `).join('')}
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fecha y hora</label>
+              <input type="datetime-local" name="scheduledFor" required
+                     value="${editing ? editing.scheduledFor.slice(0, 16) : ''}"
+                     class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Destinatarios</label>
+              <select name="recipientGroup" class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" required>
+                <option value="">Selecciona...</option>
+                ${this.contactGroups.map(g => `
+                  <option value="${g.id}" ${editing?.recipientGroup === g.id ? 'selected' : ''}>${g.icon} ${g.name}</option>
+                `).join('')}
+              </select>
+            </div>
+
+            <button type="submit" class="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-all">
+              ${editing ? 'Guardar cambios' : 'Programar'}
+            </button>
+          </form>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Guarda (crea o edita) un recordatorio y arma su aviso
+   */
+  saveScheduledMessage(event, editId) {
+    event.preventDefault();
+    const data = new FormData(event.target);
+    const entry = {
+      id: editId || `sched_${Date.now()}`,
+      template: data.get('template'),
+      // Se guarda tal cual el valor local del input datetime-local (sin
+      // convertir a UTC) para que el formulario de edición pueda
+      // pre-rellenarlo con slice(0, 16) sin desfasarse por zona horaria.
+      scheduledFor: data.get('scheduledFor'),
+      recipientGroup: data.get('recipientGroup'),
+      status: 'pending'
+    };
+
+    if (editId) {
+      const idx = this.scheduledMessages.findIndex(m => m.id === editId);
+      if (idx >= 0) this.scheduledMessages[idx] = entry;
+    } else {
+      this.scheduledMessages.push(entry);
+    }
+
+    this.saveState();
+    this.armReminder(entry);
+
+    if (window.Notification && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    window.Notifications?.show('✅ Recordatorio guardado', 'success');
+    this.showTab('scheduled');
+  }
+
+  /**
+   * Arma los avisos para todos los recordatorios pendientes (al abrir la app)
+   */
+  scheduleReminders() {
+    this.reminderTimers.forEach(t => clearTimeout(t));
+    this.reminderTimers = [];
+    this.scheduledMessages
+      .filter(m => m.status === 'pending')
+      .forEach(m => this.armReminder(m));
+  }
+
+  /**
+   * Arma un único aviso (setTimeout, solo funciona con la app abierta)
+   */
+  armReminder(entry) {
+    const msUntil = new Date(entry.scheduledFor).getTime() - Date.now();
+    const MAX_TIMEOUT = 2 ** 31 - 1; // límite máximo de setTimeout en el navegador
+    if (msUntil <= 0 || msUntil > MAX_TIMEOUT) return;
+
+    const timer = setTimeout(() => {
+      const template = this.MESSAGE_TEMPLATES[entry.template];
+      window.Notifications?.show(`🔔 Recordatorio: "${template?.name || 'mensaje'}" listo para enviar`, 'info');
+      if (window.Notification && Notification.permission === 'granted') {
+        new Notification('Japitin', {
+          body: `${template?.name || 'Mensaje'} listo para enviar por WhatsApp`,
+          icon: '/images/icons/icon-192.png'
+        });
+      }
+    }, msUntil);
+
+    this.reminderTimers.push(timer);
   }
 
   /**
@@ -525,14 +770,14 @@ class WhatsAppUpdater {
                 <h4 class="font-bold text-gray-900 dark:text-white">${template.name}</h4>
                 <div class="text-sm text-gray-600 dark:text-gray-400">${template.templates.length} variaciones</div>
               </div>
-              <button onclick="window.whatsappUpdater?.useTemplate('${key}')"
+              <button onclick="window.whatsappUpdater?.selectTemplate('${key}')"
                       class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all text-sm">
                 Usar →
               </button>
             </div>
 
             <div class="space-y-2">
-              ${template.templates.map((text, index) => `
+              ${template.templates.map((text) => `
                 <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
                   <p class="text-gray-700 dark:text-gray-300 text-sm">${text}</p>
                 </div>
@@ -599,6 +844,64 @@ class WhatsAppUpdater {
   }
 
   /**
+   * Formulario para añadir un contacto real
+   */
+  addContact(groupId = null) {
+    const content = document.getElementById('whatsappContent');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="space-y-6">
+        <button onclick="window.whatsappUpdater?.showTab('contacts')" class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">← Volver</button>
+        <div class="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6 max-w-md">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">➕ Añadir contacto</h3>
+          <form onsubmit="window.whatsappUpdater?.saveContact(event)" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nombre</label>
+              <input name="name" type="text" required class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Teléfono (con código de país)</label>
+              <input name="phone" type="tel" required placeholder="+34612345678"
+                     class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Grupo</label>
+              <select name="groupId" class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" required>
+                ${this.contactGroups.map(g => `<option value="${g.id}" ${g.id === groupId ? 'selected' : ''}>${g.icon} ${g.name}</option>`).join('')}
+              </select>
+            </div>
+            <button type="submit" class="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-all">Guardar</button>
+          </form>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Valida y guarda el contacto nuevo
+   */
+  saveContact(event) {
+    event.preventDefault();
+    const data = new FormData(event.target);
+    const phone = data.get('phone').trim();
+    const digits = phone.replace(/[^\d]/g, '');
+
+    if (digits.length < 8) {
+      window.Notifications?.show('❌ Número de teléfono inválido. Incluye el código de país.', 'error');
+      return;
+    }
+
+    const group = this.contactGroups.find(g => g.id === data.get('groupId'));
+    if (!group) return;
+
+    group.contacts.push({ name: data.get('name').trim(), phone });
+    this.saveState();
+    window.Notifications?.show('✅ Contacto añadido', 'success');
+    this.showTab('contacts');
+  }
+
+  /**
    * Renderiza tab de historial
    */
   renderHistoryTab() {
@@ -609,7 +912,7 @@ class WhatsAppUpdater {
         ${this.sentMessages.length > 0 ? `
           <div class="space-y-3">
             ${this.sentMessages.map(msg => {
-              const template = this.MESSAGE_TEMPLATES[msg.template];
+              const template = this.MESSAGE_TEMPLATES[msg.template] || { icon: '✍️', name: 'Mensaje personalizado' };
               return `
                 <div class="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4">
                   <div class="flex items-start gap-4">
@@ -622,17 +925,17 @@ class WhatsAppUpdater {
                             ${new Date(msg.sentAt).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' })}
                           </div>
                         </div>
-                        <span class="px-2 py-1 ${msg.delivered ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-yellow-100 text-yellow-700'} rounded-full text-xs">
-                          ${msg.delivered ? '✓✓ Entregado' : '⏳ Enviando'}
+                        <span class="px-2 py-1 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded-full text-xs">
+                          📤 Abierto en WhatsApp
                         </span>
                       </div>
 
                       <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 mb-2">
-                        <p class="text-gray-700 dark:text-gray-300 text-sm">${msg.message}</p>
+                        <p class="text-gray-700 dark:text-gray-300 text-sm">${escapeHTML(msg.message)}</p>
                       </div>
 
                       <div class="text-xs text-gray-600 dark:text-gray-400">
-                        Enviado a: ${msg.recipients.map(r => this.contactGroups.find(g => g.id === r)?.name).join(', ')}
+                        Para: ${msg.recipient}
                       </div>
                     </div>
                   </div>
@@ -654,7 +957,6 @@ class WhatsAppUpdater {
    * Cambia de tab
    */
   showTab(tabName) {
-    // Update tab buttons
     document.querySelectorAll('.tab-button').forEach(btn => {
       btn.className = 'px-6 py-3 font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 tab-button';
     });
@@ -664,11 +966,10 @@ class WhatsAppUpdater {
       activeTab.className = 'px-6 py-3 font-medium border-b-2 border-green-500 text-green-600 dark:text-green-400 tab-button';
     }
 
-    // Update content
     const content = document.getElementById('whatsappContent');
     if (!content) return;
 
-    switch(tabName) {
+    switch (tabName) {
       case 'quick':
         content.innerHTML = this.renderQuickSendTab();
         break;
@@ -699,69 +1000,15 @@ class WhatsAppUpdater {
   }
 
   /**
-   * Envío rápido con template predefinido
-   */
-  quickSend(templateKey) {
-    // TODO: Implementar modal de confirmación y envío
-    alert(`Enviando mensaje de tipo: ${this.MESSAGE_TEMPLATES[templateKey].name}`);
-  }
-
-  /**
-   * Selecciona un template para personalizar
-   */
-  selectTemplate(templateKey) {
-    // TODO: Abrir modal con el template seleccionado y opciones de personalización
-    console.log('Selected template:', templateKey);
-  }
-
-  /**
-   * Usa un template directamente
-   */
-  useTemplate(templateKey) {
-    this.selectTemplate(templateKey);
-  }
-
-  /**
-   * Envía mensaje personalizado
-   */
-  sendCustomMessage(event) {
-    event.preventDefault();
-    // TODO: Implementar envío con API de WhatsApp Business
-    alert('✓ Mensaje enviado!');
-    event.target.reset();
-  }
-
-  /**
-   * Programa un nuevo mensaje
-   */
-  scheduleNewMessage() {
-    // TODO: Abrir modal para programar mensaje
-    alert('Programar mensaje - Modal coming soon!');
-  }
-
-  /**
-   * Edita mensaje programado
-   */
-  editScheduled(msgId) {
-    console.log('Edit scheduled:', msgId);
-  }
-
-  /**
-   * Elimina mensaje programado
+   * Elimina un recordatorio programado
    */
   deleteScheduled(msgId) {
-    if (confirm('¿Eliminar este mensaje programado?')) {
+    if (confirm('¿Eliminar este recordatorio?')) {
       this.scheduledMessages = this.scheduledMessages.filter(m => m.id !== msgId);
+      this.saveState();
+      this.scheduleReminders();
       this.showTab('scheduled');
     }
-  }
-
-  /**
-   * Añade un contacto
-   */
-  addContact() {
-    // TODO: Modal para añadir contacto
-    alert('Añadir contacto - Modal coming soon!');
   }
 
   /**
@@ -772,6 +1019,7 @@ class WhatsAppUpdater {
       const group = this.contactGroups.find(g => g.id === groupId);
       if (group) {
         group.contacts = group.contacts.filter(c => c.name !== contactName);
+        this.saveState();
         this.showTab('contacts');
       }
     }
@@ -781,7 +1029,6 @@ class WhatsAppUpdater {
    * Cierra el updater
    */
   close() {
-    // Usar ModalManager si está disponible
     if (window.ModalManager) {
       window.ModalManager.closeModal('whatsappUpdaterModal');
     } else {

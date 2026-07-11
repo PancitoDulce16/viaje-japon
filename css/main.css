@@ -508,6 +508,16 @@ html.dark .header-chip-badge {
   font-size: 0.62rem;
 }
 
+/* Con el panel de menú abierto (dashboard.js setupMobileMenu), los FABs
+   flotantes (chat, accesibilidad, menú principal) quedaban por encima del
+   panel por tener z-index más alto - ocultarlos mientras el panel está abierto. */
+body.menu-panel-open #chatBtnContainer,
+body.menu-panel-open #main-fab-button,
+body.menu-panel-open #a11yButton,
+body.menu-panel-open #pwa-install-button {
+  display: none !important;
+}
+
 html.dark .sos-button {
   border-color: rgba(212, 175, 55, 0.8);
   box-shadow: 0 3px 12px rgba(139, 0, 0, 0.7);

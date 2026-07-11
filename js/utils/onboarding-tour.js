@@ -14,7 +14,7 @@ class OnboardingTour {
     // Tour steps para dashboard
     this.dashboardSteps = [
       {
-        target: '#itinerary-section, [data-tour="itinerary"]',
+        target: '[data-tab="itinerary"]',
         title: '📅 Tu Itinerario',
         description: 'Aquí planificas día a día tu viaje. Puedes agregar lugares, horarios, y notas.',
         position: 'bottom',
@@ -22,31 +22,24 @@ class OnboardingTour {
         action: 'Empezar tour'
       },
       {
-        target: '#budget-section, [data-tour="budget"]',
+        target: '[data-tab="budget"]',
         title: '💰 Control de Gastos',
         description: 'Trackea todos tus gastos en tiempo real. Ver categorías, límites, y exportar reportes.',
         position: 'bottom',
         highlightPadding: 15
       },
       {
-        target: '[data-feature="locationGame"], .viral-features',
+        target: '#main-fab-button',
         title: '🎮 Features Virales',
-        description: 'Descubre 7 features sociales: juegos, challenges, travel twins, hidden gems y más!',
+        description: 'Descubre features sociales: juegos, challenges, travel twins, hidden gems y más!',
         position: 'left',
         highlightPadding: 15
       },
       {
-        target: '#map-section, [data-tour="map"]',
+        target: '[data-tab="map"]',
         title: '🗺️ Mapa Interactivo',
         description: 'Visualiza todas tus ubicaciones en el mapa. Conecta con otros viajeros.',
         position: 'top',
-        highlightPadding: 10
-      },
-      {
-        target: '[data-tour="shortcuts"], .keyboard-shortcuts-trigger',
-        title: '⌨️ Atajos de Teclado',
-        description: 'Presiona ? para ver todos los shortcuts. Ctrl+K para command palette.',
-        position: 'left',
         highlightPadding: 10
       }
     ];

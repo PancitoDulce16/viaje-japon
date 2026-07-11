@@ -1,5 +1,7 @@
 // js/trip-story-generator.js - Generador automático de Instagram Stories del viaje
 
+import { downloadElementAsImage, slugifyFilename } from '../../utils/image-export.js';
+
 /**
  * Trip Story Generator
  * Crea historias visuales automáticas del viaje para compartir en redes sociales
@@ -448,12 +450,40 @@ export const TripStoryGenerator = {
    * Descarga todas las stories
    */
   async downloadStories() {
-    window.Notifications?.show('📥 Preparando descarga...', 'info');
+    if (!this.storySlides.length) {
+      window.Notifications?.show('❌ No hay stories para descargar', 'error');
+      return;
+    }
 
-    // TODO: Generar imágenes reales usando html2canvas
-    setTimeout(() => {
+    window.Notifications?.show(`📥 Generando ${this.storySlides.length} imágenes...`, 'info');
+
+    // Render cada slide en un contenedor fuera de pantalla para no interrumpir el preview
+    const offscreen = document.createElement('div');
+    offscreen.style.cssText = 'position:fixed; top:0; left:-9999px; width:375px; height:667px; overflow:hidden;';
+    document.body.appendChild(offscreen);
+
+    try {
+      const tripName = slugifyFilename(this.currentTrip?.info?.name);
+
+      for (let i = 0; i < this.storySlides.length; i++) {
+        offscreen.innerHTML = this.renderSlide(i);
+        await downloadElementAsImage(offscreen, `${tripName}-story-${i + 1}.png`);
+
+        // Pausa breve para que el navegador no bloquee descargas múltiples consecutivas
+        await new Promise(resolve => setTimeout(resolve, 400));
+      }
+
       window.Notifications?.show('✅ Stories descargadas! Revisa tu carpeta de descargas', 'success');
-    }, 2000);
+
+      if (window.GamificationSystem) {
+        window.GamificationSystem.trackAction('exportFormats', 1);
+      }
+    } catch (error) {
+      console.error('❌ Error generando imágenes de las stories:', error);
+      window.Notifications?.show('❌ No se pudieron generar las imágenes. Intenta de nuevo.', 'error');
+    } finally {
+      offscreen.remove();
+    }
   },
 
   /**

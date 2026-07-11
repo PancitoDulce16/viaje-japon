@@ -21,6 +21,16 @@ service cloud.firestore {
              request.auth.uid in trip.data.members;
     }
 
+    // Helper to check the caller is a participant of a Travel Twins DM thread
+    function isThreadParticipant(threadId) {
+      let thread = get(/databases/$(database)/documents/travelTwinsThreads/$(threadId));
+      return isSignedIn() &&
+             thread.data != null &&
+             'participants' in thread.data &&
+             thread.data.participants is list &&
+             request.auth.uid in thread.data.participants;
+    }
+
     function isNewDataValidExpense(data) {
         return data.desc is string &&
                data.amount is number && data.amount > 0 &&
@@ -153,6 +163,67 @@ service cloud.firestore {
       match /polls/{pollId} {
         allow read: if isTripMember(tripId);
         allow write: if isTripMember(tripId);
+      }
+    }
+
+    // =====================================================================
+    // Reglas para 'posts' - feed social (Japitin Social). Cualquier usuario
+    // autenticado puede leer y publicar; solo el autor puede editar/borrar
+    // el post, pero cualquiera puede togglear 'likes' o incrementar
+    // 'commentCount' (esos son los únicos campos que un no-autor puede tocar).
+    // =====================================================================
+    match /posts/{postId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        resource.data.authorId == request.auth.uid ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'commentCount'])
+      );
+      allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+
+      match /comments/{commentId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+        allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+        allow update: if false;
+      }
+    }
+
+    // =====================================================================
+    // Reglas para 'travelTwinsPool' - resumen de viajes que optaron por ser
+    // visibles para el matching de Travel Twins (opt-in, no todos los viajes)
+    // Doc ID = tripId. Solo contiene datos ya pensados para ser públicos
+    // (ciudades, fechas, presupuesto, intereses) - nunca el itinerario real.
+    // =====================================================================
+    match /travelTwinsPool/{tripId} {
+      // Cualquier usuario autenticado puede ver el pool para buscar matches
+      allow read: if isSignedIn();
+
+      // Solo un miembro del viaje puede publicar/actualizar/retirar su propio resumen
+      allow create, update: if isTripMember(tripId) &&
+                                request.resource.data.ownerId == request.auth.uid;
+      allow delete: if isTripMember(tripId);
+    }
+
+    // =====================================================================
+    // Reglas para 'travelTwinsThreads' - mensajes directos entre dos usuarios
+    // que se encontraron vía Travel Twins. Thread ID = "uidA_uidB" (ordenados).
+    // =====================================================================
+    match /travelTwinsThreads/{threadId} {
+      allow read: if isSignedIn() &&
+                     'participants' in resource.data &&
+                     request.auth.uid in resource.data.participants;
+      allow create: if isSignedIn() &&
+                       request.auth.uid in request.resource.data.participants &&
+                       request.resource.data.participants.size() == 2;
+      allow update: if isSignedIn() &&
+                       request.auth.uid in resource.data.participants;
+
+      match /messages/{messageId} {
+        allow read: if isThreadParticipant(threadId);
+        allow create: if isThreadParticipant(threadId) &&
+                          request.resource.data.senderId == request.auth.uid;
+        allow update, delete: if false;
       }
     }
   }

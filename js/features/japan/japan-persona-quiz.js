@@ -1,5 +1,7 @@
 // js/japan-persona-quiz.js - Quiz viral tipo BuzzFeed "What type of Japan traveler are you?"
 
+import { downloadElementAsImage, slugifyFilename } from '../../utils/image-export.js';
+
 /**
  * Japan Persona Quiz
  * Quiz viral para determinar qué tipo de viajero a Japón eres
@@ -320,7 +322,7 @@ export const JapanPersonaQuiz = {
       <div id="quizResultModal" class="fixed inset-0 z-50 bg-gradient-to-br ${persona.color} flex items-center justify-center p-4">
 
         <!-- Result Container -->
-        <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
+        <div id="quizResultCard" class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
 
           <!-- Confetti Header -->
           <div class="relative p-12 text-center bg-gradient-to-br ${persona.color} text-white overflow-hidden">
@@ -371,7 +373,7 @@ export const JapanPersonaQuiz = {
             </div>
 
             <!-- Share -->
-            <div class="bg-gradient-to-r ${persona.color} p-6 rounded-2xl text-white text-center">
+            <div data-export-ignore class="bg-gradient-to-r ${persona.color} p-6 rounded-2xl text-white text-center">
               <p class="text-lg font-semibold mb-4">
                 ¡Comparte tu resultado con tus amigos!
               </p>
@@ -390,7 +392,7 @@ export const JapanPersonaQuiz = {
           </div>
 
           <!-- Footer Actions -->
-          <div class="p-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+          <div data-export-ignore class="p-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex gap-3">
             <button onclick="window.JapanPersonaQuiz.restart()"
                     class="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-bold rounded-lg transition">
               🔄 Reintentar
@@ -432,12 +434,26 @@ export const JapanPersonaQuiz = {
   /**
    * Descarga el resultado como imagen
    */
-  downloadResult(personaKey) {
+  async downloadResult(personaKey) {
+    const cardEl = document.getElementById('quizResultCard');
+    if (!cardEl) {
+      window.Notifications?.show('❌ No se encontró el resultado para descargar', 'error');
+      return;
+    }
+
     window.Notifications?.show('📥 Preparando descarga...', 'info');
-    // TODO: Usar html2canvas
-    setTimeout(() => {
+
+    try {
+      const persona = this.PERSONAS[personaKey];
+      const filename = slugifyFilename(persona?.name, 'japitin-persona');
+      const ok = await downloadElementAsImage(cardEl, `${filename}-japitin.png`);
+      if (!ok) throw new Error('No se pudo generar la imagen');
+
       window.Notifications?.show('✅ Resultado descargado!', 'success');
-    }, 1500);
+    } catch (error) {
+      console.error('❌ Error generando imagen del resultado:', error);
+      window.Notifications?.show('❌ No se pudo generar la imagen. Intenta de nuevo.', 'error');
+    }
   },
 
   /**

@@ -1101,19 +1101,19 @@ export const TripsManager = {
             onclick="TripsManager.showCreateTripModal()"
             class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2.5 px-3 sm:px-6 rounded-lg transition hover:scale-105 shadow-md text-sm"
           >
-            ➕ <span class="hidden sm:inline">Agregar Viaje</span>
+            ➕ <span>Agregar Viaje</span>
           </button>
           <button
             onclick="TripsManager.regenerateItinerary()"
             class="bg-purple-500/80 hover:bg-purple-600 text-white font-semibold py-2.5 px-3 sm:px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-purple-400/30 text-sm shadow-lg"
           >
-            🧠 <span class="hidden sm:inline">Regenerar Itinerario</span>
+            🧠 <span>Regenerar</span>
           </button>
           <button
             onclick="TripsManager.clearItinerary()"
             class="bg-red-500/80 hover:bg-red-600 text-white font-semibold py-2.5 px-3 sm:px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-red-400/30 text-sm shadow-lg"
           >
-            🗑️ <span class="hidden sm:inline">Vaciar Itinerario</span>
+            🗑️ <span>Vaciar</span>
           </button>
 
           <!-- 🆕 Botón de Exportar con Dropdown -->
@@ -1123,7 +1123,7 @@ export const TripsManager = {
               id="exportButton"
               class="bg-green-500/80 hover:bg-green-600 text-white font-semibold py-2.5 px-3 sm:px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-green-400/30 text-sm shadow-lg flex items-center gap-2"
             >
-              📤 <span class="hidden sm:inline">Exportar</span>
+              📤 <span>Exportar</span>
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
               </svg>
@@ -1276,7 +1276,9 @@ export const TripsManager = {
           </div>
           <div class="text-3xl font-bold text-white mb-2 leading-tight">${totalDays} días</div>
           <div class="text-white/90 text-xs mb-3 font-medium">
-            ${daysUntil > 0 ? `Comienza en ${daysUntil} días` : tripProgress < 100 ? `Día ${daysElapsed} de ${totalDays}` : 'Completado'}
+            ${daysUntil > 0
+              ? `${window.TimeUtils.formatDate(this.currentTrip.info.dateStart, { day: 'numeric', month: 'short' })} - ${window.TimeUtils.formatDate(this.currentTrip.info.dateEnd, { day: 'numeric', month: 'short' })}`
+              : tripProgress < 100 ? `Día ${daysElapsed} de ${totalDays}` : 'Completado'}
           </div>
           <div class="w-full bg-white/20 dark:bg-white/10 rounded-full h-2">
             <div class="bg-white dark:bg-blue-300 h-2 rounded-full transition-all duration-500" style="width: ${tripProgress}%"></div>

@@ -10,93 +10,17 @@ export const UserMenu = {
         this.attachListeners();
     },
 
+    // El botón/opciones de este menú ahora viven en dashboard.html dentro de
+    // #mobileMenuPanel (el mismo panel que abre el hamburguesa del header) -
+    // antes este módulo creaba SU PROPIO botón flotante hamburguesa en la
+    // esquina superior derecha, duplicando #menuToggle del header y confundiendo
+    // cuál de los dos abría qué. Acá solo se inyecta el modal de perfil, que
+    // sigue siendo propio de este módulo.
     injectMenu() {
-        const existingMenu = document.getElementById('userMenuContainer');
-        if (existingMenu) return; // Ya existe
+        const existingModal = document.getElementById('userProfileModal');
+        if (existingModal) return; // Ya existe
 
         const menuHTML = `
-            <!-- User Menu Container -->
-            <div id="userMenuContainer" class="fixed top-4 right-4 z-50">
-                <!-- Menu Button -->
-                <button
-                    id="userMenuBtn"
-                    class="bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all transform hover:scale-110 smooth-scale btn-press"
-                    aria-label="Menú de usuario"
-                >
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </button>
-
-                <!-- Dropdown Menu -->
-                <div
-                    id="userMenuDropdown"
-                    class="hidden absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden animate-scale-in glass"
-                >
-                    <!-- User Header -->
-                    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-4 text-white">
-                        <div class="flex items-center gap-3">
-                            <div id="menuUserAvatar" class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center font-bold text-lg overflow-hidden">
-                                ?
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p id="menuUserName" class="font-bold truncate">Usuario</p>
-                                <p id="menuUserEmail" class="text-xs opacity-90 truncate">email@example.com</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Menu Items -->
-                    <div class="py-2">
-                        <button
-                            onclick="UserMenu.openProfile()"
-                            class="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition smooth-hover flex items-center gap-3 text-left"
-                        >
-                            <span class="text-2xl">👤</span>
-                            <div>
-                                <p class="font-semibold text-gray-800 dark:text-white">Mi Perfil</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Ver y editar información</p>
-                            </div>
-                        </button>
-
-                        <button
-                            onclick="UserMenu.openSettings()"
-                            class="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition smooth-hover flex items-center gap-3 text-left"
-                        >
-                            <span class="text-2xl">⚙️</span>
-                            <div>
-                                <p class="font-semibold text-gray-800 dark:text-white">Configuración</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Preferencias de la app</p>
-                            </div>
-                        </button>
-
-                        <button
-                            onclick="UserMenu.toggleDarkMode()"
-                            class="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition smooth-hover flex items-center gap-3 text-left"
-                        >
-                            <span class="text-2xl">🌓</span>
-                            <div>
-                                <p class="font-semibold text-gray-800 dark:text-white">Modo Oscuro</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400" id="darkModeStatus">Activar/Desactivar</p>
-                            </div>
-                        </button>
-
-                        <div class="border-t border-gray-200 dark:border-gray-700 my-2"></div>
-
-                        <button
-                            onclick="UserMenu.logout()"
-                            class="w-full px-4 py-3 hover:bg-red-50 dark:hover:bg-red-900/20 transition smooth-hover flex items-center gap-3 text-left text-red-600 dark:text-red-400"
-                        >
-                            <span class="text-2xl">🚪</span>
-                            <div>
-                                <p class="font-semibold">Cerrar Sesión</p>
-                                <p class="text-xs opacity-75">Salir de la cuenta</p>
-                            </div>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             <!-- Profile Modal -->
             <div id="userProfileModal" class="hidden fixed inset-0 bg-black/80 z-50 overflow-y-auto" onclick="UserMenu.closeProfileModal(event)">
                 <div class="min-h-screen px-4 py-8">
@@ -119,24 +43,7 @@ export const UserMenu = {
     },
 
     attachListeners() {
-        const menuBtn = document.getElementById('userMenuBtn');
-        const menuDropdown = document.getElementById('userMenuDropdown');
-
-        if (menuBtn) {
-            menuBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.toggleMenu();
-            });
-        }
-
-        // Cerrar al hacer click fuera
-        document.addEventListener('click', (e) => {
-            if (this.isOpen && menuDropdown && !menuDropdown.contains(e.target)) {
-                this.closeMenu();
-            }
-        });
-
-        // Actualizar info del usuario
+        // Actualizar info del usuario (avatar/nombre/email, ahora en #mobileMenuPanel)
         this.updateUserInfo();
 
         // Listen auth changes
@@ -145,20 +52,13 @@ export const UserMenu = {
         });
     },
 
-    toggleMenu() {
-        this.isOpen = !this.isOpen;
-        const dropdown = document.getElementById('userMenuDropdown');
-        if (dropdown) {
-            dropdown.classList.toggle('hidden', !this.isOpen);
-        }
-    },
-
+    // El panel que contenía estos botones era un dropdown propio; ahora es
+    // #mobileMenu (controlado por dashboard.js). Cerrarlo vía el botón de
+    // cierre existente mantiene el resto de los métodos (openProfile, logout,
+    // etc.) funcionando sin cambios.
     closeMenu() {
         this.isOpen = false;
-        const dropdown = document.getElementById('userMenuDropdown');
-        if (dropdown) {
-            dropdown.classList.add('hidden');
-        }
+        document.getElementById('menuClose')?.click();
     },
 
     updateUserInfo() {

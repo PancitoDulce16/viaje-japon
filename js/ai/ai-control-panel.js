@@ -81,26 +81,6 @@ class AIControlPanel {
       </div>
 
       <div class="p-6 space-y-6">
-        <!-- NLP Command Input -->
-        <div class="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-4 border-2 border-purple-200 dark:border-purple-700">
-          <h3 class="text-sm font-bold mb-2 flex items-center gap-2">
-            <span>🗣️</span>
-            <span>Comando Rápido</span>
-          </h3>
-          <input
-            type="text"
-            id="ai-quick-command"
-            placeholder='Ej: "Agrega más templos al día 3"'
-            class="w-full px-4 py-2 rounded-lg border border-purple-300 dark:border-purple-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-          <button
-            onclick="window.AIControlPanel.executeCommand()"
-            class="mt-2 w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg font-semibold transition"
-          >
-            Ejecutar
-          </button>
-        </div>
-
         <!-- Health Score -->
         <div id="ai-health-score" class="bg-white dark:bg-gray-700 rounded-xl p-4 border-2 border-gray-200 dark:border-gray-600">
           <h3 class="text-sm font-bold mb-3 flex items-center gap-2">
@@ -170,10 +150,6 @@ class AIControlPanel {
             <button onclick="window.AIControlPanel.detectAllAnomalies()" class="w-full text-left px-4 py-2 bg-white dark:bg-gray-600 hover:bg-gray-100 dark:hover:bg-gray-500 rounded-lg transition flex items-center gap-2">
               <span>🔍</span>
               <span class="text-sm">Detectar anomalías</span>
-            </button>
-            <button onclick="window.AIControlPanel.generateDescriptions()" class="w-full text-left px-4 py-2 bg-white dark:bg-gray-600 hover:bg-gray-100 dark:hover:bg-gray-500 rounded-lg transition flex items-center gap-2">
-              <span>✍️</span>
-              <span class="text-sm">Generar descripciones</span>
             </button>
           </div>
         </div>
@@ -481,31 +457,6 @@ class AIControlPanel {
   }
 
   /**
-   * 🗣️ Ejecuta comando NLP
-   */
-  async executeCommand() {
-    const input = document.getElementById('ai-quick-command');
-    if (!input || !input.value.trim()) return;
-
-    const command = input.value.trim();
-
-    if (!window.NLPCommandParser) {
-      alert('❌ NLP Parser no disponible');
-      return;
-    }
-
-    const parsed = window.NLPCommandParser.parse(command);
-
-    if (parsed.success) {
-      alert(`✅ Comando entendido:\n\nAcción: ${parsed.intent}\nConfianza: ${Math.round(parsed.confidence * 100)}%\n\nNota: Implementación de acciones próximamente`);
-    } else {
-      alert(`❌ No entendí el comando\n\n${parsed.error}\n\n${parsed.suggestion || ''}`);
-    }
-
-    input.value = '';
-  }
-
-  /**
    * ⚡ Acciones rápidas
    */
   async optimizeAllRoutes() {
@@ -513,7 +464,42 @@ class AIControlPanel {
       alert('⚠️ Selecciona un itinerario primero');
       return;
     }
-    alert('🧬 Optimizando rutas... (Implementación próximamente)');
+    if (!window.RouteOptimizer) {
+      alert('⚠️ El optimizador de rutas no está disponible');
+      return;
+    }
+
+    // Optimiza sobre el itinerario EN VIVO (window.ItineraryHandler.currentItinerary
+    // es la misma referencia que usa saveCurrentItineraryToFirebase), no sobre
+    // el snapshot que llega por el evento itineraryLoaded/itineraryUpdated.
+    const live = window.ItineraryHandler?.currentItinerary;
+    if (!live || !live.days) {
+      alert('⚠️ No se encontró el itinerario activo para optimizar');
+      return;
+    }
+
+    let optimizedDays = 0;
+    live.days.forEach(day => {
+      if (!day.activities || day.activities.length < 2) return;
+      const result = window.RouteOptimizer.optimizeRoute(day.activities, { optimizationMode: 'balanced' });
+      if (result.wasOptimized) {
+        day.activities = result.optimizedActivities;
+        optimizedDays++;
+      }
+    });
+
+    if (optimizedDays === 0) {
+      alert('ℹ️ No hay suficientes actividades con coordenadas para optimizar rutas.');
+      return;
+    }
+
+    try {
+      await window.saveCurrentItineraryToFirebase?.();
+      alert(`✅ ${optimizedDays} día(s) optimizados y guardados. Abre la pestaña Itinerario para verlos.`);
+    } catch (error) {
+      console.error('Error guardando rutas optimizadas:', error);
+      alert('❌ No se pudo guardar la optimización. Intenta de nuevo.');
+    }
   }
 
   async detectAllAnomalies() {
@@ -523,14 +509,6 @@ class AIControlPanel {
     }
     await this.analyzeAnomalies(this.currentItinerary);
     alert('✅ Anomalías detectadas. Revisa el panel.');
-  }
-
-  async generateDescriptions() {
-    if (!this.currentItinerary) {
-      alert('⚠️ Selecciona un itinerario primero');
-      return;
-    }
-    alert('✍️ Generando descripciones... (Implementación próximamente)');
   }
 
   /**

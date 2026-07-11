@@ -162,7 +162,8 @@ function predictCrowdLevel(day) {
     // Determinar día de la semana
     if (day.date) {
         try {
-            const date = new Date(day.date);
+            const date = window.TimeUtils ? window.TimeUtils.parseDate(day.date) : new Date(day.date);
+            if (!date) throw new Error('Invalid date');
             factors.dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
             factors.isWeekend = factors.dayOfWeek === 0 || factors.dayOfWeek === 6;
 

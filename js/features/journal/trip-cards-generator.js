@@ -1,5 +1,7 @@
 // js/trip-cards-generator.js - Generador de tarjetas visuales compartibles
 
+import { downloadElementAsImage, slugifyFilename } from '../../utils/image-export.js';
+
 /**
  * Trip Cards Generator
  * Genera tarjetas visuales hermosas para compartir en redes sociales
@@ -550,12 +552,28 @@ export const TripCardsGenerator = {
    * Descarga la card como imagen
    */
   async downloadCard(type) {
-    window.Notifications?.show('📥 Preparando descarga...', 'info');
+    const cardEl = document.getElementById('cardContent');
+    if (!cardEl) {
+      window.Notifications?.show('❌ No se encontró la tarjeta para descargar', 'error');
+      return;
+    }
 
-    // TODO: Usar html2canvas para convertir a imagen
-    setTimeout(() => {
+    window.Notifications?.show('📥 Generando imagen...', 'info');
+
+    try {
+      const tripName = slugifyFilename(this.currentTrip?.info?.name);
+      const ok = await downloadElementAsImage(cardEl, `${tripName}-${type}-card.png`);
+      if (!ok) throw new Error('No se pudo generar la imagen');
+
       window.Notifications?.show('✅ Card descargada! Revisa tu carpeta de descargas', 'success');
-    }, 1500);
+
+      if (window.GamificationSystem) {
+        window.GamificationSystem.trackAction('exportFormats', 1);
+      }
+    } catch (error) {
+      console.error('❌ Error generando imagen de la card:', error);
+      window.Notifications?.show('❌ No se pudo generar la imagen. Intenta de nuevo.', 'error');
+    }
   },
 
   /**

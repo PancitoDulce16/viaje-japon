@@ -550,7 +550,8 @@ class SmartDescriptionGenerator {
   determineSeason(startDate) {
     if (!startDate) return null;
 
-    const date = new Date(startDate);
+    const date = window.TimeUtils ? window.TimeUtils.parseDate(startDate) : new Date(startDate);
+    if (!date) return null;
     const month = date.getMonth() + 1;
 
     if (month >= 3 && month <= 5) return 'spring';

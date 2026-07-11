@@ -481,7 +481,7 @@ class FatiguePredictor {
     });
 
     // Predict fatigue after remaining activities
-    const predictedFatigue = currentFatigue;
+    let predictedFatigue = currentFatigue;
     remainingActivities.forEach(activity => {
       const activityFatigue = this.calculateActivityFatigue(activity, this.userFatigueProfile);
       predictedFatigue += activityFatigue.total;

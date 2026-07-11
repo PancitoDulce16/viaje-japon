@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "dompurify": "^3.3.0",
-    "firebase": "^12.15.0"
+    "firebase": "^12.15.0",
+    "html2canvas": "^1.4.1"
   }
 }

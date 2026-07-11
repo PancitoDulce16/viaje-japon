@@ -338,6 +338,11 @@ class EnhancedDashboard {
   calculateDaysUntilTrip(itinerary) {
     if (!itinerary || !itinerary.startDate) return '--';
 
+    if (window.TimeUtils) {
+      const today = window.TimeUtils.toISODate(new Date());
+      return window.TimeUtils.daysBetween(today, itinerary.startDate);
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 

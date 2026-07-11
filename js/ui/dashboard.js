@@ -432,6 +432,9 @@ class DashboardManager {
         // Abrir menú
         menuToggle.addEventListener('click', () => {
             mobileMenu.classList.remove('hidden');
+            // Los FABs flotantes (chat, accesibilidad, menú principal) tienen
+            // z-index muy alto y quedaban flotando encima del panel del menú.
+            document.body.classList.add('menu-panel-open');
             setTimeout(() => {
                 mobileMenuPanel.classList.remove('translate-x-full');
             }, 10);
@@ -440,6 +443,7 @@ class DashboardManager {
         // Cerrar menú
         const closeMenu = () => {
             mobileMenuPanel.classList.add('translate-x-full');
+            document.body.classList.remove('menu-panel-open');
             setTimeout(() => {
                 mobileMenu.classList.add('hidden');
             }, 300);

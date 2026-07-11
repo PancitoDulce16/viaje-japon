@@ -2,6 +2,8 @@
 // Detecta huecos apropiados para comidas y sugiere restaurantes cercanos
 // Version: 2.2 - Flexible meal slot detection (before/between/after activities)
 
+import { deriveRestaurantArea } from './smart-itinerary-generator.js';
+
 /**
  * Sistema de Inserción Automática de Comidas
  * Analiza el itinerario y sugiere dónde insertar comidas
@@ -773,6 +775,7 @@ export const MealInsertionSystem = {
       icon: mealType === 'breakfast' ? '🥐' : mealType === 'lunch' ? '🍜' : '🍱',
       coordinates: restaurant?.coordinates || null,
       address: restaurant?.address || '',
+      area: deriveRestaurantArea(restaurant),
       rating: restaurant?.rating || null,
       cost: estimatedCost,
       desc: restaurant ? `${restaurant.address || ''}${restaurant.rating ? ` • ⭐ ${restaurant.rating}` : ''}` : '',

@@ -364,8 +364,8 @@ class CrowdDetector {
     // Obtener nivel de multitudes para rango de fechas
     analyzeDateRange(startDate, endDate) {
         const results = [];
-        let currentDate = new Date(startDate);
-        const end = new Date(endDate);
+        let currentDate = window.TimeUtils?.parseDate(startDate) || new Date(startDate);
+        const end = window.TimeUtils?.parseDate(endDate) || new Date(endDate);
 
         while (currentDate <= end) {
             results.push(this.analyzeCrowdLevel(currentDate));

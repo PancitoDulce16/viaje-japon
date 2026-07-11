@@ -4,13 +4,15 @@
  *
  * Real-time assistance when in Japan:
  * - Geolocation detection
- * - Nearby recommendations
+ * - Nearby recommendations (Foursquare, via APIsIntegration)
  * - Context-aware suggestions
  * - Emergency assistance
  * - Offline mode
  * - Quick phrases
  * - Local services (ATM, konbini, pharmacy)
  */
+
+import { APIsIntegration } from '../../api/apis-integration.js';
 
 class LiveMode {
   constructor() {
@@ -147,23 +149,38 @@ class LiveMode {
   }
 
   /**
-   * Get nearby recommendations
+   * Formatea una distancia en metros (la que devuelve Foursquare) para mostrarla
    */
-  getNearbyRecommendations() {
+  formatDistance(meters) {
+    if (meters === null || meters === undefined || isNaN(meters)) return '';
+    return meters < 1000 ? `${Math.round(meters)}m` : `${(meters / 1000).toFixed(1)}km`;
+  }
+
+  /**
+   * Get nearby recommendations (llamadas reales a Foursquare vía APIsIntegration,
+   * usando la ubicación GPS actual - antes esto devolvía listas fijas por ciudad)
+   */
+  async getNearbyRecommendations() {
     if (!this.currentLocation) {
       return {
         error: 'Location not available'
       };
     }
 
-    // Determine city/area based on coordinates
+    // Determine city/area based on coordinates (solo para mostrar el nombre del área)
     const area = this.detectArea(this.currentLocation.lat, this.currentLocation.lng);
+
+    const [restaurants, attractions, services] = await Promise.all([
+      this.getNearbyRestaurants(),
+      this.getNearbyAttractions(),
+      this.getNearbyServices()
+    ]);
 
     return {
       area: area,
-      restaurants: this.getNearbyRestaurants(area),
-      attractions: this.getNearbyAttractions(area),
-      services: this.getNearbyServices(area),
+      restaurants,
+      attractions,
+      services,
       tips: this.getContextualTips(area)
     };
   }
@@ -209,86 +226,71 @@ class LiveMode {
   }
 
   /**
-   * Get nearby restaurants
+   * Get nearby restaurants (Foursquare, radio 1.5km alrededor de la posición actual)
    */
-  getNearbyRestaurants(area) {
-    const restaurants = {
-      Shibuya: [
-        { name: 'Ichiran Ramen', type: 'Ramen', distance: '0.3km', rating: 4.5 },
-        { name: 'Genki Sushi', type: 'Sushi', distance: '0.5km', rating: 4.3 },
-        { name: 'Harajuku Gyoza Lou', type: 'Gyoza', distance: '0.8km', rating: 4.6 }
-      ],
-      Shinjuku: [
-        { name: 'Fuunji', type: 'Tsukemen', distance: '0.2km', rating: 4.7 },
-        { name: 'Omoide Yokocho', type: 'Izakaya Street', distance: '0.4km', rating: 4.5 },
-        { name: 'Nakajima', type: 'Tonkatsu', distance: '0.6km', rating: 4.4 }
-      ],
-      Asakusa: [
-        { name: 'Sometaro', type: 'Okonomiyaki', distance: '0.3km', rating: 4.6 },
-        { name: 'Asakusa Imahan', type: 'Sukiyaki', distance: '0.5km', rating: 4.5 },
-        { name: 'Daikokuya', type: 'Tempura', distance: '0.2km', rating: 4.7 }
-      ],
-      Kyoto: [
-        { name: 'Ippudo', type: 'Ramen', distance: '0.4km', rating: 4.5 },
-        { name: 'Nishiki Market', type: 'Food Market', distance: '0.6km', rating: 4.8 },
-        { name: 'Gion Kappa', type: 'Traditional', distance: '0.7km', rating: 4.6 }
-      ],
-      Osaka: [
-        { name: 'Dotonbori Kukuru', type: 'Takoyaki', distance: '0.2km', rating: 4.6 },
-        { name: 'Kiji', type: 'Okonomiyaki', distance: '0.5km', rating: 4.7 },
-        { name: 'Ichiran Dotonbori', type: 'Ramen', distance: '0.3km', rating: 4.5 }
-      ]
-    };
+  async getNearbyRestaurants() {
+    const { lat, lng } = this.currentLocation;
+    const result = await APIsIntegration.searchNearbyPlaces(lat, lng, 'restaurant', 1500);
+    if (!result.success) return [];
 
-    return restaurants[area] || [];
+    return result.places.slice(0, 6).map(place => ({
+      name: place.name,
+      type: place.category,
+      distance: this.formatDistance(place.distance),
+      rating: place.rating || null,
+      lat: place.lat,
+      lng: place.lng
+    }));
   }
 
   /**
-   * Get nearby attractions
+   * Get nearby attractions (Foursquare, radio 3km)
    */
-  getNearbyAttractions(area) {
-    const attractions = {
-      Shibuya: [
-        { name: 'Shibuya Crossing', distance: '0.1km', type: 'Landmark' },
-        { name: 'Hachiko Statue', distance: '0.2km', type: 'Monument' },
-        { name: 'Shibuya Sky', distance: '0.3km', type: 'Observatory' }
-      ],
-      Shinjuku: [
-        { name: 'Tokyo Metropolitan Building', distance: '0.5km', type: 'Observatory' },
-        { name: 'Kabukicho', distance: '0.3km', type: 'Entertainment' },
-        { name: 'Shinjuku Gyoen', distance: '0.8km', type: 'Park' }
-      ],
-      Asakusa: [
-        { name: 'Sensoji Temple', distance: '0.2km', type: 'Temple' },
-        { name: 'Nakamise Shopping Street', distance: '0.1km', type: 'Shopping' },
-        { name: 'Tokyo Skytree', distance: '1.2km', type: 'Tower' }
-      ],
-      Kyoto: [
-        { name: 'Fushimi Inari', distance: '2km', type: 'Shrine' },
-        { name: 'Kinkakuji', distance: '5km', type: 'Temple' },
-        { name: 'Gion District', distance: '0.5km', type: 'Historic' }
-      ],
-      Osaka: [
-        { name: 'Dotonbori', distance: '0.1km', type: 'Entertainment' },
-        { name: 'Osaka Castle', distance: '2km', type: 'Castle' },
-        { name: 'Kuromon Market', distance: '0.5km', type: 'Market' }
-      ]
-    };
+  async getNearbyAttractions() {
+    const { lat, lng } = this.currentLocation;
+    const result = await APIsIntegration.searchNearbyPlaces(lat, lng, 'attraction', 3000);
+    if (!result.success) return [];
 
-    return attractions[area] || [];
+    return result.places.slice(0, 6).map(place => ({
+      name: place.name,
+      type: place.category,
+      distance: this.formatDistance(place.distance),
+      lat: place.lat,
+      lng: place.lng
+    }));
   }
 
   /**
-   * Get nearby services
+   * Get nearby services: konbini, farmacia, ATM (Foursquare, radio 800m)
    */
-  getNearbyServices(area) {
-    return [
-      { name: '7-Eleven', type: 'Konbini', distance: '0.1km', open24h: true },
-      { name: 'FamilyMart', type: 'Konbini', distance: '0.2km', open24h: true },
-      { name: 'Seven Bank ATM', type: 'ATM', distance: '0.1km', foreignCards: true },
-      { name: 'Matsumoto Kiyoshi', type: 'Pharmacy', distance: '0.3km', open: '9am-10pm' },
-      { name: 'Police Box (Koban)', type: 'Police', distance: '0.4km', emergency: '110' }
+  async getNearbyServices() {
+    const { lat, lng } = this.currentLocation;
+    const categories = [
+      { category: 'convenience_store', type: 'Konbini' },
+      { category: 'pharmacy', type: 'Pharmacy' },
+      { category: 'atm', type: 'ATM' }
     ];
+
+    const results = await Promise.all(
+      categories.map(({ category }) => APIsIntegration.searchNearbyPlaces(lat, lng, category, 800))
+    );
+
+    const services = results.flatMap((result, i) =>
+      result.success
+        ? result.places.slice(0, 3).map(place => ({
+            name: place.name,
+            type: categories[i].type,
+            distanceMeters: place.distance ?? Infinity,
+            distance: this.formatDistance(place.distance),
+            lat: place.lat,
+            lng: place.lng
+          }))
+        : []
+    );
+
+    return services
+      .sort((a, b) => a.distanceMeters - b.distanceMeters)
+      .map(({ distanceMeters, ...service }) => service);
   }
 
   /**

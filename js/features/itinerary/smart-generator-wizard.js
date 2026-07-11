@@ -2006,7 +2006,9 @@ export const SmartGeneratorWizard = {
       const dateStart = new Date();
       const dateEnd = new Date(dateStart);
       dateEnd.setDate(dateEnd.getDate() + duration - 1);
-      const toISODate = (d) => d.toISOString().split('T')[0];
+      const toISODate = window.TimeUtils
+        ? (d) => window.TimeUtils.toISODate(d)
+        : (d) => d.toISOString().split('T')[0];
 
       // Crear un nuevo trip con el template
       const tripData = {

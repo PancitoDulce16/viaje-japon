@@ -11,6 +11,7 @@ import { LocationAutocomplete } from '../../ui/location-autocomplete.js'; // �
 import { RouteOptimizer } from '../../map/route-optimizer-v2.js'; // 🗺️ Optimizador de rutas
 import { DayBalancer } from './day-balancer-v3.js'; // ⚖️ Balanceador inteligente de días
 import { DayExperiencePredictor } from './day-experience-predictor.js'; // 🔮 Predictor de experiencia
+import { hasRemoteAreaConflict } from './smart-itinerary-generator.js'; // 🏝️ Guardia de sub-área remota (Uji/Miyajima)
 
 // 🛡️ Safe wrapper para TimeUtils con fallback
 const SafeTimeUtils = {
@@ -2796,10 +2797,8 @@ export const ItineraryHandler = {
     }
 
     // Mostrar modal
-    console.log('🎭 Opening modal...');
     modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    console.log('✅ Modal classes updated:', modal.classList.toString());
+    modal.classList.add('active');
 
     // Inicializar autocomplete de actividades y ubicaciones
     setTimeout(() => {
@@ -2854,8 +2853,7 @@ Si ya tienes las coordenadas, simplemente pégalas:
   closeActivityModal() {
     const modal = document.getElementById('activityModal');
     if (modal) {
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
+      modal.classList.remove('active');
 
       // Limpiar autocomplete dropdown
       if (window.ActivityAutocomplete && window.ActivityAutocomplete.hideDropdown) {
@@ -2919,6 +2917,14 @@ Si ya tienes las coordenadas, simplemente pégalas:
       }
     }
 
+    // Preservar el área geográfica de la actividad original (usada por la
+    // guardia de sub-área remota Uji/Miyajima) - este objeto se reconstruye
+    // desde cero en cada guardado y sin esto se perdería en cada edición.
+    const originalDayData = currentItinerary.days.find(d => d.day === originalDay);
+    const originalActivity = activityId
+      ? originalDayData?.activities.find(a => a.id === activityId)
+      : null;
+
     const activity = {
       id: activityId || `activity_${Date.now()}`,
       icon,
@@ -2928,6 +2934,9 @@ Si ya tienes las coordenadas, simplemente pégalas:
       cost,
       station
     };
+    if (originalActivity?.area) {
+      activity.area = originalActivity.area;
+    }
 
     // 📍 Add coordinates if valid
     if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
@@ -2936,18 +2945,27 @@ Si ya tienes las coordenadas, simplemente pégalas:
 
     // Si estamos editando Y el día cambió, mover la actividad
     if (activityId && originalDay !== newDay) {
-      // Eliminar del día original
-      const originalDayData = currentItinerary.days.find(d => d.day === originalDay);
-      if (originalDayData) {
-        originalDayData.activities = originalDayData.activities.filter(a => a.id !== activityId);
-      }
-
       // Agregar al nuevo día
       const newDayData = currentItinerary.days.find(d => d.day === newDay);
       if (!newDayData) {
         alert('⚠️ No se encontró el día destino');
         return;
       }
+
+      // 🏝️ GUARDIA DE SUB-ÁREA REMOTA (Uji, Miyajima): no permitir mover una
+      // actividad a un día que ya tiene actividades de una sub-área remota
+      // distinta (mismo chequeo que usa el generador/balanceador).
+      const targetAreas = newDayData.activities.map(a => a.area).filter(Boolean);
+      if (hasRemoteAreaConflict(activity.area, targetAreas)) {
+        alert(`⚠️ No se puede mover: "${title}" chocaría con la sub-área remota (Uji/Miyajima) ya presente en el Día ${newDay}.`);
+        return;
+      }
+
+      // Eliminar del día original
+      if (originalDayData) {
+        originalDayData.activities = originalDayData.activities.filter(a => a.id !== activityId);
+      }
+
       newDayData.activities.push(activity);
 
       Notifications.show(`Actividad movida al Día ${newDay}`, 'success');

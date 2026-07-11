@@ -30,9 +30,8 @@ class KeyboardShortcuts {
 
     // Feature shortcuts
     this.register('1', () => this.openFeature('locationGame'), 'Location Game', { alt: true });
-    this.register('2', () => this.openFeature('challengeSystem'), 'Challenges', { alt: true });
-    this.register('3', () => this.openFeature('travelTwins'), 'Travel Twins', { alt: true });
-    this.register('4', () => this.openFeature('hiddenGems'), 'Hidden Gems', { alt: true });
+    this.register('2', () => this.openFeature('travelTwins'), 'Travel Twins', { alt: true });
+    this.register('3', () => this.openFeature('hiddenGems'), 'Hidden Gems', { alt: true });
 
     // Utility shortcuts
     this.register('s', () => this.saveData(), 'Guardar', { ctrl: true });
@@ -307,7 +306,6 @@ class KeyboardShortcuts {
   openFeature(featureId) {
     const features = {
       locationGame: () => window.locationGame?.open(),
-      challengeSystem: () => window.challengeSystem?.open(),
       travelTwins: () => window.TravelTwinsMatcher?.open(),
       hiddenGems: () => window.HiddenGemsMap?.open()
     };
