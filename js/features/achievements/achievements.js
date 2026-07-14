@@ -521,6 +521,38 @@ class Achievements {
   }
 
   /**
+   * 🎏 Teaser silencioso para superficies que no son una pantalla de
+   * logros por sí mismas (ej. el Dashboard) — un recuerdo quietamente
+   * guardado, no un panel. Deliberadamente más callado que
+   * renderPanel(): usa el objeto Journal (cálido, papel) en vez del
+   * tratamiento morado del panel completo, muestra como máximo un
+   * recuerdo, y no tiene título propio tipo "Logros" — el llamador
+   * decide el label de la sección (ver dash-section__label). Misma
+   * fuente de datos que renderPanel()/renderAllModal(), nunca una
+   * copia — ver ARCHITECTURE_PRINCIPLES.md.
+   */
+  renderMemoryTeaser() {
+    if (!this.state || this.state.unlocked.length === 0) return '';
+
+    const latest = [...this.state.unlocked].reverse().find(u => this.definitions[u.id]);
+    if (!latest) return '';
+
+    const def = this.definitions[latest.id];
+
+    return `
+      <button type="button" class="journal-card" onclick="window.Achievements.renderAllModal()" style="cursor:pointer; text-align:left; width:100%; border:0; font:inherit; display:block;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="font-size:1.8rem;">${def.icon}</div>
+          <div>
+            <div class="journal-card__title" style="margin-top:0;">${def.name}</div>
+            <div class="journal-card__sub" style="margin-top:0;">${this.state.unlocked.length} recuerdo${this.state.unlocked.length === 1 ? '' : 's'} de este viaje, guardados en silencio</div>
+          </div>
+        </div>
+      </button>
+    `;
+  }
+
+  /**
    * 🎏 Único punto de render — galería completa (modal).
    */
   renderAllModal() {
@@ -568,4 +600,7 @@ class Achievements {
 // Instancia global — único punto de acceso público
 window.Achievements = new Achievements();
 
-export default Achievements;
+// Exporta la INSTANCIA, no la clase — cualquier import ES module de
+// este archivo debe recibir el mismo singleton que window.Achievements,
+// nunca un segundo objeto independiente.
+export default window.Achievements;

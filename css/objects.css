@@ -1,0 +1,180 @@
+/* ==========================================================================
+   Travel Objects — canonical card families per OBJECT_BIBLE.md.
+   Built on css/tokens.css only — no ad hoc colors/spacing/shadows.
+   Four families used by Dashboard Experience slice 2. Every future
+   screen that needs a Ticket/Travel/Discovery/Journal card reuses
+   these classes — see ARCHITECTURE_PRINCIPLES.md "one canonical
+   implementation per reusable object."
+   ========================================================================== */
+
+/* ---- 🎫 Ticket Card — activities, trains, reservations ---- */
+.ticket-card {
+  position: relative;
+  background: var(--surface-page);
+  border-radius: var(--radius-md);
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  box-shadow: var(--shadow-sm);
+  --notch-bg: var(--surface-page-alt); /* override per-container to match whatever surrounds it */
+}
+.ticket-card::before,
+.ticket-card::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--notch-bg);
+}
+.ticket-card::before { left: -8px; }
+.ticket-card::after { right: -8px; }
+
+.ticket-card__time {
+  padding: var(--space-4) 0 var(--space-4) var(--space-4);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.ticket-card__time::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 10px;
+  bottom: 10px;
+  border-left: 2px dashed var(--hairline);
+}
+.ticket-card__t { font-family: var(--font-mono); font-weight: 600; font-size: 1rem; color: var(--ink); }
+.ticket-card__d { font-family: var(--font-mono); font-size: 0.66rem; color: var(--ink-soft); }
+
+.ticket-card__body { padding: var(--space-3) var(--space-4); min-width: 0; }
+.ticket-card__title { font-weight: 700; font-size: 0.95rem; color: var(--ink); }
+.ticket-card__sub { font-size: 0.8rem; color: var(--ink-soft); margin-top: 2px; }
+.ticket-card__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--space-2);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-umi);
+  background: rgba(79, 169, 196, 0.12);
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+}
+
+/* ---- 🧳 Travel Card — stats, progress, countdown detail. Deliberately
+   flatter/more utilitarian than the other three by design — see
+   DESIGN_SYSTEM.md §0, efficiency is allowed to win here. ---- */
+.travel-card {
+  background: var(--surface-page-alt);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+.travel-card__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.travel-card__value {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 1.3rem;
+  color: var(--ink);
+  margin-top: 4px;
+}
+.travel-card__bar {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--hairline);
+  overflow: hidden;
+  margin-top: var(--space-2);
+}
+.travel-card__bar-fill {
+  height: 100%;
+  background: var(--color-matcha);
+  border-radius: var(--radius-pill);
+}
+
+/* ---- 🗺 Discovery Card — image/icon-forward, single tag, swipe row ---- */
+.discovery-card {
+  flex: 0 0 auto;
+  width: 168px;
+  background: var(--surface-page);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  scroll-snap-align: start;
+}
+.discovery-card__art {
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+}
+.discovery-card__body { padding: var(--space-3); }
+.discovery-card__title { font-weight: 700; font-size: 0.85rem; color: var(--ink); }
+.discovery-card__tag { font-size: 0.7rem; color: var(--ink-soft); margin-top: 2px; }
+
+/* ---- 📖 Journal Card — warm, washi surface, torn-edge accent ---- */
+.journal-card {
+  background: var(--surface-page);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  position: relative;
+  box-shadow: var(--shadow-sm);
+}
+.journal-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: var(--space-4); right: var(--space-4);
+  height: 3px;
+  background: repeating-linear-gradient(90deg, var(--color-kasumi) 0 10px, transparent 10px 16px);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  opacity: 0.6;
+}
+.journal-card__title { font-weight: 700; font-size: 0.92rem; color: var(--ink); margin-top: var(--space-2); }
+.journal-card__sub { font-size: 0.8rem; color: var(--ink-soft); margin-top: 4px; line-height: 1.5; }
+
+/* ---- Any object rendered as an interactive <button> (memory teaser,
+   the Dreaming-stage budget nudge, etc.) gets a real focus ring —
+   never relies on :hover alone. ---- */
+.travel-card:focus-visible,
+.journal-card:focus-visible,
+.ticket-card:focus-visible,
+.discovery-card:focus-visible {
+  outline: 3px solid var(--color-kasumi);
+  outline-offset: 2px;
+}
+
+/* ---- Shared row/section rhythm for progressive-disclosure sections
+   (Dashboard slice 2) — a label + horizontal scroller, never a boxed
+   "widget" competing with the objects inside it. ---- */
+.dash-section { display: flex; flex-direction: column; gap: var(--space-3); }
+.dash-section__label {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--ink);
+}
+.dash-section__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.dash-section__scroller {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scroll-snap-type: x proximity;
+}
+.dash-section__scroller::-webkit-scrollbar { height: 6px; }
+.dash-section__scroller::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: var(--radius-pill); }

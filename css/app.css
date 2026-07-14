@@ -22,6 +22,7 @@
 @import './tooltips.css';
 @import './micro-interactions.css';
 @import './dashboard-hero.css';
+@import './objects.css';
 
 /* 5. Theme variants */
 @import './theme-kawaii.css';
