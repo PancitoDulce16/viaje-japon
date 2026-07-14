@@ -1,0 +1,141 @@
+/* ==========================================================================
+   Hero Moment — Dashboard Experience, slice 1.
+   The one primary visual focal point (see experiences/dashboard.md).
+   Built on css/tokens.css — no new ad hoc colors/spacing here.
+   ========================================================================== */
+
+.hero-moment {
+  position: relative;
+  width: 100%;
+  min-height: 260px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-sora);
+  box-shadow: var(--shadow-md);
+  isolation: isolate;
+}
+
+.hero-moment__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  transition: filter var(--motion-orchestrated) var(--motion-ease);
+}
+
+.hero-moment__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(var(--shadow-rgb), 0.72) 0%, rgba(var(--shadow-rgb), 0.15) 55%, transparent 80%);
+}
+
+.hero-moment__empty-art {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, var(--color-sora) 0%, var(--color-sora-deep) 100%);
+}
+
+.hero-moment__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  min-height: 260px;
+  padding: var(--space-6);
+}
+
+.hero-moment__headline {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  color: var(--color-washi);
+  line-height: 1.1;
+  text-wrap: balance;
+  margin: 0;
+}
+
+.hero-moment__subtext {
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  color: rgba(251, 247, 241, 0.88);
+  margin: 0;
+}
+
+.hero-moment__cta {
+  align-self: flex-start;
+  margin-top: var(--space-3);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--color-ai);
+  background: var(--color-washi);
+  border: 0;
+  padding: 10px 18px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: transform var(--motion-base) var(--motion-ease);
+}
+.hero-moment__cta:hover { transform: translateY(-1px); }
+.hero-moment__cta:focus-visible {
+  outline: 3px solid var(--color-kasumi);
+  outline-offset: 2px;
+}
+
+/* Empty state (Dreaming — no trip yet): calm, no photographic art, no CTA urgency */
+.hero-moment--dreaming .hero-moment__headline,
+.hero-moment--dreaming .hero-moment__subtext {
+  color: var(--color-ai);
+}
+.hero-moment--dreaming .hero-moment__subtext { color: var(--ink-soft); }
+.hero-moment--dreaming .hero-moment__cta {
+  background: linear-gradient(135deg, var(--color-kasumi), var(--color-yuzu));
+  color: #fff;
+}
+
+/* Remembering / Looking back: quieter, desaturated, nostalgic per
+   EXPERIENCE_GUIDELINES.md — motion is "the calmest in the app," and
+   the art itself pulls back rather than staying vivid. */
+.hero-moment--remembering .hero-moment__art,
+.hero-moment--lookingBack .hero-moment__art {
+  filter: saturate(0.55) brightness(0.92);
+}
+.hero-moment--lookingBack .hero-moment__cta {
+  background: transparent;
+  color: var(--color-washi);
+  border: 1.5px solid rgba(251, 247, 241, 0.6);
+}
+
+/* Traveling: hero quiets and shrinks — delight recedes, information leads */
+.hero-moment--traveling {
+  min-height: 180px;
+}
+.hero-moment--traveling .hero-moment__content {
+  min-height: 180px;
+  padding: var(--space-5);
+}
+.hero-moment--traveling .hero-moment__headline {
+  font-size: clamp(1.2rem, 3.4vw, 1.6rem);
+}
+
+/* Load motion: a single quiet settle, never a bounce or slide-race.
+   "Motion communicates continuity, not spectacle." */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-moment {
+    animation: heroMomentSettle var(--motion-orchestrated) var(--motion-ease) both;
+  }
+}
+@keyframes heroMomentSettle {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (min-width: 768px) {
+  .hero-moment { min-height: 340px; }
+  .hero-moment__content { min-height: 340px; padding: var(--space-7); }
+  .hero-moment--traveling,
+  .hero-moment--traveling .hero-moment__content { min-height: 240px; }
+}

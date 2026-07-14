@@ -21,6 +21,7 @@
 /* 4. UI components */
 @import './tooltips.css';
 @import './micro-interactions.css';
+@import './dashboard-hero.css';
 
 /* 5. Theme variants */
 @import './theme-kawaii.css';

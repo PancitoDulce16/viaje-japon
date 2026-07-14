@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Hero Moment — Preview (dev only)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;800&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/dashboard-hero.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 32px 20px 80px;
+      background: var(--surface-page);
+      font-family: var(--font-body);
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      max-width: 480px;
+      margin-inline: auto;
+    }
+    h1 { font-family: var(--font-display); font-size: 1.3rem; margin: 0 0 4px; }
+    p.note { color: var(--ink-soft); font-size: 0.85rem; margin: 0 0 24px; }
+    /* Direct-child selector on purpose — a descendant `h2` selector here
+       would also match .hero-moment__headline (it's an h2 too, nested
+       one level deeper), silently overriding the component's own type
+       styling. Exactly the specificity trap the design system's own
+       CSS rules warn about. */
+    .stage-block > h2 {
+      font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--ink-soft); margin: 0 0 8px;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <h1>🌸 Hero Moment — todas las etapas</h1>
+    <p class="note">Preview de desarrollo, no se despliega (ver firebase.json). Slice 1 de Dashboard Experience — ver experiences/dashboard.md.</p>
+  </div>
+
+  <div class="stage-block"><h2>Dreaming (sin viaje activo)</h2><div id="hero-dreaming"></div></div>
+  <div class="stage-block"><h2>Planning (42 días)</h2><div id="hero-planning"></div></div>
+  <div class="stage-block"><h2>Preparing (5 días)</h2><div id="hero-preparing"></div></div>
+  <div class="stage-block"><h2>Traveling (día 4 de 10)</h2><div id="hero-traveling"></div></div>
+  <div class="stage-block"><h2>Remembering (volvió hace 6 días)</h2><div id="hero-remembering"></div></div>
+  <div class="stage-block"><h2>Looking back (hace 2 años)</h2><div id="hero-lookingback"></div></div>
+
+  <script src="/js/utils/time-utils.js"></script>
+  <script type="module">
+    import { renderHeroMoment } from '/js/features/dashboard/hero-moment.js';
+
+    function isoDaysFromNow(days) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return window.TimeUtils.toISODate(d);
+    }
+
+    const scenarios = {
+      dreaming: null,
+      planning: { info: { name: 'Aventura Japón', destination: 'Japón', dateStart: isoDaysFromNow(42), dateEnd: isoDaysFromNow(52) } },
+      preparing: { info: { name: 'Aventura Japón', destination: 'Japón', dateStart: isoDaysFromNow(5), dateEnd: isoDaysFromNow(15) } },
+      traveling: { info: { name: 'Aventura Japón', destination: 'Japón', dateStart: isoDaysFromNow(-3), dateEnd: isoDaysFromNow(6) } },
+      remembering: { info: { name: 'Aventura Japón', destination: 'Japón', dateStart: isoDaysFromNow(-16), dateEnd: isoDaysFromNow(-6) } },
+      lookingback: { info: { name: 'Aventura Japón', destination: 'Japón', dateStart: isoDaysFromNow(-740), dateEnd: isoDaysFromNow(-730) } },
+    };
+
+    for (const [key, trip] of Object.entries(scenarios)) {
+      const el = document.getElementById(`hero-${key}`);
+      if (el) el.innerHTML = renderHeroMoment(trip);
+    }
+
+    window.DashboardApp = { switchTab: (t) => console.log('[preview] switchTab ->', t) };
+    window.TripsManager = { showCreateTripModal: () => console.log('[preview] showCreateTripModal') };
+  </script>
+</body>
+</html>
