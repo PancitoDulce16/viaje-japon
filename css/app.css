@@ -1,5 +1,8 @@
 /* app.css — single entry point for all styles */
 
+/* 0. Design tokens — must load first, defines vars only, no component rules */
+@import './tokens.css';
+
 /* 1. Base */
 @import './critical.css';
 @import './main.css';

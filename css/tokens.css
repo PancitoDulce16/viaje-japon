@@ -1,0 +1,85 @@
+/* ==========================================================================
+   Japitin Design Tokens — single source of truth.
+   See DESIGN_SYSTEM.md for the rationale behind every value here.
+   This file only DEFINES tokens — it must stay free of component rules
+   so the rest of the cascade can adopt it gradually without a big-bang
+   visual change (Phase 1 of the redesign roadmap).
+   ========================================================================== */
+
+:root {
+  /* ---- Color: brand ---- */
+  --color-sora: #CDEEF7;       /* scene backgrounds, sky washes */
+  --color-sora-deep: #9FD9EE;
+  --color-umi: #4FA9C4;        /* illustration depth, secondary accents */
+  --color-kasumi: #FF8FBB;     /* primary accent */
+  --color-kasumi-deep: #F16FA3;
+  --color-yuzu: #F6923B;       /* reserved — delight/confirmation/primary CTA only, see DESIGN_SYSTEM.md §5 */
+  --color-ai: #2B3868;         /* ink — type, icon strokes, illustration linework */
+  --color-ai-soft: #4A5788;
+  --color-washi: #FBF7F1;      /* card / content surface */
+  --color-washi-alt: #F2ECE1;
+
+  /* ---- Color: semantic (never used as brand accent) ---- */
+  --color-matcha: #5FB489;     /* progress, confirmation, success */
+  --color-sango: #E8615C;      /* SOS / errors only */
+
+  /* ---- Color: surface roles (theme-aware, light default) ---- */
+  --surface-page: var(--color-washi);
+  --surface-page-alt: var(--color-washi-alt);
+  --ink: var(--color-ai);
+  --ink-soft: #5C6690;
+  --hairline: rgba(43, 56, 104, 0.12);
+  --shadow-rgb: 43, 56, 104; /* shadows are indigo-tinted, never neutral grey */
+
+  /* ---- Type ---- */
+  /* Family names must match the Google Fonts request in each HTML <head> exactly. */
+  --font-display: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Consolas', monospace;
+
+  /* ---- Spacing scale ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 48px;
+
+  /* ---- Radius ---- */
+  --radius-sm: 14px;
+  --radius-md: 20px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+
+  /* ---- Shadow (indigo-tinted) ---- */
+  --shadow-sm: 0 6px 14px -8px rgba(var(--shadow-rgb), 0.28);
+  --shadow-md: 0 10px 24px -12px rgba(var(--shadow-rgb), 0.30);
+  --shadow-lg: 0 20px 40px -16px rgba(var(--shadow-rgb), 0.35);
+
+  /* ---- Motion ---- */
+  --motion-micro: 120ms;
+  --motion-base: 240ms;
+  --motion-orchestrated: 480ms;
+  --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark mode: redefine tokens only, never style components inside this block. */
+.dark {
+  --surface-page: #141A2E;
+  --surface-page-alt: #1B2238;
+  --ink: #F2EEE4;
+  --ink-soft: #B7BEDB;
+  --hairline: rgba(242, 238, 228, 0.14);
+  --color-sora: #22314A;
+  --shadow-rgb: 0, 0, 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-micro: 0ms;
+    --motion-base: 0ms;
+    --motion-orchestrated: 0ms;
+  }
+}
