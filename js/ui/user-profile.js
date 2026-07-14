@@ -241,8 +241,8 @@ export const UserProfile = {
                     ${stats.latestAchievements && stats.latestAchievements.length > 0 ? `
                         <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                             <h3 class="text-sm font-bold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
-                                <span>🏆</span>
-                                <span>Últimos Logros</span>
+                                <span>🎏</span>
+                                <span>Últimos Recuerdos</span>
                             </h3>
                             <div class="flex gap-2 overflow-x-auto pb-2">
                                 ${stats.latestAchievements.slice(0, 5).map(achievement => `
@@ -289,25 +289,23 @@ export const UserProfile = {
         }
     },
 
-    // Cargar panel de gamificación en el perfil
-    loadGamificationPanel() {
+    // Cargar panel de logros en el perfil — delega por completo en el
+    // sistema canónico (js/features/achievements/achievements.js).
+    async loadGamificationPanel() {
         const container = document.getElementById('profile-gamification-panel');
         if (!container) return;
 
-        if (window.GamificationSystem) {
-            // renderGamificationPanel() devuelve el HTML directamente (no inyecta
-            // solo, ni acepta un id de contenedor) - renderPanel() nunca existió.
-            container.innerHTML = window.GamificationSystem.renderGamificationPanel() || `
-                <div class="text-center py-8">
-                    <div class="text-4xl mb-3">🎮</div>
-                    <p class="text-gray-600 dark:text-gray-400">Aún no hay datos de progreso para este viaje.</p>
-                </div>
-            `;
+        if (window.Achievements) {
+            const tripId = window.currentTripId || localStorage.getItem('currentTripId');
+            if (tripId && window.Achievements.tripId !== tripId) {
+                await window.Achievements.initialize(tripId);
+            }
+            container.innerHTML = window.Achievements.renderPanel();
         } else {
             container.innerHTML = `
                 <div class="text-center py-8">
-                    <div class="text-4xl mb-3">🎮</div>
-                    <p class="text-gray-600 dark:text-gray-400">Sistema de gamificación no disponible</p>
+                    <div class="text-4xl mb-3">🎏</div>
+                    <p class="text-gray-600 dark:text-gray-400">No se pudo cargar el sistema de recuerdos</p>
                     <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Intenta recargar la página</p>
                 </div>
             `;
@@ -317,26 +315,22 @@ export const UserProfile = {
     // ============================================
     // GET USER STATS
     // ============================================
+    // Nota de arquitectura: mealsTracked/bingoCompleted/stampsCollected y
+    // los logros ya NO se calculan aquí — se leen de
+    // window.Achievements (única fuente de verdad, ver achievements.js)
+    // para no mantener una segunda copia de esa lógica. photosUploaded y
+    // journalEntries siguen siendo consultas propias porque son solo
+    // estadísticas de perfil, no condiciones de ningún logro.
     async getUserStats(userId) {
         const tripId = window.currentTripId || localStorage.getItem('currentTripId');
 
         try {
-            // Stats from localStorage
-            const mealsTracked = JSON.parse(localStorage.getItem('japanFoodTracker') || '{}');
-            const bingoData = JSON.parse(localStorage.getItem('japanTravelBingo') || '{}');
-            const stampsData = JSON.parse(localStorage.getItem('japanStampCollection') || '[]');
-
             let photosUploaded = 0;
             let journalEntries = 0;
-            let achievements = 0;
-            let latestAchievements = [];
 
             if (tripId) {
                 // Photos count - trips/{tripId}/photos es una SUBCOLECCIÓN (un doc por
                 // foto, ver photo-gallery.js), no un documento único con un mapa adentro.
-                // doc(db, 'trips/{tripId}/photos') con 3 segmentos era una referencia de
-                // documento inválida (siempre necesita un número PAR de segmentos) -
-                // crasheaba con "Invalid document reference" antes de este fix.
                 try {
                     const photosQuery = query(collection(db, 'trips', tripId, 'photos'), where('userId', '==', userId));
                     const photosSnap = await getDocs(photosQuery);
@@ -345,8 +339,6 @@ export const UserProfile = {
                     // Colección podría no existir todavía
                 }
 
-                // Journal entries count - misma corrección, trips/{tripId}/journal
-                // también es una subcolección (ver travel-journal.js).
                 try {
                     const journalQuery = query(collection(db, 'trips', tripId, 'journal'), where('userId', '==', userId));
                     const journalSnap = await getDocs(journalQuery);
@@ -354,27 +346,55 @@ export const UserProfile = {
                 } catch (e) {
                     // Colección podría no existir todavía
                 }
+            }
 
-                // Achievements
-                const achievementsRef = doc(db, `trips/${tripId}/achievements/${userId}`);
-                try {
-                    const achievementsSnap = await getDoc(achievementsRef);
-                    if (achievementsSnap.exists()) {
-                        const achievementsData = achievementsSnap.data();
-                        latestAchievements = achievementsData.achievements || [];
-                        achievements = latestAchievements.length;
+            let mealsTracked = 0, bingoCompleted = 0, stampsCollected = 0;
+            let achievements = 0, latestAchievements = [];
+
+            if (window.Achievements && tripId) {
+                const isOwnCurrentTrip = this.isOwnProfile && userId === auth.currentUser?.uid;
+
+                // Para el propio perfil: asegura que la sesión ya corrió
+                // initialize() (con su migración de datos heredados) ANTES
+                // de leer nada, y lee directo de window.Achievements.state
+                // — así este número siempre coincide con lo que
+                // renderPanel() muestra más abajo, en vez de una segunda
+                // lectura a Firestore que puede llegar antes de que la
+                // migración termine de guardarse.
+                if (isOwnCurrentTrip) {
+                    if (window.Achievements.tripId !== tripId) {
+                        await window.Achievements.initialize(tripId);
                     }
-                } catch (e) {
-                    // Document might not exist yet
+                    const liveStats = await window.Achievements.getLiveStats();
+                    mealsTracked = liveStats.mealsTracked || 0;
+                    bingoCompleted = liveStats.bingoCompleted || 0;
+                    stampsCollected = liveStats.stampsCollected || 0;
+
+                    latestAchievements = window.Achievements.state.unlocked
+                        .slice(-5)
+                        .reverse()
+                        .map(u => window.Achievements.definitions[u.id])
+                        .filter(Boolean); // ids de logros retirados se ignoran, no rompen el render
+                    achievements = window.Achievements.state.unlocked.length;
+                } else {
+                    // Viendo el perfil de otro viajero — única lectura
+                    // posible es a Firestore, vía el método canónico.
+                    const achievementState = await window.Achievements.getStateFor(tripId, userId);
+                    latestAchievements = achievementState.unlocked
+                        .slice(-5)
+                        .reverse()
+                        .map(u => window.Achievements.definitions[u.id])
+                        .filter(Boolean);
+                    achievements = achievementState.unlocked.length;
                 }
             }
 
             return {
                 photosUploaded,
                 journalEntries,
-                mealsTracked: Object.values(mealsTracked).filter(v => v).length,
-                bingoCompleted: Object.values(bingoData).filter(v => v).length,
-                stampsCollected: stampsData.length,
+                mealsTracked,
+                bingoCompleted,
+                stampsCollected,
                 achievements,
                 latestAchievements
             };

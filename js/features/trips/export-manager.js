@@ -40,10 +40,9 @@ const ExportManager = {
 
       window.Notifications?.show('✅ PDF generado exitosamente', 'success');
 
-      // 🏆 Tracking de gamificación
-      if (window.GamificationSystem) {
-        await window.GamificationSystem.trackAction('exportFormats', 1);
-      }
+      // Nota: el contador 'exportFormats' se retiró — el logro que lo
+      // usaba (exportar en 3 formatos) era una métrica de uso de la
+      // función, no un recuerdo de viaje. Ver DEPRECATION_LOG.md.
 
       return true;
 
@@ -201,10 +200,7 @@ const ExportManager = {
 
       window.Notifications?.show('✅ Archivo de calendario descargado. Ábrelo para agregar a Google Calendar', 'success');
 
-      // 🏆 Tracking de gamificación
-      if (window.GamificationSystem) {
-        window.GamificationSystem.trackAction('exportFormats', 1);
-      }
+      // Nota: el contador 'exportFormats' se retiró — ver DEPRECATION_LOG.md.
 
       return true;
 
@@ -269,10 +265,7 @@ const ExportManager = {
 
       window.Notifications?.show('✅ Abriendo Google Maps con tu ruta', 'success');
 
-      // 🏆 Tracking de gamificación
-      if (window.GamificationSystem) {
-        window.GamificationSystem.trackAction('exportFormats', 1);
-      }
+      // Nota: el contador 'exportFormats' se retiró — ver DEPRECATION_LOG.md.
 
       return true;
 
@@ -332,10 +325,7 @@ const ExportManager = {
 
       window.Notifications?.show('✅ Checklist descargado', 'success');
 
-      // 🏆 Tracking de gamificación
-      if (window.GamificationSystem) {
-        window.GamificationSystem.trackAction('exportFormats', 1);
-      }
+      // Nota: el contador 'exportFormats' se retiró — ver DEPRECATION_LOG.md.
 
       return true;
 

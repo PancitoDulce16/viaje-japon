@@ -2439,10 +2439,7 @@ export const SmartGeneratorWizard = {
       toggleText.textContent = 'Vista Tarjetas';
       contentContainer.innerHTML = this.renderComparisonView(this.currentVariations);
 
-      // 🏆 Tracking de gamificación - comparaciones
-      if (window.GamificationSystem) {
-        window.GamificationSystem.trackAction('variationsCompared', 1);
-      }
+      // Nota: el contador 'variationsCompared' se retiró — ver DEPRECATION_LOG.md.
     } else {
       // Volver a vista grid
       toggleIcon.textContent = '📊';
@@ -2795,10 +2792,7 @@ export const SmartGeneratorWizard = {
       // Guardar itinerario
       await this.saveGeneratedItinerary(hybridItinerary);
 
-      // 🏆 Tracking de gamificación - híbridos
-      if (window.GamificationSystem) {
-        await window.GamificationSystem.trackAction('hybridsCreated', 1);
-      }
+      // Nota: el contador 'hybridsCreated' se retiró — ver DEPRECATION_LOG.md.
 
       // 🗑️ Limpiar sessionStorage y datos temporales
       this.clearSessionStorage();
@@ -3058,9 +3052,9 @@ export const SmartGeneratorWizard = {
 
       console.log('✅ Itinerario guardado en Firebase');
 
-      // 🏆 Tracking de gamificación
-      if (window.GamificationSystem) {
-        await window.GamificationSystem.trackAction('itinerariesGenerated', 1);
+      // 🎏 Tracking de achievements
+      if (window.Achievements) {
+        await window.Achievements.trackAction('itinerariesGenerated', 1);
       }
     } catch (error) {
       console.error('❌ Error guardando itinerario:', error);

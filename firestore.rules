@@ -164,6 +164,20 @@ service cloud.firestore {
         allow read: if isTripMember(tripId);
         allow write: if isTripMember(tripId);
       }
+
+      // --- Sub-colección de Achievements (objeto Achievement, ver
+      // OBJECT_BIBLE.md / js/features/achievements/achievements.js) ---
+      // Cualquier miembro del viaje puede leer los recuerdos de
+      // cualquiera (para ver el perfil de un compañero de viaje), pero
+      // cada quien solo puede escribir su propio documento.
+      // NOTA: esta regla nunca existió — ni para este sistema ni para
+      // el anterior (social-features.js usaba la misma ruta). Antes de
+      // esto, toda escritura/lectura aquí fallaba en silencio con
+      // "Missing or insufficient permissions". Ver DEPRECATION_LOG.md.
+      match /achievements/{userId} {
+        allow read: if isTripMember(tripId);
+        allow write: if isTripMember(tripId) && request.auth.uid == userId;
+      }
     }
 
     // =====================================================================

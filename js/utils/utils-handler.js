@@ -332,13 +332,31 @@ export const UtilsHandler = {
             }
         }
 
+        // Achievements section — implementación canónica, ver achievements.js
+        if (window.Achievements && sectionName === 'achievements') {
+            const tripId = window.currentTripId || localStorage.getItem('currentTripId');
+            if (tripId) {
+                if (window.Achievements.tripId !== tripId) {
+                    window.Achievements.initialize(tripId).then(() => {
+                        sectionDiv.innerHTML = window.Achievements.renderPanel();
+                    });
+                } else {
+                    sectionDiv.innerHTML = window.Achievements.renderPanel();
+                }
+            } else {
+                sectionDiv.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-4xl mb-3">✈️</p>
+                        <p class="text-gray-600 dark:text-gray-400">No hay viaje activo</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Selecciona o crea un viaje primero</p>
+                    </div>
+                `;
+            }
+        }
+
         // SocialFeatures sections
         if (window.SocialFeatures) {
             switch(sectionName) {
-                case 'achievements':
-                    sectionDiv.innerHTML = window.SocialFeatures.renderAchievements();
-                    window.SocialFeatures.loadAchievements();
-                    break;
                 case 'polls':
                     sectionDiv.innerHTML = window.SocialFeatures.renderVotingSystem();
                     window.SocialFeatures.loadPolls();

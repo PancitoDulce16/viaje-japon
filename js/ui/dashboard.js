@@ -194,15 +194,13 @@ class DashboardManager {
                 window.HealthDashboard.init();
             }
 
-            // 🏆 Inicializar Sistema de Gamificación
-            console.log('🏆 Inicializando Sistema de Gamificación...');
-            if (window.GamificationSystem && AuthHandler.currentUser) {
-                try {
-                    await window.GamificationSystem.initialize(AuthHandler.currentUser.uid);
-                    this.renderGamificationPanel();
-                } catch (error) {
-                    console.error('❌ Error inicializando gamificación:', error);
-                }
+            // 🎏 Inicializar Achievements (por viaje, no por cuenta — ver achievements.js)
+            // renderGamificationPanel() se auto-inicializa para el viaje activo
+            // (currentTripId todavía puede no estar resuelto en este punto del
+            // bootstrap), así que basta con llamarlo.
+            console.log('🎏 Inicializando Achievements...');
+            if (window.Achievements && AuthHandler.currentUser) {
+                this.renderGamificationPanel();
             }
 
             // 🤖 Inicializar Panel Central de IA
@@ -314,17 +312,35 @@ class DashboardManager {
         }
     }
 
-    renderGamificationPanel() {
+    async renderGamificationPanel(retriesLeft = 3) {
         try {
             const panel = document.getElementById('gamification-panel');
-            if (!panel || !window.GamificationSystem) return;
+            if (!panel || !window.Achievements) return;
 
-            const html = window.GamificationSystem.renderGamificationPanel();
-            panel.innerHTML = html;
+            // Auto-inicializa si todavía no corrió para el viaje activo —
+            // el bootstrap del dashboard puede llamar esto antes de que
+            // TripsManager termine de resolver currentTripId, así que esta
+            // llamada no puede asumir que ya se hizo initialize(). Si
+            // currentTripId todavía no existe, reintenta un par de veces
+            // con un pequeño delay (mismo patrón que ya usa este archivo
+            // para ReservationsManager/ExpenseSplitter).
+            const activeTripId = this.getCurrentTripId();
+            if (!activeTripId) {
+                if (retriesLeft > 0) {
+                    setTimeout(() => this.renderGamificationPanel(retriesLeft - 1), 800);
+                }
+                return;
+            }
 
-            console.log('🏆 Panel de gamificación renderizado');
+            if (window.Achievements.tripId !== activeTripId) {
+                await window.Achievements.initialize(activeTripId);
+            }
+
+            panel.innerHTML = window.Achievements.renderPanel();
+
+            console.log('🎏 Panel de recuerdos renderizado');
         } catch (error) {
-            console.error('❌ Error renderizando gamificación:', error);
+            console.error('❌ Error renderizando achievements:', error);
         }
     }
 

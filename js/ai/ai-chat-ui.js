@@ -159,10 +159,8 @@ class AIChatUI {
       this.chatPanel.classList.add('flex');
       document.getElementById('ai-chat-input').focus();
 
-      // Track opening
-      if (window.GamificationSystem) {
-        window.GamificationSystem.trackAction('aiChatOpened', 1);
-      }
+      // Nota: el tracking 'aiChatOpened' se retiró — nunca alimentó
+      // ningún logro real, era telemetría sin efecto. Ver DEPRECATION_LOG.md.
     } else {
       this.chatPanel.classList.add('hidden');
       this.chatPanel.classList.remove('flex');
@@ -205,10 +203,8 @@ class AIChatUI {
         insights: response.insights
       });
 
-      // Track interaction
-      if (window.GamificationSystem) {
-        window.GamificationSystem.trackAction('aiMessagesExchanged', 1);
-      }
+      // Nota: el tracking 'aiMessagesExchanged' se retiró — mismo motivo
+      // que 'aiChatOpened' arriba. Ver DEPRECATION_LOG.md.
 
     } catch (error) {
       console.error('Error sending message:', error);

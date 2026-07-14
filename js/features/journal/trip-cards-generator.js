@@ -567,9 +567,7 @@ export const TripCardsGenerator = {
 
       window.Notifications?.show('✅ Card descargada! Revisa tu carpeta de descargas', 'success');
 
-      if (window.GamificationSystem) {
-        window.GamificationSystem.trackAction('exportFormats', 1);
-      }
+      // Nota: el contador 'exportFormats' se retiró — ver DEPRECATION_LOG.md.
     } catch (error) {
       console.error('❌ Error generando imagen de la card:', error);
       window.Notifications?.show('❌ No se pudo generar la imagen. Intenta de nuevo.', 'error');

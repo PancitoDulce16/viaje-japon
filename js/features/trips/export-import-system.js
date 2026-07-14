@@ -242,15 +242,14 @@ class ExportImportSystem {
   /**
    * 🎏 EXPORTAR LOGROS
    *
-   * Nota de migración (ver DEPRECATION_LOG.md): esta función leía
-   * `.points`/`.level`/`.achievements`/`.stats`, propiedades que nunca
-   * existieron en la clase real — era código muerto que nunca funcionó.
-   * Ahora exporta el estado real (`userStats`, incluido `unlockedBadges`)
-   * para que los recuerdos de un usuario sí sobrevivan a un export/import.
+   * Nota de migración (ver DEPRECATION_LOG.md): apuntaba a
+   * window.GamificationSystem (retirado). Ahora exporta el estado real
+   * del sistema canónico (window.Achievements.state — incluye
+   * `unlocked` y `stats`) para el viaje activo.
    */
   async exportGamification() {
-    if (window.GamificationSystem?.userStats) {
-      return { userStats: window.GamificationSystem.userStats };
+    if (window.Achievements?.state) {
+      return { achievementsState: window.Achievements.state };
     }
 
     return null;
@@ -261,12 +260,12 @@ class ExportImportSystem {
    */
   async importGamification(data) {
     try {
-      if (window.GamificationSystem && data?.userStats) {
-        window.GamificationSystem.userStats = {
-          ...window.GamificationSystem.getDefaultStats(),
-          ...data.userStats
+      if (window.Achievements && data?.achievementsState) {
+        window.Achievements.state = {
+          ...window.Achievements.getDefaultState(),
+          ...data.achievementsState
         };
-        await window.GamificationSystem.saveStats();
+        await window.Achievements.save();
       }
       return true;
     } catch (error) {

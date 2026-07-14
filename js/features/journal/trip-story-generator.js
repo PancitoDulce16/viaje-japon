@@ -475,9 +475,7 @@ export const TripStoryGenerator = {
 
       window.Notifications?.show('✅ Stories descargadas! Revisa tu carpeta de descargas', 'success');
 
-      if (window.GamificationSystem) {
-        window.GamificationSystem.trackAction('exportFormats', 1);
-      }
+      // Nota: el contador 'exportFormats' se retiró — ver DEPRECATION_LOG.md.
     } catch (error) {
       console.error('❌ Error generando imágenes de las stories:', error);
       window.Notifications?.show('❌ No se pudieron generar las imágenes. Intenta de nuevo.', 'error');

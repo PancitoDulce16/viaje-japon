@@ -15,6 +15,31 @@ Newest entries at the top.
 
 ---
 
+## 2026-07-14 — Unified Achievement system (single canonical implementation)
+
+**What was removed:**
+- `js/features/gamification/gamification-system.js` — deleted outright (previous slice had already stripped its XP/levels; this slice retires the whole file, including its 18 achievement definitions and all rendering).
+- The achievement section of `js/features/social/social-features.js` (`checkAndUpdateAchievements`, `getUserStats`, `renderAchievements`, `loadAchievements`) — a second, independent implementation of the same concept, with its own 10-item list.
+- `js/ui/user-profile.js`'s independent stats computation for meals/bingo/stamps (duplicated `getLiveStats()`'s logic) and its broken achievement preview (it read `achievement.icon`/`achievement.name` from data that only ever contained `{id, unlockedAt}` — a pre-existing display bug, not introduced by this change, now fixed as a side effect of routing through the canonical module).
+
+**What replaced it:**
+`js/features/achievements/achievements.js` (`window.Achievements`) — the single canonical implementation of the Achievement object per `OBJECT_BIBLE.md`. One data model, one persistence layer (`trips/{tripId}/achievements/{userId}`), one rendering path (`renderPanel()`/`renderAllModal()`), one public API. Every other file that touches achievements now calls into this module rather than recomputing anything — see `OBJECT_BIBLE.md`'s Achievement entry for the full API surface.
+
+**Content review (per explicit request — "if one feels like a game mechanic instead of a travel memory, redesign it"):** went through all 28 achievements from both old lists individually. Cut 6 for being feature-usage/engagement metrics with no travel content: `hybridCreator` (used the hybrid-itinerary feature), `customizer` (edited 5 days — a UI-interaction count), `variations` (compared itinerary variations 5 times), `exporter` (exported in 3 formats), `dedicated` (opened the app on 30 different days — pure retention metric), `legend` (unlocked every other badge — a "collect them all" meta-mechanic). Kept 22, and renamed every one that used ranking/gamer language ("Maestro," "Experto," "Pro," "Novato," "Leyenda," "Guerrero") to plain descriptions of what actually happened.
+
+**Architecture decision — scope change from account-level to trip-level:** the old `gamification-system.js` stored everything at `users/{uid}/gamification/stats` (one record per account, shared across every trip). The new canonical system stores at `trips/{tripId}/achievements/{userId}` (one record per trip) — matching Passport's "one per trip, not per user" scoping already established in `OBJECT_BIBLE.md`, since an achievement is a memory of a specific journey, not a lifetime stat. This is the reason the migration logic below exists.
+
+**Why:** `ARCHITECTURE_PRINCIPLES.md` — "every reusable object has one canonical implementation," "never duplicate domain logic." `SOUL.md` — the content review above. `OBJECT_BIBLE.md`'s Passport entry — the trip-scoping precedent.
+
+**Migration notes:**
+- Trip-scoped legacy data (the old `social-features.js` doc shape, `{achievements: [{id, unlockedAt}]}`, already living at the same Firestore path): migrated automatically and unambiguously on first `initialize()` for that trip — old ids mapped to new canonical ids (e.g. `bingo_10` → `deepExplorer`), unmapped ids (the two streak achievements already removed in the prior slice) are dropped since they have no current equivalent.
+- Account-scoped legacy data (the old `gamification-system.js` doc at `users/{uid}/gamification/stats`, `unlockedBadges: [ids]` plus the 12 counters): migrated once, adopted into the **first trip the user opens** after this change, since the old system never recorded which trip a badge belonged to. This is an imperfect but data-preserving choice for users with achievements spanning multiple trips — documented here rather than left as an unexplained surprise. Badge ids with no new equivalent (`hybridCreator`, `customizer`, `variations`, `exporter`, `dedicated`, `legend`, plus the already-retired `sensei`/`consistent`) are not migrated — there's no current achievement for them to become.
+- Verified against the real test account: had a legacy `users/{uid}/gamification/stats` doc with `tripsCreated: 1` from prior testing. First `initialize()` for its trip correctly migrated this into the new trip doc and unlocked `firstTrip` + `firstItinerary` for real, confirmed via screenshot (profile stat tile and achievement gallery both show "2" consistently).
+
+**Bug found and fixed as part of this migration, unrelated to the achievement redesign itself:** `firestore.rules` had **no rule at all** for the `trips/{tripId}/achievements/{userId}` subcollection — every read/write to this path silently failed with "Missing or insufficient permissions," for both the old `social-features.js` system and the new one, before this fix. Added the rule (trip members can read any member's achievements, only the owner can write their own doc) and deployed it. This means the achievement system was **never actually functional in production before this change** — worth knowing if anything elsewhere assumed it was working.
+
+---
+
 ## 2026-07-14 — Gamification scoring/leaderboard/streak removal
 
 **What was removed:**

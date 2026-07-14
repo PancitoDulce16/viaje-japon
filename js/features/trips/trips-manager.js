@@ -190,9 +190,13 @@ export const TripsManager = {
         await this.loadTemplateItinerary(tripId, tripData.templateId);
       }
 
-      // 🏆 Tracking de gamificación
-      if (window.GamificationSystem) {
-        await window.GamificationSystem.trackAction('tripsCreated', 1);
+      // 🎏 Tracking de achievements — inicializa para este viaje nuevo
+      // primero (trackAction requiere que initialize() ya haya corrido
+      // para el tripId activo, y un viaje recién creado nunca fue
+      // inicializado todavía).
+      if (window.Achievements) {
+        await window.Achievements.initialize(tripId);
+        await window.Achievements.trackAction('tripsCreated', 1);
       }
 
       Notifications.success(

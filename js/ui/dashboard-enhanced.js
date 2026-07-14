@@ -544,8 +544,8 @@ class EnhancedDashboard {
         }
         break;
       case 'showGamification':
-        if (window.GamificationSystem) {
-          window.GamificationSystem.showAllBadges();
+        if (window.Achievements) {
+          window.Achievements.renderAllModal();
         }
         break;
       case 'showBudget':
