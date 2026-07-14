@@ -84,6 +84,37 @@ Whenever a system is replaced, real user data connected to it is preserved where
 
 ---
 
+## Data locality: what's local, cloud, or hybrid today
+
+Requested explicitly so synchronization can be designed on purpose later, instead of discovered by accident. Audited 2026-07-14 across every storage-touching feature file found this far into the project. **Cloud-backed** = Firestore/Storage is the source of truth. **Hybrid** = Firestore is primary but a localStorage fallback/cache exists. **Local-only** = never leaves the browser; a cleared cache or a second device loses it entirely.
+
+### Cloud-backed (no local fallback)
+- Trip metadata — `trips/{tripId}` (`trips-manager.js`)
+- Photos — `trips/{tripId}/photos` + Firebase Storage (`photo-gallery.js`) — confirmed no offline mode
+- Reservations — `trips/{tripId}/data/reservations` (`reservations-manager.js`) — confirmed no offline mode; `init()` no-ops without a `tripId`
+- Group chat, activity timeline, polls — `trips/{tripId}/chat`, `/timeline`, `/polls`, real-time via `onSnapshot`
+- **Achievements** — `trips/{tripId}/achievements/{userId}` (`achievements.js`) — state lives in memory + Firestore only, no localStorage
+- User profile — `users/{userId}`
+- Social feed / Travel Twins — `posts`, `travelTwinsPool`, `travelTwinsThreads`
+
+### Hybrid (Firestore primary, localStorage fallback or cache)
+- Packing list — `packing-list.js`: Firestore (`trips/{id}/data/packing` or `users/{id}/data/packing`) with `onSnapshot`, **and** always dual-writes to `localStorage['packingList']`
+- Budget/expenses — `budget-tracker.js`: Firestore `trips/{id}/expenses` when a trip+user exist, falls back fully to `localStorage['expenses']` otherwise
+- Budget category splits — `bento-budget.js`: `trip.info.categoryBudgets` (Firestore) or `localStorage['bento_category_budgets']`/`['bento_total_budget']` fallback
+- Journal entries — `travel-journal.js`: Firestore `trips/{id}/journal` with `onSnapshot`, **and** write-through cached to `localStorage['journal_entries']`, which also serves as the offline/no-trip fallback
+
+### Local-only (never synced — the most consequential finding here)
+- **Goshuin book — `localStorage['goshuin_book']`.** No Firestore at all.
+- **Ramen Passport — `localStorage['ramen_passport']`.** No Firestore at all.
+- Achievement-condition trackers read by `Achievements.getLiveStats()` — `localStorage['japanFoodTracker']`, `['japanTravelBingo']`, `['japanStampCollection']`
+- "Momentos Registrados" (formerly the streak tracker) — `localStorage['streaks']`
+- Location-guessing game score — in-memory only, not even localStorage; resets on reload
+- `currentTripId` — localStorage device/session pointer (correct as local-only by design, this one shouldn't sync)
+
+**Why this matters:** Goshuin and Ramen Passport are exactly the objects `OBJECT_BIBLE.md` and `SOUL.md` treat as the most emotionally important — real collected memories of a real trip — and they're the ones with zero durability. A cleared browser cache or a new device silently erases them, with no warning anywhere in the product that this could happen. Any future sync-strategy work should treat migrating these two onto the same Firestore pattern already proven by Reservations/Photos as the highest-priority item, not an equal-weight backlog entry.
+
+---
+
 ## How these principles get used
 
 Every proposal written under `FEATURE_ROADMAP.md`'s Step 1–5 workflow gets checked against this document during Step 2 (compare against every foundational document), alongside `SOUL.md`, `EXPERIENCE_GUIDELINES.md`, `DESIGN_SYSTEM.md`, `OBJECT_BIBLE.md`, and `ILLUSTRATION_LIBRARY.md`. Where `SOUL.md` and `EXPERIENCE_GUIDELINES.md` ask "does this feel right," this document asks "will this still be one clean system a year from now, or the beginning of a fifth gamification implementation."
