@@ -1,6 +1,6 @@
 # Dashboard Experience
 
-**Status: APPROVED, implementing in small reviewable slices.** Proposal accepted; the principles below were added at approval time and now govern every slice of this experience.
+**Status: PRODUCTION READY.** All four slices complete. See "Final Dashboard Review" at the end of this document for the production-readiness assessment. This experience is now the reference implementation every future experience is measured against.
 
 ### Implementation progress
 
@@ -8,7 +8,7 @@
 - **Slice 2 — Progressive content below the hero (done).** `js/features/dashboard/progressive-content.js`, `css/objects.css` (the first real implementation of the Ticket/Travel/Discovery/Journal card families from `OBJECT_BIBLE.md` — previously spec-only). `Achievements.renderMemoryTeaser()` added as a quiet, single-recuerdo teaser distinct from the fuller `renderPanel()`. Stage-ordered sections: Dreaming/Planning lead with inspiration, Preparing with reservations/packing/documents, Traveling with today's Ticket rail, Remembering with the memory teaser + stats + a "Travel Memories" teaser. Demonstrated in the same isolated preview, still not wired into live `dashboard.html`.
 - **Slice 3 — Live integration (done).** `hero-moment.js` + `progressive-content.js` now render for real inside `TripsManager.updateTripHeader()`/`updateTripHeaderEmpty()`, fed by real Firestore data via the new `js/features/dashboard/dashboard-data.js`. The old banner + 4-card stat grid + `loadTripStatistics()` are deleted, not hidden. Full migration summary in `DEPRECATION_LOG.md`. Verified against the real test account (existing trip, real stage/data), a brand-new account (no-trip state), mobile + desktop, keyboard navigation, and console — all clean.
   - **Found during this slice, not fixed, flagged for a decision:** `itinerary-v3.js` renders its own separate trip-summary header inside the Itinerario tab, now visibly duplicating the new Dashboard hero directly above it. Pre-existing, not introduced by this migration — see `DEPRECATION_LOG.md`'s "remaining technical debt" for this entry.
-- **Slice 4 — not started.** Candidate: resolve the duplicate-header finding above, or move on to other experiences per explicit direction.
+- **Slice 4 — Polish (done).** Empty/error/loading states, accessibility fixes (two real contrast failures found and fixed — see review below), analytics event contracts verified against real consumers, responsive check at tablet width, illustration compressed 89% (1.9MB → 205KB, no new dependency). The duplicate-header finding from slice 3 remains deliberately unresolved — it belongs to the future Itinerary Experience, not this one.
 - Full Definition of Done (bottom of this doc) applies to the *experience as a whole*, not to each individual slice — slice 1's own scope is intentionally narrower; see its self-review in the commit history.
 
 This is the first document written against the Experience Documentation template. It doubles as the Dashboard Experience Proposal requested directly — the template sections are the blueprint, the "Existing elements," "Wireframes," "User flow," and "Migration strategy" sections at the end are the proposal-specific analysis that justifies it.
@@ -193,3 +193,72 @@ The hero is the only thing guaranteed visible without scrolling. Everything belo
 2. Confirm all six "absorbed" tabs (Vuelos, Hoteles, Transporte, Atracciones, Esenciales, Analytics) are genuinely reachable through the new IA before removing their top-level tab buttons — no feature loses its only door.
 3. Swap the default shell once verified; keep the old tab bar's CSS in place for one more pass (per `ARCHITECTURE_PRINCIPLES.md`'s "deprecate before deleting") rather than deleting it in the same commit that ships the new shell.
 4. Log the tab-bar removal in `DEPRECATION_LOG.md` once it actually happens, with a note on where each absorbed tab now lives.
+
+---
+
+# Final Dashboard Review — production readiness
+
+This is not a design document. It's an assessment of what actually shipped, written after all four slices, for anyone deciding whether this is safe to consider done.
+
+## What was removed
+
+- The centered JAPITIN banner (desktop-only) and the 4-card stat grid (`#tripStatsDashboard`: Progreso del Viaje, Actividades, Presupuesto, Reservas).
+- `TripsManager.loadTripStatistics()` — deleted outright, not left dormant.
+- The old "👋 ¡Bienvenido!" empty-state strip.
+- Four independent gamification/scoring systems and their fake leaderboard, in the earlier Phase 2 work this experience builds on (`gamification-system.js`, the achievement section of `social-features.js`, two separate streak trackers) — replaced by the single canonical `Achievements` module this experience's memory teaser reads from.
+
+## What was simplified
+
+- One trip-summary rendering path instead of two parallel ones (`updateTripHeader()`/`updateTripHeaderEmpty()` now call directly into `stage-detector.js` → `hero-moment.js` → `progressive-content.js`, no independent stat-computation logic living alongside it).
+- The whole-trip "total activities" stat is gone with no direct replacement — it was superseded by the Traveling stage's real today's-activities Ticket rail, which answers a more useful question. A deliberate simplification, not an oversight (see `DEPRECATION_LOG.md`).
+- Card markup collapsed from ad hoc Tailwind strings scattered per feature into four canonical, reusable classes (`ticket-card`, `travel-card`, `discovery-card`, `journal-card`) — the first real implementation of `OBJECT_BIBLE.md`'s card families, not just documentation anymore.
+
+## What became canonical
+
+- `js/features/dashboard/stage-detector.js` — the one place trip dates become a journey stage.
+- `js/features/dashboard/hero-moment.js` — the one hero moment, never competing cards.
+- `js/features/dashboard/progressive-content.js` — the one place "what matters next" gets ordered by stage.
+- `js/features/dashboard/dashboard-data.js` — the one place the Dashboard reads Firestore, keeping the renderer pure.
+- `css/objects.css` — the first four real Travel Objects, ready for reuse by every future experience (Budget, Journal, Itinerary, etc. should consume these, not invent their own card styles).
+- `Achievements.renderMemoryTeaser()` — the quiet-memory rendering path every future "show a recent achievement" surface should call, not reimplement.
+
+## Remaining technical debt
+
+- **The duplicate Itinerary header** (found in slice 3, deliberately left alone — see `DEPRECATION_LOG.md`). This is the most visible remaining rough edge and the natural first item for the future Itinerary Experience.
+- **Most manually-tracked Achievement counters have no real call site** (documented since the Achievement unification work) — unchanged by this experience, not this experience's problem to fix, but still true.
+- **The Traveling stage's "Tu pase de transporte" card has no real data source** — no IC-card/Suica balance tracking exists anywhere in the app. It renders an honest `—` rather than a fake number, which is correct, but it's a visibly incomplete card until Train Pass (the `OBJECT_BIBLE.md` object) gets built for real.
+- **Only one real illustration exists** (`tokyo-skyline-day-sakura.jpg`), reused across every stage via CSS mood shifts. Deliberate slice-1 scope, still true — Preparing/Traveling/Remembering all show the same photo. This is the single biggest visual-polish gap left.
+- **Discovery cards are icon-based, not photo-based** — consistent with "keep using the existing illustration, don't spend time on new art" for this experience, but means the Discovery object isn't demonstrating its own `OBJECT_BIBLE.md` ideal ("image-forward") yet.
+
+## Performance observations
+
+- Net bundle impact across all four slices: the main `dashboard.js` chunk moved from ~2850KB to ~2855KB pre-gzip (~698KB → ~702KB gzipped) — roughly +5KB despite adding stage detection, hero rendering, four stage-specific content renderers, real Firestore data-fetching, and a full illustration. Deleting the old stat-grid code offset most of what was added.
+- The hero illustration was shipped as an uncompressed 1.9MB PNG straight from Nano Banana output — caught during this review's performance pass, not before. Re-encoded to JPEG (quality 82, .NET's built-in encoder, no new dependency) at 205KB, a 89% reduction with no visible quality loss. Documented as a required step for every future illustration in `ILLUSTRATION_LIBRARY.md`'s governance section — this was a real gap in the pipeline, now closed for future assets, not just this one.
+- Dev-server timing showed the hero visible ~6.4s and progressive content ~7.2s after the login click — this number is dominated by Firebase Auth + unbundled ES module dev-server overhead and is **not representative of production performance** (no minification, no CDN, no build-time bundling active in dev mode). Flagged as a number to re-measure against the deployed build, not a verified production figure.
+- `dashboard-data.js` fetches only what the current stage needs (no speculative reads), and reuses the itinerary document already fetched for the `itineraryLoaded` event rather than double-reading it for Traveling/Remembering stages.
+
+## Accessibility observations
+
+- **Two real WCAG AA contrast failures were found by measurement, not assumed away, and fixed:**
+  1. The Dreaming-stage empty-state subtext (`--ink-soft` on the gradient's darker stop) measured 3.63:1 — fixed by switching to `--color-ai` (7.3–9.2:1).
+  2. The Ticket Card's confirmation tag (`--color-umi` text on its own pale pill) measured 2.28:1 — fixed by switching the text to `--color-ai` (9.53:1) while keeping the tinted background as the color cue.
+- The hero's photographic scrim was strengthened from 0.72 to 0.85 alpha at its darkest stop after measuring the headline at 5.58:1 and the subtext at only 4.76:1 against the shipped photo's lightest region — a technically-passing but fragile margin that would likely fail against a brighter future illustration. Now 7.52:1 / 6.27:1, with real headroom.
+- Keyboard navigation verified directly (not assumed): Tab order reaches the hero's CTA button within 6 tab-stops on the real page, `:focus-visible` rings are defined for every new interactive element (hero CTA, discovery/travel/ticket/journal cards used as buttons, the new error-retry button).
+- Two `onclick`-bearing `<div>`s from slice 2 (memory teaser, Dreaming budget nudge) were already converted to real `<button>` elements before this review — confirmed still correct.
+- Not yet audited: screen-reader announcement quality for the stage transition itself (does a screen-reader user get told the hero's content just changed after a re-render?) — flagged as a future opportunity below, not fixed here.
+
+## Future opportunities (not implemented)
+
+- Per-stage, per-city illustration generation (Preparing/Traveling/Remembering each getting their own mood-appropriate art) once more Nano Banana budget/time is allocated.
+- Live `aria-live` region on the hero so stage changes announce themselves to screen readers.
+- Photo-based Discovery cards once city-specific illustrations exist for more than Tokyo.
+- Real Train Pass / IC-card balance integration, once that data source exists anywhere in the app.
+- Re-measuring the performance numbers above against the actual deployed production build, not dev-server timing.
+
+## Original Dashboard vs. this one
+
+**Why it's better:** The original dashboard treated every visit the same — a stat-strip and eleven equal-weight tabs, regardless of whether the trip was three months away or happening today. This one changes what it leads with based on where the traveler actually is in their journey, which is the entire premise `EXPERIENCE_GUIDELINES.md` was written to argue for. It also fixed a genuinely broken FAB, a permissions gap that made the Achievement system non-functional in production, and two real accessibility failures — none of which the original dashboard's existence had surfaced, because nobody had measured it.
+
+**Which product principles it now satisfies:** The three SOUL.md tests apply cleanly for the first time on this screen — a user opening the app sees a feeling before a number; the hero+progressive-content structure could not be mistaken for a generic SaaS dashboard; and removing "Japan" from the hero's copy would leave it making no sense at all (city art, real trip dates, JR-Pass-adjacent language). Every object on screen is one of the 15 canonical Travel Objects, never an invented one-off.
+
+**Which principles still need future work:** "Every illustration should communicate the current travel stage" is only partially true — one photo standing in for four stages via CSS filters is a placeholder for real per-stage art, not the finished version of that principle. The Achievement teaser is quiet, per the brief, but the underlying Achievement counters mostly can't fire yet, so "memories quietly collected along the journey" is more aspirational than real until other experiences wire their own `trackAction()` calls. And the duplicate Itinerary header means the very first thing a user scrolls past after this polished hero is a visibly older, unrelated design language — the Dashboard Experience is finished, but the *page* it lives on isn't yet, and that seam will stay visible until the Itinerary Experience happens.

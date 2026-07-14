@@ -7,16 +7,23 @@
  * says before anything else, changing with the journey stage.
  *
  * Illustration note: this slice ships with ONE real Nano Banana
- * illustration (images/illustrations/generated/cities/tokyo-skyline-day-sakura.png),
+ * illustration (images/illustrations/generated/cities/tokyo-skyline-day-sakura.jpg),
  * reused across stages with CSS-level mood shifts (brighter for
  * Preparing, desaturated + slower for Remembering) rather than a
  * dedicated generation per stage/city. That's an intentional slice-1
  * scope decision, not a finished art set — see experiences/dashboard.md.
+ *
+ * File format note (polish pass): shipped as .jpg, not the original
+ * Nano Banana .png — re-encoded via .NET's built-in JPEG encoder
+ * (no new dependency), 1.9MB → 205KB (89% smaller) with no visible
+ * quality loss for a photographic-style illustration like this one.
+ * Future generated illustrations should get the same treatment before
+ * landing in images/illustrations/generated/.
  */
 
 import { detectJourneyStage, getJourneyMath } from './stage-detector.js';
 
-const HERO_IMAGE = '/images/illustrations/generated/cities/tokyo-skyline-day-sakura.png';
+const HERO_IMAGE = '/images/illustrations/generated/cities/tokyo-skyline-day-sakura.jpg';
 
 function buildContent(trip, stage, math) {
   const destination = trip?.info?.destination || 'Japón';

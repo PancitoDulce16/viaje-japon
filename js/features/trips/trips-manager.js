@@ -17,7 +17,7 @@ import {
 } from 'firebase/firestore';
 import { detectJourneyStage } from '../dashboard/stage-detector.js';
 import { renderHeroMoment } from '../dashboard/hero-moment.js';
-import { renderProgressiveContent } from '../dashboard/progressive-content.js';
+import { renderProgressiveContent, renderProgressiveSkeleton } from '../dashboard/progressive-content.js';
 import { fetchDashboardData } from '../dashboard/dashboard-data.js';
 
 export const TripsManager = {
@@ -1179,7 +1179,7 @@ export const TripsManager = {
         </div>
 
         <div id="dashboardProgressiveContent" style="display:flex; flex-direction:column; gap:32px;">
-          <div class="text-center text-sm py-6" style="color:var(--ink-soft)">Cargando…</div>
+          ${renderProgressiveSkeleton()}
         </div>
       </div>
     `;
@@ -1228,10 +1228,17 @@ export const TripsManager = {
       const data = await fetchDashboardData(this.currentTrip.id, stage, this.currentTrip, itineraryData);
       container.innerHTML = renderProgressiveContent(this.currentTrip, data);
     } catch (error) {
+      // Error state per EXPERIENCE_GUIDELINES.md — plain and calm, not
+      // personality-forward, explains what happened, one real retry
+      // action (not "reload the whole page").
       console.error('❌ Error cargando contenido del dashboard:', error);
       container.innerHTML = `
-        <div class="text-center text-sm py-6" style="color:var(--ink-soft)">
-          No se pudo cargar el contenido del dashboard. Intenta recargar la página.
+        <div class="journal-card" style="text-align:center;">
+          <div class="journal-card__title" style="margin-top:0;">No se pudo cargar esta sección</div>
+          <div class="journal-card__sub">Revisa tu conexión e intenta de nuevo.</div>
+          <button type="button" onclick="TripsManager.loadDashboardProgressiveContent('${stage}')" class="dash-action-btn" style="margin-top:12px;">
+            Reintentar
+          </button>
         </div>
       `;
     }

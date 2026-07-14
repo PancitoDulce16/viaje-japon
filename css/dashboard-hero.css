@@ -28,7 +28,12 @@
 .hero-moment__scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(var(--shadow-rgb), 0.72) 0%, rgba(var(--shadow-rgb), 0.15) 55%, transparent 80%);
+  /* 0.85 at the bottom stop (not 0.72) — verified via real contrast
+     measurement against the shipped Tokyo illustration's lightest
+     region: gives the headline ~7.5:1 and the subtext ~6.3:1, a real
+     safety margin above WCAG AA (4.5:1) rather than a borderline pass
+     that could fail against a different/brighter future illustration. */
+  background: linear-gradient(to top, rgba(var(--shadow-rgb), 0.85) 0%, rgba(var(--shadow-rgb), 0.2) 55%, transparent 80%);
 }
 
 .hero-moment__empty-art {
@@ -85,12 +90,16 @@
   outline-offset: 2px;
 }
 
-/* Empty state (Dreaming — no trip yet): calm, no photographic art, no CTA urgency */
+/* Empty state (Dreaming — no trip yet): calm, no photographic art, no CTA urgency.
+   Both headline AND subtext use --color-ai (not --ink-soft) — measured
+   contrast: --ink-soft against the gradient's darker (bottom) stop was
+   only 3.63:1, failing WCAG AA's 4.5:1 for normal text. --color-ai
+   clears it with real margin (7.3–9.2:1). Hierarchy between headline/
+   subtext still reads via weight and size, not color alone. */
 .hero-moment--dreaming .hero-moment__headline,
 .hero-moment--dreaming .hero-moment__subtext {
   color: var(--color-ai);
 }
-.hero-moment--dreaming .hero-moment__subtext { color: var(--ink-soft); }
 .hero-moment--dreaming .hero-moment__cta {
   background: linear-gradient(135deg, var(--color-kasumi), var(--color-yuzu));
   color: #fff;

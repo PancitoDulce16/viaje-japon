@@ -1,22 +1,21 @@
 /**
- * 📖 PROGRESSIVE CONTENT — Dashboard Experience, slice 2
+ * 📖 PROGRESSIVE CONTENT — Dashboard Experience
  *
  * Everything below the one Hero Moment (hero-moment.js). Answers "what
  * should I care about next," in an order that changes with the journey
  * stage — never a grid of equal-weight widgets, one continuous story
  * read top to bottom. Built entirely from the canonical object classes
  * in css/objects.css (ticket-card / travel-card / discovery-card /
- * journal-card) — no new card styles invented for this slice, and the
- * Achievement teaser reuses Achievements.renderMemoryTeaser() rather
- * than a second implementation.
+ * journal-card) — no new card styles invented, and the Achievement
+ * teaser reuses Achievements.renderMemoryTeaser() rather than a second
+ * implementation.
  *
- * Data note: the section-builder functions below take plain data
- * (arrays of activities/reservations/etc.) so they're ready to wire to
- * real trip data later — this slice itself is demonstrated with
- * clearly-labeled representative content in dashboard-hero-preview.html,
- * the same isolated-preview pattern slice 1 used, not real user data.
- * No fabricated personal numbers (budgets, distances) are asserted as
- * fact anywhere here — see SOUL.md's rule against fake data.
+ * Wired to real Firestore data since slice 3 via dashboard-data.js —
+ * this file stays a pure renderer (data in, HTML out). Every branch's
+ * "no data yet" path is a real, warm empty state (per slice 4's polish
+ * pass), never a bare "0 de 0" or "No hay X." No fabricated personal
+ * numbers are ever asserted as fact — see SOUL.md's rule against fake
+ * data.
  */
 
 import { detectJourneyStage, getJourneyMath } from './stage-detector.js';
@@ -136,9 +135,13 @@ function renderPreparingContent(trip, math, data) {
     ${!readiness.allReady ? `<div class="journal-card__sub" style="margin-top:8px;">⚠️ Todavía falta confirmar algo antes de salir</div>` : ''}
   ` : null;
 
+  const packingContent = packingProgress.total > 0
+    ? travelCard({ label: 'Empacado', value: `${packingProgress.checked} de ${packingProgress.total}`, progress: packingPct })
+    : `<div class="journal-card" onclick="window.DashboardApp?.switchTab('preparation')" style="cursor:pointer;"><div class="journal-card__title" style="margin-top:0;">Aún no armaste tu maleta</div><div class="journal-card__sub">Empieza tu lista y márcala mientras empacas →</div></div>`;
+
   return (
-    section('Reservas', reservations || `<div class="journal-card"><div class="journal-card__sub" style="margin-top:0;">Aún no tienes reservas guardadas.</div></div>`) +
-    section('Tu maleta', travelCard({ label: 'Empacado', value: `${packingProgress.checked} de ${packingProgress.total}`, progress: packingPct })) +
+    section('Reservas', reservations || `<div class="journal-card"><div class="journal-card__title" style="margin-top:0;">Sin reservas todavía</div><div class="journal-card__sub">Hoteles, restaurantes y actividades que confirmes aparecerán aquí.</div></div>`) +
+    section('Tu maleta', packingContent) +
     (budgetCard ? section('Presupuesto', budgetCard) : '') +
     (readinessCard ? section('Vuelos y hoteles', readinessCard) : '')
   );
@@ -188,6 +191,23 @@ function renderRememberingContent(trip, data) {
       </div>
     `)
   );
+}
+
+/**
+ * Loading placeholder shown while fetchDashboardData() resolves —
+ * shaped like the content it's about to become (two card-height
+ * blocks under a label bar), not a bare "Cargando…" string. Respects
+ * prefers-reduced-motion (see css/objects.css).
+ */
+export function renderProgressiveSkeleton() {
+  const block = `
+    <div class="dash-skeleton">
+      <div class="dash-skeleton__bar"></div>
+      <div class="dash-skeleton__card"></div>
+      <div class="dash-skeleton__card"></div>
+    </div>
+  `;
+  return block + block;
 }
 
 /**
