@@ -226,7 +226,7 @@ export const UserProfile = {
                     </div>
 
                     <!-- Additional Stats -->
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                    <div class="grid grid-cols-2 gap-4 mt-4">
                         <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg text-center">
                             <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">${stats.bingoCompleted}</div>
                             <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">🎯 Bingo</div>
@@ -234,10 +234,6 @@ export const UserProfile = {
                         <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg text-center">
                             <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">${stats.stampsCollected}</div>
                             <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">🎫 Sellos</div>
-                        </div>
-                        <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg text-center">
-                            <div class="text-2xl font-bold text-red-600 dark:text-red-400">${stats.maxStreak}</div>
-                            <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">🔥 Racha</div>
                         </div>
                     </div>
 
@@ -261,20 +257,20 @@ export const UserProfile = {
                 </div>
             </div>
 
-            <!-- 🏆 SECCIÓN DE LOGROS Y BADGES COMPLETA -->
+            <!-- 🎏 SECCIÓN DE RECUERDOS -->
             ${this.isOwnProfile ? `
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden mt-6">
                     <div class="bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/40 dark:to-orange-900/40 p-6 border-b border-yellow-200 dark:border-yellow-700">
                         <h3 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-3">
-                            <span>🏆</span>
-                            <span>Mis Logros y Badges</span>
+                            <span>🎏</span>
+                            <span>Mis Recuerdos</span>
                         </h3>
                         <p class="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                            Completa actividades y alcanza hitos para desbloquear badges especiales
+                            Momentos de este viaje que ya valen la pena recordar
                         </p>
                     </div>
                     <div class="p-6">
-                        <!-- Panel de Gamificación se renderizará aquí -->
+                        <!-- Panel de logros se renderizará aquí -->
                         <div id="profile-gamification-panel">
                             <div class="text-center text-gray-400 py-8">
                                 Cargando sistema de logros...
@@ -329,7 +325,6 @@ export const UserProfile = {
             const mealsTracked = JSON.parse(localStorage.getItem('japanFoodTracker') || '{}');
             const bingoData = JSON.parse(localStorage.getItem('japanTravelBingo') || '{}');
             const stampsData = JSON.parse(localStorage.getItem('japanStampCollection') || '[]');
-            const streaksData = JSON.parse(localStorage.getItem('japanActivityStreaks') || '{}');
 
             let photosUploaded = 0;
             let journalEntries = 0;
@@ -380,7 +375,6 @@ export const UserProfile = {
                 mealsTracked: Object.values(mealsTracked).filter(v => v).length,
                 bingoCompleted: Object.values(bingoData).filter(v => v).length,
                 stampsCollected: stampsData.length,
-                maxStreak: Math.max(...Object.values(streaksData).map(s => s.streak || 0), 0),
                 achievements,
                 latestAchievements
             };
@@ -392,7 +386,6 @@ export const UserProfile = {
                 mealsTracked: 0,
                 bingoCompleted: 0,
                 stampsCollected: 0,
-                maxStreak: 0,
                 achievements: 0,
                 latestAchievements: []
             };

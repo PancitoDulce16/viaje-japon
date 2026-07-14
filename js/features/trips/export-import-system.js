@@ -240,38 +240,37 @@ class ExportImportSystem {
   }
 
   /**
-   * 🏆 EXPORTAR GAMIFICACIÓN
+   * 🎏 EXPORTAR LOGROS
+   *
+   * Nota de migración (ver DEPRECATION_LOG.md): esta función leía
+   * `.points`/`.level`/`.achievements`/`.stats`, propiedades que nunca
+   * existieron en la clase real — era código muerto que nunca funcionó.
+   * Ahora exporta el estado real (`userStats`, incluido `unlockedBadges`)
+   * para que los recuerdos de un usuario sí sobrevivan a un export/import.
    */
   async exportGamification() {
-    if (window.GamificationSystem) {
-      return {
-        points: window.GamificationSystem.points,
-        level: window.GamificationSystem.level,
-        badges: window.GamificationSystem.badges,
-        achievements: window.GamificationSystem.achievements,
-        stats: window.GamificationSystem.stats
-      };
+    if (window.GamificationSystem?.userStats) {
+      return { userStats: window.GamificationSystem.userStats };
     }
 
     return null;
   }
 
   /**
-   * 🏆 IMPORTAR GAMIFICACIÓN
+   * 🎏 IMPORTAR LOGROS
    */
   async importGamification(data) {
     try {
-      if (window.GamificationSystem) {
-        window.GamificationSystem.points = data.points || 0;
-        window.GamificationSystem.level = data.level || 1;
-        window.GamificationSystem.badges = data.badges || [];
-        window.GamificationSystem.achievements = data.achievements || [];
-        window.GamificationSystem.stats = data.stats || {};
-        window.GamificationSystem.save();
+      if (window.GamificationSystem && data?.userStats) {
+        window.GamificationSystem.userStats = {
+          ...window.GamificationSystem.getDefaultStats(),
+          ...data.userStats
+        };
+        await window.GamificationSystem.saveStats();
       }
       return true;
     } catch (error) {
-      console.error('Error importando gamification:', error);
+      console.error('Error importando logros:', error);
       return false;
     }
   }

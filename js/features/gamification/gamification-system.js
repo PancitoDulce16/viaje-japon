@@ -1,15 +1,16 @@
 /**
- * 🏆 SISTEMA DE GAMIFICACIÓN Y BADGES
+ * 🎏 SISTEMA DE LOGROS (ACHIEVEMENTS)
  *
- * Sistema de logros, puntos y niveles para motivar a los usuarios
- * a explorar todas las funcionalidades de la app.
+ * Marca los momentos de un viaje que valen la pena recordar.
+ * Un logro es un recuerdo, no una recompensa — no hay puntos, no hay
+ * niveles, no hay rachas que romper. Ver SOUL.md ("Memories, not
+ * productivity") y OBJECT_BIBLE.md (objeto Achievement).
  *
- * Features:
- * - 20+ badges desbloqueables
- * - Sistema de puntos (XP)
- * - 6 niveles de viajero
- * - Notificaciones de logros
- * - Persistencia en Firebase
+ * Deprecation note (ver DEPRECATION_LOG.md): esta clase antes otorgaba
+ * XP por cada badge y calculaba 6 "niveles de viajero" a partir del XP
+ * acumulado. Todo eso se eliminó. Los datos de `unlockedBadges` de
+ * usuarios existentes se preservan tal cual — solo cambió qué se
+ * calcula/muestra a partir de ellos, nunca se borró nada en Firestore.
  */
 
 import { db } from '../../core/firebase-config.js';
@@ -20,15 +21,16 @@ class GamificationSystem {
     this.userId = null;
     this.userStats = null;
 
-    // Definición de badges
+    // Definición de logros — cada uno es un momento real de un viaje,
+    // no un peldaño hacia el siguiente. Ninguno depende de "nivel" ni
+    // de rachas de días consecutivos.
     this.badges = {
-      // 🎯 Badges de Inicio
+      // 🎯 Primeros pasos
       firstTrip: {
         id: 'firstTrip',
         name: 'Primer Viaje',
         description: 'Creaste tu primer viaje',
         icon: '🎫',
-        points: 50,
         condition: (stats) => stats.tripsCreated >= 1
       },
 
@@ -37,17 +39,15 @@ class GamificationSystem {
         name: 'Planificador Novato',
         description: 'Generaste tu primer itinerario inteligente',
         icon: '🗺️',
-        points: 100,
         condition: (stats) => stats.itinerariesGenerated >= 1
       },
 
-      // 🎨 Badges de Personalización
+      // 🎨 Personalización
       hybridCreator: {
         id: 'hybridCreator',
         name: 'Creador Híbrido',
         description: 'Creaste un itinerario híbrido personalizado',
         icon: '🎨',
-        points: 150,
         condition: (stats) => stats.hybridsCreated >= 1
       },
 
@@ -56,17 +56,15 @@ class GamificationSystem {
         name: 'Personalizador Experto',
         description: 'Editaste actividades en 5 días diferentes',
         icon: '✏️',
-        points: 200,
         condition: (stats) => stats.daysEdited >= 5
       },
 
-      // 💰 Badges de Gestión
+      // 💰 Gestión del presupuesto
       budgetMaster: {
         id: 'budgetMaster',
         name: 'Maestro del Presupuesto',
         description: 'Registraste gastos en 3 categorías diferentes',
         icon: '💰',
-        points: 150,
         condition: (stats) => stats.expenseCategories >= 3
       },
 
@@ -75,17 +73,15 @@ class GamificationSystem {
         name: 'Viajero Económico',
         description: 'Mantuviste el presupuesto bajo control',
         icon: '🏦',
-        points: 200,
         condition: (stats) => stats.budgetKept >= 1
       },
 
-      // 📊 Badges de Exploración
+      // 📊 Exploración
       explorer: {
         id: 'explorer',
         name: 'Explorador Curioso',
         description: 'Generaste itinerarios para 3 ciudades diferentes',
         icon: '🧭',
-        points: 250,
         condition: (stats) => stats.citiesExplored >= 3
       },
 
@@ -94,17 +90,15 @@ class GamificationSystem {
         name: 'Indeciso Creativo',
         description: 'Comparaste variaciones 5 veces',
         icon: '🔄',
-        points: 100,
         condition: (stats) => stats.variationsCompared >= 5
       },
 
-      // 📤 Badges de Compartir
+      // 📤 Compartir
       exporter: {
         id: 'exporter',
         name: 'Organizador Pro',
         description: 'Exportaste tu itinerario en 3 formatos diferentes',
         icon: '📤',
-        points: 150,
         condition: (stats) => stats.exportFormats >= 3
       },
 
@@ -113,17 +107,15 @@ class GamificationSystem {
         name: 'Espíritu Colaborativo',
         description: 'Compartiste un viaje con otros usuarios',
         icon: '🤝',
-        points: 200,
         condition: (stats) => stats.tripsShared >= 1
       },
 
-      // 📝 Badges de Contenido
+      // 📝 Contenido
       notekeeper: {
         id: 'notekeeper',
         name: 'Cronista Viajero',
         description: 'Agregaste notas a 10 actividades',
         icon: '📝',
-        points: 150,
         condition: (stats) => stats.notesAdded >= 10
       },
 
@@ -132,17 +124,15 @@ class GamificationSystem {
         name: 'Fotógrafo Entusiasta',
         description: 'Agregaste 20 fotos a tus viajes',
         icon: '📷',
-        points: 200,
         condition: (stats) => stats.photosAdded >= 20
       },
 
-      // 🎯 Badges Avanzados
+      // 🎯 Momentos memorables
       marathoner: {
         id: 'marathoner',
         name: 'Maratonista Cultural',
         description: 'Creaste un itinerario con más de 30 actividades',
         icon: '🏃',
-        points: 300,
         condition: (stats) => stats.maxActivitiesInTrip >= 30
       },
 
@@ -151,7 +141,6 @@ class GamificationSystem {
         name: 'Guerrero de la Semana',
         description: 'Planificaste un viaje de 7+ días',
         icon: '📅',
-        points: 250,
         condition: (stats) => stats.maxTripDays >= 7
       },
 
@@ -160,71 +149,39 @@ class GamificationSystem {
         name: 'Polímata Viajero',
         description: 'Visitaste 10 categorías diferentes de lugares',
         icon: '🎭',
-        points: 350,
         condition: (stats) => stats.categoryDiversity >= 10
       },
 
-      // 🔥 Badges de Streak
-      consistent: {
-        id: 'consistent',
-        name: 'Planificador Consistente',
-        description: 'Usaste la app 5 días seguidos',
-        icon: '🔥',
-        points: 300,
-        condition: (stats) => stats.loginStreak >= 5
-      },
-
+      // ⭐ De vuelta, una y otra vez (total acumulado, nunca una racha)
       dedicated: {
         id: 'dedicated',
         name: 'Viajero Dedicado',
         description: 'Usaste la app 30 días en total',
         icon: '⭐',
-        points: 500,
         condition: (stats) => stats.totalDaysUsed >= 30
       },
 
-      // 🏆 Badges Maestros
+      // 🏆 Logros mayores
       completionist: {
         id: 'completionist',
         name: 'Completista',
         description: 'Completaste todas las secciones de un viaje',
         icon: '✅',
-        points: 400,
         condition: (stats) => stats.completedTrips >= 1
-      },
-
-      sensei: {
-        id: 'sensei',
-        name: 'Sensei del Itinerario',
-        description: 'Alcanzaste el nivel máximo',
-        icon: '🥋',
-        points: 1000,
-        condition: (stats) => stats.level >= 6
       },
 
       legend: {
         id: 'legend',
         name: 'Leyenda Viajera',
-        description: 'Desbloqueaste todos los badges',
+        description: 'Desbloqueaste todos los demás logros',
         icon: '👑',
-        points: 2000,
-        condition: (stats) => stats.badgesUnlocked >= 19 // Todos menos este
+        condition: (stats) => stats.badgesUnlocked >= 17 // todos menos este
       }
     };
-
-    // Niveles de viajero
-    this.levels = [
-      { level: 1, name: 'Turista Novato', minXP: 0, icon: '🌱', color: 'gray' },
-      { level: 2, name: 'Viajero Curioso', minXP: 500, icon: '🗺️', color: 'blue' },
-      { level: 3, name: 'Explorador Experimentado', minXP: 1500, icon: '🧭', color: 'green' },
-      { level: 4, name: 'Planificador Experto', minXP: 3500, icon: '🎯', color: 'purple' },
-      { level: 5, name: 'Maestro del Itinerario', minXP: 7000, icon: '⭐', color: 'yellow' },
-      { level: 6, name: 'Sensei Viajero', minXP: 12000, icon: '🥋', color: 'red' }
-    ];
   }
 
   /**
-   * 🚀 Inicializa el sistema de gamificación para un usuario
+   * 🚀 Inicializa el sistema de logros para un usuario
    */
   async initialize(userId) {
     this.userId = userId;
@@ -242,6 +199,9 @@ class GamificationSystem {
       const statsDoc = await getDoc(statsRef);
 
       if (statsDoc.exists()) {
+        // Puede incluir campos heredados (xp, level, loginStreak) de antes
+        // de este cambio — se preservan tal cual en Firestore, simplemente
+        // ya no se leen ni se usan para nada.
         this.userStats = statsDoc.data();
       } else {
         // Crear stats iniciales
@@ -249,11 +209,11 @@ class GamificationSystem {
         await this.saveStats();
       }
 
-      console.log('🏆 Gamification initialized:', this.userStats);
+      console.log('🎏 Achievements initialized:', this.userStats);
       return this.userStats;
 
     } catch (error) {
-      console.error('❌ Error initializing gamification:', error);
+      console.error('❌ Error initializing achievements:', error);
       this.userStats = this.getDefaultStats();
       return this.userStats;
     }
@@ -264,12 +224,11 @@ class GamificationSystem {
    */
   getDefaultStats() {
     return {
-      xp: 0,
-      level: 1,
       badgesUnlocked: 0,
       unlockedBadges: [],
 
-      // Contadores de acciones
+      // Contadores de acciones — reflejan lo que realmente pasó en el
+      // viaje, nunca puntos.
       tripsCreated: 0,
       itinerariesGenerated: 0,
       hybridsCreated: 0,
@@ -285,7 +244,6 @@ class GamificationSystem {
       maxActivitiesInTrip: 0,
       maxTripDays: 0,
       categoryDiversity: 0,
-      loginStreak: 0,
       totalDaysUsed: 0,
       completedTrips: 0,
 
@@ -297,11 +255,11 @@ class GamificationSystem {
   }
 
   /**
-   * 📈 Registra una acción y otorga puntos si corresponde
+   * 📈 Registra una acción del viaje y revisa si desbloquea un logro
    */
   async trackAction(action, value = 1) {
     if (!this.userStats) {
-      console.warn('⚠️ Gamification not initialized');
+      console.warn('⚠️ Achievements not initialized');
       return;
     }
 
@@ -320,7 +278,7 @@ class GamificationSystem {
     this.userStats.lastLogin = Date.now();
     this.userStats.updatedAt = Date.now();
 
-    // Verificar nuevos badges desbloqueados
+    // Verificar nuevos logros desbloqueados
     const newBadges = await this.checkBadges();
 
     // Guardar cambios
@@ -330,7 +288,7 @@ class GamificationSystem {
   }
 
   /**
-   * 🏅 Verifica si se desbloquearon nuevos badges
+   * 🎏 Verifica si se desbloquearon nuevos logros
    */
   async checkBadges() {
     const newBadges = [];
@@ -343,80 +301,17 @@ class GamificationSystem {
 
       // Verificar condición
       if (badge.condition(this.userStats)) {
-        console.log(`🎉 Badge unlocked: ${badge.name}`);
+        console.log(`🎉 Achievement unlocked: ${badge.name}`);
 
-        // Desbloquear badge
         this.userStats.unlockedBadges.push(badgeId);
         this.userStats.badgesUnlocked++;
 
-        // Otorgar puntos
-        this.userStats.xp += badge.points;
-
-        // Verificar nivel
-        const levelUp = this.checkLevelUp();
-
-        newBadges.push({
-          ...badge,
-          levelUp
-        });
-
-        // Mostrar notificación
-        this.showBadgeNotification(badge, levelUp);
+        newBadges.push(badge);
+        this.showBadgeNotification(badge);
       }
     }
 
     return newBadges;
-  }
-
-  /**
-   * 📊 Verifica si el usuario subió de nivel
-   */
-  checkLevelUp() {
-    const currentLevel = this.userStats.level;
-    const newLevel = this.getCurrentLevel();
-
-    if (newLevel.level > currentLevel) {
-      this.userStats.level = newLevel.level;
-      console.log(`🎊 Level up! Now ${newLevel.name}`);
-      return newLevel;
-    }
-
-    return null;
-  }
-
-  /**
-   * 🎖️ Obtiene el nivel actual del usuario basado en XP
-   */
-  getCurrentLevel() {
-    const xp = this.userStats.xp;
-
-    for (let i = this.levels.length - 1; i >= 0; i--) {
-      if (xp >= this.levels[i].minXP) {
-        return this.levels[i];
-      }
-    }
-
-    return this.levels[0];
-  }
-
-  /**
-   * 📈 Obtiene el progreso al siguiente nivel
-   */
-  getProgressToNextLevel() {
-    const currentLevel = this.getCurrentLevel();
-    const nextLevelIndex = this.levels.findIndex(l => l.level === currentLevel.level) + 1;
-
-    if (nextLevelIndex >= this.levels.length) {
-      return { progress: 100, xpNeeded: 0, xpToNext: 0 };
-    }
-
-    const nextLevel = this.levels[nextLevelIndex];
-    const xpInCurrentLevel = this.userStats.xp - currentLevel.minXP;
-    const xpNeeded = nextLevel.minXP - currentLevel.minXP;
-    const progress = Math.round((xpInCurrentLevel / xpNeeded) * 100);
-    const xpToNext = nextLevel.minXP - this.userStats.xp;
-
-    return { progress, xpNeeded, xpToNext, nextLevel };
   }
 
   /**
@@ -442,10 +337,10 @@ class GamificationSystem {
   }
 
   /**
-   * 🎉 Muestra notificación de badge desbloqueado
+   * 🎉 Muestra notificación de logro desbloqueado — un recuerdo nuevo,
+   * no una recompensa. Sin XP, sin "subiste de nivel".
    */
-  showBadgeNotification(badge, levelUp) {
-    // Crear elemento de notificación
+  showBadgeNotification(badge) {
     const notification = document.createElement('div');
     notification.className = 'fixed top-20 right-4 z-50 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-2xl shadow-2xl p-6 max-w-sm transform transition-all duration-500 translate-x-full';
 
@@ -453,13 +348,9 @@ class GamificationSystem {
       <div class="flex items-start gap-4">
         <div class="text-5xl">${badge.icon}</div>
         <div class="flex-1">
-          <div class="text-xs font-bold uppercase tracking-wide mb-1">¡Badge Desbloqueado!</div>
+          <div class="text-xs font-bold uppercase tracking-wide mb-1">Nuevo recuerdo</div>
           <div class="text-lg font-bold mb-1">${badge.name}</div>
-          <div class="text-sm opacity-90 mb-2">${badge.description}</div>
-          <div class="flex items-center gap-2 text-sm">
-            <span class="font-bold">+${badge.points} XP</span>
-            ${levelUp ? `<span class="bg-white/20 px-2 py-1 rounded">🎊 Nivel ${levelUp.level}</span>` : ''}
-          </div>
+          <div class="text-sm opacity-90">${badge.description}</div>
         </div>
         <button onclick="this.parentElement.parentElement.remove()" class="text-white/80 hover:text-white">
           ✕
@@ -469,26 +360,22 @@ class GamificationSystem {
 
     document.body.appendChild(notification);
 
-    // Animación de entrada
     setTimeout(() => {
       notification.classList.remove('translate-x-full');
     }, 100);
 
-    // Auto-cerrar después de 6 segundos
     setTimeout(() => {
       notification.classList.add('translate-x-full');
       setTimeout(() => notification.remove(), 500);
     }, 6000);
 
-    // Sonido de logro (opcional)
     this.playAchievementSound();
   }
 
   /**
-   * 🔊 Reproduce sonido de logro
+   * 🔊 Reproduce un sonido suave al desbloquear un logro
    */
   playAchievementSound() {
-    // Sonido simple usando Web Audio API
     try {
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
@@ -510,21 +397,24 @@ class GamificationSystem {
   }
 
   /**
-   * 🏆 Renderiza el panel de gamificación para el dashboard
+   * 🎏 Renderiza el panel de logros para el dashboard — sin nivel, sin XP,
+   * solo los momentos que ya pasaron.
    */
   renderGamificationPanel() {
     if (!this.userStats) return '';
 
-    const currentLevel = this.getCurrentLevel();
-    const progress = this.getProgressToNextLevel();
-    const recentBadges = this.userStats.unlockedBadges.slice(-3).reverse();
+    const totalBadges = Object.keys(this.badges).length;
+    const recentBadges = this.userStats.unlockedBadges
+      .slice(-3)
+      .reverse()
+      .filter(badgeId => this.badges[badgeId]); // ignora ids de logros ya retirados
 
     return `
       <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl p-6 border-2 border-purple-200 dark:border-purple-700">
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
           <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            🏆 Tu Progreso
+            🎏 Tus Recuerdos
           </h3>
           <button
             onclick="window.GamificationSystem.showAllBadges()"
@@ -534,45 +424,14 @@ class GamificationSystem {
           </button>
         </div>
 
-        <!-- Level Progress -->
-        <div class="mb-6">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-2">
-              <span class="text-3xl">${currentLevel.icon}</span>
-              <div>
-                <div class="font-bold text-gray-900 dark:text-white">${currentLevel.name}</div>
-                <div class="text-xs text-gray-600 dark:text-gray-400">Nivel ${currentLevel.level}</div>
-              </div>
-            </div>
-            <div class="text-right">
-              <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">${this.userStats.xp.toLocaleString()}</div>
-              <div class="text-xs text-gray-600 dark:text-gray-400">XP Total</div>
-            </div>
-          </div>
-
-          <!-- Progress Bar -->
-          ${progress.nextLevel ? `
-            <div class="relative">
-              <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-                <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-500"
-                     style="width: ${progress.progress}%"></div>
-              </div>
-              <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
-                <span>${progress.progress}% al siguiente nivel</span>
-                <span>${progress.xpToNext} XP restantes</span>
-              </div>
-            </div>
-          ` : `
-            <div class="text-center text-sm text-yellow-600 dark:text-yellow-400 font-bold">
-              🎊 ¡Nivel Máximo Alcanzado!
-            </div>
-          `}
+        <div class="mb-6 text-sm text-gray-600 dark:text-gray-400">
+          ${this.userStats.badgesUnlocked} de ${totalBadges} momentos capturados en este viaje
         </div>
 
-        <!-- Recent Badges -->
+        <!-- Recent Achievements -->
         <div>
           <div class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            Badges Recientes (${this.userStats.badgesUnlocked}/${Object.keys(this.badges).length})
+            Últimos recuerdos
           </div>
           ${recentBadges.length > 0 ? `
             <div class="grid grid-cols-3 gap-3">
@@ -582,14 +441,13 @@ class GamificationSystem {
                   <div class="bg-white dark:bg-gray-800 rounded-lg p-3 text-center border-2 border-purple-200 dark:border-purple-700">
                     <div class="text-3xl mb-1">${badge.icon}</div>
                     <div class="text-xs font-semibold text-gray-900 dark:text-white truncate">${badge.name}</div>
-                    <div class="text-xs text-purple-600 dark:text-purple-400">+${badge.points} XP</div>
                   </div>
                 `;
               }).join('')}
             </div>
           ` : `
             <div class="text-center text-sm text-gray-500 dark:text-gray-400 py-4">
-              ¡Empieza a desbloquear badges!
+              Tu primer recuerdo está a un viaje de distancia.
             </div>
           `}
         </div>
@@ -598,7 +456,7 @@ class GamificationSystem {
   }
 
   /**
-   * 🎯 Muestra modal con todos los badges
+   * 🎏 Muestra modal con todos los logros — un álbum, no una tabla de puntajes
    */
   showAllBadges() {
     const modal = document.createElement('div');
@@ -607,8 +465,7 @@ class GamificationSystem {
       if (e.target === modal) modal.remove();
     };
 
-    const currentLevel = this.getCurrentLevel();
-    const progress = this.getProgressToNextLevel();
+    const totalBadges = Object.keys(this.badges).length;
 
     modal.innerHTML = `
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -616,8 +473,8 @@ class GamificationSystem {
         <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
           <div class="flex justify-between items-center">
             <div>
-              <h2 class="text-2xl font-bold mb-2">🏆 Tus Logros</h2>
-              <p class="text-purple-100">${this.userStats.badgesUnlocked}/${Object.keys(this.badges).length} badges desbloqueados • ${this.userStats.xp.toLocaleString()} XP</p>
+              <h2 class="text-2xl font-bold mb-2">🎏 Tus Recuerdos</h2>
+              <p class="text-purple-100">${this.userStats.badgesUnlocked}/${totalBadges} momentos capturados</p>
             </div>
             <button onclick="this.closest('.fixed').remove()" class="text-white/80 hover:text-white text-2xl">
               ✕
@@ -627,38 +484,6 @@ class GamificationSystem {
 
         <!-- Content -->
         <div class="flex-1 overflow-y-auto p-6">
-          <!-- Level Info -->
-          <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl p-6 mb-6">
-            <div class="flex items-center gap-4 mb-4">
-              <div class="text-5xl">${currentLevel.icon}</div>
-              <div class="flex-1">
-                <div class="text-2xl font-bold text-gray-900 dark:text-white">${currentLevel.name}</div>
-                <div class="text-gray-600 dark:text-gray-400">Nivel ${currentLevel.level}/6</div>
-              </div>
-              <div class="text-right">
-                <div class="text-3xl font-bold text-purple-600 dark:text-purple-400">${this.userStats.xp.toLocaleString()}</div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">XP Total</div>
-              </div>
-            </div>
-            ${progress.nextLevel ? `
-              <div>
-                <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  <span>Progreso a ${progress.nextLevel.name}</span>
-                  <span>${progress.progress}%</span>
-                </div>
-                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
-                  <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-500"
-                       style="width: ${progress.progress}%"></div>
-                </div>
-              </div>
-            ` : `
-              <div class="text-center text-yellow-600 dark:text-yellow-400 font-bold">
-                🎊 ¡Nivel Máximo Alcanzado!
-              </div>
-            `}
-          </div>
-
-          <!-- All Badges Grid -->
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             ${Object.values(this.badges).map(badge => {
               const unlocked = this.userStats.unlockedBadges.includes(badge.id);
@@ -667,10 +492,7 @@ class GamificationSystem {
                   ${unlocked ? '<div class="absolute top-2 right-2 text-green-500">✅</div>' : ''}
                   <div class="text-4xl mb-2 ${unlocked ? '' : 'grayscale'}">${badge.icon}</div>
                   <div class="font-bold text-sm text-gray-900 dark:text-white mb-1">${badge.name}</div>
-                  <div class="text-xs text-gray-600 dark:text-gray-400 mb-2">${badge.description}</div>
-                  <div class="text-xs font-bold ${unlocked ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500'}">
-                    +${badge.points} XP
-                  </div>
+                  <div class="text-xs text-gray-600 dark:text-gray-400">${badge.description}</div>
                 </div>
               `;
             }).join('')}

@@ -29,8 +29,6 @@ export const SocialFeatures = {
                 { id: 'bingo_5', name: 'Aventurero', icon: '🗾', condition: stats.bingoCompleted >= 5, description: 'Completaste 5 experiencias' },
                 { id: 'bingo_10', name: 'Explorador Maestro', icon: '🏯', condition: stats.bingoCompleted >= 10, description: 'Completaste 10 experiencias' },
                 { id: 'stamps_5', name: 'Coleccionista', icon: '🎫', condition: stats.stampsCollected >= 5, description: 'Coleccionaste 5 sellos' },
-                { id: 'streak_3', name: 'Constante', icon: '🔥', condition: stats.maxStreak >= 3, description: 'Mantuviste una racha de 3 días' },
-                { id: 'streak_7', name: 'Dedicado', icon: '💪', condition: stats.maxStreak >= 7, description: 'Mantuviste una racha de 7 días' },
                 { id: 'early_bird', name: 'Madrugador', icon: '🌅', condition: stats.tripStarted, description: 'Iniciaste tu viaje a Japón' },
                 { id: 'social', name: 'Social', icon: '👥', condition: stats.journalEntries >= 1, description: 'Escribiste tu primera entrada en el diario' },
                 { id: 'writer', name: 'Escritor', icon: '📝', condition: stats.journalEntries >= 5, description: 'Escribiste 5 entradas en el diario' },
@@ -58,7 +56,6 @@ export const SocialFeatures = {
         const mealsTracked = JSON.parse(localStorage.getItem('japanFoodTracker') || '{}');
         const bingoData = JSON.parse(localStorage.getItem('japanTravelBingo') || '{}');
         const stampsData = JSON.parse(localStorage.getItem('japanStampCollection') || '[]');
-        const streaksData = JSON.parse(localStorage.getItem('japanActivityStreaks') || '{}');
 
         // Obtener entradas del diario
         const journalRef = collection(db, `trips/${tripId}/journal`);
@@ -69,7 +66,6 @@ export const SocialFeatures = {
             mealsTracked: Object.values(mealsTracked).filter(v => v).length,
             bingoCompleted: Object.values(bingoData).filter(v => v).length,
             stampsCollected: stampsData.length,
-            maxStreak: Math.max(...Object.values(streaksData).map(s => s.streak || 0), 0),
             journalEntries: journalSnap.size,
             tripStarted: true
         };
@@ -80,11 +76,11 @@ export const SocialFeatures = {
             <div class="space-y-4">
                 <div class="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-4 rounded-lg border-2 border-yellow-300 dark:border-yellow-600">
                     <h4 class="text-lg font-bold mb-2 text-gray-800 dark:text-white flex items-center gap-2">
-                        <span>🏆</span>
-                        <span>Mis Logros</span>
+                        <span>🎏</span>
+                        <span>Tus Recuerdos</span>
                     </h4>
                     <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                        Completa actividades para desbloquear logros y badges especiales
+                        Momentos de tu viaje que ya valen la pena recordar
                     </p>
                 </div>
 
@@ -92,7 +88,7 @@ export const SocialFeatures = {
                     onclick="SocialFeatures.loadAchievements()"
                     class="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-3 rounded-lg font-bold transition shadow-lg"
                 >
-                    🔄 Actualizar Logros
+                    🔄 Actualizar
                 </button>
 
                 <div id="achievementsGrid" class="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -151,181 +147,6 @@ export const SocialFeatures = {
                 <p class="text-xs text-gray-600 dark:text-gray-400">${achievement.description}</p>
             </div>
         `).join('');
-    },
-
-    // ============================================
-    // DESAFÍOS DIARIOS
-    // ============================================
-    renderDailyChallenges() {
-        return `
-            <div class="space-y-4">
-                <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-lg border-2 border-purple-300 dark:border-purple-600">
-                    <h4 class="text-lg font-bold mb-2 text-gray-800 dark:text-white flex items-center gap-2">
-                        <span>⚡</span>
-                        <span>Desafío del Día</span>
-                    </h4>
-                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                        Un nuevo reto cada día para todos los miembros del grupo
-                    </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                        ⏰ Se renueva a medianoche (hora de Japón)
-                    </p>
-                </div>
-
-                <div id="dailyChallengeCard" class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border-2 border-purple-400 dark:border-purple-600">
-                    <div class="text-center text-gray-400 py-8">
-                        Cargando desafío...
-                    </div>
-                </div>
-
-                <div id="challengeParticipants" class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
-                    <!-- Participantes que completaron el desafío -->
-                </div>
-            </div>
-        `;
-    },
-
-    async loadDailyChallenge() {
-        const tripId = window.currentTripId || localStorage.getItem('currentTripId');
-        const card = document.getElementById('dailyChallengeCard');
-
-        if (!card) return;
-
-        if (!auth.currentUser) {
-            card.innerHTML = `
-                <div class="text-center py-8">
-                    <p class="text-4xl mb-3">🔒</p>
-                    <p class="text-gray-600 dark:text-gray-400">Debes estar autenticado</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Inicia sesión para ver el desafío del día</p>
-                </div>
-            `;
-            return;
-        }
-
-        if (!tripId) {
-            card.innerHTML = `
-                <div class="text-center py-8">
-                    <p class="text-4xl mb-3">✈️</p>
-                    <p class="text-gray-600 dark:text-gray-400">No hay viaje activo</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Selecciona o crea un viaje primero</p>
-                </div>
-            `;
-            return;
-        }
-
-        try {
-            const today = new Date().toISOString().split('T')[0];
-            const challengeRef = doc(db, `trips/${tripId}/challenges/${today}`);
-            const challengeSnap = await getDoc(challengeRef);
-
-            let challengeData;
-            if (!challengeSnap.exists()) {
-                // Crear desafío del día
-                const challenges = [
-                    { icon: '📸', title: 'Fotógrafo del Día', description: 'Toma una foto de un templo o santuario', category: 'cultural' },
-                    { icon: '🍜', title: 'Aventura Culinaria', description: 'Prueba una comida que nunca has comido', category: 'food' },
-                    { icon: '🗣️', title: 'Practicando Japonés', description: 'Usa 5 frases en japonés hoy', category: 'language' },
-                    { icon: '🚶', title: 'Explorador', description: 'Camina 10,000 pasos', category: 'activity' },
-                    { icon: '🏯', title: 'Cazador de Cultura', description: 'Visita un lugar histórico o cultural', category: 'cultural' },
-                    { icon: '🎌', title: 'Coleccionista', description: 'Consigue un sello o stamp nuevo', category: 'collection' },
-                    { icon: '🍵', title: 'Momento Zen', description: 'Toma té en un lugar tranquilo', category: 'relaxation' },
-                    { icon: '🛍️', title: 'Shopping Local', description: 'Compra algo en una tienda local (no cadena)', category: 'shopping' },
-                    { icon: '🌸', title: 'Naturaleza', description: 'Encuentra un jardín o parque', category: 'nature' },
-                    { icon: '👘', title: 'Experiencia Tradicional', description: 'Prueba algo tradicionalmente japonés', category: 'cultural' },
-                ];
-
-                const randomChallenge = challenges[Math.floor(Math.random() * challenges.length)];
-                challengeData = {
-                    ...randomChallenge,
-                    date: today,
-                    participants: [],
-                    createdAt: serverTimestamp()
-                };
-
-                await setDoc(challengeRef, challengeData);
-            } else {
-                challengeData = challengeSnap.data();
-            }
-
-            this.renderChallengeCard(challengeData, tripId, today);
-        } catch (error) {
-            console.error('Error loading daily challenge:', error);
-        }
-    },
-
-    renderChallengeCard(challenge, tripId, date) {
-        const card = document.getElementById('dailyChallengeCard');
-        if (!card) return;
-
-        const userId = auth.currentUser?.uid;
-        const hasCompleted = challenge.participants?.includes(userId);
-
-        card.innerHTML = `
-            <div class="text-center">
-                <div class="text-6xl mb-4">${challenge.icon}</div>
-                <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">${challenge.title}</h3>
-                <p class="text-gray-600 dark:text-gray-300 mb-4">${challenge.description}</p>
-
-                ${hasCompleted ? `
-                    <div class="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-4 py-2 rounded-lg font-bold">
-                        ✅ ¡Completado!
-                    </div>
-                ` : `
-                    <button
-                        onclick="SocialFeatures.completeChallenge('${tripId}', '${date}')"
-                        class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-bold transition shadow-lg"
-                    >
-                        ✓ Marcar como Completado
-                    </button>
-                `}
-            </div>
-        `;
-
-        // Mostrar participantes
-        const participantsDiv = document.getElementById('challengeParticipants');
-        if (participantsDiv && challenge.participants?.length > 0) {
-            participantsDiv.innerHTML = `
-                <h5 class="font-bold text-sm text-gray-700 dark:text-gray-300 mb-2">
-                    👥 Completado por ${challenge.participants.length} persona(s)
-                </h5>
-                <div class="flex gap-2 flex-wrap">
-                    ${challenge.participants.map(() => '<span class="text-2xl">✅</span>').join('')}
-                </div>
-            `;
-        }
-    },
-
-    async completeChallenge(tripId, date) {
-        if (!auth.currentUser) {
-            alert('Debes estar autenticado');
-            return;
-        }
-
-        try {
-            const userId = auth.currentUser.uid;
-            const challengeRef = doc(db, `trips/${tripId}/challenges/${date}`);
-
-            const challengeSnap = await getDoc(challengeRef);
-            const currentParticipants = challengeSnap.data()?.participants || [];
-
-            if (currentParticipants.includes(userId)) {
-                alert('Ya completaste este desafío');
-                return;
-            }
-
-            await updateDoc(challengeRef, {
-                participants: [...currentParticipants, userId]
-            });
-
-            alert('¡Desafío completado! 🎉');
-            this.loadDailyChallenge();
-
-            // Actualizar logros
-            this.checkAndUpdateAchievements(tripId);
-        } catch (error) {
-            console.error('Error completing challenge:', error);
-            alert('Error al completar el desafío');
-        }
     },
 
     // ============================================

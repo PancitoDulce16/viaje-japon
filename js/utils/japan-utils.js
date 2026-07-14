@@ -1205,14 +1205,22 @@ export const JapanUtils = {
         alert(`Filtro por tag: ${tagId}\n\nEsta función se integrará con tu sistema de favoritos existente.`);
     },
 
-    // 18. RACHA DE ACTIVIDADES
+    // 18. MOMENTOS REGISTRADOS
+    // Deprecation note (ver DEPRECATION_LOG.md): esta sección mostraba una
+    // "racha de días seguidos" con lógica de romper la racha si pasaba más
+    // de un día sin marcar la actividad. SOUL.md prohíbe rachas explícitamente
+    // ("no streaks", "celebrate exploration, not competition"). Ahora es un
+    // conteo acumulado simple — nunca se rompe, nunca presiona a usarlo todos
+    // los días. Los datos existentes en localStorage (clave 'streaks', sin
+    // renombrar para no perder los conteos ya guardados) se siguen leyendo,
+    // solo se dejó de interpretar `lastDate` como una racha que se rompe.
     renderActivityStreak() {
         return `
             <div class="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-6 border-l-4 border-indigo-500">
                 <h4 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
-                    🔥 Racha de Actividades
+                    ✨ Momentos Registrados
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Mantén tu racha diaria activa</p>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Cada vez que marcas una de estas, queda guardado — sin presión, sin racha que romper</p>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     ${this.streakActivities.map(activity => `
@@ -1225,20 +1233,14 @@ export const JapanUtils = {
                             </div>
                             <div class="text-center py-3">
                                 <p class="text-4xl font-bold text-indigo-600 dark:text-indigo-400" id="streak-${activity.id}">0</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">días seguidos</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">veces registrado</p>
                             </div>
                             <button onclick="JapanUtils.logActivity('${activity.id}')"
                                     class="w-full bg-indigo-500 hover:bg-indigo-600 text-white p-2 rounded-lg font-bold text-sm transition">
-                                ✓ Hecho Hoy
+                                ✓ Registrar de Hoy
                             </button>
                         </div>
                     `).join('')}
-                </div>
-
-                <div class="p-4 bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/40 dark:to-purple-900/40 rounded-lg">
-                    <p class="text-sm text-gray-700 dark:text-gray-300 text-center">
-                        🎯 <strong>¡Mantén tus rachas activas!</strong> Marca cada día que completes estas actividades
-                    </p>
                 </div>
             </div>
         `;
@@ -1257,17 +1259,6 @@ export const JapanUtils = {
             const streakData = streaks[activity.id] || { count: 0, lastDate: null };
             const streakEl = document.getElementById(`streak-${activity.id}`);
 
-            // Verificar si la racha está rota (más de 1 día sin actividad)
-            if (streakData.lastDate) {
-                const lastDate = new Date(streakData.lastDate);
-                const today = new Date();
-                const diffDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
-
-                if (diffDays > 1) {
-                    streakData.count = 0; // Racha rota
-                }
-            }
-
             if (streakEl) {
                 streakEl.textContent = streakData.count;
             }
@@ -1280,38 +1271,20 @@ export const JapanUtils = {
 
         const streakData = streaks[activityId] || { count: 0, lastDate: null };
 
-        // Verificar si ya se logueó hoy
+        // Ya registrado hoy — no penaliza, solo evita duplicar el conteo del día
         if (streakData.lastDate === today) {
-            alert('¡Ya marcaste esta actividad hoy! 🎉');
+            window.Notifications?.show('Ya registraste esto hoy ✨', 'info') ?? alert('¡Ya registraste esta actividad hoy! ✨');
             return;
         }
 
-        // Verificar si es día consecutivo
-        const lastDate = streakData.lastDate ? new Date(streakData.lastDate) : null;
-        const todayDate = new Date();
-
-        if (lastDate) {
-            const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
-
-            if (diffDays === 1) {
-                // Día consecutivo
-                streakData.count += 1;
-            } else if (diffDays > 1) {
-                // Racha rota, reiniciar
-                streakData.count = 1;
-            }
-        } else {
-            // Primera vez
-            streakData.count = 1;
-        }
-
+        streakData.count += 1;
         streakData.lastDate = today;
         streaks[activityId] = streakData;
 
         localStorage.setItem('streaks', JSON.stringify(streaks));
 
-        // Mostrar celebración
-        alert(`🎉 ¡${streakData.count} día${streakData.count > 1 ? 's' : ''} seguido${streakData.count > 1 ? 's' : ''}! ¡Sigue así!`);
+        window.Notifications?.show(`✨ ${streakData.count} momento${streakData.count > 1 ? 's' : ''} registrado${streakData.count > 1 ? 's' : ''}`, 'success')
+            ?? alert(`✨ ¡${streakData.count} momento${streakData.count > 1 ? 's' : ''} registrado${streakData.count > 1 ? 's' : ''}!`);
 
         this.loadStreaks();
     },

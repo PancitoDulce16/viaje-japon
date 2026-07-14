@@ -134,8 +134,9 @@ class ModuleLoader {
           ],
 
           'gamification': [
-            '/js/gamification-system.js',
-            '/js/achievement-tracker.js'
+            '/js/gamification-system.js'
+            // '/js/achievement-tracker.js' removed — file never existed,
+            // this was a dangling reference. See DEPRECATION_LOG.md.
           ]
         }
       },

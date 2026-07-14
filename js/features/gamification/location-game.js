@@ -2,18 +2,24 @@
 
 /**
  * Spot the Location Game
- * Juego comunitario: usuarios postean fotos y otros adivinan la ubicación
+ * Juego de descubrimiento: adivina dónde fue tomada la foto.
+ *
+ * Deprecation note (see DEPRECATION_LOG.md): this file used to track a
+ * competitive score with a time-bonus formula and render a hardcoded fake
+ * leaderboard (invented usernames/scores). Per SOUL.md — "Japitin celebrates
+ * exploration, not competition" and "fake or invented data must never exist
+ * anywhere in the product" — both were removed. The guessing mechanic itself
+ * is unchanged; only the scoring/ranking layer is gone.
  */
 export const LocationGame = {
   currentRound: null,
-  userScore: 0,
-  totalRounds: 0,
-  leaderboard: [],
+  roundsPlayed: 0,
+  roundsCorrect: 0,
 
   DIFFICULTY_LEVELS: {
-    easy: { name: 'Lugares Icónicos', points: 10, time: 30 },
-    medium: { name: 'Restaurantes Conocidos', points: 25, time: 20 },
-    hard: { name: 'Hidden Gems', points: 50, time: 15 }
+    easy: { name: 'Lugares Icónicos', time: 30 },
+    medium: { name: 'Restaurantes Conocidos', time: 20 },
+    hard: { name: 'Hidden Gems', time: 15 }
   },
 
   /**
@@ -42,19 +48,15 @@ export const LocationGame = {
             </div>
           </div>
 
-          <!-- Stats -->
-          <div class="p-6 bg-gradient-to-r from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-pink-900/20 grid grid-cols-3 gap-4 text-center border-b border-gray-200 dark:border-gray-700">
+          <!-- Stats: personal only, never a ranking against other people -->
+          <div class="p-6 bg-gradient-to-r from-purple-50 via-pink-50 to-blue-50 dark:from-gray-900 dark:via-purple-900/20 dark:to-pink-900/20 grid grid-cols-2 gap-4 text-center border-b border-gray-200 dark:border-gray-700">
             <div class="hover-lift animate-fadeInUp-delay-1">
-              <div class="stat-number text-4xl mb-1 pulse-glow">${this.userScore}</div>
-              <div class="text-xs text-gray-600 dark:text-gray-400 font-semibold">Tu Puntaje</div>
+              <div class="stat-number text-4xl mb-1 pulse-glow">${this.roundsCorrect}</div>
+              <div class="text-xs text-gray-600 dark:text-gray-400 font-semibold">Lugares Reconocidos</div>
             </div>
             <div class="hover-lift animate-fadeInUp-delay-2">
-              <div class="stat-number text-4xl mb-1">${this.totalRounds}</div>
+              <div class="stat-number text-4xl mb-1">${this.roundsPlayed}</div>
               <div class="text-xs text-gray-600 dark:text-gray-400 font-semibold">Rondas Jugadas</div>
-            </div>
-            <div class="hover-lift animate-fadeInUp-delay-3">
-              <div class="text-4xl font-bold mb-1 bg-gradient-to-r from-pink-600 to-orange-600 bg-clip-text text-transparent">#15</div>
-              <div class="text-xs text-gray-600 dark:text-gray-400 font-semibold">Ranking Global</div>
             </div>
           </div>
 
@@ -73,7 +75,7 @@ export const LocationGame = {
                       ${level.name}
                     </h4>
                     <p class="text-sm text-gray-600 dark:text-gray-400 font-semibold">
-                      ⭐ ${level.points} puntos • ⏱️ ${level.time}s por ronda
+                      ⏱️ ${level.time}s por ronda
                     </p>
                   </div>
                   <div class="text-5xl animate-wave">
@@ -82,28 +84,12 @@ export const LocationGame = {
                 </div>
               </button>
             `).join('')}
-
-            <!-- Leaderboard Preview -->
-            <div class="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border-2 border-yellow-200 dark:border-yellow-800">
-              <h4 class="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                <span class="text-xl">🏆</span>
-                Top 3 Jugadores
-              </h4>
-              <div class="space-y-2 text-sm">
-                ${this.renderLeaderboardPreview()}
-              </div>
-            </div>
-
           </div>
 
           <!-- Footer -->
-          <div class="p-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex gap-3">
-            <button onclick="window.LocationGame.showLeaderboard()"
-                    class="flex-1 px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-lg transition">
-                    🏆 Leaderboard Completo
-            </button>
+          <div class="p-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
             <button onclick="window.LocationGame.close()"
-                    class="px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 text-gray-800 dark:text-white font-bold rounded-lg">
+                    class="w-full px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 text-gray-800 dark:text-white font-bold rounded-lg">
               Salir
             </button>
           </div>
@@ -180,7 +166,6 @@ export const LocationGame = {
   showGameRound() {
     const round = this.currentRound.round;
     const difficulty = this.currentRound.difficulty;
-    const points = this.DIFFICULTY_LEVELS[difficulty].points;
 
     const modalHTML = `
       <div id="gameRoundModal" class="fixed inset-0 z-[60] bg-gradient-to-br from-blue-600 to-purple-600 gradient-animated flex items-center justify-center p-4 animate-fadeInUp">
@@ -198,9 +183,6 @@ export const LocationGame = {
             <div class="flex items-center justify-between mb-2">
               <span class="text-sm font-semibold opacity-90">
                 {difficulty.toUpperCase()}
-              </span>
-              <span class="text-sm font-semibold opacity-90">
-                +${points} puntos
               </span>
             </div>
             <h2 class="text-2xl font-bold mb-2">¿Dónde es esto?</h2>
@@ -283,25 +265,19 @@ export const LocationGame = {
    */
   submitAnswer(answer) {
     const isCorrect = answer === this.currentRound.round.correct;
-    const timeUsed = Date.now() - this.currentRound.startTime;
-    const timeBonus = Math.max(0, (this.currentRound.timeLimit - timeUsed) / 1000);
 
-    const basePoints = this.DIFFICULTY_LEVELS[this.currentRound.difficulty].points;
-    const earnedPoints = isCorrect ? Math.round(basePoints + (timeBonus * 2)) : 0;
-
+    this.roundsPlayed++;
     if (isCorrect) {
-      this.userScore += earnedPoints;
+      this.roundsCorrect++;
     }
 
-    this.totalRounds++;
-
-    this.showResult(isCorrect, earnedPoints);
+    this.showResult(isCorrect);
   },
 
   /**
    * Muestra resultado de la ronda
    */
-  showResult(isCorrect, points) {
+  showResult(isCorrect) {
     const correctAnswer = this.currentRound.round.correct;
 
     const modalHTML = `
@@ -315,12 +291,12 @@ export const LocationGame = {
 
           <!-- Message -->
           <h2 class="text-4xl font-bold mb-2 gradient-text-animated">
-            ${isCorrect ? '¡Correcto!' : '¡Incorrecto!'}
+            ${isCorrect ? '¡Correcto!' : '¡Casi!'}
           </h2>
 
           ${isCorrect ? `
             <p class="text-xl text-gray-700 dark:text-gray-300 mb-4">
-              +${points} puntos
+              Un lugar más que reconoces de Japón.
             </p>
           ` : `
             <p class="text-lg text-gray-700 dark:text-gray-300 mb-4">
@@ -329,10 +305,10 @@ export const LocationGame = {
             </p>
           `}
 
-          <!-- Current Score -->
+          <!-- Personal progress, not a score to compare against anyone -->
           <div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl mb-6">
-            <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Puntaje Total</div>
-            <div class="text-4xl font-bold text-purple-600 dark:text-purple-400">${this.userScore}</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Lugares reconocidos</div>
+            <div class="text-4xl font-bold text-purple-600 dark:text-purple-400">${this.roundsCorrect} / ${this.roundsPlayed}</div>
           </div>
 
           <!-- Actions -->
@@ -371,34 +347,6 @@ export const LocationGame = {
   closeResult() {
     document.getElementById('resultModal')?.remove();
     this.showMainMenu();
-  },
-
-  /**
-   * Renderiza preview del leaderboard
-   */
-  renderLeaderboardPreview() {
-    const top3 = [
-      { username: 'japan_master', score: 1250, avatar: 'J' },
-      { username: 'location_pro', score: 980, avatar: 'L' },
-      { username: 'tokyo_explorer', score: 875, avatar: 'T' }
-    ];
-
-    return top3.map((player, i) => `
-      <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded-lg">
-        <div class="flex items-center gap-3">
-          <span class="text-xl">${i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
-          <span class="font-semibold text-gray-900 dark:text-white">@${player.username}</span>
-        </div>
-        <span class="font-bold text-purple-600 dark:text-purple-400">${player.score}</span>
-      </div>
-    `).join('');
-  },
-
-  /**
-   * Muestra leaderboard completo
-   */
-  showLeaderboard() {
-    window.Notifications?.show('🏆 Leaderboard completo próximamente', 'info');
   },
 
   /**

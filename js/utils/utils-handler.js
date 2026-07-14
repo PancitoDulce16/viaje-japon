@@ -124,8 +124,7 @@ export const UtilsHandler = {
                 ${this.renderAccordion('goshuin', '⛩️', 'Goshuin Book', 'Libro digital de sellos de templos y santuarios')}
                 ${this.renderAccordion('timeline', '📱', 'Timeline Compartido', 'Feed de actividad del grupo en tiempo real')}
                 ${this.renderAccordion('photogallery', '📸', 'Memorias Compartidas', 'Galería de fotos con comentarios y likes')}
-                ${this.renderAccordion('achievements', '🏆', 'Sistema de Logros', 'Desbloquea badges completando actividades')}
-                ${this.renderAccordion('challenges', '⚡', 'Desafíos Diarios', 'Reto del día para todo el grupo')}
+                ${this.renderAccordion('achievements', '🎏', 'Tus Recuerdos', 'Momentos memorables de tu viaje, capturados como logros')}
                 ${this.renderAccordion('polls', '🗳️', 'Sistema de Votaciones', 'Decide en grupo: restaurantes, actividades, etc.')}
                 ${this.renderAccordion('journal', '📔', 'Diario de Viaje', 'Comparte tus experiencias diarias')}
                 ${this.renderAccordion('quiz', '🎌', 'Quiz Cultural', 'Pon a prueba tu conocimiento')}
@@ -135,7 +134,7 @@ export const UtilsHandler = {
                 ${this.renderAccordion('bingo', '🎯', 'Bingo de Viaje', 'Completa experiencias típicas')}
                 ${this.renderAccordion('stamps', '🎫', 'Colección de Sellos', 'Sella cada lugar que visitas')}
                 ${this.renderAccordion('counter', '📊', 'Contador de Experiencias', 'Estadísticas de tu viaje')}
-                ${this.renderAccordion('streaks', '🔥', 'Racha de Actividades', 'Mantén tu racha diaria')}
+                ${this.renderAccordion('streaks', '✨', 'Momentos Registrados', 'Pequeños hábitos del viaje, sin presión')}
                 ${this.renderAccordion('tags', '🏷️', 'Tags de Favoritos', 'Organiza lugares guardados')}
             </div>
         `;
@@ -339,10 +338,6 @@ export const UtilsHandler = {
                 case 'achievements':
                     sectionDiv.innerHTML = window.SocialFeatures.renderAchievements();
                     window.SocialFeatures.loadAchievements();
-                    break;
-                case 'challenges':
-                    sectionDiv.innerHTML = window.SocialFeatures.renderDailyChallenges();
-                    window.SocialFeatures.loadDailyChallenge();
                     break;
                 case 'polls':
                     sectionDiv.innerHTML = window.SocialFeatures.renderVotingSystem();
