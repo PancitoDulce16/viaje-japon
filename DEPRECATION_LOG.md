@@ -15,6 +15,32 @@ Newest entries at the top.
 
 ---
 
+## 2026-07-14 — Dashboard Experience slice 3: live integration migration summary
+
+**What legacy code was removed:**
+- `trips-manager.js`'s old `updateTripHeader()` body — the centered JAPITIN banner (desktop-only), and the entire 4-card stat grid (`#tripStatsDashboard`: "Progreso del Viaje," "Actividades," "Presupuesto," "Reservas").
+- `loadTripStatistics()` — the async function that computed and rendered those 4 cards — **deleted outright**, not left dormant.
+- The old `updateTripHeaderEmpty()` "👋 ¡Bienvenido!" strip markup.
+
+**What was preserved (same functionality, verified working):**
+- All 4 action buttons (Agregar Viaje, Regenerar, Vaciar, Exportar + its dropdown with PDF/Calendar/Maps/Checklist) — kept with identical `onclick` handlers, unchanged.
+- "Unirse con código" (`joinTripWithCode()`) — moved from the old empty-state strip into the new Dreaming-stage progressive content, same function call.
+- The `itineraryLoaded` custom event dispatch — **this one needed care**: three real, unrelated consumers depend on it (`ai-control-panel.js`, `kawaii-animations.js`, `analytics-integration.js`). The old code fired it unconditionally inside `loadTripStatistics()`; the new code fires it unconditionally inside `loadDashboardProgressiveContent()` regardless of which stage-specific data is also being fetched, specifically so removing the old stats logic didn't silently break those three files.
+- Flight/accommodation booking counts (`trip.flights`, `trip.accommodations`) — previously in stat-card 4 ("Reservas: N/2 vuelos, N hoteles"), now shown for real in the Preparing stage's "Vuelos y hoteles" section (`dashboard-data.js`'s `travelReadiness()`).
+- The budget estimate formula (¥15,000/día/persona) — reused verbatim in `dashboard-data.js`'s `budgetSummary()`, not recalculated independently.
+
+**What became canonical:**
+- `js/features/dashboard/dashboard-data.js` — the one place that fetches real Firestore data (reservations, packing, itinerary, budget) for the Dashboard, keeping `progressive-content.js` a pure renderer.
+- `TripsManager.updateTripHeader()`/`updateTripHeaderEmpty()` now call directly into `stage-detector.js` + `hero-moment.js` + `progressive-content.js` — no more parallel rendering logic.
+
+**Not preserved — a deliberate simplification, not an oversight:** the old "Actividades" stat card (total itinerary activities + "completed" count) has no direct replacement. Investigation during this migration found `activity.completed` was never actually a real field set anywhere in the codebase — that sub-stat always silently showed its fallback ("Planificadas"). The raw total-activity-count is superseded by the Traveling stage's real today's-activity Ticket rail, which is more useful than a whole-trip count; it is simply gone for the other stages, not replaced 1:1.
+
+**Migration notes:** No Firestore schema changed. No user data was deleted or migrated — this slice only changed rendering, not storage.
+
+**Remaining technical debt (found during this migration, not fixed — flagged for a decision, not hidden):**
+- **`js/features/itinerary/itinerary-v3.js` renders its own, separate trip-summary header** (trip name/dates/status badge + a *different* set of action buttons: Mis Viajes/Compartir/Agregar Viaje/Exportar PDF/Optimizar Todo/Balancear) directly inside `#content-itinerary`. This predates this migration entirely and was never touched by it — but because Itinerario is the default landing tab, it now renders immediately below the new Dashboard hero, and the two headers read as visibly redundant in a way the old, more utilitarian dashboard header didn't make as obvious. This is real, pre-existing architectural duplication (two independent "trip header" implementations) that `ARCHITECTURE_PRINCIPLES.md` argues against — but fixing it means touching `itinerary-v3.js`'s own rendering, which is Itinerary Experience territory, not Dashboard Experience. Left alone pending an explicit decision.
+- Most manually-tracked Achievement counters still have no real call site (documented previously, unchanged by this slice).
+
 ## 2026-07-14 — Unified Achievement system (single canonical implementation)
 
 **What was removed:**

@@ -98,7 +98,18 @@ function renderDreamingContent(trip) {
       </button>
     `;
 
-  return section('Inspírate', inspiration) + section('Un paso más', secondCard);
+  // Solo en Dreaming (sin viaje activo) — unirse con código sigue siendo
+  // una acción real que había en el header viejo, preservada aquí en vez
+  // de perderse en la migración.
+  const joinLink = !trip ? `
+    <div style="text-align:center;">
+      <button type="button" onclick="TripsManager.joinTripWithCode()" style="background:none; border:0; font:inherit; color:var(--color-umi); font-weight:600; font-size:0.85rem; cursor:pointer; padding:8px;">
+        🔗 ¿Tienes un código de invitación? Únete a un viaje
+      </button>
+    </div>
+  ` : '';
+
+  return section('Inspírate', inspiration) + section('Un paso más', secondCard) + joinLink;
 }
 
 // ---------------------------------------------------------------------
@@ -112,10 +123,24 @@ function renderPreparingContent(trip, math, data) {
   const packingProgress = data?.packing ?? { checked: 0, total: 0 };
   const packingPct = packingProgress.total ? (packingProgress.checked / packingProgress.total) * 100 : 0;
 
+  const budgetCard = data?.budget
+    ? travelCard({ label: 'Presupuesto estimado', value: `¥${data.budget.spent.toLocaleString()} de ¥${data.budget.estimated.toLocaleString()}`, progress: data.budget.progress })
+    : null;
+
+  const readiness = data?.travelReadiness;
+  const readinessCard = readiness ? `
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      ${travelCard({ label: 'Vuelos', value: `${readiness.flightsBooked}/2` })}
+      ${travelCard({ label: 'Hoteles', value: readiness.accommodationsCount })}
+    </div>
+    ${!readiness.allReady ? `<div class="journal-card__sub" style="margin-top:8px;">⚠️ Todavía falta confirmar algo antes de salir</div>` : ''}
+  ` : null;
+
   return (
     section('Reservas', reservations || `<div class="journal-card"><div class="journal-card__sub" style="margin-top:0;">Aún no tienes reservas guardadas.</div></div>`) +
     section('Tu maleta', travelCard({ label: 'Empacado', value: `${packingProgress.checked} de ${packingProgress.total}`, progress: packingPct })) +
-    section('Documentos', travelCard({ label: 'Antes de salir', value: 'Pasaporte, seguro, IC card' }))
+    (budgetCard ? section('Presupuesto', budgetCard) : '') +
+    (readinessCard ? section('Vuelos y hoteles', readinessCard) : '')
   );
 }
 

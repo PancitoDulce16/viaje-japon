@@ -2,7 +2,7 @@
 
 import { db, auth } from '../../core/firebase-config.js';
 import { Notifications } from '../../core/notifications.js';
-import { 
+import {
   collection,
   doc,
   setDoc,
@@ -15,6 +15,10 @@ import {
   arrayUnion,
   deleteDoc
 } from 'firebase/firestore';
+import { detectJourneyStage } from '../dashboard/stage-detector.js';
+import { renderHeroMoment } from '../dashboard/hero-moment.js';
+import { renderProgressiveContent } from '../dashboard/progressive-content.js';
+import { fetchDashboardData } from '../dashboard/dashboard-data.js';
 
 export const TripsManager = {
   currentTrip: null,
@@ -1073,33 +1077,21 @@ export const TripsManager = {
     this.closeCreateTripModal();
   },
 
-  // Actualizar header con info del trip actual (NUEVO DISEÑO CON ESTADÍSTICAS)
+  // Header del dashboard — implementación canónica de experiences/dashboard.md
+  // (Hero Moment + contenido progresivo). Reemplaza el banner/stats-grid
+  // viejo por completo — ver DEPRECATION_LOG.md para el detalle de la
+  // migración (qué se preservó, qué se retiró, qué se volvió canónico).
   updateTripHeader() {
     const headerContainer = document.getElementById('currentTripHeader');
     if (!headerContainer || !this.currentTrip) return;
 
-    const today = new Date();
-    const daysUntil = window.TimeUtils.daysBetween(today, this.currentTrip.info.dateStart);
-    const totalDays = window.TimeUtils.daysBetween(this.currentTrip.info.dateStart, this.currentTrip.info.dateEnd) + 1;
-
-    // Calcular días pasados si el viaje ya comenzó
-    const daysElapsed = Math.max(0, window.TimeUtils.daysBetween(this.currentTrip.info.dateStart, today));
-    const tripProgress = daysUntil <= 0 ? Math.min(100, (daysElapsed / totalDays) * 100) : 0;
-
-    const collaborationStatus = this.currentTrip.members.length > 1
-        ? `🤝 Viaje colaborativo • 🔗 ${this.currentTrip.info.shareCode}`
-        : '👤 Viaje individual';
+    const stage = detectJourneyStage(this.currentTrip);
 
     headerContainer.innerHTML = `
       <div id="dashboardTopSection" class="space-y-6">
-        <!-- Banner JAPITIN grande centrado - oculto en móvil: el header de arriba ya
-             muestra la marca "Japitin", este banner solo añadía ~100px+ de alto
-             redundante empujando el itinerario real fuera de la pantalla inicial. -->
-        <div class="hidden md:flex justify-center mb-4">
-          <img src="/images/icons/japitin banner.png" alt="Japitin" class="h-20 md:h-24 rounded-lg border-2 border-white/20 bg-white/95 px-4 py-2 shadow-lg">
-        </div>
+        ${renderHeroMoment(this.currentTrip)}
 
-        <!-- Botones de acción -->
+        <!-- Botones de acción — preservados tal cual, ver DEPRECATION_LOG.md -->
         <div class="flex items-center justify-center gap-2 sm:gap-3 flex-wrap px-2">
           <button
             onclick="TripsManager.showCreateTripModal()"
@@ -1120,7 +1112,6 @@ export const TripsManager = {
             🗑️ <span>Vaciar</span>
           </button>
 
-          <!-- 🆕 Botón de Exportar con Dropdown -->
           <div class="relative">
             <button
               onclick="TripsManager.toggleExportMenu()"
@@ -1133,7 +1124,6 @@ export const TripsManager = {
               </svg>
             </button>
 
-            <!-- Dropdown Menu -->
             <div
               id="exportMenu"
               class="hidden fixed w-64 bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 z-[10000] overflow-hidden"
@@ -1188,22 +1178,17 @@ export const TripsManager = {
           </div>
         </div>
 
-        <!-- Fila 2: Dashboard de Estadísticas Visuales -->
-        <div id="tripStatsDashboard" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 animate-fade-in">
-          <!-- Loading placeholder -->
-          <div class="col-span-full text-center text-white/60 text-sm py-4">
-            <i class="fas fa-spinner animate-spin mr-2"></i>Cargando estadísticas...
-          </div>
+        <div id="dashboardProgressiveContent" style="display:flex; flex-direction:column; gap:32px;">
+          <div class="text-center text-sm py-6" style="color:var(--ink-soft)">Cargando…</div>
         </div>
       </div>
     `;
 
-    // 🔧 Este header (banner + botones + tarjetas de stats) vuelve a renderizarse
-    // cada vez que llega una actualización del listener de Firestore del viaje -
-    // no solo una vez al cargar. Si el usuario está en otro tab (ej. Mapa) cuando
-    // eso pasa, este re-render deshacía el display:none que switchTab() le había
-    // puesto, y el header volvía a taparlo todo. Aplicar el estado correcto acá
-    // también, no solo en switchTab().
+    // 🔧 Este header vuelve a renderizarse cada vez que llega una actualización
+    // del listener de Firestore del viaje - no solo una vez al cargar. Si el
+    // usuario está en otro tab (ej. Mapa) cuando eso pasa, este re-render
+    // deshacía el display:none que switchTab() le había puesto, y el header
+    // volvía a taparlo todo. Aplicar el estado correcto acá también.
     const topSection = document.getElementById('dashboardTopSection');
     if (topSection) {
       const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab
@@ -1212,140 +1197,41 @@ export const TripsManager = {
       topSection.classList.toggle('js-tab-hidden', activeTab !== 'itinerary');
     }
 
-    // Cargar estadísticas de forma asíncrona
-    this.loadTripStatistics();
+    this.loadDashboardProgressiveContent(stage);
   },
 
-  // 🔥 NUEVO: Cargar y mostrar estadísticas del viaje
-  async loadTripStatistics() {
+  // Contenido progresivo (experiences/dashboard.md, slice 2/3) — carga
+  // datos reales de forma asíncrona y los pinta debajo del Hero Moment.
+  async loadDashboardProgressiveContent(stage) {
     if (!this.currentTrip) return;
 
-    const statsContainer = document.getElementById('tripStatsDashboard');
-    if (!statsContainer) return;
+    const container = document.getElementById('dashboardProgressiveContent');
+    if (!container) return;
 
     try {
-      // Obtener datos de itinerario
+      // El doc de itinerario se lee UNA vez acá, siempre — no solo para las
+      // etapas que lo necesitan para su propio contenido — porque el evento
+      // 'itineraryLoaded' tiene consumidores reales fuera del dashboard
+      // (ai-control-panel.js, kawaii-animations.js, analytics-integration.js)
+      // que dependían de que el viejo loadTripStatistics() lo disparara
+      // siempre. Perderlo habría roto esos tres sistemas silenciosamente.
       const itineraryRef = doc(db, `trips/${this.currentTrip.id}/data`, 'itinerary');
       const itinerarySnap = await getDoc(itineraryRef);
       const itineraryData = itinerarySnap.exists() ? itinerarySnap.data() : null;
 
-      // 🔔 Emitir evento de itinerario cargado para el AI Panel
       if (itineraryData) {
         window.dispatchEvent(new CustomEvent('itineraryLoaded', {
-          detail: { itinerary: itineraryData, source: 'trip-statistics' }
+          detail: { itinerary: itineraryData, source: 'dashboard-experience' }
         }));
       }
 
-      // Contar actividades totales
-      const totalActivities = itineraryData?.days?.reduce((sum, day) => sum + (day.activities?.length || 0), 0) || 0;
-
-      // Contar actividades completadas (si existe ese campo)
-      const completedActivities = itineraryData?.days?.reduce((sum, day) => {
-        return sum + (day.activities?.filter(a => a.completed)?.length || 0);
-      }, 0) || 0;
-
-      const activityProgress = totalActivities > 0 ? (completedActivities / totalActivities) * 100 : 0;
-
-      // Obtener gastos totales
-      const expenses = this.currentTrip.expenses || [];
-      const totalBudget = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
-
-      // Calcular presupuesto estimado (ejemplo: ¥15000 por día por persona)
-      const tripDays = window.TimeUtils.daysBetween(this.currentTrip.info.dateStart, this.currentTrip.info.dateEnd) + 1;
-      const estimatedBudget = tripDays * 15000 * this.currentTrip.members.length;
-      const budgetProgress = estimatedBudget > 0 ? (totalBudget / estimatedBudget) * 100 : 0;
-
-      // Información de vuelos
-      const hasOutboundFlight = this.currentTrip.flights?.outbound?.flightNumber;
-      const hasReturnFlight = this.currentTrip.flights?.return?.flightNumber;
-      const flightsBooked = (hasOutboundFlight ? 1 : 0) + (hasReturnFlight ? 1 : 0);
-
-      // Información de alojamientos
-      const accommodationsCount = this.currentTrip.accommodations?.length || 0;
-
-      // Calcular progreso del viaje (días)
-      const today = new Date();
-      const daysUntil = window.TimeUtils.daysBetween(today, this.currentTrip.info.dateStart);
-      const daysElapsed = Math.max(0, window.TimeUtils.daysBetween(this.currentTrip.info.dateStart, today));
-      const totalDays = tripDays;
-      const tripProgress = daysUntil <= 0 ? Math.min(100, (daysElapsed / totalDays) * 100) : 0;
-
-      // Renderizar cards de estadísticas (más compactas)
-      statsContainer.innerHTML = `
-        <!-- Card 1: Progreso del Viaje -->
-        <div class="stat-card bg-gradient-to-br from-blue-500/90 to-cyan-500/90 dark:from-blue-900/60 dark:to-cyan-900/60 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 dark:border-blue-800/30 transition-all">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-white font-semibold text-xs tracking-wide uppercase">Progreso del Viaje</div>
-            <div class="text-2xl">🗓️</div>
-          </div>
-          <div class="text-3xl font-bold text-white mb-2 leading-tight">${totalDays} días</div>
-          <div class="text-white/90 text-xs mb-3 font-medium">
-            ${daysUntil > 0
-              ? `${window.TimeUtils.formatDate(this.currentTrip.info.dateStart, { day: 'numeric', month: 'short' })} - ${window.TimeUtils.formatDate(this.currentTrip.info.dateEnd, { day: 'numeric', month: 'short' })}`
-              : tripProgress < 100 ? `Día ${daysElapsed} de ${totalDays}` : 'Completado'}
-          </div>
-          <div class="w-full bg-white/20 dark:bg-white/10 rounded-full h-2">
-            <div class="bg-white dark:bg-blue-300 h-2 rounded-full transition-all duration-500" style="width: ${tripProgress}%"></div>
-          </div>
-        </div>
-
-        <!-- Card 2: Actividades del Itinerario -->
-        <div class="stat-card bg-gradient-to-br from-purple-500/90 to-pink-500/90 dark:from-purple-900/60 dark:to-pink-900/60 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 dark:border-purple-800/30 transition-all">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-white font-semibold text-xs tracking-wide uppercase">Actividades</div>
-            <div class="text-2xl">📍</div>
-          </div>
-          <div class="text-3xl font-bold text-white mb-2 leading-tight">${totalActivities}</div>
-          <div class="text-white/90 text-xs mb-3 font-medium">
-            ${completedActivities > 0 ? `${completedActivities} completadas` : 'Planificadas'}
-          </div>
-          <div class="w-full bg-white/20 dark:bg-white/10 rounded-full h-2">
-            <div class="bg-white dark:bg-purple-300 h-2 rounded-full transition-all duration-500" style="width: ${activityProgress}%"></div>
-          </div>
-        </div>
-
-        <!-- Card 3: Presupuesto -->
-        <div class="stat-card bg-gradient-to-br from-green-500/90 to-emerald-500/90 dark:from-green-900/60 dark:to-emerald-900/60 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 dark:border-green-800/30 transition-all">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-white font-semibold text-xs tracking-wide uppercase">Presupuesto</div>
-            <div class="text-2xl">💰</div>
-          </div>
-          <div class="text-3xl font-bold text-white mb-2 leading-tight">¥${totalBudget.toLocaleString()}</div>
-          <div class="text-white/90 text-xs mb-3 font-medium">
-            ${budgetProgress > 0 ? `${budgetProgress.toFixed(0)}% del estimado` : 'Sin gastos registrados'}
-          </div>
-          <div class="w-full bg-white/20 dark:bg-white/10 rounded-full h-2">
-            <div class="bg-white dark:bg-green-300 h-2 rounded-full transition-all duration-500" style="width: ${Math.min(100, budgetProgress)}%"></div>
-          </div>
-        </div>
-
-        <!-- Card 4: Reservas -->
-        <div class="stat-card bg-gradient-to-br from-orange-500/90 to-red-500/90 dark:from-orange-900/60 dark:to-red-900/60 backdrop-blur-sm rounded-xl p-4 shadow-lg hover-lift border border-white/10 dark:border-orange-800/30 transition-all">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-white font-semibold text-xs tracking-wide uppercase">Reservas</div>
-            <div class="text-2xl">✈️</div>
-          </div>
-          <div class="flex gap-4 items-center mb-2">
-            <div>
-              <div class="text-2xl font-bold text-white leading-tight">${flightsBooked}/2</div>
-              <div class="text-white/90 text-xs font-medium mt-1">Vuelos</div>
-            </div>
-            <div class="w-px h-10 bg-white/30"></div>
-            <div>
-              <div class="text-2xl font-bold text-white leading-tight">${accommodationsCount}</div>
-              <div class="text-white/90 text-xs font-medium mt-1">Hoteles</div>
-            </div>
-          </div>
-          <div class="text-white/90 text-xs font-medium">
-            ${flightsBooked === 2 && accommodationsCount > 0 ? '✅ Todo listo' : '⚠️ Pendiente'}
-          </div>
-        </div>
-      `;
+      const data = await fetchDashboardData(this.currentTrip.id, stage, this.currentTrip, itineraryData);
+      container.innerHTML = renderProgressiveContent(this.currentTrip, data);
     } catch (error) {
-      console.error('❌ Error cargando estadísticas:', error);
-      statsContainer.innerHTML = `
-        <div class="col-span-full text-center text-white/60 text-sm py-2">
-          ⚠️ No se pudieron cargar las estadísticas
+      console.error('❌ Error cargando contenido del dashboard:', error);
+      container.innerHTML = `
+        <div class="text-center text-sm py-6" style="color:var(--ink-soft)">
+          No se pudo cargar el contenido del dashboard. Intenta recargar la página.
         </div>
       `;
     }
@@ -1356,28 +1242,13 @@ export const TripsManager = {
     const headerContainer = document.getElementById('currentTripHeader');
     if (!headerContainer) return;
 
+    // Etapa Dreaming del Hero — "Crear Viaje" vive en el propio CTA del
+    // hero; "Unirse con código" se preservó dentro del contenido
+    // progresivo (ver progressive-content.js, renderDreamingContent).
     headerContainer.innerHTML = `
-      <div class="flex items-center gap-3">
-        <div class="flex-1">
-          <h2 class="text-xl font-bold text-white">👋 ¡Bienvenido!</h2>
-          <p class="text-sm text-white/80">
-            Crea tu primer viaje o únete a uno existente
-          </p>
-        </div>
-        <div class="flex gap-2">
-          <button 
-            onclick="TripsManager.showCreateTripModal()"
-            class="text-xs bg-white/20 hover:bg-white/30 px-4 py-2 rounded transition font-semibold"
-          >
-            ➕ Crear Viaje
-          </button>
-          <button
-            onclick="TripsManager.joinTripWithCode()"
-            class="text-xs bg-green-500/80 hover:bg-green-500 px-4 py-2 rounded transition font-semibold"
-          >
-            🔗 Unirse
-          </button>
-        </div>
+      <div id="dashboardTopSection" class="space-y-6">
+        ${renderHeroMoment(null)}
+        ${renderProgressiveContent(null, {})}
       </div>
     `;
 
