@@ -15,6 +15,22 @@ Newest entries at the top.
 
 ---
 
+## 2026-07-15 — Production incident: CSS custom-property name collision broke the Dashboard's visual identity
+
+**What happened:** The Dashboard Experience (slices 1–4) was reviewed and approved entirely against the local dev server, where it rendered correctly. After deploying to production and the user checking the real site, the Dashboard "looked ugly" — the Bricolage Grotesque headline was rendering in Georgia serif, and shadow/radius values weren't the ones designed. Root cause: `css/tokens.css` defined `--font-display`, `--radius-sm/md/lg/pill`, and `--shadow-sm/md/lg` on `:root` back in Phase 1 — but four legacy files already defined `:root` custom properties with the **exact same names** for unrelated purposes: `visual-redesign.css` (`--font-display: 'Georgia', serif`, plus its own `--radius-*`/`--shadow-*`), and `japan-theme.css`/`theme-kawaii.css`/`theme-ninja.css` (their own `--shadow-*`). Because these legacy files load *after* `tokens.css` in `app.css`'s import order, their values won the cascade for every consumer of those names app-wide — including every new Dashboard component.
+
+**Why the dev/production difference:** There wasn't one, really — the same collision existed in dev too. It went unnoticed through four slices of review because every review focused on the *new* components rendering correctly in isolation or against real data, never against a full side-by-side comparison with what the token *should* have looked like. The bug was real and present the whole time; it just wasn't looked at the right way to be seen until the user saw the actual deployed page fresh, without the context of "I just wrote this and it should work."
+
+**What replaced it:** Renamed the three colliding token groups to `--jp-font-display`, `--jp-radius-sm/md/lg/pill`, `--jp-shadow-sm/md/lg` in `tokens.css`, `dashboard-hero.css`, and `objects.css`. Did **not** touch the four legacy files' own definitions — changing *their* values risks regressing other, unrelated screens that may depend on their specific meaning of those names, and auditing every consumer of theirs was out of scope for an urgent fix. `--color-*`, `--space-*`, `--surface-*`, `--ink*`, `--hairline`, `--shadow-rgb`, `--font-body`, `--font-mono`, and `--motion-*` were checked and confirmed collision-free — left as-is.
+
+**Why:** `ARCHITECTURE_PRINCIPLES.md` — "one source of truth" was violated by accident, not by design: two systems had genuinely independent, unaware-of-each-other definitions of the same name. Fixed per the same principle, at the lowest-risk point (the newer, fully-self-contained system renames itself rather than risking the larger, less-understood legacy surface).
+
+**Migration notes:** CSS-only change, no data affected.
+
+**Process gap this exposes, not yet fixed:** nothing in this project's review process checks a new CSS custom property name against the existing 46-file cascade before it's adopted. `DESIGN_SYSTEM.md` §1 now carries a note to grep first; there's no automated guard against this recurring with the next new token. Flagged as a real gap, not solved here.
+
+---
+
 ## 2026-07-14 — Dashboard Experience slice 3: live integration migration summary
 
 **What legacy code was removed:**

@@ -42,9 +42,10 @@ A second batch of references arrived after the proposal was approved (`images/il
 
 ### Spacing, radius, shadow, motion
 - Spacing scale: 4/8/12/16/20/24/32/48px (`--space-1` … `--space-8`).
-- Radius: 14px small controls, 20px cards, 999px pills (`--radius-sm/md/pill`).
-- Shadows are **indigo-tinted, never neutral grey**: `rgba(43,56,104, α)`, not `rgba(0,0,0,α)` — this alone is most of why the reference feels warm instead of corporate.
+- Radius: 14px small controls, 20px cards, 24px hero-scale, 999px pills (`--jp-radius-sm/md/lg/pill`).
+- Shadows are **indigo-tinted, never neutral grey**: `rgba(43,56,104, α)`, not `rgba(0,0,0,α)` — this alone is most of why the reference feels warm instead of corporate. (`--jp-shadow-sm/md/lg`.)
 - Motion durations: 120ms micro-interactions, 240ms transitions, 480ms orchestrated moments (see §4).
+- **Naming note:** `--jp-radius-*`, `--jp-shadow-*`, and `--jp-font-display` carry a `jp-` prefix — `--font-body`/`--font-mono`/`--space-*`/`--color-*` don't need it. Found in production (2026-07-15): the legacy 46-file cascade already defined its own unrelated `--radius-*`/`--shadow-*`/`--font-display` on `:root` (`visual-redesign.css`, `japan-theme.css`, `theme-kawaii.css`, `theme-ninja.css`) — plain names silently collided and the legacy value won the cascade (a Georgia-serif `--font-display` from `visual-redesign.css` was overriding Bricolage Grotesque app-wide). Before adding any *new* token name here, grep the existing `css/` tree for it first — see `DEPRECATION_LOG.md` for the full incident.
 
 ---
 
