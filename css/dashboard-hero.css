@@ -259,6 +259,19 @@
   .hero-moment__petal { display: none; }
 }
 
+/* the countdown number breathes, slow and quiet */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-moment__countdown-num {
+    animation: heroCountBreathe 4.5s var(--motion-ease) infinite;
+    display: inline-block;
+    transform-origin: center bottom;
+  }
+}
+@keyframes heroCountBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.035); }
+}
+
 .hero-moment__cta {
   align-self: flex-start;
   margin-top: var(--space-3);
