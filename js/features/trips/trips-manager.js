@@ -1093,32 +1093,38 @@ export const TripsManager = {
 
         <!-- Botones de acción — preservados tal cual, ver DEPRECATION_LOG.md -->
         <div class="flex items-center justify-center gap-2 sm:gap-3 flex-wrap px-2">
+          <!-- bg-transparent los exime de los button{} globales de theme-kawaii/ninja
+               (que excluyen [class*="bg-"]); el estilo real vive en .jp-trip-action -->
           <button
             onclick="TripsManager.showCreateTripModal()"
-            class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2.5 px-3 sm:px-6 rounded-lg transition hover:scale-105 shadow-md text-sm"
+            class="jp-trip-action jp-trip-action--primary bg-transparent"
           >
-            ➕ <span>Agregar Viaje</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            <span>Agregar Viaje</span>
           </button>
           <button
             onclick="TripsManager.regenerateItinerary()"
-            class="bg-purple-500/80 hover:bg-purple-600 text-white font-semibold py-2.5 px-3 sm:px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-purple-400/30 text-sm shadow-lg"
+            class="jp-trip-action bg-transparent"
           >
-            🧠 <span>Regenerar</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.3M21 3v6h-6"/></svg>
+            <span>Regenerar</span>
           </button>
           <button
             onclick="TripsManager.clearItinerary()"
-            class="bg-red-500/80 hover:bg-red-600 text-white font-semibold py-2.5 px-3 sm:px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-red-400/30 text-sm shadow-lg"
+            class="jp-trip-action jp-trip-action--danger bg-transparent"
           >
-            🗑️ <span>Vaciar</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>
+            <span>Vaciar</span>
           </button>
 
           <div class="relative">
             <button
               onclick="TripsManager.toggleExportMenu()"
               id="exportButton"
-              class="bg-green-500/80 hover:bg-green-600 text-white font-semibold py-2.5 px-3 sm:px-6 rounded-lg transition backdrop-blur-sm hover:scale-105 border border-green-400/30 text-sm shadow-lg flex items-center gap-2"
+              class="jp-trip-action bg-transparent"
             >
-              📤 <span>Exportar</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+              <span>Exportar</span>
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
               </svg>
