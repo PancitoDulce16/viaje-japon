@@ -23,7 +23,12 @@
 
 import { detectJourneyStage, getJourneyMath } from './stage-detector.js';
 
-const HERO_IMAGE = '/images/illustrations/generated/cities/tokyo-skyline-day-sakura.jpg';
+/* Panorama pair (Nano Banana, 2026-07-16): the night version was generated
+   FROM the day image ("same composition, make it night"), so both line up
+   pixel-perfect and the Kawaii↔Ninja theme toggle crossfades between them
+   as if the same scene falls into night. WebP, 57KB + 97KB. */
+const HERO_ART_DAY = '/images/illustrations/generated/panorama/japan-fuji-panorama-day.webp';
+const HERO_ART_NIGHT = '/images/illustrations/generated/panorama/japan-fuji-panorama-night.webp';
 
 function buildContent(trip, stage, math) {
   const destination = trip?.info?.destination || 'Japón';
@@ -38,14 +43,18 @@ function buildContent(trip, stage, math) {
       };
     case 'planning':
       return {
-        headline: `${destination}: faltan ${math.daysUntilStart} días`,
+        eyebrow: 'Tu aventura a',
+        headline: destination,
         subtext: `${tripName} todavía se está tomando forma.`,
+        countdown: math.daysUntilStart,
         cta: { label: 'Seguir planeando →', action: "window.DashboardApp?.switchTab('itinerary')" }
       };
     case 'preparing':
       return {
-        headline: `Tu aventura a Japón empieza en ${math.daysUntilStart} día${math.daysUntilStart === 1 ? '' : 's'}`,
-        subtext: 'Ya casi es hora — revisemos qué falta.',
+        eyebrow: 'Ya casi es hora…',
+        headline: destination,
+        subtext: 'Revisemos qué falta antes de salir.',
+        countdown: math.daysUntilStart,
         cta: { label: 'Ver preparación →', action: "window.DashboardApp?.switchTab('preparation')" }
       };
     case 'traveling':
@@ -77,20 +86,31 @@ function buildContent(trip, stage, math) {
 export function renderHeroMoment(trip) {
   const stage = detectJourneyStage(trip);
   const math = getJourneyMath(trip);
-  const { headline, subtext, cta } = buildContent(trip, stage, math);
+  const { eyebrow, headline, subtext, cta, countdown } = buildContent(trip, stage, math);
 
   const hasArt = stage !== 'dreaming'; // empty state gets its own calm treatment, no city art for a trip that doesn't exist yet
+  const hasCountdown = Number.isFinite(countdown) && countdown > 0;
 
   return `
     <section class="hero-moment hero-moment--${stage}" aria-label="Estado de tu viaje">
       ${hasArt ? `
-        <img class="hero-moment__art" src="${HERO_IMAGE}" alt="" aria-hidden="true">
+        <img class="hero-moment__art hero-moment__art--day" src="${HERO_ART_DAY}" alt="" aria-hidden="true">
+        <img class="hero-moment__art hero-moment__art--night" src="${HERO_ART_NIGHT}" alt="" aria-hidden="true" loading="lazy">
         <div class="hero-moment__scrim" aria-hidden="true"></div>
       ` : `
         <div class="hero-moment__empty-art" aria-hidden="true"></div>
       `}
       <div class="hero-moment__content">
+        ${eyebrow ? `<span class="hero-moment__eyebrow" aria-hidden="true">${eyebrow}</span>` : ''}
         <h2 class="hero-moment__headline">${headline}</h2>
+        ${hasCountdown ? `
+          <div class="hero-moment__countdown" role="text" aria-label="Faltan ${countdown} día${countdown === 1 ? '' : 's'}">
+            <span class="hero-moment__countdown-label">Faltan</span>
+            <span class="hero-moment__countdown-num">${countdown}</span>
+            <span class="hero-moment__countdown-days">día${countdown === 1 ? '' : 's'}</span>
+            <span class="hero-moment__countdown-stamp" aria-hidden="true">日本</span>
+          </div>
+        ` : ''}
         <p class="hero-moment__subtext">${subtext}</p>
         ${cta ? `<button class="hero-moment__cta" onclick="${cta.action}">${cta.label}</button>` : ''}
       </div>

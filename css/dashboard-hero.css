@@ -22,18 +22,38 @@
   height: 100%;
   object-fit: cover;
   object-position: center 30%;
-  transition: filter var(--motion-orchestrated) var(--motion-ease);
+  transition: filter var(--motion-orchestrated) var(--motion-ease),
+              opacity var(--motion-orchestrated) var(--motion-ease);
+}
+
+/* Day/night panorama pair: same composition (night generated from the day
+   image), so toggling Kawaii↔Ninja crossfades like dusk falling over the
+   same scene rather than swapping to a different picture. */
+.hero-moment__art--night { opacity: 0; }
+.dark .hero-moment__art--day { opacity: 0; }
+.dark .hero-moment__art--night { opacity: 1; }
+
+.hero-moment {
+  /* wash color for the text zone: cream over the day art, deep indigo over
+     the night art — matches --surface-page in both themes */
+  --hero-wash-rgb: 251, 247, 241;
+}
+.dark .hero-moment {
+  --hero-wash-rgb: 20, 26, 46;
 }
 
 .hero-moment__scrim {
   position: absolute;
   inset: 0;
-  /* 0.85 at the bottom stop (not 0.72) — verified via real contrast
-     measurement against the shipped Tokyo illustration's lightest
-     region: gives the headline ~7.5:1 and the subtext ~6.3:1, a real
-     safety margin above WCAG AA (4.5:1) rather than a borderline pass
-     that could fail against a different/brighter future illustration. */
-  background: linear-gradient(to top, rgba(var(--shadow-rgb), 0.85) 0%, rgba(var(--shadow-rgb), 0.2) 55%, transparent 80%);
+  /* The panorama pair was generated with its left third deliberately left as
+     calm negative space for the text (see hero-moment.js). Instead of the old
+     bottom-up dark scrim (which fought the ink-colored text over a light
+     illustration), a soft left-side paper wash keeps the text zone readable
+     in both themes while letting the art breathe on the right. */
+  background: linear-gradient(to right,
+    rgba(var(--hero-wash-rgb), 0.88) 0%,
+    rgba(var(--hero-wash-rgb), 0.55) 38%,
+    rgba(var(--hero-wash-rgb), 0.0) 68%);
 }
 
 .hero-moment__empty-art {
@@ -48,17 +68,21 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  justify-content: flex-end;
+  justify-content: center; /* sits in the art's left negative space */
   min-height: 260px;
   padding: var(--space-6);
+  max-width: min(58%, 420px);
+}
+@media (max-width: 640px) {
+  .hero-moment__content { max-width: 100%; }
 }
 
 .hero-moment__headline {
   font-family: var(--jp-font-display);
   font-weight: 800;
-  font-size: clamp(1.4rem, 4vw, 2rem);
-  color: var(--color-washi);
-  line-height: 1.1;
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  color: var(--ink); /* ink on the day wash, flips to light ink at night */
+  line-height: 1.05;
   text-wrap: balance;
   margin: 0;
 }
@@ -66,8 +90,94 @@
 .hero-moment__subtext {
   font-family: var(--font-body);
   font-size: 0.92rem;
-  color: rgba(251, 247, 241, 0.88);
+  color: var(--ink-soft);
   margin: 0;
+  max-width: 34ch;
+}
+
+/* Handwritten eyebrow ("Tu aventura a") — Caveat, slightly tilted, sits on
+   the dark scrim so kasumi pink has plenty of contrast. */
+.hero-moment__eyebrow {
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: 1.55rem;
+  line-height: 1;
+  color: var(--color-kasumi-deep);
+  transform: rotate(-2deg);
+  transform-origin: left bottom;
+  align-self: flex-start;
+}
+.dark .hero-moment__eyebrow { color: var(--color-kasumi); }
+
+/* Countdown notebook chip — the mockup's spiral-bound paper card, built on
+   surface tokens so it flips to dark paper in Ninja mode by itself. */
+.hero-moment__countdown {
+  align-self: flex-start;
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  grid-template-areas: 'label label' 'num days';
+  align-items: baseline;
+  column-gap: var(--space-2);
+  background: var(--surface-page);
+  border: 1px solid var(--hairline);
+  border-radius: var(--jp-radius-sm);
+  box-shadow: var(--jp-shadow-md);
+  padding: var(--space-3) var(--space-5) var(--space-3) calc(var(--space-5) + 14px);
+  transform: rotate(-1.2deg);
+  margin: var(--space-2) 0;
+}
+.hero-moment__countdown::before {
+  /* spiral punch holes down the left edge */
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 10px;
+  bottom: 10px;
+  width: 10px;
+  background-image: radial-gradient(circle 3.5px, var(--surface-page-alt) 3px, var(--hairline) 3.5px, transparent 4.5px);
+  background-size: 10px 16px;
+  background-repeat: repeat-y;
+}
+.hero-moment__countdown-label {
+  grid-area: label;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+.hero-moment__countdown-num {
+  grid-area: num;
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: clamp(2.4rem, 6vw, 3.2rem);
+  line-height: 0.95;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.hero-moment__countdown-days {
+  grid-area: days;
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--color-kasumi-deep);
+}
+.hero-moment__countdown-stamp {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--color-kasumi-deep);
+  border-radius: 50%;
+  background: var(--surface-page);
+  color: var(--color-kasumi-deep);
+  font-size: 0.72rem;
+  font-weight: 700;
+  transform: rotate(10deg);
+  opacity: 0.9;
 }
 
 .hero-moment__cta {
@@ -76,12 +186,13 @@
   font-family: var(--font-body);
   font-weight: 700;
   font-size: 0.85rem;
-  color: var(--color-ai);
-  background: var(--color-washi);
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-kasumi), var(--color-kasumi-deep));
   border: 0;
   padding: 10px 18px;
   border-radius: var(--jp-radius-pill);
   cursor: pointer;
+  box-shadow: 0 8px 18px -8px rgba(241, 111, 163, 0.65);
   transition: transform var(--motion-base) var(--motion-ease);
 }
 .hero-moment__cta:hover { transform: translateY(-1px); }

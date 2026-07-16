@@ -36,6 +36,7 @@
   --jp-font-display: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
   --font-body: 'Inter', -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'Consolas', monospace;
+  --font-hand: 'Caveat', 'Segoe Script', cursive; /* handwritten accents: eyebrows, "días", quotes */
 
   /* ---- Spacing scale ---- */
   --space-1: 4px;
