@@ -6,6 +6,52 @@
    Tokens de css/tokens.css — no inventar colores aquí.
    ========================================================================== */
 
+/* ---- 0. Header: de gradiente fucsia a papel washi translúcido ---- */
+.japan-header,
+html.dark .japan-header,
+html[data-theme="dark"] .japan-header {
+  background: color-mix(in srgb, var(--surface-page) 90%, transparent) !important;
+  background-image: none !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--hairline) !important;
+  box-shadow: var(--jp-shadow-sm) !important;
+  color: var(--ink) !important;
+}
+/* la línea inferior de acento se queda pero en kasumi suave */
+.japan-header::after {
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-kasumi) 55%, transparent), transparent) !important;
+}
+/* marca y textos del header en tinta (el markup trae text-white) */
+.japan-header h1,
+.japan-header .text-white,
+.japan-header [class*="text-white"] { color: var(--ink) !important; }
+/* chips (Mis Viajes, Buscar, campanita, menú): pills de papel */
+.header-chip,
+html.dark .header-chip {
+  background: var(--surface-page-alt) !important;
+  border: 1px solid var(--hairline) !important;
+  color: var(--ink) !important;
+  border-radius: var(--jp-radius-pill) !important;
+  box-shadow: none !important;
+  transition: transform var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease) !important;
+}
+.header-chip:hover,
+html.dark .header-chip:hover {
+  transform: translateY(-1px);
+  border-color: var(--color-kasumi) !important;
+  box-shadow: var(--jp-shadow-sm) !important;
+}
+.header-chip-badge {
+  background: var(--color-kasumi-deep) !important;
+  color: #fff !important;
+}
+.header-kbd {
+  background: var(--surface-page) !important;
+  border: 1px solid var(--hairline) !important;
+  color: var(--ink-soft) !important;
+}
+
 /* ---- 1. Barra de pestañas: papel, tinta, subrayado a pincel ---- */
 .japan-nav {
   background: var(--surface-page) !important;
