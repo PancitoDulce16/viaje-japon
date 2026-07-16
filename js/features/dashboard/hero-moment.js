@@ -91,6 +91,19 @@ export function renderHeroMoment(trip) {
   const hasArt = stage !== 'dreaming'; // empty state gets its own calm treatment, no city art for a trip that doesn't exist yet
   const hasCountdown = Number.isFinite(countdown) && countdown > 0;
 
+  // Sakura petals drifting over the art (mockup parity). Pure CSS animation;
+  // hidden entirely under prefers-reduced-motion (see dashboard-hero.css).
+  const petals = hasArt ? `
+    <div class="hero-moment__petals" aria-hidden="true">
+      ${Array.from({ length: 12 }, () => {
+        const size = (7 + Math.random() * 7).toFixed(1);
+        return `<span class="hero-moment__petal" style="left:${(Math.random() * 100).toFixed(1)}%; width:${size}px; height:${size}px; animation-duration:${(8 + Math.random() * 8).toFixed(1)}s; animation-delay:-${(Math.random() * 16).toFixed(1)}s; opacity:${(0.45 + Math.random() * 0.45).toFixed(2)};"></span>`;
+      }).join('')}
+    </div>
+  ` : '';
+
+  const ctaHtml = cta ? `<button class="hero-moment__cta" onclick="${cta.action}">${cta.label}</button>` : '';
+
   return `
     <section class="hero-moment hero-moment--${stage}" aria-label="Estado de tu viaje">
       ${hasArt ? `
@@ -100,20 +113,27 @@ export function renderHeroMoment(trip) {
       ` : `
         <div class="hero-moment__empty-art" aria-hidden="true"></div>
       `}
+      ${petals}
       <div class="hero-moment__content">
         ${eyebrow ? `<span class="hero-moment__eyebrow" aria-hidden="true">${eyebrow}</span>` : ''}
         <h2 class="hero-moment__headline">${headline}</h2>
         ${hasCountdown ? `
+          <div class="hero-moment__jp" aria-hidden="true">日本への冒険</div>
           <div class="hero-moment__countdown" role="text" aria-label="Faltan ${countdown} día${countdown === 1 ? '' : 's'}">
+            <span class="hero-moment__countdown-tag" aria-hidden="true">出発まで</span>
             <span class="hero-moment__countdown-label">Faltan</span>
             <span class="hero-moment__countdown-num">${countdown}</span>
             <span class="hero-moment__countdown-days">día${countdown === 1 ? '' : 's'}</span>
             <span class="hero-moment__countdown-stamp" aria-hidden="true">日本</span>
+            ${ctaHtml}
           </div>
-        ` : ''}
-        <p class="hero-moment__subtext">${subtext}</p>
-        ${cta ? `<button class="hero-moment__cta" onclick="${cta.action}">${cta.label}</button>` : ''}
+          <p class="hero-moment__subtext">${subtext}</p>
+        ` : `
+          <p class="hero-moment__subtext">${subtext}</p>
+          ${ctaHtml}
+        `}
       </div>
+      ${hasArt && hasCountdown ? `<div class="hero-moment__quote" aria-hidden="true">✦ “Cada día nos acerca más a Japón” <span>♥</span></div>` : ''}
     </section>
   `;
 }

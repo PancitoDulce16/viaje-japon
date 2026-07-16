@@ -63,8 +63,16 @@ function discoveryRow(items) {
   return `
     <div class="dash-section__scroller">
       ${items.map(i => `
-        <div class="discovery-card">
-          <div class="discovery-card__art" style="background:${i.bg}">${i.icon}</div>
+        <div class="discovery-card${i.img ? ' discovery-card--postcard' : ''}">
+          ${i.img ? `
+            <span class="discovery-card__washi" aria-hidden="true"></span>
+            <div class="discovery-card__art discovery-card__art--img">
+              ${i.kanji ? `<span class="discovery-card__kanji" aria-hidden="true">${i.kanji}</span>` : ''}
+              <img src="${i.img}" alt="">
+            </div>
+          ` : `
+            <div class="discovery-card__art" style="background:${i.bg}">${i.icon}</div>
+          `}
           <div class="discovery-card__body">
             <div class="discovery-card__title">${i.title}</div>
             <div class="discovery-card__tag">${i.tag}</div>
@@ -83,9 +91,10 @@ function discoveryRow(items) {
 // ---------------------------------------------------------------------
 function renderDreamingContent(trip) {
   const inspiration = discoveryRow([
-    { icon: '⛩️', bg: 'var(--color-sora)', title: 'Kioto', tag: 'Templos y jardines' },
-    { icon: '🍜', bg: '#FFE1EC', title: 'Osaka', tag: 'La capital de la comida' },
-    { icon: '🗻', bg: '#DCEFF6', title: 'Hakone', tag: 'Monte Fuji y aguas termales' },
+    { img: '/images/illustrations/generated/cities/kyoto-watercolor.webp', kanji: '京都', title: 'Kioto', tag: 'Templos y jardines milenarios' },
+    { img: '/images/illustrations/generated/cities/osaka-watercolor.webp', kanji: '大阪', title: 'Osaka', tag: 'La capital de la comida' },
+    { img: '/images/illustrations/generated/cities/nara-watercolor.webp', kanji: '奈良', title: 'Nara', tag: 'Historia y naturaleza en armonía' },
+    { img: '/images/illustrations/generated/cities/hakone-watercolor.webp', kanji: '箱根', title: 'Hakone', tag: 'Aguas termales y vistas al Fuji' },
   ]);
 
   const secondCard = trip
