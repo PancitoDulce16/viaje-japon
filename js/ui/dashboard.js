@@ -439,14 +439,15 @@ class DashboardManager {
 
     setupMobileMenu() {
         const menuToggle = document.getElementById('menuToggle');
+        const menuToggleDesktop = document.getElementById('menuToggleDesktop');
         const menuClose = document.getElementById('menuClose');
         const mobileMenu = document.getElementById('mobileMenu');
         const mobileMenuPanel = document.getElementById('mobileMenuPanel');
 
         if (!menuToggle || !mobileMenu || !mobileMenuPanel) return;
 
-        // Abrir menú
-        menuToggle.addEventListener('click', () => {
+        // Abrir menú (hamburguesa móvil y la de escritorio abren el mismo panel)
+        const openMenu = () => {
             mobileMenu.classList.remove('hidden');
             // Los FABs flotantes (chat, accesibilidad, menú principal) tienen
             // z-index muy alto y quedaban flotando encima del panel del menú.
@@ -454,7 +455,9 @@ class DashboardManager {
             setTimeout(() => {
                 mobileMenuPanel.classList.remove('translate-x-full');
             }, 10);
-        });
+        };
+        menuToggle.addEventListener('click', openMenu);
+        if (menuToggleDesktop) menuToggleDesktop.addEventListener('click', openMenu);
 
         // Cerrar menú
         const closeMenu = () => {
