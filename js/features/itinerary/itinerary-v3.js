@@ -1182,6 +1182,21 @@ function renderTripSelector(){
     </div>`;
 }
 
+// Miniatura acuarela por categoría de actividad (Nano Banana, ver
+// images/illustrations/generated/categories/). Se elige por keywords sobre
+// categoría + icono + título porque los generadores usan campos distintos.
+function activityThumb(act) {
+  const hay = `${act.category || ''} ${act.categoryName || ''} ${act.icon || act.categoryIcon || ''} ${act.title || act.name || ''}`.toLowerCase();
+  const pick =
+    /comida|food|restaurante|ramen|sushi|omurice|café|cafe|cena|almuerzo|desayuno|market|mercado gastron|🍜|🍣|🍱|🍛|🍙|☕|🍽/.test(hay) ? 'food' :
+    /templo|temple|shrine|santuario|castillo|castle|museo|cultura|⛩|🏯|🛕/.test(hay) ? 'culture' :
+    /naturaleza|parque|bosque|bambú|bambu|jardín|jardin|monte|lago|onsen|🌳|🎋|🏞|⛰|♨/.test(hay) ? 'nature' :
+    /compras|shopping|mercado|tienda|market|🛍|🏬/.test(hay) ? 'shopping' :
+    /torre|tower|skytree|mirador|vista|observatorio|🗼|🌆|🌃/.test(hay) ? 'landmark' :
+    'walk';
+  return `/images/illustrations/generated/categories/${pick}.webp`;
+}
+
 // Emoji representativo por ciudad para las tarjetas del selector de días
 const DAY_CITY_EMOJI = {
   tokyo: '🗼', kyoto: '⛩️', osaka: '🏯', hiroshima: '🕊️', nara: '🦌',
@@ -2457,7 +2472,8 @@ function renderActivities(day){
           <div class="drag-handle text-gray-400 dark:text-gray-500 text-xs cursor-grab active:cursor-grabbing" title="Arrastra para reordenar">⋮⋮</div>
           <input type="checkbox" data-id="${act.id}" ${checkedActivities[act.id]?'checked':''} class="activity-checkbox w-5 h-5 cursor-pointer accent-purple-600 flex-shrink-0" />
         </div>
-        <div class="hidden sm:flex bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 p-3 rounded-lg text-2xl flex-shrink-0">${actIcon}</div>
+        <img class="activity-thumb hidden sm:block" src="${activityThumb(act)}" alt="" loading="lazy">
+
         <div class="flex-1 min-w-0">
           <div class="flex justify-between items-start gap-2">
             <h3 class="text-lg font-bold dark:text-white mb-1 min-w-0"><span class="sm:hidden">${actIcon} </span>${activityTitle}</h3>

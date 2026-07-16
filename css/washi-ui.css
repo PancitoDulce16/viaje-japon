@@ -166,3 +166,139 @@
   62%  { transform: scale(0.94) rotate(10deg); opacity: 0.9; }
   100% { transform: scale(1) rotate(12deg); opacity: 0.85; }
 }
+
+/* ---- 5. Miniatura acuarela por categoría en cada actividad ---- */
+.activity-thumb {
+  width: 64px;
+  height: 58px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--hairline);
+  box-shadow: var(--jp-shadow-sm);
+  transform: rotate(-1.5deg);
+  transition: transform var(--motion-base) var(--motion-ease);
+}
+.activity-card:hover .activity-thumb { transform: rotate(0deg) scale(1.05); }
+.dark .activity-thumb { filter: brightness(0.85); }
+
+/* ---- 6. Tarjeta del viaje (itinerario): de gradiente rosa a cuaderno ---- */
+.trip-header-banner {
+  position: relative;
+  background: var(--surface-page) !important;
+  border: 1px solid var(--hairline);
+  border-radius: var(--jp-radius-lg) !important;
+  box-shadow: var(--jp-shadow-md) !important;
+  padding-left: 42px !important;
+}
+.trip-header-banner::before {
+  /* espiral de cuaderno */
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 18px;
+  bottom: 18px;
+  width: 12px;
+  background-image: radial-gradient(circle 4.5px, var(--surface-page-alt) 4px, color-mix(in srgb, var(--ink) 22%, transparent) 4.5px, transparent 5.5px);
+  background-size: 12px 22px;
+  background-repeat: repeat-y;
+}
+.trip-header-banner::after {
+  /* cinta washi arriba al centro */
+  content: '';
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  width: 110px;
+  height: 24px;
+  transform: translateX(-50%) rotate(-2.5deg);
+  background: rgba(255, 143, 187, 0.4);
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.35) 0 6px, transparent 6px 12px);
+  clip-path: polygon(3% 0, 97% 4%, 100% 32%, 96% 100%, 4% 96%, 0 60%);
+}
+.trip-header-banner h3 {
+  font-family: var(--jp-font-display) !important;
+  color: var(--ink) !important;
+}
+.trip-header-banner p,
+.trip-header-banner .text-white\/90 { color: var(--ink-soft) !important; }
+.trip-header-banner button {
+  background: color-mix(in srgb, var(--color-kasumi) 14%, var(--surface-page)) !important;
+  color: var(--color-kasumi-deep) !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: var(--jp-radius-pill) !important;
+  font-family: var(--font-body) !important;
+  font-weight: 700 !important;
+  backdrop-filter: none !important;
+  box-shadow: var(--jp-shadow-sm) !important;
+  transition: transform var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease) !important;
+}
+.trip-header-banner button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--jp-shadow-md) !important;
+}
+/* "Crear Itinerario" conserva su rol de confirmación → matcha */
+.trip-header-banner button[class*="bg-green"] {
+  background: var(--color-matcha) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+
+/* ---- 7. Countdown kawaii: de gradiente rosa a nota washi ---- */
+.countdown-widget {
+  background: var(--surface-page) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: var(--jp-radius-md) !important;
+  box-shadow: var(--jp-shadow-md) !important;
+  transform: rotate(-0.8deg);
+}
+.countdown-widget::before,
+.countdown-widget::after {
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-kasumi) 30%, transparent) 0%, transparent 70%) !important;
+}
+.countdown-widget h2 {
+  color: var(--ink-soft) !important;
+  font-family: var(--font-hand) !important;
+  font-size: 1.15rem !important;
+  text-shadow: none !important;
+}
+.countdown-widget .days {
+  font-family: var(--jp-font-display) !important;
+  color: var(--color-kasumi-deep) !important;
+  text-shadow: none !important;
+}
+.countdown-widget p { color: var(--ink-soft) !important; text-shadow: none !important; }
+
+/* ---- 8. Traslados entre actividades: mini-boleto de tren ---- */
+.travel-time-indicator {
+  position: relative;
+  background: color-mix(in srgb, var(--color-sora) 26%, var(--surface-page)) !important;
+  border: 1px dashed color-mix(in srgb, var(--ink) 30%, transparent) !important;
+  border-radius: 12px !important;
+  margin-left: 3.2rem !important;
+  color: var(--ink-soft);
+}
+.travel-time-indicator p { color: var(--ink-soft) !important; }
+.travel-time-indicator p.font-semibold { color: var(--ink) !important; }
+/* muescas de boleto a los lados */
+.travel-time-indicator::before,
+.travel-time-indicator::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: var(--surface-page-alt);
+  border: 1px dashed color-mix(in srgb, var(--ink) 30%, transparent);
+}
+.travel-time-indicator::before { left: -8px; border-left-color: transparent; }
+.travel-time-indicator::after { right: -8px; border-right-color: transparent; }
+/* aviso de traslado largo: tinte dorado, no naranja plano */
+.travel-time-indicator[class*="orange"] {
+  background: color-mix(in srgb, var(--color-yuzu) 14%, var(--surface-page)) !important;
+  border-color: color-mix(in srgb, var(--color-yuzu) 55%, transparent) !important;
+}
+.travel-time-indicator [class*="text-orange"] { color: color-mix(in srgb, var(--color-yuzu) 75%, var(--ink)) !important; }
