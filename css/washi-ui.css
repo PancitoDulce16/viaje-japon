@@ -348,3 +348,42 @@ html.dark .header-chip:hover {
   border-color: color-mix(in srgb, var(--color-yuzu) 55%, transparent) !important;
 }
 .travel-time-indicator [class*="text-orange"] { color: color-mix(in srgb, var(--color-yuzu) 75%, var(--ink)) !important; }
+
+/* ---- 9. Footer: de banda roja a cierre de papel ---- */
+.japan-footer {
+  background: var(--surface-page-alt) !important;
+  background-image: none !important;
+  color: var(--ink-soft) !important;
+  border-top: 1px solid var(--hairline);
+}
+.japan-footer .text-white,
+.japan-footer [class*="text-white"] { color: var(--ink) !important; }
+.japan-footer .fa-heart { color: var(--color-kasumi-deep) !important; }
+
+/* ---- 10. Dropdown Exportar: papel con sombra índigo ---- */
+#exportMenu {
+  background: var(--surface-page) !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: var(--jp-radius-md) !important;
+  box-shadow: var(--jp-shadow-lg) !important;
+  color: var(--ink) !important;
+}
+#exportMenu [class*="text-gray-"],
+#exportMenu .font-semibold { color: var(--ink) !important; }
+#exportMenu button:hover,
+#exportMenu [role="menuitem"]:hover,
+#exportMenu > div > *:hover {
+  background: color-mix(in srgb, var(--color-kasumi) 12%, var(--surface-page)) !important;
+}
+
+/* ---- 11. Panel del menú de cuenta: washi + acento kasumi ---- */
+#mobileMenuPanel {
+  background: var(--surface-page) !important;
+}
+#mobileMenuPanel .bg-gradient-to-br {
+  background: linear-gradient(135deg, var(--color-kasumi), var(--color-kasumi-deep)) !important;
+}
+#menuUserAvatar {
+  background: rgba(255, 255, 255, 0.28) !important;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+}

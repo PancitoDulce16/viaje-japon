@@ -5,8 +5,8 @@
   "start_url": "/dashboard.html?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0f0a1e",
-  "theme_color": "#7c3aed",
+  "background_color": "#FBF7F1",
+  "theme_color": "#2B3868",
   "orientation": "any",
   "prefer_related_applications": false,
   "icons": [
@@ -35,7 +35,11 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["travel", "lifestyle", "productivity"],
+  "categories": [
+    "travel",
+    "lifestyle",
+    "productivity"
+  ],
   "lang": "es",
   "dir": "ltr",
   "shortcuts": [
@@ -44,14 +48,24 @@
       "short_name": "Itinerario",
       "description": "Ver mi itinerario de viaje",
       "url": "/dashboard.html",
-      "icons": [{ "src": "/images/icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/images/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Mapa",
       "short_name": "Mapa",
       "description": "Ver mapa de actividades",
       "url": "/dashboard.html#map",
-      "icons": [{ "src": "/images/icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/images/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ],
   "screenshots": []
