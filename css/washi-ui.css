@@ -1,0 +1,168 @@
+/* ==========================================================================
+   Washi UI — reskin acuarela de la navegación y el itinerario.
+   Solo CSS sobre los class hooks estables (.tab-btn, .day-btn/.day-ticket,
+   .activity-card): cero cambios de comportamiento. Importado al FINAL de
+   app.css a propósito para ganar el cascade a los temas y fixes previos.
+   Tokens de css/tokens.css — no inventar colores aquí.
+   ========================================================================== */
+
+/* ---- 1. Barra de pestañas: papel, tinta, subrayado a pincel ---- */
+.japan-nav {
+  background: var(--surface-page) !important;
+  border-bottom: 1px solid var(--hairline) !important;
+  box-shadow: var(--jp-shadow-sm) !important;
+}
+#tabSelector .tab-btn {
+  position: relative;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0.7rem 0.9rem !important;
+  font-family: var(--font-body) !important;
+  font-weight: 700 !important;
+  color: var(--ink-soft) !important;
+  transition: color var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease) !important;
+}
+#tabSelector .tab-btn:hover {
+  color: var(--ink) !important;
+  transform: translateY(-1px);
+  background: transparent !important;
+}
+#tabSelector .tab-btn.active {
+  color: var(--color-kasumi-deep) !important;
+}
+/* subrayado tipo brochazo (reusa el ::before que ya anima width) */
+#tabSelector .tab-btn::before {
+  height: 4px !important;
+  border-radius: 4px !important;
+  background: linear-gradient(90deg, var(--color-kasumi), var(--color-kasumi-deep)) !important;
+  transform: translateX(-50%) rotate(-1deg);
+  bottom: 2px !important;
+}
+
+/* ---- 2. Selector de días: boletos de papel con kanji del día ---- */
+#daySelector .day-ticket {
+  display: flex;
+  align-items: stretch;
+  gap: 9px;
+  flex-shrink: 0;
+  text-align: left;
+  white-space: nowrap;
+  background: var(--surface-page);
+  border: 1px solid var(--hairline);
+  border-radius: var(--jp-radius-sm);
+  padding: 7px 13px 7px 9px;
+  box-shadow: var(--jp-shadow-sm);
+  cursor: pointer;
+  transition: transform var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease);
+}
+#daySelector .day-ticket * { pointer-events: none; }
+#daySelector .day-ticket:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--jp-shadow-md);
+}
+.day-ticket__kanji {
+  align-self: center;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 38px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--color-kasumi) 16%, var(--surface-page));
+  color: var(--color-kasumi-deep);
+  font-family: 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.day-ticket__main { display: flex; flex-direction: column; line-height: 1.25; }
+.day-ticket__title {
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+.day-ticket__meta {
+  font-size: 0.62rem;
+  color: var(--ink-soft);
+  text-transform: capitalize;
+}
+.day-ticket__count {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--color-kasumi-deep);
+}
+/* activo: hanko rojo-rosa, ligeramente girado como sello puesto a mano */
+#daySelector .day-ticket--active {
+  background: linear-gradient(135deg, var(--color-kasumi-deep), #E8496A);
+  border-color: transparent;
+  transform: rotate(-1.2deg);
+  box-shadow: 0 10px 20px -8px rgba(232, 73, 106, 0.55);
+}
+#daySelector .day-ticket--active:hover { transform: rotate(-1.2deg) translateY(-2px); }
+.day-ticket--active .day-ticket__kanji {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+.day-ticket--active .day-ticket__title { color: #fff; }
+.day-ticket--active .day-ticket__meta { color: rgba(255, 255, 255, 0.85); }
+.day-ticket--active .day-ticket__count { color: rgba(255, 255, 255, 0.92); }
+
+/* ---- 3. Tarjetas de actividad: papel washi + acento kasumi ---- */
+.activity-card {
+  position: relative;
+  background: var(--surface-page) !important;
+  border: 1px solid var(--hairline) !important;
+  border-left: 4px solid var(--color-kasumi) !important;
+  border-radius: var(--jp-radius-md) !important;
+  box-shadow: var(--jp-shadow-sm) !important;
+  transition: transform var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease), opacity var(--motion-base) var(--motion-ease) !important;
+}
+.activity-card:hover {
+  transform: translateX(3px);
+  box-shadow: var(--jp-shadow-md) !important;
+}
+.activity-card h3 {
+  font-family: var(--jp-font-display) !important;
+  color: var(--ink) !important;
+}
+.activity-card .activity-checkbox { accent-color: var(--color-kasumi-deep) !important; }
+/* lo morado genérico dentro de la tarjeta pasa a kasumi/papel */
+.activity-card [class*="bg-purple-"] {
+  background: color-mix(in srgb, var(--color-kasumi) 16%, var(--surface-page)) !important;
+  color: var(--color-kasumi-deep) !important;
+}
+.activity-card [class*="text-purple-"] { color: var(--color-kasumi-deep) !important; }
+
+/* ---- 4. Sello 済 ("hecho"): se estampa al marcar la actividad ---- */
+.activity-card:has(.activity-checkbox:checked)::after {
+  content: '済';
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  margin-top: -23px;
+  border: 3px solid var(--color-sango);
+  border-radius: 50%;
+  color: var(--color-sango);
+  font-family: 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  transform: rotate(12deg);
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 2;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .activity-card:has(.activity-checkbox:checked)::after {
+    animation: hankoStamp 380ms cubic-bezier(0.2, 1.6, 0.4, 1) both;
+  }
+}
+@keyframes hankoStamp {
+  0%   { transform: scale(2.1) rotate(26deg); opacity: 0; }
+  62%  { transform: scale(0.94) rotate(10deg); opacity: 0.9; }
+  100% { transform: scale(1) rotate(12deg); opacity: 0.85; }
+}

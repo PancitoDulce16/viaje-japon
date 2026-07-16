@@ -1211,22 +1211,21 @@ function renderDaySelector(){
     const icon = DAY_CITY_EMOJI[cityKey] || '📍';
     const cityName = day.city || day.cityName || firstCity?.cityName || day.location || '';
     const dateStr = day.date ? window.TimeUtils.formatDate(day.date, { weekday: 'short', day: 'numeric' }) : '';
+    // Kanji del día de la semana (日月火水木金土), como los boletos de tren.
+    // parseDate del proyecto (nunca new Date('YYYY-MM-DD'), ver CLAUDE.md).
+    const parsed = day.date ? window.TimeUtils.parseDate(day.date) : null;
+    const weekKanji = parsed ? '日月火水木金土'[parsed.getDay()] : icon;
 
+    // Boleto de papel — estilos en css/washi-ui.css. Mantener .day-btn y
+    // data-day (delegación de clicks) y pointer-events:none en los hijos
+    // (lo aplica el CSS) para que e.target siempre sea el botón.
     return `
-    <button data-day="${day.day}"
-      class="day-btn flex flex-col items-start px-3.5 py-2 rounded-xl whitespace-nowrap transition-all hover:scale-[1.03] flex-shrink-0 text-left border-2 ${
-        active
-          ? 'bg-red-600 border-red-600 text-white shadow-lg'
-          : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-100 hover:border-red-300 dark:hover:border-red-400 shadow-sm'
-      }">
-      <span class="flex items-center gap-1.5 font-extrabold text-sm leading-tight pointer-events-none">
-        <span>${icon}</span> Día ${day.day}
-      </span>
-      <span class="text-[10px] leading-tight capitalize pointer-events-none ${active ? 'text-white/85' : 'text-gray-500 dark:text-gray-400'}">
-        ${dateStr}${cityName ? ' · ' + cityName : ''}
-      </span>
-      <span class="text-[10px] font-bold leading-tight pointer-events-none ${active ? 'text-white/90' : 'text-red-500 dark:text-amber-300'}">
-        ${count === 0 ? 'día libre' : count + ' actividades'}${cost > 0 ? ' · ¥' + Math.round(cost).toLocaleString() : ''}
+    <button data-day="${day.day}" class="day-btn day-ticket ${active ? 'day-ticket--active' : ''}">
+      <span class="day-ticket__kanji">${weekKanji}</span>
+      <span class="day-ticket__main">
+        <span class="day-ticket__title">Día ${day.day}</span>
+        <span class="day-ticket__meta">${dateStr}${cityName ? ' · ' + cityName : ''}</span>
+        <span class="day-ticket__count">${count === 0 ? 'día libre' : count + ' actividades'}${cost > 0 ? ' · ¥' + Math.round(cost).toLocaleString() : ''}</span>
       </span>
     </button>`;
   }).join('');

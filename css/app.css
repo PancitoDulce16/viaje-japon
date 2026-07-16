@@ -70,3 +70,6 @@
 @import './contrast-fixes.css';
 @import './dark-mode-fixes.css';
 @import './dark-mode-ultra-contrast.css';
+
+/* 11. Washi UI reskin (nav + itinerario) - debe ir al final, gana el cascade */
+@import './washi-ui.css';
