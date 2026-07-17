@@ -349,6 +349,35 @@ html.dark .header-chip:hover {
 }
 .travel-time-indicator [class*="text-orange"] { color: color-mix(in srgb, var(--color-yuzu) 75%, var(--ink)) !important; }
 
+/* ---- 8.5 Tarjeta del día en la columna lateral: página de cuaderno ---- */
+.day-info-art {
+  border: 1px solid var(--hairline);
+  box-shadow: var(--jp-shadow-md);
+  border-radius: var(--jp-radius-md) !important;
+}
+.day-info-art img {
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+.day-info-art .day-info-kanji {
+  position: absolute;
+  top: 0;
+  left: 12px;
+  z-index: 2;
+  writing-mode: vertical-rl;
+  letter-spacing: 4px;
+  font-family: 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--surface-page);
+  border: 1px solid var(--hairline);
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
+  padding: 9px 6px 7px;
+  box-shadow: var(--jp-shadow-sm);
+}
+.day-info-art h2 { font-family: var(--jp-font-display) !important; text-transform: capitalize; }
+
 /* ---- 9. Footer: de banda roja a cierre de papel ---- */
 .japan-footer {
   background: var(--surface-page-alt) !important;

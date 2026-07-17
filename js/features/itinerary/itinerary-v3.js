@@ -1529,7 +1529,19 @@ function renderDayOverview(day){
 
     console.log('🏙️ Detected city:', cityName);
 
-    if (window.ImageService && window.ImageService.getCityImage) {
+    // Set acuarela propio (Nano Banana, mismo look que las postales de
+    // Inspírate) — tiene prioridad sobre ImageService/City cards para
+    // mantener el lenguaje washi en toda la app.
+    const WATERCOLOR_CITY_ART = {
+      tokyo: '/images/illustrations/generated/cities/tokyo-watercolor.webp',
+      kyoto: '/images/illustrations/generated/cities/kyoto-watercolor.webp',
+      osaka: '/images/illustrations/generated/cities/osaka-watercolor.webp',
+      nara: '/images/illustrations/generated/cities/nara-watercolor.webp',
+      hakone: '/images/illustrations/generated/cities/hakone-watercolor.webp',
+    };
+    if (WATERCOLOR_CITY_ART[cityName]) {
+      cityImage = WATERCOLOR_CITY_ART[cityName];
+    } else if (window.ImageService && window.ImageService.getCityImage) {
       cityImage = window.ImageService.getCityImage(cityName);
       console.log('🖼️ Image from ImageService:', cityImage);
     } else {
@@ -1552,17 +1564,23 @@ function renderDayOverview(day){
 
   console.log('✅ Final cityImage:', cityImage);
 
+  // Kanji de la ciudad para la pestaña vertical (como las postales)
+  const CITY_KANJI = { tokyo: '東京', kyoto: '京都', osaka: '大阪', nara: '奈良', hakone: '箱根', hiroshima: '広島', kamakura: '鎌倉', nikko: '日光' };
+  const cityKanjiKey = String(day.city || day.location || day.title || '').toLowerCase();
+  const cityKanji = Object.keys(CITY_KANJI).find(k => cityKanjiKey.includes(k));
+  const dayDateLong = day.date ? window.TimeUtils.formatDate(day.date, { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+
   container.innerHTML = `
     ${cityImage ? `
-      <div class="relative w-full mb-4 overflow-hidden rounded-xl">
-        <img src="${cityImage}" alt="${day.city || day.location || 'Japan'}" class="w-full h-auto block" loading="lazy">
+      <div class="day-info-art relative w-full mb-4 overflow-hidden rounded-xl">
+        ${cityKanji ? `<span class="day-info-kanji" aria-hidden="true">${CITY_KANJI[cityKanji]}</span>` : ''}
+        <img src="${cityImage}" alt="${day.city || day.location || 'Japan'}" class="w-full h-auto block">
         <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"></div>
         <div class="absolute bottom-0 left-0 right-0 p-4">
           <div class="flex items-center gap-2 text-white">
-            <span class="text-3xl">📅</span>
             <div>
-              <h2 class="text-2xl font-bold text-white drop-shadow-lg">Día ${day.day}</h2>
-              <p class="text-sm text-white/90">${day.city || day.location || ''}</p>
+              <h2 class="text-2xl font-bold text-white drop-shadow-lg">Día ${day.day}${day.city || day.location ? ' – ' + (day.city || day.location) : ''}</h2>
+              ${dayDateLong ? `<p class="text-sm text-white/90">${dayDateLong}</p>` : ''}
             </div>
           </div>
         </div>
