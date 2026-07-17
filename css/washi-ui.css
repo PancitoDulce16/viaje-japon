@@ -378,6 +378,50 @@ html.dark .header-chip:hover {
 }
 .day-info-art h2 { font-family: var(--jp-font-display) !important; text-transform: capitalize; }
 
+/* Eki stamp — sello de estación al completar todas las actividades del día */
+.eki-stamp {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-content: center;
+  gap: 2px;
+  text-align: center;
+  border: 3px solid var(--color-sango);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-sango) 55%, transparent);
+  background: color-mix(in srgb, var(--surface-page) 78%, transparent);
+  color: var(--color-sango);
+  transform: rotate(-12deg);
+  opacity: 0.92;
+  pointer-events: none;
+}
+.eki-stamp__jp {
+  font-family: 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.eki-stamp__label {
+  font-family: var(--font-body);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .eki-stamp {
+    animation: ekiStamp 460ms cubic-bezier(0.2, 1.6, 0.4, 1) both;
+  }
+}
+@keyframes ekiStamp {
+  0%   { transform: scale(2.4) rotate(-30deg); opacity: 0; }
+  60%  { transform: scale(0.92) rotate(-9deg); opacity: 0.95; }
+  100% { transform: scale(1) rotate(-12deg); opacity: 0.92; }
+}
+
 /* ---- 9. Footer: de banda roja a cierre de papel ---- */
 .japan-footer {
   background: var(--surface-page-alt) !important;

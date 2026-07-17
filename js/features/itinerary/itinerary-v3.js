@@ -1570,10 +1570,22 @@ function renderDayOverview(day){
   const cityKanji = Object.keys(CITY_KANJI).find(k => cityKanjiKey.includes(k));
   const dayDateLong = day.date ? window.TimeUtils.formatDate(day.date, { day: 'numeric', month: 'long', year: 'numeric' }) : '';
 
+  // 🎌 Eki stamp: al completar TODAS las actividades del día se estampa el
+  // sello de la estación de esa ciudad sobre la tarjeta (como los sellos
+  // reales de las estaciones JR). Se re-renderiza al marcar el último
+  // checkbox, así que el sello "cae" justo en ese momento (hankoStamp).
+  const dayComplete = day.activities.length > 0 && completed === day.activities.length;
+  const ekiStamp = dayComplete ? `
+    <span class="eki-stamp" role="img" aria-label="Día completado">
+      <span class="eki-stamp__jp">${cityKanji ? CITY_KANJI[cityKanji] : '済'}</span>
+      <span class="eki-stamp__label">EKI STAMP</span>
+    </span>` : '';
+
   container.innerHTML = `
     ${cityImage ? `
       <div class="day-info-art relative w-full mb-4 overflow-hidden rounded-xl">
         ${cityKanji ? `<span class="day-info-kanji" aria-hidden="true">${CITY_KANJI[cityKanji]}</span>` : ''}
+        ${ekiStamp}
         <img src="${cityImage}" alt="${day.city || day.location || 'Japan'}" class="w-full h-auto block">
         <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"></div>
         <div class="absolute bottom-0 left-0 right-0 p-4">
