@@ -259,6 +259,27 @@
   .hero-moment__petal { display: none; }
 }
 
+/* Modo Ninja: los pétalos se vuelven luciérnagas doradas sobre la noche.
+   La caída (heroPetalFall, duración inline por pétalo) sigue en el span;
+   el pulso de brillo vive en ::after con su propio reloj para que la
+   duración inline de la caída no lo pise. */
+.dark .hero-moment__petal {
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #FFF3C4, #F4C95D 60%, rgba(244, 201, 93, 0) 100%);
+}
+.dark .hero-moment__petal::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  box-shadow: 0 0 9px 3px rgba(244, 201, 93, 0.55);
+  animation: fireflyPulse 2.6s ease-in-out infinite;
+}
+@keyframes fireflyPulse {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
 /* the countdown number breathes, slow and quiet */
 @media (prefers-reduced-motion: no-preference) {
   .hero-moment__countdown-num {
