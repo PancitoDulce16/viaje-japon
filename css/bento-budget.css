@@ -288,3 +288,177 @@ html.dark .bento-cat-chip {
   background: color-mix(in srgb, var(--cat-color) 12%, transparent);
   transform: scale(1.04);
 }
+
+/* ==========================================================================
+   🍱 BENTO WASHI (2026-07) — caja de madera con compartimentos ilustrados
+   (Nano Banana) + boletos de stats. Reemplaza al viejo SVG; va al final del
+   archivo para ganarle a las reglas de arriba con la misma especificidad.
+   Tokens de css/tokens.css.
+   ========================================================================== */
+
+/* Caja de madera */
+.bento-wood {
+  position: relative;
+  background: linear-gradient(145deg, #9c6b45, #7a4e2e 55%, #6b4226);
+  border-radius: 22px;
+  padding: 12px;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.38), var(--jp-shadow-lg);
+}
+html.dark .bento-wood {
+  background: linear-gradient(145deg, #4a311f, #33220f);
+}
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+@media (max-width: 640px) {
+  .bento-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Compartimento */
+.bento-cell {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--color-washi);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: transform var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease);
+  padding: 0;
+  text-align: left;
+  font-family: inherit;
+}
+.bento-cell:hover { transform: translateY(-3px); box-shadow: inset 0 2px 6px rgba(0,0,0,.25), var(--jp-shadow-md); }
+.bento-cell:focus-visible { outline: 3px solid var(--color-kasumi); outline-offset: 2px; }
+.bento-cell.is-selected { box-shadow: inset 0 0 0 3px var(--color-kasumi-deep), inset 0 2px 6px rgba(0,0,0,.25); }
+
+.bento-cell__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+html.dark .bento-cell__art { filter: brightness(0.85); }
+
+/* Nivel de llenado: sube desde la base según gasto/presupuesto */
+.bento-cell__fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to top, rgba(241, 111, 163, 0.42), rgba(241, 111, 163, 0.10));
+  border-top: 2px solid rgba(241, 111, 163, 0.65);
+  pointer-events: none;
+  transition: height 600ms var(--motion-ease);
+}
+.bento-cell.is-over .bento-cell__fill {
+  background: linear-gradient(to top, rgba(232, 97, 92, 0.55), rgba(232, 97, 92, 0.15));
+  border-top-color: var(--color-sango);
+}
+
+/* Etiqueta superior: nombre + montos sobre velo washi */
+.bento-cell__head {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 7px 9px 10px;
+  background: linear-gradient(to bottom, rgba(251, 247, 241, 0.92), rgba(251, 247, 241, 0.55) 70%, transparent);
+}
+html.dark .bento-cell__head {
+  background: linear-gradient(to bottom, rgba(20, 26, 46, 0.9), rgba(20, 26, 46, 0.5) 70%, transparent);
+}
+.bento-cell__name {
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--ink);
+  line-height: 1.1;
+}
+.bento-cell__amount {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Píldora de porcentaje abajo-izquierda (color de la categoría) */
+.bento-cell__pct {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--cell-color, var(--color-kasumi-deep));
+  box-shadow: var(--jp-shadow-sm);
+}
+.bento-cell__pct.over { background: var(--color-sango); }
+
+/* Palillos decorativos junto a la caja */
+.bento-chopsticks {
+  position: relative;
+  display: flex;
+  gap: 7px;
+  justify-content: center;
+  margin-top: 10px;
+  transform: rotate(-2deg);
+}
+.bento-chopsticks span {
+  width: 190px;
+  height: 7px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #8a5a3b, #a9744c);
+  box-shadow: var(--jp-shadow-sm);
+}
+.bento-chopsticks i {
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  width: 26px;
+  height: 19px;
+  transform: translateX(-50%);
+  background: var(--color-kasumi);
+  border-radius: 4px;
+  opacity: 0.85;
+}
+
+/* Boletos de stats: papel washi con muesca y sello kanji */
+.bento-stat.bento-ticket,
+html.dark .bento-stat.bento-ticket {
+  position: relative;
+  background: var(--surface-page);
+  border: 1px dashed color-mix(in srgb, var(--ink) 28%, transparent);
+  border-radius: 14px;
+  box-shadow: var(--jp-shadow-sm);
+  overflow: hidden;
+}
+.bento-ticket__stamp {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 2px solid color-mix(in srgb, var(--color-kasumi-deep) 65%, transparent);
+  border-radius: 50%;
+  color: var(--color-kasumi-deep);
+  font-family: 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  transform: rotate(10deg);
+  opacity: 0.75;
+}

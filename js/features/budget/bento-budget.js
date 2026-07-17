@@ -165,7 +165,7 @@ export const BentoBudget = {
 
         <!-- Bento interactivo -->
         <div class="bento-stage my-4">
-          ${this.renderBentoSVG(s)}
+          ${this.renderBentoBox(s)}
         </div>
 
         <div class="flex justify-center mb-6">
@@ -197,22 +197,26 @@ export const BentoBudget = {
 
     return `
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-        <div class="bento-stat">
-          <div class="bento-stat-label">Presupuesto</div>
+        <div class="bento-stat bento-ticket">
+          <span class="bento-ticket__stamp" aria-hidden="true">予算</span>
+          <div class="bento-stat-label">Presupuesto total</div>
           <div class="bento-stat-value bento-editable" onclick="window.BentoBudget.editTotalBudget()" title="Toca para editar">${this.fmt(s.totalBudget)} ✏️</div>
           <div class="bento-stat-sub">~$${Math.round(s.totalBudget / JPY_TO_USD)} USD</div>
         </div>
-        <div class="bento-stat">
+        <div class="bento-stat bento-ticket">
+          <span class="bento-ticket__stamp" aria-hidden="true">支出</span>
           <div class="bento-stat-label">Gastado</div>
           <div class="bento-stat-value">${this.fmt(s.totalSpent)}</div>
           <div class="bento-progress"><div class="bento-progress-fill ${pct >= 100 ? 'over' : ''}" style="width:${pct}%"></div></div>
         </div>
-        <div class="bento-stat">
+        <div class="bento-stat bento-ticket">
+          <span class="bento-ticket__stamp" aria-hidden="true">残り</span>
           <div class="bento-stat-label">${s.remaining >= 0 ? 'Te queda' : 'Excedido'}</div>
           <div class="bento-stat-value ${s.remaining < 0 ? 'text-red-500' : ''}">${this.fmt(Math.abs(s.remaining))}</div>
           <div class="bento-stat-sub">${s.started && !s.ended ? `día ${s.currentDay} de ${s.days}` : `${s.days} días de viaje`}</div>
         </div>
-        <div class="bento-stat">
+        <div class="bento-stat bento-ticket">
+          <span class="bento-ticket__stamp" aria-hidden="true">一日</span>
           <div class="bento-stat-label">Por día disponible</div>
           <div class="bento-stat-value">${this.fmt(Math.max(0, s.dailyAllowance))}</div>
           <div class="bento-stat-sub">${paceChip}</div>
@@ -228,60 +232,52 @@ export const BentoBudget = {
   },
 
   // ==========================================================================
-  // SVG DEL BENTO
+  // CAJA BENTO (HTML) — compartimentos ilustrados en caja de madera.
+  // Reemplaza al viejo SVG; misma interacción (selectCategory, selected,
+  // over, nivel de llenado que sube desde la base según gasto/presupuesto).
   // ==========================================================================
 
-  renderBentoSVG(s) {
+  renderBentoBox(s) {
+    // Ilustraciones acuarela por compartimento (Nano Banana)
+    const BENTO_ART = {
+      'Comida': 'comida', 'Alojamiento': 'hotel', 'Transporte': 'transporte',
+      'Compras': 'compras', 'Entretenimiento': 'diversion', 'Otros': 'otros'
+    };
+
     const compartments = BENTO_COMPARTMENTS.map(c => {
       const budget = s.budgets[c.key] || 1;
       const spent = s.spentByCat[c.key] || 0;
       const ratio = spent / budget;
       const isOver = ratio > 1;
-      const fillRatio = Math.min(1, ratio);
+      const fillPct = Math.round(Math.min(1, ratio) * 100);
       const selected = this.selectedCategory === c.key;
-
-      // Relleno que sube desde la base del compartimento
-      const pad = 5;
-      const innerH = c.h - pad * 2;
-      const fillH = Math.max(0, Math.round(innerH * fillRatio));
-      const fillY = c.y + pad + (innerH - fillH);
-
       const pctText = budget > 0 ? Math.round(ratio * 100) + '%' : '';
+      const art = BENTO_ART[c.key] || 'otros';
 
       return `
-        <g class="bento-comp ${selected ? 'selected' : ''} ${isOver ? 'over' : ''}"
-           onclick="window.BentoBudget.selectCategory('${c.key}')" role="button" tabindex="0"
-           aria-label="${c.label}: gastado ${this.fmt(spent)} de ${this.fmt(budget)}">
-          <!-- base del compartimento -->
-          <rect class="bento-comp-bg" x="${c.x}" y="${c.y}" width="${c.w}" height="${c.h}" rx="14"/>
-          <!-- relleno según gasto -->
-          <clipPath id="clip-${c.key}"><rect x="${c.x + pad}" y="${c.y + pad}" width="${c.w - pad * 2}" height="${innerH}" rx="10"/></clipPath>
-          <rect class="bento-comp-fill" clip-path="url(#clip-${c.key})"
-                x="${c.x + pad}" y="${fillY}" width="${c.w - pad * 2}" height="${fillH}"
-                fill="${isOver ? '#dc2626' : c.color}" opacity="${isOver ? 0.55 : 0.4}"/>
-          <!-- borde -->
-          <rect class="bento-comp-border" x="${c.x}" y="${c.y}" width="${c.w}" height="${c.h}" rx="14"
-                fill="none" stroke-width="${selected ? 4 : 2}"/>
-          <!-- contenido -->
-          <text x="${c.x + c.w / 2}" y="${c.y + c.h / 2 - 28}" text-anchor="middle" font-size="34">${c.icon}</text>
-          <text x="${c.x + c.w / 2}" y="${c.y + c.h / 2 + 4}" text-anchor="middle" font-size="15" font-weight="800" fill="currentColor">${c.label}</text>
-          <text x="${c.x + c.w / 2}" y="${c.y + c.h / 2 + 26}" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor" opacity="0.75">${this.fmt(spent)} / ${this.fmt(s.budgets[c.key])}</text>
-          <text x="${c.x + c.w / 2}" y="${c.y + c.h / 2 + 46}" text-anchor="middle" font-size="12" font-weight="800" fill="${isOver ? '#dc2626' : c.color}">${isOver ? '⚠️ ' : ''}${pctText}</text>
-        </g>
+        <button type="button"
+           class="bento-cell ${selected ? 'is-selected' : ''} ${isOver ? 'is-over' : ''}"
+           onclick="window.BentoBudget.selectCategory('${c.key}')"
+           aria-label="${c.label}: gastado ${this.fmt(spent)} de ${this.fmt(budget)}${isOver ? ' — excedido' : ''}"
+           aria-pressed="${selected}">
+          <img class="bento-cell__art" src="/images/illustrations/generated/bento/${art}.webp" alt="">
+          <span class="bento-cell__fill" style="height:${fillPct}%" aria-hidden="true"></span>
+          <span class="bento-cell__head" aria-hidden="true">
+            <span class="bento-cell__name">${c.label}</span>
+            <span class="bento-cell__amount">${this.fmt(spent)} / ${this.fmt(budget)}</span>
+          </span>
+          <span class="bento-cell__pct ${isOver ? 'over' : ''}" style="${isOver ? '' : `--cell-color:${c.color}`}" aria-hidden="true">${isOver ? '⚠️ ' : ''}${pctText}</span>
+        </button>
       `;
     }).join('');
 
     return `
-      <svg viewBox="0 0 700 430" class="bento-svg text-gray-700 dark:text-gray-100 select-none" role="group" aria-label="Bento de presupuesto por categorías">
-        <!-- caja exterior -->
-        <rect class="bento-box" x="8" y="8" width="624" height="414" rx="22"/>
-        ${compartments}
-        <!-- palillos decorativos -->
-        <g transform="rotate(6 660 210)">
-          <rect x="650" y="30" width="9" height="370" rx="4.5" class="bento-chopstick"/>
-          <rect x="666" y="30" width="9" height="370" rx="4.5" class="bento-chopstick"/>
-        </g>
-      </svg>
+      <div class="bento-wood" role="group" aria-label="Bento de presupuesto por categorías">
+        <div class="bento-grid">${compartments}</div>
+      </div>
+      <div class="bento-chopsticks" aria-hidden="true">
+        <span></span><span></span><i></i>
+      </div>
     `;
   },
 
