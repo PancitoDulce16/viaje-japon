@@ -3051,25 +3051,40 @@ Si ya tienes las coordenadas, simplemente pégalas:
   },
 
   async deleteActivity(activityId, day) {
-    const confirmed = await window.Dialogs.confirm({
-        title: '🗑️ ¿Eliminar Actividad?',
-        message: '¿Estás seguro de que deseas eliminar esta actividad del itinerario?',
-        okText: 'Sí, eliminar',
-        isDestructive: true
-    });
-    if (!confirmed) return;
-
+    // Patrón moderno (ideas #156/#43): borrado optimista + toast "Deshacer"
+    // en vez de diálogo de confirmación. Menos fricción y más seguridad real:
+    // el diálogo se responde en automático, el undo rescata de verdad.
     const dayData = currentItinerary.days.find(d => d.day === day);
     if (!dayData) return;
+
+    const index = dayData.activities.findIndex(a => a.id === activityId);
+    if (index === -1) return;
+    const removed = dayData.activities[index];
 
     dayData.activities = dayData.activities.filter(a => a.id !== activityId);
     try {
       await saveCurrentItineraryToFirebase();
       // render() se llama automáticamente desde el listener onSnapshot del itinerario
-      Notifications.show('Actividad eliminada', 'success');
+      window.WashiToast?.show({
+        message: `"${removed.title || removed.name || 'Actividad'}" eliminada`,
+        type: 'success',
+        actionLabel: 'Deshacer',
+        onAction: async () => {
+          const d = currentItinerary?.days?.find(dd => dd.day === day);
+          if (!d) return;
+          d.activities.splice(Math.min(index, d.activities.length), 0, removed);
+          try {
+            await saveCurrentItineraryToFirebase();
+            window.WashiToast?.show({ message: 'Actividad restaurada 🌸', type: 'success' });
+          } catch (e) {
+            console.error('❌ Error restaurando actividad:', e);
+            window.WashiToast?.show({ message: 'No se pudo restaurar', type: 'error' });
+          }
+        }
+      });
     } catch (error) {
       console.error('❌ Error eliminando actividad:', error);
-      alert('⚠️ Error al eliminar la actividad');
+      window.WashiToast?.show({ message: 'No se pudo eliminar la actividad', type: 'error' });
     }
   },
 

@@ -461,6 +461,88 @@ html.dark .header-chip:hover {
   border: 2px solid rgba(255, 255, 255, 0.55);
 }
 
+/* ---- 11.5 Washi Toast — notitas de papel con acción (ideas #156/#43) ---- */
+#washiToastStack {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  z-index: 12000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  width: min(440px, calc(100vw - 32px));
+}
+.washi-toast {
+  pointer-events: auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--surface-page);
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  border-left: 4px solid var(--color-kasumi);
+  border-radius: 13px;
+  padding: 11px 14px;
+  box-shadow: var(--jp-shadow-lg);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 600;
+  overflow: hidden;
+  cursor: default;
+}
+.washi-toast--success { border-left-color: var(--color-matcha); }
+.washi-toast--error { border-left-color: var(--color-sango); }
+.washi-toast__icon {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.washi-toast--success .washi-toast__icon { background: color-mix(in srgb, var(--color-matcha) 20%, transparent); color: var(--color-matcha); }
+.washi-toast--error .washi-toast__icon { background: color-mix(in srgb, var(--color-sango) 18%, transparent); color: var(--color-sango); }
+.washi-toast--info .washi-toast__icon { background: color-mix(in srgb, var(--color-kasumi) 20%, transparent); }
+.washi-toast__msg { flex: 1; min-width: 0; }
+.washi-toast__action {
+  flex-shrink: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--color-kasumi) 16%, var(--surface-page));
+  color: var(--color-kasumi-deep);
+  font: inherit;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.washi-toast__action:hover { background: color-mix(in srgb, var(--color-kasumi) 28%, var(--surface-page)); }
+.washi-toast__timer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2.5px;
+  width: 100%;
+  background: color-mix(in srgb, var(--color-kasumi) 45%, transparent);
+  transform-origin: left;
+  animation: washiToastTimer linear forwards;
+}
+@keyframes washiToastTimer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@media (prefers-reduced-motion: no-preference) {
+  .washi-toast { animation: washiToastIn 300ms cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+}
+.washi-toast.is-leaving { opacity: 0; transform: translateY(8px); transition: opacity 240ms ease, transform 240ms ease; }
+@keyframes washiToastIn {
+  from { opacity: 0; transform: translateY(14px) rotate(-1deg); }
+  to   { opacity: 1; transform: translateY(0) rotate(0); }
+}
+
 /* ---- 12. Micro-detalles de sistema (ideas #193, #159, #13) ---- */
 
 /* Selección de texto en sakura */
