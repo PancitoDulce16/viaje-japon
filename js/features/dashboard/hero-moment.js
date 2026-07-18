@@ -23,6 +23,27 @@
 
 import { detectJourneyStage, getJourneyMath } from './stage-detector.js';
 
+// 🌸 Saludo según hora + nombre (idea #25). Japonés + español, sin emoji.
+// Defensivo: si no hay usuario, el saludo funciona igual sin nombre.
+function greetingLine() {
+  const h = new Date().getHours();
+  const morning = h >= 5 && h < 11;
+  const afternoon = h >= 11 && h < 18;
+  const jp = morning ? 'おはよう' : afternoon ? 'こんにちは' : 'こんばんは';
+  const es = morning ? 'Buenos días' : afternoon ? 'Buenas tardes' : 'Buenas noches';
+  const u = window.AuthHandler?.currentUser;
+  let name = '';
+  if (u) {
+    if (u.displayName) {
+      name = u.displayName.trim().split(/\s+/)[0]; // primer nombre
+    } else if (u.email) {
+      name = u.email.split('@')[0].split(/[._+]/)[0]; // prefijo limpio del correo
+    }
+    if (name) name = name.charAt(0).toUpperCase() + name.slice(1);
+  }
+  return `${jp} · ${es}${name ? ', ' + name : ''}`;
+}
+
 /* Panorama pair (Nano Banana, 2026-07-16): the night version was generated
    FROM the day image ("same composition, make it night"), so both line up
    pixel-perfect and the Kawaii↔Ninja theme toggle crossfades between them
@@ -115,6 +136,7 @@ export function renderHeroMoment(trip) {
       `}
       ${petals}
       <div class="hero-moment__content">
+        <span class="hero-moment__greeting">${greetingLine()}</span>
         ${eyebrow ? `<span class="hero-moment__eyebrow" aria-hidden="true">${eyebrow}</span>` : ''}
         <h2 class="hero-moment__headline">${headline}</h2>
         ${hasCountdown ? `

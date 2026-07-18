@@ -95,6 +95,16 @@
   max-width: 34ch;
 }
 
+/* Saludo por hora (idea #25) — japonés + español, discreto sobre el arte */
+.hero-moment__greeting {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.3px;
+  color: var(--ink-soft);
+  margin-bottom: 2px;
+}
+
 /* Handwritten eyebrow ("Tu aventura a") — Caveat, slightly tilted, sits on
    the dark scrim so kasumi pink has plenty of contrast. */
 .hero-moment__eyebrow {

@@ -1158,6 +1158,56 @@ async function render(){
   }
 }
 
+// 🌸 "Tu Japón en números" (idea #111 del brainstorm wizard/motor): resume el
+// viaje generado con cifras que ya existen en los datos. Solo lectura, cero
+// impacto en el motor. Sellos kanji en vez de emoji, consistente con los
+// boletos de día y del bento.
+function computeTripNumbers(itinerary) {
+  const days = itinerary?.days || [];
+  const cities = new Set();
+  let places = 0, meals = 0, culture = 0, onsen = 0, nature = 0, totalCost = 0;
+  days.forEach(d => {
+    const city = d.city || d.cityName || (Array.isArray(d.cities) ? d.cities[0]?.cityName : null) || d.location;
+    if (city) cities.add(String(city).toLowerCase().trim());
+    (d.activities || []).forEach(a => {
+      places++;
+      const hay = `${a.category || ''} ${a.categoryName || ''} ${a.title || a.name || ''} ${a.desc || a.description || ''}`.toLowerCase();
+      totalCost += Number(a.cost ?? a.price) || 0;
+      if (a.isMeal || /\bmeal\b|comida|\bfood\b|ramen|sushi|caf[eé]|restaur|almuerzo|cena|desayuno|izakaya/.test(hay)) meals++;
+      else if (/onsen|aguas termales|sento|ba[ñn]o termal/.test(hay)) onsen++;
+      else if (/templo|temple|shrine|santuario|castillo|castle|cultura|cultural|museo|museum/.test(hay)) culture++;
+      else if (/parque|jard[íi]n|bosque|monta[ñn]a|lago|naturaleza|bamb[úu]/.test(hay)) nature++;
+    });
+  });
+  return { days: days.length, cities: cities.size, places, meals, culture, onsen, nature, totalCost };
+}
+
+function renderTripNumbers(itinerary) {
+  const n = computeTripNumbers(itinerary);
+  if (!n.places) return '';
+  const card = (kanji, value, label) => `
+    <div class="trip-num">
+      <span class="trip-num__stamp" aria-hidden="true">${kanji}</span>
+      <span class="trip-num__value">${value}</span>
+      <span class="trip-num__label">${label}</span>
+    </div>`;
+  const cards = [
+    card('日', n.days, n.days === 1 ? 'día' : 'días'),
+    card('都', n.cities, n.cities === 1 ? 'ciudad' : 'ciudades'),
+    card('所', n.places, 'lugares'),
+    n.meals ? card('食', n.meals, n.meals === 1 ? 'comida' : 'comidas') : '',
+    n.culture ? card('社', n.culture, 'templos y cultura') : '',
+    n.onsen ? card('湯', n.onsen, 'onsen') : '',
+    n.nature ? card('森', n.nature, 'naturaleza') : '',
+    n.totalCost > 0 ? card('円', '¥' + Math.round(n.totalCost).toLocaleString(), 'estimado') : '',
+  ].filter(Boolean).join('');
+  return `
+    <div class="trip-numbers-wrap">
+      <div class="trip-numbers-title">Tu Japón en números <span>✿</span></div>
+      <div class="trip-numbers">${cards}</div>
+    </div>`;
+}
+
 // ⬇️⬇️⬇️  NUEVO: renderTripSelector con botón “Ver Insights AI”  ⬇️⬇️⬇️
 function renderTripSelector(){
   const container=document.getElementById('tripSelectorHeader'); if(!container) return;
@@ -1182,7 +1232,8 @@ function renderTripSelector(){
         ${currentItinerary ? `<button onclick="window.showBalanceAnalysis?.()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">⚖️ Balancear</button>`:''}
         ${!currentItinerary ? `<button onclick="TripsManager.regenerateItinerary()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition text-sm font-bold shadow-md">✨ Crear Itinerario</button>`:''}
       </div>
-    </div>`;
+    </div>
+    ${currentItinerary ? renderTripNumbers(currentItinerary) : ''}`;
 }
 
 // Miniatura acuarela por categoría de actividad (Nano Banana, ver
