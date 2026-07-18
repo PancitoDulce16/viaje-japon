@@ -1322,6 +1322,31 @@ function renderDaySelector(){
 }
 
 /**
+ * Caminata aproximada del día (idea #97). Honesto sobre lo que se camina de
+ * verdad: solo suma los tramos entre paradas ≤1.8 km en línea recta (esos se
+ * caminan; los largos son tren/metro) con factor calle ×1.3, más ~0.4 km de
+ * andar dentro de cada lugar. No pretende ser exacto, sino comparable.
+ */
+function dayWalkKm(day) {
+  const pts = (day.activities || [])
+    .map(a => a.coordinates)
+    .filter(c => c && Number.isFinite(c.lat) && Number.isFinite(c.lng));
+  if (!pts.length) return 0;
+  const R = 6371, rad = d => d * Math.PI / 180;
+  const seg = (a, b) => {
+    const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(h));
+  };
+  let km = 0.4 * pts.length; // andar dentro de cada lugar
+  for (let i = 1; i < pts.length; i++) {
+    const straight = seg(pts[i - 1], pts[i]);
+    if (straight <= 1.8) km += straight * 1.3; // solo lo caminable
+  }
+  return km;
+}
+
+/**
  * 📊 Renderiza estadísticas rápidas del día en una línea compacta
  */
 function renderQuickStats(day) {
@@ -1357,6 +1382,9 @@ function renderQuickStats(day) {
   // Calcular costo total
   const totalCost = calculateDayTotalCost(day);
 
+  // Caminata aproximada del día (idea #97)
+  const distKm = dayWalkKm(day);
+
   // Detectar alertas
   let alertsCount = 0;
   let highestSeverity = 'none';
@@ -1381,7 +1409,7 @@ function renderQuickStats(day) {
 
   return `
     <div class="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg p-3 mb-4 border border-purple-200 dark:border-purple-700">
-      <div class="grid grid-cols-4 gap-2 text-center">
+      <div class="grid grid-cols-5 gap-2 text-center">
         <div class="flex flex-col items-center">
           <span class="text-purple-600 dark:text-purple-400 text-xl mb-1">📍</span>
           <span class="text-xs text-gray-600 dark:text-gray-400">Actividades</span>
@@ -1391,6 +1419,11 @@ function renderQuickStats(day) {
           <span class="text-blue-600 dark:text-blue-400 text-xl mb-1">⏱️</span>
           <span class="text-xs text-gray-600 dark:text-gray-400">Duración</span>
           <span class="font-bold text-gray-900 dark:text-white">${totalHours}h</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <span class="text-pink-500 dark:text-pink-300 text-xl mb-1">🚶</span>
+          <span class="text-xs text-gray-600 dark:text-gray-400">A pie</span>
+          <span class="font-bold text-gray-900 dark:text-white">${distKm > 0 ? '~' + distKm.toFixed(1) + ' km' : '—'}</span>
         </div>
         <div class="flex flex-col items-center">
           <span class="text-green-600 dark:text-green-400 text-xl mb-1">💰</span>
