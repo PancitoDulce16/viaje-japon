@@ -8,6 +8,7 @@ import './mobile-enhancements.js'; // Import for side effects
 import './theme-manager.js?v=2025-10-26-08'; // Import for side effects - cache bust
 import './live-title.js'; // 🌸 Título de pestaña vivo (countdown + gatito)
 import './washi-toast.js'; // 🌸 Toasts de papel con acción (Deshacer)
+import './sakura-confetti.js'; // 🌸 Confetti de hitos (día completo, logros)
 // import './dark-mode-enforcer.js'; // DISABLED - Was causing contrast issues and overriding balanced dark mode
 import { SafeFirestore } from '../core/firestore-wrapper.js'; // 🛡️ Wrapper seguro para Firestore
 import { MapsHelper } from '../map/maps-helper.js'; // 🗺️ Helper para Google Maps

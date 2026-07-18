@@ -1200,6 +1200,10 @@ function activityThumb(act) {
   return `/images/illustrations/generated/categories/${pick}.webp`;
 }
 
+// Estado por día para detectar la transición incompleto→completo del eki
+// stamp (celebrar solo al completar, no al re-renderizar un día ya hecho)
+const ekiCompleteState = {};
+
 // Emoji representativo por ciudad para las tarjetas del selector de días
 const DAY_CITY_EMOJI = {
   tokyo: '🗼', kyoto: '⛩️', osaka: '🏯', hiroshima: '🕊️', nara: '🦌',
@@ -1578,6 +1582,18 @@ function renderDayOverview(day){
   // reales de las estaciones JR). Se re-renderiza al marcar el último
   // checkbox, así que el sello "cae" justo en ese momento (hankoStamp).
   const dayComplete = day.activities.length > 0 && completed === day.activities.length;
+
+  // Confetti SOLO en la transición incompleto→completo de esta sesión
+  // (no al cargar la página con un día ya completo). El sello eki cae con
+  // su propia animación; el confetti celebra encima. Idea #155.
+  if (dayComplete && ekiCompleteState[day.day] === false) {
+    setTimeout(() => {
+      window.SakuraConfetti?.burst(document.querySelector('.day-info-art'));
+      if (navigator.vibrate) navigator.vibrate([15, 60, 25]);
+    }, 250);
+  }
+  ekiCompleteState[day.day] = dayComplete;
+
   const ekiStamp = dayComplete ? `
     <span class="eki-stamp" role="img" aria-label="Día completado">
       <span class="eki-stamp__jp">${cityKanji ? CITY_KANJI[cityKanji] : '済'}</span>
