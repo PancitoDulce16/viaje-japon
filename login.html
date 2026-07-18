@@ -106,6 +106,26 @@
         .login-brand-name { color: #2B3868 !important; }
         .login-brand-sub { color: #5C6690 !important; }
 
+        /* Modo noche automático (19:00–06:00): panorama nocturno (idea #141) */
+        body.night .login-bg {
+            background-image: url('/images/illustrations/generated/panorama/japan-fuji-panorama-night.webp');
+        }
+        body.night .login-overlay {
+            background: linear-gradient(180deg,
+                rgba(20,26,46,0.30) 0%,
+                rgba(20,26,46,0.10) 45%,
+                rgba(20,26,46,0.42) 100%
+            );
+        }
+        body.night .login-brand-name { color: #ECE6F0 !important; }
+        body.night .login-brand-sub { color: #B4AECB !important; }
+
+        /* Botón principal en kasumi, no morado (idea #142) */
+        .login-card button[type="submit"] {
+            background: linear-gradient(135deg, #FF8FBB, #F16FA3) !important;
+            box-shadow: 0 8px 18px -8px rgba(241, 111, 163, 0.65) !important;
+        }
+
         /* Tab active */
         .tab-btn { transition: color 0.2s, border-color 0.2s; }
         .tab-btn.active {
@@ -170,6 +190,10 @@
     </style>
 </head>
 <body class="antialiased min-h-screen">
+    <script>
+        // Noche real (19:00–06:00) → panorama nocturno. Antes de pintar, sin flash.
+        (function(){ var h = new Date().getHours(); if (h >= 19 || h < 6) document.body.classList.add('night'); })();
+    </script>
 
     <!-- Background -->
     <div class="login-bg"></div>

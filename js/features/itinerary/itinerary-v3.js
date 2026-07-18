@@ -444,6 +444,9 @@ async function toggleActivity(activityId) {
   const previousState = checkedActivities[activityId];
   checkedActivities[activityId] = !previousState;
 
+  // Haptic sutil al completar (idea #186) — solo al marcar, no al desmarcar
+  if (checkedActivities[activityId] && navigator.vibrate) navigator.vibrate(12);
+
   // If not authenticated, save locally only
   if (!db || !auth || !auth.currentUser) {
     localStorage.setItem('checkedActivities', JSON.stringify(checkedActivities));

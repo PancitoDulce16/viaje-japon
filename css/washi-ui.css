@@ -460,3 +460,39 @@ html.dark .header-chip:hover {
   background: rgba(255, 255, 255, 0.28) !important;
   border: 2px solid rgba(255, 255, 255, 0.55);
 }
+
+/* ---- 12. Micro-detalles de sistema (ideas #193, #159, #13) ---- */
+
+/* Selección de texto en sakura */
+::selection {
+  background: color-mix(in srgb, var(--color-kasumi) 35%, transparent);
+  color: var(--ink);
+}
+
+/* Todos los botones se "hunden" 1px al presionar — papel táctil.
+   Sin transform en reposo para no pisar los hover existentes. */
+button:active:not(:disabled),
+.day-ticket:active,
+[role="button"]:active {
+  transform: translateY(1px) !important;
+  transition-duration: 60ms !important;
+}
+
+/* Scrollbar washi */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-kasumi) 55%, var(--surface-page-alt)) transparent;
+}
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-kasumi) 45%, var(--surface-page-alt));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-kasumi-deep);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
