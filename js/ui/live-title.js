@@ -1,29 +1,56 @@
 // js/ui/live-title.js
 //
-// 🌸 Título de pestaña vivo (idea #187 del brainstorm):
-// - Con viaje activo: "🌸 36 días para Japón — Japitin"
-// - Al irte a otra pestaña: el gatito te extraña.
+// 🌸 Título de pestaña vivo (idea #187) + favicon con countdown (idea #12):
+// - Título: "🌸 36 días para Japón" / al ocultar, el gatito te extraña.
+// - Favicon: dibuja los días restantes en un círculo kasumi (canvas → dataURL).
 // Lee el countdown ya renderizado por hero-moment.js (no recalcula fechas)
-// y es 100% defensivo: sin hero, deja el título original en paz.
+// y es 100% defensivo: sin hero, deja título y favicon originales en paz.
 
 const BASE_TITLE = document.title;
 
-function currentTitle() {
+function countdownNum() {
   const n = document.querySelector('.hero-moment__countdown-num')?.textContent?.trim();
-  if (n && /^\d+$/.test(n)) {
-    return `🌸 ${n} día${n === '1' ? '' : 's'} para Japón — Japitin`;
-  }
-  return BASE_TITLE;
+  return (n && /^\d+$/.test(n)) ? n : null;
+}
+
+function currentTitle() {
+  const n = countdownNum();
+  return n ? `🌸 ${n} día${n === '1' ? '' : 's'} para Japón — Japitin` : BASE_TITLE;
+}
+
+// Dibuja el número de días sobre un círculo rosa como favicon.
+function paintFavicon(n) {
+  try {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const x = c.getContext('2d');
+    x.fillStyle = '#F16FA3';
+    x.beginPath(); x.arc(32, 32, 30, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#fff';
+    x.textAlign = 'center';
+    x.textBaseline = 'middle';
+    x.font = `bold ${n.length > 2 ? 24 : 34}px -apple-system, "Segoe UI", sans-serif`;
+    x.fillText(n, 32, 35);
+    let link = document.querySelector('link[rel~="icon"]');
+    if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+    link.type = 'image/png';
+    link.href = c.toDataURL('image/png');
+  } catch (e) { /* favicon es cosmético; nunca romper por esto */ }
+}
+
+function refresh() {
+  document.title = currentTitle();
+  const n = countdownNum();
+  if (n) paintFavicon(n);
 }
 
 // El hero llega tras el fetch de viajes; reintento corto y me rindo en silencio.
 let tries = 0;
 const wait = setInterval(() => {
   tries++;
-  const ready = document.querySelector('.hero-moment');
-  if (ready || tries > 24) {
+  if (document.querySelector('.hero-moment') || tries > 24) {
     clearInterval(wait);
-    document.title = currentTitle();
+    refresh();
   }
 }, 500);
 

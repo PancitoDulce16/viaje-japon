@@ -422,6 +422,20 @@ html.dark .header-chip:hover {
   100% { transform: scale(1) rotate(-12deg); opacity: 0.92; }
 }
 
+/* ---- 8.6 "Nota del día" — resumen cálido como historia (idea #119) ---- */
+.day-note {
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  background: var(--surface-page-alt);
+  border-left: 3px solid var(--color-kasumi);
+  border-radius: 0 10px 10px 0;
+  padding: 8px 14px;
+  margin: 0 0 14px;
+}
+
 /* ---- 8.7 "Tu Japón en números" — boletos de resumen del viaje (idea #111) ---- */
 .trip-numbers-wrap { margin: -8px 0 20px; }
 .trip-numbers-title {

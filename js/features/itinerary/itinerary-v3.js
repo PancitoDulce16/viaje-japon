@@ -1158,6 +1158,31 @@ async function render(){
   }
 }
 
+// 🌸 "Nota del día" (idea #119): una línea cálida que resume el día como
+// historia, no como lista. Se genera de los datos existentes (ciudad +
+// categoría dominante + primer lugar). Solo lectura.
+function dayNote(day) {
+  const acts = (day.activities || []).filter(a => a.title || a.name);
+  if (!acts.length) return '';
+  const raw = day.city || day.cityName || day.location || '';
+  const city = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : 'Japón';
+  let food = 0, culture = 0, nature = 0;
+  acts.forEach(a => {
+    const hay = `${a.category || ''} ${a.categoryName || ''} ${a.title || a.name || ''} ${a.desc || a.description || ''}`.toLowerCase();
+    if (a.isMeal || /comida|\bfood\b|ramen|sushi|caf[eé]|restaur|izakaya|\bmeal\b/.test(hay)) food++;
+    else if (/templo|temple|shrine|santuario|cultura|cultural|museo|castillo/.test(hay)) culture++;
+    else if (/parque|jard[íi]n|bosque|naturaleza|onsen|lago|bamb[úu]/.test(hay)) nature++;
+  });
+  const max = Math.max(food, culture, nature);
+  let theme;
+  if (max === 0) theme = `un día para descubrir ${city} a tu ritmo`;
+  else if (culture === max) theme = `un día de templos y tradición en ${city}`;
+  else if (food === max) theme = `un día para comer rico por ${city}`;
+  else theme = `un día de naturaleza y calma en ${city}`;
+  const firstArea = acts[0].area || acts[0].title || acts[0].name;
+  return `Hoy es ${theme} — ${acts.length} paradas que arrancan en ${firstArea}.`;
+}
+
 // 🌸 "Tu Japón en números" (idea #111 del brainstorm wizard/motor): resume el
 // viaje generado con cifras que ya existen en los datos. Solo lectura, cero
 // impacto en el motor. Sellos kanji en vez de emoji, consistente con los
@@ -1706,6 +1731,7 @@ function renderDayOverview(day){
         <h2 class="text-2xl font-bold dark:text-white">Día ${day.day}</h2>
       </div>
     `}
+    ${dayNote(day) ? `<div class="day-note">${dayNote(day)}</div>` : ''}
     <div class="mb-4">
       <div class="flex justify-between text-sm mb-1 dark:text-gray-100"><span>Progreso</span><span>${completed}/${day.activities.length}</span></div>
       <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2"><div class="bg-red-600 dark:bg-red-500 h-2 rounded-full transition-all duration-500" style="width:${progress}%"></div></div>
