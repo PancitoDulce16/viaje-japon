@@ -361,103 +361,82 @@ export const ModalRenderer = {
     getCreateTripModal() {
         return `
             <div id="modal-create-trip" class="modal">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="jp-create-modal shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
                     <div class="p-8">
-                        <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-3xl font-bold dark:text-white flex items-center gap-3">
-                                <span class="text-4xl">✈️</span>
-                                Crear Nuevo Viaje
-                            </h2>
-                            <button onclick="TripsManager.closeCreateTripModal()" class="text-4xl hover:text-red-600 transition" aria-label="Cerrar">&times;</button>
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="flex items-start gap-3">
+                                <span class="jp-create-stamp" aria-hidden="true">
+                                    <svg width="26" height="18" viewBox="0 0 30 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 L12 4 Q15 2 18 4 L28 12 Z"/><path d="M9 8 L15 4 L21 8"/></svg>
+                                </span>
+                                <div>
+                                    <h2 class="jp-create-title">Crear Nuevo Viaje</h2>
+                                    <p class="jp-create-sub">Elige cómo quieres comenzar tu próxima aventura</p>
+                                </div>
+                            </div>
+                            <button onclick="TripsManager.closeCreateTripModal()" class="jp-create-close" aria-label="Cerrar">&times;</button>
                         </div>
 
-                        <!-- Selección de Tipo de Viaje -->
+                        <!-- Selección de Tipo de Viaje — dos tickets boarding-pass -->
                         <div id="tripTypeSelection">
-                            <p class="text-center text-lg text-gray-600 dark:text-gray-400 mb-8">
-                                ¿Cómo quieres crear tu viaje?
-                            </p>
-
-                            <div class="grid md:grid-cols-2 gap-6">
-                                <!-- Opción 1: Viaje Simple -->
-                                <button
-                                    onclick="TripsManager.showSimpleTripForm()"
-                                    class="group p-8 bg-white dark:from-slate-800 dark:to-slate-700 dark:bg-gradient-to-br rounded-2xl border-4 border-blue-600 dark:border-blue-500 hover:border-blue-700 dark:hover:border-blue-400 hover:shadow-2xl transition-all duration-300 transform hover:scale-105 text-left shadow-lg"
-                                >
-                                    <div class="text-center mb-4">
-                                        <div class="text-7xl mb-3">📋</div>
-                                        <h3 class="text-2xl font-black text-blue-800 dark:text-blue-400 mb-2">
-                                            Viaje Simple
-                                        </h3>
-                                        <span class="inline-block bg-green-700 text-white text-xs px-3 py-1 rounded-full font-black shadow-md">
-                                            RÁPIDO
-                                        </span>
-                                    </div>
-                                    <div class="space-y-3 text-sm text-black dark:text-gray-100">
-                                        <p class="flex items-start gap-2">
-                                            <span class="text-green-700 dark:text-green-400 text-lg font-black">✓</span>
-                                            <span class="font-bold">Solo nombre y fechas del viaje</span>
-                                        </p>
-                                        <p class="flex items-start gap-2">
-                                            <span class="text-green-700 dark:text-green-400 text-lg font-black">✓</span>
-                                            <span class="font-bold">Creas el itinerario después paso a paso</span>
-                                        </p>
-                                        <p class="flex items-start gap-2">
-                                            <span class="text-green-700 dark:text-green-400 text-lg font-black">✓</span>
-                                            <span class="font-bold">Máxima flexibilidad y personalización</span>
-                                        </p>
-                                        <p class="flex items-start gap-2">
-                                            <span class="text-green-700 dark:text-green-400 text-lg font-black">✓</span>
-                                            <span class="font-bold">Ideal si aún no tienes todo definido</span>
-                                        </p>
-                                    </div>
-                                    <div class="mt-6 text-center">
-                                        <span class="text-xs text-gray-700 dark:text-gray-300 font-bold">⏱️ Toma 30 segundos</span>
-                                    </div>
-                                </button>
-
-                                <!-- Opción 2: Wizard Completo -->
-                                <button
-                                    onclick="TripsManager.showFullTripWizard()"
-                                    class="group p-8 bg-white dark:from-slate-800 dark:to-slate-700 dark:bg-gradient-to-br rounded-2xl border-4 border-purple-600 dark:border-purple-500 hover:border-purple-700 dark:hover:border-purple-400 hover:shadow-2xl transition-all duration-300 transform hover:scale-105 text-left shadow-lg"
-                                >
-                                    <div class="text-center mb-4">
-                                        <div class="text-7xl mb-3">✨</div>
-                                        <h3 class="text-2xl font-black text-purple-800 dark:text-purple-400 mb-2">
-                                            Wizard Completo
-                                        </h3>
-                                        <span class="inline-block bg-yellow-600 text-white text-xs px-3 py-1 rounded-full font-black shadow-md">
-                                            POPULAR
-                                        </span>
-                                    </div>
-                                    <div class="space-y-3 text-sm text-black dark:text-gray-100">
-                                        <p class="flex items-start gap-2">
-                                            <span class="text-purple-800 dark:text-purple-400 text-lg font-black">✓</span>
-                                            <span class="font-bold">Elige ciudades, vuelos y conexiones</span>
-                                        </p>
-                                        <p class="flex items-start gap-2">
-                                            <span class="text-purple-800 dark:text-purple-400 text-lg font-black">✓</span>
-                                            <span class="font-bold">Selecciona tus intereses y categorías</span>
-                                        </p>
-                                        <p class="flex items-start gap-2">
-                                            <span class="text-purple-800 dark:text-purple-400 text-lg font-black">✓</span>
-                                            <span class="font-bold">Usa plantillas predefinidas (8 opciones)</span>
-                                        </p>
-                                        <p class="flex items-start gap-2">
-                                            <span class="text-purple-800 dark:text-purple-400 text-lg font-black">✓</span>
-                                            <span class="font-bold">Itinerario completo generado automáticamente</span>
-                                        </p>
-                                    </div>
-                                    <div class="mt-6 text-center">
-                                        <span class="text-xs text-gray-700 dark:text-gray-300 font-bold">⏱️ Toma 2-3 minutos</span>
-                                    </div>
-                                </button>
+                            <div class="jp-chooser__head">
+                                <img class="jp-chooser__cat" src="/images/illustrations/generated/characters/cat-explorer.webp" alt="" aria-hidden="true">
+                                <h3>¿Cómo quieres comenzar tu aventura? <span>✿</span></h3>
+                                <p>Elige la opción que mejor se adapte a tu viaje.</p>
                             </div>
 
-                            <div class="mt-8 p-5 bg-blue-200 dark:bg-slate-700 rounded-xl text-center border-3 border-blue-600 dark:border-blue-500 shadow-md">
-                                <p class="text-sm text-black dark:text-gray-100 font-bold">
-                                    💡 <strong class="text-blue-900 dark:text-blue-300">Tip:</strong> Puedes empezar con el <strong class="text-blue-900 dark:text-blue-200">Viaje Simple</strong> y agregar detalles después,
-                                    o usar el <strong class="text-purple-900 dark:text-purple-300">Wizard Completo</strong> para tener todo listo de inmediato.
-                                </p>
+                            <div class="jp-tickets">
+                                <!-- Ticket 1: Viaje Simple -->
+                                <div class="jp-ticket jp-ticket--simple" role="button" tabindex="0"
+                                     onclick="TripsManager.showSimpleTripForm()"
+                                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+                                    <span class="jp-ticket__stub"><span>IT'S TIME TO EXPLORE</span></span>
+                                    <span class="jp-ticket__body">
+                                        <span class="jp-ticket__stamp">~30<small>SEG</small></span>
+                                        <span class="jp-ticket__badge">TU VIAJE, A TU MANERA</span>
+                                        <span class="jp-ticket__top">
+                                            <span class="jp-ticket__title">Viaje<br>Simple</span>
+                                            <img class="jp-ticket__cat" src="/images/illustrations/generated/characters/cat-explorer.webp" alt="">
+                                        </span>
+                                        <span class="jp-ticket__desc">Para cuando quieres empezar a soñar primero y organizar después.</span>
+                                        <span class="jp-ticket__incluye">Incluye</span>
+                                        <span class="jp-ticket__list">
+                                            <span class="jp-ticket__li">Solo lo básico: nombre y fechas</span>
+                                            <span class="jp-ticket__li">Construye tu itinerario cuando quieras</span>
+                                            <span class="jp-ticket__li">Añade ciudades y actividades después</span>
+                                        </span>
+                                        <span class="jp-ticket__cta">Empezar Viaje Simple <span aria-hidden="true">→</span></span>
+                                    </span>
+                                </div>
+
+                                <!-- Ticket 2: Wizard Completo -->
+                                <div class="jp-ticket jp-ticket--wizard" role="button" tabindex="0"
+                                     onclick="TripsManager.showFullTripWizard()"
+                                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+                                    <span class="jp-ticket__stub"><span>JAPITIN MAGIC</span></span>
+                                    <span class="jp-ticket__body">
+                                        <span class="jp-ticket__stamp">~2-3<small>MIN</small></span>
+                                        <span class="jp-ticket__badge">TODO LISTO PARA DESPEGAR</span>
+                                        <span class="jp-ticket__top">
+                                            <span class="jp-ticket__title">Wizard<br>Completo</span>
+                                            <img class="jp-ticket__cat" src="/images/illustrations/generated/characters/cat-wizard.webp" alt="">
+                                        </span>
+                                        <span class="jp-ticket__desc">Cuéntame qué te gusta y Japitin preparará el viaje contigo.</span>
+                                        <span class="jp-ticket__incluye">Incluye</span>
+                                        <span class="jp-ticket__list">
+                                            <span class="jp-ticket__li">Destinos y conexiones</span>
+                                            <span class="jp-ticket__li">Tus intereses y estilo de viaje</span>
+                                            <span class="jp-ticket__li">Plantillas de viaje</span>
+                                            <span class="jp-ticket__li">Itinerario generado automáticamente</span>
+                                        </span>
+                                        <span class="jp-ticket__cta">Crear mi itinerario completo <span aria-hidden="true">→</span></span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="jp-chooser__note">
+                                <span class="jp-chooser__tape jp-chooser__tape--l" aria-hidden="true"></span>
+                                <span class="jp-chooser__tape jp-chooser__tape--r" aria-hidden="true"></span>
+                                <b>¿No estás segura?</b> Empieza con un Viaje Simple — puedes convertirlo en una aventura completa cuando quieras.
                             </div>
                         </div>
 

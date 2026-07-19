@@ -495,6 +495,157 @@ html.dark .header-chip:hover {
   letter-spacing: 0.2px;
 }
 
+/* ---- 8.9 Crear Nuevo Viaje — chooser de dos tickets boarding-pass (idea #2/#10) ---- */
+.jp-create-modal {
+  background: var(--surface-page) !important;
+  border: 1px solid var(--hairline);
+  border-radius: 22px !important;
+  color: var(--ink);
+}
+.jp-create-stamp {
+  flex: 0 0 44px;
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  border: 1.5px dashed var(--color-kasumi-deep);
+  border-radius: 10px;
+  color: var(--color-kasumi-deep);
+  background: color-mix(in srgb, var(--color-kasumi) 10%, var(--surface-page));
+}
+.jp-create-title { font-family: var(--jp-font-display); font-weight: 800; font-size: 1.7rem; color: var(--ink); margin: 0; line-height: 1.1; }
+.jp-create-sub { color: var(--ink-soft); font-size: 0.9rem; margin: 2px 0 0; }
+.jp-create-close {
+  width: 40px; height: 40px; flex-shrink: 0;
+  display: grid; place-items: center;
+  border: 0; border-radius: 50%; cursor: pointer;
+  font-size: 1.6rem; line-height: 1;
+  background: color-mix(in srgb, var(--color-kasumi) 14%, var(--surface-page));
+  color: var(--color-kasumi-deep);
+  transition: transform .18s ease, background .18s ease;
+}
+.jp-create-close:hover { transform: rotate(90deg); background: color-mix(in srgb, var(--color-kasumi) 26%, var(--surface-page)); }
+
+.jp-chooser__head { text-align: center; margin: 4px 0 18px; }
+.jp-chooser__cat { width: 52px; height: 52px; object-fit: contain; display: inline-block; vertical-align: middle; margin-bottom: 2px; }
+.jp-chooser__head h3 { font-family: var(--jp-font-display); font-weight: 800; font-size: 1.5rem; color: var(--ink); margin: 4px 0 2px; }
+.jp-chooser__head h3 span { color: var(--color-kasumi); font-size: 0.8em; }
+.jp-chooser__head p { color: var(--ink-soft); font-size: 0.92rem; margin: 0; }
+
+.jp-tickets { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 720px) { .jp-tickets { grid-template-columns: 1fr; } }
+
+.jp-ticket {
+  display: flex;
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: var(--jp-shadow-md);
+  transition: transform .2s var(--motion-ease), box-shadow .2s var(--motion-ease);
+  min-height: 340px;
+}
+.jp-ticket:hover { transform: translateY(-4px); box-shadow: var(--jp-shadow-lg); }
+.jp-ticket:focus-visible { outline: 3px solid var(--color-kasumi); outline-offset: 3px; }
+
+/* stub perforado con texto vertical */
+.jp-ticket__stub {
+  flex: 0 0 34px;
+  display: grid; place-items: center;
+  color: #fff;
+}
+.jp-ticket__stub span {
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  font-size: 0.6rem; font-weight: 800; letter-spacing: 2.5px; opacity: .95;
+}
+.jp-ticket__body {
+  flex: 1; position: relative;
+  display: flex; flex-direction: column; gap: 7px;
+  padding: 18px 20px 18px 22px;
+  border-left: 2px dashed rgba(255, 255, 255, .75);
+}
+/* muescas de perforación (color del modal) en el borde stub/body */
+.jp-ticket__body::before, .jp-ticket__body::after {
+  content: ''; position: absolute; left: -10px; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--surface-page); z-index: 2;
+}
+.jp-ticket__body::before { top: -10px; }
+.jp-ticket__body::after { bottom: -10px; }
+
+.jp-ticket__badge {
+  align-self: flex-start;
+  font-size: 0.6rem; font-weight: 800; letter-spacing: 1px;
+  color: #fff; padding: 4px 12px; border-radius: 999px;
+}
+.jp-ticket__top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.jp-ticket__title { font-family: var(--jp-font-display); font-weight: 800; font-size: 1.9rem; line-height: 1; color: var(--ink); }
+.jp-ticket__cat { width: 82px; height: 82px; object-fit: contain; flex-shrink: 0; margin-top: -6px; }
+.jp-ticket__desc { font-size: 0.85rem; color: var(--ink-soft); line-height: 1.4; }
+.jp-ticket__incluye {
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--ink-soft); margin-top: 4px;
+}
+.jp-ticket__list { display: flex; flex-direction: column; gap: 4px; }
+.jp-ticket__li { position: relative; padding-left: 20px; font-size: 0.82rem; font-weight: 600; color: var(--ink); line-height: 1.35; }
+.jp-ticket__li::before {
+  content: '✓'; position: absolute; left: 0; top: 0;
+  font-weight: 800; font-size: 0.8rem;
+}
+.jp-ticket__stamp {
+  position: absolute; top: 16px; right: 16px;
+  width: 54px; height: 54px; border-radius: 50%;
+  border: 2px dashed currentColor;
+  display: grid; place-content: center; text-align: center;
+  font-family: var(--jp-font-display); font-weight: 800; font-size: 1rem; line-height: 1;
+  transform: rotate(-8deg); opacity: .72;
+}
+.jp-ticket__stamp small { display: block; font-size: 0.4rem; letter-spacing: 1px; margin-top: 1px; }
+.jp-ticket__cta {
+  margin-top: auto;
+  text-align: center;
+  color: #fff; font-weight: 800; font-size: 0.92rem;
+  padding: 12px; border-radius: 12px;
+  transition: filter .18s ease;
+}
+.jp-ticket:hover .jp-ticket__cta { filter: brightness(1.06); }
+
+/* Ticket Simple — azul sera / índigo */
+.jp-ticket--simple .jp-ticket__stub { background: #6C79C4; }
+.jp-ticket--simple .jp-ticket__body { background: color-mix(in srgb, #A7D7F9 26%, var(--surface-page)); }
+.jp-ticket--simple .jp-ticket__badge { background: #3D4BBC; }
+.jp-ticket--simple .jp-ticket__li::before { color: #3D4BBC; }
+.jp-ticket--simple .jp-ticket__stamp { color: #3D4BBC; }
+.jp-ticket--simple .jp-ticket__cta { background: linear-gradient(135deg, #4C5AC8, #3D4BBC); }
+.jp-ticket--simple .jp-ticket__body::before,
+.jp-ticket--simple .jp-ticket__body::after { background: var(--surface-page); }
+
+/* Ticket Wizard — sakura / kasumi */
+.jp-ticket--wizard .jp-ticket__stub { background: var(--color-kasumi-deep); }
+.jp-ticket--wizard .jp-ticket__body { background: color-mix(in srgb, var(--color-kasumi) 16%, var(--surface-page)); }
+.jp-ticket--wizard .jp-ticket__badge { background: var(--color-kasumi-deep); }
+.jp-ticket--wizard .jp-ticket__li::before { color: var(--color-kasumi-deep); }
+.jp-ticket--wizard .jp-ticket__stamp { color: var(--color-kasumi-deep); }
+.jp-ticket--wizard .jp-ticket__cta { background: linear-gradient(135deg, var(--color-kasumi), var(--color-kasumi-deep)); }
+
+/* Nota con washi tape al pie */
+.jp-chooser__note {
+  position: relative;
+  margin: 22px auto 4px;
+  max-width: 620px;
+  background: var(--surface-page-alt);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  padding: 14px 20px;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+.jp-chooser__note b { color: var(--ink); }
+.jp-chooser__tape {
+  position: absolute; top: -9px; width: 74px; height: 20px;
+  background: rgba(255, 143, 187, .4);
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.35) 0 6px, transparent 6px 12px);
+}
+.jp-chooser__tape--l { left: 26px; transform: rotate(-4deg); }
+.jp-chooser__tape--r { right: 26px; transform: rotate(3deg); background: rgba(167, 215, 249, .45); }
+
 /* ---- 9. Footer: de banda roja a cierre de papel ---- */
 .japan-footer {
   background: var(--surface-page-alt) !important;
