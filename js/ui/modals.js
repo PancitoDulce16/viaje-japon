@@ -395,7 +395,7 @@ export const ModalRenderer = {
                                         <span class="jp-ticket__badge">TU VIAJE, A TU MANERA</span>
                                         <span class="jp-ticket__top">
                                             <span class="jp-ticket__title">Viaje<br>Simple</span>
-                                            <img class="jp-ticket__cat" src="/images/illustrations/generated/characters/cat-explorer.webp" alt="">
+                                            <img class="jp-ticket__cat" src="/images/illustrations/generated/characters/dog-hello.webp" alt="">
                                         </span>
                                         <span class="jp-ticket__desc">Para cuando quieres empezar a soñar primero y organizar después.</span>
                                         <span class="jp-ticket__incluye">Incluye</span>

@@ -1240,6 +1240,13 @@ function renderTripSelector(){
   const userTrips=window.TripsManager?.userTrips||[];
   container.innerHTML = `
     <div class="trip-header-banner text-white p-6 rounded-xl mb-6 shadow-lg">
+      <!-- Capa de objetos del diario (art direction: layering, nunca alineado) -->
+      <img class="jp-trip-postmark" src="/images/illustrations/generated/decorations/postmark.webp" alt="" aria-hidden="true">
+      <img class="jp-trip-polaroid" src="/images/illustrations/generated/decorations/polaroid-fuji.webp" alt="" aria-hidden="true">
+      <span class="jp-trip-dogwrap" aria-hidden="true">
+        <img class="jp-trip-dog" src="/images/illustrations/generated/characters/dog-hello.webp" alt="">
+        <span class="jp-trip-bubble">¡Vamos a vivir Japón al máximo!</span>
+      </span>
       <!-- Banner centrado y grande sin icono -->
       <div class="text-center mb-4">
         <h3 class="font-bold text-3xl mb-2">${currentTrip.info.name}</h3>
@@ -2602,6 +2609,15 @@ function renderActivities(day){
   // Generar HTML de actividades con tiempos de traslado entre ellas
   const activitiesHTML = [];
 
+  // 🐶 El perrito fotógrafo se pega como sticker en LA actividad estrella del
+  // día (rating más alto, mínimo 4.7) — art direction: el personaje vive el
+  // viaje en los márgenes, una sola vez por día para no saturar.
+  let magicId = null, magicBest = 4.69;
+  sortedActivities.forEach(a => {
+    const r = Number(a.rating) || 0;
+    if (r > magicBest) { magicBest = r; magicId = a.id; }
+  });
+
   sortedActivities.forEach((act,i)=> {
     const votes = act.votes || {};
     const voteCount = Object.keys(votes).length;
@@ -2626,6 +2642,12 @@ function renderActivities(day){
     // Agregar la actividad
     activitiesHTML.push(`
     <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden fade-in transition-all hover:shadow-xl border-l-4 border-purple-500 dark:border-purple-400 ${checkedActivities[act.id]?'opacity-60':''}" style="animation-delay:${i*0.05}s">
+      ${act.id === magicId ? `
+        <span class="jp-act-magic" aria-hidden="true">
+          <img src="/images/illustrations/generated/characters/dog-camera.webp" alt="">
+          <i>¡Este lugar es mágico!</i>
+        </span>
+      ` : ''}
       <div class="p-3 sm:p-4 flex items-start gap-2 sm:gap-4">
         <div class="flex flex-col gap-2 items-center">
           <div class="drag-handle text-gray-400 dark:text-gray-500 text-xs cursor-grab active:cursor-grabbing" title="Arrastra para reordenar">⋮⋮</div>
@@ -2719,6 +2741,23 @@ function renderActivities(day){
       }
     }
   });
+
+  // 🐶 Día completado: el perrito se queda dormido al final del timeline
+  // (art direction: el personaje vive el mismo día que tú). Solo si TODAS
+  // las actividades están hechas.
+  const allDone = sortedActivities.length > 0 && sortedActivities.every(a => checkedActivities[a.id]);
+  if (allDone) {
+    activitiesHTML.push(`
+      <div class="jp-daydone" role="status">
+        <img class="jp-daydone__dog" src="/images/illustrations/generated/characters/dog-sleeping.webp" alt="">
+        <div class="jp-daydone__txt">
+          <b>¡Día espectacular!</b>
+          <span>Llevas ${sortedActivities.length} actividades completadas. ¡Sigue así, viajer@!</span>
+        </div>
+        <span class="jp-daydone__jp" aria-hidden="true">がんばって!</span>
+      </div>
+    `);
+  }
 
   container.innerHTML = activitiesHTML.join('');
 

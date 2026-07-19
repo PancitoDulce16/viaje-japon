@@ -793,6 +793,147 @@ html.dark .header-chip:hover {
   100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.9); opacity: 0; }
 }
 
+/* ---- 11.9 Capa de objetos del diario — perrito viajero + decoraciones ----
+   Art direction: los personajes/objetos INVADEN los bordes con rotaciones
+   imperfectas; los stickers llevan borde blanco baked (funcionan en ambos
+   temas), la tinta (matasellos) usa multiply y solo vive en modo claro. */
+
+/* Matasellos airmail sobre el cuaderno del viaje */
+.jp-trip-postmark {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  width: 150px;
+  mix-blend-mode: multiply;
+  opacity: 0.75;
+  transform: rotate(-2deg);
+  pointer-events: none;
+  user-select: none;
+}
+html.dark .jp-trip-postmark { display: none; }
+
+/* Polaroid del Fuji sobresaliendo del borde superior */
+.jp-trip-polaroid {
+  position: absolute;
+  top: -16px;
+  right: 176px;
+  width: 92px;
+  transform: rotate(6deg);
+  filter: drop-shadow(0 6px 10px rgba(43, 56, 104, 0.18));
+  pointer-events: none;
+  user-select: none;
+  z-index: 2;
+}
+html.dark .jp-trip-polaroid { filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)) brightness(.88); }
+
+/* Perrito saludando con globito manuscrito */
+.jp-trip-dogwrap { position: absolute; left: 16px; bottom: 10px; pointer-events: none; user-select: none; }
+.jp-trip-dog {
+  width: 76px;
+  transform: rotate(-4deg);
+  filter: drop-shadow(0 4px 8px rgba(43, 56, 104, 0.2));
+}
+.jp-trip-bubble {
+  position: absolute;
+  left: 66px;
+  bottom: 52px;
+  width: 150px;
+  background: var(--surface-page);
+  border: 1px solid var(--hairline);
+  border-radius: 12px 12px 12px 3px;
+  padding: 6px 10px;
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: 0.98rem;
+  line-height: 1.15;
+  color: var(--ink);
+  box-shadow: var(--jp-shadow-sm);
+  transform: rotate(2deg);
+}
+@media (max-width: 1000px) {
+  .jp-trip-dogwrap, .jp-trip-polaroid { display: none; }
+  .jp-trip-postmark { width: 110px; top: 6px; right: 10px; }
+}
+
+/* Sticker "¡Este lugar es mágico!" en la actividad estrella del día */
+.jp-act-magic {
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  pointer-events: none;
+  user-select: none;
+}
+.jp-act-magic img {
+  width: 52px;
+  transform: rotate(6deg);
+  filter: drop-shadow(0 3px 6px rgba(43, 56, 104, 0.18));
+}
+.jp-act-magic i {
+  font-family: var(--font-hand);
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-kasumi-deep);
+  transform: rotate(-3deg);
+  margin-bottom: 10px;
+  white-space: nowrap;
+}
+@media (max-width: 900px) { .jp-act-magic { display: none; } }
+/* la tarjeta estrella necesita aire abajo-derecha para el sticker */
+@media (min-width: 901px) { .activity-card:has(.jp-act-magic) { padding-right: 8px; } }
+
+/* Banner de día completado — el perrito se durmió */
+.jp-daydone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 6px 4px 0;
+  background: var(--surface-page);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  padding: 12px 18px;
+  box-shadow: var(--jp-shadow-sm);
+}
+.jp-daydone::before {
+  content: '';
+  position: absolute;
+  top: -9px;
+  left: 26px;
+  width: 70px;
+  height: 20px;
+  transform: rotate(-3deg);
+  background: rgba(255, 143, 187, .4);
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.35) 0 6px, transparent 6px 12px);
+}
+.jp-daydone__dog {
+  width: 68px;
+  flex-shrink: 0;
+  transform: rotate(-2deg);
+  filter: drop-shadow(0 3px 6px rgba(43, 56, 104, 0.16));
+}
+.jp-daydone__txt { display: flex; flex-direction: column; gap: 1px; }
+.jp-daydone__txt b { font-family: var(--jp-font-display); font-weight: 800; font-size: 1.05rem; color: var(--ink); }
+.jp-daydone__txt span { font-size: 0.85rem; color: var(--ink-soft); }
+.jp-daydone__jp {
+  margin-left: auto;
+  font-family: 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--color-kasumi-deep);
+  border: 2px solid color-mix(in srgb, var(--color-kasumi-deep) 55%, transparent);
+  border-radius: 10px;
+  padding: 6px 10px;
+  transform: rotate(4deg);
+  opacity: 0.85;
+  white-space: nowrap;
+}
+@media (max-width: 640px) { .jp-daydone__jp { display: none; } }
+
 /* ---- 12. Micro-detalles de sistema (ideas #193, #159, #13) ---- */
 
 /* Selección de texto en sakura */
