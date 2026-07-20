@@ -162,7 +162,64 @@ html.dark .header-chip:hover {
   border-left: 4px solid var(--color-kasumi) !important;
   border-radius: var(--jp-radius-md) !important;
   box-shadow: var(--jp-shadow-sm) !important;
+  /* El marcador del raíl (::before) vive FUERA de la tarjeta, en el
+     canalón izquierdo; con el overflow-hidden de Tailwind quedaba
+     recortado. Las esquinas de la miniatura ya las redondea
+     .activity-thumb por su cuenta, así que no se pierde nada. */
+  overflow: visible !important;
   transition: transform var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease), opacity var(--motion-base) var(--motion-ease) !important;
+}
+
+/* ---- 3b. RAÍL DEL DÍA — la columna del itinerario es una línea de
+   tiempo con banderines, como en la referencia oficial.
+   Se monta sin tocar itinerary-v3.js: `:has(> .activity-card)` encuentra
+   el contenedor real de la lista sin depender de sus clases Tailwind
+   (que cambian con el layout). ---- */
+#content-itinerary div:has(> .activity-card) {
+  position: relative;
+  padding-left: 42px;
+}
+
+#content-itinerary div:has(> .activity-card)::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 12px;
+  bottom: 12px;
+  width: 0;
+  border-left: 2px dashed color-mix(in srgb, var(--color-kasumi) 55%, transparent);
+  pointer-events: none;
+}
+
+/* Banderín en el raíl, a la altura de cada actividad */
+.activity-card::before {
+  content: '';
+  position: absolute;
+  left: -35px;
+  top: 22px;
+  width: 20px;
+  height: 24px;
+  background: var(--color-kasumi);
+  /* Silueta de banderín (borde inferior en V), como los marcadores torii
+     de la referencia — no un punto genérico de timeline. */
+  clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%);
+  box-shadow: 0 2px 4px rgba(var(--shadow-rgb), 0.25);
+  z-index: 2;
+}
+
+/* Actividad completada: el banderín se apaga a tinta, coherente con el
+   sello 済 que aparece en la misma tarjeta. */
+.activity-card:has(.activity-checkbox:checked)::before {
+  background: color-mix(in srgb, var(--color-kasumi) 45%, var(--ink));
+}
+
+/* Los tramos de transporte son paradas menores del mismo raíl */
+#content-itinerary div:has(> .activity-card) > .travel-time-indicator { position: relative; }
+
+@media (max-width: 640px) {
+  #content-itinerary div:has(> .activity-card) { padding-left: 26px; }
+  #content-itinerary div:has(> .activity-card)::before { left: 8px; }
+  .activity-card::before { left: -22px; width: 15px; height: 18px; top: 18px; }
 }
 .activity-card:hover {
   transform: translateX(3px);
@@ -524,127 +581,107 @@ html.dark .header-chip:hover {
 }
 .jp-create-close:hover { transform: rotate(90deg); background: color-mix(in srgb, var(--color-kasumi) 26%, var(--surface-page)); }
 
-.jp-chooser__head { text-align: center; margin: 4px 0 18px; }
-.jp-chooser__cat { width: 52px; height: 52px; object-fit: contain; display: inline-block; vertical-align: middle; margin-bottom: 2px; }
-.jp-chooser__head h3 { font-family: var(--jp-font-display); font-weight: 800; font-size: 1.5rem; color: var(--ink); margin: 4px 0 2px; }
-.jp-chooser__head h3 span { color: var(--color-kasumi); font-size: 0.8em; }
-.jp-chooser__head p { color: var(--ink-soft); font-size: 0.92rem; margin: 0; }
+/* ESCENA "Crear viaje" — los objetos ilustrados SON los componentes.
+   La tinta (HTML) se posa encima en coordenadas % del objeto; cqw hace
+   que el texto escale con el papel. Rotaciones ya vienen baked en el arte. */
+/* ESCENA "Crear viaje" — cada BOLETO es una ilustración completa (Nano Banana);
+   el HTML solo posa la tinta (texto) en las zonas en blanco. Test: al ocultar
+   .jps-t__ink sigue siendo papelería japonesa de verdad. */
+.jps-head { text-align: center; margin: 0 0 10px; }
+.jps-head__cat { width: 46px; height: 46px; object-fit: contain; vertical-align: middle; margin: 0 6px 6px 0; }
+.jps-head h3 {
+  display: inline;
+  font-family: var(--jp-font-display); font-weight: 800; font-size: 1.55rem; color: #2B3868;
+  border-bottom: 3px solid var(--color-kasumi); padding-bottom: 2px;
+}
+.jps-head p { font-family: var(--font-body); font-size: 0.95rem; color: #8A80A0; margin: 8px 0 0; }
 
-.jp-tickets { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-@media (max-width: 720px) { .jp-tickets { grid-template-columns: 1fr; } }
+.jps-tickets {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center; margin: 0 -1.5%;
+}
+@media (max-width: 720px) { .jps-tickets { grid-template-columns: 1fr; } }
 
-.jp-ticket {
-  display: flex;
-  border-radius: 16px;
-  overflow: hidden;
-  cursor: pointer;
-  box-shadow: var(--jp-shadow-md);
-  transition: transform .2s var(--motion-ease), box-shadow .2s var(--motion-ease);
-  min-height: 340px;
-}
-.jp-ticket:hover { transform: translateY(-4px); box-shadow: var(--jp-shadow-lg); }
-.jp-ticket:focus-visible { outline: 3px solid var(--color-kasumi); outline-offset: 3px; }
-
-/* stub perforado con texto vertical */
-.jp-ticket__stub {
-  flex: 0 0 34px;
-  display: grid; place-items: center;
-  color: #fff;
-}
-.jp-ticket__stub span {
-  writing-mode: vertical-rl; transform: rotate(180deg);
-  font-size: 0.6rem; font-weight: 800; letter-spacing: 2.5px; opacity: .95;
-}
-.jp-ticket__body {
-  flex: 1; position: relative;
-  display: flex; flex-direction: column; gap: 7px;
-  padding: 18px 20px 18px 22px;
-  border-left: 2px dashed rgba(255, 255, 255, .75);
-}
-/* muescas de perforación (color del modal) en el borde stub/body */
-.jp-ticket__body::before, .jp-ticket__body::after {
-  content: ''; position: absolute; left: -10px; width: 18px; height: 18px;
-  border-radius: 50%; background: var(--surface-page); z-index: 2;
-}
-.jp-ticket__body::before { top: -10px; }
-.jp-ticket__body::after { bottom: -10px; }
-
-.jp-ticket__badge {
-  align-self: flex-start;
-  font-size: 0.6rem; font-weight: 800; letter-spacing: 1px;
-  color: #fff; padding: 4px 12px; border-radius: 999px;
-}
-.jp-ticket__top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-.jp-ticket__title { font-family: var(--jp-font-display); font-weight: 800; font-size: 1.9rem; line-height: 1; color: var(--ink); }
-.jp-ticket__cat { width: 82px; height: 82px; object-fit: contain; flex-shrink: 0; margin-top: -6px; }
-.jp-ticket__desc { font-size: 0.85rem; color: var(--ink-soft); line-height: 1.4; }
-.jp-ticket__incluye {
-  font-size: 0.62rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
-  color: var(--ink-soft); margin-top: 4px;
-}
-.jp-ticket__list { display: flex; flex-direction: column; gap: 4px; }
-.jp-ticket__li { position: relative; padding-left: 20px; font-size: 0.82rem; font-weight: 600; color: var(--ink); line-height: 1.35; }
-.jp-ticket__li::before {
-  content: '✓'; position: absolute; left: 0; top: 0;
-  font-weight: 800; font-size: 0.8rem;
-}
-.jp-ticket__stamp {
-  position: absolute; top: 16px; right: 16px;
-  width: 54px; height: 54px; border-radius: 50%;
-  border: 2px dashed currentColor;
-  display: grid; place-content: center; text-align: center;
-  font-family: var(--jp-font-display); font-weight: 800; font-size: 1rem; line-height: 1;
-  transform: rotate(-8deg); opacity: .72;
-}
-.jp-ticket__stamp small { display: block; font-size: 0.4rem; letter-spacing: 1px; margin-top: 1px; }
-.jp-ticket__cta {
-  margin-top: auto;
-  text-align: center;
-  color: #fff; font-weight: 800; font-size: 0.92rem;
-  padding: 12px; border-radius: 12px;
-  transition: filter .18s ease;
-}
-.jp-ticket:hover .jp-ticket__cta { filter: brightness(1.06); }
-
-/* Ticket Simple — azul sera / índigo */
-.jp-ticket--simple .jp-ticket__stub { background: #6C79C4; }
-.jp-ticket--simple .jp-ticket__body { background: color-mix(in srgb, #A7D7F9 26%, var(--surface-page)); }
-.jp-ticket--simple .jp-ticket__badge { background: #3D4BBC; }
-.jp-ticket--simple .jp-ticket__li::before { color: #3D4BBC; }
-.jp-ticket--simple .jp-ticket__stamp { color: #3D4BBC; }
-.jp-ticket--simple .jp-ticket__cta { background: linear-gradient(135deg, #4C5AC8, #3D4BBC); }
-.jp-ticket--simple .jp-ticket__body::before,
-.jp-ticket--simple .jp-ticket__body::after { background: var(--surface-page); }
-
-/* Ticket Wizard — sakura / kasumi */
-.jp-ticket--wizard .jp-ticket__stub { background: var(--color-kasumi-deep); }
-.jp-ticket--wizard .jp-ticket__body { background: color-mix(in srgb, var(--color-kasumi) 16%, var(--surface-page)); }
-.jp-ticket--wizard .jp-ticket__badge { background: var(--color-kasumi-deep); }
-.jp-ticket--wizard .jp-ticket__li::before { color: var(--color-kasumi-deep); }
-.jp-ticket--wizard .jp-ticket__stamp { color: var(--color-kasumi-deep); }
-.jp-ticket--wizard .jp-ticket__cta { background: linear-gradient(135deg, var(--color-kasumi), var(--color-kasumi-deep)); }
-
-/* Nota con washi tape al pie */
-.jp-chooser__note {
+.jps-t {
   position: relative;
-  margin: 22px auto 4px;
-  max-width: 620px;
-  background: var(--surface-page-alt);
-  border: 1px solid var(--hairline);
-  border-radius: 12px;
-  padding: 14px 20px;
+  container-type: inline-size;
+  cursor: pointer;
+  transition: transform .22s var(--motion-ease), filter .22s var(--motion-ease);
+}
+.jps-t--simple { transform: rotate(-1.4deg); }
+.jps-t--wizard { transform: rotate(1.4deg); }
+.jps-t--simple:hover { transform: rotate(-1.4deg) translateY(-6px); filter: brightness(1.02); }
+.jps-t--wizard:hover { transform: rotate(1.4deg) translateY(-6px); filter: brightness(1.02); }
+.jps-t:focus-visible { outline: 3px solid var(--color-kasumi); outline-offset: 4px; border-radius: 18px; }
+.jps-t__obj { width: 100%; height: auto; display: block; user-select: none; }
+
+/* capa de tinta: todos los hijos posicionados en % del boleto */
+.jps-t__ink { position: absolute; inset: 0; pointer-events: none; }
+.jps-t__ink > * { position: absolute; }
+
+/* texto vertical del stub */
+.jps-t__stub {
+  left: 3.5%; top: 50%; transform: translateY(-50%) rotate(180deg);
+  writing-mode: vertical-rl;
+  font-family: var(--font-body); font-weight: 800; font-size: 2cqw; letter-spacing: .22em;
+  color: rgba(255,255,255,.92);
+}
+.jps-t__stub--r { left: auto; right: 3.5%; }
+
+/* badge (sobre la píldora baked del boleto) */
+.jps-t__badge {
+  left: 29%; top: 42.5%; transform: translate(-50%,-50%);
+  font-family: var(--font-body); font-weight: 800; font-size: 1.55cqw; letter-spacing: .05em;
+  text-transform: uppercase; color: #fff; white-space: nowrap;
+}
+/* título grande en la zona blanca central-izquierda */
+.jps-t__title {
+  left: 15.5%; top: 50.5%;
+  font-family: var(--jp-font-display); font-weight: 800; font-size: 5.1cqw; line-height: .88;
+}
+.jps-t--simple .jps-t__title { color: #3D4BBC; }
+.jps-t--wizard .jps-t__title { color: #D95F7F; }
+/* descripción */
+.jps-t__desc {
+  left: 16%; top: 72%;
+  font-family: var(--font-body); font-weight: 600; font-size: 1.65cqw; line-height: 1.3;
+}
+.jps-t--simple .jps-t__desc { color: #5C6690; }
+.jps-t--wizard .jps-t__desc { color: #9A6A7C; }
+/* sello ~30 SEG / ~2-3 MIN sobre la circunferencia baked */
+.jps-t__stamp {
+  left: 84%; top: 81%; transform: translate(-50%,-50%) rotate(-7deg);
   text-align: center;
-  font-size: 0.88rem;
-  color: var(--ink-soft);
+  font-family: var(--jp-font-display); font-weight: 800; font-size: 2.4cqw; line-height: .9;
 }
-.jp-chooser__note b { color: var(--ink); }
-.jp-chooser__tape {
-  position: absolute; top: -9px; width: 74px; height: 20px;
-  background: rgba(255, 143, 187, .4);
-  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.35) 0 6px, transparent 6px 12px);
+.jps-t__stamp i { display: block; font-style: normal; font-size: 1.05cqw; letter-spacing: .12em; }
+.jps-t--simple .jps-t__stamp { color: #3D4BBC; }
+.jps-t--wizard .jps-t__stamp { color: #D95F7F; }
+/* etiqueta del botón, centrada sobre la píldora baked (que es parte del boleto) */
+.jps-t__cta {
+  left: 31.5%; top: 86.5%; transform: translate(-50%,-50%);
+  font-family: var(--font-body); font-weight: 800; font-size: 1.7cqw; letter-spacing: 0;
+  color: #fff; white-space: nowrap;
 }
-.jp-chooser__tape--l { left: 26px; transform: rotate(-4deg); }
-.jp-chooser__tape--r { right: 26px; transform: rotate(3deg); background: rgba(167, 215, 249, .45); }
+
+/* NOTA */
+.jps-note { position: relative; container-type: inline-size; width: 60%; margin: -2% auto 0; }
+.jps-note__obj { width: 100%; display: block; }
+.jps-note__ink {
+  position: absolute; left: 24%; top: 50%; width: 53%; transform: translateY(-50%);
+  text-align: center; font-family: var(--font-body); font-size: 2.6cqw; line-height: 1.32; color: #7A6A55;
+}
+.jps-note__ink b { font-family: var(--font-hand); font-weight: 700; font-size: 1.4em; color: #5C4B36; }
+
+/* el escritorio sigue siendo papel cálido también de noche */
+html.dark .jp-create-modal { background: #FBF7F1 !important; filter: brightness(.95); }
+html.dark .jp-create-title { color: #2B3868 !important; }
+html.dark .jp-create-sub { color: #5C6690 !important; }
+html.dark .jps-head h3 { color: #2B3868; }
+
+@media (max-width: 720px) {
+  .jps-note { width: 100%; }
+  .jps-head h3 { font-size: 1.25rem; }
+}
 
 /* ---- 9. Footer: de banda roja a cierre de papel ---- */
 .japan-footer {
@@ -883,8 +920,17 @@ html.dark .jp-trip-polaroid { filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)) bri
   white-space: nowrap;
 }
 @media (max-width: 900px) { .jp-act-magic { display: none; } }
-/* la tarjeta estrella necesita aire abajo-derecha para el sticker */
-@media (min-width: 901px) { .activity-card:has(.jp-act-magic) { padding-right: 8px; } }
+/* La tarjeta estrella necesita aire abajo-derecha para el sticker.
+   `padding-right` NO bastaba: el sticker está posicionado en absoluto, así
+   que no empuja nada y se montaba encima de la última línea de la ficha
+   (la dirección), dejándola ilegible. Hay que RESERVAR la banda inferior
+   donde va a caer. */
+@media (min-width: 901px) {
+  .activity-card:has(.jp-act-magic) { padding-right: 8px; padding-bottom: 30px; }
+  /* El perrito sí puede sobresalir hacia arriba dentro de esa banda:
+     el layering es intencional, el texto tapado no lo era. */
+  .activity-card:has(.jp-act-magic) .jp-act-magic { bottom: -2px; }
+}
 
 /* Banner de día completado — el perrito se durmió */
 .jp-daydone {

@@ -114,7 +114,7 @@ export const ModalRenderer = {
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
                     <div class="p-6">
                         <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold dark:text-white">🔐 Iniciar Sesión</h2>
+                            <h2 class="text-2xl font-bold dark:text-white">Iniciar Sesión</h2>
                             <button class="modal-close text-3xl hover:text-red-600 transition" data-modal-close="auth" aria-label="Cerrar">&times;</button>
                         </div>
 
@@ -271,7 +271,7 @@ export const ModalRenderer = {
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                     <div class="p-6">
                         <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold text-red-600 dark:text-red-400">🚨 Emergencias</h2>
+                            <h2 class="text-2xl font-bold text-red-600 dark:text-red-400">Emergencias</h2>
                             <button class="modal-close text-3xl hover:text-red-600 transition" data-modal-close="emergency" aria-label="Cerrar">&times;</button>
                         </div>
                         <div class="space-y-4">
@@ -305,10 +305,10 @@ export const ModalRenderer = {
             <div id="modal-budget" class="modal">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                     <div class="p-6">
-                        <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold dark:text-white">💰 Budget Tracker</h2>
-                            <button class="modal-close text-3xl hover:text-red-600 transition" data-modal-close="budget" aria-label="Cerrar">&times;</button>
-                        </div>
+                        <!-- Sin <h2> propio: bento-budget.js ya renderiza su
+                             cabecera dentro de #budgetModalContent, así que
+                             había DOS títulos apilados. Queda solo el cierre. -->
+                        <button class="jp-modal-close modal-close" data-modal-close="budget" aria-label="Cerrar presupuesto">&times;</button>
                         <div class="sync-badge mb-4"></div>
                         <div id="budgetModalContent"></div>
                     </div>
@@ -341,7 +341,7 @@ export const ModalRenderer = {
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                     <div class="p-6">
                         <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold dark:text-white">🗣️ Frases Útiles</h2>
+                            <h2 class="text-2xl font-bold dark:text-white">Frases Útiles</h2>
                             <button class="modal-close text-3xl hover:text-red-600 transition" data-modal-close="phrases" aria-label="Cerrar">&times;</button>
                         </div>
                         <div class="space-y-3 max-h-96 overflow-y-auto">
@@ -376,67 +376,57 @@ export const ModalRenderer = {
                             <button onclick="TripsManager.closeCreateTripModal()" class="jp-create-close" aria-label="Cerrar">&times;</button>
                         </div>
 
-                        <!-- Selección de Tipo de Viaje — dos tickets boarding-pass -->
+                        <!-- Selección de Tipo de Viaje — ESCENA de escritorio: los objetos
+                             (boarding pass / libreta / etiqueta) SON los componentes,
+                             generados completos con Nano Banana; el HTML solo posa la
+                             tinta encima. Ver japitin-art-direction. -->
                         <div id="tripTypeSelection">
-                            <div class="jp-chooser__head">
-                                <img class="jp-chooser__cat" src="/images/illustrations/generated/characters/cat-explorer.webp" alt="" aria-hidden="true">
-                                <h3>¿Cómo quieres comenzar tu aventura? <span>✿</span></h3>
+                            <div class="jps-head">
+                                <img class="jps-head__cat" src="/images/illustrations/generated/components/tk-cathead.webp" alt="" aria-hidden="true">
+                                <h3>¿Cómo quieres comenzar tu aventura?</h3>
                                 <p>Elige la opción que mejor se adapte a tu viaje.</p>
                             </div>
 
-                            <div class="jp-tickets">
-                                <!-- Ticket 1: Viaje Simple -->
-                                <div class="jp-ticket jp-ticket--simple" role="button" tabindex="0"
+                            <div class="jps-tickets">
+                                <!-- BOLETO 1: ilustración completa = Viaje Simple -->
+                                <div class="jps-t jps-t--simple" role="button" tabindex="0"
+                                     aria-label="Viaje Simple: solo nombre y fechas, listo en 30 segundos"
                                      onclick="TripsManager.showSimpleTripForm()"
                                      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
-                                    <span class="jp-ticket__stub"><span>IT'S TIME TO EXPLORE</span></span>
-                                    <span class="jp-ticket__body">
-                                        <span class="jp-ticket__stamp">~30<small>SEG</small></span>
-                                        <span class="jp-ticket__badge">TU VIAJE, A TU MANERA</span>
-                                        <span class="jp-ticket__top">
-                                            <span class="jp-ticket__title">Viaje<br>Simple</span>
-                                            <img class="jp-ticket__cat" src="/images/illustrations/generated/characters/dog-hello.webp" alt="">
-                                        </span>
-                                        <span class="jp-ticket__desc">Para cuando quieres empezar a soñar primero y organizar después.</span>
-                                        <span class="jp-ticket__incluye">Incluye</span>
-                                        <span class="jp-ticket__list">
-                                            <span class="jp-ticket__li">Solo lo básico: nombre y fechas</span>
-                                            <span class="jp-ticket__li">Construye tu itinerario cuando quieras</span>
-                                            <span class="jp-ticket__li">Añade ciudades y actividades después</span>
-                                        </span>
-                                        <span class="jp-ticket__cta">Empezar Viaje Simple <span aria-hidden="true">→</span></span>
+                                    <img class="jps-t__obj" src="/images/illustrations/generated/components/tk-simple.webp" alt="">
+                                    <span class="jps-t__ink" aria-hidden="true">
+                                        <span class="jps-t__stub">IT'S TIME TO EXPLORE</span>
+                                        <span class="jps-t__badge">Tu viaje, a tu manera</span>
+                                        <span class="jps-t__title">Viaje<br>Simple</span>
+                                        <span class="jps-t__desc">Sueña primero, organiza después.<br>Solo nombre y fechas.</span>
+                                        <span class="jps-t__stamp">~30<i>SEG</i></span>
+                                        <span class="jps-t__cta">Empezar viaje →</span>
                                     </span>
                                 </div>
 
-                                <!-- Ticket 2: Wizard Completo -->
-                                <div class="jp-ticket jp-ticket--wizard" role="button" tabindex="0"
+                                <!-- BOLETO 2: ilustración completa = Wizard Completo -->
+                                <div class="jps-t jps-t--wizard" role="button" tabindex="0"
+                                     aria-label="Wizard Completo: cuéntale a Japitin qué te gusta y genera tu itinerario, 2 a 3 minutos"
                                      onclick="TripsManager.showFullTripWizard()"
                                      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
-                                    <span class="jp-ticket__stub"><span>JAPITIN MAGIC</span></span>
-                                    <span class="jp-ticket__body">
-                                        <span class="jp-ticket__stamp">~2-3<small>MIN</small></span>
-                                        <span class="jp-ticket__badge">TODO LISTO PARA DESPEGAR</span>
-                                        <span class="jp-ticket__top">
-                                            <span class="jp-ticket__title">Wizard<br>Completo</span>
-                                            <img class="jp-ticket__cat" src="/images/illustrations/generated/characters/cat-wizard.webp" alt="">
-                                        </span>
-                                        <span class="jp-ticket__desc">Cuéntame qué te gusta y Japitin preparará el viaje contigo.</span>
-                                        <span class="jp-ticket__incluye">Incluye</span>
-                                        <span class="jp-ticket__list">
-                                            <span class="jp-ticket__li">Destinos y conexiones</span>
-                                            <span class="jp-ticket__li">Tus intereses y estilo de viaje</span>
-                                            <span class="jp-ticket__li">Plantillas de viaje</span>
-                                            <span class="jp-ticket__li">Itinerario generado automáticamente</span>
-                                        </span>
-                                        <span class="jp-ticket__cta">Crear mi itinerario completo <span aria-hidden="true">→</span></span>
+                                    <img class="jps-t__obj" src="/images/illustrations/generated/components/tk-wizard.webp" alt="">
+                                    <span class="jps-t__ink" aria-hidden="true">
+                                        <span class="jps-t__stub">JAPITIN MAGIC</span>
+                                        <span class="jps-t__badge">Todo listo para despegar</span>
+                                        <span class="jps-t__title">Wizard<br>Completo</span>
+                                        <span class="jps-t__desc">Cuéntame qué te gusta y<br>preparo el viaje contigo.</span>
+                                        <span class="jps-t__stamp">~2-3<i>MIN</i></span>
+                                        <span class="jps-t__cta">Crear itinerario →</span>
                                     </span>
                                 </div>
                             </div>
 
-                            <div class="jp-chooser__note">
-                                <span class="jp-chooser__tape jp-chooser__tape--l" aria-hidden="true"></span>
-                                <span class="jp-chooser__tape jp-chooser__tape--r" aria-hidden="true"></span>
-                                <b>¿No estás segura?</b> Empieza con un Viaje Simple — puedes convertirlo en una aventura completa cuando quieras.
+                            <!-- NOTA con washi tape (ilustración completa) -->
+                            <div class="jps-note">
+                                <img class="jps-note__obj" src="/images/illustrations/generated/components/tk-note.webp" alt="">
+                                <span class="jps-note__ink" aria-hidden="true">
+                                    <b>¿No estás segura?</b> Empieza con un Viaje Simple — puedes convertirlo en una aventura completa cuando quieras.
+                                </span>
                             </div>
                         </div>
 
@@ -550,7 +540,7 @@ export const ModalRenderer = {
                     <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white p-6 rounded-t-xl z-10">
                         <div class="flex justify-between items-center">
                             <div>
-                                <h2 class="text-3xl font-bold">🗂️ Mis Viajes</h2>
+                                <h2 class="text-3xl font-bold">Mis Viajes</h2>
                                 <p class="text-sm text-white/80 mt-1">Gestiona todos tus viajes a Japón</p>
                             </div>
                             <button
@@ -576,7 +566,7 @@ export const ModalRenderer = {
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full">
                     <div class="p-6">
                         <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold dark:text-white">📝 Mis Notas</h2>
+                            <h2 class="text-2xl font-bold dark:text-white">Mis Notas</h2>
                             <button class="modal-close text-3xl hover:text-red-600 transition cursor-pointer" data-modal-close="notes" aria-label="Cerrar">&times;</button>
                         </div>
                         <div class="sync-badge mb-4"></div>
@@ -603,7 +593,7 @@ export const ModalRenderer = {
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                     <div class="p-6">
                         <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold dark:text-white">🎒 Checklist de Equipaje</h2>
+                            <h2 class="text-2xl font-bold dark:text-white">Checklist de Equipaje</h2>
                             <button class="modal-close text-3xl hover:text-red-600 transition" data-modal-close="packing" aria-label="Cerrar">&times;</button>
                         </div>
                         <div id="packingListContainer"></div>
@@ -618,10 +608,10 @@ export const ModalRenderer = {
             <div id="modal-favorites" class="modal">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                     <div class="p-6">
-                        <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold dark:text-white">⭐ Mis Favoritos</h2>
-                            <button class="modal-close text-3xl hover:text-red-600 transition" data-modal-close="favorites" aria-label="Cerrar">&times;</button>
-                        </div>
+                        <!-- Sin <h2> propio: favorites-manager.js ya rotula
+                             "Mis Favoritos" dentro del contenedor — el título
+                             aparecía literalmente dos veces seguidas. -->
+                        <button class="jp-modal-close modal-close" data-modal-close="favorites" aria-label="Cerrar favoritos">&times;</button>
                         <div id="favoritesListContainer"></div>
                     </div>
                 </div>
@@ -631,12 +621,18 @@ export const ModalRenderer = {
 
     getChatModal() {
         return `
+            <!-- El marco es mínimo a propósito: el chat trae su propia
+                 cabecera de papel (.jc-head, css/chat-washi.css), así que
+                 aquí solo queda el cierre. Antes había una segunda barra
+                 blanca con "💬 Chat Grupal" encima, duplicando el título. -->
             <div id="modal-chat" class="modal">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-3xl w-full">
-                    <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
-                        <h2 class="text-2xl font-bold dark:text-white">💬 Chat Grupal</h2>
-                        <button class="modal-close text-3xl hover:text-red-600 transition" onclick="window.GroupChat.close()" aria-label="Cerrar">&times;</button>
-                    </div>
+                <div class="jc-shell">
+                    <button class="jc-close modal-close" onclick="window.GroupChat.close()" aria-label="Cerrar chat">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+                             stroke-width="3" stroke-linecap="round" aria-hidden="true">
+                            <path d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                     <div id="chatModalContent"></div>
                 </div>
             </div>
