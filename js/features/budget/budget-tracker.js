@@ -109,7 +109,7 @@ export const BudgetTracker = {
 
     container.innerHTML = `
       <!-- Total Card compacto -->
-      <div class="mb-4 p-4 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 text-white rounded-xl shadow-lg">
+      <div class="jp-ledger-total mb-4 p-4 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 text-white rounded-xl shadow-lg">
         <div class="flex justify-between items-center">
           <div>
             <p class="text-sm opacity-90 mb-1">Total Gastado</p>
@@ -125,7 +125,7 @@ export const BudgetTracker = {
       ${members.length > 1 && sharedExpenses.length ? `<details class="mb-4 p-3 bg-pink-50 dark:bg-gray-800 rounded-lg border border-pink-100 dark:border-gray-700"><summary class="font-bold text-sm cursor-pointer">🤝 Saldos del grupo</summary><div class="mt-3 space-y-2">${balances.map(balance => { const net = balance.paid - sharePerPerson; return `<div class="flex justify-between text-xs"><span>${this.escapeHtml(balance.email.split('@')[0])}</span><b class="${net >= 0 ? 'text-green-600' : 'text-rose-600'}">${net >= 0 ? 'recibe' : 'debe'} ¥${Math.abs(Math.round(net)).toLocaleString()}</b></div>`; }).join('')}</div></details>` : ''}
 
       <!-- Formulario compacto -->
-      <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+      <div class="jp-ledger-form mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
         <h4 class="font-bold mb-2 text-gray-800 dark:text-white text-sm">➕ Agregar Gasto</h4>
         <div class="grid grid-cols-2 gap-2 mb-2">
           <input id="expenseDescTab" type="text" class="col-span-2 p-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Descripción">
@@ -148,7 +148,7 @@ export const BudgetTracker = {
 
       <!-- Categorías si hay gastos -->
       ${categories.length > 0 ? `
-        <div class="mb-4 p-3 bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="jp-ledger-categories mb-4 p-3 bg-white dark:bg-gray-800 rounded-lg shadow">
           <h4 class="font-bold text-sm mb-3 dark:text-white">📊 Por Categoría</h4>
           <div class="space-y-2">
             ${categories.map(([cat, amount]) => {
@@ -172,7 +172,7 @@ export const BudgetTracker = {
       ` : ''}
 
       <!-- Lista de gastos compacta -->
-      <div class="space-y-2 max-h-96 overflow-y-auto">
+      <div class="jp-ledger-receipts space-y-2 max-h-96 overflow-y-auto">
         ${this.expenses.length === 0 ? `
           <div class="text-center py-8">
             <div class="text-4xl mb-2">💰</div>
@@ -182,7 +182,7 @@ export const BudgetTracker = {
           const icon = this.getCategoryIcon(exp.category || 'Otros');
           const color = this.getCategoryColorClass(exp.category || 'Otros');
           return `
-            <div class="group p-2 bg-white dark:bg-gray-700 rounded-lg border-l-4 ${color} hover:shadow-md transition">
+            <div class="jp-ledger-receipt group p-2 bg-white dark:bg-gray-700 rounded-lg border-l-4 ${color} hover:shadow-md transition">
               <div class="flex justify-between items-start">
                 <div class="flex-1">
                   <div class="flex items-center gap-2 mb-1">

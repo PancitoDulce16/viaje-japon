@@ -198,7 +198,7 @@ export const MapHandler = {
                     <select
                         id="mapDaySelector"
                         onchange="MapHandler.onDayChange(this.value)"
-                        class="w-full p-3 border-2 border-purple-300 dark:border-purple-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 font-semibold text-base mb-3"
+                            class="jp-map-day-select w-full p-3 border-2 border-purple-300 dark:border-purple-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 font-semibold text-base mb-3"
                     >
                         ${daysOptions}
                     </select>
@@ -255,7 +255,7 @@ export const MapHandler = {
                 </div>
 
                 <!-- Info Tips -->
-                <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500">
+                <div class="jp-map-tip mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500">
                     <p class="text-sm dark:text-gray-300">
                         💡 <strong>Tips:</strong> Haz clic en los marcadores para ver más información.
                         Usa los filtros para ver solo ciertos tipos de lugares.
@@ -264,7 +264,7 @@ export const MapHandler = {
 
                 <!-- 🔥 Búsqueda de Lugares Cercanos con Google Places -->
                 ${GooglePlacesAPI.isConfigured() ? `
-                <div class="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div class="jp-map-search mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                     <h3 class="text-xl font-bold mb-4 dark:text-white flex items-center gap-2">
                         🔍 Buscar Lugares Cercanos
                         <span class="text-xs font-normal text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full">
@@ -272,7 +272,7 @@ export const MapHandler = {
                         </span>
                     </h3>
 
-                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <div class="jp-map-search__fields grid md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                 Buscar cerca de:
