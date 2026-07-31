@@ -1438,7 +1438,7 @@ function renderQuickStats(day) {
     'text-green-600 dark:text-green-400';
 
   return `
-    <div class="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg p-3 mb-4 border border-purple-200 dark:border-purple-700">
+    <div class="day-index-stats bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg p-3 mb-4 border border-purple-200 dark:border-purple-700">
       <div class="grid grid-cols-5 gap-2 text-center">
         <div class="flex flex-col items-center">
           <span class="text-purple-600 dark:text-purple-400 text-xl mb-1">📍</span>
@@ -1514,7 +1514,9 @@ function renderMiniTimeline(day) {
   });
 
   return `
-    <div class="bg-white dark:bg-gray-700 rounded-lg p-3 mb-4 border border-gray-200 dark:border-gray-600">
+    <details class="day-index-timeline mb-4">
+      <summary><span>時</span><b>Agenda visual</b><small>${sorted[0].time} → ${sorted[sorted.length - 1].time}</small></summary>
+      <div class="day-index-timeline__paper bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
       <div class="flex items-center justify-between mb-2">
         <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">Timeline del Día</span>
         <div class="flex gap-2 text-xs">
@@ -1555,7 +1557,8 @@ function renderMiniTimeline(day) {
         <span class="flex items-center gap-1"><span class="w-2 h-2 bg-orange-500 rounded-full"></span>Comida</span>
         <span class="flex items-center gap-1"><span class="w-2 h-2 bg-blue-500 rounded-full"></span>Cultural</span>
       </div>
-    </div>
+      </div>
+    </details>
   `;
 }
 
@@ -1564,7 +1567,7 @@ function renderMiniTimeline(day) {
  */
 function renderQuickActionButtons(day) {
   return `
-    <div>
+    <div class="day-index-primary-action">
       <!-- Simple add button (always visible) -->
       <div class="mb-3">
         <button
@@ -1964,12 +1967,12 @@ function renderDayOverview(day){
       </div>
     `}
     ${dayNote(day) ? `<div class="day-note">${dayNote(day)}</div>` : ''}
-    <div class="mb-4">
-      <div class="flex justify-between text-sm mb-1 dark:text-gray-100"><span>Progreso</span><span>${completed}/${day.activities.length}</span></div>
-      <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2"><div class="bg-red-600 dark:bg-red-500 h-2 rounded-full transition-all duration-500" style="width:${progress}%"></div></div>
+    <div class="day-route-progress mb-4" style="--day-progress:${progress}%">
+      <div class="flex justify-between text-sm mb-1 dark:text-gray-100"><span>Ruta del día</span><span>${completed}/${day.activities.length}</span></div>
+      <div class="day-route-progress__track w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2"><div class="day-route-progress__fill bg-red-600 dark:bg-red-500 h-2 rounded-full transition-all duration-500" style="width:${progress}%"></div></div>
       <div class="mt-2 text-right">${syncStatus}</div>
     </div>
-    <div class="space-y-3 text-sm">
+    <div class="day-index-meta space-y-3 text-sm">
       <p class="font-semibold text-base dark:text-gray-100">${day.date}</p>
 
       <!-- Weather Widget -->
