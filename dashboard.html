@@ -481,16 +481,13 @@
 
 
     <!-- 📄 PDF EXPORTER - Exportar itinerario a PDF -->
-    <script type="module" src="/js/features/trips/pdf-exporter.js"></script>
 
     <!-- 📊 EXPENSE CHARTS - Gráficos visuales para gastos -->
-    <script type="module" src="/js/features/budget/expense-charts.js"></script>
 
     <!-- 🆕 HTML2PDF - Librería para generar PDFs -->
 
 
     <!-- 🆕 EXPORT MANAGER - Sistema de exportación multi-formato -->
-    <script type="module" src="/js/features/trips/export-manager.js"></script>
 
     <!-- 🎏 ACHIEVEMENTS - Implementación canónica del objeto Achievement (OBJECT_BIBLE.md) -->
     <script type="module" src="/js/features/achievements/achievements.js"></script>
@@ -553,15 +550,16 @@
         // 🎯 MEGA MENU - Acceso a TODAS las características
         window.showMainMenu = function() {
             const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4';
+            modal.className = 'jp-modal-shell fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4';
+            modal.setAttribute('aria-label', 'Menú principal de herramientas');
             modal.innerHTML = `
-                <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                    <div class="flex justify-between items-center mb-6">
+                <div class="jp-modal-paper bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                    <div class="jp-modal-head flex justify-between items-center mb-6 -m-6 p-6">
                         <h2 class="text-2xl font-bold">🌟 Menú Principal</h2>
-                        <button onclick="this.closest('.fixed').remove()" class="text-3xl hover:text-purple-600">&times;</button>
+                        <button onclick="this.closest('.fixed').remove()" class="jp-modal-close text-3xl hover:text-purple-600" aria-label="Cerrar menú">&times;</button>
                     </div>
 
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="jp-modal-grid grid grid-cols-2 md:grid-cols-3 gap-4 mt-12">
                         <!-- NUEVAS CARACTERÍSTICAS -->
                         <button class="feature-btn bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-4 rounded-xl hover:shadow-lg transition-all" onclick="window.GeoOptimizerUI?.runOptimization(); this.closest('.fixed').remove();">
                             <div class="text-4xl mb-2">🗺️</div>
@@ -713,6 +711,7 @@
             `;
             modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
             document.body.appendChild(modal);
+            window.JapitinDialog?.enhance(modal, { onClose: () => modal.remove() });
         };
 
         window.addEventListener('load', () => {

@@ -8,6 +8,7 @@ import './mobile-enhancements.js'; // Import for side effects
 import './theme-manager.js?v=2025-10-26-08'; // Import for side effects - cache bust
 import './live-title.js'; // 🌸 Título de pestaña vivo (countdown + gatito)
 import './washi-toast.js'; // 🌸 Toasts de papel con acción (Deshacer)
+import './dialog-a11y.js';
 import './sakura-confetti.js'; // 🌸 Confetti de hitos (día completo, logros)
 // import './dark-mode-enforcer.js'; // DISABLED - Was causing contrast issues and overriding balanced dark mode
 import { SafeFirestore } from '../core/firestore-wrapper.js'; // 🛡️ Wrapper seguro para Firestore
@@ -26,9 +27,7 @@ import { Notifications } from '../core/notifications.js';
 import { ItineraryBuilder } from '../features/itinerary/itinerary-builder.js';
 import { ItineraryBuilderExtensions } from '../features/itinerary/itinerary-builder-part2.js';
 import { Dialogs } from './dialogs-v2.js'; // Renamed to force cache bypass
-import { RecommendationEngine } from '../ai/recommendation-engine.js';
 import { FeedbackTracker } from '../analytics/feedback-tracker.js';
-import { CostCalculator } from '../features/budget/cost-calculator.js';
 import { EssentialsHandler } from '../features/planning/essentials-handler.js';
 import { EmergencyAssistant } from '../features/planning/emergency-assistant.js'; // 🚨 Asistente de emergencias (SOS) - antes nunca se importaba, el botón SOS no hacía nada
 import { BudgetCalculator } from '../features/budget/budget-calculator.js';

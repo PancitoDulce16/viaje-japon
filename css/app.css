@@ -101,3 +101,5 @@
 @import './itinerary-polish.css';
 @import './today-mode.css';
 @import './dashboard-scrapbook.css';
+/* 15. Shared travel-desk modals must beat legacy dark/mobile utilities. */
+@import './japitin-modals.css';

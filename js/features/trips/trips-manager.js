@@ -1536,9 +1536,12 @@ export const TripsManager = {
       return;
     }
 
+    if (!window.ExportManager && window.JapitinPerformance?.loadExports) {
+      try { await window.JapitinPerformance.loadExports({ pdf: format === 'pdf' }); }
+      catch (error) { console.error('ExportManager no encontrado', error); }
+    }
     if (!window.ExportManager) {
       Notifications.error('❌ El sistema de exportación no está disponible');
-      console.error('ExportManager no encontrado');
       return;
     }
 

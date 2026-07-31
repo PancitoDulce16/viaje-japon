@@ -1250,7 +1250,7 @@ function renderTripSelector(){
   const currentTrip=window.TripsManager?.currentTrip; if(!currentTrip){ container.innerHTML=''; return; }
   const userTrips=window.TripsManager?.userTrips||[];
   container.innerHTML=buildTripHeaderView({trip:currentTrip,userTripCount:userTrips.length,hasItinerary:Boolean(currentItinerary),crowdHTML:renderTripCrowdBadge(),numbersHTML:currentItinerary?renderTripNumbers(currentItinerary):'',formatDate:value=>window.TimeUtils?.formatDate?.(value)||value});
-  bindTripHeaderActions(container,{today:()=>window.TodayMode?.open(),list:()=>window.TripsManager?.showTripsListModal(),share:()=>window.TripsManager?.showShareCode(),create:()=>window.TripsManager?.showCreateTripModal(),pdf:()=>window.PDFExporter?.exportToPDF(),optimize:()=>window.runMasterOptimization?.(),balance:()=>window.showBalanceAnalysis?.(),regenerate:()=>window.TripsManager?.regenerateItinerary()});
+  bindTripHeaderActions(container,{today:()=>window.TodayMode?.open(),list:()=>window.TripsManager?.showTripsListModal(),share:()=>window.TripsManager?.showShareCode(),create:()=>window.TripsManager?.showCreateTripModal(),pdf:async()=>{if(!window.PDFExporter)await window.JapitinPerformance?.loadExports?.({pdf:true});return window.PDFExporter?.exportToPDF();},optimize:()=>window.runMasterOptimization?.(),balance:()=>window.showBalanceAnalysis?.(),regenerate:()=>window.TripsManager?.regenerateItinerary()});
 }
 
 function saveCurrentItineraryToFirebase() {

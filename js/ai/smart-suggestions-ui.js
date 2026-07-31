@@ -18,18 +18,19 @@ Object.assign(SuggestionsEngine, {
 
     const modal = document.createElement('div');
     modal.id = 'suggestionsModal';
-    modal.className = 'modal active';
+    modal.className = 'modal active jp-modal-shell jp-suggestions-modal';
+    modal.setAttribute('aria-labelledby', 'suggestionsModalTitle');
 
     const totalSuggestions =
       suggestions.gaps.reduce((sum, g) => sum + g.suggestions.length, 0) +
       suggestions.nearby.reduce((sum, n) => sum + n.suggestions.length, 0);
 
     modal.innerHTML = `
-      <div class="modal-content bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="modal-content jp-modal-paper bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         <!-- Header -->
-        <div class="modal-header sticky top-0 bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-800 dark:to-indigo-800 text-white p-6 flex justify-between items-center z-10">
+        <div class="modal-header jp-modal-head sticky top-0 bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-800 dark:to-indigo-800 text-white p-6 flex justify-between items-center z-10">
           <div>
-            <h2 class="text-3xl font-bold flex items-center gap-3">
+            <h2 id="suggestionsModalTitle" class="text-3xl font-bold flex items-center gap-3">
               💡 Sugerencias para el Día ${dayNumber}
             </h2>
             <p class="text-purple-100 mt-1">${totalSuggestions} sugerencias encontradas</p>
@@ -37,12 +38,12 @@ Object.assign(SuggestionsEngine, {
           <div class="flex gap-3">
             <button
               onclick="SuggestionsEngine.refreshSuggestions(${dayNumber})"
-              class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-semibold transition flex items-center gap-2"
+              class="jp-modal-action px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-semibold transition flex items-center gap-2"
             >
               🔄 Actualizar
             </button>
             <button
-              class="modal-close text-white hover:bg-white/20 w-10 h-10 rounded-lg transition font-bold text-2xl"
+              class="modal-close jp-modal-close text-white hover:bg-white/20 w-10 h-10 rounded-lg transition font-bold text-2xl"
               onclick="document.getElementById('suggestionsModal').remove()"
             >
               ✕
@@ -61,6 +62,7 @@ Object.assign(SuggestionsEngine, {
     `;
 
     document.body.appendChild(modal);
+    window.JapitinDialog?.enhance(modal, { onClose: () => modal.remove() });
 
     // Cerrar al hacer click fuera
     modal.addEventListener('click', (e) => {

@@ -8,6 +8,7 @@ function loadScript(name) {
 }
 let analyticsReady;
 let mapReady;
+let exportReady;
 function ensureStylesheet(href) { if (document.querySelector(`link[href="${href}"]`)) return; const link = document.createElement('link'); link.rel = 'stylesheet'; link.href = href; document.head.appendChild(link); }
 async function loadMap() {
   if (window.MapHandler?.mapInitialized) return window.MapHandler;
@@ -17,13 +18,18 @@ async function loadMap() {
 }
 async function loadCharts() {
   await loadScript('chart');
-  analyticsReady ||= Promise.all([import('../analytics/analytics-dashboard.js'), import('../analytics/analytics-integration.js'), import('../features/budget/budget-visual-charts.js')]);
+  analyticsReady ||= Promise.all([import('../analytics/analytics-dashboard.js'), import('../analytics/analytics-integration.js'), import('../features/budget/budget-visual-charts.js'), import('../features/budget/expense-charts.js')]);
   return analyticsReady;
+}
+async function loadExports({ pdf = false } = {}) {
+  if (pdf) await Promise.all([loadScript('jspdf'), loadScript('html2pdf')]);
+  exportReady ||= Promise.all([import('../features/trips/pdf-exporter.js'), import('../features/trips/export-manager.js')]);
+  return exportReady;
 }
 document.addEventListener('click', async (event) => {
   const tab = event.target.closest('.tab-btn[data-tab="budget"],.tab-btn[data-tab="analytics"]');
   if (tab && !window.Chart && !tab.dataset.vendorReady) { event.preventDefault(); event.stopImmediatePropagation(); await loadCharts(); tab.dataset.vendorReady = 'true'; tab.click(); return; }
-  const pdf = event.target.closest('[onclick*="exportToPDF"],[onclick*="exportReservationsPDF"]');
-  if (pdf && !window.jspdf && !pdf.dataset.vendorReady) { event.preventDefault(); event.stopImmediatePropagation(); await Promise.all([loadScript('jspdf'), loadScript('html2pdf')]); pdf.dataset.vendorReady = 'true'; pdf.click(); }
+  const exportTrigger = event.target.closest('[data-trip-action="pdf"],[onclick*="exportToPDF"],[onclick*="exportReservationsPDF"],[onclick*="exportCurrentTrip"],[onclick*="exportJapitin"]');
+  if (exportTrigger && !exportTrigger.dataset.vendorReady) { event.preventDefault(); event.stopImmediatePropagation(); exportTrigger.setAttribute('aria-busy','true'); try { await loadExports({ pdf: exportTrigger.matches('[data-trip-action="pdf"],[onclick*="PDF"],[onclick*="pdf"]') }); exportTrigger.dataset.vendorReady = 'true'; exportTrigger.click(); } catch(error) { console.error('No se pudo preparar la exportación',error); window.WashiToast?.show({message:'No pudimos preparar la exportación. Inténtalo de nuevo.',type:'error'}); } finally { exportTrigger.removeAttribute('aria-busy'); } }
 }, true);
-window.JapitinPerformance = { ...(window.JapitinPerformance || {}), loadCharts, loadScript, loadMap };
+window.JapitinPerformance = { ...(window.JapitinPerformance || {}), loadCharts, loadExports, loadScript, loadMap };

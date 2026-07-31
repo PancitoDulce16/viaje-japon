@@ -10,8 +10,8 @@
     "preview": "npx vite preview --port 3000",
     "validate": "node validate-imports.js",
     "test": "npm run test:itinerary && npm run test:visual",
-    "test:itinerary": "node tests/itinerary-order.test.mjs && node tests/serial-task-queue.test.mjs && node tests/feature-loader.test.mjs && node tests/trip-header-view.test.mjs",
-    "test:visual": "node tests/visual-assets.test.mjs",
+    "test:itinerary": "node tests/itinerary-order.test.mjs && node tests/serial-task-queue.test.mjs && node tests/feature-loader.test.mjs && node tests/trip-header-view.test.mjs && node tests/itinerary-scenarios.test.mjs",
+    "test:visual": "node tests/visual-assets.test.mjs && node tests/dashboard-contracts.test.mjs",
     "predeploy": "npm run validate && npm test",
     "deploy": "firebase deploy --only hosting"
   },

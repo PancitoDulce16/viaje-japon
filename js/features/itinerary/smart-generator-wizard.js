@@ -2490,17 +2490,17 @@ export const SmartGeneratorWizard = {
 
       // Crear modal de selección de templates
       const modalHTML = `
-        <div id="templateSelectorModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        <div id="templateSelectorModal" class="jp-modal-shell jp-template-modal fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Plantillas de itinerarios">
+          <div class="jp-modal-paper bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
 
             <!-- Header -->
-            <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
+            <div class="jp-modal-head bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
               <div class="flex items-center justify-between">
                 <div>
                   <h2 class="text-2xl font-bold">📋 Plantillas de Itinerarios</h2>
                   <p class="text-purple-100 mt-1">Selecciona una plantilla para empezar</p>
                 </div>
-                <button onclick="document.getElementById('templateSelectorModal').remove()" class="text-white hover:bg-white/20 rounded-lg p-2 transition">
+                <button onclick="document.getElementById('templateSelectorModal').remove()" class="jp-modal-close text-white hover:bg-white/20 rounded-lg p-2 transition" aria-label="Cerrar plantillas">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                   </svg>
@@ -2510,7 +2510,7 @@ export const SmartGeneratorWizard = {
 
             <!-- Template Card -->
             <div class="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-              <div class="border-2 border-purple-200 dark:border-purple-800 rounded-xl overflow-hidden hover:shadow-xl transition cursor-pointer"
+              <div class="template-card border-2 border-purple-200 dark:border-purple-800 rounded-xl overflow-hidden hover:shadow-xl transition cursor-pointer"
                    onclick="window.SmartGeneratorWizard.loadTemplate('${template.id}')">
 
                 <!-- Template Header -->
@@ -2581,6 +2581,8 @@ export const SmartGeneratorWizard = {
 
       // Agregar modal al DOM
       document.body.insertAdjacentHTML('beforeend', modalHTML);
+      const templateDialog = document.getElementById('templateSelectorModal');
+      window.JapitinDialog?.enhance(templateDialog, { onClose: () => templateDialog.remove() });
 
     } catch (error) {
       console.error('❌ Error cargando templates:', error);
