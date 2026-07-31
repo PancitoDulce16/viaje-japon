@@ -144,3 +144,14 @@
 .story-memory__photos figure:hover{transform:translateY(-3px) rotate(0);z-index:2;box-shadow:2px 5px 0 rgba(66,46,29,.12)}
 .weather-rain-action button:hover{transform:translateY(-2px);box-shadow:2px 3px 0 rgba(66,83,91,.12)!important}
 @media(prefers-reduced-motion:reduce){.trip-companion,.trip-companion:before,.trip-companion__focus h3,.trip-companion__rail article,.trip-companion__controls button.is-selected:after{animation:none!important}.trip-companion__controls button,.trip-companion__exports button,.story-memory__photos figure,.weather-rain-action button{transition:none!important}}
+
+/* Arquitectura del día: sidebar-resumen, relato y decisiones en el lienzo */
+.day-main-editorial{display:grid;gap:18px;margin-bottom:28px}
+.day-main-editorial>:first-child{margin-top:0}
+.day-main-editorial>:last-child{margin-bottom:0}
+.day-main-activities{display:grid;gap:16px}
+#content-itinerary #dayOverview{align-self:start;max-height:calc(100vh - 170px);overflow:auto;scrollbar-width:thin;scrollbar-color:rgba(174,82,107,.35) transparent}
+#content-itinerary #dayOverview .trip-companion,
+#content-itinerary #dayOverview .story-desk,
+#content-itinerary #dayOverview .geo-flow{display:none}
+@media(max-width:767px){#content-itinerary #dayOverview{max-height:none;overflow:visible}.day-main-editorial{gap:14px;margin-top:18px}.day-main-activities{gap:13px}}

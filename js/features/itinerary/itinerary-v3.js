@@ -2035,14 +2035,6 @@ function renderDayOverview(day){
       ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-200">📍 ${day.location}</p>`:''}
     </div>
 
-    ${renderAirportPass(day)}
-    ${renderScheduleAdjustments(day)}
-    ${renderTransferTicket(day)}
-    ${renderHotelTransition(day)}
-    ${renderGeographicFlow(day, hotelForCity)}
-    ${renderDayStoryDesk(day)}
-    ${renderTripCompanion(day)}
-
     <!-- 📊 Quick Stats del Día -->
     ${renderQuickStats(day)}
 
@@ -3007,7 +2999,23 @@ function renderActivities(day){
     `);
   }
 
-  container.innerHTML = activitiesHTML.join('');
+  const cityForDay = day.city || day.location || null;
+  const hotelForCity = cityForDay && window.HotelBaseSystem
+    ? window.HotelBaseSystem.getHotelForCity(currentItinerary, cityForDay, day.day)
+    : (day.hotel || null);
+  const editorialSections = [
+    renderAirportPass(day),
+    renderScheduleAdjustments(day),
+    renderTransferTicket(day),
+    renderHotelTransition(day),
+    renderGeographicFlow(day, hotelForCity),
+    renderDayStoryDesk(day),
+    renderTripCompanion(day)
+  ].filter(Boolean).join('');
+
+  container.innerHTML = `
+    ${editorialSections ? `<div class="day-main-editorial">${editorialSections}</div>` : ''}
+    <div class="day-main-activities" id="dayMainActivities">${activitiesHTML.join('')}</div>`;
 
   initializeDragAndDrop(container);
 }
@@ -3025,7 +3033,8 @@ function initializeDragAndDrop(container) {
   }
 
   try {
-    sortableInstance = new Sortable(container, {
+    const sortableContainer = container.querySelector('#dayMainActivities') || container;
+    sortableInstance = new Sortable(sortableContainer, {
       animation: 200,
       easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
       ghostClass: 'sortable-ghost',
