@@ -113,6 +113,21 @@ class LoadingStates {
     return skeleton.firstElementChild;
   }
 
+  createState(type = 'loading', message = '') {
+    const content = {
+      loading: ['Preparando tu ruta', 'Japitin está ordenando los papeles…', '旅'],
+      success: ['Guardado', 'Tu cuaderno está al día.', '済'],
+      error: ['Algo no encajó', 'Conservamos tus cambios. Intenta otra vez.', '再'],
+      empty: ['Página por descubrir', 'Todavía no hay recuerdos en esta sección.', '空'],
+      offline: ['Postal sin conexión', 'Puedes seguir consultando lo que ya guardaste.', '〒']
+    }[type] || ['Japitin', message, '旅'];
+    const state = document.createElement('div');
+    state.className = `jp-state-slip jp-state-slip--${type}`;
+    state.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    state.innerHTML = `<span class="jp-state-slip__seal">${content[2]}</span><div><b>${content[0]}</b><p>${message || content[1]}</p></div>`;
+    return state;
+  }
+
   /**
    * Progress bar para operaciones largas
    */

@@ -2044,14 +2044,8 @@ function renderDayOverview(day){
     <!-- 🎯 Botones de Acción Rápida -->
     ${renderQuickActionButtons(day)}
 
-    <!-- 💰 Widget de Presupuesto del Día (Colapsable) -->
-    ${renderDayBudgetCollapsible(day)}
-
-    <!-- 🧠 Análisis Inteligente del Día (Colapsable) -->
-    ${renderDayIntelligenceCollapsible(day)}
-
-    <!-- 👥 Análisis de Multitudes (Colapsable) -->
-    ${renderDayCrowdAnalysisCollapsible(day)}
+    <!-- Carpeta única: presupuesto, conflictos y multitudes -->
+    ${renderDayDiagnosticFolder(day)}
 
     <!-- ⚖️ Indicador de Carga del Día (Colapsable) -->
     ${renderDayLoadIndicatorCollapsible(day)}
@@ -2143,6 +2137,16 @@ async function loadWeatherForDay(day) {
 /**
  * 💰 Renderiza widget de presupuesto COLAPSABLE
  */
+function renderDayDiagnosticFolder(day) {
+  const sections = [renderDayBudgetCollapsible(day), renderDayIntelligenceCollapsible(day), renderDayCrowdAnalysisCollapsible(day)].filter(Boolean);
+  if (!sections.length) return '';
+  const feasibility = analyzeDayFeasibility(day);
+  return `<details class="day-diagnostic" ${feasibility.status === 'impossible' ? 'open' : ''}>
+    <summary><span class="day-diagnostic__seal">診</span><span><b>Diagnóstico del día</b><small>Presupuesto · horarios · multitudes</small></span><strong>${feasibility.issues.length ? `${feasibility.issues.length} alerta(s)` : 'Todo en orden'}</strong></summary>
+    <div class="day-diagnostic__papers">${sections.join('')}</div>
+  </details>`;
+}
+
 function renderDayBudgetCollapsible(day) {
   const totalCost = calculateDayTotalCost(day);
   const budget = day.budget || 0;
@@ -3043,10 +3047,15 @@ function initializeDragAndDrop(container) {
       draggable: '.activity-card',
       handle: '.drag-handle',
       onStart: function(evt) {
+        sortableContainer.classList.add('is-reordering');
+        evt.item?.classList.add('is-lifted');
       },
       onMove: function(evt) {
       },
       onEnd: async function(evt) {
+        sortableContainer.classList.remove('is-reordering');
+        evt.item?.classList.remove('is-lifted');
+        container.classList.add('is-recalculating');
         // Get the new order of activities
         const activityCards = Array.from(container.querySelectorAll('.activity-card'));
         const dayData = currentItinerary.days.find(d => d.day === currentDay);
@@ -3062,12 +3071,14 @@ function initializeDragAndDrop(container) {
 
         // Update the current itinerary
         dayData.activities = reorderedActivities;
+        dayData.routeFlow = buildDayRouteFlow(dayData, dayData.hotel || null);
 
         // Save to Firebase
         try {
           await saveCurrentItineraryToFirebase();
           console.log('✅ Activity order saved');
           if (window.Notifications) {
+            window.WashiToast?.show({ message: 'Ruta recalculada y guardada', type: 'success' });
             window.Notifications.show('Orden actualizado', 'success');
           }
         } catch (error) {
@@ -3077,6 +3088,8 @@ function initializeDragAndDrop(container) {
           }
           // Revert the UI on error
           render();
+        } finally {
+          container.classList.remove('is-recalculating');
         }
       }
     });

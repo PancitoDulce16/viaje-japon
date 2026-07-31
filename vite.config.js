@@ -57,6 +57,15 @@ export default defineConfig({
         main: './index.html',
         login: './login.html',
         dashboard: './dashboard.html'
+      },
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/firebase')) return 'firebase';
+          if (id.includes('node_modules/html2canvas')) return 'capture';
+          if (id.includes('/js/ml/') || id.includes('/js/ai/')) return 'intelligence';
+          if (id.includes('/js/features/journal/')) return 'journal';
+          if (id.includes('/js/features/social/')) return 'social';
+        }
       }
     }
   },
