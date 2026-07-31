@@ -9,6 +9,7 @@
     "build:alt": "chmod +x build.sh && ./build.sh",
     "preview": "npx vite preview --port 3000",
     "validate": "node validate-imports.js",
+    "test:itinerary": "node tests/itinerary-order.test.mjs",
     "predeploy": "npm run validate",
     "deploy": "firebase deploy --only hosting"
   },

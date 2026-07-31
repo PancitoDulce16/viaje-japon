@@ -14,6 +14,7 @@ import { DayExperiencePredictor } from './day-experience-predictor.js'; // 🔮 
 import { hasRemoteAreaConflict } from './smart-itinerary-generator.js'; // 🏝️ Guardia de sub-área remota (Uji/Miyajima)
 import { activityIllustration } from '../../ui/illustration-library.js';
 import { buildDayRouteFlow } from './day-route-flow.js';
+import { applyManualActivityOrder, moveActivityByOffset, orderActivitiesForDisplay, removeFromManualActivityOrder } from './activity-order.js';
 import { formatTransferDuration } from './intercity-transfer.js';
 import { adaptDayToWeather, regenerateScope, buildDayNarrative, ensureDayMemory, analyzeLodgingDay } from './day-adaptation.js';
 import {
@@ -2840,9 +2841,7 @@ function renderActivities(day){
   if (sortableInstance){ try{ sortableInstance.destroy(); }catch(_){} sortableInstance=null; }
 
   // Ordenar actividades por hora antes de renderizar
-  const sortedActivities = (day.activities||[]).slice().sort((a, b) => {
-    return SafeTimeUtils.parseTime(a.time) - SafeTimeUtils.parseTime(b.time);
-  });
+  const sortedActivities = orderActivitiesForDisplay(day, SafeTimeUtils.parseTime);
 
   // Generar HTML de actividades con tiempos de traslado entre ellas
   const activitiesHTML = [];
@@ -2865,6 +2864,7 @@ function renderActivities(day){
     const normalizedTitle = (act.title && act.title !== 'undefined' && act.title !== 'null') ? act.title : null;
     const normalizedName = (act.name && act.name !== 'undefined' && act.name !== 'null') ? act.name : null;
     const activityTitle = normalizedTitle || normalizedName || 'Sin título';
+    const safeActivityTitle = escapeStoryText(activityTitle);
 
     // Los generadores usan nombres de campo distintos (price/description/
     // categoryIcon vs cost/desc/icon) — normalizar aquí para que la tarjeta
@@ -2879,7 +2879,7 @@ function renderActivities(day){
 
     // Agregar la actividad
     activitiesHTML.push(`
-    <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden fade-in transition-all hover:shadow-xl border-l-4 border-purple-500 dark:border-purple-400 ${checkedActivities[act.id]?'opacity-60':''}" style="animation-delay:${i*0.05}s">
+    <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden fade-in transition-all hover:shadow-xl border-l-4 border-purple-500 dark:border-purple-400 ${checkedActivities[act.id]?'opacity-60':''}" data-activity-id="${act.id}" style="animation-delay:${i*0.05}s">
       ${act.id === magicId ? `
         <span class="jp-act-magic" aria-hidden="true">
           <img src="/images/illustrations/generated/characters/dog-camera.webp" alt="">
@@ -2888,19 +2888,20 @@ function renderActivities(day){
       ` : ''}
       <div class="p-3 sm:p-4 flex items-start gap-2 sm:gap-4">
         <div class="flex flex-col gap-2 items-center">
-          <div class="drag-handle text-gray-400 dark:text-gray-500 text-xs cursor-grab active:cursor-grabbing" title="Arrastra para reordenar">⋮⋮</div>
-          <input type="checkbox" data-id="${act.id}" ${checkedActivities[act.id]?'checked':''} class="activity-checkbox w-5 h-5 cursor-pointer accent-purple-600 flex-shrink-0" />
+          <div class="drag-handle text-gray-400 dark:text-gray-500 text-xs cursor-grab active:cursor-grabbing" title="Arrastra para reordenar" aria-hidden="true">⋮⋮</div>
+          <div class="activity-order-controls" aria-label="Cambiar posición de ${safeActivityTitle}"><button type="button" data-action="move-up" data-activity-id="${act.id}" data-day="${day.day}" aria-label="Mover ${safeActivityTitle} hacia arriba">↑</button><button type="button" data-action="move-down" data-activity-id="${act.id}" data-day="${day.day}" aria-label="Mover ${safeActivityTitle} hacia abajo">↓</button></div>
+          <input type="checkbox" data-id="${act.id}" aria-label="Marcar ${safeActivityTitle} como completada" ${checkedActivities[act.id]?'checked':''} class="activity-checkbox w-5 h-5 cursor-pointer accent-purple-600 flex-shrink-0" />
         </div>
         <!-- eager, NO lazy: loading="lazy" no dispara dentro de los
              contenedores de esta app (html/body llevan overflow:hidden auto,
              el scroller real es <body>, así que el observer del navegador no
              ve la intersección). Ya se tropezó con esto en las postales de
              Inspírate y en el sidebar del itinerario. -->
-        <img class="activity-thumb hidden sm:block" src="${activityThumb(act)}" alt="" loading="eager">
+        <img class="activity-thumb hidden sm:block" src="${activityThumb(act)}" alt="" loading="eager" onerror="this.hidden=true">
 
         <div class="flex-1 min-w-0">
           <div class="flex justify-between items-start gap-2">
-            <h3 class="text-lg font-bold dark:text-white mb-1 min-w-0"><span class="sm:hidden">${actIcon} </span>${activityTitle}</h3>
+            <h3 class="text-lg font-bold dark:text-white mb-1 min-w-0"><span class="sm:hidden">${actIcon} </span>${safeActivityTitle}</h3>
             <div class="flex gap-1 flex-shrink-0">
               ${act.alternatives && act.alternatives.length > 0 ? `
                 <button
@@ -2924,8 +2925,8 @@ function renderActivities(day){
                 <i class="fas fa-heart"></i>
                 <span class="text-xs font-bold">${voteCount > 0 ? voteCount : ''}</span>
               </button>
-              <button type="button" data-action="edit" data-activity-id="${act.id}" data-day="${day.day}" class="activity-edit-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition">✏️</button>
-              <button type="button" data-action="delete" data-activity-id="${act.id}" data-day="${day.day}" class="activity-delete-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition">🗑️</button>
+              <button type="button" aria-label="Editar ${safeActivityTitle}" data-action="edit" data-activity-id="${act.id}" data-day="${day.day}" class="activity-edit-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition">✏️</button>
+              <button type="button" aria-label="Eliminar ${safeActivityTitle}" data-action="delete" data-activity-id="${act.id}" data-day="${day.day}" class="activity-delete-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition">🗑️</button>
             </div>
           </div>
           <div class="flex items-center gap-1.5 mb-1 flex-wrap">
@@ -3060,7 +3061,14 @@ function initializeDragAndDrop(container) {
         const activityCards = Array.from(container.querySelectorAll('.activity-card'));
         const dayData = currentItinerary.days.find(d => d.day === currentDay);
 
-        if (!dayData) return;
+        if (!dayData) {
+          container.classList.remove('is-recalculating');
+          return;
+        }
+
+        const previousActivities = dayData.activities.slice();
+        const previousOrder = Array.isArray(dayData.manualActivityOrder) ? dayData.manualActivityOrder.slice() : null;
+        const previousRouteFlow = dayData.routeFlow;
 
         // Reorder activities based on new positions
         const reorderedActivities = activityCards.map(card => {
@@ -3071,6 +3079,7 @@ function initializeDragAndDrop(container) {
 
         // Update the current itinerary
         dayData.activities = reorderedActivities;
+        applyManualActivityOrder(dayData, reorderedActivities.map(activity => activity.id));
         dayData.routeFlow = buildDayRouteFlow(dayData, dayData.hotel || null);
 
         // Save to Firebase
@@ -3083,6 +3092,10 @@ function initializeDragAndDrop(container) {
           }
         } catch (error) {
           console.error('❌ Error saving activity order:', error);
+          dayData.activities = previousActivities;
+          if (previousOrder) dayData.manualActivityOrder = previousOrder;
+          else delete dayData.manualActivityOrder;
+          dayData.routeFlow = previousRouteFlow;
           if (window.Notifications) {
             window.Notifications.show('Error al guardar el orden', 'error');
           }
@@ -3152,6 +3165,7 @@ export const ItineraryHandler = {
         const editBtn=e.target.closest('.activity-edit-btn');
         const deleteBtn=e.target.closest('.activity-delete-btn');
         const voteBtn = e.target.closest('.activity-vote-btn');
+        const moveBtn = e.target.closest('[data-action="move-up"],[data-action="move-down"]');
         const dayBtn=e.target.closest('.day-btn');
 
         // ❌ Event handlers desactivados - botones eliminados
@@ -3186,6 +3200,9 @@ export const ItineraryHandler = {
           const day=parseInt(addBtn.id.split('_')[1]);
           console.log('📅 Opening modal for day:', day);
           ItineraryHandler.showActivityModal(null, day);
+        }
+        else if(moveBtn){
+          ItineraryHandler.moveActivity(moveBtn.dataset.activityId, Number(moveBtn.dataset.day), moveBtn.dataset.action === 'move-up' ? -1 : 1);
         }
         else if(editBtn){
           console.log('✏️ Edit button clicked');
@@ -3431,6 +3448,7 @@ Si ya tienes las coordenadas, simplemente pégalas:
       : null;
 
     const activity = {
+      ...(originalActivity || {}),
       id: activityId || `activity_${Date.now()}`,
       icon,
       time,
@@ -3447,6 +3465,16 @@ Si ya tienes las coordenadas, simplemente pégalas:
     if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
       activity.coordinates = { lat, lng };
     }
+
+    const affectedDays = [...new Set([originalDay, newDay])]
+      .map(dayNumber => currentItinerary.days.find(dayItem => dayItem.day === dayNumber))
+      .filter(Boolean);
+    const affectedSnapshots = affectedDays.map(dayItem => ({
+      day: dayItem,
+      activities: dayItem.activities.slice(),
+      manualActivityOrder: Array.isArray(dayItem.manualActivityOrder) ? dayItem.manualActivityOrder.slice() : null,
+      routeFlow: dayItem.routeFlow
+    }));
 
     // Si estamos editando Y el día cambió, mover la actividad
     if (activityId && originalDay !== newDay) {
@@ -3492,6 +3520,14 @@ Si ya tienes las coordenadas, simplemente pégalas:
       }
     }
 
+
+    affectedDays.forEach(dayItem => {
+      if (Array.isArray(dayItem.manualActivityOrder)) {
+        applyManualActivityOrder(dayItem, dayItem.manualActivityOrder);
+      }
+      dayItem.routeFlow = buildDayRouteFlow(dayItem, dayItem.hotel || null);
+    });
+
     try {
       await saveCurrentItineraryToFirebase();
       this.closeActivityModal();
@@ -3503,6 +3539,13 @@ Si ya tienes las coordenadas, simplemente pégalas:
       }
     } catch (error) {
       console.error('❌ Error guardando actividad:', error);
+      affectedSnapshots.forEach(snapshot => {
+        snapshot.day.activities = snapshot.activities;
+        if (snapshot.manualActivityOrder) snapshot.day.manualActivityOrder = snapshot.manualActivityOrder;
+        else delete snapshot.day.manualActivityOrder;
+        snapshot.day.routeFlow = snapshot.routeFlow;
+      });
+      render();
       alert('⚠️ Error al guardar la actividad');
     }
   },
@@ -3517,8 +3560,12 @@ Si ya tienes las coordenadas, simplemente pégalas:
     const index = dayData.activities.findIndex(a => a.id === activityId);
     if (index === -1) return;
     const removed = dayData.activities[index];
+    const previousOrder = Array.isArray(dayData.manualActivityOrder) ? dayData.manualActivityOrder.slice() : null;
+    const previousRouteFlow = dayData.routeFlow;
 
     dayData.activities = dayData.activities.filter(a => a.id !== activityId);
+    removeFromManualActivityOrder(dayData, activityId);
+    dayData.routeFlow = buildDayRouteFlow(dayData, dayData.hotel || null);
     try {
       await saveCurrentItineraryToFirebase();
       // render() se llama automáticamente desde el listener onSnapshot del itinerario
@@ -3530,6 +3577,8 @@ Si ya tienes las coordenadas, simplemente pégalas:
           const d = currentItinerary?.days?.find(dd => dd.day === day);
           if (!d) return;
           d.activities.splice(Math.min(index, d.activities.length), 0, removed);
+          if (previousOrder) d.manualActivityOrder = previousOrder.slice();
+          d.routeFlow = buildDayRouteFlow(d, d.hotel || null);
           try {
             await saveCurrentItineraryToFirebase();
             window.WashiToast?.show({ message: 'Actividad restaurada 🌸', type: 'success' });
@@ -3541,7 +3590,28 @@ Si ya tienes las coordenadas, simplemente pégalas:
       });
     } catch (error) {
       console.error('❌ Error eliminando actividad:', error);
+      dayData.activities.splice(Math.min(index, dayData.activities.length), 0, removed);
+      if (previousOrder) dayData.manualActivityOrder = previousOrder;
+      else delete dayData.manualActivityOrder;
+      dayData.routeFlow = previousRouteFlow;
+      render();
       window.WashiToast?.show({ message: 'No se pudo eliminar la actividad', type: 'error' });
+    }
+  },
+
+  async moveActivity(activityId, day, offset) {
+    const dayData = currentItinerary.days.find(item => item.day === day);
+    if (!dayData || !moveActivityByOffset(dayData, activityId, offset, SafeTimeUtils.parseTime)) return;
+    dayData.routeFlow = buildDayRouteFlow(dayData, dayData.hotel || null);
+    render();
+    try {
+      await saveCurrentItineraryToFirebase();
+      window.WashiToast?.show({ message: 'Orden y ruta actualizados', type: 'success' });
+    } catch (error) {
+      console.error('❌ Error moviendo actividad:', error);
+      window.WashiToast?.show({ message: 'No se pudo guardar el nuevo orden', type: 'error' });
+      await loadItinerary();
+      render();
     }
   },
 
