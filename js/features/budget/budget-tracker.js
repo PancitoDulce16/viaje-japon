@@ -102,6 +102,10 @@ export const BudgetTracker = {
     }, {});
 
     const categories = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
+    const members = window.TripsManager?.currentTrip?.memberEmails || window.TripsManager?.currentTrip?.data?.memberEmails || [auth.currentUser?.email].filter(Boolean);
+    const sharedExpenses = this.expenses.filter(expense => expense.shared !== false);
+    const sharePerPerson = members.length ? sharedExpenses.reduce((sum, expense) => sum + expense.amount, 0) / members.length : 0;
+    const balances = members.map(email => ({ email, paid: this.expenses.filter(expense => (expense.paidBy || expense.addedBy) === email).reduce((sum, expense) => sum + expense.amount, 0) }));
 
     container.innerHTML = `
       <!-- Total Card compacto -->
@@ -118,6 +122,8 @@ export const BudgetTracker = {
         </div>
       </div>
 
+      ${members.length > 1 && sharedExpenses.length ? `<details class="mb-4 p-3 bg-pink-50 dark:bg-gray-800 rounded-lg border border-pink-100 dark:border-gray-700"><summary class="font-bold text-sm cursor-pointer">🤝 Saldos del grupo</summary><div class="mt-3 space-y-2">${balances.map(balance => { const net = balance.paid - sharePerPerson; return `<div class="flex justify-between text-xs"><span>${this.escapeHtml(balance.email.split('@')[0])}</span><b class="${net >= 0 ? 'text-green-600' : 'text-rose-600'}">${net >= 0 ? 'recibe' : 'debe'} ¥${Math.abs(Math.round(net)).toLocaleString()}</b></div>`; }).join('')}</div></details>` : ''}
+
       <!-- Formulario compacto -->
       <div class="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
         <h4 class="font-bold mb-2 text-gray-800 dark:text-white text-sm">➕ Agregar Gasto</h4>
@@ -132,6 +138,8 @@ export const BudgetTracker = {
             <option value="Otros">📦 Otros</option>
           </select>
           <input id="expenseAmountTab" type="number" class="p-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="¥ JPY">
+          <select id="expensePayerTab" class="p-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">${members.map(email => `<option value="${this.escapeHtml(email)}" ${email === auth.currentUser?.email ? 'selected' : ''}>Pagó ${this.escapeHtml(email.split('@')[0])}</option>`).join('')}</select>
+          <label class="flex items-center gap-2 p-2 text-xs text-gray-600 dark:text-gray-300"><input id="expenseSharedTab" type="checkbox" checked> Dividir entre todos</label>
         </div>
         <button id="addExpenseBtnTab" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-2 rounded-lg transition text-sm">
           ➕ Agregar
@@ -230,6 +238,8 @@ export const BudgetTracker = {
     const descInput = document.getElementById('expenseDescTab');
     const amountInput = document.getElementById('expenseAmountTab');
     const categorySelect = document.getElementById('expenseCategoryTab');
+    const payerSelect = document.getElementById('expensePayerTab');
+    const sharedInput = document.getElementById('expenseSharedTab');
 
     if (!descInput || !amountInput) return;
 
@@ -248,7 +258,9 @@ export const BudgetTracker = {
       category,
       timestamp: Date.now(),
       date: new Date().toISOString(),
-      addedBy: auth.currentUser ? auth.currentUser.email : 'Usuario local'
+      addedBy: auth.currentUser ? auth.currentUser.email : 'Usuario local',
+      paidBy: payerSelect?.value || auth.currentUser?.email || 'Usuario local',
+      shared: sharedInput?.checked !== false
     };
 
     try {

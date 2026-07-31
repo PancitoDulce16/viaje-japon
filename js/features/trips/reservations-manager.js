@@ -466,6 +466,7 @@ export const ReservationsManager = {
                 reservations: this.reservations,
                 updatedAt: serverTimestamp()
             });
+            window.ItineraryHandler?.refreshReservationStates?.();
         } catch (error) {
             Logger.error('Error saving reservations:', error);
             throw error;

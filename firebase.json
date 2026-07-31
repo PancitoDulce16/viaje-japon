@@ -20,6 +20,7 @@
       "test-suggestions.html",
       "limpiar-estilos.html",
       "dashboard-hero-preview.html",
+      "design-reference/**",
       "simple-recover.js",
       "force-recover.js",
       "MODULE_TEMPLATE.js",

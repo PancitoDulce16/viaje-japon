@@ -61,10 +61,10 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #9333ea, #ec4899);
+    background: linear-gradient(135deg, #F16FA3, #FF8FBB);
     color: white;
     border: none;
-    box-shadow: 0 6px 20px rgba(147, 51, 234, 0.4);
+    box-shadow: 0 6px 20px rgba(241, 111, 163, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -271,8 +271,10 @@
     /* Botones más grandes.
        Excluir .rounded-full: son botones-icono compactos (votar/editar/
        borrar en las tarjetas, cerrar modales) — inflarlos a 48px con
-       padding 12/20 rompía el layout de las activity cards en mobile */
-    button:not(.floating-btn):not(.tab-btn):not(.rounded-full):not(.sos-button):not(.header-chip) {
+       padding 12/20 rompía el layout de las activity cards en mobile.
+       Excluir .dash-quick-btn: círculo quieto de 38px del Dashboard
+       Experience (Concept A) — el mismo problema, deforma el círculo. */
+    button:not(.floating-btn):not(.tab-btn):not(.rounded-full):not(.sos-button):not(.header-chip):not(.dash-quick-btn):not([class*="jw-"]):not([class*="jc-"]):not([class*="jtd-"]):not([class*="jps-"]) {
         min-height: 48px !important;
         padding: 12px 20px !important;
         font-size: 15px !important;

@@ -24,14 +24,14 @@ export const TransportHandler = {
         const savings = jrPass14 - totalIndividual;
 
         container.innerHTML = `
-            <div class="max-w-6xl mx-auto p-4 md:p-6">
+            <div class="max-w-6xl mx-auto p-4 md:p-6 jp-transport-page">
                 <h2 class="text-4xl font-bold mb-6 text-gray-800 dark:text-white">🚆 Guía de Transporte</h2>
 
                 <!-- Hero Section: Tu Recomendación (siempre visible) -->
                 ${this.renderRecommendation(totalIndividual, jrPass14, savings)}
 
                 <!-- Accordions Menu -->
-                <div class="space-y-4 mt-6">
+                <div class="space-y-4 mt-6 jp-rail-wallet">
 
                     <!-- Tus Rutas Accordion -->
                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
@@ -175,7 +175,7 @@ export const TransportHandler = {
 
     renderRecommendation(totalIndividual, jrPass14, savings) {
         return `
-            <div class="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl p-6 mb-6 shadow-lg">
+            <div class="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl p-6 mb-6 shadow-lg jp-rail-recommendation">
                 <div class="flex items-start gap-4">
                     <div class="text-6xl">💡</div>
                     <div class="flex-1">
@@ -219,7 +219,7 @@ export const TransportHandler = {
 
     renderYourRoutes(total) {
         return `
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6 jp-route-sheet">
                 <h3 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
                     🎫 Ejemplo: 5 Rutas Típicas de Larga Distancia
                 </h3>
@@ -230,7 +230,7 @@ export const TransportHandler = {
 
                 <div class="space-y-3">
                     ${this.yourRoutes.map((route, index) => `
-                        <div class="p-4 bg-white dark:from-blue-900/20 dark:to-purple-900/20 dark:bg-gradient-to-r rounded-lg border-l-4 border-blue-600 dark:border-blue-500 shadow-lg">
+                        <div class="p-4 bg-white dark:from-blue-900/20 dark:to-purple-900/20 dark:bg-gradient-to-r rounded-lg border-l-4 border-blue-600 dark:border-blue-500 shadow-lg jp-rail-ticket">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-xs font-black text-blue-800 dark:text-blue-400">DÍA ${route.day} • ${route.line}</span>
                                 <span class="text-lg font-black text-green-700 dark:text-green-400">¥${route.price.toLocaleString()}</span>
@@ -283,7 +283,7 @@ export const TransportHandler = {
 
     renderJRPassCalculator() {
         return `
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 jp-jr-calculator">
                 <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white flex items-center gap-2">
                     🧮 Calculadora Interactiva JR Pass
                 </h3>

@@ -1,6 +1,5 @@
 // js/tabs.js - Con APIs integradas
 
-import { MapHandler } from '../map/map.js';
 import { AppUtils } from '../utils/utils.js';
 
 export const TabsHandler = {
@@ -9,7 +8,6 @@ export const TabsHandler = {
         if (window.UtilsHandler) {
             window.UtilsHandler.init();
         }
-        MapHandler.renderMap();
     },
 
     renderFlightsTab_OLD() {

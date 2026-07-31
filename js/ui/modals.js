@@ -361,72 +361,141 @@ export const ModalRenderer = {
     getCreateTripModal() {
         return `
             <div id="modal-create-trip" class="modal">
-                <div class="jp-create-modal shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-                    <div class="p-8">
-                        <div class="flex justify-between items-start mb-6">
+                <div class="jp-create-modal shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="createTripHeading">
+                    <div class="jp-create-pad">
+                        <div class="flex justify-between items-start jp-create-headrow">
                             <div class="flex items-start gap-3">
                                 <span class="jp-create-stamp" aria-hidden="true">
-                                    <svg width="26" height="18" viewBox="0 0 30 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12 L12 4 Q15 2 18 4 L28 12 Z"/><path d="M9 8 L15 4 L21 8"/></svg>
+                                    <svg width="32" height="26" viewBox="0 0 32 26">
+                                        <path d="M2 3 a1.6 1.6 0 010 3.2 a1.6 1.6 0 010 3.2 a1.6 1.6 0 010 3.2 a1.6 1.6 0 010 3.2 a1.6 1.6 0 010 3.2 L30 22 a1.6 1.6 0 010-3.2 a1.6 1.6 0 010-3.2 a1.6 1.6 0 010-3.2 a1.6 1.6 0 010-3.2 a1.6 1.6 0 010-3.2 Z" fill="none" stroke="#C9BBA8" stroke-width="1.2"/>
+                                        <rect x="5.5" y="5.5" width="21" height="15" fill="none" stroke="#B8A88F" stroke-width="0.9"/>
+                                        <g transform="translate(16 13) rotate(-38) translate(-12 -12)" fill="#F4A6C6">
+                                            <path d="M21 13.5v-1.7l-6.5-4V4.2c0-.7-.55-1.2-1.2-1.2s-1.2.5-1.2 1.2v3.6l-6.5 4v1.7l6.5-2V15l-2 1.2v1.2l3.2-.8 3.2.8v-1.2L15 15v-3.5z"/>
+                                        </g>
+                                    </svg>
                                 </span>
                                 <div>
-                                    <h2 class="jp-create-title">Crear Nuevo Viaje</h2>
+                                    <h2 id="createTripHeading" class="jp-create-title">Crear Nuevo Viaje</h2>
                                     <p class="jp-create-sub">Elige cómo quieres comenzar tu próxima aventura</p>
                                 </div>
                             </div>
-                            <button onclick="TripsManager.closeCreateTripModal()" class="jp-create-close" aria-label="Cerrar">&times;</button>
+                            <button type="button" onclick="TripsManager.closeCreateTripModal()" class="jp-create-close" aria-label="Cerrar">&times;</button>
                         </div>
+                        <svg class="jp-postmark" viewBox="0 0 300 190" aria-hidden="true">
+                            <g fill="none" stroke="#9C8FA6" stroke-width="1.6" stroke-linecap="round" opacity="0.55">
+                                <path d="M6 46 Q40 30 74 46 T142 46"/>
+                                <path d="M6 66 Q40 50 74 66 T142 66"/>
+                                <path d="M6 86 Q40 70 74 86 T142 86"/>
+                            </g>
+                            <g transform="translate(205,95)" opacity="0.55">
+                                <circle r="72" fill="none" stroke="#9C8FA6" stroke-width="2"/>
+                                <circle r="63" fill="none" stroke="#9C8FA6" stroke-width="1.2"/>
+                                <text x="0" y="-34" text-anchor="middle" font-size="20" font-weight="700" fill="#9C8FA6" font-family="var(--jp-font-display)">日本</text>
+                                <path d="M-34 18 L-14 -14 L2 8 L18 -22 L38 18 Z" fill="none" stroke="#9C8FA6" stroke-width="2.4" stroke-linejoin="round"/>
+                                <circle cx="18" cy="-22" r="3" fill="#E8A3B3" stroke="none"/>
+                                <text x="0" y="46" text-anchor="middle" font-size="15" font-weight="700" letter-spacing="2" fill="#9C8FA6" font-family="var(--jp-font-display)">JAPAN</text>
+                            </g>
+                        </svg>
 
-                        <!-- Selección de Tipo de Viaje — ESCENA de escritorio: los objetos
-                             (boarding pass / libreta / etiqueta) SON los componentes,
-                             generados completos con Nano Banana; el HTML solo posa la
-                             tinta encima. Ver japitin-art-direction. -->
+                        <!-- Selección de Tipo de Viaje — cada BOLETO es una ilustración
+                             completa (Nano Banana) para su mitad superior; el HTML posa
+                             la tinta encima y continúa el papel hacia abajo con el
+                             checklist y el botón, reales y reales. -->
                         <div id="tripTypeSelection">
                             <div class="jps-head">
-                                <img class="jps-head__cat" src="/images/illustrations/generated/components/tk-cathead.webp" alt="" aria-hidden="true">
-                                <h3>¿Cómo quieres comenzar tu aventura?</h3>
+                                <img class="jps-head__cat" src="/images/illustrations/generated/components/tk-cathead-final.png" alt="" aria-hidden="true">
+                                <h3>¿Cómo quieres comenzar tu aventura? <span class="jps-head__flower" aria-hidden="true"><svg viewBox="0 0 24 24" width="1em" height="1em"><g fill="#F4A6C6"><ellipse cx="12" cy="7" rx="3.4" ry="4.2" transform="rotate(0 12 7)"/><ellipse cx="12" cy="7" rx="3.4" ry="4.2" transform="rotate(72 12 12)"/><ellipse cx="12" cy="7" rx="3.4" ry="4.2" transform="rotate(144 12 12)"/><ellipse cx="12" cy="7" rx="3.4" ry="4.2" transform="rotate(216 12 12)"/><ellipse cx="12" cy="7" rx="3.4" ry="4.2" transform="rotate(288 12 12)"/></g><circle cx="12" cy="12" r="2.2" fill="#F7C9DE"/></svg></span></h3>
+                                <img class="jps-head__dog" src="/images/illustrations/generated/components/tk-doghead-final.png" alt="" aria-hidden="true">
                                 <p>Elige la opción que mejor se adapte a tu viaje.</p>
                             </div>
 
                             <div class="jps-tickets">
-                                <!-- BOLETO 1: ilustración completa = Viaje Simple -->
-                                <div class="jps-t jps-t--simple" role="button" tabindex="0"
-                                     aria-label="Viaje Simple: solo nombre y fechas, listo en 30 segundos"
-                                     onclick="TripsManager.showSimpleTripForm()"
-                                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
-                                    <img class="jps-t__obj" src="/images/illustrations/generated/components/tk-simple.webp" alt="">
-                                    <span class="jps-t__ink" aria-hidden="true">
-                                        <span class="jps-t__stub">IT'S TIME TO EXPLORE</span>
-                                        <span class="jps-t__badge">Tu viaje, a tu manera</span>
-                                        <span class="jps-t__title">Viaje<br>Simple</span>
-                                        <span class="jps-t__desc">Sueña primero, organiza después.<br>Solo nombre y fechas.</span>
-                                        <span class="jps-t__stamp">~30<i>SEG</i></span>
-                                        <span class="jps-t__cta">Empezar viaje →</span>
+                                <!-- BOLETO 1: Viaje Simple -->
+                                <button type="button" class="jps-card jps-card--simple"
+                                        aria-label="Viaje Simple: solo nombre y fechas, listo en 30 segundos. Incluye: solo necesito lo básico, empieza a construir tu itinerario cuando quieras, añade ciudades y actividades después."
+                                        onclick="TripsManager.showSimpleTripForm()">
+                                    <span class="jps-card__stub" aria-hidden="true"></span>
+                                    <span class="jps-stubtext"><span>IT'S TIME TO EXPLORE</span></span>
+                                    <span class="jps-card__top" aria-hidden="true">
+                                        <img class="jps-card__img" src="/images/illustrations/generated/components/tk-simple-crop-head.webp" alt="" draggable="false">
+                                        <span class="jps-card__ink">
+                                            <span class="jps-badge">Tu viaje, a tu manera</span>
+                                            <span class="jps-title">Viaje Simple</span>
+                                        </span>
                                     </span>
-                                </div>
+                                    <span class="jps-body">
+                                        <span class="jps-desc">Para cuando quieres empezar a soñar primero y organizar después.</span>
+                                        <span class="jps-divider" aria-hidden="true"></span>
+                                        <span class="jps-includes"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Incluye</span>
+                                        <span class="jps-check"><span class="jps-check__dot"><svg viewBox="0 0 20 20" fill="none"><path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Solo necesito lo básico (nombre y fechas)</span>
+                                        <span class="jps-check"><span class="jps-check__dot"><svg viewBox="0 0 20 20" fill="none"><path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Empieza a construir tu itinerario cuando quieras</span>
+                                        <span class="jps-check"><span class="jps-check__dot"><svg viewBox="0 0 20 20" fill="none"><path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Añade ciudades y actividades después</span>
+                                        <span class="jps-timebadge" aria-hidden="true">
+                                            <svg class="jps-timebadge__face" viewBox="0 0 100 100">
+                                                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2.2"/>
+                                                <circle cx="50" cy="50" r="37" fill="none" stroke="currentColor" stroke-width="1.4"/>
+                                                <path d="M50 5 L50 13 M50 87 L50 95 M5 50 L13 50 M87 50 L95 50 M18 18 L24 24 M76 76 L82 82 M18 82 L24 76 M76 24 L82 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                <path d="M50 3 L45 12 L55 12 Z" fill="currentColor"/>
+                                            </svg>
+                                            <span class="jps-timebadge__text"><b>~30</b><i>SEGUNDOS</i></span>
+                                            <svg class="jps-timebadge__star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l2.4 6.8L21 11l-6.6 2.2L12 20l-2.4-6.8L3 11l6.6-2.2z"/></svg>
+                                        </span>
+                                        <span class="jps-cta">Empezar Viaje Simple
+                                            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                                        </span>
+                                    </span>
+                                </button>
 
-                                <!-- BOLETO 2: ilustración completa = Wizard Completo -->
-                                <div class="jps-t jps-t--wizard" role="button" tabindex="0"
-                                     aria-label="Wizard Completo: cuéntale a Japitin qué te gusta y genera tu itinerario, 2 a 3 minutos"
-                                     onclick="TripsManager.showFullTripWizard()"
-                                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
-                                    <img class="jps-t__obj" src="/images/illustrations/generated/components/tk-wizard.webp" alt="">
-                                    <span class="jps-t__ink" aria-hidden="true">
-                                        <span class="jps-t__stub">JAPITIN MAGIC</span>
-                                        <span class="jps-t__badge">Todo listo para despegar</span>
-                                        <span class="jps-t__title">Wizard<br>Completo</span>
-                                        <span class="jps-t__desc">Cuéntame qué te gusta y<br>preparo el viaje contigo.</span>
-                                        <span class="jps-t__stamp">~2-3<i>MIN</i></span>
-                                        <span class="jps-t__cta">Crear itinerario →</span>
+                                <!-- BOLETO 2: Wizard Completo -->
+                                <button type="button" class="jps-card jps-card--wizard"
+                                        aria-label="Wizard Completo: cuéntale a Japitin qué te gusta y genera tu itinerario, 2 a 3 minutos. Incluye: destinos y conexiones, tus intereses y estilo de viaje, plantillas de viaje, itinerario generado automáticamente."
+                                        onclick="TripsManager.showFullTripWizard()">
+                                    <span class="jps-card__stub" aria-hidden="true"></span>
+                                    <span class="jps-stubtext"><span>JAPITIN MAGIC</span></span>
+                                    <span class="jps-card__top" aria-hidden="true">
+                                        <img class="jps-card__img" src="/images/illustrations/generated/components/tk-wizard-crop-head-mirrored.webp" alt="" draggable="false">
+                                        <span class="jps-card__ink">
+                                            <span class="jps-badge">Todo listo para despegar</span>
+                                            <span class="jps-title">Wizard Completo</span>
+                                        </span>
                                     </span>
-                                </div>
+                                    <span class="jps-body">
+                                        <span class="jps-desc">Cuéntame qué te gusta y Japitin preparará el viaje contigo.</span>
+                                        <span class="jps-divider" aria-hidden="true"></span>
+                                        <span class="jps-includes"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Incluye</span>
+                                        <span class="jps-check"><span class="jps-check__dot"><svg viewBox="0 0 20 20" fill="none"><path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Destinos y conexiones</span>
+                                        <span class="jps-check"><span class="jps-check__dot"><svg viewBox="0 0 20 20" fill="none"><path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Tus intereses y estilo de viaje</span>
+                                        <span class="jps-check"><span class="jps-check__dot"><svg viewBox="0 0 20 20" fill="none"><path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Plantillas de viaje</span>
+                                        <span class="jps-check"><span class="jps-check__dot"><svg viewBox="0 0 20 20" fill="none"><path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Itinerario generado automáticamente</span>
+                                        <span class="jps-timebadge" aria-hidden="true">
+                                            <svg class="jps-timebadge__face" viewBox="0 0 100 100">
+                                                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="2.2"/>
+                                                <circle cx="50" cy="50" r="37" fill="none" stroke="currentColor" stroke-width="1.4"/>
+                                                <path d="M50 5 L50 13 M50 87 L50 95 M5 50 L13 50 M87 50 L95 50 M18 18 L24 24 M76 76 L82 82 M18 82 L24 76 M76 24 L82 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                                <path d="M50 3 L45 12 L55 12 Z" fill="currentColor"/>
+                                            </svg>
+                                            <span class="jps-timebadge__text"><b>~2-3</b><i>MINUTOS</i></span>
+                                            <svg class="jps-timebadge__star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l2.4 6.8L21 11l-6.6 2.2L12 20l-2.4-6.8L3 11l6.6-2.2z"/></svg>
+                                        </span>
+                                        <span class="jps-cta">Crear mi itinerario completo
+                                            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                                        </span>
+                                    </span>
+                                </button>
                             </div>
 
-                            <!-- NOTA con washi tape (ilustración completa) -->
+                            <!-- NOTA: papel plano + 2 stickers como capas FÍSICAS
+                                 independientes que sobresalen del borde del papel
+                                 (troquelados, con rotación y sombra propia) — no
+                                 una sola ilustración plana. -->
                             <div class="jps-note">
-                                <img class="jps-note__obj" src="/images/illustrations/generated/components/tk-note.webp" alt="">
+                                <img class="jps-note__tape jps-note__tape--a" src="/images/illustrations/generated/components/note-tape-pink-final.png" alt="" aria-hidden="true">
+                                <img class="jps-note__tape jps-note__tape--b" src="/images/illustrations/generated/components/note-tape-blue-final.png" alt="" aria-hidden="true">
                                 <span class="jps-note__ink" aria-hidden="true">
-                                    <b>¿No estás segura?</b> Empieza con un Viaje Simple — puedes convertirlo en una aventura completa cuando quieras.
+                                    <b>¿No estás seguro?</b> Empieza con un Viaje Simple. <em>Puedes</em> convertirlo en una aventura completa cuando quieras.
                                 </span>
+                                <img class="jps-note__sticker jps-note__sticker--dog" src="/images/illustrations/generated/components/note-sticker-dog-v2.png" alt="" aria-hidden="true">
+                                <img class="jps-note__sticker jps-note__sticker--cat" src="/images/illustrations/generated/components/note-sticker-cat-cutout.png" alt="" aria-hidden="true">
                             </div>
                         </div>
 
@@ -434,16 +503,19 @@ export const ModalRenderer = {
                         <div id="simpleTripForm" class="hidden">
                             <button 
                                 onclick="document.getElementById('tripTypeSelection').classList.remove('hidden'); document.getElementById('simpleTripForm').classList.add('hidden');"
-                                class="mb-4 text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2"
+                                class="mb-4 text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2 jpf-back"
                             >
                                 ← Volver a opciones
                             </button>
 
-                            <form id="createTripFormSimple" class="space-y-6">
-                                <div class="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-6">
-                                    <h3 class="font-bold text-xl mb-4 dark:text-white flex items-center gap-2">
-                                        📝 Información Básica
+                            <form id="createTripFormSimple" class="space-y-6 jpf-form">
+                                <div class="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-6 jpf-main">
+                                    <img class="jpf-cat" src="/images/illustrations/generated/characters/cat-suitcase.webp" alt="" aria-hidden="true">
+                                    <div class="jpf-kicker">旅の記録 · Registro de aventura</div>
+                                    <h3 class="font-bold text-xl mb-4 dark:text-white flex items-center gap-2 jpf-title">
+                                        Tu próximo viaje
                                     </h3>
+                                    <p class="jpf-lead">Ponle nombre a la historia y marca cuándo empieza.</p>
                                     <div class="space-y-4">
                                         <div>
                                             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -485,9 +557,10 @@ export const ModalRenderer = {
                                 </div>
 
                                 <!-- 🔥 NUEVO: Selector de Template -->
-                                <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-6">
+                                <div class="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-6 jpf-template">
+                                    <span class="jpf-template__stub" aria-hidden="true">JAPITIN PASS</span>
                                     <h3 class="font-bold text-xl mb-4 dark:text-white flex items-center gap-2">
-                                        ✨ Plantilla de Itinerario
+                                        ¿Quieres una ruta preparada?
                                     </h3>
                                     <div class="space-y-4">
                                         <div>
@@ -498,11 +571,11 @@ export const ModalRenderer = {
                                                 id="simpleTripTemplate"
                                                 class="w-full p-3 border-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-purple-500 focus:outline-none font-semibold"
                                             >
-                                                <option value="">🔲 Sin Plantilla (Itinerario vacío)</option>
-                                                <option value="otaku-paradise">🎮 Otaku Paradise - Gaming & Culture (16 días)</option>
+                                                <option value="">Sin plantilla · Itinerario vacío</option>
+                                                <option value="otaku-paradise">Otaku Paradise · 16 días</option>
                                             </select>
                                         </div>
-                                        <div class="bg-purple-100 dark:bg-purple-900/30 rounded-lg p-4 text-sm">
+                                        <div class="bg-purple-100 dark:bg-purple-900/30 rounded-lg p-4 text-sm jpf-tip">
                                             <p class="text-purple-900 dark:text-purple-200 font-semibold">
                                                 💡 <strong>Tip:</strong> Las plantillas incluyen itinerarios completos con actividades, horarios, ubicaciones y coordenadas para el mapa. Puedes editarlo después.
                                             </p>
@@ -510,17 +583,17 @@ export const ModalRenderer = {
                                     </div>
                                 </div>
 
-                                <div class="flex gap-4">
+                                <div class="flex gap-4 jpf-actions">
                                     <button
                                         type="button"
                                         onclick="TripsManager.closeCreateTripModal()"
-                                        class="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white py-3 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition font-semibold"
+                                        class="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-white py-3 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition font-semibold jpf-cancel"
                                     >
                                         Cancelar
                                     </button>
                                     <button
                                         type="submit"
-                                        class="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold text-lg"
+                                        class="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold text-lg jpf-submit"
                                     >
                                         ✨ Crear Viaje
                                     </button>

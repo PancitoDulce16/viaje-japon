@@ -945,10 +945,14 @@ html {
   }
 
   /* Botones más grandes para touch */
-  button {
+  button:not([class*="jw-"]):not([class*="jc-"]):not([class*="jtd-"]):not([class*="jps-"]) {
     min-height: 44px; /* Apple HIG recomendado */
     touch-action: manipulation;
   }
+
+  /* Los controles del wizard definen su propia área táctil en
+     wizard-washi.css (bloque @media (hover: none)). */
+  button[class*="jw-"] { touch-action: manipulation; }
 
   /* Cards más compactas: sin padding extra, el template ya trae el suyo */
   .activity-card {
@@ -1611,7 +1615,7 @@ html.dark .dark\:border-gray-700 {
 
 html.dark .bg-gray-600,
 html.dark .hover\:bg-gray-700,
-html.dark button:not([class*="bg-red"]):not([class*="bg-blue"]):not([class*="bg-green"]):not([class*="bg-purple"]):not([class*="bg-pink"]):not([class*="gradient"]) {
+html.dark button:not([class*="bg-red"]):not([class*="bg-blue"]):not([class*="bg-green"]):not([class*="bg-purple"]):not([class*="bg-pink"]):not([class*="gradient"]):not(.hero-moment__cta):not(.dash-quick-btn):not([class*="jw-"]):not([class*="jc-"]):not([class*="jtd-"]):not([class*="jps-"]) {
   background-color: var(--balanced-dark-elevated) !important;
   color: var(--balanced-white-text) !important;
   border: 1px solid var(--balanced-border) !important;

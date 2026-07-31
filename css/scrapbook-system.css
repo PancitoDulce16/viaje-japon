@@ -1,0 +1,514 @@
+/* ==========================================================================
+   Scrapbook System — canonical, screen-agnostic components for the
+   "handcrafted Japanese travel journal" direction (see DESIGN_SYSTEM.md §0.1,
+   SIGNATURE_ELEMENTS.md). Built ONLY on css/tokens.css vars/color-mix() —
+   no ad hoc hex here, same discipline as objects.css and washi-ui.css.
+
+   This file is the primitive layer: washi tape, tickets, polaroids, stamps,
+   sticky notes, handwritten labels, paper textures, postage stamps, photo
+   corners, stickers, notebook sections, dividers, paper folds, dotted
+   backgrounds, plus the shadow/border/type/color/animation utility scales.
+
+   Rule (per ARCHITECTURE_PRINCIPLES.md "one canonical implementation per
+   reusable object"): every future screen assembles from THESE classes.
+   Don't hand-roll a new tape/stamp/polaroid inside a page-specific file —
+   extend this one instead. Page-specific files (itinerary-washi.css,
+   chat-washi.css, wizard-washi.css, ...) may still layer screen-specific
+   positioning/behavior on top, they just shouldn't reinvent the primitive.
+
+   Physical-object rule: things made of real paper (washi tape, polaroids,
+   sticky notes, postage stamps) use --color-washi/--color-washi-alt
+   directly, NOT --surface-page/--surface-page-alt — paper doesn't turn
+   into midnight-indigo just because Ninja mode is active (confirmed by
+   the chat mockup: polaroids stay cream in the dark thread). Ink marks
+   (postmarks) are the opposite — they dim/desaturate in the dark, because
+   ink-on-paper contrast reads wrong glowing on an indigo night page.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. WASHI TAPE — 6 variants, semi-translucent, always slightly rotated.
+   Usage: <span class="washi-tape washi-tape--pink" style="--rotate:-3deg;
+   --tape-w:90px"></span>, absolutely positioned by the caller (or inline
+   for a "tape strip in running text" effect).
+   ========================================================================== */
+.washi-tape {
+  --rotate: -3deg;
+  --tape-w: 88px;
+  --tape-h: 24px;
+  display: inline-block;
+  width: var(--tape-w);
+  height: var(--tape-h);
+  transform: rotate(var(--rotate));
+  background-image: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.35) 0 6px, transparent 6px 12px);
+  clip-path: polygon(3% 0, 97% 4%, 100% 32%, 96% 100%, 4% 96%, 0 60%);
+  pointer-events: none;
+  user-select: none;
+}
+.washi-tape--pink { background-color: color-mix(in srgb, var(--color-kasumi) 40%, transparent); }
+.washi-tape--blue { background-color: color-mix(in srgb, var(--color-umi) 35%, transparent); }
+.washi-tape--kraft { background-color: color-mix(in srgb, var(--color-yuzu) 30%, var(--color-washi-alt) 70%); opacity: 0.9; }
+.washi-tape--mint { background-color: color-mix(in srgb, var(--color-matcha) 32%, transparent); }
+.washi-tape--sun { background-color: color-mix(in srgb, var(--color-yuzu) 38%, transparent); }
+.washi-tape--sakura {
+  background-color: color-mix(in srgb, var(--color-kasumi-deep) 34%, transparent);
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,.55) 0 2px, transparent 2.5px),
+    radial-gradient(circle at 60% 70%, rgba(255,255,255,.5) 0 2px, transparent 2.5px),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.3) 0 6px, transparent 6px 12px);
+}
+
+/* ==========================================================================
+   2. TICKET NOTCH — the universal die-cut edge from SIGNATURE_ELEMENTS.md
+   #5. The full ticket layout (time block + dashed divider + body) already
+   lives in css/objects.css as `.ticket-card` — that's still the canonical
+   component for activities/trains/reservations. This is the lighter-weight
+   version: drop it on ANY box that needs just the notched edge (a wizard
+   boarding pass, a summary chip) without objects.css's fixed grid.
+   ========================================================================== */
+.jp-notched {
+  position: relative;
+  --notch-bg: var(--surface-page-alt);
+  --notch-size: 16px;
+}
+.jp-notched::before,
+.jp-notched::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: var(--notch-size);
+  height: var(--notch-size);
+  border-radius: 50%;
+  background: var(--notch-bg);
+  z-index: 1;
+}
+.jp-notched::before { left: calc(var(--notch-size) / -2); }
+.jp-notched::after { right: calc(var(--notch-size) / -2); }
+
+/* ==========================================================================
+   3. POLAROID PHOTO — always cream paper, never theme-flipped.
+   Usage: <figure class="polaroid" style="--rotate:-4deg"><img
+   src="..."><figcaption>Kyoto, Día 1</figcaption></figure>
+   ========================================================================== */
+.polaroid {
+  --rotate: -3deg;
+  display: inline-block;
+  margin: 0;
+  width: 150px;
+  background: var(--color-washi);
+  padding: 8px 8px 26px;
+  border-radius: 2px;
+  box-shadow: var(--jp-shadow-md);
+  transform: rotate(var(--rotate));
+  transition: transform var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease);
+}
+.polaroid:hover { transform: rotate(0deg) translateY(-3px); box-shadow: var(--jp-shadow-lg); }
+.polaroid img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 1px;
+}
+.polaroid figcaption {
+  margin-top: 8px;
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.1;
+  color: var(--color-ai-soft);
+  text-align: center;
+}
+
+/* ==========================================================================
+   4. HANKO STAMP — the Hanko Ring (SIGNATURE_ELEMENTS.md #1). Clean
+   vermillion ring, text/kanji rendered live so one class serves every use.
+   Usage: <span class="hanko-stamp" style="--rotate:8deg">済</span>
+   ========================================================================== */
+.hanko-stamp {
+  --rotate: 8deg;
+  --size: 46px;
+  display: inline-grid;
+  place-items: center;
+  width: var(--size);
+  height: var(--size);
+  border: 3px solid var(--color-sango);
+  border-radius: 50%;
+  color: var(--color-sango);
+  font-family: 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+  font-weight: 700;
+  font-size: calc(var(--size) * 0.32);
+  line-height: 1;
+  transform: rotate(var(--rotate));
+  opacity: 0.88;
+  user-select: none;
+}
+.hanko-stamp--sm { --size: 30px; border-width: 1.5px; }
+.hanko-stamp--lg { --size: 76px; border-width: 3px; }
+.hanko-stamp--kasumi { border-color: var(--color-kasumi-deep); color: var(--color-kasumi-deep); }
+@media (prefers-reduced-motion: no-preference) {
+  .hanko-stamp.is-stamping { animation: jpStampIn 380ms cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+}
+
+/* ==========================================================================
+   5. INK STAMP — the postmark/matasellos register: rougher, indigo-inked,
+   double ring, multiply blend. Distinct from the hanko ring (#4): a hanko
+   confirms ("done"), an ink stamp marks ("passed through here, on this
+   date"). Dims instead of vanishing in dark mode — still needs to read as
+   information, not just decoration.
+   ========================================================================== */
+.ink-stamp {
+  --rotate: -6deg;
+  --size: 84px;
+  display: inline-grid;
+  place-items: center;
+  gap: 1px;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  box-shadow: inset 0 0 0 4px var(--surface-page), inset 0 0 0 5px var(--ink);
+  color: var(--ink);
+  text-align: center;
+  transform: rotate(var(--rotate));
+  mix-blend-mode: multiply;
+  opacity: 0.8;
+  user-select: none;
+}
+.ink-stamp__line1 { font-family: var(--jp-font-display); font-weight: 800; font-size: calc(var(--size) * 0.14); letter-spacing: 0.5px; }
+.ink-stamp__line2 { font-family: var(--font-mono); font-size: calc(var(--size) * 0.11); }
+html.dark .ink-stamp,
+html[data-theme="dark"] .ink-stamp {
+  mix-blend-mode: normal;
+  opacity: 0.4;
+  box-shadow: inset 0 0 0 4px var(--surface-page-alt), inset 0 0 0 5px var(--ink);
+}
+
+/* ==========================================================================
+   6. STICKY NOTES — small pastel notes, always paper-colored, one corner
+   folded (reuses the paper-fold utility, §13).
+   Usage: <div class="sticky-note sticky-note--pink">Reservar Ryokan!</div>
+   ========================================================================== */
+.sticky-note {
+  --rotate: -2deg;
+  position: relative;
+  display: inline-block;
+  width: 150px;
+  padding: var(--space-3);
+  background: color-mix(in srgb, var(--color-kasumi) 22%, var(--color-washi));
+  box-shadow: var(--jp-shadow-sm);
+  transform: rotate(var(--rotate));
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.25;
+  color: var(--color-ai);
+  transition: transform var(--motion-base) var(--motion-ease);
+}
+.sticky-note:hover { transform: rotate(0deg) translateY(-2px); }
+.sticky-note--yellow { background: color-mix(in srgb, var(--color-yuzu) 24%, var(--color-washi)); }
+.sticky-note--blue { background: color-mix(in srgb, var(--color-sora-deep) 40%, var(--color-washi)); }
+.sticky-note--mint { background: color-mix(in srgb, var(--color-matcha) 20%, var(--color-washi)); }
+.sticky-note--pink { background: color-mix(in srgb, var(--color-kasumi) 22%, var(--color-washi)); }
+
+/* ==========================================================================
+   7. HANDWRITTEN LABELS — the "someone wrote this by hand" accent.
+   Usage: <span class="label-hand">¡No olvides el JR Pass!</span>
+   ========================================================================== */
+.label-hand {
+  font-family: var(--font-hand);
+  font-weight: 700;
+  color: var(--color-kasumi-deep);
+  line-height: 1.2;
+}
+.label-hand--ink { color: var(--ink-soft); }
+.label-hand--underline {
+  position: relative;
+  padding-bottom: 4px;
+}
+.label-hand--underline::after {
+  content: "";
+  position: absolute;
+  left: 2%;
+  right: 4%;
+  bottom: 0;
+  height: 3px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, currentColor, transparent 96%);
+  opacity: 0.55;
+  transform: rotate(-0.6deg);
+}
+
+/* ==========================================================================
+   8. PAPER TEXTURE — subtle grain over any surface. Add `.paper-texture`
+   to a container that already sets a background (a card, a page section).
+   ========================================================================== */
+.paper-texture { position: relative; }
+.paper-texture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
+  mix-blend-mode: multiply;
+  opacity: 0.04;
+  border-radius: inherit;
+}
+.paper-texture--kraft::before { opacity: 0.07; }
+html.dark .paper-texture::before,
+html[data-theme="dark"] .paper-texture::before {
+  mix-blend-mode: overlay;
+  opacity: 0.06;
+}
+
+/* ==========================================================================
+   9. POSTAGE STAMP — perforated-edge rectangle. Two background layers:
+   the face (padding-box) and a dotted ring tiled into the transparent
+   border (border-box) — the classic CSS "stamp perforation" trick.
+   Usage: <div class="postage-stamp"><i class="postage-stamp__art">🗻</i>
+   <b>JAPITIN</b></div>
+   ========================================================================== */
+.postage-stamp {
+  --perf: 6px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 84px;
+  height: 100px;
+  border: var(--perf) solid transparent;
+  background:
+    linear-gradient(var(--color-washi), var(--color-washi)) padding-box,
+    repeating-radial-gradient(circle at center, var(--surface-page) 0 1.6px, transparent 1.8px 7px) border-box;
+  box-shadow: var(--jp-shadow-sm);
+  color: var(--ink);
+  text-align: center;
+}
+.postage-stamp__art { font-size: 1.5rem; font-style: normal; line-height: 1; }
+.postage-stamp b {
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+}
+.postage-stamp small { font-size: 0.58rem; color: var(--ink-soft); }
+
+/* ==========================================================================
+   10. PHOTO CORNERS — 4 triangular paper corners "holding" a photo, pure
+   CSS via 4 background-image layers, no extra markup.
+   Usage: <div class="photo-corners"><img src="..."></div>
+   ========================================================================== */
+.photo-corners {
+  --corner: 22px;
+  position: relative;
+  display: inline-block;
+  padding: 10px;
+  background-color: var(--color-washi);
+  box-shadow: var(--jp-shadow-sm);
+  background-image:
+    linear-gradient(135deg, color-mix(in srgb, var(--ink) 16%, var(--color-washi)) 50%, transparent 50.5%),
+    linear-gradient(225deg, color-mix(in srgb, var(--ink) 16%, var(--color-washi)) 50%, transparent 50.5%),
+    linear-gradient(315deg, color-mix(in srgb, var(--ink) 16%, var(--color-washi)) 50%, transparent 50.5%),
+    linear-gradient(45deg, color-mix(in srgb, var(--ink) 16%, var(--color-washi)) 50%, transparent 50.5%);
+  background-size: var(--corner) var(--corner);
+  background-repeat: no-repeat;
+  background-position: top left, top right, bottom right, bottom left;
+}
+.photo-corners img { display: block; max-width: 100%; }
+
+/* ==========================================================================
+   11. TRAVEL STICKERS — mascots/objects that "sit" on top of a page.
+   Usage: <span class="sticker" style="--size:64px; --rotate:-6deg">
+   <img src="images/shiba-wave.png"></span>
+   ========================================================================== */
+.sticker {
+  --size: 64px;
+  --rotate: -4deg;
+  display: inline-block;
+  pointer-events: none;
+  user-select: none;
+  transform: rotate(var(--rotate));
+  transition: transform var(--motion-base) var(--motion-ease);
+}
+.sticker img {
+  width: var(--size);
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(var(--shadow-rgb), 0.22));
+}
+.sticker--interactive { pointer-events: auto; }
+.sticker--interactive:hover { transform: rotate(0deg) scale(1.06); }
+
+/* Small inline kawaii icon — for glyphs sitting next to text (headings,
+   labels), lighter-weight than a full positioned .sticker. */
+.jp-icon {
+  display: inline-block;
+  height: 1.3em;
+  width: auto;
+  vertical-align: -0.3em;
+  filter: drop-shadow(0 2px 3px rgba(var(--shadow-rgb), 0.2));
+}
+
+/* ==========================================================================
+   12. NOTEBOOK SECTION — a labeled group of content, screen-agnostic
+   version of the dashboard's `.dash-section` (css/objects.css), usable
+   anywhere a screen needs "this is a section of the notebook."
+   ========================================================================== */
+.notebook-section { display: flex; flex-direction: column; gap: var(--space-3); }
+.notebook-section__label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--ink);
+}
+.notebook-section__label::after {
+  content: '✿';
+  color: var(--color-kasumi);
+  font-size: 0.7em;
+}
+.notebook-section__body { display: flex; flex-direction: column; gap: var(--space-3); }
+
+/* ==========================================================================
+   13. SECTION DIVIDER — the Torii Divider (SIGNATURE_ELEMENTS.md #4):
+   Japitin's answer to <hr>. Pure CSS mask so its color follows theme.
+   Usage: <div class="divider-torii"></div>
+   ========================================================================== */
+.divider-torii {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+.divider-torii::before,
+.divider-torii::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--hairline);
+}
+.divider-torii__glyph {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 20px;
+  background-color: var(--color-kasumi-deep);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20'%3E%3Cpath d='M0 4h24v2.4H0zM2.4 2h1.8v18H2.4zM19.8 2h1.8v18h-1.8zM0 8.4h24V10H0z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 20'%3E%3Cpath d='M0 4h24v2.4H0zM2.4 2h1.8v18H2.4zM19.8 2h1.8v18h-1.8zM0 8.4h24V10H0z'/%3E%3C/svg%3E");
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+}
+
+/* ==========================================================================
+   14. PAPER FOLD — the dog-ear corner from SIGNATURE_ELEMENTS.md #10.
+   Add to any `position: relative` card. Default corner: top-right.
+   Usage: <div class="jp-card paper-fold">...</div>
+   ========================================================================== */
+.paper-fold { position: relative; overflow: hidden; }
+.paper-fold::after {
+  content: "";
+  position: absolute;
+  top: 0; right: 0;
+  width: 22px;
+  height: 22px;
+  background:
+    linear-gradient(225deg, color-mix(in srgb, var(--ink) 10%, transparent) 50%, transparent 51%),
+    linear-gradient(135deg, var(--surface-page-alt) 50%, transparent 50.5%);
+  box-shadow: -2px 2px 4px rgba(var(--shadow-rgb), 0.18);
+}
+.paper-fold--tl::after { top: 0; left: 0; right: auto; transform: scaleX(-1); }
+.paper-fold--bl::after { top: auto; bottom: 0; left: 0; right: auto; transform: scale(-1, -1); }
+.paper-fold--br::after { top: auto; bottom: 0; right: 0; transform: scaleY(-1); }
+
+/* ==========================================================================
+   15. DOTTED NOTEBOOK BACKGROUND — dot-grid paper for pages/sections.
+   Usage: add `.bg-dotted` to a page or section wrapper.
+   ========================================================================== */
+.bg-dotted {
+  background-image: radial-gradient(var(--hairline) 1px, transparent 1.5px);
+  background-size: 18px 18px;
+  background-position: -9px -9px;
+}
+
+/* ==========================================================================
+   16. SHADOW SYSTEM — utility classes over tokens.css's indigo-tinted
+   elevation scale, for arbitrary HTML (not just component-internal CSS).
+   ========================================================================== */
+.jp-shadow-none { box-shadow: none; }
+.jp-shadow-sm { box-shadow: var(--jp-shadow-sm); }
+.jp-shadow-md { box-shadow: var(--jp-shadow-md); }
+.jp-shadow-lg { box-shadow: var(--jp-shadow-lg); }
+
+/* ==========================================================================
+   17. BORDER SYSTEM — hairline/radius utilities for arbitrary HTML.
+   ========================================================================== */
+.jp-border { border: 1px solid var(--hairline); }
+.jp-border-dashed { border: 1px dashed color-mix(in srgb, var(--ink) 30%, transparent); }
+.jp-border-thick { border: 2px solid var(--ink); }
+.jp-r-sm { border-radius: var(--jp-radius-sm); }
+.jp-r-md { border-radius: var(--jp-radius-md); }
+.jp-r-lg { border-radius: var(--jp-radius-lg); }
+.jp-r-pill { border-radius: var(--jp-radius-pill); }
+
+/* ==========================================================================
+   18. COLOR HIERARCHY — semantic text-color utilities over tokens.css.
+   ========================================================================== */
+.text-ink { color: var(--ink); }
+.text-ink-soft { color: var(--ink-soft); }
+.text-accent { color: var(--color-kasumi-deep); }
+.text-success { color: var(--color-matcha); }
+.text-danger { color: var(--color-sango); }
+
+/* ==========================================================================
+   19. TYPOGRAPHY HIERARCHY — a real scale over tokens.css's three
+   families (display / body / mono / hand), for arbitrary HTML.
+   ========================================================================== */
+.jp-h1 { font-family: var(--jp-font-display); font-weight: 800; font-size: 2rem; line-height: 1.1; color: var(--ink); }
+.jp-h2 { font-family: var(--jp-font-display); font-weight: 800; font-size: 1.4rem; line-height: 1.15; color: var(--ink); }
+.jp-h3 { font-family: var(--jp-font-display); font-weight: 700; font-size: 1.1rem; line-height: 1.2; color: var(--ink); }
+.jp-body { font-family: var(--font-body); font-weight: 400; font-size: 1rem; line-height: 1.5; color: var(--ink); }
+.jp-caption { font-family: var(--font-body); font-weight: 600; font-size: 0.78rem; line-height: 1.3; color: var(--ink-soft); }
+.jp-data { font-family: var(--font-mono); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); }
+.jp-hand { font-family: var(--font-hand); font-weight: 700; color: var(--color-kasumi-deep); }
+
+/* ==========================================================================
+   20. ANIMATION LANGUAGE — the five motions from DESIGN_SYSTEM.md §4,
+   as reusable classes. Every one degrades to a plain fade under
+   prefers-reduced-motion (see the block at the bottom).
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  .anim-ticket-slide { animation: jpTicketSlide var(--motion-orchestrated) var(--motion-ease) both; }
+  .anim-stamp-in { animation: jpStampIn 380ms cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+  .anim-paper-in { animation: jpPaperIn var(--motion-orchestrated) var(--motion-ease) both; }
+  .anim-fade-rise { animation: jpFadeRise var(--motion-base) var(--motion-ease) both; }
+  .anim-train-progress { animation: jpTrainProgress 1.6s var(--motion-ease) forwards; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .anim-ticket-slide, .anim-stamp-in, .anim-paper-in, .anim-fade-rise { animation: jpFadeRise var(--motion-base) linear both; }
+  .anim-train-progress { animation: none; transform: scaleX(1); }
+}
+
+@keyframes jpTicketSlide {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes jpStampIn {
+  0%   { transform: scale(2.1) rotate(26deg); opacity: 0; }
+  62%  { transform: scale(0.94) rotate(10deg); opacity: 0.9; }
+  100% { transform: scale(1) rotate(var(--rotate, 8deg)); opacity: 0.85; }
+}
+@keyframes jpPaperIn {
+  from { opacity: 0; transform: translateY(10px) rotate(-1.5deg); }
+  to   { opacity: 1; transform: translateY(0) rotate(0); }
+}
+@keyframes jpFadeRise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes jpTrainProgress {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}

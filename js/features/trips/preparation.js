@@ -170,14 +170,14 @@ export const PreparationHandler = {
         }
 
         container.innerHTML = `
-            <div class="max-w-6xl mx-auto p-4 md:p-6">
+            <div class="jp-prep-page max-w-6xl mx-auto p-4 md:p-6">
                 <h2 class="text-4xl font-bold mb-6 text-gray-800 dark:text-white">📦 Preparación del Viaje</h2>
 
                 <!-- Budget Calculator -->
                 ${budgetHTML ? `<div class="mb-6">${budgetHTML}</div>` : ''}
 
                 <!-- Progress Overview -->
-                <div class="bg-gradient-to-r ${progress === 100 ? 'from-green-500 to-emerald-500 animate-pulse' : 'from-blue-500 to-purple-500'} text-white rounded-xl p-6 mb-6 shadow-lg transition-all duration-500">
+                <div class="jp-prep-progress bg-gradient-to-r ${progress === 100 ? 'from-green-500 to-emerald-500 animate-pulse' : 'from-blue-500 to-purple-500'} text-white rounded-xl p-6 mb-6 shadow-lg transition-all duration-500">
                     <div class="flex justify-between items-center mb-4">
                         <div>
                             <h3 class="text-2xl font-bold">${progress === 100 ? '¡Todo Listo! 🎊' : '¿Listo para Japón?'}</h3>
@@ -196,17 +196,17 @@ export const PreparationHandler = {
                     </div>
                 </div>
 
-                <div class="grid lg:grid-cols-2 gap-6">
+                <div class="jp-prep-layout grid lg:grid-cols-2 gap-6">
                     <!-- Packing Checklist -->
                     <div class="space-y-6">
-                        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <div class="jp-prep-checklist bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                             <h3 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">📋 Checklist de Equipaje</h3>
                             ${this.renderPackingSection()}
                         </div>
                     </div>
 
                     <!-- Guides Column -->
-                    <div class="space-y-6">
+                    <div class="jp-prep-guides space-y-6">
                         <!-- JR Pass Guide -->
                         ${this.renderJRPassGuide()}
                         
@@ -224,6 +224,7 @@ export const PreparationHandler = {
     },
 
     renderPackingSection() {
+        const memberEmails = window.TripsManager?.currentTrip?.memberEmails || [auth.currentUser?.email].filter(Boolean);
         const categories = {
             documents: { name: 'Documentos 📄', icon: '📄', color: 'red' },
             clothing: { name: 'Ropa 👔', icon: '👔', color: 'blue' },
@@ -272,6 +273,7 @@ export const PreparationHandler = {
                                             data-index="${index}"
                                         >
                                         <span class="flex-1 dark:text-gray-300 ${item.checked ? 'line-through' : ''}">${item.name}</span>
+                                        ${memberEmails.length > 1 ? `<select class="packing-owner max-w-24 p-1 text-xs rounded border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200" data-category="${key}" data-index="${index}" aria-label="Responsable de ${item.name}"><option value="">Sin asignar</option>${memberEmails.map(email => `<option value="${email}" ${item.owner === email ? 'selected' : ''}>${email.split('@')[0]}</option>`).join('')}</select>` : (item.owner ? `<small class="text-xs text-pink-600">${item.owner.split('@')[0]}</small>` : '')}
                                         ${!item.isDefault ? `
                                             <button
                                                 class="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition text-sm delete-item-btn"
@@ -467,6 +469,13 @@ export const PreparationHandler = {
         }
     },
 
+    async assignItem(category, index, owner) {
+        if (!this.packingList[category]?.[index]) return;
+        this.packingList[category][index].owner = owner || null;
+        await this.savePackingList(owner ? 'Responsable asignado' : 'Responsable removido');
+        window.Notifications?.show(owner ? `Asignado a ${owner.split('@')[0]}` : 'Tarea sin asignar', 'success');
+    },
+
     getTotalItems() {
         return Object.values(this.packingList).reduce((total, items) => total + items.length, 0);
     },
@@ -569,6 +578,10 @@ export const PreparationHandler = {
                 const index = parseInt(e.target.dataset.index);
                 this.toggleItem(category, index);
             });
+        });
+
+        document.querySelectorAll('.packing-owner').forEach(select => {
+            select.addEventListener('change', event => this.assignItem(event.currentTarget.dataset.category, Number(event.currentTarget.dataset.index), event.currentTarget.value));
         });
 
         // Add item buttons

@@ -6,6 +6,8 @@
  * IMPROVED.md Quick Win #6
  */
 
+import { JAPITIN_ILLUSTRATIONS } from './illustration-library.js';
+
 class EmptyStates {
   /**
    * Crear empty state genérico
@@ -13,6 +15,7 @@ class EmptyStates {
   static create(options = {}) {
     const {
       icon = '📭',
+      image = null,
       title = 'No hay nada aquí',
       message = 'Agrega algo para empezar',
       actionText = null,
@@ -20,15 +23,17 @@ class EmptyStates {
     } = options;
 
     const container = document.createElement('div');
-    container.className = 'flex flex-col items-center justify-center p-12 text-center';
+    container.className = 'jp-empty-state';
     container.innerHTML = `
-      <div class="w-24 h-24 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-4 animate-bounce-slow">
-        <span class="text-5xl">${icon}</span>
+      <div class="jp-empty-state__art">
+        ${image
+          ? `<img src="${image}" alt="" aria-hidden="true" loading="lazy">`
+          : `<span aria-hidden="true">${icon}</span>`}
       </div>
-      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">${title}</h3>
-      <p class="text-gray-600 dark:text-gray-400 mb-4 max-w-sm">${message}</p>
+      <h3 class="jp-empty-state__title">${title}</h3>
+      <p class="jp-empty-state__message">${message}</p>
       ${actionText && actionCallback ? `
-        <button class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:shadow-xl transition-all font-semibold">
+        <button class="jp-empty-state__action">
           ${actionText}
         </button>
       ` : ''}
@@ -47,6 +52,7 @@ class EmptyStates {
   static favorites() {
     return this.create({
       icon: '⭐',
+      image: JAPITIN_ILLUSTRATIONS.empty.favorites,
       title: 'No tienes favoritos aún',
       message: 'Explora lugares increíbles en Japón y agrégalos a tus favoritos',
       actionText: '🔍 Explorar Lugares',
@@ -64,6 +70,7 @@ class EmptyStates {
   static notes() {
     return this.create({
       icon: '📝',
+      image: JAPITIN_ILLUSTRATIONS.empty.notes,
       title: 'Sin notas todavía',
       message: 'Crea notas para recordar detalles importantes de tu viaje',
       actionText: '✍️ Crear Primera Nota',
@@ -81,6 +88,7 @@ class EmptyStates {
   static itinerary() {
     return this.create({
       icon: '📅',
+      image: JAPITIN_ILLUSTRATIONS.empty.itinerary,
       title: 'Tu itinerario está vacío',
       message: '¡Empieza a planear tu aventura en Japón! Agrega días y actividades',
       actionText: '🎌 Comenzar a Planear',
@@ -98,6 +106,7 @@ class EmptyStates {
   static expenses() {
     return this.create({
       icon: '💰',
+      image: JAPITIN_ILLUSTRATIONS.empty.expenses,
       title: 'No hay gastos registrados',
       message: 'Comienza a registrar tus gastos para mantener el control de tu presupuesto',
       actionText: '💵 Agregar Primer Gasto',
@@ -115,6 +124,7 @@ class EmptyStates {
   static searchNoResults(query) {
     return this.create({
       icon: '🔍',
+      image: JAPITIN_ILLUSTRATIONS.empty.search,
       title: 'No se encontraron resultados',
       message: `No encontramos nada para "${query}". Intenta con otros términos`,
       actionText: null,
@@ -128,6 +138,7 @@ class EmptyStates {
   static packing() {
     return this.create({
       icon: '🎒',
+      image: JAPITIN_ILLUSTRATIONS.empty.packing,
       title: 'Lista de equipaje vacía',
       message: '¿Qué vas a llevar a Japón? Crea tu lista de equipaje personalizada',
       actionText: '📦 Crear Lista',
@@ -145,6 +156,7 @@ class EmptyStates {
   static chat() {
     return this.create({
       icon: '💬',
+      image: JAPITIN_ILLUSTRATIONS.empty.chat,
       title: 'Sin mensajes',
       message: 'Comienza una conversación con tu asistente IA',
       actionText: '🤖 Iniciar Chat',
@@ -161,10 +173,11 @@ class EmptyStates {
    */
   static loading(message = 'Cargando...') {
     const container = document.createElement('div');
-    container.className = 'flex flex-col items-center justify-center p-12 text-center';
+    container.className = 'jp-loading-state';
     container.innerHTML = `
-      <div class="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mb-4"></div>
-      <p class="text-gray-600 dark:text-gray-400">${message}</p>
+      <img src="${JAPITIN_ILLUSTRATIONS.loading.generic}" alt="" aria-hidden="true">
+      <span class="jp-loading-state__route" aria-hidden="true"></span>
+      <p>${message}</p>
     `;
     return container;
   }

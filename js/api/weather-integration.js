@@ -1,3 +1,5 @@
+import { weatherIllustration } from '../ui/illustration-library.js';
+
 /**
  * ⛅ INTEGRACIÓN DE CLIMA EN TIEMPO REAL (#6)
  * ============================================
@@ -376,6 +378,7 @@ class WeatherIntegration {
     if (!container) return;
 
     const emoji = this.getWeatherEmoji(weather);
+    const illustration = weatherIllustration(weather);
     const alerts = this.generateAlerts(weather);
     const clothing = this.recommendClothing(weather);
 
@@ -386,7 +389,10 @@ class WeatherIntegration {
             <h3 class="text-2xl font-bold">${city}</h3>
             <p class="text-sm text-gray-600 dark:text-gray-400">${weather.description}</p>
           </div>
-          <div class="text-6xl">${emoji}</div>
+          <div class="jp-weather-art">
+            <img src="${illustration}" alt="${weather.description || 'Condición meteorológica'}" loading="lazy">
+            <span aria-hidden="true">${emoji}</span>
+          </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4 mb-4">

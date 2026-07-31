@@ -1,0 +1,330 @@
+/* ============================================================
+   modals-washi.css — familias visuales de los modales compartidos
+
+   NO es un skin único. Los modales de esta app cumplen funciones muy
+   distintas y aplanarlos al mismo objeto rompería su jerarquía. Se agrupan
+   por FUNCIÓN, y uno de ellos (Emergencias) se deja deliberadamente sobrio.
+
+   Base común    → superficie de papel washi en vez de card blanca
+   Escritura     → #modal-notes: página de libreta con renglones
+   Consulta      → #modal-phrases: papel sobrio, sin adorno
+   Colecciones   → #modal-favorites, #modal-packing, #modal-trips-list
+   Formularios   → #modal-auth, #activityModal
+   Crítico       → #modal-emergency: SIN decoración, solo contraste
+
+   Ya rediseñados aparte y por tanto NO tocados aquí:
+   #modal-create-trip (.jtd-scene, ver create-trip-scene.css) y
+   #modal-chat (.jc-shell). El selector base usa [class*="bg-white"],
+   que ninguno de los dos lleva.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. Superficie base — sustituye la card blanca genérica
+   ------------------------------------------------------------ */
+
+.modal > div[class*="bg-white"],
+.modal > div.modal-content {
+  background-color: var(--surface-page) !important;
+  background-image:
+    linear-gradient(rgba(251, 247, 241, 0.82), rgba(251, 247, 241, 0.82)),
+    url('/images/backgrounds/washi-page-light.webp');
+  background-size: auto, 420px;
+  /* Esquinas irregulares: el papel no tiene el mismo radio en las 4 */
+  border-radius: 8px 18px 8px 18px !important;
+  border: 1px solid var(--hairline) !important;
+  box-shadow: 0 26px 56px -24px rgba(var(--shadow-rgb), 0.5) !important;
+}
+
+html.dark .modal > div[class*="bg-white"],
+html.dark .modal > div.modal-content {
+  background-color: var(--surface-page-alt) !important;
+  background-image:
+    linear-gradient(rgba(27, 34, 56, 0.86), rgba(27, 34, 56, 0.86)),
+    url('/images/backgrounds/washi-page-dark.webp');
+  border-color: rgba(242, 238, 228, 0.14) !important;
+}
+
+/* Títulos con la voz de la marca */
+.modal h2 {
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+html.dark .modal h2 { color: var(--ink); }
+
+/* Cierre unificado: botón redondo de papel, no una "×" de 3rem suelta */
+.modal .modal-close,
+.jp-modal-close {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-kasumi) 20%, transparent);
+  color: var(--color-kasumi-deep);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform var(--motion-micro) var(--motion-ease),
+              background var(--motion-micro) var(--motion-ease);
+}
+
+.modal .modal-close:hover,
+.jp-modal-close:hover {
+  transform: rotate(90deg);
+  background: color-mix(in srgb, var(--color-kasumi) 36%, transparent);
+  color: var(--color-kasumi-deep);
+}
+
+.modal .modal-close:focus-visible,
+.jp-modal-close:focus-visible { outline: 3px solid var(--color-kasumi); outline-offset: 3px; }
+
+/* Los modales cuyo <h2> se eliminó (budget, favoritos) necesitan que el
+   cierre flote, porque ya no hay fila de cabecera que lo contenga. */
+.jp-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  z-index: 4;
+}
+
+#modal-budget > div,
+#modal-favorites > div { position: relative; }
+
+/* ------------------------------------------------------------
+   2. ESCRITURA — #modal-notes es el único donde el papel rayado
+      tiene sentido literal: se escribe encima.
+   ------------------------------------------------------------ */
+
+#modal-notes textarea {
+  background-color: var(--color-washi-alt, #F2ECE1) !important;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 31px,
+    color-mix(in srgb, var(--color-umi) 26%, transparent) 31px,
+    color-mix(in srgb, var(--color-umi) 26%, transparent) 32px
+  ) !important;
+  line-height: 32px !important;
+  padding: 6px 14px !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: 3px 12px 3px 12px !important;
+  font-family: var(--font-hand);
+  font-size: 1.22rem;
+  color: var(--ink) !important;
+}
+
+html.dark #modal-notes textarea {
+  background-color: #232A44 !important;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 31px,
+    rgba(159, 217, 238, 0.20) 31px,
+    rgba(159, 217, 238, 0.20) 32px
+  ) !important;
+}
+
+/* ------------------------------------------------------------
+   3. CONSULTA — #modal-phrases. Se lee, no se decora.
+      Cada frase es una entrada de glosario separada por tinta.
+   ------------------------------------------------------------ */
+
+/* OJO con el `> div`: sin él, [class*="bg-gray-"] casa también con el PANEL
+   del modal, porque su class incluye `dark:bg-gray-800`. Medido: el panel de
+   Frases se quedaba transparente y sin radio, comiéndose la superficie base. */
+#modal-phrases > div [class*="bg-gray-"],
+#modal-phrases > div [class*="bg-blue-"] {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px dashed var(--hairline) !important;
+  border-radius: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* ------------------------------------------------------------
+   4. COLECCIONES — el modal solo aporta la superficie; los ítems
+      ya traen su propio tratamiento (no se les añade nada).
+   ------------------------------------------------------------ */
+
+/* `> div` por el mismo motivo que en Frases: el panel lleva `bg-white` en su
+   propia class y se llevaba el tratamiento de ÍTEM en vez del de superficie. */
+#modal-favorites > div [class*="bg-white"],
+#modal-packing > div [class*="bg-white"],
+#modal-trips-list > div [class*="bg-white"] {
+  background: var(--surface-page-alt) !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: 4px 14px 4px 14px !important;
+  box-shadow: none !important;
+}
+
+html.dark #modal-favorites > div [class*="bg-white"],
+html.dark #modal-packing > div [class*="bg-white"],
+html.dark #modal-trips-list > div [class*="bg-white"] {
+  background: color-mix(in srgb, var(--color-kasumi) 7%, var(--surface-page)) !important;
+}
+
+/* ------------------------------------------------------------
+   5. FORMULARIOS — #modal-auth y #activityModal: ficha de papel,
+      con los mismos renglones que el wizard para no inventar un
+      tercer lenguaje de campo.
+   ------------------------------------------------------------ */
+
+#modal-auth input,
+#activityModal input[type="text"],
+#activityModal input[type="number"],
+#activityModal textarea,
+#activityModal select {
+  background: var(--color-washi-alt, #F2ECE1) !important;
+  border: 0 !important;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--ink) 22%, transparent) !important;
+  border-radius: 3px 3px 0 0 !important;
+  color: var(--ink) !important;
+}
+
+html.dark #modal-auth input,
+html.dark #activityModal input[type="text"],
+html.dark #activityModal input[type="number"],
+html.dark #activityModal textarea,
+html.dark #activityModal select {
+  background: color-mix(in srgb, var(--color-kasumi) 6%, var(--surface-page)) !important;
+  border-bottom-color: color-mix(in srgb, var(--ink) 32%, transparent) !important;
+}
+
+#modal-auth input:focus,
+#activityModal input:focus,
+#activityModal textarea:focus,
+#activityModal select:focus {
+  outline: none;
+  border-bottom-color: var(--color-kasumi-deep) !important;
+}
+
+#modal-auth input:focus-visible,
+#activityModal input:focus-visible,
+#activityModal textarea:focus-visible,
+#activityModal select:focus-visible {
+  outline: 3px solid var(--color-kasumi);
+  outline-offset: 2px;
+}
+
+/* Las pestañas Entrar/Registrarse eran azul Tailwind */
+#modal-auth .auth-tab { color: var(--ink-soft) !important; border-bottom-color: transparent !important; }
+#modal-auth .auth-tab[class*="border-blue"],
+#modal-auth .auth-tab[class*="text-blue"] {
+  color: var(--color-kasumi-deep) !important;
+  border-bottom-color: var(--color-kasumi-deep) !important;
+}
+
+/* Guardar/Cancelar del formulario de actividad */
+#activityModal button[type="submit"] {
+  background: linear-gradient(135deg, var(--color-kasumi), var(--color-kasumi-deep)) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 6px 14px -8px rgba(241, 111, 163, 0.9) !important;
+}
+
+/* ------------------------------------------------------------
+   5b. Acciones primarias — el azul de Tailwind (#2563eb) tampoco
+       pertenece a la paleta Japitin. Se unifican en kasumi, igual
+       que en el wizard, para que "guardar" se vea igual en toda la app.
+   ------------------------------------------------------------ */
+
+.modal button[class*="bg-blue-"],
+.modal button[class*="bg-green-6"],
+.modal button[class*="bg-purple-"] {
+  background: linear-gradient(135deg, var(--color-kasumi), var(--color-kasumi-deep)) !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  color: #fff !important;
+  box-shadow: 0 6px 14px -8px rgba(241, 111, 163, 0.9) !important;
+}
+
+.modal button[class*="bg-blue-"]:hover,
+.modal button[class*="bg-green-6"]:hover,
+.modal button[class*="bg-purple-"]:hover { filter: brightness(1.06); }
+
+/* Secundarios (Cancelar): etiqueta de papel, nunca gris de sistema */
+.modal button[class*="bg-gray-2"],
+.modal button[class*="bg-gray-3"] {
+  background: transparent !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: var(--jp-radius-pill) !important;
+  color: var(--ink-soft) !important;
+}
+
+/* ------------------------------------------------------------
+   6. CRÍTICO — #modal-emergency.
+      DECISIÓN DELIBERADA: no se decora. Es el SOS; tiene que leerse
+      como aviso urgente, no como papelería. Solo se corrige el fondo
+      blanco duro (heredado de la base) y se refuerza el contraste.
+      Nada de washi tape, sellos ni personajes aquí.
+   ------------------------------------------------------------ */
+
+#modal-emergency > div[class*="bg-white"] {
+  background-image: none !important;
+  background-color: #FFF8F7 !important;
+  border: 2px solid var(--color-sango) !important;
+  border-radius: 10px !important;
+}
+
+html.dark #modal-emergency > div[class*="bg-white"] {
+  background-color: #2A1A1C !important;
+  border-color: var(--color-sango) !important;
+}
+
+#modal-emergency h2 {
+  color: var(--color-sango) !important;
+  font-family: var(--jp-font-display);
+}
+
+/* El bloque de la embajada venía en azul Tailwind, fuera de paleta y
+   además compitiendo visualmente con los teléfonos de urgencia. Pasa a
+   papel neutro: es información de apoyo, no una alerta. */
+#modal-emergency > div [class*="bg-blue-"] {
+  background: var(--color-washi-alt, #F2ECE1) !important;
+  border: 1px solid var(--hairline) !important;
+  border-radius: 8px !important;
+}
+
+html.dark #modal-emergency > div [class*="bg-blue-"] {
+  background: rgba(242, 238, 228, 0.07) !important;
+}
+
+/* Los bloques de contacto mantienen separación clara y alto contraste */
+#modal-emergency > div [class*="bg-red-"],
+#modal-emergency > div [class*="bg-gray-"] {
+  background: color-mix(in srgb, var(--color-sango) 8%, #fff) !important;
+  border: 1px solid color-mix(in srgb, var(--color-sango) 30%, transparent) !important;
+  border-radius: 8px !important;
+}
+
+html.dark #modal-emergency > div [class*="bg-red-"],
+html.dark #modal-emergency > div [class*="bg-gray-"] {
+  background: color-mix(in srgb, var(--color-sango) 16%, #1A1013) !important;
+}
+
+/* El cierre del SOS no gira ni se vuelve rosa: se mantiene neutro y obvio */
+#modal-emergency .modal-close {
+  background: color-mix(in srgb, var(--color-sango) 16%, transparent);
+  color: var(--color-sango);
+}
+
+#modal-emergency .modal-close:hover {
+  transform: none;
+  background: color-mix(in srgb, var(--color-sango) 30%, transparent);
+}
+
+/* ------------------------------------------------------------
+   7. Movimiento reducido
+   ------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .modal .modal-close,
+  .jp-modal-close { transition: none; }
+  .modal .modal-close:hover,
+  .jp-modal-close:hover { transform: none; }
+}

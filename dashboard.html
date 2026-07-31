@@ -34,13 +34,8 @@
     }
     </script>
 
-    <!-- Tailwind CSS with dark mode config -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class'
-        }
-    </script>
+    <!-- Tailwind compilado localmente: npm run build:tailwind -->
+    <link rel="stylesheet" href="/css/tailwind.min.css">
 
     <!-- Japitin type system — see DESIGN_SYSTEM.md §1. Display: Bricolage (restrained, 700/800 only).
          Body: Inter. Data/tickets: IBM Plex Mono. Previously missing entirely on this page. -->
@@ -50,18 +45,15 @@
 
     <!-- CSS específico para dashboard -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
 
     <!-- Leaflet CSS for Interactive Map -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-          crossorigin=""/>
     
     <!-- Chart.js para gráficos -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
 
     <!-- App styles -->
     <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/attractions-discovery.css">
 
     <!-- Wallpapers inline para máxima prioridad -->
     <style>
@@ -113,6 +105,19 @@
 
     <!-- APP DASHBOARD -->
     <div id="appDashboard">
+        <aside class="jp-desktop-rail" aria-label="Navegación Japitin">
+            <div class="jp-desktop-rail__brand">JAPITÍN<span>✿</span></div>
+            <nav>
+                <button type="button" class="active" data-rail-tab="itinerary" onclick="document.querySelector('.tab-btn[data-tab=&quot;itinerary&quot;]')?.click()"><i class="fas fa-home"></i><span>Inicio</span></button>
+                <button type="button" onclick="window.TripsManager?.showTripsListModal()"><i class="fas fa-suitcase-rolling"></i><span>Viajes</span></button>
+                <button type="button" data-rail-tab="attractions" onclick="document.querySelector('.tab-btn[data-tab=&quot;attractions&quot;]')?.click()"><i class="fas fa-compass"></i><span>Descubrir</span></button>
+                <button type="button" data-rail-tab="itinerary" onclick="document.querySelector('.tab-btn[data-tab=&quot;itinerary&quot;]')?.click()"><i class="far fa-calendar-alt"></i><span>Itinerario</span></button>
+                <button type="button" data-rail-tab="map" onclick="document.querySelector('.tab-btn[data-tab=&quot;map&quot;]')?.click()"><i class="fas fa-map-marked-alt"></i><span>Mapa</span></button>
+                <button type="button" onclick="window.GroupChat?.open()"><i class="far fa-comment-dots"></i><span>Chat</span></button>
+                <button type="button" onclick="window.TravelJournal?.show()"><i class="fas fa-book-open"></i><span>Diario</span></button>
+            </nav>
+            <button type="button" class="jp-desktop-rail__profile" onclick="window.UserMenu?.openProfile()"><i class="fas fa-user"></i><span>Perfil</span></button>
+        </aside>
         <!-- 🎯 SIMPLE FAB BUTTON - Opens Everything -->
         <button id="main-fab-button" style="position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%); color: white; border: none; box-shadow: 0 4px 20px rgba(147,51,234,0.4); cursor: pointer; z-index: 99999; font-size: 24px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="window.showMainMenu()" aria-label="Abrir menú principal">
             <i class="fas fa-th"></i>
@@ -435,11 +440,7 @@
     <!-- SortableJS para drag & drop -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <!-- Swiper.js para carrusel de días -->
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <!-- Leaflet JS for Interactive Map -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-            crossorigin=""></script>
 
     <!-- 🔍 Logger System - Centralized logging with debug mode -->
     <script type="module" src="/js/core/logger.js"></script>
@@ -460,10 +461,8 @@
     <script type="module" src="/js/features/social/social-features.js"></script>
 
     <!-- 📸 Photo Gallery - Shared photo gallery with upload, comments, likes -->
-    <script type="module" src="/js/features/journal/photo-gallery.js"></script>
 
     <!-- 👤 User Profile - User profiles with photo, bio, stats -->
-    <script type="module" src="/js/ui/user-profile.js"></script>
 
     <!-- 💬 Dialogs (window.Dialogs) - usado por TripsManager.joinTripWithCode() y otros -->
     <script type="module" src="/js/ui/dialogs-v2.js"></script>
@@ -480,7 +479,7 @@
     <!-- ⌨️ Keyboard Shortcuts - Command palette and shortcuts (see js/utils/keyboard-shortcuts.js) -->
 
     <!-- 📄 PDF Export Library - jsPDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 
     <!-- 📄 PDF EXPORTER - Exportar itinerario a PDF -->
     <script type="module" src="/js/features/trips/pdf-exporter.js"></script>
@@ -489,7 +488,7 @@
     <script type="module" src="/js/features/budget/expense-charts.js"></script>
 
     <!-- 🆕 HTML2PDF - Librería para generar PDFs -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 
     <!-- 🆕 EXPORT MANAGER - Sistema de exportación multi-formato -->
     <script type="module" src="/js/features/trips/export-manager.js"></script>
@@ -510,31 +509,22 @@
     <script type="module" src="/js/features/trips/shopping-tracker.js"></script>
 
     <!-- 🌸 JAPITIN SOCIAL - Red social interna tipo Instagram -->
-    <script type="module" src="/js/features/social/social-network.js"></script>
 
     <!-- 📖 TRIP STORY GENERATOR - Genera Instagram Stories del viaje -->
-    <script type="module" src="/js/features/journal/trip-story-generator.js"></script>
 
     <!-- 📊 TRIP CARDS GENERATOR - Tarjetas compartibles para redes -->
-    <script type="module" src="/js/features/journal/trip-cards-generator.js"></script>
 
     <!-- 🎯 JAPAN PERSONA QUIZ - Quiz viral tipo BuzzFeed -->
-    <script type="module" src="/js/features/japan/japan-persona-quiz.js"></script>
 
     <!-- 👯 TRAVEL TWINS MATCHER - AI matching con otros viajeros -->
-    <script type="module" src="/js/features/social/travel-twins-matcher.js"></script>
 
     <!-- 💎 HIDDEN GEMS MAP - Mapa colaborativo de lugares secretos -->
-    <script type="module" src="/js/map/hidden-gems-map.js"></script>
 
     <!-- 🎯 LOCATION GAME - Adivina el lugar de la foto -->
-    <script type="module" src="/js/features/gamification/location-game.js"></script>
 
     <!-- 📱 WHATSAPP UPDATER - Sistema de mensajes automáticos -->
-    <script type="module" src="/js/features/social/whatsapp-updater.js"></script>
 
     <!-- 🌐 LANDING PAGE GENERATOR - Generador de landing pages públicas -->
-    <script type="module" src="/js/ui/landing-page-generator.js"></script>
 
     <!-- 🔥 CACHE BUSTER - Detecta y corrige automáticamente problemas de cache -->
     <script type="module" src="/js/utils/cache-buster.js"></script>
@@ -940,32 +930,18 @@
     <script type="module" src="/js/ui/kawaii-animations.js"></script>
 
     <!-- Scripts de 30 Reglas Anti-Error -->
-    <script type="module" src="/js/features/japan/japan-rules.js"></script>
-    <script type="module" src="/js/features/japan/japan-rules-ui.js"></script>
 
     <!-- Scripts de Control Horarios -->
-    <script type="module" src="/js/features/japan/horarios-system.js"></script>
-    <script type="module" src="/js/features/japan/horarios-ui.js"></script>
 
     <!-- Scripts de Sistema de Zonas -->
-    <script type="module" src="/js/features/japan/zonas-system.js"></script>
-    <script type="module" src="/js/features/japan/zonas-ui.js"></script>
 
     <!-- Scripts de Survival Guide -->
-    <script type="module" src="/js/features/japan/survival-guide.js"></script>
-    <script type="module" src="/js/features/japan/survival-ui.js"></script>
 
     <!-- Scripts de JR Pass Calculator -->
-    <script type="module" src="/js/features/japan/jr-pass-calculator.js"></script>
-    <script type="module" src="/js/features/japan/jr-pass-ui.js"></script>
 
     <!-- Scripts de Ramen Passport -->
-    <script type="module" src="/js/features/japan/ramen-passport.js"></script>
-    <script type="module" src="/js/features/japan/ramen-passport-ui.js"></script>
 
     <!-- Scripts de Goshuin Book -->
-    <script type="module" src="/js/features/japan/goshuin-book.js"></script>
-    <script type="module" src="/js/features/japan/goshuin-book-ui.js"></script>
 
     <!-- 🏥 Health Dashboard - Diagnóstico del Itinerario -->
     <script type="module" src="/js/tools/health-calculator.js"></script>
@@ -974,16 +950,12 @@
 
     <!-- 🤖 SISTEMA DE INTELIGENCIA ARTIFICIAL - Mini IA Local -->
     <!-- 🧠 Predictor de Preferencias ML -->
-    <script type="module" src="/js/ai/preference-predictor.js"></script>
 
     <!-- 🎓 Motor de Decisiones Sistema Experto -->
-    <script type="module" src="/js/ai/expert-decision-engine.js"></script>
 
     <!-- 🧬 Algoritmo Genético para Optimización de Rutas -->
-    <script type="module" src="/js/map/genetic-route-optimizer.js"></script>
 
     <!-- 📊 Simulador de Ritmo Visual -->
-    <script type="module" src="/js/ai/visual-pace-simulator.js"></script>
 
     <!-- ⛅ Integración de Clima en Tiempo Real -->
     <script type="module" src="/js/api/weather-integration.js"></script>
@@ -992,48 +964,31 @@
     <script type="module" src="/js/features/itinerary/day-regenerator.js"></script>
 
     <!-- 🤖 Integración ML - Conecta todo el sistema de IA -->
-    <script type="module" src="/js/ai/ml-integration.js"></script>
 
     <!-- 🔍 Detector de Anomalías en Itinerarios -->
-    <script type="module" src="/js/features/itinerary/itinerary-anomaly-detector.js"></script>
 
     <!-- ⚡ Predictor de Energía y Burnout -->
-    <script type="module" src="/js/ai/energy-burnout-predictor.js"></script>
 
     <!-- 🤝 Sistema de Recomendaciones Colaborativas -->
-    <script type="module" src="/js/ai/collaborative-recommender.js"></script>
 
     <!-- ✍️ Generador Inteligente de Descripciones -->
-    <script type="module" src="/js/ai/smart-description-generator.js"></script>
 
     <!-- 🗣️ Parser de Comandos en Lenguaje Natural -->
-    <script type="module" src="/js/ai/nlp-command-parser.js"></script>
 
     <!-- 🗺️ GEOGRAPHIC ROUTE OPTIMIZATION -->
-    <script type="module" src="/js/map/geo-optimizer.js"></script>
-    <script type="module" src="/js/map/geo-optimizer-ui.js"></script>
 
     <!-- 💰 BUDGET INTELLIGENCE SYSTEM -->
-    <script type="module" src="/js/features/budget/budget-intelligence.js"></script>
-    <script type="module" src="/js/features/budget/budget-intelligence-ui.js"></script>
 
     <!-- ⛩️ CULTURAL KNOWLEDGE SYSTEM -->
-    <script type="module" src="/js/features/japan/cultural-knowledge.js"></script>
-    <script type="module" src="/js/features/japan/cultural-knowledge-ui.js"></script>
 
     <!-- 📱 MOBILE-FIRST SYSTEM -->
     <script type="module" src="/js/ui/mobile-first.js"></script>
 
     <!-- 👤 TRAVELER PROFILES SYSTEM -->
-    <script type="module" src="/js/ai/traveler-profiles.js"></script>
-    <script type="module" src="/js/ai/traveler-profiles-ui.js"></script>
 
     <!-- 📍 LIVE MODE SYSTEM -->
-    <script type="module" src="/js/features/planning/live-mode.js"></script>
-    <script type="module" src="/js/features/planning/live-mode-ui.js"></script>
 
     <!-- 🤖 Panel Central de IA -->
-    <script type="module" src="/js/ai/ai-control-panel.js"></script>
 
     <!-- 🍞 Toast Notifications handled by core/notifications.js -->
 
@@ -1055,143 +1010,30 @@
 
     <!-- ⚙️ SISTEMA DE CONFIGURACIONES DE USUARIO -->
     <!-- Sistema de configuraciones completo -->
-    <script type="module" src="/js/ui/user-settings.js"></script>
 
     <!-- UI de configuraciones -->
-    <script type="module" src="/js/ui/settings-ui.js"></script>
 
     <!-- 💱 Currency Converter con API Real -->
     <script type="module" src="/js/features/budget/currency-converter.js"></script>
 
     <!-- 📦 Export/Import System -->
     <script type="module" src="/js/features/trips/export-import-system.js"></script>
-
-    <!-- 🧠 ML BRAIN - FASE 1 -->
-    <script type="module" src="/js/ml/ml-storage.js"></script>
-    <script type="module" src="/js/ml/sensor-layer.js"></script>
-    <script type="module" src="/js/ml/pattern-recognition.js"></script>
-    <script type="module" src="/js/ml/data-pipeline.js"></script>
-    <script type="module" src="/js/ml/feature-engineering.js"></script>
-    <script type="module" src="/js/ml/ml-brain.js"></script>
-
-    <!-- 🔮 ML BRAIN - FASE 2: PREDICTION -->
-    <script type="module" src="/js/ml/predictive-models.js"></script>
-    <script type="module" src="/js/ml/time-series-forecaster.js"></script>
-    <script type="module" src="/js/ml/fatigue-predictor.js"></script>
-    <script type="module" src="/js/ml/anomaly-detector.js"></script>
-    <script type="module" src="/js/ml/uncertainty-estimator.js"></script>
-
-    <!-- 🤝 ML BRAIN - FASE 3: COLLABORATION -->
-    <script type="module" src="/js/ml/knowledge-graph.js"></script>
-    <script type="module" src="/js/ml/collaborative-filtering.js"></script>
-    <script type="module" src="/js/ml/swarm-intelligence.js"></script>
-
-    <!-- 🧠 ML ITINERARY ENHANCER - Integración Real del ML Brain -->
-    <script type="module" src="/js/ai/ml-itinerary-enhancer.js"></script>
-
-    <!-- 🗣️ FASE 4: NATURAL LANGUAGE UNDERSTANDING -->
-    <script type="module" src="/js/ml/semantic-intent-recognition.js"></script>
-    <script type="module" src="/js/ml/nlp-engine.js"></script>
-
-    <!-- 🧠 SMART RESPONSE GENERATION (NEW!) -->
-    <script type="module" src="/js/ml/smart-response-generator.js"></script>
-
-    <!-- 🎬 AI ACTION EXECUTOR - Makes AI actually DO things -->
-    <script type="module" src="/js/ml/ai-action-executor.js"></script>
-
-    <!-- 💡 PROACTIVE RECOMMENDATIONS - AI suggests improvements automatically -->
-    <script type="module" src="/js/ml/proactive-recommendations.js"></script>
-
-    <!-- 📚 FEEDBACK LEARNING - AI learns from user feedback -->
-    <script type="module" src="/js/ml/feedback-learning.js"></script>
-
-    <!-- 🧠 CONVERSATIONAL MEMORY - Multi-turn conversation context -->
-    <script type="module" src="/js/ml/conversational-memory.js"></script>
-
-    <!-- 🎭 PERSONALITY ADAPTER - Adapts AI tone to match user style -->
-    <script type="module" src="/js/ml/personality-adapter.js"></script>
-
-    <!-- 🔗 INTENT CHAINING - Multi-turn conversation workflows -->
-    <script type="module" src="/js/ml/intent-chaining.js"></script>
-
-    <!-- 🔍 AI INSIGHTS - Deep itinerary analysis -->
-    <script type="module" src="/js/ml/ai-insights.js"></script>
-
-    <!-- 🎮 FASE 5: REINFORCEMENT LEARNING -->
-    <script type="module" src="/js/ml/reinforcement-learning.js"></script>
-
-    <!-- 🧠 FASE 6: META-LEARNING - Aprender a Aprender -->
-    <script type="module" src="/js/ml/meta-learning.js"></script>
-    <script type="module" src="/js/ml/transfer-learning.js"></script>
-    <script type="module" src="/js/ml/few-shot-learning.js"></script>
-    <script type="module" src="/js/ml/curriculum-learning.js"></script>
-    <script type="module" src="/js/ml/learning-strategies.js"></script>
-    <script type="module" src="/js/ml/self-improvement.js"></script>
-
-    <!-- 💬 FASE 7: DIALOGUE & CONVERSATIONAL AI -->
-    <script type="module" src="/js/ml/dialogue-manager.js"></script>
-    <script type="module" src="/js/ml/conversational-ai.js"></script>
-    <script type="module" src="/js/ml/reasoning-engine.js"></script>
-    <script type="module" src="/js/ml/proactive-assistant.js"></script>
-
-    <!-- 🌳 FASE 8.5: HUMAN-LIKE REASONING CORE -->
-    <script type="module" src="/js/ml/tree-of-thoughts.js"></script>
-    <script type="module" src="/js/ml/uncertainty-handler.js"></script>
-
-    <!-- 🤖 FASE 11.5: INDEPENDENT DECISION ENGINE -->
-    <script type="module" src="/js/ml/multi-agent-debate.js"></script>
-    <script type="module" src="/js/ml/fallback-autonomy.js"></script>
-
-    <!-- ⚡ FASE 12.5: EFFICIENCY OPTIMIZER -->
-    <script type="module" src="/js/ml/thought-optimizer.js"></script>
-
-    <!-- 🧠 FASE 13: LONG-TERM MEMORY SYSTEM -->
-    <script type="module" src="/js/ml/long-term-memory.js"></script>
-
-    <!-- 🌐 JAPAN DATA INTEGRATION -->
-    <script type="module" src="/js/core/data-integration.js"></script>
-
-    <!-- 🔍 FASE 10: VISUAL INTELLIGENCE - Image Search & Recognition -->
-    <script type="module" src="/js/ml/visual-intelligence.js"></script>
-
-    <!-- 🐝 FASE 9+: SWARM INTELLIGENCE ADVANCED - Real-world optimization -->
-    <script type="module" src="/js/ml/swarm-intelligence-advanced.js"></script>
-
-    <!-- 🤖 FASE 11: AUTONOMOUS AGENT - Goal-oriented planning -->
-    <script type="module" src="/js/ml/autonomous-agent.js"></script>
-
-    <!-- 🪞 FASE 12: SELF-REFLECTION ENGINE - Self-assessment & improvement -->
-    <script type="module" src="/js/ml/self-reflection.js"></script>
-
-    <!-- 🎓 AUTO-TRAINER - Automatic training from user data -->
-    <script type="module" src="/js/ml/auto-trainer.js"></script>
-
-    <!-- 🔍 FASE 14: EXPLAINABLE AI - Why did the AI decide this? -->
-    <script type="module" src="/js/ml/explainable-ai.js"></script>
-
-    <!-- 🎯 FASE 15: ACTIVE LEARNING - Smart questioning system -->
-    <script type="module" src="/js/ml/active-learning.js"></script>
-
-    <!-- 🎼 FASE 16: ENSEMBLE METHODS - Combining multiple models -->
-    <script type="module" src="/js/ml/ensemble-methods.js"></script>
-
-    <!-- 🧵 FASE 17: CONTEXTUAL MEMORY NETWORKS - Understanding full conversation context -->
-    <script type="module" src="/js/ml/contextual-memory-networks.js"></script>
-
-    <!-- 🎨 FASE 18: ADAPTIVE RESPONSE GENERATION - Responses that adapt to you -->
-    <script type="module" src="/js/ml/adaptive-response-generation.js"></script>
-
-    <!-- 💬 AI CHAT UI - Interface for talking to the AI -->
-    <script type="module" src="/js/ai/ai-chat-ui.js"></script>
+    <!-- AI/ML experimental stack: deferred and code-split. -->
+    <script type="module" src="/js/performance/lazy-ai-stack.js"></script>
+    <script type="module" src="/js/performance/lazy-vendors.js"></script>
+    <script type="module" src="/js/performance/lazy-extras.js"></script>
+    <script type="module" src="/js/performance/lazy-japan-tools.js"></script>
+    <script type="module" src="/js/performance/lazy-account.js"></script>
+    <script type="module" src="/js/features/planning/today-mode.js"></script>
 
     <!-- 📸 INSTAGRAM TIMELINE - Visual timeline of your trip -->
     <script type="module" src="/js/features/journal/instagram-timeline.js"></script>
 
     <!-- 📊 ANALYTICS DASHBOARD - Data visualizations -->
-    <script type="module" src="/js/analytics/analytics-dashboard.js"></script>
+
 
     <!-- 📊 ANALYTICS INTEGRATION - Connect charts to app -->
-    <script type="module" src="/js/analytics/analytics-integration.js"></script>
+
 
     <!-- 📔 TRAVEL JOURNAL - Personal travel diary -->
     <script type="module" src="/js/features/journal/travel-journal.js"></script>
@@ -1200,7 +1042,7 @@
     <script type="module" src="/js/ui/dashboard-enhanced.js"></script>
 
     <!-- 💰 BUDGET VISUAL CHARTS - Beautiful budget visualizations -->
-    <script type="module" src="/js/features/budget/budget-visual-charts.js"></script>
+
 
     <!-- 🔍 GLOBAL SEARCH & FILTERS - Advanced search and filtering -->
     <script type="module" src="/js/ui/global-search-filters.js"></script>

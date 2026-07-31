@@ -177,7 +177,7 @@ const RamenPassportUI = {
     if (visitas.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">🍜</div>
+          <img class="jp-collection-empty__art" src="/images/illustrations/generated/food/tonkotsu-ramen.webp" alt="Bowl de ramen en acuarela" loading="lazy">
           <h4 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 8px;">
             No has registrado ningún ramen aún
           </h4>

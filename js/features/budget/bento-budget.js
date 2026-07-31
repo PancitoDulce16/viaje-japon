@@ -153,10 +153,10 @@ export const BentoBudget = {
     const s = this.computeStats();
 
     container.innerHTML = `
-      <div class="max-w-5xl mx-auto px-3 sm:px-4 py-4">
+      <div class="jp-budget-page max-w-5xl mx-auto px-3 sm:px-4 py-4">
 
         <!-- Header + resumen -->
-        <div class="text-center mb-4">
+        <div class="jp-budget-head text-center mb-4">
           <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-800 dark:text-white">🍱 Bento Budget</h2>
           <p class="text-sm text-gray-500 dark:text-gray-400">Cada compartimento se llena con lo que gastas — que no se te desborde el bento</p>
         </div>

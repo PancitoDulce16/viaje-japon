@@ -1,0 +1,796 @@
+/* ============================================================
+   chat-washi.css — el chat como hilo de notitas en una libreta
+   Fuente de verdad: Desktop/Nueva carpeta → "Japitin chat ref.webp"
+   (incluye su bloque de modo oscuro: noche en Japón, faroles cálidos)
+
+   Cada mensaje es un PAPEL — notita, ticket o postal — con su propio tono
+   por interlocutor y una inclinación leve. Si se ocultan las ilustraciones
+   esto sigue siendo papelería, no un messenger.
+   ============================================================ */
+
+/* Marco del modal: solo sostiene la hoja y el cierre. La cabecera real
+   es .jc-head, dentro del propio chat. */
+.jc-shell {
+  position: relative;
+  width: 100%;
+  max-width: 1220px;
+  border-radius: 8px 16px 8px 16px;
+  box-shadow: 0 26px 56px -22px rgba(var(--shadow-rgb), 0.55);
+  overflow: hidden;
+}
+
+.jc-app { display: grid; grid-template-columns: 250px minmax(0, 1fr) 230px; height: min(780px, 88vh); background: var(--surface-page); }
+.jc-app .jc-chat { height: 100%; max-height: none; min-width: 0; border-radius: 0; border-inline: 1px solid var(--hairline); }
+
+.jc-threads, .jc-guide { min-width: 0; padding: 18px 14px; background: color-mix(in srgb, var(--color-kasumi) 5%, var(--surface-page)); color: var(--ink); overflow-y: auto; }
+.jc-threads { display: flex; flex-direction: column; gap: 14px; }
+.jc-threads__head { display: flex; align-items: center; justify-content: space-between; }
+.jc-threads__head h2 { margin: 2px 0 0; font: 800 1.25rem/1 var(--jp-font-display); }
+.jc-kicker { font: 700 .58rem/1 var(--font-mono); letter-spacing: .12em; color: var(--color-kasumi-deep); }
+.jc-iconbtn, .jc-tool { width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 1px solid color-mix(in srgb, var(--color-kasumi) 32%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--color-kasumi) 12%, var(--surface-page)); color: var(--ink); cursor: pointer; }
+.jc-search { display: flex; align-items: center; gap: 7px; padding: 7px 10px; border: 1px solid var(--hairline); border-radius: 10px; background: var(--surface-page); }
+.jc-search input { width: 100%; min-width: 0; border: 0 !important; outline: 0; padding: 0 !important; background: transparent !important; color: var(--ink) !important; font-size: .76rem !important; }
+.jc-thread-card { width: 100%; display: grid; grid-template-columns: 44px minmax(0,1fr) auto; align-items: center; gap: 9px; padding: 10px; border: 1px solid transparent; border-radius: 5px 13px 5px 13px; text-align: left; background: transparent; color: var(--ink); }
+.jc-thread-card img { width: 44px; height: 44px; object-fit: cover; border-radius: 50%; }
+.jc-thread-card span { min-width: 0; display: grid; gap: 3px; }
+.jc-thread-card b, .jc-thread-card small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.jc-thread-card b { font-size: .8rem; }.jc-thread-card small, .jc-thread-card time { color: var(--ink-soft); font-size: .64rem; }
+.jc-thread-card--active { background: color-mix(in srgb, var(--color-kasumi) 15%, var(--surface-page)); border-color: color-mix(in srgb, var(--color-kasumi) 35%, transparent); box-shadow: 0 5px 12px -10px rgba(var(--shadow-rgb),.5); }
+.jc-thread-card--tip { grid-template-columns: 44px 1fr; margin-top: 3px; border-top: 1px dashed var(--hairline); border-radius: 0; }
+.jc-threads__foot { margin-top: auto; padding-top: 13px; border-top: 1px dashed var(--hairline); font-size: .66rem; color: var(--ink-soft); }
+.jc-threads__foot span { color: var(--color-kasumi-deep); font-family: serif; font-weight: 800; }
+
+.jc-sidebar-toggle { display: none; }
+.jc-members { display: flex; margin-top: 5px; }
+.jc-members span { width: 23px; height: 23px; display: grid; place-items: center; margin-left: calc(var(--i) * -4px); border: 2px solid var(--surface-page); border-radius: 50%; background: color-mix(in srgb, var(--color-kasumi) calc(18% + var(--i) * 6%), var(--surface-page)); font-size: .6rem; font-weight: 800; }
+
+.jc-guide { display: flex; flex-direction: column; gap: 12px; }
+.jc-guide__title { display: flex; align-items: center; gap: 8px; }.jc-guide__title span { color: var(--color-kasumi-deep); }.jc-guide__title h3 { margin: 0; font: 800 1rem/1.2 var(--jp-font-display); }
+.jc-guide__card { padding: 12px; border: 1px solid var(--hairline); border-radius: 5px 13px 5px 13px; background: var(--surface-page); box-shadow: 0 5px 14px -13px rgba(var(--shadow-rgb),.5); }
+.jc-guide__card b { font-size: .76rem; }.jc-guide__card p, .jc-guide__tip { margin: 5px 0 0; font-size: .68rem; line-height: 1.5; color: var(--ink-soft); }
+.jc-guide__mascot { width: 120px; margin: auto auto 0; transform: rotate(2deg); filter: drop-shadow(0 7px 8px rgba(var(--shadow-rgb),.18)); }
+.jc-guide__tip { padding: 11px; border-top: 1px dashed color-mix(in srgb, var(--color-kasumi) 42%, transparent); }
+
+.jc-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 5;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-kasumi) 26%, #fff);
+  color: var(--color-kasumi-deep);
+  cursor: pointer;
+  transition: transform var(--motion-micro) var(--motion-ease), background var(--motion-micro) var(--motion-ease);
+}
+
+.jc-close:hover { transform: rotate(90deg); background: color-mix(in srgb, var(--color-kasumi) 42%, #fff); }
+.jc-close:focus-visible { outline: 3px solid var(--color-kasumi); outline-offset: 3px; }
+
+.dark .jc-close { background: color-mix(in srgb, var(--color-kasumi) 30%, var(--surface-page-alt)); color: #fff; }
+
+@media (max-width: 768px) {
+  /* A pantalla completa de verdad: el .modal centra con padding, que
+     empujaba la cabecera del chat fuera del borde superior. */
+  #modal-chat {
+    padding: 0 !important;
+    align-items: stretch !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+  /* mobile-optimizations.css:289 pinta TODO `.modal > div` con
+     max-width/margin/max-height !important (pensado para modales-card
+     normales) — sin ganarle ahí, la hoja de chat queda encogida a una
+     tarjeta flotante con 16px de margen en vez de ocupar la pantalla.
+     Se sube a #modal-chat > .jc-shell (ID + clase) y se iguala el
+     !important para ganar el empate. */
+  #modal-chat > .jc-shell {
+    max-width: none !important;
+    width: 100%;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* .jc-shell no es flex, así que #chatModalContent (su único hijo real)
+     quedaba con altura auto = altura de su contenido, y el `height:100%`
+     de .jc-chat más abajo no tenía nada definido contra qué resolverse
+     (se quedaba en ~260px, un cuadrito arriba con hueco en blanco debajo).
+     Se fuerza la cadena de alturas completa hasta .jc-chat. */
+  #chatModalContent { height: 100%; }
+  /* !important: la regla base .jc-chat{height:600px} vive MÁS ABAJO en este
+     mismo archivo (fuera de cualquier media query), así que en el cascade
+     gana por orden de aparición aunque esta sea la regla "correcta" para
+     móvil — mismo empate de especificidad, pero orden de fuente contrario
+     al que se necesita. */
+  .jc-chat { height: 100% !important; max-height: none !important; border-radius: 0; }
+
+  /* El bottom-nav tapaba la caja de escribir. El chat es modal: mientras
+     está abierto no compite con la navegación de la app. */
+  body:has(#modal-chat.active) .mobile-bottom-nav { display: none !important; }
+  body:has(#modal-chat.active) { padding-bottom: 0 !important; }
+}
+
+.jc-chat {
+  display: flex;
+  flex-direction: column;
+  height: 600px;
+  max-height: 80vh;
+  background-color: var(--surface-page);
+  background-image:
+    linear-gradient(rgba(251, 247, 241, 0.8), rgba(251, 247, 241, 0.8)),
+    url('/images/backgrounds/washi-page-light.webp');
+  background-size: auto, 420px;
+  border-radius: 8px 16px 8px 16px;
+  overflow: hidden;
+}
+
+.dark .jc-chat {
+  background-image:
+    linear-gradient(rgba(27, 34, 56, 0.84), rgba(27, 34, 56, 0.84)),
+    url('/images/backgrounds/washi-page-dark.webp');
+}
+
+/* ---------- Cabecera ---------- */
+
+.jc-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: color-mix(in srgb, var(--color-kasumi) 12%, var(--surface-page));
+  border-bottom: 1px dashed color-mix(in srgb, var(--color-kasumi) 40%, transparent);
+}
+
+.dark .jc-head { background: color-mix(in srgb, var(--color-kasumi) 14%, var(--surface-page-alt)); }
+
+.jc-head__cat {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  flex-shrink: 0;
+  transform: rotate(-4deg);
+  filter: drop-shadow(0 4px 7px rgba(var(--shadow-rgb), 0.22));
+}
+
+.jc-head__text { flex: 1; min-width: 0; }
+
+.jc-head__text h3 {
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jc-head__text p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 0;
+  font-size: 0.74rem;
+  color: var(--ink-soft);
+}
+
+.jc-live {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-matcha);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-matcha) 25%, transparent);
+  animation: jcPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes jcPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+/* Sello de la cabecera */
+.jc-head__stamp {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  transform: rotate(9deg);
+}
+
+.jc-head__stamp::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/images/illustrations/generated/signature-elements/hanko-ring.png') no-repeat center / contain;
+  opacity: 0.85;
+}
+
+.dark .jc-head__stamp::before { filter: brightness(1.5) saturate(1.3); }
+
+.jc-head__stamp i {
+  position: relative;
+  font-style: normal;
+  font-family: 'Yu Mincho', 'Hiragino Mincho ProN', 'Noto Serif JP', serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #E0537A;
+}
+
+.dark .jc-head__stamp i { color: #FF7FA8; }
+
+/* ---------- Hilo ---------- */
+
+.jc-thread {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: clip; /* nunca hidden: crea scrollers anidados en esta app */
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) { .jc-thread { scroll-behavior: auto; } }
+
+.jc-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  max-width: 78%;
+  animation: jcIn var(--motion-base) var(--motion-ease) both;
+}
+
+.jc-msg--mine { margin-left: auto; flex-direction: row-reverse; }
+
+@keyframes jcIn {
+  from { opacity: 0; transform: translateY(7px) rotate(-1deg); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Avatar como sticker redondo con borde de papel */
+.jc-avatar {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-kasumi) 26%, var(--surface-page));
+  border: 2px solid var(--surface-page);
+  box-shadow: 0 2px 5px -2px rgba(var(--shadow-rgb), 0.4);
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+
+.jc-avatar--ghost { background: none; border: 0; box-shadow: none; }
+
+.jc-msg__col { min-width: 0; }
+.jc-reactions { display: flex; gap: 5px; margin: 5px 4px 0; }
+.jc-reactions button { min-width: 36px; height: 24px; padding: 0 7px; border: 1px solid color-mix(in srgb, var(--color-kasumi) 28%, transparent); border-radius: 999px; background: var(--surface-page); color: var(--color-kasumi-deep); font-size: .68rem; cursor: pointer; }
+.jc-reactions button span { color: var(--ink-soft); }
+.jc-reactions { align-items: center; flex-wrap: wrap; }
+.jc-actions { position: relative; }
+.jc-actions summary { list-style: none; width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid color-mix(in srgb, var(--color-kasumi) 28%, transparent); border-radius: 50%; background: var(--surface-page); color: var(--color-kasumi-deep); font-size: .8rem; cursor: pointer; }
+.jc-actions summary::-webkit-details-marker { display: none; }
+.jc-actions > div { position: absolute; z-index: 6; bottom: 30px; left: 0; display: grid; min-width: 112px; padding: 5px; border: 1px solid var(--hairline); border-radius: 5px 11px 5px 11px; background: var(--surface-page); box-shadow: 0 10px 25px -12px rgba(var(--shadow-rgb),.65); }
+.jc-msg--mine .jc-actions > div { right: 0; left: auto; }
+.jc-actions > div button { width: 100%; height: auto; padding: 7px 9px; border: 0; border-radius: 5px; text-align: left; color: var(--ink); }
+.jc-actions > div button:hover { background: color-mix(in srgb, var(--color-kasumi) 16%, transparent); }
+.jc-msg--pinned .jc-note { box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-kasumi) 50%, transparent), 0 8px 18px -10px rgba(var(--shadow-rgb),.5); }
+.jc-msg--focus .jc-note { animation: jcFocus 1.5s ease; }
+@keyframes jcFocus { 25%, 70% { transform: rotate(0) scale(1.025); box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-kasumi) 35%, transparent); } }
+.jc-polaroid { width: min(230px, 100%); margin: 10px 0 3px; padding: 7px 7px 20px; background: #fff; box-shadow: 0 7px 15px -10px rgba(var(--shadow-rgb),.6); transform: rotate(2deg); }
+.jc-polaroid img { width: 100%; max-height: 180px; object-fit: cover; display: block; }
+
+.jc-msg__who {
+  font-family: var(--font-hand);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-kasumi-deep);
+  margin: 0 0 3px 4px;
+}
+
+/* ---------- La notita ---------- */
+
+.jc-note {
+  position: relative;
+  padding: 11px 15px 20px;
+  border-radius: 3px 12px 3px 12px;
+  background: var(--jc-paper, #FDF6EC);
+  border: 1px solid var(--jc-edge, rgba(43, 56, 104, 0.14));
+  box-shadow: 0 3px 8px -5px rgba(var(--shadow-rgb), 0.45);
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform var(--motion-base) var(--motion-ease),
+              box-shadow var(--motion-base) var(--motion-ease);
+}
+
+.jc-note:hover {
+  transform: rotate(0deg) translateY(-2px);
+  box-shadow: 0 10px 18px -10px rgba(var(--shadow-rgb), 0.5);
+}
+
+.jc-note__text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ink);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.jc-note__time {
+  position: absolute;
+  right: 11px;
+  bottom: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--ink-soft);
+  opacity: 0.8;
+}
+
+.jc-note__del {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 23px;
+  height: 23px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-sango);
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity var(--motion-micro) var(--motion-ease), transform var(--motion-micro) var(--motion-ease);
+}
+
+.jc-msg:hover .jc-note__del,
+.jc-note__del:focus-visible { opacity: 1; transform: scale(1); }
+.jc-note__del:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* --- Tonos de papel por interlocutor (asignados en group-chat.js) --- */
+.jc-msg[data-paper="sakura"] .jc-note { --jc-paper: #FDEDF2; --jc-edge: rgba(224, 83, 122, 0.28); }
+.jc-msg[data-paper="sora"]   .jc-note { --jc-paper: #E9F4FA; --jc-edge: rgba(79, 169, 196, 0.30); }
+.jc-msg[data-paper="matcha"] .jc-note { --jc-paper: #EDF5EE; --jc-edge: rgba(95, 180, 137, 0.32); }
+.jc-msg[data-paper="yuzu"]   .jc-note { --jc-paper: #FDF2E3; --jc-edge: rgba(246, 146, 59, 0.30); }
+.jc-msg[data-paper="fuji"]   .jc-note { --jc-paper: #EFEDF8; --jc-edge: rgba(90, 96, 160, 0.28); }
+.jc-msg[data-paper="kraft"]  .jc-note { --jc-paper: #F6EEE2; --jc-edge: rgba(150, 116, 78, 0.30); }
+
+/* El mensaje propio es un ticket, no una notita: se distingue por FORMA,
+   no solo por color (así sigue siendo legible sin percepción de color). */
+.jc-msg--mine .jc-note {
+  --jc-paper: color-mix(in srgb, var(--color-kasumi) 22%, #FDF6EC);
+  --jc-edge: color-mix(in srgb, var(--color-kasumi-deep) 42%, transparent);
+  border-radius: 12px 3px 12px 3px;
+  border-style: dashed;
+}
+
+/* Muescas de boleto en el mensaje propio */
+.jc-msg--mine .jc-note::before,
+.jc-msg--mine .jc-note::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  margin-top: -4.5px;
+  border-radius: 50%;
+  background: var(--surface-page);
+  border: 1px dashed var(--jc-edge);
+}
+
+.jc-msg--mine .jc-note::before { left: -5px; clip-path: inset(0 0 0 50%); }
+.jc-msg--mine .jc-note::after  { right: -5px; clip-path: inset(0 50% 0 0); }
+
+/* Papeles en oscuro: siguen siendo papel, iluminado por farol */
+.dark .jc-msg .jc-note { --jc-paper: #2E3350; --jc-edge: rgba(242, 238, 228, 0.18); }
+.dark .jc-msg[data-paper="sakura"] .jc-note { --jc-paper: #3A2C3C; --jc-edge: rgba(255, 143, 187, 0.30); }
+.dark .jc-msg[data-paper="sora"]   .jc-note { --jc-paper: #22344A; --jc-edge: rgba(159, 217, 238, 0.26); }
+.dark .jc-msg[data-paper="matcha"] .jc-note { --jc-paper: #26382F; --jc-edge: rgba(95, 180, 137, 0.30); }
+.dark .jc-msg[data-paper="yuzu"]   .jc-note { --jc-paper: #3B3227; --jc-edge: rgba(246, 146, 59, 0.32); }
+.dark .jc-msg[data-paper="fuji"]   .jc-note { --jc-paper: #2C2E49; --jc-edge: rgba(160, 165, 220, 0.26); }
+.dark .jc-msg[data-paper="kraft"]  .jc-note { --jc-paper: #37302A; --jc-edge: rgba(200, 165, 120, 0.28); }
+.dark .jc-msg--mine .jc-note {
+  --jc-paper: color-mix(in srgb, var(--color-kasumi) 24%, #2A2E48);
+  --jc-edge: color-mix(in srgb, var(--color-kasumi) 55%, transparent);
+}
+.dark .jc-msg--mine .jc-note::before,
+.dark .jc-msg--mine .jc-note::after { background: var(--surface-page); }
+
+/* ---------- Vacío ---------- */
+
+.jc-empty {
+  margin: auto;
+  text-align: center;
+  padding: 30px 20px;
+}
+
+/* El asset del perrito trae fondo blanco (no es transparente), así que
+   suelto sobre el papel crema se leía como una caja blanca sin explicación.
+   Se enmarca como polaroid — que además es lenguaje propio de la referencia
+   — y el borde blanco pasa a ser intencional en vez de un defecto. */
+.jc-empty img {
+  width: 96px;
+  height: auto;
+  display: block;
+  margin: 0 auto 14px;
+  padding: 7px 7px 20px;
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 6px 14px -8px rgba(var(--shadow-rgb), 0.55);
+  transform: rotate(-3deg);
+}
+
+.dark .jc-empty img { background: #E8E4DA; }
+
+.jc-empty__title {
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: 1.02rem;
+  color: var(--ink);
+  margin: 0 0 3px;
+}
+
+.jc-empty__sub { font-family: var(--font-hand); font-size: 1.08rem; color: var(--ink-soft); margin: 0; }
+
+.jc-cta {
+  margin-top: 18px;
+  padding: 10px 22px;
+  border: 0;
+  border-radius: 999px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-kasumi), var(--color-kasumi-deep));
+  box-shadow: 0 8px 18px -8px rgba(241, 111, 163, 0.85);
+  cursor: pointer;
+  transition: transform var(--motion-micro) var(--motion-ease), filter var(--motion-micro) var(--motion-ease);
+}
+
+.jc-cta:hover { transform: translateY(-2px); filter: brightness(1.06); }
+.jc-cta:active { transform: translateY(0) scale(0.97); }
+.jc-cta:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+/* ---------- Escribiendo ---------- */
+
+.jc-typing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 20px 8px;
+  font-size: 0.74rem;
+  color: var(--ink-soft);
+}
+
+.jc-typing.hidden { display: none; }
+
+.jc-typing__dots { display: inline-flex; gap: 4px; }
+
+.jc-typing__dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-kasumi);
+  animation: jcBounce 1.2s ease-in-out infinite;
+}
+
+.jc-typing__dots i:nth-child(2) { animation-delay: 0.15s; }
+.jc-typing__dots i:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes jcBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.55; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* ---------- Caja de mensaje ---------- */
+
+.jc-pins { display: flex; align-items: center; gap: 8px; min-height: 32px; padding: 6px 16px; border-bottom: 1px dashed color-mix(in srgb, var(--color-kasumi) 32%, transparent); background: color-mix(in srgb, var(--color-kasumi) 8%, var(--surface-page)); font-size: .7rem; color: var(--ink-soft); }
+.jc-pins[hidden] { display: none; }
+.jc-pins > span { flex: 0 0 auto; color: var(--color-kasumi-deep); font-weight: 800; }
+.jc-pins > button { min-width: 0; padding: 2px 0; border: 0; background: transparent; color: var(--ink); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: pointer; }
+
+.jc-compose {
+  position: relative;
+  padding: 14px 16px 13px;
+  background: var(--surface-page);
+  border-top: 1px dashed color-mix(in srgb, var(--color-kasumi) 34%, transparent);
+}
+
+.dark .jc-compose { background: var(--surface-page-alt); }
+
+/* Clip de papel sujetando la hoja de escritura (ref: la caja de mensaje
+   es una hoja en blanco con clip) */
+.jc-compose::before {
+  content: '';
+  position: absolute;
+  top: -13px;
+  left: 26px;
+  width: 26px;
+  height: 34px;
+  background: url('/images/illustrations/generated/signature-elements/paper-clip.png') no-repeat center / contain;
+  transform: rotate(-6deg);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.dark .jc-compose::before { filter: brightness(1.35); }
+
+.jc-compose__row { display: flex; gap: 9px; align-items: center; }
+.jc-tool { flex: 0 0 auto; font-size: 1rem; }
+
+input.jc-input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 14px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--jw-paper-warm, #FDF6EC);
+  border: 0;
+  /* Renglón de libreta, no caja con borde */
+  border-bottom: 1.5px solid color-mix(in srgb, var(--ink) 22%, transparent);
+  border-radius: 3px 3px 0 0;
+  transition: border-color var(--motion-micro) var(--motion-ease);
+}
+
+/* dark-mode-ultra-contrast.css:106 pinta `html.dark input` con !important
+   (carbón + borde gris de 2px). Medido: con `.dark input.jc-input` NO
+   bastaba, así que se iguala el prefijo `html.dark` para ganar también en
+   el recuento de elementos (0,2,2 vs 0,1,2). Sin esto el renglón de
+   libreta vuelve a ser una caja de dashboard en modo oscuro. */
+html.dark input.jc-input {
+  background: color-mix(in srgb, var(--color-kasumi) 7%, var(--surface-page)) !important;
+  border: 0 !important;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--ink) 32%, transparent) !important;
+  color: var(--ink) !important;
+}
+
+input.jc-input:focus { outline: none; border-bottom-color: var(--color-kasumi-deep); }
+input.jc-input:focus-visible { outline: 3px solid var(--color-kasumi); outline-offset: 2px; }
+.jc-input::placeholder { color: var(--ink-soft); opacity: 0.7; }
+
+button.jc-send {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-kasumi), var(--color-kasumi-deep));
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 5px 12px -6px rgba(241, 111, 163, 0.9);
+  transition: transform var(--motion-micro) var(--motion-ease), filter var(--motion-micro) var(--motion-ease);
+}
+
+button.jc-send:hover { transform: translateY(-2px); filter: brightness(1.06); }
+button.jc-send:active { transform: translateY(0) scale(0.95); }
+button.jc-send:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+button.jc-send:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.jc-compose__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 9px;
+  padding: 0 2px;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+}
+
+.jc-me { font-family: var(--font-hand); font-size: 0.98rem; color: var(--color-kasumi-deep); font-weight: 700; }
+.jc-compose__meta b { color: var(--ink); }
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 640px) {
+  .jc-msg { max-width: 88%; }
+  .jc-thread { padding: 14px 12px; gap: 12px; }
+  .jc-head { padding: 12px 14px; }
+  .jc-head__cat { width: 42px; height: 42px; }
+  .jc-head__stamp { width: 34px; height: 34px; }
+  .jc-compose__meta { font-size: 0.66rem; }
+}
+
+.jc-reply-preview { display: flex; align-items: center; gap: 10px; margin: -3px 0 9px 35px; padding: 6px 9px; border-left: 3px solid var(--color-kasumi-deep); background: color-mix(in srgb, var(--color-kasumi) 9%, transparent); color: var(--ink-soft); font-size: .68rem; }
+.jc-reply-preview[hidden] { display: none; }
+.jc-reply-preview span { min-width: 0; display: grid; flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.jc-reply-preview b { color: var(--color-kasumi-deep); }
+.jc-reply-preview button { width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--ink); font-size: 1rem; cursor: pointer; }
+
+.jc-reply-quote { width: 100%; display: grid; gap: 2px; margin: 0 0 8px; padding: 6px 8px; border: 0; border-left: 3px solid var(--color-kasumi-deep); border-radius: 3px; background: rgba(255,255,255,.42); color: var(--ink-soft); text-align: left; cursor: pointer; }
+.jc-reply-quote b { color: var(--color-kasumi-deep); font-size: .63rem; }
+.jc-reply-quote span { max-width: 230px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: .68rem; }
+
+@media (max-width: 1050px) {
+  .jc-app { grid-template-columns: 220px minmax(0, 1fr); }
+  .jc-guide { display: none; }
+}
+
+@media (max-width: 768px) {
+  .jc-app { position: relative; display: block; height: 100%; }
+  .jc-app .jc-chat { width: 100%; border: 0; }
+  .jc-sidebar-toggle { display: grid; }
+  .jc-threads { position: absolute; inset: 0 auto 0 0; z-index: 8; width: min(82vw, 300px); transform: translateX(-105%); transition: transform .24s ease; box-shadow: 14px 0 34px -22px rgba(0,0,0,.65); }
+  .jc-app--threads-open .jc-threads { transform: translateX(0); }
+  .jc-app--threads-open::after { content: ''; position: absolute; inset: 0; z-index: 7; background: rgba(20,26,46,.4); }
+  .jc-head__cat { display: none; }
+}
+
+html.dark .jc-threads, html.dark .jc-guide { background: #171F35; }
+html.dark .jc-thread-card--active, html.dark .jc-guide__card, html.dark .jc-search { background: #222C47; }
+html.dark .jc-polaroid { background: #E8E4DA; }
+
+@media (hover: none) {
+  .jc-note:hover { transform: rotate(var(--tilt, 0deg)); }
+  /* Sin hover no hay forma de revelar el botón de borrar: siempre visible */
+  .jc-msg--mine .jc-note__del { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jc-msg { animation: none; }
+  .jc-note, button.jc-send { transition: none; }
+  .jc-typing__dots i, .jc-live { animation: none; }
+}
+
+/* ---------- Oscuro: restaurar jerarquía ----------
+   Mismo caso que en el wizard: `html.dark *` de ultra-contrast pinta todo
+   el texto de #f5f5f5 y borra la diferencia entre autor, mensaje y hora.
+   Se sube a (0,3,1) con el prefijo html.dark + contenedor. */
+
+html.dark .jc-chat .jc-note__time,
+html.dark .jc-chat .jc-compose__meta,
+html.dark .jc-chat .jc-head__text p,
+html.dark .jc-chat .jc-empty__sub,
+html.dark .jc-chat .jc-typing {
+  color: var(--ink-soft) !important;
+}
+
+html.dark .jc-chat .jc-msg__who,
+html.dark .jc-chat .jc-me {
+  color: #FFA9C8 !important;
+}
+
+html.dark .jc-chat .jc-compose__meta b { color: var(--ink) !important; }
+
+/* ---------- Herramientas del chat Japitin ---------- */
+.jc-msg__who span { margin-left:4px; font-family:sans-serif; font-size:.75rem; }
+.jc-filter-empty { margin:auto; display:grid; justify-items:center; gap:6px; padding:28px; text-align:center; color:var(--ink-soft); }
+.jc-filter-empty > span { width:42px; height:42px; display:grid; place-items:center; border:1px solid color-mix(in srgb,var(--color-kasumi) 40%,transparent); border-radius:50%; color:var(--color-kasumi-deep); font-family:serif; }
+.jc-filter-empty b { color:var(--ink); font:700 .9rem var(--jp-font-display); }
+.jc-filter-empty small { font-size:.7rem; }
+.jc-post-sticker { width:clamp(150px,26vw,220px); aspect-ratio:1; overflow:hidden; margin:-5px; }
+.jc-post-sticker i,.jc-sticker-grid i { display:block; width:300%; height:300%; background:url('/images/illustrations/generated/chat-stickers/japitin-reactions.webp') no-repeat; background-size:100% 100%; transform:translate(calc(var(--sx) * -33.333%),calc(var(--sy) * -33.333%)); transform-origin:top left; }
+.jc-sticker-picker { margin:10px 0 2px 35px; padding:10px; border:1px solid color-mix(in srgb,var(--color-kasumi) 30%,transparent); border-radius:5px 14px 5px 14px; background:color-mix(in srgb,var(--color-kasumi) 7%,var(--surface-page)); box-shadow:0 9px 20px -15px rgba(var(--shadow-rgb),.65); }
+.jc-sticker-picker[hidden] { display:none; }
+.jc-sticker-picker > div:first-child { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:7px; }
+.jc-sticker-picker b { color:var(--ink); font:700 .78rem var(--jp-font-display); }
+.jc-sticker-picker small { color:var(--ink-soft); font-size:.58rem; }
+.jc-sticker-grid { display:grid; grid-template-columns:repeat(9,1fr); gap:4px; }
+.jc-sticker-grid button { min-width:0; aspect-ratio:1; padding:2px; overflow:hidden; border:1px solid transparent; border-radius:8px; background:rgba(255,255,255,.4); cursor:pointer; transition:transform .16s ease,border-color .16s ease; }
+.jc-sticker-grid button:hover { transform:translateY(-3px) rotate(-2deg); border-color:var(--color-kasumi); }
+@media(max-width:640px){.jc-sticker-grid{grid-template-columns:repeat(5,1fr)}.jc-sticker-picker{margin-left:0}.jc-post-sticker{width:165px}}
+
+.jc-date-separator,.jc-unread-separator { width:100%; display:flex; align-items:center; gap:9px; color:var(--ink-soft); font-size:.62rem; text-transform:capitalize; }
+.jc-date-separator::before,.jc-date-separator::after,.jc-unread-separator::before,.jc-unread-separator::after { content:''; height:1px; flex:1; background:var(--hairline); }
+.jc-date-separator span { padding:3px 9px; border-radius:999px; background:var(--surface-page); }
+.jc-unread-separator { color:var(--color-kasumi-deep); font-weight:800; }
+.jc-unread-separator::before,.jc-unread-separator::after { background:color-mix(in srgb,var(--color-kasumi) 52%,transparent); }
+.jc-mention { padding:1px 3px; border-radius:4px; background:color-mix(in srgb,var(--color-kasumi) 22%,transparent); color:var(--color-kasumi-deep); font-weight:800; }
+.jc-mention-suggestions { position:absolute; z-index:8; bottom:100%; left:48px; display:flex; gap:4px; max-width:calc(100% - 70px); padding:7px; overflow-x:auto; border:1px solid var(--hairline); border-radius:9px; background:var(--surface-page); box-shadow:0 9px 25px -15px rgba(var(--shadow-rgb),.7); }
+.jc-mention-suggestions button { flex:0 0 auto; padding:5px 8px; border:0; border-radius:999px; background:color-mix(in srgb,var(--color-kasumi) 14%,transparent); color:var(--ink); font-size:.68rem; cursor:pointer; }
+.jc-note__edit { position:absolute; top:-8px; right:19px; width:23px; height:23px; padding:0; border:0; border-radius:50%; background:var(--surface-page); color:var(--ink); cursor:pointer; opacity:0; box-shadow:0 2px 6px -3px rgba(var(--shadow-rgb),.6); }
+.jc-msg:hover .jc-note__edit,.jc-note__edit:focus-visible { opacity:1; }
+.jc-audio { display:block; width:min(250px,100%); height:34px; margin:8px 0 3px; }
+.jc-file { display:flex; align-items:center; gap:6px; margin:8px 0 3px; padding:8px 10px; border:1px dashed var(--jc-edge); border-radius:7px; color:var(--ink); font-size:.72rem; text-decoration:none; }
+.jc-poll { display:grid; gap:6px; min-width:min(250px,65vw); margin:8px 0 3px; }
+.jc-poll > b { font-size:.78rem; color:var(--ink); }
+.jc-poll button { display:flex; justify-content:space-between; gap:8px; padding:7px 9px; border:1px solid var(--jc-edge); border-radius:7px; background:rgba(255,255,255,.35); color:var(--ink); font-size:.7rem; cursor:pointer; }
+.jc-poll button.active { border-color:var(--color-kasumi-deep); background:color-mix(in srgb,var(--color-kasumi) 18%,transparent); }
+.jc-poll button i { min-width:20px; font-style:normal; font-weight:800; color:var(--color-kasumi-deep); }
+#chatConnectionState { color:var(--color-matcha); font-size:.64rem; }
+#chatConnectionState.offline { color:var(--color-yuzu,#c77a27); }
+@media(max-width:640px){.jc-compose__row{gap:5px}.jc-compose__row .jc-tool{width:30px;height:30px;font-size:.83rem}.jc-note__edit{opacity:1}.jc-head__stamp{display:none}}
+
+/* ============================================================
+   Chat scrapbook v2 — una sola superficie, no columnas de dashboard
+   ============================================================ */
+.jc-shell { max-width:min(1500px,96vw); border-radius:18px 8px 18px 8px; background:#f5eadc; }
+.jc-app { display:block; height:min(860px,92vh); background:transparent; }
+.jc-threads,.jc-guide { display:none !important; }
+.jc-app .jc-chat { width:100%; border:0; }
+.jc-chat { position:relative; height:100%; max-height:none; border-radius:inherit; background-color:#f8f1e6; background-image:linear-gradient(rgba(255,252,246,.22),rgba(255,252,246,.22)),url('/images/backgrounds/chat-scrapbook-v2.webp'); background-size:cover; background-position:center; }
+.dark .jc-chat { background-image:linear-gradient(rgba(18,25,42,.88),rgba(18,25,42,.88)),url('/images/backgrounds/chat-scrapbook-v2.webp'); }
+
+.jc-head { align-self:center; width:min(760px,calc(100% - 120px)); margin:18px auto 3px; padding:13px 26px 15px; border:0; background:#f7dfd7; clip-path:polygon(0 8%,3% 2%,7% 7%,12% 1%,18% 6%,24% 2%,31% 7%,38% 1%,45% 5%,53% 1%,60% 6%,68% 2%,75% 7%,83% 1%,91% 6%,100% 2%,99% 94%,94% 98%,87% 93%,80% 99%,72% 94%,65% 98%,56% 93%,48% 99%,39% 94%,30% 99%,22% 93%,14% 98%,7% 93%,1% 98%); box-shadow:0 15px 30px -24px rgba(74,50,46,.7); transform:rotate(-.25deg); overflow:visible; }
+.jc-head::before { content:''; position:absolute; inset:4px 18%; border-top:12px solid rgba(235,180,169,.24); transform:rotate(.7deg); pointer-events:none; }
+.jc-head__cat { width:58px; height:58px; padding:5px; background:#fffaf2; border:4px solid #fff; border-radius:2px; transform:rotate(-6deg); box-shadow:0 4px 8px -5px rgba(0,0,0,.55); }
+.jc-head__text h3 { font-family:var(--font-hand); font-size:1.35rem; letter-spacing:.01em; }
+.jc-head__text p { font-size:.69rem; }
+.jc-members { position:absolute; right:142px; top:50%; transform:translateY(-50%); }
+.jc-members span { width:30px; height:30px; margin-left:calc(var(--i) * -7px); border:3px solid #fff9f1; box-shadow:0 3px 7px -4px rgba(0,0,0,.6); }
+.jc-head__stamp { display:none; }
+.jc-head .jc-iconbtn { width:34px; height:34px; background:rgba(255,255,255,.38); border-color:rgba(218,111,137,.28); }
+
+.jc-pins { align-self:center; width:min(720px,calc(100% - 150px)); min-height:28px; padding:4px 12px; border:0; border-left:3px solid var(--color-kasumi-deep); background:rgba(255,250,241,.74); transform:rotate(.15deg); }
+.jc-thread { width:min(940px,100%); margin:0 auto; padding:22px 72px 40px; gap:17px; }
+.jc-msg { max-width:76%; }
+.jc-msg__who { margin-left:12px; font-size:1.08rem; transform:rotate(-2deg); }
+.jc-avatar { width:42px; height:42px; margin-top:18px; border:4px solid #fff9f1; background:#fff; box-shadow:0 5px 10px -7px rgba(0,0,0,.65); transform:rotate(-6deg); }
+.jc-note { min-width:190px; padding:15px 20px 23px; border:0; border-radius:0; clip-path:polygon(0 7%,3% 3%,7% 7%,12% 2%,17% 6%,23% 1%,29% 6%,36% 2%,43% 7%,50% 2%,57% 6%,64% 1%,71% 7%,78% 2%,85% 6%,92% 1%,100% 5%,99% 93%,94% 98%,88% 94%,81% 99%,74% 94%,67% 98%,60% 93%,53% 99%,46% 94%,39% 98%,32% 93%,25% 99%,18% 94%,11% 98%,5% 93%,0 97%); box-shadow:none; filter:drop-shadow(0 7px 6px rgba(75,52,45,.12)); }
+.jc-msg--mine .jc-note { border:0; border-radius:0; clip-path:polygon(0 8%,4% 3%,9% 7%,15% 1%,21% 6%,28% 2%,36% 7%,43% 1%,51% 5%,59% 1%,67% 6%,75% 2%,83% 7%,91% 1%,100% 5%,99% 94%,93% 98%,86% 93%,78% 99%,70% 94%,62% 98%,54% 93%,46% 99%,38% 94%,30% 98%,22% 93%,14% 99%,7% 94%,1% 98%); }
+.jc-msg--mine .jc-note::before,.jc-msg--mine .jc-note::after { display:none; }
+.jc-note__text { font-family:var(--font-hand); font-size:1.05rem; line-height:1.42; }
+.jc-note__time { right:17px; bottom:8px; font-size:.56rem; }
+.jc-reactions { margin:2px 10px 0; gap:4px; opacity:.42; transition:opacity .18s ease; }
+.jc-msg:hover .jc-reactions,.jc-reactions:focus-within { opacity:1; }
+.jc-reactions button { min-width:30px; height:23px; padding:0 7px; border:0; background:rgba(255,250,241,.8); box-shadow:0 3px 8px -7px rgba(0,0,0,.8); }
+.jc-post-sticker { width:210px; margin:-15px; }
+.jc-msg:has(.jc-post-sticker) .jc-note { padding:0; background:transparent; filter:drop-shadow(0 8px 6px rgba(55,38,35,.14)); clip-path:none; }
+.jc-msg:has(.jc-post-sticker) .jc-note__time { bottom:-4px; }
+.jc-polaroid { width:min(310px,72vw); padding:9px 9px 29px; margin:9px -3px 4px; transform:rotate(2.2deg); }
+
+.jc-date-separator { color:#75554f; font-family:var(--font-hand); font-size:.88rem; }
+.jc-date-separator::before,.jc-date-separator::after { height:0; border-top:1px solid rgba(112,82,70,.3); background:transparent; transform:rotate(.3deg); }
+.jc-date-separator span { padding:2px 14px; background:transparent; }
+.jc-unread-separator::before,.jc-unread-separator::after { height:2px; background:#c95771; box-shadow:0 1px 0 rgba(255,255,255,.7); }
+.jc-unread-separator span { padding:4px 12px; background:#f8e4dc; clip-path:polygon(4% 0,96% 3%,100% 88%,94% 100%,5% 95%,0 12%); }
+
+.jc-compose { isolation:isolate; align-self:center; width:min(900px,calc(100% - 100px)); margin:0 auto 18px; padding:13px 17px 11px; border:0; background:transparent; clip-path:none; filter:none; overflow:visible; }
+.jc-compose::after { content:''; position:absolute; z-index:-1; inset:0; background:#f5e7d2; clip-path:polygon(0 8%,3% 2%,9% 6%,15% 1%,22% 5%,30% 1%,38% 6%,47% 1%,55% 5%,63% 1%,71% 6%,79% 2%,87% 6%,94% 1%,100% 5%,99% 94%,92% 99%,84% 94%,75% 99%,66% 94%,57% 99%,48% 94%,39% 98%,30% 94%,21% 99%,12% 94%,3% 99%); filter:drop-shadow(0 7px 7px rgba(65,47,40,.16)); pointer-events:none; }
+.dark .jc-compose { background:transparent; }
+.dark .jc-compose::after { background:#252e49; }
+.jc-compose::before { top:-15px; left:22px; }
+.jc-compose__row { position:relative; gap:10px; }
+.jc-tool--plus { width:43px; height:43px; background:#eecbc7; border:0; font-size:1.4rem; transition:transform .2s ease; }
+.jc-tool--plus.active { transform:rotate(45deg); }
+.jc-tooltray { position:absolute; z-index:10; left:-6px; bottom:58px; display:flex; gap:7px; padding:10px 12px; background:#fff8ee; clip-path:polygon(2% 4%,15% 0,27% 5%,39% 1%,52% 5%,64% 0,76% 4%,88% 1%,100% 6%,98% 94%,85% 99%,71% 95%,58% 100%,44% 95%,29% 99%,15% 94%,0 98%); filter:drop-shadow(0 10px 9px rgba(50,35,30,.2)); }
+.jc-tooltray[hidden] { display:none; }
+.jc-tooltray .jc-tool { width:52px; height:50px; display:flex; flex-direction:column; gap:1px; border:0; border-radius:4px; background:transparent; }
+.jc-tooltray .jc-tool:hover { background:#f8e2df; transform:translateY(-3px) rotate(-2deg); }
+.jc-tooltray .jc-tool span { font-size:1.15rem; }
+.jc-tooltray .jc-tool small { font-size:.52rem; color:var(--ink-soft); }
+input.jc-input { padding:11px 10px 8px; background:transparent; border-bottom:1px solid rgba(78,66,61,.25); font-family:var(--font-hand); font-size:1.02rem; }
+button.jc-send { width:46px; height:46px; box-shadow:0 7px 12px -8px rgba(190,65,106,.9); }
+.jc-compose__meta { margin-top:5px; padding-left:50px; }
+.jc-sticker-picker { position:absolute; z-index:11; left:55px; bottom:70px; width:min(520px,80vw); margin:0; }
+
+@media(max-width:768px){
+  .jc-shell{max-width:none}.jc-head{width:calc(100% - 28px);margin:10px auto 0;padding:11px 14px}.jc-head__cat{width:44px;height:44px}.jc-members{display:none}.jc-head__text h3{font-size:1.08rem}.jc-thread{width:100%;padding:18px 14px 28px}.jc-msg{max-width:88%}.jc-compose{width:calc(100% - 20px);margin:0 auto 8px;padding:11px}.jc-compose__meta{padding-left:42px}.jc-tooltray{left:0;max-width:calc(100vw - 32px);overflow-x:auto}.jc-tooltray .jc-tool{flex:0 0 47px}.jc-pins{width:calc(100% - 30px)}
+}
+
+/* Escapes de los button{} globales de los temas (7 archivos, ver
+   CLAUDE.md / memoria del proyecto). Mismo patrón que el prefijo jw-. */
+.jc-chat button.jc-send,
+.jc-chat button.jc-note__del,
+.jc-chat button.jc-cta { text-transform: none; letter-spacing: normal; }
+
+/* Con el chat abierto, los FAB flotantes de la app caían justo encima del
+   botón de enviar en móvil (comprobado a 390px). Se ocultan mientras el
+   modal está activo — vía :has(), sin tocar el ciclo de vida de
+   ModalManager. `.modal.active` es el único mecanismo real de visibilidad
+   de estos modales; `hidden` de Tailwind no los controla. */
+body:has(#modal-chat.active) #main-fab-button,
+body:has(#modal-chat.active) #a11yButton,
+body:has(#modal-chat.active) #chatBtnContainer,
+body:has(#modal-chat.active) #pwa-install-button {
+  display: none !important;
+}

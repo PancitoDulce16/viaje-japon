@@ -209,11 +209,11 @@ export const FlightsHandler = {
     if (!container) return;
 
     container.innerHTML = `
-      <div class="max-w-6xl mx-auto p-4 md:p-6">
+      <div class="max-w-6xl mx-auto p-4 md:p-6 jp-flights-page">
         <h2 class="text-4xl font-bold mb-6 text-gray-800 dark:text-white">✈️ Gestión de Vuelos</h2>
 
         <!-- Mis Vuelos Registrados -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6 jp-flight-wallet">
           <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
             <h3 class="text-2xl font-bold dark:text-white flex items-center gap-2">
               🎫 Mis Vuelos
@@ -232,11 +232,11 @@ export const FlightsHandler = {
         </div>
 
         <!-- Formulario de Agregar Vuelo (Hidden) -->
-        <div id="addFlightForm" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+        <div id="addFlightForm" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6 jp-flight-form">
           ${this.renderAddFlightForm()}
         </div>
 
-        <div class="grid lg:grid-cols-2 gap-6 mb-6">
+        <div class="grid lg:grid-cols-2 gap-6 mb-6 jp-flight-tools">
           <!-- Flight Tracker Links -->
           <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl shadow-lg p-6">
             <h3 class="text-2xl font-bold mb-4 flex items-center gap-2">
@@ -267,7 +267,7 @@ export const FlightsHandler = {
         </div>
 
         <!-- Información de Equipaje -->
-        <div id="baggageInfo" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <div id="baggageInfo" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 jp-baggage-sheet">
           ${this.renderBaggageInfo()}
         </div>
 
@@ -311,7 +311,7 @@ export const FlightsHandler = {
     }
 
     container.innerHTML = this.myFlights.map((flight, index) => `
-      <div class="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg mb-4 border-l-4 border-blue-500">
+      <div class="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg mb-4 border-l-4 border-blue-500 jp-boarding-pass">
         <div class="flex justify-between items-start mb-3 flex-wrap gap-2">
           <div class="flex-1">
             <span class="text-xs font-bold text-blue-600 dark:text-blue-400">${flight.type === 'outbound' ? '🛫 IDA' : '🛬 VUELTA'}</span>

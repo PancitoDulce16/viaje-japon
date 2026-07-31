@@ -173,7 +173,7 @@ const GoshuinBookUI = {
     if (goshuin.length === 0) {
       container.innerHTML = `
         <div class="goshuin-empty-state">
-          <div class="goshuin-empty-icon">⛩️</div>
+          <img class="jp-collection-empty__art" src="/images/illustrations/generated/shrines/torii-gate.webp" alt="Torii japonés en acuarela" loading="lazy">
           <h4 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 8px;">
             Tu libro está vacío
           </h4>

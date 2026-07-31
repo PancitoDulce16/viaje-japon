@@ -71,26 +71,11 @@ class MobileFirst {
 
     nav.innerHTML = `
       <div class="mobile-bottom-nav-items">
-        <div class="mobile-nav-item active" data-tab="itinerary">
-          <i class="far fa-calendar-alt"></i>
-          <span>Itinerario</span>
-        </div>
-        <div class="mobile-nav-item" data-tab="map">
-          <i class="fas fa-map-marked-alt"></i>
-          <span>Mapa</span>
-        </div>
-        <div class="mobile-nav-item" data-tab="budget">
-          <i class="fas fa-yen-sign"></i>
-          <span>Presupuesto</span>
-        </div>
-        <div class="mobile-nav-item" data-tab="tools">
-          <i class="fas fa-tools"></i>
-          <span>Herramientas</span>
-        </div>
-        <div class="mobile-nav-item" data-tab="more">
-          <i class="fas fa-ellipsis-h"></i>
-          <span>Más</span>
-        </div>
+        <div class="mobile-nav-item active" data-tab="home"><i class="fas fa-home"></i><span>Inicio</span></div>
+        <div class="mobile-nav-item" data-tab="itinerary"><i class="far fa-calendar-alt"></i><span>Itinerarios</span></div>
+        <div class="mobile-nav-item mobile-nav-item--create" data-tab="add" aria-label="Agregar viaje"><i class="fas fa-plus"></i><span>Agregar</span></div>
+        <div class="mobile-nav-item" data-tab="map"><i class="fas fa-map-marked-alt"></i><span>Mapa</span></div>
+        <div class="mobile-nav-item" data-tab="journal"><i class="fas fa-book-open"></i><span>Diario</span></div>
       </div>
     `;
 
@@ -126,7 +111,14 @@ class MobileFirst {
     this.hapticFeedback('light');
 
     // Handle special tabs
-    if (tabName === 'tools') {
+    if (tabName === 'home') {
+      document.querySelector('[data-tab="itinerary"]')?.click();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (tabName === 'add') {
+      window.TripsManager?.showCreateTripModal();
+    } else if (tabName === 'journal') {
+      window.TravelJournal?.show();
+    } else if (tabName === 'tools') {
       // Show tools menu
       this.showToolsMenu();
     } else if (tabName === 'more') {

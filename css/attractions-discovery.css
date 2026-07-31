@@ -1,0 +1,54 @@
+/* Atracciones · travel journal discovery experience */
+#content-attractions { --jp-ink: #26345d; --jp-red: #d95d4f; --jp-paper: #fffaf0; }
+.jp-attractions-page { padding-bottom: 7rem; }
+.jp-attractions-hero {
+  position: relative; min-height: 260px; display: flex; align-items: center;
+  padding: clamp(1.5rem, 5vw, 4rem); overflow: hidden; border: 1px solid rgba(84, 65, 48, .14);
+  border-radius: 28px 10px 28px 12px; color: var(--jp-ink);
+  background: #f8eedb url('/images/illustrations/generated/travel-sections/attractions-discovery-banner.webp') center/cover no-repeat;
+  box-shadow: 0 18px 45px rgba(43, 56, 104, .12), 0 2px 0 rgba(255,255,255,.8) inset;
+  isolation: isolate;
+}
+.jp-attractions-hero::after {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(90deg, rgba(255,250,240,.98) 0%, rgba(255,250,240,.88) 34%, rgba(255,250,240,.12) 67%);
+}
+.jp-attractions-hero__copy { max-width: 530px; }
+.jp-attractions-hero__eyebrow { display: block; margin-bottom: .7rem; font: 600 .72rem/1.2 'IBM Plex Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: #a4473d; }
+.jp-attractions-hero h2 { margin: 0; max-width: 11ch; font: 800 clamp(2rem, 5vw, 4rem)/.96 'Bricolage Grotesque', sans-serif; letter-spacing: -.045em; }
+.jp-attractions-hero p { max-width: 42ch; margin: 1rem 0 0; color: #4d5874; font-size: clamp(.95rem, 1.6vw, 1.12rem); line-height: 1.55; }
+.jp-attractions-stats { margin-top: -22px; position: relative; z-index: 2; padding-inline: clamp(.5rem, 3vw, 2rem); }
+.jp-attractions-stats > div { position: relative; overflow: hidden; border: 1px solid rgba(38,52,93,.1) !important; border-left-width: 1px !important; border-radius: 16px 5px 16px 7px; background: rgba(255,255,255,.9) !important; box-shadow: 0 8px 24px rgba(38,52,93,.09); backdrop-filter: blur(8px); }
+.jp-attractions-stats > div::after { content: attr(data-stamp); position: absolute; right: .5rem; bottom: -.5rem; color: currentColor; opacity: .08; font: 800 3.6rem/1 serif; transform: rotate(-10deg); }
+.jp-attractions-search .relative { filter: drop-shadow(0 7px 13px rgba(38,52,93,.08)); }
+.jp-attractions-search input { min-height: 54px; border: 1px solid rgba(38,52,93,.18) !important; border-radius: 17px 7px 17px 7px !important; background: rgba(255,255,255,.86) !important; }
+.jp-attractions-filters { padding: .2rem .15rem .65rem; scroll-snap-type: x proximity; }
+.jp-attractions-filters .filter-btn { scroll-snap-align: start; min-height: 42px; border: 1px solid rgba(38,52,93,.13); border-radius: 999px !important; background: rgba(255,255,255,.72) !important; color: #4b5570; }
+.jp-attractions-filters .filter-btn:hover, .jp-attractions-filters .filter-btn.active { background: var(--jp-ink) !important; color: white !important; border-color: var(--jp-ink); box-shadow: 0 6px 14px rgba(38,52,93,.2); transform: translateY(-1px); }
+.jp-attractions-advanced { padding: 1rem; border: 1px dashed rgba(38,52,93,.2); border-radius: 18px 7px; background: rgba(255,250,240,.68); }
+.jp-attractions-advanced select { min-height: 44px; border: 1px solid rgba(38,52,93,.16) !important; border-radius: 11px 4px 11px 4px !important; background-color: rgba(255,255,255,.88) !important; }
+.jp-attraction-status { display: grid; grid-template-columns: repeat(3, 1fr); gap: .35rem; margin: .75rem 0; }
+.jp-attraction-status button { min-width: 0; padding: .48rem .25rem; border: 1px solid rgba(38,52,93,.12); border-radius: 10px 4px; background: #f8f6f1; color: #687087; font-size: .68rem; font-weight: 700; transition: transform .18s, background .18s, color .18s; }
+.jp-attraction-status button:hover { transform: translateY(-2px); }
+.jp-attraction-status button.is-active { background: #26345d; border-color: #26345d; color: white; box-shadow: 0 5px 12px rgba(38,52,93,.2); }
+.jp-attraction-status button span { display: block; margin-top: .15rem; overflow: hidden; text-overflow: ellipsis; }
+.jp-attractions-page .attraction-card { border-radius: 20px 7px 20px 9px !important; box-shadow: 0 8px 24px rgba(38,52,93,.08) !important; }
+.jp-attractions-page .attraction-card:hover { transform: translateY(-4px); box-shadow: 0 16px 34px rgba(38,52,93,.14) !important; }
+.dark .jp-attractions-hero { color: #f8f3e8; border-color: rgba(255,255,255,.13); }
+.dark .jp-attractions-hero::after { background: linear-gradient(90deg, rgba(20,26,46,.97), rgba(20,26,46,.83) 40%, rgba(20,26,46,.13) 75%); }
+.dark .jp-attractions-hero p { color: #d7dbea; }
+.dark .jp-attractions-stats > div, .dark .jp-attractions-search input { background: rgba(30,38,67,.92) !important; color: #f7f2e9; }
+.dark .jp-attractions-filters .filter-btn, .dark .jp-attractions-advanced, .dark .jp-attractions-advanced select { background-color: rgba(30,38,67,.78) !important; color: #e7eaf4; border-color: rgba(255,255,255,.13) !important; }
+.dark .jp-attraction-status button { background: #212a48; color: #cdd3e4; border-color: rgba(255,255,255,.1); }
+.dark .jp-attraction-status button.is-active { background: #e56d5d; border-color: #e56d5d; color: #fff; }
+@media (max-width: 640px) {
+  .jp-attractions-page { padding-inline: .75rem !important; }
+  .jp-attractions-hero { min-height: 330px; align-items: flex-start; padding: 1.4rem; background-position: 62% center; }
+  .jp-attractions-hero::after { background: linear-gradient(180deg, rgba(255,250,240,.98) 0%, rgba(255,250,240,.83) 48%, rgba(255,250,240,.12) 82%); }
+  .dark .jp-attractions-hero::after { background: linear-gradient(180deg, rgba(20,26,46,.98), rgba(20,26,46,.8) 48%, rgba(20,26,46,.08) 85%); }
+  .jp-attractions-stats { margin-top: -34px; padding-inline: .55rem; gap: .5rem !important; }
+  .jp-attractions-stats > div { padding: .8rem !important; }
+  .jp-attractions-advanced { grid-template-columns: 1fr 1fr; gap: .75rem !important; }
+  .jp-attraction-status button span { font-size: .62rem; }
+}
+@media (prefers-reduced-motion: reduce) { .jp-attractions-page * { scroll-behavior: auto !important; transition-duration: .01ms !important; } }

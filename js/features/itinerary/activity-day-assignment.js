@@ -3,6 +3,7 @@
 
 import { HotelBaseSystem } from '../../api/hotel-base-system.js';
 import { RouteOptimizer } from '../../map/route-optimizer-v2.js';
+import { buildDayRouteFlow, annotateTripRhythm } from './day-route-flow.js';
 
 // 🏝️ Sub-áreas conocidas que, aunque están etiquetadas con la ciudad "padre" (ej. Uji
 // como parte de Kyoto, Miyajima como parte de Hiroshima), son en la práctica
@@ -59,6 +60,7 @@ export const ActivityDayAssignment = {
         day.activities.forEach(activity => {
           allActivities.push({
             ...activity,
+            stayId: activity.stayId || day.stayId || null,
             originalDay: day.day // Guardar día original para referencia
           });
         });
@@ -136,6 +138,7 @@ export const ActivityDayAssignment = {
       if (hotel && hotel.coordinates) {
         hotelsByDay[day.day] = {
           city: city,
+          stayId: day.stayId || null,
           coordinates: hotel.coordinates,
           name: hotel.name
         };
@@ -183,6 +186,7 @@ export const ActivityDayAssignment = {
       // ese hotel resultó geográficamente más cercano en el cálculo bruto (ej. si faltan
       // hoteles configurados para algunos días). Nunca mezclar ciudades entre sí.
       Object.entries(hotelsByDay).forEach(([dayNum, hotel]) => {
+        if (activity.stayId && hotel.stayId && activity.stayId !== hotel.stayId) return;
         if (!HotelBaseSystem.isCityCompatible(hotel.city, activityCity)) {
           return; // ciudad distinta, no es candidato
         }
@@ -239,6 +243,7 @@ export const ActivityDayAssignment = {
       // sí sola no distingue en qué día conviene poner esta actividad.
       const candidateDays = [];
       Object.entries(hotelsByDay).forEach(([dayNum, hotel]) => {
+        if (activity.stayId && hotel.stayId && activity.stayId !== hotel.stayId) return;
         if (!HotelBaseSystem.isCityCompatible(hotel.city, activityCity)) {
           return;
         }
@@ -348,6 +353,7 @@ export const ActivityDayAssignment = {
     const activityCity = HotelBaseSystem.resolveActivityCity(activity);
     if (activityCity) {
       const sameCityDays = days.filter(d => {
+        if (activity.stayId && d.stayId && activity.stayId !== d.stayId) return false;
         const dayCity = d.city || HotelBaseSystem.detectCityForDay(d);
         return dayCity && HotelBaseSystem.isCityCompatible(dayCity, activityCity);
       });
@@ -393,6 +399,7 @@ export const ActivityDayAssignment = {
     if (activityCity) {
       const sameCity = middleDays
         .filter(d => {
+          if (activity.stayId && d.stayId && activity.stayId !== d.stayId) return false;
           const dayCity = d.city || HotelBaseSystem.detectCityForDay(d);
           return dayCity && HotelBaseSystem.isCityCompatible(dayCity, activityCity);
         })
@@ -1034,6 +1041,7 @@ export const ActivityDayAssignment = {
 
     itinerary.days.forEach(day => {
       if (day.activities.length <= 1) {
+        day.routeFlow = buildDayRouteFlow(day, hotelsByDay[day.day] || null);
         return; // No hay nada que optimizar
       }
 
@@ -1058,7 +1066,9 @@ export const ActivityDayAssignment = {
         day.activities = result.optimizedActivities;
         console.log(`✅ Día ${day.day}: Ruta optimizada (ahorro: ${result.savings.time} min)`);
       }
+      day.routeFlow = buildDayRouteFlow(day, hotel || null);
     });
+    annotateTripRhythm(itinerary.days);
   },
 
   /**

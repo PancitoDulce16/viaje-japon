@@ -1,0 +1,613 @@
+/* ============================================================
+   create-trip-scene.css — "Crear Nuevo Viaje"
+
+   Réplica exacta de la referencia oficial (Desktop/Nueva carpeta →
+   "itinerary wizard 1 ref.webp"): panel grande, doble encabezado,
+   dos boletos en grid de 2 columnas con checklist y botón completos,
+   banner de nota a todo lo ancho con washi tape y stickers a ambos
+   lados. Sin composición asimétrica ni escena de escritorio — esto
+   es una reproducción literal pedida explícitamente por la usuaria.
+
+   Cada boleto = imagen (mitad superior: solapa+badge+título+
+   personaje+descripción, recortada de tk-{simple,wizard}-crop-head.webp)
+   + HTML real debajo (checklist, sello de tiempo, botón de acción) con
+   un color de fondo que continúa el cartón del boleto sin costura.
+   ============================================================ */
+
+/* ---- Panel principal ---- */
+
+/* Papel real, no un div de color plano: textura washi tenue + velo cálido.
+   La referencia jamás muestra blanco puro — el "parece un div blanco" que
+   señaló la usuaria era exactamente esto: faltaba la imagen de textura,
+   solo había background-color. */
+.jp-create-modal {
+  background-color: #FBF7F1 !important;
+  background-image:
+    linear-gradient(rgba(251, 247, 241, 0.68), rgba(251, 247, 241, 0.68)),
+    url('/images/backgrounds/washi-page-light.webp') !important;
+  background-size: auto, 420px !important;
+  border: 1px solid var(--hairline);
+  border-radius: 22px !important;
+  color: var(--ink);
+  position: relative;
+}
+
+/* Padding y márgenes compactados: medí la referencia (grid de % sobre
+   itinerary wizard 1 ref.webp) y el header+huecos se comen proporción que
+   en la referencia es de los boletos (30%-80% = 50% del alto total). El
+   p-8/mb-6 genéricos de Tailwind eran demasiado generosos para esa meta. */
+.jp-create-pad { padding: 34px 56px 40px; }
+.jp-create-headrow { margin-bottom: 8px !important; }
+
+/* El SVG ya dibuja su propio borde de estampilla (troquelado + marco
+   interior), así que el contenedor solo necesita el tamaño — un
+   border/background propios acá dibujaban un doble marco. */
+.jp-create-stamp {
+  flex: 0 0 62px;
+  width: 62px; height: 52px;
+  display: grid; place-items: center;
+}
+
+.jp-create-stamp svg { width: 100%; height: 100%; }
+
+.jp-create-title { font-family: var(--jp-font-display); font-weight: 800; font-size: 1.7rem; color: var(--ink); margin: 0; line-height: 1.1; }
+.jp-create-sub { color: var(--ink-soft); font-size: 0.9rem; margin: 2px 0 0; }
+
+.jp-create-close {
+  width: 42px; height: 42px; flex-shrink: 0;
+  display: grid; place-items: center;
+  border: 0; border-radius: 50%; cursor: pointer;
+  font-size: 1.5rem; line-height: 1; font-weight: 700;
+  background: color-mix(in srgb, var(--color-kasumi) 32%, white);
+  color: var(--color-kasumi-deep);
+  transition: transform 180ms ease, background 180ms ease;
+}
+
+.jp-create-close:hover { transform: rotate(90deg); background: color-mix(in srgb, var(--color-kasumi) 46%, white); }
+.jp-create-close:focus-visible { outline: 3px solid var(--color-kasumi); outline-offset: 3px; }
+
+/* Matasellos decorativo, esquina superior derecha: líneas de cancelación
+   postal + sello circular "日本 / JAPAN" con el Monte Fuji — como un
+   matasellos real, no una franja decorativa genérica. */
+.jp-postmark {
+  position: absolute;
+  top: 2px;
+  right: 56px; /* despejado del botón de cerrar (44px + margen) */
+  width: 240px;
+  height: auto;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  z-index: 0;
+}
+
+html.dark .jp-postmark { mix-blend-mode: screen; opacity: 0.7; }
+
+@media (max-width: 900px) { .jp-postmark { display: none; } }
+
+/* ---- Segundo encabezado: "¿Cómo quieres comenzar tu aventura?" ---- */
+
+.jps-head { text-align: center; margin: 0 0 12px; }
+/* Tailwind preflight fuerza `img{display:block}` — sin display:inline-block
+   acá, el ícono se sale del flujo de línea del h3 y termina flotando
+   arriba-izquierda en vez de ir pegado al texto del encabezado. */
+.jps-head__cat, .jps-head__dog {
+  display: inline-block;
+  width: 44px; height: 44px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+.jps-head__cat { margin: 0 6px 6px 0; }
+.jps-head__dog { margin: 0 0 6px 8px; transform: scaleX(-1); }
+.jps-head h3 {
+  display: inline;
+  font-family: var(--jp-font-display); font-weight: 800; font-size: 1.55rem; color: #2B3868;
+  border-bottom: 7px solid color-mix(in srgb, var(--color-kasumi) 65%, transparent);
+  border-radius: 2px;
+  padding-bottom: 1px;
+}
+.jps-head h3 span { font-size: 0.85em; }
+.jps-head__flower { display: inline-block; vertical-align: -0.1em; }
+.jps-head p { font-family: var(--font-body); font-size: 0.95rem; color: #8A80A0; margin: 10px 0 0; }
+
+/* ---- Grid de 2 boletos, columnas iguales (a propósito, tal como la
+   referencia) ---- */
+
+/* align-items:stretch (no "start"): el Wizard tiene 4 líneas de checklist
+   contra las 3 del Simple — con "start" cada tarjeta se quedaba con SU
+   propio alto de contenido y el Wizard terminaba visiblemente más grande,
+   rompiendo el equilibrio de la referencia (los dos boletos pesan igual).
+   Estirar ambas al alto de la fila y anclar el CTA abajo con margin-top:auto
+   iguala el peso visual sin inventar contenido de relleno. */
+.jps-tickets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+
+@media (max-width: 720px) { .jps-tickets { grid-template-columns: 1fr; } }
+
+/* ---- La tarjeta del boleto: imagen arriba + HTML real abajo,
+   mismo color de cartón para que no se note la costura. ---- */
+
+.jps-card {
+  position: relative;
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--jps-card-bg);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  box-shadow: 0 14px 28px -16px rgba(43, 56, 104, 0.35);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.jps-card:focus-visible { outline: 3px solid var(--color-kasumi); outline-offset: 4px; }
+
+/* El giro (probado en -0.9/1.1deg y luego en -0.35/0.4deg) seguía
+   leyéndose como error — un rectángulo con esquinas redondeadas
+   rotado dentro de una celda de grid nunca llena limpio su caja
+   original, y encima el translateY distinto en cada tarjeta (+4px vs
+   -3px) desalineaba el borde superior 7px entre una y otra, dando la
+   sensación de "tamaños distintos". Los dos boletos deben pesar y
+   verse IGUAL — derechos, mismo tamaño, mismo borde superior. La
+   diferencia sutil de "no es un grid perfecto" ahora viene solo del
+   z-index (el rosa ligeramente por delante) sin tocar el tamaño ni
+   el ángulo. */
+.jps-card--simple {
+  --jps-card-bg: #ECF9FE; --jps-stub: #7289C1; --jps-ink: #3D4BBC; --jps-ink-soft: #5C6690; --jps-accent: #4C5AC8; --jps-accent-deep: #3D4BBC;
+  z-index: 1;
+}
+.jps-card--wizard {
+  --jps-card-bg: #FFF0EE; --jps-stub: #DB969D; --jps-ink: #D95F7F; --jps-ink-soft: #9A6A7C; --jps-accent: #E8608A; --jps-accent-deep: #D8406A;
+  z-index: 2;
+}
+
+.jps-card--simple:hover { transform: translateY(-4px); box-shadow: 0 22px 36px -16px rgba(43, 56, 104, 0.42); }
+.jps-card--wizard:hover { transform: translateY(-4px); box-shadow: 0 22px 36px -16px rgba(43, 56, 104, 0.42); }
+
+/* Franja de color a todo lo alto, continuando la solapa del boleto
+   (la imagen ya trae SU solapa decorada arriba; esta franja plana
+   solo continúa el mismo color hacia abajo, sin costura visible). */
+.jps-card__stub {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 16.7%;
+  background: var(--jps-stub);
+  z-index: 0;
+}
+
+/* El boleto Wizard es un ESPEJO del Simple (tal como la referencia: dos
+   boletos encarados, uno con la solapa a la izquierda y otro a la
+   derecha) — no una copia con los mismos colores en el mismo lugar. */
+.jps-card--wizard .jps-card__stub { left: auto; right: 0; }
+
+/* Borde troquelado (perforado) en el canto EXTERIOR de la solapa —
+   la referencia no es un boleto liso, es un boleto de verdad con
+   muescas circulares repetidas a lo largo de todo el borde.
+   El centro del círculo va EN x:0 (el canto real de la tarjeta), no en
+   un left:-1px: con el offset negativo, la mitad del círculo caía
+   fuera de .jps-card (que tiene overflow:hidden) y el recorte
+   desalineaba el patrón, dejando una franja visible del fondo de
+   página en vez de una muesca limpia. */
+.jps-card__stub::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 0;
+  width: 7px;
+  background-image: radial-gradient(circle 6.5px at 0px 8px, #FBF7F1 6.5px, transparent 6.75px);
+  background-size: 7px 16px;
+  background-repeat: repeat-y;
+}
+
+.jps-card--wizard .jps-card__stub::before { left: auto; right: 0; transform: scaleX(-1); }
+
+.jps-card__top { position: relative; display: block; }
+.jps-card__img { width: 100%; height: auto; display: block; user-select: none; position: relative; z-index: 1; }
+
+/* Capa de tinta sobre la imagen: coordenadas en % de ESTA imagen
+   (1130×322, medidas por muestreo de píxeles). container-type permite
+   usar cqw para que el texto escale con el ancho real del boleto. */
+.jps-card__top { container-type: inline-size; }
+.jps-card__ink { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.jps-card__ink > * { position: absolute; }
+
+/* Vive como hijo directo de .jps-card (NO dentro de .jps-card__top,
+   que solo mide el alto de la imagen recortada) — el texto vertical
+   "IT'S TIME TO EXPLORE"/"JAPITIN MAGIC" es más alto que esa franja.
+
+   El bug real no era de tamaño de texto: era de z-index. La imagen
+   (.jps-card__img) tiene z-index:1 y su alto ESCALA CON EL ANCHO de
+   la tarjeta (imagen de aspecto fijo), mientras el límite superior de
+   esta franja estaba fijado en px absolutos (190px) pensado para un
+   ancho de tarjeta específico. En una ventana más ancha la tarjeta
+   crece más en ancho que en alto, la imagen se vuelve más alta que
+   esos 190px, y — al tener mayor z-index — pintaba ENCIMA de la
+   parte superior del texto, tapando letras ("...TO EXI" en vez de
+   "...TO EXPLORE"). No era recorte por overflow, era una imagen
+   opaca por delante. Con z-index más alto que la imagen, el texto
+   siempre gana sin importar cuánto crezca la imagen, así que la
+   franja segura vuelve a ser casi toda la tarjeta. */
+.jps-stubtext {
+  position: absolute;
+  left: 0; width: 16.7%;
+  top: 10px; bottom: 10px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.jps-card--wizard .jps-stubtext { left: auto; right: 0; }
+
+/* font-size en cqw escala con el ANCHO de la tarjeta, pero la zona
+   segura donde vive este texto (.jps-stubtext, arriba) está acotada en
+   px fijos ligados al ALTO de la tarjeta — y el ancho crece más rápido
+   que el alto según la ventana (medido: 624→780px de ancho vs
+   502→530px de alto entre 1536px y 1920px de viewport). A 3.4cqw el
+   texto ya llegaba justo al límite en la más angosta y se pasaba en
+   la más ancha, cortando "I" y "ORE". Bajarlo dando margen real en
+   vez de un ajuste exacto que se rompe con cualquier ventana distinta. */
+.jps-stubtext span {
+  transform: rotate(180deg);
+  writing-mode: vertical-rl;
+  font-weight: 800;
+  font-size: 2.3cqw;
+  letter-spacing: 0.13em;
+  color: rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+}
+
+.jps-badge {
+  left: 21.7%; top: 22%;
+  transform: none;
+  width: max-content;
+  max-width: 46%;
+  padding: 0.85cqw 2.2cqw;
+  border-radius: 999px;
+  background: var(--jps-accent-deep);
+  font-weight: 800;
+  font-size: 2cqw;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  text-align: center;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* Título: ancla por el borde SUPERIOR (sin centrar), con TODO el espacio
+   libre bajo el pill del badge para él solo — medido con reglas de % reales
+   superpuestas en el navegador (no a ojo): el pill termina ~42%, dejando
+   libre 42%-100% para el título en dos líneas. La descripción YA NO vive
+   aquí — pasó a ser un párrafo HTML normal en .jps-body, donde SÍ hay aire
+   real en vez de pelear por el mismo espacio recortado. */
+.jps-title {
+  left: 21.7%; top: 57%;
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: 6.2cqw;
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: var(--jps-ink);
+  width: 33%;
+}
+
+/* Boleto Wizard espejado: la solapa vive a la derecha, así que el badge
+   y el título arrancan cerca del borde izquierdo real (sin solapa que
+   despejar) en vez de a 21.7%. */
+.jps-card--wizard .jps-badge,
+.jps-card--wizard .jps-title { left: 6%; }
+
+/* ---- Cuerpo real (checklist + sello de tiempo + botón), mismo
+   fondo que el cartón del boleto, sin caja aparte. ---- */
+
+.jps-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 18px 22px 22px calc(16.7% + 20px);
+}
+
+.jps-card--wizard .jps-body { padding: 18px calc(16.7% + 20px) 22px 22px; }
+
+/* La descripción es ahora un párrafo real dentro del cuerpo (ya no vive
+   sobre la imagen, donde competía por el mismo espacio que el título) */
+.jps-desc {
+  display: block;
+  margin: 0 0 16px;
+  padding-right: 92px; /* mismo respiro que el checklist para el sello */
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.42;
+  color: var(--ink);
+}
+
+.jps-divider {
+  display: block;
+  border-top: 2px dashed color-mix(in srgb, var(--jps-accent-deep) 55%, transparent);
+  margin: 0 92px 14px 0;
+}
+
+.jps-includes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--jps-accent-deep);
+  margin: 0 0 12px;
+}
+
+.jps-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+  margin-bottom: 11px;
+  padding-right: 92px; /* deja aire para el sello circular flotante */
+}
+
+.jps-check__dot {
+  flex-shrink: 0;
+  width: 21px; height: 21px;
+  border-radius: 50%;
+  background: var(--jps-accent-deep);
+  display: grid;
+  place-items: center;
+}
+
+.jps-check__dot svg { width: 12px; height: 12px; color: #fff; }
+
+.jps-timebadge {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  width: 84px;
+  height: 84px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  color: var(--jps-accent-deep);
+  text-align: center;
+}
+
+.jps-timebadge__face { position: absolute; inset: 0; width: 100%; height: 100%; }
+.jps-timebadge__text { position: relative; display: flex; flex-direction: column; align-items: center; }
+.jps-timebadge b { font-family: var(--jp-font-display); font-size: 1.15rem; font-weight: 800; line-height: 1; }
+.jps-timebadge i { font-style: normal; font-size: 0.5rem; font-weight: 700; letter-spacing: 0.06em; }
+.jps-timebadge__star {
+  position: absolute;
+  width: 22px; height: 22px;
+  right: -4px; bottom: 6px;
+  color: var(--jps-accent-deep);
+  background: var(--jps-card-bg);
+  border-radius: 50%;
+}
+
+.jps-card--wizard .jps-timebadge { right: calc(16.7% + 14px); }
+
+.jps-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: auto;
+  padding: 13px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--jps-accent), var(--jps-accent-deep));
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.98rem;
+  box-shadow: 0 8px 16px -8px rgba(0, 0, 0, 0.35);
+  transition: filter 180ms ease;
+}
+
+.jps-card:hover .jps-cta { filter: brightness(1.06); }
+
+/* ---- NOTA — composición desacoplada en capas, NO un PNG único.
+   El papel es puro CSS (color + textura repetible), así que su altura
+   es una decisión de diseño (~11-14% del modal, medido contra la
+   referencia) y no queda atada a la proporción fija de ningún asset.
+   La cinta washi y los dos personajes son stickers independientes,
+   recortados y superpuestos por encima — nada viene "horneado" en el
+   fondo. El asset se adapta a la composición, no al revés. */
+
+.jps-note {
+  position: relative;
+  container-type: inline-size;
+  width: 62%; /* medido: la nota ocupa 19%-81% del ancho del modal */
+  height: 116px;
+  margin: 22px auto 0;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, #C9A876 30%, transparent);
+  background-color: #F5EAD4; /* papel plano y limpio — no textura washi */
+  box-shadow: 0 10px 22px -14px rgba(43, 56, 104, 0.3);
+}
+
+.jps-note__tape {
+  position: absolute;
+  width: 8%;
+  height: auto;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.jps-note__tape--a { left: -1%; top: -13%; transform: rotate(-18deg); }
+.jps-note__tape--b { right: -1%; top: -13%; transform: rotate(18deg) scaleX(-1); }
+
+.jps-note__ink {
+  position: absolute; left: 33%; top: 50%; width: 38%; transform: translateY(-50%);
+  text-align: center; font-family: var(--font-body); font-size: 1.9cqw; line-height: 1.34; color: #6B5B42;
+  z-index: 1;
+}
+
+.jps-note__ink b { font-family: var(--font-hand); font-weight: 700; font-size: 1.35em; color: #4A3A24; }
+.jps-note__ink em { font-style: normal; color: #7C7FC9; }
+
+/* Stickers troquelados de verdad: PNG con transparencia real recortada
+   por flood-fill desde los bordes (no un rectángulo con fondo crema),
+   así que el único "borde blanco" visible es el contorno propio del
+   sticker. Sombra muy sutil (para dar un mínimo de altura física, no
+   una tarjeta flotando) y rompen el canto del papel a propósito —
+   invaden el espacio en vez de vivir contenidos dentro del banner. */
+.jps-note__sticker {
+  position: absolute;
+  width: 19%;
+  height: auto;
+  filter: drop-shadow(0 3px 3px rgba(43, 56, 104, 0.22));
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Anclados por el borde SUPERIOR (no centrados) a un top% que arranca
+   claramente por debajo de la cinta washi de arriba — antes, al
+   centrarlos en la mitad de la nota, invadían la misma franja donde
+   vive la cinta y la tapaban. */
+.jps-note__sticker--dog {
+  left: -5%;
+  top: 44%;
+  transform: rotate(-9deg);
+}
+
+.jps-note__sticker--cat {
+  width: 17%;
+  right: -4%;
+  top: 40%;
+  transform: rotate(8deg);
+}
+
+@media (max-width: 720px) {
+  .jps-note { width: 92%; height: 100px; }
+}
+
+/* ---- Oscuro: el escritorio sigue siendo papel cálido de noche ---- */
+
+/* Ancladas a #modal-create-trip: una regla genérica de la app,
+   `html.dark .modal > div, html.dark .modal-content { background-color: ... !important }`,
+   tiene especificidad (0,2,2) — más alta que `.jp-create-modal` sola (0,2,1) — y
+   ganaba, aplanando el fondo a un card oscuro genérico y borrando la textura
+   washi. Anclar al ID sube la especificidad por encima de esa regla. */
+html.dark #modal-create-trip .jp-create-modal {
+  background-color: #FBF7F1 !important;
+  background-image:
+    linear-gradient(rgba(251, 247, 241, 0.68), rgba(251, 247, 241, 0.68)),
+    url('/images/backgrounds/washi-page-light.webp') !important;
+  background-size: auto, 420px !important;
+  filter: brightness(0.97);
+}
+/* .jp-create-sub es un <p>, y `html.dark p:not(.hero-moment__subtext)`
+   tiene especificidad (0,2,2) — más alta que `.jp-create-sub` sola
+   (0,2,1) por el :not(.clase) — así que ganaba y dejaba el subtítulo
+   casi invisible. .jp-create-title es un <h2> y cae en el selector
+   más débil `html.dark h2` (0,1,2), por eso ESE sí sobrevivía. */
+html.dark .jp-create-title { color: #2B3868 !important; }
+html.dark #modal-create-trip .jp-create-sub { color: #5C6690 !important; }
+html.dark #modal-create-trip .jps-head h3 { color: #2B3868 !important; }
+html.dark #modal-create-trip .jps-head p { color: #8A80A0 !important; }
+html.dark .jps-check { color: #2B3868 !important; }
+html.dark #modal-create-trip .jps-check__dot svg,
+html.dark #modal-create-trip .jps-check__dot svg * { color: #fff !important; }
+html.dark #modal-create-trip .jps-includes,
+html.dark #modal-create-trip .jps-includes svg,
+html.dark #modal-create-trip .jps-includes svg * { color: var(--jps-accent-deep) !important; }
+html.dark #modal-create-trip .jps-note__ink em { color: #7C7FC9 !important; }
+html.dark #modal-create-trip .jp-create-close { color: var(--color-kasumi-deep) !important; }
+
+/* dark-mode-ultra-contrast.css aplica `html.dark *:not(.hero-moment__subtext)
+   { color: #f5f5f5 !important }` a TODO. Los tickets/nota son papel claro
+   fijo (de día y de noche), así que su texto necesita su propia tinta —
+   #f5f5f5 sobre un card pastel claro se lee casi invisible. */
+html.dark #modal-create-trip .jps-title { color: var(--jps-ink) !important; }
+html.dark #modal-create-trip .jps-desc { color: var(--jps-ink-soft) !important; }
+html.dark #modal-create-trip .jps-timebadge,
+html.dark #modal-create-trip .jps-timebadge b,
+html.dark #modal-create-trip .jps-timebadge i,
+html.dark #modal-create-trip .jps-timebadge svg,
+html.dark #modal-create-trip .jps-timebadge svg * { color: var(--jps-accent-deep) !important; }
+html.dark #modal-create-trip .jps-note__ink { color: #7A6A55 !important; }
+html.dark #modal-create-trip .jps-note__ink b { color: #5C4B36 !important; }
+
+/* ---- Responsive ---- */
+
+@media (max-width: 720px) {
+  .jp-create-pad { padding: 20px 18px 24px; }
+  .jps-head h3 { font-size: 1.25rem; }
+  .jps-title { font-size: 8cqw; }
+  .jps-badge { font-size: 2.4cqw; }
+  .jps-stubtext span { font-size: 5cqw; }
+  .jps-desc { margin-right: 0; padding-right: 0; font-size: 3.6cqw; }
+  .jps-divider { margin-right: 0; }
+  .jps-body { padding-left: calc(16.7% + 16px); padding-right: 16px; }
+  .jps-card--wizard .jps-body { padding-left: 16px; padding-right: calc(16.7% + 16px); }
+  .jps-check { padding-right: 0; font-size: 0.82rem; }
+  .jps-timebadge { position: static; width: auto; height: auto; flex-direction: row; gap: 6px; margin: 10px 0 4px; justify-content: flex-start; }
+  .jps-timebadge__face { display: none; }
+  .jps-timebadge__star { display: none; }
+  .jps-timebadge__text { flex-direction: row; gap: 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jps-card, .jp-create-close { transition: none; }
+}
+/* ── Viaje simple: documento de salida, no formulario SaaS ────────────── */
+#simpleTripForm { width:min(920px,100%); margin:12px auto 0; }
+#modal-create-trip.active { align-items:flex-start; overflow-y:auto; padding-block:22px; }
+#modal-create-trip .jp-create-modal { margin:auto; flex:0 0 auto; }
+.jpf-back { width:max-content; padding:9px 15px; border:1px solid rgba(43,56,104,.16); border-radius:4px 11px 4px 11px; color:#5c6680!important; background:#fff8ec; text-decoration:none!important; box-shadow:2px 3px 0 rgba(43,56,104,.06); }
+.jpf-form { position:relative; display:grid; grid-template-columns:minmax(0,1.55fr) minmax(280px,.8fr); gap:24px!important; align-items:start; padding:28px; border:1px solid rgba(91,69,42,.18); border-radius:6px 18px 7px 16px; background:#f9f0dc; box-shadow:0 14px 28px -22px rgba(43,56,104,.42),4px 5px 0 rgba(76,57,34,.07); }
+.jpf-form::before { content:''; position:absolute; z-index:0; inset:0; pointer-events:none; opacity:.35; border-radius:inherit; background:url('/images/backgrounds/washi-page-light.webp') center/cover; }
+.jpf-form::after { content:''; position:absolute; top:-10px; left:44%; width:82px; height:24px; background:rgba(240,185,189,.64); clip-path:polygon(3% 9%,98% 0,95% 92%,0 100%); box-shadow:0 2px 3px rgba(72,55,37,.08); }
+.jpf-form>* { position:relative; z-index:1; }
+.jpf-main { position:relative; min-height:430px; padding:34px 34px 30px!important; overflow:hidden; border:0!important; border-radius:4px 14px 4px 13px!important; background:#fffaf0!important; box-shadow:3px 4px 0 rgba(69,55,39,.09)!important; }
+.jpf-main::after { content:'日本'; position:absolute; right:22px; bottom:18px; display:grid; place-items:center; width:68px; height:68px; border:2px solid rgba(195,82,87,.18); border-radius:50%; color:rgba(195,82,87,.28); font:700 15px/1 serif; transform:rotate(-8deg); }
+.jpf-cat { position:absolute; top:24px; right:27px; width:112px; height:112px; object-fit:contain; filter:drop-shadow(0 3px 2px rgba(43,56,104,.12)); }
+.jpf-kicker { margin-bottom:7px; color:#b14f59; font:600 .67rem/1.3 'IBM Plex Mono',monospace; letter-spacing:.12em; text-transform:uppercase; }
+.jpf-title { max-width:70%; margin-bottom:2px!important; color:#2b3868!important; font:800 clamp(1.8rem,3vw,2.65rem)/1 'Bricolage Grotesque',sans-serif!important; letter-spacing:-.045em; }
+.jpf-lead { max-width:55%; margin:0 0 34px; color:#707893; font-size:.92rem; }
+.jpf-main .space-y-4 { display:grid; gap:25px!important; }
+.jpf-main label,.jpf-template label { margin-bottom:7px!important; color:#3d496c!important; font-size:.72rem!important; font-family:'IBM Plex Mono',monospace; letter-spacing:.02em; }
+.jpf-main input,.jpf-template select { min-height:50px; border:0!important; border-bottom:1.5px solid #aeb0ad!important; border-radius:0!important; color:#29365f!important; background:transparent!important; box-shadow:none!important; }
+.jpf-main input:focus,.jpf-template select:focus { outline:3px solid rgba(221,91,116,.14)!important; outline-offset:3px; border-bottom-color:#d95571!important; }
+.jpf-template { position:relative; margin-top:64px; padding:32px 24px 25px 52px!important; overflow:hidden; border:1px dashed #c6ab87!important; border-radius:3px 11px 3px 10px!important; background:#f7e8cd!important; box-shadow:3px 4px 0 rgba(76,57,34,.08)!important; }
+.jpf-template::before,.jpf-template::after { content:''; position:absolute; left:-7px; width:14px; height:14px; border-radius:50%; background:#f9f0dc; }
+.jpf-template::before { top:-7px; }.jpf-template::after { bottom:-7px; }
+.jpf-template__stub { position:absolute; inset:0 auto 0 0; display:grid; place-items:center; width:32px; border-right:1px dashed #c29c6b; color:#8b7050; background:#ead6b4; font:700 .53rem/1 'IBM Plex Mono',monospace; letter-spacing:.14em; writing-mode:vertical-rl; transform:rotate(180deg); }
+.jpf-template h3 { margin-bottom:6px!important; color:#2b3868!important; font:800 1.25rem/1.15 'Bricolage Grotesque',sans-serif!important; }
+.jpf-template select { min-height:44px; font-size:.8rem; }
+.jpf-tip { margin-top:17px; padding:12px!important; border:0!important; border-left:3px solid #c58d62!important; border-radius:0!important; color:#6d5946!important; background:rgba(255,250,240,.55)!important; }
+.jpf-tip p { color:inherit!important; font-size:.72rem; line-height:1.5; }
+.jpf-actions { grid-column:1/-1; align-items:center; margin-top:2px; padding-top:20px; border-top:2px dotted rgba(112,89,59,.18); }
+.jpf-cancel { flex:0 0 auto!important; padding-inline:24px!important; border:0!important; color:#6c6f79!important; background:transparent!important; box-shadow:none!important; }
+.jpf-submit { position:relative; min-height:52px; max-width:360px; margin-left:auto; border:1px solid #c94865!important; border-radius:4px 13px 4px 13px!important; color:#fff!important; background:#d95577!important; box-shadow:3px 4px 0 rgba(150,48,72,.18)!important; }
+.jpf-submit::before,.jpf-submit::after { content:''; position:absolute; top:50%; width:12px; height:22px; border-radius:50%; background:#f9f0dc; transform:translateY(-50%); }
+.jpf-submit::before { left:-7px; }.jpf-submit::after { right:-7px; }
+.jpf-submit:hover { transform:translateY(-1px); filter:brightness(1.04); }
+.jpf-submit:focus-visible,.jpf-cancel:focus-visible,.jpf-back:focus-visible { outline:4px solid rgba(217,85,119,.2); outline-offset:3px; }
+html.dark #modal-create-trip .jpf-main,html.dark #modal-create-trip .jpf-template,html.dark #modal-create-trip .jpf-form { color:#2b3868!important; }
+@media(max-width:720px){
+ #modal-create-trip.active{padding:0}.jp-create-modal{max-height:100dvh!important;border-radius:0!important}
+ #simpleTripForm{margin-top:6px}.jpf-back{margin-bottom:12px!important;font-size:.78rem}.jpf-form{display:block;padding:14px;box-shadow:none}.jpf-form::after{left:39%;width:64px}
+ .jpf-main{min-height:0;padding:24px 18px 26px!important}.jpf-cat{top:16px;right:10px;width:76px;height:76px}.jpf-kicker{max-width:72%;font-size:.5rem;letter-spacing:.06em}.jpf-title{max-width:72%;font-size:1.8rem!important}.jpf-lead{max-width:70%;margin-bottom:28px}
+ .jpf-main .grid{grid-template-columns:1fr!important;gap:19px!important}.jpf-template{margin-top:18px;padding:25px 17px 22px 43px!important}.jpf-actions{display:grid!important;grid-template-columns:auto 1fr;gap:8px!important;margin-top:18px;padding-top:14px}
+ .jpf-cancel{padding-inline:10px!important}.jpf-submit{width:100%;min-width:0;font-size:.95rem!important}
+}

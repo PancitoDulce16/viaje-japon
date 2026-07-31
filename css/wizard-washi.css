@@ -1,0 +1,2283 @@
+/* ============================================================
+   wizard-washi.css — Rediseño del Wizard como objeto de papelería
+   Fuente de verdad: Desktop/Nueva carpeta (refs wizard 1-5)
+   + design-reference/visual-dna-reference.png
+
+   REGLA: las ilustraciones DEFINEN los componentes. Aquí solo hay
+   posicionamiento, capas, estados, responsive y accesibilidad.
+   Si se ocultan las imágenes esto debe seguir siendo papel, sellos
+   y boletos — nunca una card con border-radius + box-shadow.
+   ============================================================ */
+
+:root {
+  --jw-paper: var(--color-washi);
+  --jw-paper-warm: #FDF6EC;
+  --jw-tape-h: 26px;
+  --jw-hanko: #E0537A;
+  --jw-font-jp: 'Yu Mincho', 'Hiragino Mincho ProN', 'Noto Serif JP', 'MS Mincho', serif;
+}
+
+.dark {
+  --jw-paper: #1B2238;
+  --jw-paper-warm: #202942;
+}
+
+/* ------------------------------------------------------------
+   1. SHELL — escritorio de planificación, no modal
+   ------------------------------------------------------------ */
+
+.jw-overlay {
+  position: fixed;
+  inset: 0;
+  /* Por encima del bottom-nav móvil y de los FAB flotantes (que van en el
+     rango 40-60): el wizard es modal, nada de la app debe flotar sobre él. */
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(8px, 2vw, 28px);
+  /* Índigo tintado, nunca negro plano: se lee como "tarde en el cuarto" */
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 143, 187, 0.18), transparent 60%),
+    rgba(43, 56, 104, 0.42);
+  backdrop-filter: blur(3px);
+  overflow-y: auto;
+}
+
+.dark .jw-overlay {
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(255, 143, 187, 0.12), transparent 60%),
+    rgba(8, 12, 26, 0.66);
+}
+
+/* La hoja: papel washi con textura real, esquinas apenas suavizadas
+   (no el rounded-2xl de Tailwind) y sombra índigo, nunca gris. */
+.jw-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 1180px;
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--jw-paper);
+  /* Velo crema sobre la textura: el washi de la app es un estampado de
+     sakura bastante marcado y a tamaño pantalla completa competía con las
+     postales. Las referencias tienen grano de papel, no estampado. */
+  background-image:
+    linear-gradient(rgba(251, 247, 241, 0.74), rgba(251, 247, 241, 0.74)),
+    url('/images/backgrounds/washi-page-light.webp');
+  background-size: auto, 420px;
+  background-repeat: repeat;
+  border-radius: 10px 12px 10px 12px;
+  box-shadow:
+    0 28px 60px -24px rgba(var(--shadow-rgb), 0.5),
+    0 2px 0 rgba(255, 255, 255, 0.5) inset;
+  overflow: hidden;
+}
+
+.dark .jw-sheet {
+  background-image:
+    linear-gradient(rgba(27, 34, 56, 0.78), rgba(27, 34, 56, 0.78)),
+    url('/images/backgrounds/washi-page-dark.webp');
+  box-shadow: 0 28px 60px -20px rgba(0, 0, 0, 0.7);
+}
+
+/* Matasellos decorativo de la esquina — presente en TODAS las refs.
+   Se apaga en dark (tinta sobre papel oscuro no existe). */
+.jw-sheet::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 270px; /* despejado de la etiqueta "Salir del wizard" */
+  width: 180px;
+  height: 104px;
+  background: url('/images/illustrations/generated/decorations/postmark.webp') no-repeat center / contain;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dark .jw-sheet::after { opacity: 0.16; mix-blend-mode: screen; }
+
+@media (max-width: 900px) { .jw-sheet::after { display: none; } }
+
+/* ------------------------------------------------------------
+   2. CABECERA — título + sellos de paso + salida tipo etiqueta
+   ------------------------------------------------------------ */
+
+.jw-head {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px clamp(16px, 3vw, 34px) 14px;
+  flex-wrap: wrap;
+}
+
+.jw-head__title {
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: clamp(1.5rem, 3.2vw, 2.1rem);
+  line-height: 1.05;
+  color: var(--ink);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* Pétalos sueltos junto al título (ref 2/3/4) */
+.jw-head__title::before {
+  content: '';
+  display: inline-block;
+  width: 30px;
+  height: 22px;
+  margin-right: 2px;
+  vertical-align: 0.15em;
+  background: url('/images/illustrations/generated/decorations/washi-pink.webp') no-repeat center / contain;
+  opacity: 0.55;
+}
+
+/* Fila de pasos: píldora del paso actual + nombres separados por puntos */
+.jw-steps {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 9px;
+}
+
+.jw-steps__pill {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: var(--color-kasumi-deep);
+  padding: 5px 13px;
+  border-radius: var(--jp-radius-pill);
+  white-space: nowrap;
+  box-shadow: 0 2px 0 rgba(var(--shadow-rgb), 0.18);
+}
+
+.jw-steps__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  border: 0;
+  background: none;
+  padding: 2px 0;
+  cursor: default;
+  font-family: inherit;
+}
+
+.jw-steps__item--done { cursor: pointer; }
+.jw-steps__item--done:hover .jw-steps__name { color: var(--color-kasumi-deep); }
+.jw-steps__item:focus-visible { outline: 3px solid var(--color-kasumi); outline-offset: 3px; border-radius: 4px; }
+
+.jw-steps__item--active .jw-steps__name {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* Separador de tres puntitos, como en las refs (no una barra de progreso) */
+.jw-steps__dots {
+  color: var(--color-kasumi);
+  letter-spacing: 2px;
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* "Salir del wizard" = etiqueta de equipaje, no un botón */
+.jw-exit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--color-kasumi-deep);
+  background: color-mix(in srgb, var(--color-kasumi) 16%, var(--jw-paper));
+  border: 1px solid color-mix(in srgb, var(--color-kasumi) 40%, transparent);
+  padding: 9px 16px;
+  border-radius: var(--jp-radius-pill);
+  cursor: pointer;
+  transition: transform var(--motion-micro) var(--motion-ease),
+              background var(--motion-micro) var(--motion-ease);
+}
+
+.jw-exit:hover { background: color-mix(in srgb, var(--color-kasumi) 26%, var(--jw-paper)); transform: translateY(-1px); }
+.jw-exit:focus-visible { outline: 3px solid var(--color-kasumi); outline-offset: 3px; }
+
+/* ------------------------------------------------------------
+   3. CUERPO
+   ------------------------------------------------------------ */
+
+.jw-body {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: clip; /* nunca hidden: crea scrollers anidados en esta app */
+  padding: 0 clamp(14px, 3vw, 34px) 26px;
+}
+
+/* Reja principal: contenido + columna narrativa (todas las refs la tienen) */
+.jw-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr);
+  gap: clamp(14px, 2vw, 26px);
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .jw-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ------------------------------------------------------------
+   4. NOTA DEL GATO — el experto habla desde el margen
+   ------------------------------------------------------------ */
+
+.jw-catnote {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0 20px;
+  padding-left: 96px;
+  min-height: 92px;
+}
+
+/* El gato es un sticker die-cut que INVADE la nota, no la decora al lado */
+.jw-catnote__cat {
+  position: absolute;
+  left: 0;
+  bottom: -6px;
+  width: 118px;
+  height: auto;
+  z-index: 2;
+  transform: rotate(-4deg);
+  filter: drop-shadow(0 6px 10px rgba(var(--shadow-rgb), 0.22));
+  pointer-events: none;
+}
+
+.jw-catnote__paper {
+  position: relative;
+  flex: 1;
+  background: var(--jw-paper-warm);
+  border: 1px solid color-mix(in srgb, var(--color-yuzu) 26%, transparent);
+  border-radius: 4px 14px 4px 14px;
+  padding: 15px 20px 15px 34px;
+  box-shadow: 0 3px 0 rgba(var(--shadow-rgb), 0.06);
+  transform: rotate(-0.5deg);
+}
+
+/* En oscuro el papel sigue siendo PAPEL, solo que iluminado por una lámpara
+   cálida — no un rectángulo casi negro (regla: noche en Japón, nunca apagado) */
+.dark .jw-catnote__paper {
+  background: linear-gradient(150deg, #33304A, #2A2E45);
+  border-color: color-mix(in srgb, var(--color-yuzu) 42%, transparent);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25), 0 0 26px -10px rgba(246, 146, 59, 0.32);
+}
+
+.jw-catnote__paper h3 {
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: clamp(1.02rem, 2vw, 1.32rem);
+  color: var(--ink);
+  margin: 0 0 3px;
+  line-height: 1.2;
+}
+
+.jw-catnote__paper p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 640px) {
+  .jw-catnote { padding-left: 74px; min-height: 78px; }
+  .jw-catnote__cat { width: 88px; }
+  .jw-catnote__paper { padding: 12px 14px 12px 22px; }
+}
+
+/* ------------------------------------------------------------
+   5. BANDEJA "MI COLECCIÓN DE VIAJE" — etiquetas de equipaje
+   ------------------------------------------------------------ */
+
+.jw-tray {
+  border: 1px dashed color-mix(in srgb, var(--color-kasumi) 45%, transparent);
+  border-radius: 14px;
+  padding: 13px 15px;
+  margin-bottom: 18px;
+  background: color-mix(in srgb, var(--color-kasumi) 5%, transparent);
+}
+
+.jw-tray__title {
+  font-family: var(--jp-font-display);
+  font-weight: 700;
+  font-size: 0.94rem;
+  color: var(--ink);
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.jw-tray__row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.jw-tray__row::-webkit-scrollbar { height: 5px; }
+.jw-tray__row::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 999px; }
+
+/* Cada interés elegido = etiqueta de equipaje con su ojal */
+.jw-tag {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  max-width: 190px;
+  padding: 8px 30px 8px 11px;
+  background: var(--jw-paper-warm);
+  border: 1px solid var(--hairline);
+  border-radius: 4px 10px 10px 4px;
+  box-shadow: 0 2px 5px -2px rgba(var(--shadow-rgb), 0.25);
+  animation: jwTagIn var(--motion-base) var(--motion-ease) both;
+}
+
+.dark .jw-tag { background: var(--surface-page-alt); }
+
+.jw-tag::before { /* ojal de la etiqueta */
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: 50%;
+  background: var(--hairline);
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+.jw-tag { padding-left: 17px; }
+
+.jw-tag img {
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.jw-tag__name {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jw-tag__off {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 19px;
+  height: 19px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-kasumi-deep);
+  color: #fff;
+  font-size: 0.66rem;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.jw-tag__off:hover { filter: brightness(1.08); }
+.jw-tag__off:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Contador — hueco vacío del talonario */
+.jw-tray__count {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  min-width: 78px;
+  padding: 6px 12px;
+  border: 1px dashed color-mix(in srgb, var(--color-kasumi) 50%, transparent);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.jw-tray__count b {
+  display: block;
+  font-family: var(--jp-font-display);
+  font-size: 1.15rem;
+  color: var(--color-kasumi-deep);
+  line-height: 1;
+}
+
+.jw-tray__count span { font-size: 0.62rem; color: var(--ink-soft); letter-spacing: 0.02em; }
+
+.jw-tray__empty { font-size: 0.8rem; color: var(--ink-soft); font-family: var(--font-hand); font-size: 1.05rem; }
+
+@keyframes jwTagIn {
+  from { opacity: 0; transform: translateY(-6px) rotate(-3deg); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ------------------------------------------------------------
+   6. PANEL DE PAPEL — contenedor de sección
+   ------------------------------------------------------------ */
+
+.jw-panel {
+  position: relative;
+  background: var(--jw-paper);
+  border: 1px solid var(--hairline);
+  border-radius: 6px 16px 6px 16px;
+  padding: 18px clamp(12px, 2vw, 20px) 20px;
+  box-shadow: 0 8px 20px -14px rgba(var(--shadow-rgb), 0.4);
+}
+
+.dark .jw-panel { background: var(--surface-page-alt); }
+
+/* Washi tape que une el panel con la página (uno solo, no salpicado) */
+.jw-panel--taped::before {
+  content: '';
+  position: absolute;
+  top: -13px;
+  left: 34px;
+  width: 104px;
+  height: var(--jw-tape-h);
+  background: url('/images/illustrations/generated/signature-elements/washi-tape-pink.png') no-repeat center / 100% 100%;
+  transform: rotate(-2.5deg);
+  opacity: 0.92;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.jw-panel__title {
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: 1.08rem;
+  color: var(--ink);
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.jw-panel__title::before { /* pincelada de tinta */
+  content: '';
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  background: url('/images/illustrations/generated/decorations/washi-pink.webp') no-repeat center / contain;
+  opacity: 0.85;
+}
+
+/* ------------------------------------------------------------
+   7. POSTAL DE INTERÉS — el control ES la postal
+   ------------------------------------------------------------ */
+
+.jw-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+  gap: 15px 13px;
+}
+
+.jw-postcard {
+  position: relative;
+  display: block;
+  cursor: pointer;
+  border-radius: 3px;
+  background: var(--jw-paper-warm);
+  /* Borde blanco de postal impresa + sombra índigo baja */
+  padding: 7px 7px 0;
+  box-shadow:
+    0 3px 10px -5px rgba(var(--shadow-rgb), 0.4),
+    0 0 0 1px var(--hairline);
+  transition:
+    transform var(--motion-base) var(--motion-ease),
+    box-shadow var(--motion-base) var(--motion-ease);
+  will-change: transform;
+}
+
+.dark .jw-postcard { background: #232C46; }
+
+/* Asimetría controlada: cada postal cae con su propio ángulo */
+.jw-postcard:nth-child(4n+1) { transform: rotate(-1.4deg); }
+.jw-postcard:nth-child(4n+2) { transform: rotate(0.9deg); }
+.jw-postcard:nth-child(4n+3) { transform: rotate(-0.6deg); }
+.jw-postcard:nth-child(4n)   { transform: rotate(1.6deg); }
+
+/* El papel se levanta al pasar el cursor — no "escala" */
+.jw-postcard:hover {
+  transform: translateY(-5px) rotate(0deg);
+  box-shadow:
+    0 14px 24px -10px rgba(var(--shadow-rgb), 0.45),
+    0 0 0 1px var(--hairline);
+  z-index: 4;
+}
+
+/* El input real sigue existiendo (a11y + saveStep2Data lo lee) */
+.jw-postcard__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.jw-postcard__art {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--color-sora) 30%, var(--jw-paper));
+}
+
+.jw-postcard__art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* La acuarela viene con margen de papel alrededor del motivo (así se
+     generó, y ese aire es parte del estilo). A tamaño de postal el motivo
+     quedaba diminuto, así que se encuadra un poco más cerca. */
+  transform: scale(1.16);
+  transition: transform var(--motion-orchestrated) var(--motion-ease);
+}
+
+.jw-postcard:hover .jw-postcard__art img { transform: scale(1.24); }
+.dark .jw-postcard__art img { filter: brightness(0.86) saturate(0.94); }
+
+/* Sello hanko: anillo ilustrado existente + kanji real en HTML encima.
+   No se genera el kanji dentro de la imagen — debe poder cambiar. */
+.jw-postcard__hanko {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  transform: rotate(7deg);
+  pointer-events: none;
+}
+
+.jw-postcard__hanko::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/images/illustrations/generated/signature-elements/hanko-ring.png') no-repeat center / contain;
+  opacity: 0.92;
+}
+
+.jw-postcard__hanko i {
+  position: relative;
+  font-style: normal;
+  font-family: var(--jw-font-jp);
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: var(--jw-hanko);
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+/* Banda de título — parte de la postal, no una barra debajo */
+.jw-postcard__label {
+  display: block;
+  padding: 9px 6px 11px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.22;
+  color: var(--ink);
+}
+
+/* Marca de selección: círculo estampado, no un checkbox de sistema */
+.jw-postcard__check {
+  position: absolute;
+  top: 13px;
+  left: 13px;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 0 0 1.5px var(--hairline), 0 2px 4px rgba(var(--shadow-rgb), 0.2);
+  display: grid;
+  place-items: center;
+  z-index: 3;
+  transition: background var(--motion-micro) var(--motion-ease),
+              box-shadow var(--motion-micro) var(--motion-ease);
+}
+
+.jw-postcard__check::after {
+  content: '';
+  width: 11px;
+  height: 6px;
+  border-left: 2.5px solid #fff;
+  border-bottom: 2.5px solid #fff;
+  transform: rotate(-45deg) scale(0.2);
+  opacity: 0;
+  margin-top: -3px;
+  transition: transform var(--motion-base) var(--motion-ease), opacity var(--motion-micro) var(--motion-ease);
+}
+
+/* --- ESTADO SELECCIONADO --- */
+.jw-postcard:has(.jw-postcard__input:checked) {
+  box-shadow:
+    0 10px 22px -10px rgba(var(--shadow-rgb), 0.45),
+    0 0 0 2.5px var(--color-kasumi-deep);
+}
+
+.jw-postcard:has(.jw-postcard__input:checked) .jw-postcard__check {
+  background: var(--color-kasumi-deep);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.85), 0 2px 5px rgba(var(--shadow-rgb), 0.3);
+}
+
+.jw-postcard:has(.jw-postcard__input:checked) .jw-postcard__check::after {
+  transform: rotate(-45deg) scale(1);
+  opacity: 1;
+}
+
+/* El sello se asienta al seleccionar (metáfora: quedó timbrada) */
+.jw-postcard:has(.jw-postcard__input:checked) .jw-postcard__hanko {
+  animation: jwStamp var(--motion-orchestrated) var(--motion-ease) both;
+}
+
+@keyframes jwStamp {
+  0%   { transform: rotate(18deg) scale(1.55); opacity: 0; }
+  55%  { transform: rotate(4deg) scale(0.94); opacity: 1; }
+  100% { transform: rotate(7deg) scale(1); opacity: 1; }
+}
+
+/* Foco de teclado visible SOBRE la ilustración */
+.jw-postcard:has(.jw-postcard__input:focus-visible) {
+  outline: 3px solid var(--color-kasumi);
+  outline-offset: 4px;
+}
+
+/* --- Prioridad: 5 puntos de tinta, solo en la postal elegida --- */
+.jw-weight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 6px 9px;
+  margin-top: -4px;
+}
+
+.jw-weight__hint {
+  font-family: var(--font-hand);
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+  margin-right: 2px;
+}
+
+.jw-weight__dot {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--ink) 16%, transparent);
+  transition: background var(--motion-micro) var(--motion-ease), transform var(--motion-micro) var(--motion-ease);
+}
+
+.jw-weight__dot:hover { transform: scale(1.22); }
+.jw-weight__dot:focus-visible { outline: 2px solid var(--color-kasumi); outline-offset: 2px; }
+.jw-weight__dot--on { background: var(--color-kasumi-deep); }
+
+/* ------------------------------------------------------------
+   8. COLUMNA NARRATIVA — el gato interpreta lo elegido
+   ------------------------------------------------------------ */
+
+.jw-aside {
+  position: relative;
+  background: var(--jw-paper);
+  border: 1px solid var(--hairline);
+  border-radius: 16px 6px 16px 6px;
+  padding: 18px 18px 20px;
+  box-shadow: 0 8px 20px -14px rgba(var(--shadow-rgb), 0.4);
+  overflow: hidden;
+}
+
+.dark .jw-aside { background: var(--surface-page-alt); }
+
+/* Nube de ensueño con las postales elegidas (ref 3) */
+.jw-dream {
+  position: relative;
+  min-height: 132px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.jw-dream__bubbles {
+  position: relative;
+  flex: 1;
+  min-height: 118px;
+}
+
+.jw-dream__thumb {
+  position: absolute;
+  width: 58px;
+  height: 58px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid var(--jw-paper);
+  box-shadow: 0 3px 8px -3px rgba(var(--shadow-rgb), 0.4);
+  animation: jwFloat 5.5s ease-in-out infinite;
+}
+
+.jw-dream__thumb:nth-child(1) { left: 2%;  top: 6px;  width: 66px; height: 66px; animation-delay: 0s; }
+.jw-dream__thumb:nth-child(2) { left: 32%; top: 40px; animation-delay: -1.3s; }
+.jw-dream__thumb:nth-child(3) { left: 60%; top: 2px;  animation-delay: -2.6s; }
+.jw-dream__thumb:nth-child(4) { left: 20%; top: 76px; width: 46px; height: 46px; animation-delay: -3.9s; }
+.jw-dream__thumb:nth-child(5) { left: 72%; top: 62px; width: 50px; height: 50px; animation-delay: -0.7s; }
+.jw-dream__thumb:nth-child(n+6) { display: none; }
+
+@keyframes jwFloat {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%      { transform: translateY(-7px) rotate(2deg); }
+}
+
+.jw-dream__note {
+  font-family: var(--font-hand);
+  font-size: 1.28rem;
+  line-height: 1.25;
+  color: var(--color-ai-soft);
+  max-width: 44%;
+  padding-top: 8px;
+}
+
+.dark .jw-dream__note { color: var(--ink-soft); }
+
+.jw-aside__cat {
+  display: block;
+  width: 128px;
+  margin: -6px auto 4px;
+  filter: drop-shadow(0 6px 10px rgba(var(--shadow-rgb), 0.2));
+}
+
+.jw-vibe {
+  border-top: 1px dashed var(--hairline);
+  padding-top: 13px;
+  text-align: center;
+}
+
+.jw-vibe__title {
+  font-family: var(--jp-font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+
+.jw-vibe__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  justify-content: center;
+}
+
+.jw-chip {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--color-kasumi) 15%, var(--jw-paper));
+  border: 1px solid color-mix(in srgb, var(--color-kasumi) 34%, transparent);
+  padding: 5px 12px;
+  border-radius: var(--jp-radius-pill);
+  animation: jwTagIn var(--motion-base) var(--motion-ease) both;
+}
+
+.dark .jw-chip { background: color-mix(in srgb, var(--color-kasumi) 22%, var(--surface-page)); }
+
+.jw-vibe__empty {
+  font-family: var(--font-hand);
+  font-size: 1.1rem;
+  color: var(--ink-soft);
+}
+
+/* ------------------------------------------------------------
+   8b. PASO 4 — cadena de tarjetas que desemboca en un boleto
+   ------------------------------------------------------------ */
+
+/* Envuelve en vez de hacer scroll horizontal: con 4 tarjetas + el boleto
+   final, el scroll dejaba "TU ITINERARIO" fuera de vista — justo el
+   elemento que da sentido a la cadena. */
+.jw-chain {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 4px 2px 10px;
+}
+
+.jw-chain__card {
+  position: relative;
+  flex: 1 1 128px;
+  min-width: 128px;
+  padding: 30px 13px 14px;
+  background: var(--jw-paper-warm);
+  border: 1px solid var(--hairline);
+  border-radius: 4px 12px 4px 12px;
+  box-shadow: 0 4px 12px -8px rgba(var(--shadow-rgb), 0.4);
+}
+
+.dark .jw-chain__card { background: var(--surface-page-alt); }
+
+/* Flecha entre tarjetas, dibujada, no un icono suelto */
+.jw-chain__card:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  border-top: 2px solid var(--color-kasumi);
+  border-right: 2px solid var(--color-kasumi);
+  transform: rotate(45deg);
+  opacity: 0.75;
+}
+
+.jw-chain__num {
+  position: absolute;
+  top: 9px;
+  left: 11px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-kasumi-deep);
+  color: var(--color-kasumi-deep);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.jw-chain__title {
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  margin: 0 0 2px;
+}
+
+.jw-chain__sub { font-size: 0.68rem; color: var(--ink-soft); margin: 0 0 9px; line-height: 1.3; }
+
+.jw-chain__chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.jw-chain__chips .jw-chip { font-size: 0.66rem; padding: 3px 8px; }
+.jw-chain__more { font-size: 0.66rem; color: var(--ink-soft); align-self: center; }
+
+.jw-chain__eq {
+  align-self: center;
+  font-family: var(--jp-font-display);
+  font-size: 1.5rem;
+  color: var(--color-kasumi);
+  flex: 0 0 auto;
+}
+
+/* El resultado ES un boleto: muescas laterales del color del papel */
+.jw-chain__ticket {
+  position: relative;
+  flex: 0 0 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 22px 14px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--color-kasumi) 20%, var(--jw-paper)), var(--jw-paper));
+  border: 1.5px dashed var(--color-kasumi-deep);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.jw-chain__ticket::before,
+.jw-chain__ticket::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 15px;
+  height: 15px;
+  margin-top: -7.5px;
+  border-radius: 50%;
+  background: var(--jw-paper);
+  border: 1.5px dashed var(--color-kasumi-deep);
+}
+
+.jw-chain__ticket::before { left: -8px; clip-path: inset(0 0 0 50%); }
+.jw-chain__ticket::after  { right: -8px; clip-path: inset(0 50% 0 0); }
+
+.jw-chain__ticket-label {
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: 0.88rem;
+  color: var(--color-kasumi-deep);
+  letter-spacing: 0.02em;
+}
+
+.jw-chain__ticket-sub { font-family: var(--font-hand); font-size: 1rem; color: var(--ink-soft); }
+
+.jw-chain__ticket-stamp {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  margin-top: 5px;
+  display: grid;
+  place-items: center;
+  transform: rotate(-9deg);
+}
+
+.jw-chain__ticket-stamp::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/images/illustrations/generated/signature-elements/hanko-ring.png') no-repeat center / contain;
+  opacity: 0.9;
+}
+
+.jw-chain__ticket-stamp i {
+  position: relative;
+  font-style: normal;
+  font-family: var(--jw-font-jp);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--jw-hanko);
+  letter-spacing: -0.08em;
+}
+
+/* Resumen del paso 4 — lista de datos, no una tabla de dashboard */
+.jw-summary { margin: 0 0 14px; }
+
+.jw-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--hairline);
+}
+
+.jw-summary > div:last-child { border-bottom: 0; }
+
+.jw-summary dt {
+  font-family: var(--jp-font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+
+.jw-summary dd { margin: 0; font-size: 0.8rem; color: var(--ink-soft); line-height: 1.4; }
+
+/* ------------------------------------------------------------
+   8a. PASO 1 — diagrama de ruta sobre papel
+   ------------------------------------------------------------ */
+
+/* El SVG del diagrama es `w-full h-auto`: en el modal antiguo (max-w-3xl,
+   768px) quedaba a escala natural, pero esta hoja mide hasta 1180px y lo
+   escalaba ~1,5x, dejando medio diagrama fuera de pantalla. Se acota al
+   ancho para el que fueron calculadas las posiciones de los pines. */
+.jw-mappanel .city-route-map-wrap {
+  max-width: 760px;
+  margin-inline: auto;
+}
+
+/* Las etiquetas del SVG heredan currentColor: sin esto quedaban en el gris
+   de Tailwind sobre papel crema. */
+.jw-mappanel .city-route-map-canvas { color: var(--ink); }
+
+.jw-mappanel .jw-warn { margin-top: 14px; }
+
+/* ------------------------------------------------------------
+   8c. PASO 3 — filas de preferencia, opciones-objeto y pasaporte
+   ------------------------------------------------------------ */
+
+.jw-pref {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 14px 0;
+  border-bottom: 1px dashed var(--hairline);
+}
+
+.jw-pref:last-of-type { border-bottom: 0; }
+
+.jw-pref__head { display: flex; align-items: flex-start; gap: 11px; }
+
+/* Sello kanji vertical al costado de cada fila (ref 4) */
+.jw-pref__kanji {
+  position: relative;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  transform: rotate(-5deg);
+}
+
+.jw-pref__kanji::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/images/illustrations/generated/signature-elements/hanko-ring.png') no-repeat center / contain;
+  opacity: 0.85;
+}
+
+.jw-pref__kanji i {
+  position: relative;
+  font-style: normal;
+  font-family: var(--jw-font-jp);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--jw-hanko);
+}
+
+.jw-pref__title {
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: 0.98rem;
+  color: var(--ink);
+  margin: 2px 0 1px;
+}
+
+.jw-pref__q { font-size: 0.78rem; color: var(--ink-soft); margin: 0; line-height: 1.35; }
+
+@media (max-width: 720px) {
+  .jw-pref { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+}
+
+/* --- Opción-objeto (compañía): la viñeta ES el control --- */
+.jw-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 10px;
+}
+
+.jw-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 9px 7px 10px;
+  cursor: pointer;
+  background: var(--jw-paper-warm);
+  border: 1px solid var(--hairline);
+  border-radius: 4px 12px 4px 12px;
+  box-shadow: 0 3px 9px -7px rgba(var(--shadow-rgb), 0.4);
+  transition: transform var(--motion-base) var(--motion-ease),
+              box-shadow var(--motion-base) var(--motion-ease);
+}
+
+.dark .jw-option { background: #232C46; }
+
+.jw-option:hover { transform: translateY(-3px); }
+
+.jw-option__input {
+  position: absolute;
+  width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+.jw-option__art {
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 74px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 3px;
+}
+
+.jw-option__art img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.1); }
+.dark .jw-option__art img { filter: brightness(0.88); }
+
+.jw-option__none { font-size: 1.3rem; color: var(--ink-soft); opacity: 0.55; }
+
+.jw-option__label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.jw-option__desc { font-size: 0.66rem; color: var(--ink-soft); text-align: center; }
+
+.jw-option__check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 0 0 1.5px var(--hairline);
+  display: grid;
+  place-items: center;
+}
+
+.dark .jw-option__check { background: rgba(32, 41, 66, 0.9); }
+
+.jw-option__check::after {
+  content: '';
+  width: 9px; height: 5px;
+  border-left: 2.2px solid #fff;
+  border-bottom: 2.2px solid #fff;
+  transform: rotate(-45deg) scale(0.2);
+  opacity: 0;
+  margin-top: -2px;
+  transition: transform var(--motion-base) var(--motion-ease), opacity var(--motion-micro) var(--motion-ease);
+}
+
+.jw-option:has(.jw-option__input:checked) {
+  box-shadow: 0 8px 18px -10px rgba(var(--shadow-rgb), 0.45), 0 0 0 2.5px var(--color-kasumi-deep);
+}
+
+.jw-option:has(.jw-option__input:checked) .jw-option__check { background: var(--color-kasumi-deep); box-shadow: none; }
+.jw-option:has(.jw-option__input:checked) .jw-option__check::after { transform: rotate(-45deg) scale(1); opacity: 1; }
+.jw-option:has(.jw-option__input:focus-visible) { outline: 3px solid var(--color-kasumi); outline-offset: 3px; }
+
+/* --- Slider de ritmo: raíl de papel con muescas, no un range de sistema --- */
+.jw-slider__value {
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--color-kasumi-deep);
+  margin: 0 0 8px;
+}
+
+/* input[type="range"] gana en especificidad a .jw-slider (forms.css:412 y
+   los temas pintan el raíl), así que hay que igualar el selector. */
+input[type="range"].jw-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 10px;
+  border-radius: var(--jp-radius-pill);
+  background: linear-gradient(to right, var(--color-sora), #FFD9E7, var(--color-kasumi));
+  border: 1px solid var(--hairline);
+  cursor: pointer;
+  outline: none;
+}
+
+input[type="range"].jw-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--jw-paper);
+  border: 3px solid var(--color-kasumi-deep);
+  box-shadow: 0 3px 8px -3px rgba(var(--shadow-rgb), 0.5);
+  cursor: grab;
+}
+
+input[type="range"].jw-slider::-moz-range-thumb {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--jw-paper);
+  border: 3px solid var(--color-kasumi-deep);
+  box-shadow: 0 3px 8px -3px rgba(var(--shadow-rgb), 0.5);
+  cursor: grab;
+}
+
+.jw-slider:focus-visible { outline: 3px solid var(--color-kasumi); outline-offset: 4px; }
+
+.jw-slider__ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 9px;
+  gap: 3px;
+}
+
+.jw-slider__ticks > span {
+  flex: 1;
+  text-align: center;
+  line-height: 1.2;
+  opacity: 0.5;
+  transition: opacity var(--motion-micro) var(--motion-ease);
+}
+
+.jw-slider__ticks > span.is-on { opacity: 1; }
+.jw-slider__ticks b { display: block; font-size: 0.7rem; font-weight: 700; color: var(--ink); }
+.jw-slider__ticks i { display: block; font-style: normal; font-size: 0.62rem; color: var(--ink-soft); }
+
+/* --- PASAPORTE: la ilustración es el marco, el texto va encima --- */
+.jw-passport {
+  position: relative;
+  margin: -4px 0 6px;
+}
+
+.jw-passport__paper {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.dark .jw-passport__paper { filter: brightness(0.72) sepia(0.18) hue-rotate(180deg); }
+
+/* El texto vive dentro del área de páginas en blanco del asset */
+.jw-passport__inner {
+  position: absolute;
+  inset: 11% 14% 12%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.jw-passport__brand {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.14em;
+  color: var(--color-kasumi-deep);
+  margin: 0;
+}
+
+.jw-passport__brand b { font-weight: 700; }
+
+.jw-passport__id { display: flex; align-items: center; gap: 8px; }
+
+.jw-passport__photo {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border: 1.5px solid var(--hairline);
+  border-radius: 2px;
+  background: #fff;
+}
+
+.jw-passport__name {
+  font-family: var(--jp-font-display);
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.1;
+}
+
+.jw-passport__role { font-size: 0.66rem; color: var(--ink-soft); margin: 1px 0 0; }
+
+.jw-passport__rows { margin: 3px 0 0; display: flex; flex-direction: column; gap: 1px; }
+
+.jw-passport__rows > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.jw-passport__rows dt { color: var(--ink-soft); flex-shrink: 0; }
+.jw-passport__rows dd {
+  margin: 0;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jw-passport__stamp {
+  position: absolute;
+  right: -2%;
+  bottom: 2%;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  transform: rotate(11deg);
+  pointer-events: none;
+}
+
+.jw-passport__stamp::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/images/illustrations/generated/signature-elements/hanko-ring.png') no-repeat center / contain;
+  opacity: 0.88;
+}
+
+.jw-passport__stamp i {
+  position: relative;
+  font-style: normal;
+  font-family: var(--jw-font-jp);
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: var(--jw-hanko);
+}
+
+/* En pantallas estrechas el texto no cabe dentro del asset: el pasaporte
+   pasa a ser una página de papel normal y la ilustración se retira. */
+@media (max-width: 900px) {
+  .jw-passport__paper { display: none; }
+  .jw-passport__inner {
+    position: static;
+    background: var(--jw-paper-warm);
+    border: 1px solid color-mix(in srgb, var(--color-kasumi) 30%, transparent);
+    border-radius: 4px 14px 4px 14px;
+    padding: 14px 16px 18px;
+  }
+  .dark .jw-passport__inner { background: color-mix(in srgb, var(--color-kasumi) 9%, var(--surface-page)); }
+  .jw-passport__stamp { right: 8px; bottom: 8px; }
+  .jw-passport__rows > div { font-size: 0.76rem; }
+  .jw-passport__brand { font-size: 0.62rem; }
+}
+
+/* ------------------------------------------------------------
+   8d. CAMPOS DE FORMULARIO — renglones de cuaderno, no inputs de Tailwind
+   ------------------------------------------------------------
+
+   Alcance deliberadamente amplio dentro de .jw-sheet: el wizard tiene
+   inputs repartidos por fases (fechas, presupuesto, hoteles, imperdibles,
+   evitar) con clases Tailwind escritas en distintos momentos. Reskinear
+   uno a uno dejaría el paso 1 y el 3 con dos estéticas conviviendo.
+   ------------------------------------------------------------ */
+
+.jw-sheet input[type="text"],
+.jw-sheet input[type="number"],
+.jw-sheet input[type="date"],
+.jw-sheet input[type="time"],
+.jw-sheet input[type="search"],
+.jw-sheet textarea,
+.jw-sheet select {
+  width: 100%;
+  background: var(--jw-paper-warm);
+  border: 0;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--ink) 22%, transparent);
+  border-radius: 3px 3px 0 0;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  box-shadow: none;
+  transition: border-color var(--motion-micro) var(--motion-ease),
+              background var(--motion-micro) var(--motion-ease);
+}
+
+/* html.dark + !important: dark-mode-ultra-contrast.css:106 pinta
+   `html.dark input` con !important y le gana a `.dark .jw-sheet input`.
+   Mismo caso ya medido en el chat (ver css/chat-washi.css). */
+html.dark .jw-sheet input[type="text"],
+html.dark .jw-sheet input[type="number"],
+html.dark .jw-sheet input[type="date"],
+html.dark .jw-sheet input[type="time"],
+html.dark .jw-sheet input[type="search"],
+html.dark .jw-sheet textarea,
+html.dark .jw-sheet select {
+  background: color-mix(in srgb, var(--color-kasumi) 6%, var(--surface-page)) !important;
+  color: var(--ink) !important;
+  border: 0 !important;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--ink) 30%, transparent) !important;
+}
+
+html.dark .jw-sheet textarea {
+  border: 1.5px solid color-mix(in srgb, var(--ink) 26%, transparent) !important;
+}
+
+.jw-sheet input:focus,
+.jw-sheet textarea:focus,
+.jw-sheet select:focus {
+  outline: none;
+  border-bottom-color: var(--color-kasumi-deep);
+  background: color-mix(in srgb, var(--color-kasumi) 8%, var(--jw-paper-warm));
+}
+
+.jw-sheet input:focus-visible,
+.jw-sheet textarea:focus-visible,
+.jw-sheet select:focus-visible {
+  outline: 3px solid var(--color-kasumi);
+  outline-offset: 2px;
+}
+
+.jw-sheet textarea { border: 1.5px solid color-mix(in srgb, var(--ink) 18%, transparent); border-radius: 3px; resize: vertical; }
+.jw-sheet ::placeholder { color: var(--ink-soft); opacity: 0.7; }
+
+.jw-sheet label { color: var(--ink); }
+
+/* Las etiquetas de campo en Tailwind traen text-gray-*: sobre papel crema
+   se leían apagadas y con el gris equivocado. */
+.jw-sheet .text-gray-700,
+.jw-sheet .text-gray-800,
+.jw-sheet .text-gray-900,
+.jw-sheet .dark\:text-white { color: var(--ink) !important; }
+.jw-sheet .text-gray-500,
+.jw-sheet .text-gray-600,
+.jw-sheet .text-gray-400 { color: var(--ink-soft) !important; }
+
+/* Botón "+ Agregar…" — hueco de talonario por rellenar */
+.jw-sheet button.w-full.py-2.border-2.border-dashed,
+.jw-sheet .jw-add {
+  width: 100%;
+  padding: 11px;
+  border: 1.5px dashed color-mix(in srgb, var(--color-kasumi) 50%, transparent) !important;
+  border-radius: 10px !important;
+  background: color-mix(in srgb, var(--color-kasumi) 5%, transparent) !important;
+  color: var(--color-kasumi-deep) !important;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+/* ------------------------------------------------------------
+   8d-bis. PASO 3 — alojamiento e imperdibles
+   ------------------------------------------------------------ */
+
+.jw-hint { font-size: 0.82rem; line-height: 1.5; color: var(--ink-soft); margin: 0 0 14px; }
+.jw-hint strong { color: var(--ink); }
+
+/* "opcional" como anotación al margen, no como texto de igual peso */
+.jw-opt {
+  font-family: var(--font-hand);
+  font-style: normal;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-left: 4px;
+}
+
+.jw-lodges { display: grid; gap: 12px; }
+
+/* Ficha de alojamiento: tarjeta de registro con la ciudad como pestaña */
+.jw-lodge {
+  position: relative;
+  /* La pestaña de ciudad va en absoluto sobre el borde superior: hay que
+     RESERVAR su banda o se monta sobre la etiqueta "HOTEL" del primer
+     campo (mismo error que ya cometí con el sticker del perrito). */
+  padding: 32px 15px 14px;
+  background: var(--jw-paper-warm);
+  border: 1px solid var(--hairline);
+  border-radius: 3px 12px 3px 12px;
+  box-shadow: 0 3px 10px -8px rgba(var(--shadow-rgb), 0.4);
+}
+
+.dark .jw-lodge { background: color-mix(in srgb, var(--color-kasumi) 7%, var(--surface-page)); }
+
+.jw-lodge__tab {
+  position: absolute;
+  top: -1px;
+  left: 14px;
+  padding: 3px 12px 4px;
+  background: color-mix(in srgb, var(--color-kasumi) 22%, var(--surface-page));
+  border: 1px solid color-mix(in srgb, var(--color-kasumi) 40%, transparent);
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
+  font-family: var(--jp-font-display);
+  font-weight: 700;
+  font-size: 0.74rem;
+  color: var(--color-kasumi-deep);
+}
+
+.jw-lodge__fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.jw-lodge__stay{position:absolute;right:10px;top:9px;color:#aa5365;font:800 .52rem monospace;letter-spacing:.12em}
+
+@media (max-width: 620px) { .jw-lodge__fields { grid-template-columns: 1fr; } }
+
+.jw-field { display: block; }
+
+.jw-field__label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 2px;
+}
+
+/* --- Imperdibles: entradas de una lista escrita a mano --- */
+#mustSeeList { display: flex; flex-direction: column; gap: 4px; }
+
+.jw-wish {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 2px 6px 2px 2px;
+  border-bottom: 1px dashed var(--hairline);
+}
+
+.jw-wish__bullet {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-kasumi);
+}
+
+/* El nombre se escribe sobre el renglón, sin caja propia */
+.jw-sheet input.jw-wish__name {
+  flex: 1;
+  min-width: 0;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 8px 2px !important;
+  font-family: var(--font-hand);
+  font-size: 1.12rem;
+  color: var(--ink) !important;
+}
+
+.jw-sheet input.jw-wish__name::placeholder { font-family: var(--font-body); font-size: 0.85rem; }
+
+.jw-sheet select.jw-wish__city {
+  width: auto !important;
+  flex-shrink: 0;
+  max-width: 145px;
+  padding: 6px 10px !important;
+  font-size: 0.78rem;
+  border: 1px solid var(--hairline) !important;
+  border-radius: var(--jp-radius-pill) !important;
+  background: var(--jw-paper-warm) !important;
+}
+
+.dark .jw-sheet select.jw-wish__city { background: var(--surface-page-alt) !important; }
+
+button.jw-wish__del {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background var(--motion-micro) var(--motion-ease), color var(--motion-micro) var(--motion-ease);
+}
+
+button.jw-wish__del:hover { background: color-mix(in srgb, var(--color-sango) 14%, transparent); color: var(--color-sango); }
+button.jw-wish__del:focus-visible { outline: 2px solid var(--color-kasumi); outline-offset: 2px; }
+
+/* ------------------------------------------------------------
+   8e. HELPERS YAMANOTE / OSAKA LOOP — reskin sin tocar su markup
+   ------------------------------------------------------------
+
+   Son componentes compartidos con SVG interactivo y handlers propios
+   (yamanote-helper.js / osaka-loop-helper.js). Reescribir su HTML solo
+   por estética sería justo lo que el encargo prohíbe, así que se
+   reinterpreta su paleta esmeralda como papel dentro del wizard.
+   Fuera del wizard siguen exactamente igual.
+   ------------------------------------------------------------ */
+
+.jw-sheet [class*="border-emerald"] {
+  border-color: color-mix(in srgb, var(--color-matcha) 45%, transparent) !important;
+  border-width: 1px !important;
+  border-radius: 6px 16px 6px 16px !important;
+}
+
+.jw-sheet [class*="bg-emerald-50"],
+.jw-sheet [class*="bg-emerald-900"] {
+  background: color-mix(in srgb, var(--color-matcha) 10%, var(--jw-paper)) !important;
+}
+
+.dark .jw-sheet [class*="bg-emerald-50"],
+.dark .jw-sheet [class*="bg-emerald-900"] {
+  background: color-mix(in srgb, var(--color-matcha) 14%, var(--surface-page-alt)) !important;
+}
+
+.jw-sheet [class*="text-emerald"] { color: var(--color-matcha) !important; }
+
+.jw-sheet [class*="bg-white"],
+.jw-sheet [class*="bg-gray-50"] { background: var(--jw-paper) !important; }
+.dark .jw-sheet [class*="bg-white"],
+.dark .jw-sheet [class*="bg-gray-50"],
+.dark .jw-sheet [class*="bg-gray-700"],
+.dark .jw-sheet [class*="bg-gray-800"] { background: var(--surface-page-alt) !important; }
+
+/* Las cajas azules de aviso del paso 1 (aeropuertos, notas) */
+.jw-sheet [class*="bg-blue-50"] {
+  background: color-mix(in srgb, var(--color-sora) 26%, var(--jw-paper)) !important;
+  border-color: color-mix(in srgb, var(--color-umi) 32%, transparent) !important;
+}
+.dark .jw-sheet [class*="bg-blue-50"] { background: color-mix(in srgb, var(--color-umi) 16%, var(--surface-page)) !important; }
+.jw-sheet [class*="text-blue-6"],
+.jw-sheet [class*="text-blue-8"] { color: var(--color-umi) !important; }
+
+/* Los gradientes morado/rosa heredados (banner de plantillas del paso 1) */
+.jw-sheet [class*="from-purple"],
+.jw-sheet [class*="to-pink"] {
+  background: color-mix(in srgb, var(--color-kasumi) 9%, var(--jw-paper)) !important;
+  border-color: color-mix(in srgb, var(--color-kasumi) 34%, transparent) !important;
+}
+.jw-sheet [class*="text-purple"] { color: var(--color-kasumi-deep) !important; }
+
+/* ...pero un BOTÓN con ese gradiente es una acción, no un panel: aplicarle
+   el fondo de papel lo dejaba con texto blanco sobre crema, ilegible.
+   Se reinterpreta como boleto sólido. */
+.jw-sheet button[class*="from-purple"],
+.jw-sheet button[class*="from-green"],
+.jw-sheet button[class*="bg-blue-6"] {
+  background: linear-gradient(135deg, var(--color-kasumi), var(--color-kasumi-deep)) !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 6px 14px -8px rgba(241, 111, 163, 0.9) !important;
+}
+
+.jw-sheet button[class*="from-purple"]:hover,
+.jw-sheet button[class*="from-green"]:hover,
+.jw-sheet button[class*="bg-blue-6"]:hover { filter: brightness(1.06); }
+
+/* ------------------------------------------------------------
+   9. TIP INFERIOR — nota sujeta con washi
+   ------------------------------------------------------------ */
+
+.jw-tip {
+  position: relative;
+  margin-top: 18px;
+  padding: 13px 18px;
+  background: var(--jw-paper-warm);
+  border: 1px solid color-mix(in srgb, var(--color-yuzu) 22%, transparent);
+  border-radius: 3px;
+  font-size: 0.83rem;
+  color: var(--ink-soft);
+  transform: rotate(-0.4deg);
+  box-shadow: 0 3px 0 rgba(var(--shadow-rgb), 0.05);
+}
+
+.dark .jw-tip { background: color-mix(in srgb, var(--color-yuzu) 8%, var(--surface-page-alt)); }
+
+.jw-tip::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  right: 42px;
+  width: 88px;
+  height: var(--jw-tape-h);
+  background: url('/images/illustrations/generated/signature-elements/washi-tape-kraft.png') no-repeat center / 100% 100%;
+  transform: rotate(3deg);
+  pointer-events: none;
+}
+
+.jw-tip b { color: var(--ink); }
+
+/* ------------------------------------------------------------
+   10. PIE — botones como boletos
+   ------------------------------------------------------------ */
+
+.jw-foot {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px clamp(14px, 3vw, 34px) 20px;
+  border-top: 1px dashed var(--hairline);
+  flex-wrap: wrap;
+}
+
+.jw-foot__right { display: flex; gap: 10px; align-items: center; margin-left: auto; }
+
+/* Botón secundario = etiqueta de papel */
+.jw-btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--hairline);
+  padding: 11px 20px;
+  border-radius: var(--jp-radius-pill);
+  cursor: pointer;
+  transition: background var(--motion-micro) var(--motion-ease), color var(--motion-micro) var(--motion-ease);
+}
+
+.jw-btn-back:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); color: var(--ink); }
+.jw-btn-back:focus-visible { outline: 3px solid var(--color-kasumi); outline-offset: 3px; }
+
+/* Botón primario = boleto perforado. Los muescos son del color del papel,
+   así que se lee como un ticket troquelado y no como un pill de Tailwind. */
+.jw-btn-ticket {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  font-family: var(--jp-font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-kasumi), var(--color-kasumi-deep));
+  border: 0;
+  padding: 14px 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px -8px rgba(241, 111, 163, 0.85);
+  transition: transform var(--motion-micro) var(--motion-ease), filter var(--motion-micro) var(--motion-ease);
+}
+
+.jw-btn-ticket::before,
+.jw-btn-ticket::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 13px;
+  height: 13px;
+  margin-top: -6.5px;
+  border-radius: 50%;
+  background: var(--jw-paper);
+}
+
+.jw-btn-ticket::before { left: -6.5px; }
+.jw-btn-ticket::after  { right: -6.5px; }
+
+.jw-btn-ticket:hover { transform: translateY(-2px); filter: brightness(1.05); }
+.jw-btn-ticket:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
+.jw-btn-ticket:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.jw-btn-ticket--go { background: linear-gradient(135deg, #62C29A, var(--color-matcha)); box-shadow: 0 8px 18px -8px rgba(95, 180, 137, 0.85); }
+
+.jw-foot__cancel {
+  font-family: inherit;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 8px 2px;
+}
+
+.jw-foot__cancel:hover { color: var(--color-sango); }
+.jw-foot__cancel:focus-visible { outline: 3px solid var(--color-kasumi); outline-offset: 2px; border-radius: 4px; }
+
+/* ------------------------------------------------------------
+   11. Aviso de validación — sello rojo, no alert-box de Bootstrap
+   ------------------------------------------------------------ */
+
+.jw-warn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1.5px dashed var(--color-sango);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-sango) 8%, transparent);
+  color: var(--color-sango);
+  font-size: 0.84rem;
+  font-weight: 700;
+  animation: jwShake 320ms var(--motion-ease);
+}
+
+@keyframes jwShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* validateField() alterna la clase .hidden de Tailwind sobre este aviso.
+   Como tailwind.min.css se carga aparte de app.css, el orden de cascada
+   entre ambos no está garantizado — se fuerza para que ganar/perder no
+   dependa de cuál se resolvió primero. */
+.jw-warn.hidden { display: none !important; }
+
+/* validateField() también aplica ring-2/ring-red-500 a #interestsContainer.
+   Se reinterpreta como un subrayado de tinta en el papel, en vez del anillo
+   azul-rojo de Tailwind. */
+#interestsContainer.ring-2 {
+  outline: 2px dashed var(--color-sango);
+  outline-offset: 8px;
+  --tw-ring-color: transparent;
+  box-shadow: none !important;
+}
+
+/* ------------------------------------------------------------
+   12. Responsive — el objeto conserva su identidad, no colapsa a lista
+   ------------------------------------------------------------ */
+
+@media (max-width: 1024px) {
+  /* La columna narrativa va DESPUÉS de las postales. Probado al revés
+     (order:-1, "que la escena reciba al usuario") y en móvil enterraba el
+     control principal bajo una pantalla entera de decoración: había que
+     hacer scroll para poder elegir nada. La escena cierra, no interrumpe. */
+  .jw-dream__note { max-width: 50%; }
+}
+
+/* Mientras el wizard está abierto, los FAB y el bottom-nav de la app no
+   deben flotar sobre él (mismo patrón que body.menu-panel-open). */
+body.jw-open #main-fab-button,
+body.jw-open #a11yButton,
+body.jw-open #chatBtnContainer,
+body.jw-open #pwa-install-button,
+body.jw-open .bottom-nav,
+body.jw-open [class*="bottom-nav"] { display: none !important; }
+
+@media (max-width: 640px) {
+  .jw-sheet { max-height: 100dvh; border-radius: 0; }
+  .jw-overlay { padding: 0; }
+
+  /* La fila completa de 4 nombres + separadores ocupaba 158px de alto y
+     empujaba el contenido fuera de la primera pantalla. En móvil basta con
+     la píldora del paso y el nombre del paso ACTUAL: el resto del recorrido
+     no aporta y el usuario ya sabe dónde está. */
+  .jw-steps__dots,
+  .jw-steps__item:not(.jw-steps__item--active) { display: none; }
+  .jw-steps { gap: 8px; margin-top: 7px; flex-wrap: nowrap; }
+  .jw-steps__item--active .jw-steps__name { font-size: 0.92rem; }
+  .jw-head { align-items: center; }
+  .jw-head__title { font-size: 1.32rem; }
+
+  /* El botón de salida compite con el título por el ancho: se vuelve un
+     círculo con la × (la etiqueta completa vive en desktop). */
+  .jw-exit { padding: 9px 11px; font-size: 0; gap: 0; border-radius: 50%; }
+  .jw-exit svg { width: 16px; height: 16px; }
+
+  /* El pie no debe quedar bajo el bottom-nav de la app */
+  .jw-foot { padding-bottom: calc(16px + var(--safe-area-inset-bottom, 0px)); }
+  .jw-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; }
+  .jw-postcard__label { font-size: 0.72rem; padding: 7px 4px 9px; }
+  .jw-postcard__hanko { width: 32px; height: 32px; }
+  .jw-postcard__hanko i { font-size: 0.76rem; }
+  .jw-postcard__check { width: 22px; height: 22px; top: 11px; left: 11px; }
+  .jw-head { padding: 16px 14px 10px; }
+  .jw-foot { padding: 12px 14px 16px; }
+  .jw-btn-ticket { flex: 1; justify-content: center; padding: 14px 20px; }
+  .jw-aside__cat { width: 100px; }
+  .jw-panel--taped::before { left: 18px; width: 84px; }
+}
+
+/* Táctil: sin hover fantasma, área mínima cómoda */
+@media (hover: none) {
+  .jw-postcard:hover { transform: none; }
+  .jw-postcard:nth-child(4n+1):hover { transform: rotate(-1.4deg); }
+  .jw-postcard:active { transform: scale(0.975); }
+  .jw-weight__dot { width: 16px; height: 16px; }
+}
+
+/* ------------------------------------------------------------
+   12b. MODO OSCURO — noche en Japón, no "fondo negro"
+   ------------------------------------------------------------
+
+   Los assets de tinta (sellos hanko, matasellos, cintas washi, pinceladas)
+   se generaron como stickers die-cut para papel CLARO: traen borde blanco
+   y tinta oscura. Sobre panel índigo se leían como manchas grises.
+   Regla del proyecto: en oscuro, o variante nocturna o se ocultan —
+   nunca dejarlos apagados a medias.
+   ------------------------------------------------------------ */
+
+/* Sellos hanko: en claro la tinta va sobre la acuarela y funciona sola.
+   En oscuro se ilumina y se le da un respaldo cálido de papel, para que
+   siga leyéndose como un sello estampado sobre algo, no como un icono. */
+.dark .jw-postcard__hanko::before,
+.dark .jw-chain__ticket-stamp::before {
+  filter: brightness(1.5) saturate(1.35);
+  opacity: 0.95;
+}
+
+.dark .jw-postcard__hanko i,
+.dark .jw-chain__ticket-stamp i {
+  color: #FF7FA8;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.45);
+}
+
+/* Cintas washi: se atenúan y se calientan para que parezcan cinta
+   iluminada por una lámpara, no plástico gris. */
+.dark .jw-panel--taped::before,
+.dark .jw-tip::before {
+  filter: brightness(0.82) saturate(0.85) hue-rotate(-6deg);
+  opacity: 0.7;
+}
+
+/* Las pinceladas decorativas de los títulos son tinta sobre papel:
+   en oscuro no tienen lectura posible, se retiran (el título se sostiene
+   solo) en vez de dejar un borrón. */
+.dark .jw-panel__title::before,
+.dark .jw-head__title::before,
+.dark .jw-tray__title img { opacity: 0; }
+
+.dark .jw-panel__title { gap: 0; }
+
+/* Puntos de prioridad: sobre panel oscuro el 16% de tinta era invisible */
+.dark .jw-weight__dot { background: rgba(242, 238, 228, 0.24); }
+.dark .jw-weight__dot--on { background: var(--color-kasumi); }
+
+/* Marca de selección: el círculo blanco quemaba sobre la acuarela oscura */
+.dark .jw-postcard__check { background: rgba(32, 41, 66, 0.92); }
+.dark .jw-postcard__check::after { border-color: var(--color-kasumi); }
+.dark .jw-postcard:has(.jw-postcard__input:checked) .jw-postcard__check {
+  background: var(--color-kasumi-deep);
+}
+.dark .jw-postcard:has(.jw-postcard__input:checked) .jw-postcard__check::after { border-color: #fff; }
+
+/* Botón primario: el rosa saturado vibra sobre índigo; se asienta */
+.dark .jw-btn-ticket { box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.8); }
+.dark .jw-btn-ticket::before,
+.dark .jw-btn-ticket::after { background: var(--surface-page-alt); }
+
+/* Faroles: un resplandor cálido bajo el papel, en vez de fondo plano.
+   Es lo que hace que el oscuro se lea como "noche" y no como "apagado". */
+.dark .jw-sheet::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(58% 40% at 12% 100%, rgba(246, 146, 59, 0.14), transparent 70%),
+    radial-gradient(52% 38% at 88% 0%, rgba(255, 143, 187, 0.11), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ------------------------------------------------------------
+   12c. OSCURO — restaurar JERARQUÍA tipográfica
+   ------------------------------------------------------------
+
+   dark-mode-ultra-contrast.css:66 aplica
+   `html.dark *:not(.hero-moment__subtext) { color: #f5f5f5 !important }`.
+   Resultado medido: TODO el texto del wizard salía del mismo blanco —
+   título y pregunta, nombre y etiqueta, acentos kasumi. Legible (>12:1)
+   pero plano: sin jerarquía no hay lectura, solo un muro de texto.
+
+   Su especificidad es (0,2,1); estas reglas usan `html.dark .jw-sheet X`
+   = (0,3,1) para ganarle sin subir a !important en todo.
+   ------------------------------------------------------------ */
+
+html.dark .jw-sheet .jw-pref__q,
+html.dark .jw-sheet .jw-option__desc,
+html.dark .jw-sheet .jw-field__label,
+html.dark .jw-sheet .jw-hint,
+html.dark .jw-sheet .jw-tip,
+html.dark .jw-sheet .jw-opt,
+html.dark .jw-sheet .jw-passport__role,
+html.dark .jw-sheet .jw-weight__hint,
+html.dark .jw-sheet .jw-chain__sub,
+html.dark .jw-sheet .jw-summary dd,
+html.dark .jw-sheet .jw-tray__count span,
+html.dark .jw-sheet .jw-catnote__paper p,
+html.dark .jw-sheet .jw-slider__ticks i {
+  color: var(--ink-soft) !important;
+}
+
+/* Color sólido, no color-mix con transparent: sobre el pasaporte oscuro el
+   alfa hacía impredecible el contraste real (y no se puede auditar). */
+html.dark .jw-sheet .jw-passport__rows dt {
+  color: #9AA3C4 !important;
+}
+
+/* Acentos: lo que en claro es kasumi, en oscuro sigue siendo kasumi */
+html.dark .jw-sheet .jw-slider__value,
+html.dark .jw-sheet .jw-lodge__tab,
+html.dark .jw-sheet .jw-passport__brand,
+html.dark .jw-sheet .jw-add,
+html.dark .jw-sheet .jw-panel__title::before {
+  color: #FFA9C8 !important;
+}
+
+/* Pasos futuros deben verse como futuros, no como el actual */
+html.dark .jw-sheet .jw-steps__item:not(.jw-steps__item--active) .jw-steps__name {
+  color: var(--ink-soft) !important;
+}
+
+/* ------------------------------------------------------------
+   13. Movimiento reducido
+   ------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .jw-postcard,
+  .jw-postcard__art img,
+  .jw-btn-ticket { transition: none; }
+  .jw-dream__thumb { animation: none; }
+  .jw-postcard:has(.jw-postcard__input:checked) .jw-postcard__hanko { animation: none; }
+  .jw-tag, .jw-chip { animation: none; }
+  .jw-warn { animation: none; }
+}
+
+/* ------------------------------------------------------------
+   14. Escapes: los theme-*.css aplican button{} global.
+        Sin esto los boletos vuelven a verse como botones de tema.
+   ------------------------------------------------------------ */
+
+.jw-sheet button.jw-btn-ticket,
+.jw-sheet button.jw-btn-back,
+.jw-sheet button.jw-exit,
+.jw-sheet button.jw-weight__dot,
+.jw-sheet button.jw-tag__off,
+.jw-sheet button.jw-foot__cancel,
+.jw-sheet button.jw-steps__item {
+  text-transform: none;
+  letter-spacing: normal;
+}
+/* ── Generación: una escena de viaje, no un spinner genérico ───────────── */
+.jw-making { min-height: 100%; display: grid; place-items: center; padding: clamp(1rem, 5vw, 3rem); background: rgba(31,40,70,.36); }
+.jw-making__sheet { position: relative; width: min(640px, 100%); padding: clamp(1.4rem, 5vw, 3rem); overflow: hidden; text-align: center; color: #283454; border: 1px solid rgba(70,57,42,.16); border-radius: 28px 9px 28px 12px; background: #fff9ed; box-shadow: 0 28px 80px rgba(13,20,42,.3); }
+.jw-making__sheet::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .18; background-image: url('/images/backgrounds/washi-page-light.webp'); background-size: cover; }
+.jw-making__scene { position: relative; height: 108px; margin: -1rem -1rem 1.4rem; overflow: hidden; border-bottom: 2px dashed rgba(45,58,96,.16); background: linear-gradient(#cfe4ee 0 70%, #e9dfbf 70%); }
+.jw-making__sun { position: absolute; top: 17px; right: 18%; width: 38px; height: 38px; border-radius: 50%; background: #e56556; box-shadow: 0 0 0 10px rgba(229,101,86,.1); }
+.jw-making__route { position: absolute; left: 5%; right: 5%; bottom: 20px; border-bottom: 3px dotted #d65b4d; transform: rotate(-2deg); }
+.jw-making__train { position: absolute; z-index: 2; bottom: 14px; left: 10%; font-size: 2.2rem; animation: jw-travel 4s ease-in-out infinite; filter: drop-shadow(0 4px 2px rgba(0,0,0,.12)); }
+.jw-making__eyebrow { display: block; margin-bottom: .6rem; font: 600 .72rem/1.2 'IBM Plex Mono', monospace; color: #ae4b41; letter-spacing: .1em; text-transform: uppercase; }
+.jw-making h3 { position: relative; margin: 0; font: 800 clamp(1.8rem, 5vw, 3rem)/1 'Bricolage Grotesque', sans-serif; letter-spacing: -.04em; }
+.jw-making > *, .jw-making__sheet > * { position: relative; }
+.jw-making__sheet > p { margin: .8rem auto 1.3rem; max-width: 45ch; color: #687087; }
+.jw-making__steps { display: grid; gap: .55rem; padding: 1rem; text-align: left; border: 1px dashed rgba(45,58,96,.2); border-radius: 15px 5px; background: rgba(255,255,255,.65); }
+.jw-making__steps > div { min-height: 34px; padding: .35rem .55rem; border-radius: 8px; }
+.jw-making__time { font-size: .75rem; font-family: 'IBM Plex Mono', monospace; }
+.dark .jw-making__sheet { color: #f5f0e6; border-color: rgba(255,255,255,.12); background: #18213b; }
+.dark .jw-making__sheet::before { background-image: url('/images/backgrounds/washi-page-dark.webp'); }
+.dark .jw-making__steps { background: rgba(8,14,30,.32); border-color: rgba(255,255,255,.14); }
+@keyframes jw-travel { 0% { left: 5%; transform: rotate(-2deg); } 50% { left: 76%; transform: rotate(1deg); } 100% { left: 5%; transform: rotate(-2deg); } }
+@media (prefers-reduced-motion: reduce) { .jw-making__train { animation: none; left: 46%; } }
+/* ── Visual audit 2026: un solo sistema editorial en todo el wizard ───── */
+.jw-sheet { max-width: 1180px; border-radius: 22px 8px 22px 10px; }
+.jw-head { position: relative; padding-bottom: 14px; background: linear-gradient(90deg,rgba(255,251,242,.96),rgba(249,241,224,.82)); }
+.jw-head::after { content:''; position:absolute; left:32px; right:32px; bottom:5px; border-bottom:2px dotted rgba(210,83,98,.25); }
+.jw-head__title { display:flex; align-items:baseline; gap:.55rem; font-size:clamp(1.25rem,2.2vw,2rem); letter-spacing:-.035em; }
+.jw-head__title span { font:700 .68rem/1 'IBM Plex Mono',monospace; letter-spacing:.18em; color:#d65362; }
+.jw-steps { position:relative; gap:0; padding-top:8px; }
+.jw-steps__pill { border-radius:4px 11px 4px 11px; box-shadow:2px 3px 0 rgba(177,64,80,.12); }
+.jw-steps__item { position:relative; padding:.35rem .75rem .35rem 1.55rem; border:0 !important; background:transparent !important; }
+.jw-steps__item::before { content:'旅'; position:absolute; left:.25rem; top:50%; display:grid; place-items:center; width:18px; height:18px; border:1px solid #d9a1a4; border-radius:50%; color:#bd5b65; font:700 9px/1 serif; transform:translateY(-50%); background:#fffaf0; }
+.jw-steps__item--active::before { color:#fff; border-color:#d65362; background:#d65362; box-shadow:0 0 0 4px rgba(214,83,98,.12); }
+.jw-steps__item--done::before { content:'✓'; color:#fff; border-color:#58725e; background:#58725e; }
+.jw-steps__dots { width:25px; overflow:hidden; color:#d9949e; letter-spacing:3px; }
+.jw-body { background:linear-gradient(180deg,rgba(255,252,246,.78),rgba(252,247,237,.96)); }
+.jw-screen { width:100%; margin-inline:auto; }
+.jw-screen > .jw-catnote { max-width:100%; margin-bottom:22px; }
+
+/* Datos: una hoja de embarque continua, sin colección de cards SaaS. */
+.jw-screen--basics { max-width:1040px; }
+.jw-template-ticket { position:relative; border:1px dashed #d88691 !important; border-radius:9px 3px 9px 3px !important; background:#fff3f1 !important; box-shadow:0 5px 0 rgba(183,88,92,.07); }
+.jw-template-ticket::before,.jw-template-ticket::after { content:''; position:absolute; top:50%; width:14px; height:28px; border-radius:50%; background:#fbf7ed; transform:translateY(-50%); }
+.jw-template-ticket::before { left:-8px; }.jw-template-ticket::after { right:-8px; }
+.jw-template-ticket button { border-radius:4px 12px 4px 12px !important; box-shadow:3px 4px 0 rgba(180,65,95,.16) !important; }
+.jw-date-ticket { border:1px solid #9fc5ad !important; border-radius:5px 12px 5px 12px !important; background:linear-gradient(90deg,#eef8ed 0 73%,#e4f1e4 73%) !important; box-shadow:none; }
+.jw-screen--basics input:not([type=checkbox]):not([type=radio]),.jw-screen--basics select { border:0 !important; border-bottom:1px solid #bfc0bd !important; border-radius:0 !important; background:rgba(255,255,255,.22) !important; box-shadow:none !important; }
+.jw-screen--basics input:focus,.jw-screen--basics select:focus { border-bottom:2px solid #d65362 !important; outline:3px solid rgba(214,83,98,.12) !important; outline-offset:2px; }
+.jw-screen--basics #budgetPreview { border:1px solid rgba(69,83,111,.18) !important; border-radius:3px 14px 4px 12px !important; background:#f4f0e5 !important; box-shadow:4px 5px 0 rgba(41,53,86,.07); }
+.jw-screen--basics #budgetPreview>div.grid>div { border-radius:2px 8px 2px 8px !important; background:rgba(255,255,255,.42) !important; }
+.jw-screen--basics #budgetPreview { position:relative; padding:22px 24px 20px!important; border:0!important; border-left:7px solid #d6c39b!important; background:repeating-linear-gradient(180deg,#f7f1e3 0,#f7f1e3 34px,#dfe6df 35px)!important; }
+.jw-screen--basics #budgetPreview::before { content:'予算'; position:absolute; right:20px; top:16px; color:rgba(183,69,79,.14); font:800 2.8rem/1 serif; }
+.jw-screen--basics #budgetPreview>div.grid { gap:0!important; border-top:1px solid rgba(55,71,92,.18); }
+.jw-screen--basics #budgetPreview>div.grid>div { padding:9px 7px!important; border-bottom:1px solid rgba(55,71,92,.14); border-radius:0!important; background:transparent!important; }
+.jw-diet-tag { position:relative; min-height:42px; padding:8px 14px 8px 26px!important; border:1px solid #c9b68f!important; border-radius:3px 10px 3px 9px!important; color:#4e566d; background:#f5ead5!important; box-shadow:2px 3px 0 rgba(70,55,36,.06); }
+.jw-diet-tag::before { content:''; position:absolute; left:8px; width:8px; height:8px; border:1px solid #9b815d; border-radius:50%; background:#fffaf0; }
+.jw-diet-tag input { position:absolute; opacity:0; }
+.jw-diet-tag.is-selected { color:#365b4a!important; border-color:#799c83!important; background:#e6f0df!important; }
+.jw-diet-tag.is-selected::after { content:'✓'; position:absolute; right:10px; color:#51775e; font-weight:800; }
+.jw-diet-tag:focus-within,.jw-access-pass:focus-within { outline:4px solid rgba(214,83,98,.16); outline-offset:2px; }
+.jw-screen--basics .jw-diet-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px!important; }
+.jw-screen--basics .jw-access-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px!important; }
+.jw-access-pass { min-height:48px; padding:9px 13px!important; border:1px dashed #b9a889!important; border-radius:3px 11px 3px 10px!important; background:#fff9ec!important; box-shadow:2px 3px 0 rgba(70,55,36,.06); }
+.jw-access-pass.is-selected { border-color:#d45c73!important; color:#863c51!important; background:#fff0f1!important; }
+.jw-access-pass input { accent-color:#d45c73; }
+.jw-screen--basics button.rounded-full { border:1px solid #c9a87a; border-radius:3px 10px 3px 10px !important; color:#695b49; background:#f8edda !important; }
+
+/* Mapa = mapa desplegado; reparto = talonario de trayectos. */
+.jw-screen--map { max-width:900px; }
+.jw-screen--map .jw-mappanel { padding:18px 22px 24px; border:0; box-shadow:none; background:transparent; }
+.jw-screen--days { max-width:820px; }
+.jw-screen--days>div:first-child { padding:20px 24px; border:1px solid rgba(46,58,91,.13); border-radius:5px 16px 5px 16px; background:#fff9ed; box-shadow:4px 5px 0 rgba(46,58,91,.07); }
+.jw-screen--days button { border-radius:4px 11px 4px 11px !important; }
+.jw-screen--days [class*="bg-white"],.jw-screen--days [class*="dark:bg-gray"] { border-radius:4px 12px 4px 12px !important; box-shadow:2px 3px 0 rgba(47,58,90,.06); }
+
+/* Postales conservan protagonismo; se elimina la caja que las encerraba. */
+.jw-screen--interests .jw-grid>.jw-panel { padding-inline:0; border:0; background:transparent; box-shadow:none; }
+.jw-screen--interests .jw-panel--taped::before { display:none; }
+.jw-screen--interests .jw-cards { gap:16px; }
+.jw-screen--interests .jw-tray__row { flex-wrap:nowrap; overflow-x:auto; overscroll-behavior-inline:contain; scrollbar-width:thin; }
+.jw-screen--interests .jw-tag { flex:0 0 auto; }
+.jw-postcard { border-radius:5px 12px 5px 10px; }
+.jw-postcard:focus-within { outline:4px solid rgba(214,83,98,.18); outline-offset:3px; }
+.jw-postcard__input:disabled~* { filter:grayscale(.65); opacity:.55; }
+
+/* Estilo = mesa de elección + pasaporte, no dos dashboards. */
+.jw-screen--style .jw-grid>div>.jw-panel:first-child { border:0; background:transparent; box-shadow:none; padding:8px 0; }
+.jw-screen--style .jw-pref { padding:18px 8px; }
+.jw-screen--style .jw-option { border-radius:5px 13px 5px 11px; background:#fffaf0; }
+.jw-screen--style .jw-option:hover { transform:translateY(-2px); box-shadow:0 8px 16px rgba(42,52,84,.12); }
+.jw-screen--style .jw-option:focus-within { outline:4px solid rgba(214,83,98,.18); outline-offset:2px; }
+.jw-screen--style .jw-option__input:disabled~* { opacity:.5; filter:grayscale(.7); }
+.jw-screen--style .jw-aside { border:0; background:transparent; box-shadow:none; }
+.jw-screen--style .jw-style-details { max-width:100%; margin-top:26px; }
+.jw-screen--style .jw-style-details>.jw-panel { max-width:none; }
+.jw-screen--style .jw-lodges { grid-template-columns:repeat(3,minmax(0,1fr)); }
+
+/* Resumen = secuencia de cupones perforados que desemboca en el boleto. */
+.jw-screen--summary .jw-grid>.jw-panel { border:0; background:transparent; box-shadow:none; padding-inline:0; }
+.jw-screen--summary .jw-panel--taped::before { display:none; }
+.jw-screen--summary .jw-chain { align-items:stretch; gap:9px; }
+.jw-screen--summary .jw-chain__card { position:relative; border:1px dashed #d4bda1; border-radius:3px 10px 3px 10px; background:#fff8e9; box-shadow:2px 3px 0 rgba(75,57,38,.07); }
+.jw-screen--summary .jw-chain__card::after { content:''; position:absolute; right:-5px; top:50%; width:9px; height:18px; border-radius:9px 0 0 9px; background:#fbf7ed; transform:translateY(-50%); }
+.jw-screen--summary .jw-chain__ticket { border-radius:4px 13px 4px 13px; }
+.jw-screen--summary .jw-aside { border:1px solid rgba(48,61,94,.15); border-radius:4px 14px 4px 12px; background:#f7f0df; box-shadow:4px 5px 0 rgba(48,61,94,.07); }
+.jw-warn { border:1px dashed #c84451; border-radius:3px 10px 3px 10px; background:#fff0ec; }
+.jw-btn-ticket:focus-visible,.jw-btn-back:focus-visible,.jw-exit:focus-visible { outline:4px solid rgba(214,83,98,.24); outline-offset:3px; }
+.jw-btn-ticket:disabled { cursor:not-allowed; filter:grayscale(.7); opacity:.48; box-shadow:none; }
+
+@media(max-width:640px){
+ .jw-sheet{border-radius:0;max-height:100dvh}.jw-head{padding:14px 14px 10px}.jw-head::after{left:14px;right:14px}
+ .jw-head__title{font-size:1.25rem}.jw-head__title span{display:none}.jw-steps{width:100%;overflow:visible}.jw-steps__item{display:none}.jw-steps__item--active{display:block;flex:1;padding-left:1.75rem}.jw-steps__dots{display:none}
+ .jw-steps__item--active::after{content:'';position:absolute;left:1.75rem;right:.5rem;bottom:-5px;height:2px;background:linear-gradient(90deg,#d65362 var(--jw-progress,50%),rgba(214,83,98,.16) 0)}
+ .jw-body{padding:14px 14px 105px}.jw-screen>.jw-catnote{margin-bottom:16px}
+ .jw-template-ticket .flex,.jw-date-ticket{align-items:flex-start!important}.jw-template-ticket button{padding:.7rem .9rem!important}
+ .jw-screen--basics .grid.grid-cols-2{grid-template-columns:1fr}.jw-screen--basics #budgetPreview .grid{grid-template-columns:1fr 1fr}
+ .jw-screen--basics .jw-diet-grid{grid-template-columns:1fr 1fr}.jw-screen--basics .jw-access-grid{grid-template-columns:1fr}.jw-diet-tag,.jw-access-pass{min-height:44px}.jw-screen--style .jw-lodges{grid-template-columns:1fr}
+ .jw-screen--map .jw-mappanel{padding:8px 0}.jw-screen--days>div:first-child{padding:14px}
+ .jw-screen--interests .jw-cards{gap:10px}.jw-screen--interests .jw-grid>.jw-panel{padding:0}
+ .jw-screen--style .jw-pref{padding:13px 0}.jw-screen--style .jw-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .jw-screen--summary .jw-chain{display:grid;grid-template-columns:1fr 1fr}.jw-screen--summary .jw-chain__eq{grid-column:1/-1}.jw-screen--summary .jw-chain__ticket{grid-column:1/-1;min-height:105px}
+ .jw-screen--summary .jw-aside{margin-top:12px;padding:14px}
+}
+/* ── Variaciones: mesa de propuestas editoriales ─────────────────────── */
+.jvv-sheet { position:relative; color:#2b3868; border:1px solid rgba(82,63,42,.2); border-radius:8px 22px 8px 19px!important; background:#f8f0df!important; box-shadow:0 28px 70px rgba(17,24,48,.28)!important; }
+.jvv-sheet::before { content:''; position:absolute; inset:0; pointer-events:none; opacity:.28; background:url('/images/backgrounds/washi-page-light.webp') center/cover; }
+.jvv-sheet>* { position:relative; }
+.jvv-head { color:#2b3868!important; border-bottom:2px dotted rgba(173,77,91,.2); background:rgba(255,250,240,.86)!important; }
+.jvv-head__eyebrow { display:block; margin-bottom:6px; color:#b54f5c; font:600 .65rem/1.2 'IBM Plex Mono',monospace; letter-spacing:.13em; text-transform:uppercase; }
+.jvv-head h2 { font:800 clamp(1.7rem,3vw,2.6rem)/1 'Bricolage Grotesque',sans-serif; letter-spacing:-.045em; }
+.jvv-head p { color:#6b7491!important; }
+.jvv-compare { border:1px solid #c7a878; border-radius:4px 12px 4px 11px!important; color:#5c5362!important; background:#f4e5cb!important; box-shadow:2px 3px 0 rgba(77,57,34,.08); }
+.jvv-compare:focus-visible{outline:none!important;box-shadow:2px 3px 0 rgba(77,57,34,.08),0 0 0 4px rgba(198,81,101,.2)!important}
+.jvv-content { padding:clamp(16px,3vw,32px)!important; }
+.jvv-grid { align-items:stretch; gap:clamp(14px,2vw,24px)!important; }
+.jvv-card { position:relative; display:flex; flex-direction:column; overflow:visible!important; border:1px solid #cdbb9d!important; border-radius:4px 14px 4px 12px!important; background:#fffaf0; box-shadow:4px 5px 0 rgba(65,50,32,.08); transform:none!important; }
+.jvv-card::before { content:''; position:absolute; z-index:2; top:-9px; left:50%; width:58px; height:20px; background:rgba(192,213,210,.7); clip-path:polygon(2% 8%,98% 0,95% 95%,0 88%); transform:translateX(-50%); }
+.jvv-card:hover { border-color:#c25a6d!important; box-shadow:5px 7px 0 rgba(163,65,83,.11); transform:translateY(-2px)!important; }
+.jvv-card:focus-within { outline:4px solid rgba(211,81,107,.17); outline-offset:4px; }
+.jvv-card__head { position:relative; min-height:170px; padding:30px 22px 20px!important; border-radius:inherit; background:linear-gradient(180deg,#f3ead7,#fffaf0)!important; }
+.jvv-card__number { position:absolute; left:14px; top:15px; color:#af5964; font:600 .56rem/1 'IBM Plex Mono',monospace; letter-spacing:.12em; }
+.jvv-card__icon { display:grid; place-items:center; width:62px; height:62px; margin:4px auto 10px!important; border:1px solid #d8c39f; border-radius:50%; font-size:2rem!important; background:#fff9eb; }
+.jvv-card__head h3 { font:800 1.35rem/1.05 'Bricolage Grotesque',sans-serif; letter-spacing:-.03em; }
+.jvv-card__head p { margin-top:7px; color:#6c748b!important; line-height:1.4; }
+.jvv-tags { min-height:54px; justify-content:flex-start!important; padding:10px 18px!important; border-block:1px dashed rgba(92,70,43,.16); background:#fffaf0!important; }
+.jvv-tag { position:relative; padding:5px 11px 5px 17px!important; border:1px solid #c8af84; border-radius:3px 9px 3px 8px!important; color:#6a5944!important; background:#f2e4ca!important; }
+.jvv-tag::before { content:''; position:absolute; left:6px; top:50%; width:5px; height:5px; border:1px solid #9e8057; border-radius:50%; transform:translateY(-50%); }
+.jvv-highlights { flex:1; padding:15px 18px!important; border:0!important; background:#fffaf0!important; }
+.jvv-highlights>div:first-child { color:#a26069!important; font-family:'IBM Plex Mono',monospace; }
+.jvv-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:0!important; padding:0!important; border-top:1px dashed #cdbb9d; background:#f4e6cf!important; }
+.jvv-stats>div { display:block!important; padding:11px 7px; text-align:center; border-right:1px dashed #cdbb9d; }
+.jvv-stats>div:last-child { border-right:0; }.jvv-stats span { display:block; }
+.jvv-action { padding:14px 18px 18px!important; background:#fffaf0!important; }
+.jvv-action button { position:relative; border-radius:4px 12px 4px 11px!important; background:#d65372!important; box-shadow:3px 4px 0 rgba(153,52,76,.18)!important; }
+.jvv-action button::before,.jvv-action button::after { content:''; position:absolute; top:50%; width:10px; height:18px; border-radius:50%; background:#fffaf0; transform:translateY(-50%); }.jvv-action button::before{left:-6px}.jvv-action button::after{right:-6px}
+.jvv-foot { border-top:2px dotted rgba(89,68,43,.16)!important; background:rgba(255,250,240,.74); }
+html.dark .jvv-sheet,html.dark .jvv-sheet * { color:inherit; }
+@media(max-width:720px){.jvv-sheet{max-height:100dvh!important;border-radius:0!important}.jvv-head{padding:18px 16px!important}.jvv-head>div{align-items:flex-start!important;gap:10px}.jvv-head h2{font-size:1.65rem}.jvv-head p{font-size:.8rem}.jvv-compare{width:42px;height:42px;padding:0!important;font-size:0!important;justify-content:center;flex:0 0 42px}.jvv-compare #comparisonToggleText{display:none!important}.jvv-compare span:first-child{font-size:1rem}.jvv-content{scroll-snap-type:y proximity}.jvv-grid{display:block!important}.jvv-card{margin-bottom:22px;scroll-snap-align:start}.jvv-card__head{min-height:145px}.jvv-foot{padding:12px!important}.jvv-foot button{padding:9px!important;font-size:.72rem}}
+
+/* Comparación: manifiesto de rutas + cuaderno de días */
+.jvc-view{display:grid;gap:34px;color:#3f3a3c;padding-bottom:24px}
+.jvc-manifest,.jvc-notebook,.jvc-tags{position:relative;background:#fffdf6;border:1px solid #d9c7a6;box-shadow:4px 5px 0 rgba(83,62,38,.09);padding:25px 28px}
+.jvc-manifest{background-image:linear-gradient(rgba(191,76,98,.055) 1px,transparent 1px);background-size:100% 28px}
+.jvc-manifest:before{content:"";position:absolute;width:108px;height:24px;left:50%;top:-12px;transform:translateX(-50%);background:rgba(238,181,174,.72);clip-path:polygon(2% 8%,98% 0,96% 94%,0 100%)}
+.jvc-section-title{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:22px}
+.jvc-section-title span{display:block;color:#bd5367;font:700 .65rem/1.2 monospace;letter-spacing:.18em;margin-bottom:5px}
+.jvc-section-title h3{font:800 1.55rem/1.08 var(--font-display,Georgia,serif);color:#3f3a3c;margin:0}
+.jvc-section-title p{max-width:290px;color:#716974;font:italic .86rem Georgia,serif;text-align:right}
+.jvc-routes{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.jvc-route{position:relative;display:flex;flex-direction:column;min-width:0;background:#f8edd9;border:1px solid #cdb58a;padding:19px 17px 16px;box-shadow:2px 3px 0 rgba(73,51,29,.1)}
+.jvc-route--2{background:#f5e8e5}.jvc-route--3{background:#e7efe9}
+.jvc-route:before{content:"";position:absolute;top:-7px;right:14%;width:62px;height:15px;background:rgba(218,192,147,.7);transform:rotate(1deg)}
+.jvc-route__number{font:700 .59rem monospace;letter-spacing:.17em;color:#9a665c;border-bottom:1px dashed #bfa98c;padding-bottom:8px}
+.jvc-route__identity{display:flex;align-items:center;gap:10px;min-height:71px}.jvc-route__identity>span{font-size:1.85rem}.jvc-route__identity h4{font:800 1.08rem/1.08 var(--font-display,Georgia,serif);margin:0;color:#413a3d}
+.jvc-route__facts{margin:0;border-top:1px solid rgba(119,93,62,.18)}
+.jvc-route__facts>div{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dotted rgba(119,93,62,.27)}
+.jvc-route__facts dt{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:#766c67}.jvc-route__facts dd{font-size:.76rem;font-weight:800;text-align:right;margin:0;color:#433d40}
+.jvc-choose{margin-top:15px;width:100%;padding:10px 12px;border:1px solid #b34760!important;border-radius:2px 9px 3px 7px!important;background:#d8667d!important;color:#fff!important;font-weight:800;font-size:.78rem;box-shadow:2px 3px 0 #9f3f54;display:flex;justify-content:center;gap:8px}
+.jvc-choose:hover{transform:translateY(-1px);background:#c9546c!important}.jvc-choose:focus-visible,.jvc-hybrid:focus-visible{outline:3px solid rgba(198,81,101,.27)!important;outline-offset:3px}
+.jvc-notebook{background:repeating-linear-gradient(#fffef9 0,#fffef9 30px,#dce4df 31px);padding-left:62px}
+.jvc-notebook:before{content:"";position:absolute;left:36px;top:0;bottom:0;border-left:2px solid rgba(205,98,109,.25)}
+.jvc-section-title--days{align-items:center}.jvc-hybrid{background:#f1dfb9!important;border:1px dashed #9e7758!important;border-radius:3px 10px 3px 8px!important;color:#5a4640!important;font-weight:800;font-size:.76rem;padding:10px 14px;box-shadow:2px 3px 0 rgba(81,55,35,.12)}
+.jvc-days{display:grid;gap:24px}.jvc-day{position:relative;background:rgba(255,253,247,.92);border:1px solid #cdbd9f;box-shadow:2px 3px 0 rgba(73,51,29,.07)}
+.jvc-day__tab{position:absolute;left:-48px;top:15px;width:48px;padding:7px 5px;background:#c95870;color:#fff;text-align:center;box-shadow:2px 2px 0 #913d50}.jvc-day__tab small{display:block;font:.5rem monospace;letter-spacing:.12em}.jvc-day__tab strong{font:800 1.05rem Georgia,serif}
+.jvc-day__routes{display:grid;grid-template-columns:repeat(3,1fr)}.jvc-day__route{padding:16px;border-right:1px dashed #c9b899;min-width:0}.jvc-day__route:last-child{border-right:0}.jvc-day__route h4{font:800 .76rem/1.2 var(--font-display,Georgia,serif);margin:0 0 12px;color:#5b4650}
+.jvc-day__route ol{list-style:none;margin:0;padding:0}.jvc-day__route li{position:relative;padding:0 0 10px 13px}.jvc-day__route li:before{content:"";position:absolute;left:0;top:5px;width:5px;height:5px;border-radius:50%;background:#d46a7c}.jvc-day__route li strong{display:block;font-size:.72rem;line-height:1.25}.jvc-day__route li small{display:block;color:#817774;font-size:.62rem;margin-top:2px}.jvc-day__more{font-size:.64rem;font-weight:700;color:#b24f65}
+.jvc-day__total{display:flex;justify-content:space-between;gap:8px;border-top:1px dotted #baaa91;padding-top:9px;color:#746963;font:700 .62rem monospace}.jvc-day__route--empty{display:grid;place-items:center;color:#9a928d;font-style:italic}
+.jvc-tags{background:#f5ead7}.jvc-tags__grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.jvc-tag-group{padding:13px;border-top:1px dashed #a98365}.jvc-tag-group>strong{display:block;font:800 .75rem var(--font-display,Georgia,serif);margin-bottom:10px}.jvc-tag-group>div{display:flex;flex-wrap:wrap;gap:7px}.jvc-tag-group span{position:relative;background:#fff8e9;border:1px solid #b99a75;border-radius:2px 7px 2px 7px;padding:5px 9px 5px 14px;font-size:.63rem;font-weight:750;box-shadow:1px 2px 0 rgba(83,62,38,.08)}.jvc-tag-group span:before{content:"";position:absolute;left:5px;top:50%;width:4px;height:4px;border:1px solid #957655;border-radius:50%;transform:translateY(-50%)}
+@media(max-width:720px){.jvc-view{gap:26px}.jvc-manifest,.jvc-notebook,.jvc-tags{padding:20px 15px}.jvc-section-title{display:block;margin-bottom:18px}.jvc-section-title h3{font-size:1.3rem}.jvc-section-title p{margin-top:8px;text-align:left}.jvc-routes{display:block}.jvc-route{margin-bottom:18px}.jvc-route__identity{min-height:60px}.jvc-notebook{padding-left:29px}.jvc-notebook:before{left:17px}.jvc-section-title--days{display:flex;align-items:flex-start;flex-direction:column}.jvc-hybrid{align-self:flex-start}.jvc-day__tab{left:-22px;width:37px;top:12px}.jvc-day__routes{display:block}.jvc-day__route{border-right:0;border-bottom:1px dashed #c9b899;padding:16px 13px 16px 24px}.jvc-day__route:last-child{border-bottom:0}.jvc-day__route h4{font-size:.82rem}.jvc-tags__grid{display:block}.jvc-tag-group{margin-bottom:8px}}
+
+/* Constructor híbrido: mesa de recortes y encuadernación */
+.jvh-sheet{position:relative;background:#eee3ce;border:1px solid #c9b38e;border-radius:5px 18px 7px 14px;box-shadow:11px 14px 0 rgba(54,43,34,.18),0 24px 60px rgba(40,31,26,.28);color:#423b3d}
+.jvh-head{position:relative;padding:24px 30px 0;background:#fffaf0;border-bottom:1px dashed #c7a98a;background-image:radial-gradient(rgba(190,83,101,.08) 1px,transparent 1px);background-size:18px 18px}
+.jvh-head:after{content:"";position:absolute;right:24%;top:-8px;width:92px;height:20px;background:rgba(227,180,144,.7);transform:rotate(-1deg)}
+.jvh-head__inner{display:flex;align-items:center;justify-content:space-between;gap:24px}.jvh-eyebrow{display:block;color:#be5268;font:800 .63rem monospace;letter-spacing:.18em;margin-bottom:6px}.jvh-head h2{font:900 2rem/1.05 var(--font-display,Georgia,serif);margin:0;color:#413a3d}.jvh-head p{font:italic .85rem/1.5 Georgia,serif;color:#746a6f;margin:7px 0 0;max-width:590px}
+.jvh-back,.jvh-cancel{border:1px solid #ad916d!important;background:#f5e5c8!important;color:#5c4d49!important;border-radius:3px 10px 3px 8px!important;font-weight:800;font-size:.73rem;padding:10px 14px;box-shadow:2px 3px 0 rgba(73,51,29,.11)}
+.jvh-summary{display:flex;gap:0;margin-top:20px;border-top:1px solid #d5c2a3}.jvh-summary>span{padding:9px 20px 9px 0;margin-right:20px;color:#766c67;font:700 .65rem monospace;letter-spacing:.04em}.jvh-summary strong{color:#b84e64;font-size:.78rem}
+.jvh-content{padding:28px 30px 38px;background:rgba(250,244,231,.78);scroll-behavior:smooth}.jvh-days{display:grid;gap:32px;max-width:1170px;margin:auto}
+.jvh-day{position:relative;background:#fffdf7;border:1px solid #cbb896;box-shadow:4px 5px 0 rgba(78,57,34,.09);padding:18px 18px 20px}.jvh-day:before{content:"";position:absolute;top:-9px;left:12%;width:76px;height:19px;background:rgba(233,184,178,.67);clip-path:polygon(2% 7%,100% 0,96% 94%,0 100%)}
+.jvh-day__head{display:flex;align-items:center;gap:15px;border-bottom:1px dashed #c8b495;padding-bottom:13px;margin-bottom:16px}.jvh-day__number{width:51px;height:51px;display:grid;place-content:center;text-align:center;background:#c85a70;color:#fff;border-radius:50%;box-shadow:2px 2px 0 #943e51}.jvh-day__number small{font:700 .48rem monospace;letter-spacing:.1em}.jvh-day__number strong{font:900 1.02rem Georgia,serif}.jvh-day__head h3{font:900 1.08rem/1.1 var(--font-display,Georgia,serif);margin:0;color:#493f42}.jvh-day__head p{font-size:.68rem;color:#837875;margin:4px 0 0}
+.jvh-options{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.jvh-option{position:relative;text-align:left!important;min-width:0;padding:15px 14px 13px!important;background:#f8eedc!important;color:#403a3c!important;border:1px solid #c8af86!important;border-radius:2px 8px 3px 7px!important;box-shadow:2px 3px 0 rgba(77,55,31,.09)!important;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}.jvh-option:nth-child(2){background:#f5e8e5!important}.jvh-option:nth-child(3){background:#e7eee7!important}.jvh-option:hover{transform:translateY(-2px);box-shadow:3px 5px 0 rgba(77,55,31,.12)!important}.jvh-option:focus-visible{outline:3px solid rgba(198,81,101,.27)!important;outline-offset:3px}.jvh-option.is-selected{border:2px solid #bb5067!important;box-shadow:3px 4px 0 rgba(157,55,76,.24)!important}.jvh-option.is-selected:before{content:"";position:absolute;top:-7px;left:50%;width:62px;height:15px;transform:translateX(-50%) rotate(-1deg);background:rgba(223,188,131,.72)}
+.jvh-option__route{display:flex;align-items:center;gap:8px;min-height:32px;padding-right:30px;font:900 .78rem/1.15 var(--font-display,Georgia,serif);border-bottom:1px dashed rgba(120,92,61,.3)}.jvh-option__route b{font-size:1.15rem}.jvh-option__mark{position:absolute;right:10px;top:9px;width:26px;height:26px;display:grid;place-items:center;border:1px solid #bc5369;border-radius:50%;color:#b84760;font:900 .8rem Georgia,serif;transform:rotate(-5deg)}.jvh-option:not(.is-selected) .jvh-option__mark{border-color:#ad9c83;color:transparent}
+.jvh-option__activities{display:grid;gap:8px;padding:12px 0}.jvh-option__activities>span{display:block;padding-left:11px;border-left:2px solid rgba(198,81,101,.42)}.jvh-option__activities strong{display:block;font-size:.71rem;line-height:1.2}.jvh-option__activities small{display:block;color:#7e7470;font-size:.61rem;margin-top:2px}.jvh-option__activities em{font-size:.61rem;color:#a34b5e}.jvh-option__stats{display:flex;justify-content:space-between;border-top:1px dotted #b9a587;padding-top:9px;font:700 .61rem monospace;color:#756963}.jvh-option__action{display:block;margin-top:10px;padding-top:8px;border-top:1px solid rgba(120,92,61,.15);text-align:center;font-size:.65rem;font-weight:900;color:#a6485d}.jvh-option--empty{display:grid;place-content:center;gap:6px;text-align:center!important;min-height:210px;opacity:.55}.jvh-option--empty>span{font-weight:800}.jvh-option--empty em{font-size:.7rem}
+.jvh-foot{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:15px 30px;background:#fffaf0;border-top:1px dashed #c7a98a}.jvh-save{min-width:270px;padding:12px 18px!important;background:#cf5b74!important;color:#fff!important;border:1px solid #a63f56!important;border-radius:3px 11px 3px 9px!important;box-shadow:3px 4px 0 #91384c!important;font-weight:900;font-size:.77rem}.jvh-save:hover:not(:disabled){transform:translateY(-1px);background:#be4c65!important}.jvh-save:disabled{opacity:.65;cursor:wait}.jvh-save:focus-visible,.jvh-back:focus-visible,.jvh-cancel:focus-visible{outline:3px solid rgba(198,81,101,.27)!important;outline-offset:3px}
+.jvh-loading{width:100%;height:100%;min-height:450px;display:grid;place-items:center;padding:30px;background:#e8dcc8}.jvh-loading__paper{position:relative;width:min(440px,90vw);padding:55px 35px 38px;text-align:center;background:#fffaf0;border:1px solid #c9b38e;box-shadow:7px 9px 0 rgba(66,48,30,.13);color:#493f42}.jvh-loading__paper>span{font:800 .62rem monospace;letter-spacing:.18em;color:#bd5066}.jvh-loading__paper h3{font:900 1.6rem var(--font-display,Georgia,serif);margin:8px 0}.jvh-loading__paper p{font:italic .8rem Georgia,serif;color:#756b69}.jvh-loading__stitch{position:absolute;left:0;right:0;top:20px;display:flex;justify-content:center;gap:9px}.jvh-loading__stitch i{width:35px;border-top:3px dashed #ca596f;animation:jvh-stitch 1s ease-in-out infinite}.jvh-loading__stitch i:nth-child(2){animation-delay:.15s}.jvh-loading__stitch i:nth-child(3){animation-delay:.3s}@keyframes jvh-stitch{50%{transform:translateY(5px);opacity:.35}}
+@media(max-width:720px){.jvh-sheet{height:100dvh;max-height:100dvh!important;border-radius:0}.jvh-head{padding:18px 16px 0}.jvh-head__inner{align-items:flex-start}.jvh-head h2{font-size:1.55rem}.jvh-head p{font-size:.76rem}.jvh-back{position:relative;width:42px;height:42px;padding:0!important;font-size:0!important;line-height:0!important;color:transparent!important;overflow:hidden;flex:0 0 42px}.jvh-back:before{content:"←";position:absolute;inset:0;display:grid;place-items:center;color:#5c4d49;font-size:1rem;line-height:1}.jvh-summary{display:grid;grid-template-columns:1fr 1fr}.jvh-summary>span{white-space:nowrap;padding:9px 0;margin:0}.jvh-summary>span:nth-child(2){text-align:right}.jvh-summary>span:nth-child(3){display:none}.jvh-content{padding:25px 14px 35px}.jvh-day{padding:15px 12px 18px}.jvh-day__head{padding-left:2px}.jvh-day__head>div:last-child{min-width:0}.jvh-day__head h3{font-size:.98rem}.jvh-day__head p{white-space:normal!important;overflow-wrap:anywhere}.jvh-day__head p:after{content:"Desliza para comparar →";display:block;color:#a84b60;font-weight:700;margin-top:2px}.jvh-options{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;padding:3px 18px 12px 3px}.jvh-option{flex:0 0 min(280px,80vw)!important;width:min(280px,80vw)!important;scroll-snap-align:start}.jvh-option--empty{min-height:230px}.jvh-foot{padding:12px 14px}.jvh-cancel{background:transparent!important;border:0!important;box-shadow:none!important;padding:8px!important}.jvh-save{min-width:0;flex:1;padding:11px!important;font-size:.7rem}}
+
+/* Auditoría 2026: movimiento físico, jerárquico y con un solo foco */
+@keyframes jw-sheet-arrive{from{opacity:0;transform:translateY(18px) scale(.992)}to{opacity:1;transform:none}}
+@keyframes jw-paper-arrive{from{opacity:0;transform:translateY(11px)}to{opacity:1;transform:none}}
+@keyframes jw-stamp-land{0%{opacity:0;transform:scale(1.35)}65%{opacity:1;transform:scale(.96)}100%{opacity:1;transform:scale(1)}}
+@keyframes jw-route-travel{from{background-position:0 0}to{background-position:24px 0}}
+.jw-sheet{animation:jw-sheet-arrive .48s cubic-bezier(.2,.8,.2,1) both}
+.jw-screen>div,.jw-screen>section{animation:jw-paper-arrive .38s cubic-bezier(.2,.75,.25,1) both}
+.jw-screen>div:nth-child(2),.jw-screen>section:nth-child(2){animation-delay:.05s}.jw-screen>div:nth-child(3),.jw-screen>section:nth-child(3){animation-delay:.1s}.jw-screen>div:nth-child(4),.jw-screen>section:nth-child(4){animation-delay:.15s}
+.jw-steps__item--active:before,.jw-card.is-selected:after,.jw-option.is-selected:after{animation:jw-stamp-land .36s cubic-bezier(.2,.85,.3,1.2) both}
+.jw-steps__dots{background:radial-gradient(circle,#d9949e 1.5px,transparent 2px) 0 50%/8px 8px;color:transparent;animation:jw-route-travel 3s linear infinite}
+.jw-card,.jw-option,.jw-diet-tag,.jw-access-pass,.jw-date-ticket,.jw-template-ticket{transition:transform .2s cubic-bezier(.2,.75,.25,1),box-shadow .2s ease,border-color .2s ease!important}
+.jw-card:hover,.jw-option:hover,.jw-diet-tag:hover,.jw-access-pass:hover{transform:translateY(-3px);box-shadow:3px 5px 0 rgba(69,51,35,.12)!important}
+.jw-card:active,.jw-option:active,.jw-diet-tag:active,.jw-access-pass:active{transform:translateY(0) scale(.985)}
+
+/* Básicos deja de leerse como formulario continuo: datos en hoja de embarque */
+.jw-screen--basics>.space-y-5{position:relative;padding:4px 18px 22px;border-left:1px solid rgba(196,96,112,.18);background:repeating-linear-gradient(180deg,transparent 0,transparent 45px,rgba(80,113,137,.045) 46px)}
+.jw-screen--basics>.space-y-5:before{content:"TRAVEL NOTES · 旅程";display:block;margin:3px 0 14px;color:#a34e61;font:800 .58rem/1 monospace;letter-spacing:.16em}
+.jw-screen--basics input:not([type=checkbox]):not([type=radio]),.jw-screen--basics select{border:0!important;border-bottom:1px solid rgba(56,70,99,.32)!important;border-radius:0!important;background:rgba(255,253,247,.46)!important;box-shadow:none!important}
+.jw-screen--basics input:focus,.jw-screen--basics select:focus{border-bottom-color:#d45672!important;box-shadow:0 3px 0 rgba(212,86,114,.1)!important;outline:none!important}
+.jw-date-ticket{position:relative;overflow:hidden}.jw-date-ticket:after{content:"日付";position:absolute;right:18%;top:50%;color:rgba(57,101,76,.09);font:900 3.2rem/1 Georgia,serif;transform:translateY(-50%)}
+.jw-screen--basics .flex.gap-2.mt-2 button{position:relative;border:1px dashed #b99a75!important;border-radius:3px 8px 3px 8px!important;background:#fff8e9!important;box-shadow:1px 2px 0 rgba(76,55,36,.08)}
+.jw-screen--basics .flex.gap-2.mt-2 button:hover{transform:translateY(-2px);box-shadow:2px 4px 0 rgba(76,55,36,.1)}
+@media(max-width:640px){.jw-screen--basics>.space-y-5{padding-inline:4px;border-left:0}.jw-date-ticket:after{right:6%;font-size:2.3rem}.jw-screen--basics .flex.gap-2.mt-2{display:grid;grid-template-columns:1fr}.jw-screen--basics .flex.gap-2.mt-2 button{text-align:left}}
+@media(prefers-reduced-motion:reduce){.jw-sheet,.jw-screen>div,.jw-screen>section,.jw-steps__item--active:before,.jw-card.is-selected:after,.jw-option.is-selected:after,.jw-steps__dots{animation:none!important}.jw-card,.jw-option,.jw-diet-tag,.jw-access-pass{transition:none!important}}
+
+/* Segunda capa: mapa, pasaporte y cierre narran el avance */
+@keyframes jw-pin-confirm{0%{filter:drop-shadow(0 0 0 rgba(224,83,122,0));transform:scale(1)}45%{filter:drop-shadow(0 0 7px rgba(224,83,122,.45));transform:scale(1.12)}100%{filter:drop-shadow(0 0 0 rgba(224,83,122,0));transform:scale(1)}}
+@keyframes jw-passport-open{from{opacity:0;transform:perspective(800px) rotateY(-7deg) translateX(12px)}to{opacity:1;transform:none}}
+@keyframes jw-chain-build{from{opacity:0;transform:translateX(-9px)}to{opacity:1;transform:none}}
+.jw-screen--map .city-hotspot{transform-box:fill-box;transform-origin:center;cursor:pointer}
+.jw-screen--map .city-hotspot.is-selected{animation:jw-pin-confirm .48s cubic-bezier(.2,.8,.2,1) both}
+.jw-screen--map .city-hotspot:focus-visible .city-hotspot-dot{stroke:#293866;stroke-width:3px}
+.jw-screen--map .city-route-chip{animation:jw-paper-arrive .28s ease-out both}
+.jw-screen--style .jw-passport{animation:jw-passport-open .52s .12s cubic-bezier(.2,.75,.25,1) both;transform-origin:left center}
+.jw-screen--style .jw-passport__stamp,.jw-screen--summary .jw-chain__ticket-stamp{animation:jw-stamp-land .4s .34s cubic-bezier(.2,.85,.3,1.2) both}
+.jw-screen--summary .jw-chain__card,.jw-screen--summary .jw-chain__eq,.jw-screen--summary .jw-chain__ticket{animation:jw-chain-build .34s cubic-bezier(.2,.75,.25,1) both}
+.jw-screen--summary .jw-chain__card:nth-child(1){animation-delay:.06s}.jw-screen--summary .jw-chain__card:nth-child(2){animation-delay:.12s}.jw-screen--summary .jw-chain__card:nth-child(3){animation-delay:.18s}.jw-screen--summary .jw-chain__card:nth-child(4){animation-delay:.24s}.jw-screen--summary .jw-chain__eq{animation-delay:.3s}.jw-screen--summary .jw-chain__ticket{animation-delay:.36s}
+.jw-screen--summary .jw-chain__ticket:hover{box-shadow:4px 6px 0 rgba(180,65,95,.12);transform:translateY(-2px)}
+.jw-foot__next,.jw-foot__finish{transition:transform .18s ease,box-shadow .18s ease,filter .18s ease!important}
+.jw-foot__next:hover,.jw-foot__finish:hover{transform:translateY(-2px);filter:saturate(1.06);box-shadow:4px 6px 0 rgba(180,65,95,.16)!important}
+.jw-foot__next:active,.jw-foot__finish:active{transform:translateY(1px) scale(.99)}
+@media(prefers-reduced-motion:reduce){.jw-screen--map .city-hotspot.is-selected,.jw-screen--map .city-route-chip,.jw-screen--style .jw-passport,.jw-screen--style .jw-passport__stamp,.jw-screen--summary .jw-chain__card,.jw-screen--summary .jw-chain__eq,.jw-screen--summary .jw-chain__ticket,.jw-screen--summary .jw-chain__ticket-stamp{animation:none!important}.jw-foot__next,.jw-foot__finish{transition:none!important}}

@@ -12,6 +12,14 @@ import { RouteOptimizer } from '../../map/route-optimizer-v2.js'; // 🗺️ Opt
 import { DayBalancer } from './day-balancer-v3.js'; // ⚖️ Balanceador inteligente de días
 import { DayExperiencePredictor } from './day-experience-predictor.js'; // 🔮 Predictor de experiencia
 import { hasRemoteAreaConflict } from './smart-itinerary-generator.js'; // 🏝️ Guardia de sub-área remota (Uji/Miyajima)
+import { activityIllustration } from '../../ui/illustration-library.js';
+import { buildDayRouteFlow } from './day-route-flow.js';
+import { formatTransferDuration } from './intercity-transfer.js';
+import { adaptDayToWeather, regenerateScope, buildDayNarrative, ensureDayMemory, analyzeLodgingDay } from './day-adaptation.js';
+import {
+  analyzeDayFeasibility, explainDayOptimization, buildPlanB, restorePlanA, applyPace,
+  analyzeDayBudget, culturalNotesForDay, reservationDocumentsForDay, voteOnActivity, buildOfflineSummary, addDayComment
+} from './trip-companion.js';
 
 // 🛡️ Safe wrapper para TimeUtils con fallback
 const SafeTimeUtils = {
@@ -1256,6 +1264,7 @@ function renderTripSelector(){
 
       <!-- Botones de acción centrados -->
       <div class="flex gap-2 flex-wrap justify-center">
+        ${currentItinerary ? `<button onclick="window.TodayMode?.open()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm"><i class="fas fa-location-arrow"></i> Modo Hoy</button>`:''}
         ${userTrips.length>1 ? `<button onclick="TripsManager.showTripsListModal()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">📂 Mis Viajes</button>`:''}
         <button onclick="TripsManager.showShareCode()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">🔗 Compartir</button>
         <button onclick="TripsManager.showCreateTripModal()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">➕ Agregar Viaje</button>
@@ -1268,10 +1277,17 @@ function renderTripSelector(){
     ${currentItinerary ? renderTripNumbers(currentItinerary) : ''}`;
 }
 
+function hasActivityReservation(activityTitle) {
+  const normalized = String(activityTitle || '').trim().toLowerCase();
+  return (window.ReservationsManager?.reservations || []).some(item => String(item.name || '').trim().toLowerCase() === normalized);
+}
+
 // Miniatura acuarela por categoría de actividad (Nano Banana, ver
 // images/illustrations/generated/categories/). Se elige por keywords sobre
 // categoría + icono + título porque los generadores usan campos distintos.
 function activityThumb(act) {
+  const generated = activityIllustration(act);
+  if (generated) return generated;
   const hay = `${act.category || ''} ${act.categoryName || ''} ${act.icon || act.categoryIcon || ''} ${act.title || act.name || ''}`.toLowerCase();
   const pick =
     /comida|food|restaurante|ramen|sushi|omurice|café|cafe|cena|almuerzo|desayuno|market|mercado gastron|🍜|🍣|🍱|🍛|🍙|☕|🍽/.test(hay) ? 'food' :
@@ -1602,6 +1618,224 @@ function renderQuickActionButtons(day) {
   `;
 }
 
+function renderGeographicFlow(day, hotel) {
+  const flow = buildDayRouteFlow(day, hotel || null);
+  day.routeFlow = flow;
+  if (!flow.stops.length) return '';
+  const modeIcons = { walk: '🚶', metro: '🚇', rail: '🚄', unknown: '↕' };
+  const stopIcon = stop => stop.type.startsWith('hotel') ? '🏨' : stop.type === 'meal' ? '🍜' : '📍';
+  const route = flow.stops.map((stop, index) => {
+    const leg = flow.legs[index];
+    return `
+      <li class="geo-flow__stop ${stop.type.startsWith('hotel') ? 'geo-flow__stop--hotel' : ''}">
+        <span class="geo-flow__pin">${stopIcon(stop)}</span>
+        <div><strong>${stop.name}</strong>${stop.area ? `<small>${stop.area}</small>` : ''}</div>
+        ${leg ? `<span class="geo-flow__leg"><b>${modeIcons[leg.mode] || leg.icon}</b>${leg.minutes === null ? 'Por calcular' : `${leg.minutes} min`}${leg.distanceKm !== null ? ` · ${leg.distanceKm} km` : ''}</span>` : ''}
+      </li>`;
+  }).join('');
+  const warnings = flow.warnings.filter(warning => warning.severity === 'warning');
+  return `
+    <section class="geo-flow" aria-labelledby="geoFlowTitle${day.day}">
+      <div class="geo-flow__head">
+        <div><span>移動ルート · FLUJO GEOGRÁFICO</span><h3 id="geoFlowTitle${day.day}">${flow.primaryArea || day.city || 'Ruta del día'}</h3></div>
+        <button type="button" class="geo-flow__why" aria-expanded="false" onclick="this.setAttribute('aria-expanded',this.getAttribute('aria-expanded')!=='true')">¿Por qué esta ruta?</button>
+      </div>
+      <p class="geo-flow__explanation">${flow.explanation}</p>
+      <ol class="geo-flow__route">${route}</ol>
+      <div class="geo-flow__metrics">
+        <span><b>${flow.metrics.walkingKm.toFixed(1)} km</b> caminando</span>
+        <span><b>${flow.metrics.estimatedSteps.toLocaleString()}</b> pasos</span>
+        <span><b>${flow.metrics.walkingMinutes} min</b> a pie</span>
+        <span><b>${flow.metrics.transportMinutes} min</b> transporte</span>
+      </div>
+      ${flow.exertion ? `
+        <div class="geo-flow__pace geo-flow__pace--${flow.exertion.level}">
+          <div class="geo-flow__pace-stamp"><span>RITMO</span><strong>${flow.exertion.label}</strong><small>${flow.exertion.score}/100</small></div>
+          <div>
+            <p>${flow.exertion.recommendation}</p>
+            ${flow.exertion.travelerNote ? `<em>${flow.exertion.travelerLabel}: ${flow.exertion.travelerNote}</em>` : ''}
+            ${flow.exertion.reasons.length ? `<span>${flow.exertion.reasons.join(' · ')}</span>` : ''}
+            ${flow.exertion.consecutiveWarning ? `<b>⚠️ También el día vecino es intenso: mueve una visita exigente o deja una tarde libre.</b>` : ''}
+          </div>
+        </div>
+      ` : ''}
+      ${warnings.length ? `<div class="geo-flow__warning">⚠️ ${warnings.map(w => w.message).join(' ')}</div>` : ''}
+    </section>`;
+}
+
+function renderTransferTicket(day) {
+  const transfer = day.transferPlan;
+  if (!transfer) return '';
+  const longLabel = transfer.isTravelDay ? 'JORNADA DE TRASLADO' : 'CAMBIO DE CIUDAD';
+  return `
+    <section class="transfer-ticket ${transfer.isTravelDay ? 'transfer-ticket--travel-day' : ''}" aria-labelledby="transferTitle${day.day}">
+      <div class="transfer-ticket__stub"><span>乗車券</span><b>DÍA ${String(day.day).padStart(2, '0')}</b><small>${longLabel}</small></div>
+      <div class="transfer-ticket__body">
+        ${transfer.isTravelDay ? `
+          <div class="transfer-ticket__landscape">
+            <img src="/images/illustrations/generated/transportation/shinkansen.webp" alt="" aria-hidden="true">
+            <div><span>JORNADA FERROVIARIA</span><strong>Hoy es un día de viaje</strong><small>El paisaje también forma parte de la ruta</small></div>
+          </div>
+        ` : ''}
+        <div class="transfer-ticket__route">
+          <div><small>DESDE</small><strong>${transfer.from}</strong></div><span>🚄</span><div><small>HACIA</small><strong>${transfer.to}</strong></div>
+        </div>
+        <h3 id="transferTitle${day.day}">${transfer.line}</h3>
+        <div class="transfer-ticket__facts"><span><b>${formatTransferDuration(transfer.durationMinutes)}</b> de viaje</span><span><b>${transfer.distanceKm} km</b> estimados</span><span><b>¥${transfer.cost.toLocaleString()}</b> por persona</span></div>
+        <ol class="transfer-ticket__steps">${transfer.steps.map(step => `<li><span>${step.icon}</span><strong>${step.label}</strong><small>${step.minutes} min</small></li>`).join('')}</ol>
+        <p>${transfer.explanation}</p>
+        ${transfer.warnings.length ? `<div class="transfer-ticket__warning">⚠️ ${transfer.warnings.map(w => w.message).join(' ')}</div>` : ''}
+      </div>
+    </section>`;
+}
+
+function renderScheduleAdjustments(day) {
+  const adjustments = day.scheduleAdjustments || [];
+  if (!adjustments.length) return '';
+  const affected = [...new Set(adjustments.flatMap(item => item.affected || []))];
+  return `
+    <aside class="schedule-slip" aria-label="Ajustes por horarios y cierres">
+      <div class="schedule-slip__stamp"><span>営業時間</span><strong>REVISADO</strong></div>
+      <div class="schedule-slip__body">
+        <span class="schedule-slip__eyebrow">HORARIOS COMPROBADOS</span>
+        <h3>Ajusté el día para que no llegues a una puerta cerrada</h3>
+        ${adjustments.map(item => `<p>${item.message}</p>`).join('')}
+        <div class="schedule-slip__changes">
+          ${affected.map(name => `<span>↪ ${name}</span>`).join('')}
+        </div>
+      </div>
+    </aside>`;
+}
+
+function renderSeasonMark(day) {
+  const season = day.season;
+  if (!season) return '';
+  const art = season.art ? `/images/illustrations/generated/seasonal/${season.art}` : '';
+  return `
+    <aside class="season-mark season-mark--${season.key || 'general'}">
+      ${art ? `<img src="${art}" alt="" aria-hidden="true">` : ''}
+      <div class="season-mark__seal"><span>${season.icon}</span><small>${season.inPeak ? 'EN SU MOMENTO' : 'TEMPORADA'}</small></div>
+      <div class="season-mark__copy">
+        <span>NOTA DE TEMPORADA · ${day.date || ''}</span>
+        <h3>${season.name}</h3>
+        <p>${season.tips}</p>
+      </div>
+    </aside>`;
+}
+
+function renderDayStoryDesk(day) {
+  const narrative = buildDayNarrative(day, Math.max(0, day.day - 1), currentItinerary?.days?.length || day.day);
+  const memory = ensureDayMemory(day);
+  const lodging = analyzeLodgingDay(day);
+  const rail = day.day === 1 ? currentItinerary?.railPassAnalysis : null;
+  const featuredMeal = day.mealAudit?.featured;
+  return `
+    <section class="story-desk story-desk--${narrative.color}" aria-label="Relato y herramientas del día">
+      <header class="story-desk__head">
+        <div><span>CAPÍTULO ${String(day.day).padStart(2, '0')}</span><h3>${narrative.icon} ${narrative.mood}</h3><p>${narrative.chapter}</p></div>
+        <div class="story-desk__actions">
+          <button type="button" onclick="window.regenerateJapitinDay(${day.day},'day')">↻ Rehacer día</button>
+          <button type="button" onclick="window.regenerateJapitinDay(${day.day},'restaurants')">🍜 Solo comidas</button>
+        </div>
+      </header>
+      <div class="story-desk__scraps">
+        ${featuredMeal ? `<article><span>🍜 MESA DESTACADA</span><strong>${featuredMeal.title || featuredMeal.name}</strong><small>Integrada cerca de la ruta del día</small></article>` : `<article class="is-note"><span>🍙 PAUSA PENDIENTE</span><strong>Falta una comida clara</strong><small>${day.mealAudit?.issues?.[0] || 'Japitin la revisará al regenerar comidas.'}</small></article>`}
+        ${day.shoppingPlan ? `<article><span>🛍️ SIN CARGAR BOLSAS</span><strong>Compras al final</strong><small>${day.shoppingPlan.moved.join(', ')}</small></article>` : ''}
+        ${lodging.label ? `<article class="${lodging.isRyokan ? 'is-ryokan' : ''}"><span>🏨 ALOJAMIENTO</span><strong>${lodging.label}</strong><small>${lodging.note}</small></article>` : ''}
+        ${rail ? `<article class="${rail.worthIt ? 'is-pass' : 'is-note'}"><span>🎟️ JR PASS</span><strong>${rail.worthIt ? 'Puede compensar' : 'Mejor por separado'}</strong><small>${rail.message}</small></article>` : ''}
+      </div>
+      <label class="story-memory">
+        <span>✨ RECUERDO DEL DÍA</span>
+        <strong>${narrative.memoryPrompt}</strong>
+        <textarea rows="2" placeholder="Escribe una nota para tu yo del futuro…" onblur="window.updateJapitinMemory(${day.day},this.value)">${escapeStoryText(memory.note || '')}</textarea>
+        <div class="story-memory__photos">
+          ${(memory.photos || []).map((photo, index) => `<figure><img src="${photo.dataUrl}" alt="${escapeStoryText(photo.name || `Recuerdo ${index + 1}`)}"><button type="button" onclick="window.removeJapitinMemoryPhoto(${day.day},${index})" aria-label="Quitar foto">×</button></figure>`).join('')}
+          ${(memory.photos || []).length < 3 ? `<label class="story-memory__add">📷 Añadir foto<input type="file" accept="image/*" onchange="window.uploadJapitinMemoryPhoto(${day.day},this.files[0]);this.value=''"></label>` : ''}
+        </div>
+        <small>Hasta tres recuerdos comprimidos por día.</small>
+      </label>
+    </section>`;
+}
+
+export function renderTripCompanion(day) {
+  const feasibility = analyzeDayFeasibility(day);
+  const optimization = explainDayOptimization(day);
+  const budget = analyzeDayBudget(day);
+  const culture = culturalNotesForDay(day);
+  const reservations = reservationDocumentsForDay(day, window.ReservationsManager?.reservations || []);
+  const firstVotable = (day.activities || []).find(activity => activity.id);
+  const statusLabel = { comfortable: 'RESPIRABLE', tight: 'AJUSTADO', impossible: 'REVISAR' }[feasibility.status];
+  return `
+    <section class="trip-companion trip-companion--${feasibility.status}" aria-labelledby="companionTitle${day.day}">
+      <header class="trip-companion__focus">
+        <span>CONTROL DE RUTA · 旅の確認</span>
+        <h3 id="companionTitle${day.day}">${feasibility.score}<small>/100</small> · ${statusLabel}</h3>
+        <p>${optimization.message}</p>
+      </header>
+      <div class="trip-companion__rail" role="list">
+        <article role="listitem"><span>VIABILIDAD</span><strong>${feasibility.issues.length ? feasibility.issues[0].message : 'Horarios y traslados tienen margen.'}</strong><small>${feasibility.issues.length} alerta(s) detectada(s)</small></article>
+        <article role="listitem"><span>PRESUPUESTO</span><strong>¥${budget.total.toLocaleString()}</strong><small>🚃 ${budget.categories.transport.toLocaleString()} · 🍜 ${budget.categories.meals.toLocaleString()} · 🎟️ ${budget.categories.tickets.toLocaleString()}</small></article>
+        <article role="listitem"><span>RESERVAS</span><strong>${reservations.length ? `${reservations.length} documento(s) listos` : 'Sin documentos vinculados'}</strong><small>${reservations[0]?.confirmation ? `Confirmación ${escapeStoryText(reservations[0].confirmation)}` : 'Añade QR, asiento y política desde Reservas'}</small></article>
+      </div>
+      ${culture.length ? `<div class="trip-companion__culture">${culture.map(note => `<p><b>${note.icon}</b>${note.text}</p>`).join('')}</div>` : ''}
+      <footer class="trip-companion__controls">
+        <div class="pace-stubs" aria-label="Ritmo del día">
+          ${['relaxed','balanced','intense'].map(pace => `<button type="button" class="${day.pace === pace ? 'is-selected' : ''}" onclick="window.setJapitinPace(${day.day},'${pace}')">${{relaxed:'Suave',balanced:'Equilibrado',intense:'Intenso'}[pace]}</button>`).join('')}
+        </div>
+        <button type="button" class="plan-b-ticket ${day.planB ? 'is-active' : ''}" onclick="window.toggleJapitinPlanB(${day.day})">${day.planB ? '☀️ Volver al Plan A' : '☂️ Preparar Plan B'}</button>
+        ${firstVotable ? `<button type="button" class="vote-stamp" onclick="window.voteJapitinActivity(${day.day},'${escapeStoryText(firstVotable.id)}')">♡ Votar primera parada</button>` : ''}
+        <button type="button" class="offline-stub" onclick="window.exportJapitinOffline()">↓ Resumen offline</button>
+      </footer>
+      <div class="trip-companion__exports" aria-label="Exportar y usar durante el viaje">
+        <button type="button" onclick="window.TodayMode?.open()">📍 Estoy viajando ahora</button>
+        <button type="button" onclick="window.PDFExporter?.exportToPDF()">📄 PDF Japitin</button>
+        <button type="button" onclick="window.exportJapitinCalendar()">📅 Calendario</button>
+        <button type="button" onclick="window.exportJapitinMaps()">🗺️ Maps</button>
+      </div>
+      <label class="trip-companion__comment"><span>NOTA PARA EL GRUPO</span><input maxlength="500" placeholder="Ej. Prefiero mantener esta parada…" onkeydown="if(event.key==='Enter'){event.preventDefault();window.commentJapitinDay(${day.day},this.value);this.value=''}"><small>${day.collaboration?.comments?.length || 0} comentario(s) guardado(s)</small></label>
+    </section>`;
+}
+
+function escapeStoryText(value) {
+  return String(value ?? '').replace(/[&<>"']/g, character => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[character]);
+}
+
+function renderAirportPass(day) {
+  const plan = day.arrivalPlan || day.departurePlan;
+  if (!plan) return '';
+  const arrival = plan.type === 'arrival';
+  const title = arrival ? `Bienvenida por ${plan.airport.code}` : `Regreso desde ${plan.airport.code}`;
+  const keyTime = arrival ? plan.hotelArrivalTime : plan.leaveHotelTime;
+  return `
+    <section class="airport-pass airport-pass--${plan.type}" aria-labelledby="airportPassTitle${day.day}">
+      <div class="airport-pass__main">
+        <div class="airport-pass__top"><span>${arrival ? 'ARRIVAL · 入国' : 'DEPARTURE · 出国'}</span><b>${plan.airport.code}</b></div>
+        <h3 id="airportPassTitle${day.day}">${title}</h3>
+        <p>${plan.airport.name} · ${plan.access.mode}</p>
+        <ol>${plan.steps.map(step => `<li><span>${step.icon}</span><strong>${step.label}</strong>${step.minutes ? `<small>${step.minutes} min</small>` : ''}</li>`).join('')}</ol>
+        ${plan.recommendAirportHotel ? `<div class="airport-pass__alert">🧳 Vuelo muy temprano: recomendamos dormir cerca del aeropuerto la última noche.</div>` : ''}
+      </div>
+      <div class="airport-pass__stub"><span>${arrival ? 'ATERRIZAJE' : 'SALIDA'}</span><strong>${plan.flightTime || '--:--'}</strong><i></i><span>${arrival ? 'HOTEL APROX.' : 'DEJA EL HOTEL'}</span><strong>${keyTime || '--:--'}</strong><small>¥${plan.access.cost.toLocaleString()}</small></div>
+    </section>`;
+}
+
+function renderHotelTransition(day) {
+  const plan = day.hotelTransitionPlan;
+  if (!plan) return '';
+  return `
+    <section class="hotel-move" aria-labelledby="hotelMoveTitle${day.day}">
+      <div class="hotel-move__tag"><span>荷物</span><b>CAMBIO DE HOTEL</b><small>${plan.city}</small></div>
+      <div class="hotel-move__body">
+        <div class="hotel-move__hotels"><div><small>CHECK-OUT</small><strong>${plan.fromHotel}</strong></div><span>🧳</span><div><small>CHECK-IN</small><strong>${plan.toHotel}</strong></div></div>
+        <h3 id="hotelMoveTitle${day.day}">Tus maletas cambian de base</h3>
+        <ol>${plan.steps.map(step => `<li><span>${step.icon}</span><strong>${step.label}</strong><small>${step.time || (step.minutes ? `${step.minutes} min` : '')}</small></li>`).join('')}</ol>
+        <p>${plan.explanation}</p>
+      </div>
+    </section>`;
+}
+
 function renderDayOverview(day){
   const container=document.getElementById('dayOverview'); if(!container) return;
   const completed = day.activities.filter(a => checkedActivities[a.id]).length;
@@ -1662,7 +1896,16 @@ function renderDayOverview(day){
       nara: '/images/illustrations/generated/cities/nara-watercolor.webp',
       hakone: '/images/illustrations/generated/cities/hakone-watercolor.webp',
     };
-    if (WATERCOLOR_CITY_ART[cityName]) {
+    const RETURN_VISIT_ART = {
+      tokyo: '/images/illustrations/generated/cities/tokyo-skyline-day-sakura.jpg',
+      kyoto: '/images/illustrations/generated/cities/kyoto-fushimi-inari-torii-sakura-day.jpg',
+      osaka: '/images/illustrations/generated/cities/osaka-dotonbori-neon-night.jpg',
+      nara: '/images/illustrations/generated/cities/nara-todaiji-deer-garden-day.jpg',
+      hakone: '/images/illustrations/generated/cities/hakone-lake-fuji-onsen-day.jpg'
+    };
+    if (day.cityVisitIndex > 1 && RETURN_VISIT_ART[cityName]) {
+      cityImage = RETURN_VISIT_ART[cityName];
+    } else if (WATERCOLOR_CITY_ART[cityName]) {
       cityImage = WATERCOLOR_CITY_ART[cityName];
     } else if (window.ImageService && window.ImageService.getCityImage) {
       cityImage = window.ImageService.getCityImage(cityName);
@@ -1726,7 +1969,7 @@ function renderDayOverview(day){
         <div class="absolute bottom-0 left-0 right-0 p-4">
           <div class="flex items-center gap-2 text-white">
             <div>
-              <h2 class="text-2xl font-bold text-white drop-shadow-lg">Día ${day.day}${day.city || day.location ? ' – ' + (day.city || day.location) : ''}</h2>
+              <h2 class="text-2xl font-bold text-white drop-shadow-lg">Día ${day.day}${day.cityChapter || day.city || day.location ? ' – ' + (day.cityChapter || day.city || day.location) : ''}</h2>
               ${dayDateLong ? `<p class="text-sm text-white/90">${dayDateLong}</p>` : ''}
             </div>
           </div>
@@ -1756,17 +1999,7 @@ function renderDayOverview(day){
       </div>
 
       <p class="font-bold text-lg text-red-600 dark:text-red-400">${day.title||''}</p>
-      ${day.season ? `
-        <div class="bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/30 dark:to-purple-900/30 p-3 rounded-lg border-l-4 border-pink-500 dark:border-pink-400">
-          <div class="flex items-start gap-2">
-            <span class="text-2xl">${day.season.icon}</span>
-            <div class="flex-1">
-              <p class="font-bold text-pink-700 dark:text-pink-300 text-sm">${day.season.name} ${day.season.inPeak ? '- PEAK TIME! 🌟' : ''}</p>
-              ${day.season.tips ? `<p class="text-xs text-gray-600 dark:text-gray-300 mt-1">💡 ${day.season.tips}</p>` : ''}
-            </div>
-          </div>
-        </div>
-      ` : ''}
+      ${renderSeasonMark(day)}
       ${day.energyLevel ? `
         <div class="flex items-center gap-2 text-xs">
           <span class="font-semibold dark:text-gray-200">⚡ Energy Level:</span>
@@ -1801,6 +2034,14 @@ function renderDayOverview(day){
       ` : ''}
       ${day.location ? `<p class="text-xs text-gray-500 dark:text-gray-200">📍 ${day.location}</p>`:''}
     </div>
+
+    ${renderAirportPass(day)}
+    ${renderScheduleAdjustments(day)}
+    ${renderTransferTicket(day)}
+    ${renderHotelTransition(day)}
+    ${renderGeographicFlow(day, hotelForCity)}
+    ${renderDayStoryDesk(day)}
+    ${renderTripCompanion(day)}
 
     <!-- 📊 Quick Stats del Día -->
     ${renderQuickStats(day)}
@@ -1857,12 +2098,13 @@ async function loadWeatherForDay(day) {
     const weather = await window.AppUtils.fetchWeather(city);
 
     if (weather) {
+      day.weather = weather;
       const emoji = window.AppUtils.getWeatherEmoji(weather.icon);
 
       // Determinar sugerencias según el clima
       let suggestion = '';
       if (weather.description.includes('lluvia') || weather.description.includes('rain')) {
-        suggestion = '<p class="text-xs text-blue-700 dark:text-blue-300 mt-1">☂️ Lleva paraguas</p>';
+        suggestion = `<div class="weather-rain-action"><span>☂️ Este día necesita una versión cubierta.</span><button type="button" onclick="window.adaptJapitinDayToWeather(${day.day})">Adaptar sin perder reservas</button></div>`;
       } else if (weather.temp > 25) {
         suggestion = '<p class="text-xs text-orange-700 dark:text-orange-300 mt-1">🧴 Usa protector solar</p>';
       } else if (weather.temp < 10) {
@@ -2653,7 +2895,12 @@ function renderActivities(day){
           <div class="drag-handle text-gray-400 dark:text-gray-500 text-xs cursor-grab active:cursor-grabbing" title="Arrastra para reordenar">⋮⋮</div>
           <input type="checkbox" data-id="${act.id}" ${checkedActivities[act.id]?'checked':''} class="activity-checkbox w-5 h-5 cursor-pointer accent-purple-600 flex-shrink-0" />
         </div>
-        <img class="activity-thumb hidden sm:block" src="${activityThumb(act)}" alt="" loading="lazy">
+        <!-- eager, NO lazy: loading="lazy" no dispara dentro de los
+             contenedores de esta app (html/body llevan overflow:hidden auto,
+             el scroller real es <body>, así que el observer del navegador no
+             ve la intersección). Ya se tropezó con esto en las postales de
+             Inspírate y en el sidebar del itinerario. -->
+        <img class="activity-thumb hidden sm:block" src="${activityThumb(act)}" alt="" loading="eager">
 
         <div class="flex-1 min-w-0">
           <div class="flex justify-between items-start gap-2">
@@ -2692,6 +2939,7 @@ function renderActivities(day){
             ${actCost===0?`<span class="text-xs bg-green-50 dark:bg-green-900/40 text-green-600 dark:text-green-300 px-2 py-1 rounded font-semibold whitespace-nowrap">Gratis</span>`:''}
             ${act.rating?`<span class="text-xs bg-yellow-50 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded font-semibold whitespace-nowrap">⭐ ${act.rating}</span>`:''}
             ${actCategory?`<span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">${actCategory}</span>`:''}
+            <button type="button" onclick="ItineraryHandler.openQuickReservation(${day.day}, '${act.id}')" class="jp-reservation-chip ${hasActivityReservation(activityTitle) ? 'is-reserved' : ''}"><i class="fas ${hasActivityReservation(activityTitle) ? 'fa-circle-check' : 'fa-ticket'}"></i>${hasActivityReservation(activityTitle) ? 'Reservado' : 'Reserva'}</button>
           </div>
           ${renderActivityCrowdBadge(day, act)}
           ${act.photographyInfo ? `
@@ -2840,6 +3088,9 @@ export const ItineraryHandler = {
   __getCurrentDay() {
     return currentDay;
   },
+  refreshReservationStates() {
+    render();
+  },
   async loadItinerary(tripId) {
     // Llamar a la función standalone loadItinerary
     await loadItinerary();
@@ -2957,6 +3208,25 @@ export const ItineraryHandler = {
       unsubscribe();
       unsubscribe = null;
     }
+  },
+
+  async openQuickReservation(dayNumber, activityId) {
+    const day = currentItinerary?.days?.find(item => item.day === Number(dayNumber));
+    const activity = day?.activities?.find(item => String(item.id) === String(activityId));
+    if (!activity || !window.ReservationsManager) return;
+    const tripId = getCurrentTripId();
+    if (tripId && window.ReservationsManager.currentTrip !== tripId) await window.ReservationsManager.init(tripId);
+    const name = activity.title || activity.name || 'Actividad';
+    const existing = window.ReservationsManager.reservations.find(item => String(item.name || '').toLowerCase() === name.toLowerCase());
+    if (existing) return window.ReservationsManager.showEditReservationModal(existing.id);
+    window.ReservationsManager.showAddReservationModal();
+    const form = document.querySelector('#reservationForm');
+    if (!form) return;
+    form.elements.type.value = 'activity';
+    form.elements.name.value = name;
+    form.elements.date.value = day.date || '';
+    form.elements.time.value = activity.time || '';
+    form.elements.location.value = activity.location || activity.address || '';
   },
 
   // Mostrar modal de actividad (añadir o editar)
@@ -4421,10 +4691,171 @@ async function insertGapFiller(dayNumber, gapIndex, suggestionIndex, suggestion,
   render();
 }
 
+function dayAlternativePool(day) {
+  return (day.activities || []).flatMap(activity => (activity.alternatives || []).map((alternative, index) => ({
+    id: `${activity.id || 'alt'}-${index}`,
+    title: alternative.name,
+    category: alternative.category || activity.category,
+    cost: alternative.cost || 0,
+    coordinates: alternative.coordinates || null,
+    duration: activity.duration || 60,
+    isMeal: activity.isMeal || false
+  })));
+}
+
+async function regenerateJapitinDay(dayNumber, scope = 'day') {
+  const index = currentItinerary?.days?.findIndex(day => day.day === dayNumber) ?? -1;
+  if (index < 0) return;
+  const original = currentItinerary.days[index];
+  const regenerated = regenerateScope(original, dayAlternativePool(original), scope);
+  regenerated.routeFlow = buildDayRouteFlow(regenerated, regenerated.hotel || null);
+  regenerated.narrative = buildDayNarrative(regenerated, index, currentItinerary.days.length);
+  currentItinerary.days[index] = regenerated;
+  await saveCurrentItineraryToFirebase();
+  render();
+  Notifications.show(`Día ${dayNumber} actualizado · ${regenerated.regenerationLog.changed} cambio(s), ${regenerated.regenerationLog.protected.length} protegido(s)`, 'success');
+}
+
+async function adaptJapitinDayToWeather(dayNumber) {
+  const index = currentItinerary?.days?.findIndex(day => day.day === dayNumber) ?? -1;
+  if (index < 0) return;
+  const original = currentItinerary.days[index];
+  const result = adaptDayToWeather(original, original.weather || { isRainy: true, rainProbability: 80 }, dayAlternativePool(original));
+  result.day.routeFlow = buildDayRouteFlow(result.day, result.day.hotel || null);
+  currentItinerary.days[index] = result.day;
+  await saveCurrentItineraryToFirebase();
+  render();
+  Notifications.show(`Plan de lluvia aplicado · ${result.changes.length} cambio(s), ${result.preserved.length} protegido(s)`, 'success');
+}
+
+async function updateJapitinMemory(dayNumber, note) {
+  const day = currentItinerary?.days?.find(item => item.day === dayNumber);
+  if (!day) return;
+  day.memory = { ...ensureDayMemory(day), note: String(note || '').trim(), updatedAt: new Date().toISOString() };
+  await saveCurrentItineraryToFirebase();
+}
+
+function compressMemoryPhoto(file) {
+  return new Promise((resolve, reject) => {
+    if (!file?.type?.startsWith('image/')) return reject(new Error('El archivo no es una imagen'));
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error('Imagen inválida'));
+      image.onload = () => {
+        const scale = Math.min(1, 700 / Math.max(image.width, image.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/webp', .6));
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadJapitinMemoryPhoto(dayNumber, file) {
+  const day = currentItinerary?.days?.find(item => item.day === dayNumber);
+  if (!day || !file) return;
+  const memory = ensureDayMemory(day);
+  if (memory.photos.length >= 3) return Notifications.show('Máximo tres fotos por día', 'warning');
+  try {
+    const dataUrl = await compressMemoryPhoto(file);
+    day.memory = { ...memory, photos: [...memory.photos, { name: file.name, dataUrl }], updatedAt: new Date().toISOString() };
+    await saveCurrentItineraryToFirebase();
+    render();
+  } catch (error) {
+    Notifications.show(error.message, 'error');
+  }
+}
+
+async function removeJapitinMemoryPhoto(dayNumber, photoIndex) {
+  const day = currentItinerary?.days?.find(item => item.day === dayNumber);
+  if (!day) return;
+  const memory = ensureDayMemory(day);
+  day.memory = { ...memory, photos: memory.photos.filter((_, index) => index !== photoIndex), updatedAt: new Date().toISOString() };
+  await saveCurrentItineraryToFirebase();
+  render();
+}
+
+async function toggleJapitinPlanB(dayNumber) {
+  const index = currentItinerary?.days?.findIndex(day => day.day === dayNumber) ?? -1;
+  if (index < 0) return;
+  const day = currentItinerary.days[index];
+  currentItinerary.days[index] = day.planB ? restorePlanA(day) : buildPlanB(day);
+  currentItinerary.days[index].routeFlow = buildDayRouteFlow(currentItinerary.days[index], currentItinerary.days[index].hotel || null);
+  await saveCurrentItineraryToFirebase();
+  render();
+  Notifications.show(day.planB ? 'Plan A restaurado' : 'Plan B preparado sin tocar reservas', 'success');
+}
+
+async function setJapitinPace(dayNumber, pace) {
+  const index = currentItinerary?.days?.findIndex(day => day.day === dayNumber) ?? -1;
+  if (index < 0) return;
+  currentItinerary.days[index] = applyPace(currentItinerary.days[index], pace);
+  currentItinerary.days[index].routeFlow = buildDayRouteFlow(currentItinerary.days[index], currentItinerary.days[index].hotel || null);
+  await saveCurrentItineraryToFirebase();
+  render();
+  Notifications.show(`Ritmo ${pace} aplicado; las reservas permanecen protegidas`, 'success');
+}
+
+async function voteJapitinActivity(dayNumber, activityId) {
+  const index = currentItinerary?.days?.findIndex(day => day.day === dayNumber) ?? -1;
+  if (index < 0) return;
+  currentItinerary.days[index] = voteOnActivity(currentItinerary.days[index], activityId, auth.currentUser?.uid || 'guest', 1);
+  await saveCurrentItineraryToFirebase();
+  render();
+  Notifications.show('Voto guardado en el itinerario compartido', 'success');
+}
+
+function exportJapitinOffline() {
+  if (!currentItinerary) return;
+  const content = JSON.stringify(buildOfflineSummary(currentItinerary), null, 2);
+  const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'japitin-offline.json';
+  link.click();
+  URL.revokeObjectURL(link.href);
+  Notifications.show('Resumen offline descargado con direcciones locales y japonesas', 'success');
+}
+
+function exportTripFacade() {
+  const trip = window.TripsManager?.currentTrip || {};
+  return { ...trip, info: trip.info || { name: currentItinerary?.name || 'Mi viaje', dateStart: currentItinerary?.startDate, dateEnd: currentItinerary?.endDate }, itinerary: currentItinerary };
+}
+
+function exportJapitinCalendar() { window.ExportManager?.exportToGoogleCalendar(exportTripFacade()); }
+function exportJapitinMaps() { window.ExportManager?.exportToGoogleMaps(exportTripFacade()); }
+
+async function commentJapitinDay(dayNumber, text) {
+  const index = currentItinerary?.days?.findIndex(day => day.day === dayNumber) ?? -1;
+  if (index < 0 || !String(text || '').trim()) return;
+  currentItinerary.days[index] = addDayComment(currentItinerary.days[index], auth.currentUser?.displayName || 'Viajero', text);
+  await saveCurrentItineraryToFirebase();
+  render();
+  Notifications.show('Comentario compartido guardado', 'success');
+}
+
 window.ItineraryHandler = ItineraryHandler;
 
 // Exponer funciones de guardado y render
 window.saveCurrentItineraryToFirebase = saveCurrentItineraryToFirebase;
+window.regenerateJapitinDay = regenerateJapitinDay;
+window.adaptJapitinDayToWeather = adaptJapitinDayToWeather;
+window.updateJapitinMemory = updateJapitinMemory;
+window.uploadJapitinMemoryPhoto = uploadJapitinMemoryPhoto;
+window.removeJapitinMemoryPhoto = removeJapitinMemoryPhoto;
+window.toggleJapitinPlanB = toggleJapitinPlanB;
+window.setJapitinPace = setJapitinPace;
+window.voteJapitinActivity = voteJapitinActivity;
+window.exportJapitinOffline = exportJapitinOffline;
+window.exportJapitinCalendar = exportJapitinCalendar;
+window.exportJapitinMaps = exportJapitinMaps;
+window.commentJapitinDay = commentJapitinDay;
 window.renderItinerary = render;
 window.showBalanceAnalysis = showBalanceAnalysis;
 window.runMasterOptimization = runMasterOptimization;

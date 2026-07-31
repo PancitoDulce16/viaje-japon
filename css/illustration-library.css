@@ -1,0 +1,62 @@
+/* Shared presentation for Nano Banana assets wired into live UI. */
+.jp-empty-state {
+  width: min(100%, 620px);
+  margin: 0 auto;
+  padding: clamp(24px, 5vw, 52px) 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--ink);
+}
+
+.jp-empty-state__art {
+  width: min(100%, 320px);
+  aspect-ratio: 3 / 2;
+  margin-bottom: 18px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 6px 18px 6px 18px;
+  background: var(--surface-page);
+  border: 1px solid var(--hairline);
+  box-shadow: 0 12px 26px -20px rgba(var(--shadow-rgb), .55);
+  transform: rotate(-.5deg);
+}
+
+.jp-empty-state__art img { width: 100%; height: 100%; object-fit: cover; }
+.jp-empty-state__art span { font-size: 4rem; }
+.jp-empty-state__title { margin: 0 0 7px; font: 800 clamp(1.15rem, 3vw, 1.45rem)/1.2 var(--jp-font-display); }
+.jp-empty-state__message { max-width: 430px; margin: 0 0 18px; color: var(--ink-soft); line-height: 1.6; }
+.jp-empty-state__action {
+  border: 0; border-radius: var(--jp-radius-pill); padding: 11px 21px;
+  background: linear-gradient(135deg, var(--color-kasumi), var(--color-kasumi-deep));
+  color: #fff; font-weight: 800; cursor: pointer;
+  box-shadow: 0 8px 18px -12px rgba(241,111,163,.9);
+}
+.jp-empty-state__action:hover { transform: translateY(-1px); }
+
+.jp-loading-state { min-height: 220px; display: grid; place-items: center; align-content: center; padding: 28px; text-align: center; }
+.jp-loading-state img { width: 150px; mix-blend-mode: multiply; animation: jpPlaneFloat 1.8s ease-in-out infinite; }
+.dark .jp-loading-state img { mix-blend-mode: screen; opacity: .88; }
+.jp-loading-state__route { width: 130px; border-top: 2px dashed var(--color-kasumi); margin-top: -20px; }
+.jp-loading-state p { margin: 16px 0 0; color: var(--ink-soft); font-weight: 700; }
+
+.jp-loading-overlay { position: fixed; inset: 0; z-index: 100000; display: grid; place-items: center; padding: 20px; background: rgba(20,26,46,.56); backdrop-filter: blur(6px); }
+.jp-loading-overlay__paper { width: min(92vw, 390px); padding: 24px; text-align: center; border-radius: 7px 20px 7px 20px; background: var(--surface-page); border: 1px solid var(--hairline); box-shadow: 0 28px 60px -24px rgba(0,0,0,.65); }
+.jp-loading-overlay__art { position: relative; height: 150px; overflow: hidden; }
+.jp-loading-overlay__art img { width: 100%; height: 100%; object-fit: cover; mix-blend-mode: multiply; animation: jpTrainDrift 2.1s ease-in-out infinite; }
+.dark .jp-loading-overlay__art img { mix-blend-mode: screen; opacity: .8; }
+.jp-loading-overlay__art span { position: absolute; inset: 0; display: grid; place-items: center; font-size: 2rem; }
+.jp-loading-overlay__paper p { margin: 13px 0 0; color: var(--ink); font-weight: 800; }
+
+.jp-weather-art { position: relative; width: 86px; height: 64px; flex: 0 0 auto; overflow: hidden; border-radius: 12px; }
+.jp-weather-art img { width: 100%; height: 100%; object-fit: cover; }
+.jp-weather-art span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+.jp-collection-empty__art { display: block; width: min(100%, 300px); aspect-ratio: 3/2; object-fit: cover; margin: 0 auto 18px; border-radius: 6px 16px 6px 16px; border: 1px solid var(--hairline); box-shadow: 0 10px 24px -20px rgba(var(--shadow-rgb),.55); }
+
+@keyframes jpPlaneFloat { 50% { transform: translateY(-7px) rotate(2deg); } }
+@keyframes jpTrainDrift { 50% { transform: translateX(5px); } }
+@media (prefers-reduced-motion: reduce) { .jp-loading-state img, .jp-loading-overlay__art img { animation: none; } }
+@media (max-width: 520px) { .jp-empty-state { padding-inline: 10px; } .jp-empty-state__art { width: 260px; } }

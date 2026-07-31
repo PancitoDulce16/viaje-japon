@@ -72,11 +72,11 @@ export const HotelsHandler = {
     if (!container) return;
 
     container.innerHTML = `
-      <div class="max-w-6xl mx-auto p-4 md:p-6">
+      <div class="max-w-6xl mx-auto p-4 md:p-6 jp-hotels-page">
         <h2 class="text-4xl font-bold mb-6 text-gray-800 dark:text-white">🏨 Gestión de Hoteles</h2>
 
         <!-- Mis Reservas -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6 jp-hotel-book">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-2xl font-bold dark:text-white flex items-center gap-2">
               🛏️ Mis Reservas
@@ -95,12 +95,12 @@ export const HotelsHandler = {
         </div>
 
         <!-- Formulario de Agregar Hotel (Hidden) -->
-        <div id="addHotelForm" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+        <div id="addHotelForm" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6 jp-hotel-form">
           ${this.renderAddHotelForm()}
         </div>
 
         <!-- Buscar Hoteles - Disabled (API key invalid) -->
-        <div class="bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded-xl shadow-lg p-6 mb-6 relative overflow-hidden">
+        <div class="bg-gradient-to-r from-gray-400 to-gray-500 text-white rounded-xl shadow-lg p-6 mb-6 relative overflow-hidden jp-hotel-search-disabled">
           <div class="absolute top-0 right-0 bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg">
             ⚠️ No disponible
           </div>
@@ -157,7 +157,7 @@ export const HotelsHandler = {
     }
 
     container.innerHTML = this.myHotels.map((hotel, index) => `
-      <div class="p-5 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg mb-4 border-l-4 border-purple-500">
+      <div class="p-5 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg mb-4 border-l-4 border-purple-500 jp-hotel-voucher">
         <div class="flex justify-between items-start mb-3">
           <div class="flex-1">
             <h4 class="text-lg font-bold dark:text-white">${hotel.name}</h4>

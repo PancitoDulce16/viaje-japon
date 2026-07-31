@@ -64,14 +64,14 @@ html.dark .attraction-card {
    ======================================== */
 
 html.dark,
-html.dark *,
+html.dark *:not(.hero-moment__subtext),
 html.dark h1,
 html.dark h2,
 html.dark h3,
 html.dark h4,
 html.dark h5,
 html.dark h6,
-html.dark p,
+html.dark p:not(.hero-moment__subtext),
 html.dark span,
 html.dark div,
 html.dark label,
@@ -149,7 +149,7 @@ html.dark .dark\:border-gray-700 {
 
 html.dark .bg-gray-600,
 html.dark .hover\:bg-gray-700,
-html.dark button:not([class*="bg-red"]):not([class*="bg-blue"]):not([class*="bg-green"]):not([class*="bg-purple"]):not([class*="bg-pink"]):not([class*="gradient"]) {
+html.dark button:not([class*="bg-red"]):not([class*="bg-blue"]):not([class*="bg-green"]):not([class*="bg-purple"]):not([class*="bg-pink"]):not([class*="gradient"]):not(.hero-moment__cta):not(.dash-quick-btn):not([class*="jw-"]):not([class*="jc-"]):not([class*="jtd-"]):not([class*="jps-"]) {
   background-color: var(--ultra-dark-elevated) !important;
   color: var(--ultra-white-text) !important;
   border: 1px solid var(--ultra-border) !important;

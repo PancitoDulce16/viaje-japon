@@ -14,24 +14,40 @@
    MOBILE BOTTOM NAVIGATION
    ============================================ */
 
+/* Barra inferior = borde de papel washi, no una barra de app genérica.
+   El violeta que había aquí no pertenece a la paleta Japitin
+   (tokens.css): se sustituye por kasumi sobre papel crema. */
 .mobile-bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
-  border-top: 1px solid #e5e7eb;
+  background: var(--color-washi, #FBF7F1);
+  /* Doble línea: el hilo de tinta fina + el canto del papel */
+  border-top: 1px solid color-mix(in srgb, var(--color-kasumi, #FF8FBB) 38%, transparent);
   padding: 0.5rem 0;
   display: none;
   z-index: 100;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -6px 18px -10px rgba(43, 56, 104, 0.28);
   transform: translateZ(0); /* GPU acceleration */
 }
 
+/* Costura superior de puntos, como el troquelado de un billete */
+.mobile-bottom-nav::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 12px;
+  right: 12px;
+  height: 0;
+  border-top: 1px dashed color-mix(in srgb, var(--color-kasumi, #FF8FBB) 34%, transparent);
+  pointer-events: none;
+}
+
 .dark .mobile-bottom-nav {
-  background: #1f2937;
-  border-top-color: #374151;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+  background: #1B2238;
+  border-top-color: color-mix(in srgb, var(--color-kasumi, #FF8FBB) 34%, transparent);
+  box-shadow: 0 -6px 18px -10px rgba(0, 0, 0, 0.7);
 }
 
 .mobile-bottom-nav-items {
@@ -71,16 +87,43 @@
   white-space: nowrap;
 }
 
+/* Activo: tinta kasumi + un sello de washi detrás del icono. El estado no
+   depende SOLO del color (accesibilidad): el pastilla de fondo y el peso
+   tipográfico también cambian. */
 .mobile-nav-item.active {
-  color: #9333ea;
+  color: var(--color-kasumi-deep, #F16FA3);
 }
 
-.dark .mobile-nav-item {
-  color: #9ca3af;
+.mobile-nav-item.active i {
+  background: color-mix(in srgb, var(--color-kasumi, #FF8FBB) 20%, transparent);
+  border-radius: 999px;
+  padding: 4px 13px;
+  margin-bottom: 0.2rem;
 }
 
-.dark .mobile-nav-item.active {
-  color: #a855f7;
+.mobile-nav-item.active span { font-weight: 700; }
+
+/* html.dark + !important: dark-mode-ultra-contrast.css:66 pinta
+   `html.dark *:not(.hero-moment__subtext)` de blanco con !important, lo que
+   dejaba activo e inactivo EXACTAMENTE del mismo color (#f5f5f5) — medido.
+   Sin distinción de color, el estado activo quedaba a merced solo del
+   grosor de fuente: insuficiente. Se iguala el prefijo para ganar en
+   especificidad (0,3,1) frente a (0,2,1). */
+/* `html.dark .mobile-nav-item` EMPATA en especificidad (0,2,1) con la regla
+   de ultra-contrast y pierde por orden de carga (ese archivo va después en
+   app.css). Resultado medido: el inactivo salía blanco #f5f5f5, MÁS
+   brillante que el activo — jerarquía invertida. Se añade el contenedor
+   para llegar a (0,3,1). */
+html.dark .mobile-bottom-nav .mobile-nav-item {
+  color: #A8B0CE !important;
+}
+
+html.dark .mobile-nav-item.active {
+  color: #FFA9C8 !important; /* kasumi aclarado: ~7.4:1 sobre #1B2238 */
+}
+
+html.dark .mobile-nav-item.active i {
+  background: color-mix(in srgb, var(--color-kasumi, #FF8FBB) 26%, transparent);
 }
 
 /* Badge for notifications */
@@ -128,7 +171,7 @@
   top: 50%;
   transform: translateY(-50%);
   padding: 1rem;
-  background: rgba(147, 51, 234, 0.9);
+  background: rgba(241, 111, 163, 0.9);
   color: white;
   border-radius: 0.5rem;
   pointer-events: none;
@@ -185,7 +228,10 @@
 
 /* Mobile-optimized buttons */
 @media (max-width: 768px) {
-  button, .btn {
+  /* :not([class*="jw-"]):not([class*="jc-"]):not([class*="jtd-"]):not([class*="jps-"]) — los controles del wizard (postales, sellos,
+     puntos de prioridad) traen su propio tamaño táctil; este padding
+     genérico los deformaba (un punto de 12px salía de 40x21). */
+  button:not([class*="jw-"]):not([class*="jc-"]):not([class*="jtd-"]):not([class*="jps-"]), .btn {
     min-height: 44px;
     padding: 0.75rem 1.25rem;
     font-size: 1rem;
@@ -509,12 +555,13 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: #9333ea;
+    /* kasumi, no el violeta que estaba fuera de la paleta */
+    background: linear-gradient(135deg, var(--color-kasumi, #FF8FBB), var(--color-kasumi-deep, #F16FA3));
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(147, 51, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(241, 111, 163, 0.4);
     cursor: pointer;
     z-index: 90;
     transition: all 0.3s ease;

@@ -10,6 +10,7 @@ import { STORAGE_KEYS, ERROR_CODES, TIMEOUTS, Z_INDEX, COLOR_SCHEMES, ACTIVITY_I
  */
 export const AttractionsHandler = {
     savedAttractions: JSON.parse(localStorage.getItem(STORAGE_KEYS.SAVED_ATTRACTIONS) || '[]'),
+    attractionStates: JSON.parse(localStorage.getItem('japitinAttractionStates') || '{}'),
     currentFilter: 'all',
     searchTerm: '',
     // Categorías con acordeón abierto (colapsadas por defecto para no abrumar con 200+ atracciones)
@@ -20,36 +21,39 @@ export const AttractionsHandler = {
         if (!container) return;
         
         container.innerHTML = `
-            <div class="max-w-7xl mx-auto p-4 md:p-6">
+            <div class="max-w-7xl mx-auto p-4 md:p-6 jp-attractions-page">
                 <!-- Header -->
-                <div class="mb-8">
-                    <h2 class="text-4xl font-bold mb-3 text-gray-800 dark:text-white">🎯 Atracciones de Japón</h2>
-                    <p class="text-gray-600 dark:text-gray-400 mb-4">
-                        Guía completa de las mejores atracciones. Marca tus favoritas con ⭐
-                    </p>
+                <div class="mb-8 jp-attractions-head">
+                    <div class="jp-attractions-hero">
+                        <div class="jp-attractions-hero__copy">
+                            <span class="jp-attractions-hero__eyebrow">探検ノート · Cuaderno de exploración</span>
+                            <h2>Tu mapa de lugares inolvidables</h2>
+                            <p>Descubre, guarda y convierte cada rincón de Japón en una historia por vivir.</p>
+                        </div>
+                    </div>
                     
                     <!-- Stats -->
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                        <div class="bg-pink-50 dark:bg-pink-900/20 p-4 rounded-lg border-l-4 border-pink-500">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 jp-attractions-stats">
+                        <div class="bg-pink-50 dark:bg-pink-900/20 p-4 rounded-lg border-l-4 border-pink-500" data-stamp="★">
                             <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Guardadas</p>
                             <p class="text-2xl font-bold text-pink-600 dark:text-pink-400" id="savedCount">0</p>
                         </div>
-                        <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border-l-4 border-blue-500">
-                            <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Total</p>
-                            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">${this.getTotalCount()}</p>
+                        <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border-l-4 border-blue-500" data-stamp="行">
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Quiero ir</p>
+                            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">${this.getStateCount('wanted')}</p>
                         </div>
-                        <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border-l-4 border-green-500">
-                            <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Gratis</p>
-                            <p class="text-2xl font-bold text-green-600 dark:text-green-400">${this.getFreeCount()}</p>
+                        <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border-l-4 border-green-500" data-stamp="券">
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Reservadas</p>
+                            <p class="text-2xl font-bold text-green-600 dark:text-green-400">${this.getStateCount('booked')}</p>
                         </div>
-                        <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border-l-4 border-purple-500">
-                            <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Categorías</p>
-                            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">${Object.keys(ATTRACTIONS_DATA).length}</p>
+                        <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border-l-4 border-purple-500" data-stamp="済">
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Visitadas</p>
+                            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">${this.getStateCount('visited')}</p>
                         </div>
                     </div>
 
                     <!-- 🔍 Barra de Búsqueda -->
-                    <div class="mb-4">
+                    <div class="mb-4 jp-attractions-search">
                         <div class="relative">
                             <input
                                 type="text"
@@ -65,7 +69,7 @@ export const AttractionsHandler = {
                     </div>
 
                     <!-- Filter Buttons -->
-                    <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mb-6">
+                    <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mb-6 jp-attractions-filters" role="group" aria-label="Filtrar atracciones">
                         <button onclick="AttractionsHandler.filterCategory('all')" class="filter-btn active px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-semibold text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-600 transition">
                             🎯 Todas
                         </button>
@@ -78,10 +82,13 @@ export const AttractionsHandler = {
                         <button onclick="AttractionsHandler.filterCategory('reservation')" class="filter-btn px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-semibold text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-600 transition">
                             📅 Requiere Reserva
                         </button>
+                        <button onclick="AttractionsHandler.filterCategory('wanted')" class="filter-btn px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-semibold text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-600 transition">🧷 Quiero ir</button>
+                        <button onclick="AttractionsHandler.filterCategory('booked')" class="filter-btn px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-semibold text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-600 transition">🎟️ Reservadas</button>
+                        <button onclick="AttractionsHandler.filterCategory('visited')" class="filter-btn px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-semibold text-sm whitespace-nowrap hover:bg-gray-200 dark:hover:bg-gray-600 transition">📸 Visitadas</button>
                     </div>
 
                     <!-- 🔥 Advanced Filters -->
-                    <div class="grid md:grid-cols-4 gap-4 mb-6">
+                    <div class="grid md:grid-cols-4 gap-4 mb-6 jp-attractions-advanced">
                         <!-- Category Filter -->
                         <div>
                             <label class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 block">🗂️ Categoría</label>
@@ -283,11 +290,12 @@ export const AttractionsHandler = {
         const isSaved = this.savedAttractions.includes(enrichedItem.name);
         const priceDisplay = enrichedItem.price === 0 ? 'GRATIS' : `¥${enrichedItem.price.toLocaleString()}`;
         const needsReservation = enrichedItem.reserveDays > 0;
+        const visitState = this.attractionStates[enrichedItem.name] || '';
 
         return `
             <div class="attraction-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all ${
                 isSaved ? 'border-2 border-yellow-400' : 'border border-gray-200 dark:border-gray-700'
-            }" data-attraction="${item.name}" data-price="${item.price}" data-reservation="${needsReservation}" data-city="${item.city}" data-rating="${item.rating}" data-category="${categoryKey}">
+            }" data-attraction="${item.name}" data-state="${visitState}" data-price="${item.price}" data-reservation="${needsReservation}" data-city="${item.city}" data-rating="${item.rating}" data-category="${categoryKey}">
                 
                 <!-- Imagen -->
                 <div class="relative h-40 w-full group">
@@ -318,6 +326,12 @@ export const AttractionsHandler = {
                     <p class="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2 h-10">
                         ${item.description}
                     </p>
+
+                    <div class="jp-attraction-status" role="group" aria-label="Estado de ${item.name}">
+                        <button class="${visitState === 'wanted' ? 'is-active' : ''}" onclick="AttractionsHandler.setVisitState('${item.name.replace(/'/g, "\\'")}', 'wanted')">🧷 <span>Quiero ir</span></button>
+                        <button class="${visitState === 'booked' ? 'is-active' : ''}" onclick="AttractionsHandler.setVisitState('${item.name.replace(/'/g, "\\'")}', 'booked')">🎟️ <span>Reservado</span></button>
+                        <button class="${visitState === 'visited' ? 'is-active' : ''}" onclick="AttractionsHandler.setVisitState('${item.name.replace(/'/g, "\\'")}', 'visited')">📸 <span>Visitado</span></button>
+                    </div>
 
                     <!-- Info Tags -->
                     <div class="flex flex-wrap gap-2 mb-4">
@@ -450,12 +464,14 @@ export const AttractionsHandler = {
                 section.style.display = 'block';
                 this.setCategoryExpanded(section, false);
             });
-        } else if (filter === 'saved') {
+        } else if (filter === 'saved' || ['wanted', 'booked', 'visited'].includes(filter)) {
             sections.forEach(section => {
                 const visibleCards = Array.from(section.querySelectorAll('.attraction-card')).filter(card => {
-                    const isSaved = this.savedAttractions.includes(card.dataset.attraction);
-                    card.style.display = isSaved ? 'block' : 'none';
-                    return isSaved;
+                    const matches = filter === 'saved'
+                        ? this.savedAttractions.includes(card.dataset.attraction)
+                        : card.dataset.state === filter;
+                    card.style.display = matches ? 'block' : 'none';
+                    return matches;
                 });
                 section.style.display = visibleCards.length > 0 ? 'block' : 'none';
                 this.setCategoryExpanded(section, visibleCards.length > 0);
@@ -797,6 +813,23 @@ export const AttractionsHandler = {
             if (window.Notifications) {
                 window.Notifications.error('Error al guardar la atracción');
             }
+        }
+    },
+
+    getStateCount(state) {
+        return Object.values(this.attractionStates).filter(value => value === state).length;
+    },
+
+    setVisitState(attractionName, state) {
+        try {
+            if (this.attractionStates[attractionName] === state) delete this.attractionStates[attractionName];
+            else this.attractionStates[attractionName] = state;
+            localStorage.setItem('japitinAttractionStates', JSON.stringify(this.attractionStates));
+            this.renderAttractions();
+            window.Notifications?.success?.('Estado de la atracción actualizado');
+        } catch (error) {
+            Logger.error('Error actualizando estado de atracción', error);
+            window.Notifications?.error?.('No se pudo guardar el estado');
         }
     },
 

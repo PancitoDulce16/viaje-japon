@@ -10,30 +10,65 @@ import { YamanoteHelper } from './yamanote-helper.js';
 import { OsakaLoopHelper } from './osaka-loop-helper.js';
 import { CityRouteMap } from './city-route-map.js';
 import { DayAllocationBar } from './day-allocation-bar.js';
+import { getDayTripSuggestions } from './day-trip-recommender.js';
+import { analyzeRoutePressure } from './route-pressure.js';
 import { CITY_ICONS } from '../../../data/city-coordinates.js';
 
-// Fotos generadas para cada tile de interés (Step 2) - estilo kawaii
-// consistente con el resto del wizard rediseñado.
+// Postales acuarela de cada interés (Step 2). Sustituyen a los antiguos
+// /images/wizard/interest-*.png, que eran ilustraciones vectoriales planas
+// con degradado morado (era anterior de la marca) y contradecían la
+// dirección de arte oficial de las referencias: acuarela japonesa sobre
+// papel washi crema, tinta dibujada a mano, sin texto incrustado.
+// Aquí la imagen NO es una miniatura decorativa: es la postal completa, la
+// superficie del control. Ver css/wizard-washi.css (.jw-postcard).
 const INTEREST_IMAGES = {
-  cultural: '/images/wizard/interest-cultural.png',
-  food: '/images/wizard/interest-food.png',
-  shopping: '/images/wizard/interest-shopping.png',
-  nature: '/images/wizard/interest-nature.png',
-  art: '/images/wizard/interest-art.png',
-  anime: '/images/wizard/interest-popculture.png',
-  nightlife: '/images/wizard/interest-nightlife.png',
-  technology: '/images/wizard/interest-technology.png',
-  history: '/images/wizard/interest-history.png',
-  photography: '/images/wizard/interest-photography.png',
+  cultural: '/images/wizard/watercolor/cultural.webp',
+  food: '/images/wizard/watercolor/food.webp',
+  shopping: '/images/wizard/watercolor/shopping.webp',
+  nature: '/images/wizard/watercolor/nature.webp',
+  art: '/images/wizard/watercolor/art.webp',
+  anime: '/images/wizard/watercolor/anime.webp',
+  nightlife: '/images/wizard/watercolor/nightlife.webp',
+  technology: '/images/wizard/watercolor/technology.webp',
+  history: '/images/wizard/watercolor/history.webp',
+  photography: '/images/wizard/watercolor/photography.webp',
 };
 
-// Fotos generadas para cada tarjeta de "¿con quién viajas?" (Step 2).
+// Kanji del sello hanko de cada postal. Va como TEXTO HTML sobre el anillo
+// ilustrado (signature-elements/hanko-ring.png), nunca incrustado en la
+// imagen: así el sello se puede reusar, traducir y animar al seleccionar.
+const INTEREST_KANJI = {
+  cultural: '文', food: '食', shopping: '買', nature: '自', art: '芸',
+  anime: 'オ', nightlife: '夜', technology: '技', history: '歴', photography: '写'
+};
+
+// Etiquetas cortas para la bandeja "Mi colección de viaje" y las etiquetas
+// de equipaje (el label largo no cabe en una etiqueta).
+const INTEREST_SHORT = {
+  cultural: 'Cultura', food: 'Comida', shopping: 'Compras', nature: 'Naturaleza',
+  art: 'Arte', anime: 'Anime', nightlife: 'Noche', technology: 'Tecnología',
+  history: 'Historia', photography: 'Fotos'
+};
+
+// "Tu viaje tiene una vibra..." — lectura narrativa de lo elegido (ref 3).
+// Es interpretación del gato experto, no un dato nuevo del modelo.
+const VIBE_LABELS = {
+  food: 'Foodie', nature: 'Nature Lover', anime: 'Otaku', cultural: 'Alma Zen',
+  art: 'Sensible', shopping: 'Cazadora de tesoros', nightlife: 'Noctámbula',
+  technology: 'Futurista', history: 'Viajera del tiempo', photography: 'Ojo de artista'
+};
+
+// Viñetas de "¿con quién viajas?" (Step 3). Regeneradas en acuarela por el
+// mismo motivo que las postales de interés: las anteriores eran vectores con
+// degradado morado. Se representan como OBJETOS (tazas, kokeshi, farolillos)
+// y no como personas — coherente con el resto de la papelería y evita las
+// caras humanas, que el generador dibuja de forma inconsistente.
 const COMPANION_IMAGES = {
-  solo: '/images/wizard/companion-solo.png',
-  couple: '/images/wizard/companion-couple.png',
-  family: '/images/wizard/companion-family.png',
-  seniors: '/images/wizard/companion-seniors.png',
-  friends: '/images/wizard/companion-friends.png',
+  solo: '/images/wizard/watercolor/companion-solo.webp',
+  couple: '/images/wizard/watercolor/companion-couple.webp',
+  family: '/images/wizard/watercolor/companion-family.webp',
+  seniors: '/images/wizard/watercolor/companion-seniors.webp',
+  friends: '/images/wizard/watercolor/companion-friends.webp',
 };
 
 /**
@@ -42,6 +77,8 @@ const COMPANION_IMAGES = {
 export const SmartGeneratorWizard = {
 
   currentStep: 1,
+  isGenerating: false,
+  isSavingHybrid: false,
   // 🆕 Mini-flow interno del Step 1: 'basics' (fechas/presupuesto/etc, todo
   // lo que ya vivía en renderStep1()) -> 'map' (mapa de ciudades) -> 'days'
   // (reparto de días, solo si aplica). Vive fuera de wizardData a propósito:
@@ -60,6 +97,7 @@ export const SmartGeneratorWizard = {
     tripStartDate: null,       // 🆕 Fecha de inicio (para eventos estacionales)
     tripEndDate: null,         // 🆕 Fecha de fin
     arrivalTime: null,         // 🆕 'HH:MM' - hora de aterrizaje día 1 (jetlag-aware)
+    departureTime: null,       // 🛫 Hora del vuelo de regreso
     arrivalAirport: null,      // 🆕 IATA (NRT, HND, KIX...) - sugiere primera ciudad de la ruta
     departureAirport: null,    // 🆕 IATA - sugiere última ciudad de la ruta
     dietaryRestrictions: [],   // 🆕 ['vegetarian', 'halal', 'gluten-free']
@@ -75,6 +113,46 @@ export const SmartGeneratorWizard = {
     hotels: {},
     mustSee: [],
     avoid: []
+  },
+
+  /** Esquema canónico. También sirve para migrar progresos de versiones anteriores. */
+  createDefaultData() {
+    return {
+      cities: [], dayAllocationMode: 'auto', cityStops: [], totalDays: 7,
+      dailyBudget: 10000, groupSize: 1, travelerAges: [], tripStartDate: null,
+      tripEndDate: null, arrivalTime: null, departureTime: null, arrivalAirport: null,
+      departureAirport: null, dietaryRestrictions: [], mobilityNeeds: null,
+      interests: [], interestWeights: {}, pace: 'moderate', startTime: 9,
+      companionType: null, hotels: {}, mustSee: [], avoid: []
+    };
+  },
+
+  /** Normaliza datos externos/sesiones sin permitir tipos o valores imposibles. */
+  normalizeWizardData(source = {}) {
+    const defaults = this.createDefaultData();
+    const data = { ...defaults, ...(source && typeof source === 'object' ? source : {}) };
+    const strings = value => Array.isArray(value) ? value.filter(x => typeof x === 'string' && x.trim()) : [];
+    data.cities = [...new Set(strings(data.cities))];
+    data.interests = [...new Set(strings(data.interests))].filter(id => this.ALL_INTERESTS.some(item => item.id === id));
+    data.dietaryRestrictions = strings(data.dietaryRestrictions);
+    data.avoid = strings(data.avoid);
+    data.travelerAges = Array.isArray(data.travelerAges)
+      ? data.travelerAges.map(Number).filter(age => Number.isInteger(age) && age >= 0 && age <= 120)
+      : [];
+    data.totalDays = Math.min(90, Math.max(1, Number.parseInt(data.totalDays, 10) || defaults.totalDays));
+    data.dailyBudget = Math.min(1000000, Math.max(3000, Number.parseInt(data.dailyBudget, 10) || defaults.dailyBudget));
+    data.groupSize = Math.min(30, Math.max(1, Number.parseInt(data.groupSize, 10) || 1));
+    data.startTime = Math.min(23, Math.max(0, Number.parseInt(data.startTime, 10) || 9));
+    data.arrivalTime = /^\d{2}:\d{2}$/.test(data.arrivalTime || '') ? data.arrivalTime : null;
+    data.departureTime = /^\d{2}:\d{2}$/.test(data.departureTime || '') ? data.departureTime : null;
+    data.dayAllocationMode = data.dayAllocationMode === 'manual' ? 'manual' : 'auto';
+    data.cityStops = Array.isArray(data.cityStops) ? data.cityStops
+      .filter(stop => stop && data.cities.includes(stop.city))
+      .map(stop => ({ city: stop.city, days: Math.max(1, Number.parseInt(stop.days, 10) || 1), isDayTrip: !!stop.isDayTrip })) : [];
+    data.interestWeights = data.interestWeights && typeof data.interestWeights === 'object' ? data.interestWeights : {};
+    data.hotels = data.hotels && typeof data.hotels === 'object' ? data.hotels : {};
+    data.mustSee = Array.isArray(data.mustSee) ? data.mustSee.filter(Boolean).map(place => ({ name: String(place.name || ''), city: String(place.city || '') })) : [];
+    return data;
   },
 
   /**
@@ -99,7 +177,7 @@ export const SmartGeneratorWizard = {
 
     if (prefill) {
       this.resetWizardData();
-      Object.assign(this.wizardData, prefill);
+      this.wizardData = this.normalizeWizardData({ ...this.wizardData, ...prefill });
     } else {
       // Intentar cargar datos guardados
       const hasStoredData = this.loadFromSessionStorage();
@@ -119,30 +197,9 @@ export const SmartGeneratorWizard = {
    * Resetea los datos del wizard
    */
   resetWizardData() {
-    this.wizardData = {
-      cities: [],
-      dayAllocationMode: 'auto',
-      cityStops: [],
-      totalDays: 7,
-      dailyBudget: 10000,
-      groupSize: 1,
-      travelerAges: [],
-      tripStartDate: null,
-      tripEndDate: null,
-      arrivalTime: null,
-      arrivalAirport: null,
-      departureAirport: null,
-      dietaryRestrictions: [],
-      mobilityNeeds: null,
-      interests: [],
-      interestWeights: {}, // 🆕 {interestId: 1-5}
-      pace: 'moderate', // light, moderate, packed, extreme, maximum
-      startTime: 9,
-      companionType: null, // solo, couple, family, seniors, friends
-      hotels: {},
-      mustSee: [],
-      avoid: []
-    };
+    this.wizardData = this.createDefaultData();
+    this.isGenerating = false;
+    this.isSavingHybrid = false;
   },
 
   /**
@@ -150,36 +207,32 @@ export const SmartGeneratorWizard = {
    */
   renderWizard() {
     const modalHTML = `
-      <div id="smartGeneratorWizard" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+      <div id="smartGeneratorWizard" class="jw-overlay" role="dialog" aria-modal="true" aria-labelledby="jwTitle">
+        <div class="jw-sheet">
 
-          <!-- Header -->
-          <div class="wizard-hero-banner p-4 sm:p-6 text-white">
-            <div class="flex items-center justify-between">
-              <div>
-                <h2 class="text-lg sm:text-2xl font-bold">🧠 Generador Inteligente de Itinerarios</h2>
-                <p class="text-blue-100 mt-1 hidden sm:block">Crea un itinerario completo basado en tus preferencias</p>
+          <!-- Cabecera: título + sellos de paso + etiqueta de salida -->
+          <div class="jw-head">
+            <div>
+              <h2 class="jw-head__title" id="jwTitle"><span>JAPITIN</span> Cuaderno de ruta</h2>
+              <div class="jw-steps" role="list" aria-label="Progreso del wizard" style="--jw-progress:${(this.currentStep / this.TOTAL_STEPS) * 100}%">
+                ${this.renderSteps()}
               </div>
-              <button onclick="window.SmartGeneratorWizard.close()" class="text-white hover:bg-white/20 rounded-lg p-2 transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-              </button>
             </div>
-
-            <!-- Progress Bar -->
-            <div class="mt-3 sm:mt-6 flex items-center gap-2">
-              ${this.renderProgressBar()}
-            </div>
+            <button type="button" class="jw-exit" onclick="window.SmartGeneratorWizard.close()">
+              Salir del wizard
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true">
+                <path d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
           </div>
 
-          <!-- Content -->
-          <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+          <!-- Contenido del paso -->
+          <div class="jw-body">
             ${this.renderStepContent()}
           </div>
 
-          <!-- Footer Navigation -->
-          <div class="border-t border-gray-200 dark:border-gray-700 p-3 sm:p-6 flex justify-between gap-2">
+          <!-- Pie: boletos de navegación -->
+          <div class="jw-foot">
             ${this.renderFooterButtons()}
           </div>
 
@@ -194,6 +247,10 @@ export const SmartGeneratorWizard = {
     }
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
+    // Oculta los FAB / bottom-nav de la app mientras el wizard está abierto
+    // (tienen z-index propio y flotaban por encima del papel en móvil).
+    document.body.classList.add('jw-open');
+
     // Restaurar valores guardados en los inputs
     this.restoreFormValues();
 
@@ -204,33 +261,77 @@ export const SmartGeneratorWizard = {
     if (this.currentStep === 1 && this.step1Phase === 'days' && this.wizardData.dayAllocationMode === 'manual') {
       DayAllocationBar.attachHandlers();
     }
+
+    // Accesibilidad del modal: Escape cierra y el foco entra al contenido.
+    if (!this._escapeHandler) {
+      this._escapeHandler = event => {
+        if (event.key === 'Escape' && !this.isGenerating) this.close();
+      };
+    }
+    document.removeEventListener('keydown', this._escapeHandler);
+    document.addEventListener('keydown', this._escapeHandler);
+    requestAnimationFrame(() => document.querySelector('#smartGeneratorWizard button, #smartGeneratorWizard input')?.focus());
   },
 
   /**
-   * Renderiza la barra de progreso
+   * Nombres de los 4 pasos. Antes eran 3 (Básico/Preferencias/Hoteles) con
+   * un stepper de círculos tipo Material; las referencias oficiales definen
+   * 4 tramos con nombre propio y separadores de puntitos. El re-mapeo es
+   * SOLO de presentación: wizardData no cambió de forma y el generador
+   * (generateItinerary) sigue recibiendo exactamente el mismo objeto.
+   *   1 = a dónde  (fases internas basics/map/days, intactas)
+   *   2 = intereses
+   *   3 = estilo de viaje (ritmo + compañía + hoteles/imperdibles)
+   *   4 = magia Japitin (resumen y disparo de la generación)
    */
-  renderProgressBar() {
-    const steps = [
-      { num: 1, label: 'Básico', icon: '🌏' },
-      { num: 2, label: 'Preferencias', icon: '❤️' },
-      { num: 3, label: 'Hoteles', icon: '🏨' }
-    ];
+  STEP_LABELS: ['¿A dónde quieres ir?', '¿Qué quieres descubrir?', 'Estilo de viaje', '¡Magia Japitin!'],
+  TOTAL_STEPS: 4,
 
-    return steps.map(step => {
-      const isActive = step.num === this.currentStep;
-      const isCompleted = step.num < this.currentStep;
-
+  /**
+   * Sellos de paso de la cabecera. Los pasos ya completados son navegables
+   * hacia atrás (nunca hacia adelante: saltarse una validación rompería el
+   * contrato de validateCurrentStep).
+   */
+  renderSteps() {
+    const items = this.STEP_LABELS.map((label, i) => {
+      const num = i + 1;
+      const isActive = num === this.currentStep;
+      const isDone = num < this.currentStep;
+      const cls = ['jw-steps__item', isActive ? 'jw-steps__item--active' : '', isDone ? 'jw-steps__item--done' : ''].filter(Boolean).join(' ');
+      const dots = num < this.TOTAL_STEPS ? '<span class="jw-steps__dots" aria-hidden="true">•••</span>' : '';
       return `
-        <div class="flex-1 flex items-center gap-2">
-          <div class="${isActive ? 'bg-white text-blue-600' : isCompleted ? 'bg-green-500 text-white' : 'bg-white/30 text-white'}
-                      w-10 h-10 rounded-full flex items-center justify-center font-bold transition">
-            ${isCompleted ? '✓' : step.icon}
-          </div>
-          <span class="${isActive ? 'text-white font-semibold' : 'text-blue-100'} text-sm">${step.label}</span>
-          ${step.num < 3 ? '<div class="flex-1 h-1 bg-white/30 rounded mx-2"></div>' : ''}
-        </div>
+        <button type="button" class="${cls}" role="listitem"
+          ${isDone ? `onclick="window.SmartGeneratorWizard.goToStep(${num})"` : 'aria-disabled="true"'}
+          ${isActive ? 'aria-current="step"' : ''}>
+          <span class="jw-steps__name">${label}</span>
+        </button>
+        ${dots}
       `;
     }).join('');
+
+    return `<span class="jw-steps__pill">Paso ${this.currentStep} de ${this.TOTAL_STEPS}</span>${items}`;
+  },
+
+  /**
+   * Vuelve a un paso YA COMPLETADO (desde los sellos de la cabecera).
+   * Guarda antes lo que haya en pantalla para no perder ediciones.
+   */
+  goToStep(num) {
+    if (num >= this.currentStep || num < 1) return;
+    this.saveCurrentStepData();
+    this.currentStep = num;
+    this.saveToSessionStorage();
+    this.renderWizard();
+  },
+
+  /**
+   * Persiste lo que esté montado en el DOM ahora mismo. Cada saveStepNData()
+   * ya es tolerante a que su DOM no exista (ver nota en saveStep2Data).
+   */
+  saveCurrentStepData() {
+    if (this.currentStep === 1) this.saveStep1Data();
+    else if (this.currentStep === 2) this.saveStep2Data();
+    else if (this.currentStep === 3) { this.saveStep2Data(); this.saveStep3Data(); }
   },
 
   /**
@@ -241,6 +342,7 @@ export const SmartGeneratorWizard = {
       case 1: return this.renderStep1();
       case 2: return this.renderStep2();
       case 3: return this.renderStep3();
+      case 4: return this.renderStep4();
       default: return '';
     }
   },
@@ -336,28 +438,35 @@ export const SmartGeneratorWizard = {
    */
   renderStep1Basics() {
     return `
-      <div class="space-y-6 animate-fadeInUp">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white">📍 Configuración Básica</h3>
+      <div class="space-y-6 animate-fadeInUp jw-screen jw-screen--basics">
+        <div class="jw-catnote">
+          <img class="jw-catnote__cat" src="/images/illustrations/generated/characters/cat-explorer.webp"
+               alt="" aria-hidden="true" loading="eager" width="118">
+          <div class="jw-catnote__paper">
+            <h3>¡Empecemos tu aventura!</h3>
+            <p>Cuéntame cuándo viajas y cuántos días tienes para disfrutar.</p>
+          </div>
+        </div>
 
         <!-- 🆕 Load from Template Button -->
-        <div class="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-200 dark:border-purple-800 rounded-xl">
+        <div class="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-200 dark:border-purple-800 rounded-xl jw-template-ticket">
           <div class="flex items-center justify-between">
             <div>
-              <h4 class="font-bold text-gray-800 dark:text-white mb-1">🚀 ¿Prefieres empezar con una plantilla?</h4>
+              <h4 class="font-bold text-gray-800 dark:text-white mb-1">¿Prefieres empezar con una plantilla?</h4>
               <p class="text-sm text-gray-600 dark:text-gray-300">Carga un itinerario pre-diseñado y personalízalo a tu gusto</p>
             </div>
             <button
               onclick="window.SmartGeneratorWizard.showTemplateSelector()"
               class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition transform hover:scale-105"
             >
-              📋 Ver Plantillas
+              Ver Plantillas
             </button>
           </div>
         </div>
 
         <!-- Fechas del viaje -->
         ${this.datesPrefilled && !this.showDateEditor ? `
-        <div class="flex items-center justify-between gap-3 p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-lg">
+        <div class="flex items-center justify-between gap-3 p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-lg jw-date-ticket">
           <div class="flex items-center gap-3">
             <span class="text-2xl">📅</span>
             <div>
@@ -376,7 +485,7 @@ export const SmartGeneratorWizard = {
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              📅 Fecha de inicio
+              Fecha de inicio
             </label>
             <input
               type="date"
@@ -389,7 +498,7 @@ export const SmartGeneratorWizard = {
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              📅 Fecha de fin
+              Fecha de fin
             </label>
             <input
               type="date"
@@ -407,7 +516,7 @@ export const SmartGeneratorWizard = {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              🛬 ¿A qué aeropuerto llegas? (Opcional)
+              ¿A qué aeropuerto llegas? (Opcional)
             </label>
             <select
               id="arrivalAirport"
@@ -420,7 +529,7 @@ export const SmartGeneratorWizard = {
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              🛫 ¿Desde cuál sales? (Opcional)
+              ¿Desde cuál sales? (Opcional)
             </label>
             <select
               id="departureAirport"
@@ -433,10 +542,11 @@ export const SmartGeneratorWizard = {
           </div>
         </div>
 
-        <!-- Hora de llegada (jetlag-aware día 1) -->
+        <!-- Horas de llegada y salida -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            🛬 ¿A qué hora aterrizas en Japón el día 1? (Opcional)
+            ¿A qué hora aterrizas en Japón el día 1? (Opcional)
           </label>
           <input
             type="time"
@@ -445,6 +555,12 @@ export const SmartGeneratorWizard = {
             class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition"
           >
           <p class="text-xs text-gray-500 mt-1">Si llegas en la tarde/noche, el día 1 se deja ligero o vacío por el jetlag. Si llegas temprano, se agregan 2-3 actividades suaves.</p>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">¿A qué hora sale tu vuelo de regreso? (Opcional)</label>
+          <input type="time" id="departureTime" value="${this.wizardData.departureTime || ''}" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition">
+          <p class="text-xs text-gray-500 mt-1">Protegemos el margen al aeropuerto y evitamos planes imposibles el último día.</p>
+        </div>
         </div>
 
         <!-- Días totales -->
@@ -473,7 +589,7 @@ export const SmartGeneratorWizard = {
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              👥 ¿Cuántas personas viajan?
+              ¿Cuántas personas viajan?
             </label>
             <input
               type="number"
@@ -489,7 +605,7 @@ export const SmartGeneratorWizard = {
           </div>
           <div>
             <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              🎂 Edades (separadas por comas)
+              Edades (separadas por comas)
             </label>
             <input
               type="text"
@@ -579,9 +695,9 @@ export const SmartGeneratorWizard = {
         <!-- Restricciones dietarias -->
         <div>
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            🍽️ Restricciones alimentarias (opcional)
+            Restricciones alimentarias (opcional)
           </label>
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-2 gap-2 jw-diet-grid">
             ${this.renderDietaryCheckbox('vegetarian', '🥗 Vegetariano')}
             ${this.renderDietaryCheckbox('vegan', '🌱 Vegano')}
             ${this.renderDietaryCheckbox('halal', '☪️ Halal')}
@@ -594,9 +710,9 @@ export const SmartGeneratorWizard = {
         <!-- Necesidades de movilidad -->
         <div>
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            ♿ Necesidades de accesibilidad (opcional)
+            Necesidades de accesibilidad (opcional)
           </label>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-3 gap-2 jw-access-grid">
             ${this.renderMobilityOption('none', '✅ Sin limitaciones')}
             ${this.renderMobilityOption('limited', '🚶 Movilidad limitada')}
             ${this.renderMobilityOption('wheelchair', '♿ Silla de ruedas')}
@@ -621,32 +737,41 @@ export const SmartGeneratorWizard = {
    */
   renderStep1Map() {
     return `
-      <div class="space-y-4 animate-fadeInUp">
-        <div>
-          <h3 class="text-xl font-bold text-gray-900 dark:text-white">🗺️ ¿Qué ciudades quieres visitar?</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Toca las ciudades en el mapa para armar tu ruta. Puedes repetir una ciudad (ej. si vuelves antes del vuelo de salida) desde su chip.</p>
+      <div class="jw-screen jw-screen--map">
+      <div class="jw-catnote">
+        <img class="jw-catnote__cat" src="/images/illustrations/generated/characters/cat-explorer.webp"
+             alt="" aria-hidden="true" loading="eager" width="118">
+        <div class="jw-catnote__paper">
+          <h3>¡Empecemos tu aventura!</h3>
+          <p>Toca las ciudades en el mapa para armar tu ruta. Puedes repetir una ciudad
+             (por ejemplo si vuelves antes del vuelo de salida) desde su etiqueta.</p>
         </div>
+      </div>
+
+      <section class="jw-panel jw-panel--taped jw-mappanel">
+        <h3 class="jw-panel__title">¿Qué ciudades quieres visitar?</h3>
 
         ${CityRouteMap.render(this.wizardData)}
 
-        <div id="citiesError" class="hidden mt-2 p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
-          <p class="text-sm text-red-600 dark:text-red-400">⚠️ Debes seleccionar al menos una ciudad</p>
+        <!-- OJO: 'hidden' es CLASE, no atributo — validateField('cities')
+             la alterna con classList (mismo caso que interestsError). -->
+        <div id="citiesError" class="jw-warn hidden">
+          <span aria-hidden="true">✕</span> Debes seleccionar al menos una ciudad
         </div>
+      </section>
 
-        <div class="flex justify-between pt-2">
-          <button
-            onclick="window.SmartGeneratorWizard.goToStep1Phase('basics')"
-            class="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-          >
-            ← Atrás
-          </button>
-          <button
-            onclick="window.SmartGeneratorWizard.goToStep1Phase('days')"
-            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
-          >
-            Siguiente →
+      <div class="jw-foot" style="border-top:0; padding-left:0; padding-right:0">
+        <button type="button" class="jw-btn-back"
+                onclick="window.SmartGeneratorWizard.goToStep1Phase('basics')">
+          Volver
+        </button>
+        <div class="jw-foot__right">
+          <button type="button" class="jw-btn-ticket"
+                  onclick="window.SmartGeneratorWizard.goToStep1Phase('days')">
+            Continuar
           </button>
         </div>
+      </div>
       </div>
     `;
   },
@@ -659,10 +784,12 @@ export const SmartGeneratorWizard = {
    * tenía el builder numérico anterior.
    */
   renderStep1Days() {
+    const suggestions = getDayTripSuggestions(this.wizardData.cityStops, this.wizardData.totalDays);
+    const routePressure = analyzeRoutePressure(this.wizardData.cityStops, this.wizardData.totalDays);
     return `
-      <div class="space-y-4 animate-fadeInUp">
+      <div class="space-y-4 animate-fadeInUp jw-screen jw-screen--days">
         <div>
-          <h3 class="text-xl font-bold text-gray-900 dark:text-white">📅 ¿Cómo repartimos los días?</h3>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white">¿Cómo repartimos los días?</h3>
           <div class="flex gap-2 mt-3 mb-3">
             <button
               type="button"
@@ -680,6 +807,57 @@ export const SmartGeneratorWizard = {
               <p class="text-xs text-gray-500">El generador reparte los días según tus intereses y cuánto contenido real tiene cada ciudad.</p>
             `}
           </div>
+          ${routePressure ? `
+            <aside class="jw-route-pressure jw-route-pressure--${routePressure.severity}" role="status">
+              <div class="jw-route-pressure__stamp" aria-hidden="true">
+                <strong>${routePressure.hotelChanges}</strong><span>CAMBIOS</span>
+              </div>
+              <div class="jw-route-pressure__copy">
+                <span class="jw-route-pressure__eyebrow">REVISIÓN DE RITMO · EQUIPAJE</span>
+                <h4>Tu viaje tendrá muchos cambios de hotel</h4>
+                <p>${routePressure.message}</p>
+                <div class="jw-route-pressure__facts">
+                  <span>🧳 ${routePressure.hotelChanges} mudanzas</span>
+                  <span>📍 ${routePressure.daysPerBase} días por base</span>
+                  ${routePressure.longest ? `<span>🚄 tramo mayor: ${routePressure.longest.from} → ${routePressure.longest.to} · ${routePressure.longest.label}</span>` : ''}
+                </div>
+                ${routePressure.oneNightStops.length ? `<p class="jw-route-pressure__note">Solo una noche: ${routePressure.oneNightStops.join(', ')}. Considera quitar una base o convertir una parada cercana en excursión.</p>` : ''}
+              </div>
+              <button type="button" onclick="window.SmartGeneratorWizard.goToStep1Phase('map')" class="jw-route-pressure__action">
+                Revisar la ruta
+              </button>
+            </aside>
+          ` : ''}
+          ${suggestions.length ? `
+            <section class="jw-daytrip-suggestions" aria-labelledby="jw-daytrip-title">
+              <div class="jw-daytrip-suggestions__intro">
+                <span class="jw-daytrip-suggestions__eyebrow">IDEAS DESDE TU HOTEL BASE</span>
+                <h4 id="jw-daytrip-title">Un día fuera, sin mover maletas</h4>
+                <p>${this.wizardData.totalDays} días en ${this.cityLabel(suggestions[0].baseCity)} dan espacio para una excursión. Japitin toma un día de la base, conserva la duración total y no crea otro hotel.</p>
+              </div>
+              <div class="jw-daytrip-postcards">
+                ${suggestions.map((trip, idx) => `
+                  <article class="jw-daytrip-postcard ${trip.added ? 'is-added' : ''}">
+                    <span class="jw-daytrip-postcard__index">EXCURSIÓN ${String(idx + 1).padStart(2, '0')}</span>
+                    <div class="jw-daytrip-postcard__route">
+                      <span>${trip.icon}</span>
+                      <strong>${this.cityLabel(trip.baseCity)} <i>→</i> ${trip.city}</strong>
+                    </div>
+                    <p>${trip.note}</p>
+                    <div class="jw-daytrip-postcard__meta">
+                      <span>🚆 aprox. ${trip.minutes} min</span>
+                      <span>🧳 mismo hotel</span>
+                    </div>
+                    <button type="button"
+                      onclick="window.SmartGeneratorWizard.${trip.added ? 'removeSuggestedDayTrip' : 'addSuggestedDayTrip'}('${trip.baseCity.replace(/'/g, "\\'")}','${trip.city.replace(/'/g, "\\'")}')"
+                      class="jw-daytrip-postcard__action">
+                      ${trip.added ? '✓ Añadida · quitar' : '+ Añadir a mi ruta'}
+                    </button>
+                  </article>
+                `).join('')}
+              </div>
+            </section>
+          ` : ''}
         </div>
 
         <div class="flex justify-between pt-2">
@@ -774,6 +952,42 @@ export const SmartGeneratorWizard = {
     this.wizardData.cityStops[idx].isDayTrip = isDayTrip;
     this.saveToSessionStorage();
     DayAllocationBar.refresh();
+  },
+
+  addSuggestedDayTrip(baseCity, destination) {
+    let baseIdx = this.wizardData.cityStops.findIndex(stop => !stop.isDayTrip && stop.city === baseCity);
+    if (baseIdx < 0) {
+      this.wizardData.cityStops = [{ city: baseCity, days: this.wizardData.totalDays, isDayTrip: false }];
+      baseIdx = 0;
+    }
+    const base = this.wizardData.cityStops[baseIdx];
+    if (base.days == null) base.days = this.wizardData.totalDays;
+    if (base.days <= 1 || this.wizardData.cityStops.some(stop => stop.isDayTrip && stop.city === destination)) return;
+
+    base.days -= 1;
+    this.wizardData.cityStops.splice(baseIdx + 1, 0, {
+      city: destination, days: 1, isDayTrip: true, baseCity, suggested: true
+    });
+    if (!this.wizardData.cities.includes(destination)) this.wizardData.cities.push(destination);
+    this.wizardData.dayAllocationMode = 'manual';
+    this.saveToSessionStorage();
+    this.renderWizard();
+  },
+
+  removeSuggestedDayTrip(baseCity, destination) {
+    const idx = this.wizardData.cityStops.findIndex(stop =>
+      stop.isDayTrip && stop.city === destination && (stop.baseCity === baseCity || stop.suggested)
+    );
+    if (idx < 0) return;
+    const removed = this.wizardData.cityStops[idx];
+    const base = this.wizardData.cityStops.find(stop => !stop.isDayTrip && stop.city === baseCity);
+    if (base) base.days = Number(base.days || 0) + Number(removed.days || 1);
+    this.wizardData.cityStops.splice(idx, 1);
+    if (!this.wizardData.cityStops.some(stop => stop.city === destination)) {
+      this.wizardData.cities = this.wizardData.cities.filter(city => city !== destination);
+    }
+    this.saveToSessionStorage();
+    this.renderWizard();
   },
 
   /**
@@ -934,7 +1148,7 @@ export const SmartGeneratorWizard = {
   renderDietaryCheckbox(restriction, label) {
     const isChecked = this.wizardData.dietaryRestrictions.includes(restriction);
     return `
-      <label class="flex items-center gap-2 p-2 border ${isChecked ? 'border-green-500 bg-green-50 dark:bg-green-900/30' : 'border-gray-300 dark:border-gray-600'}
+      <label class="jw-diet-tag flex items-center gap-2 p-2 border ${isChecked ? 'is-selected border-green-500 bg-green-50 dark:bg-green-900/30' : 'border-gray-300 dark:border-gray-600'}
                      rounded-lg cursor-pointer hover:border-green-400 transition">
         <input
           type="checkbox"
@@ -953,7 +1167,7 @@ export const SmartGeneratorWizard = {
   renderMobilityOption(type, label) {
     const isSelected = (type === 'none' && !this.wizardData.mobilityNeeds) || this.wizardData.mobilityNeeds === type;
     return `
-      <label class="flex items-center gap-2 p-2 border ${isSelected ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30' : 'border-gray-300 dark:border-gray-600'}
+      <label class="jw-access-pass flex items-center gap-2 p-2 border ${isSelected ? 'is-selected border-purple-500 bg-purple-50 dark:bg-purple-900/30' : 'border-gray-300 dark:border-gray-600'}
                      rounded-lg cursor-pointer hover:border-purple-400 transition">
         <input
           type="radio"
@@ -1072,108 +1286,146 @@ export const SmartGeneratorWizard = {
    * STEP 2: Preferencias (Intereses, Intensity, Companion, Hora inicio)
    * NUEVO: Con Intensity Levels slider y Companion Type selector
    */
-  renderStep2() {
-    const allInterests = [
-      { id: 'cultural', label: 'Cultura & Templos', icon: '⛩️' },
-      { id: 'food', label: 'Gastronomía', icon: '🍜' },
-      { id: 'shopping', label: 'Compras', icon: '🛍️' },
-      { id: 'nature', label: 'Naturaleza', icon: '🌸' },
-      { id: 'art', label: 'Arte & Museos', icon: '🎨' },
-      { id: 'anime', label: 'Anime & Manga', icon: '🎌' },
-      { id: 'nightlife', label: 'Vida Nocturna', icon: '🌃' },
-      { id: 'technology', label: 'Tecnología', icon: '🤖' },
-      { id: 'history', label: 'Historia', icon: '📜' },
-      { id: 'photography', label: 'Fotografía', icon: '📸' }
-    ];
+  /**
+   * Lista canónica de intereses. Los ids son contrato con el generador
+   * (smart-itinerary-generator los lee de wizardData.interests) - NO tocar.
+   */
+  ALL_INTERESTS: [
+    { id: 'cultural', label: 'Templos & Cultura' },
+    { id: 'food', label: 'Comida & Gastronomía' },
+    { id: 'nature', label: 'Naturaleza & Flores' },
+    { id: 'anime', label: 'Anime & Gaming' },
+    { id: 'shopping', label: 'Compras' },
+    { id: 'history', label: 'Historia' },
+    { id: 'nightlife', label: 'Vida Nocturna' },
+    { id: 'art', label: 'Arte & Museos' },
+    { id: 'photography', label: 'Lugares Fotogénicos' },
+    { id: 'technology', label: 'Tecnología' }
+  ],
 
-    // Intensity levels data
-    const intensityLevels = ['light', 'moderate', 'packed', 'extreme', 'maximum'];
-    const intensityLabels = {
-      light: { icon: '🐢', label: 'Tranquilo', desc: '2-3/día' },
-      moderate: { icon: '🚶', label: 'Moderado', desc: '4-5/día' },
-      packed: { icon: '🏃', label: 'Intenso', desc: '6-8/día' },
-      extreme: { icon: '⚡', label: 'Extremo', desc: '9-11/día' },
-      maximum: { icon: '🌪️', label: 'Máximo', desc: '12-15/día' }
-    };
-    const currentIntensityIndex = intensityLevels.indexOf(this.wizardData.pace);
+  /**
+   * STEP 2: "¿Qué quieres descubrir?"
+   *
+   * Rediseñado según la referencia oficial `Itinerary wizard 3 ref`: cada
+   * interés es una POSTAL (la ilustración acuarela es la superficie del
+   * control, con su sello hanko), no una card con miniatura. La columna
+   * derecha es narrativa - el gato experto interpreta lo elegido.
+   *
+   * Los <input type="checkbox"> reales siguen existiendo bajo la postal
+   * (solo ocultos visualmente): saveStep2Data() los lee por
+   * `.interest-checkbox:checked` y el teclado/lector de pantalla los usa
+   * igual que antes. Sustituirlos por <div>s habría roto ambas cosas.
+   *
+   * El slider de intensidad y "¿con quién viajas?" se movieron al Step 3
+   * ("Estilo de viaje"), que es donde las referencias los colocan.
+   */
+  renderStep2() {
+    return `
+      <div class="jw-screen jw-screen--interests">
+      <div class="jw-catnote">
+        <img class="jw-catnote__cat" src="/images/illustrations/generated/characters/cat-explorer.webp"
+             alt="" aria-hidden="true" loading="eager" width="118">
+        <div class="jw-catnote__paper">
+          <h3>Cuéntame qué cosas hacen que un viaje sea inolvidable para ti.</h3>
+          <p>Puedes elegir todos los intereses que quieras.</p>
+        </div>
+      </div>
+
+      <div class="jw-tray" id="interestTray">
+        ${this.renderInterestTray()}
+      </div>
+
+      <div class="jw-grid">
+        <section class="jw-panel jw-panel--taped">
+          <h3 class="jw-panel__title" id="interestsLabel">Elige tus intereses</h3>
+          <div class="jw-cards" id="interestsContainer" role="group" aria-labelledby="interestsLabel">
+            ${this.ALL_INTERESTS.map(interest => this.renderInterestCheckbox(interest)).join('')}
+          </div>
+          <!-- OJO: la clase 'hidden' (no el atributo) es lo que
+               validateField('interests') alterna con classList. Si esto
+               usara el atributo hidden, el aviso no volvería a aparecer
+               nunca. -->
+          <div id="interestsError" class="jw-warn hidden">
+            <span aria-hidden="true">✕</span> Elige al menos un interés para que Japitin pueda armar tu viaje
+          </div>
+          <p class="jw-tip">
+            <b>Tip:</b> selecciona tus favoritos y ajusta su prioridad con los puntitos —
+            entre más alta, más peso tienen al elegir actividades.
+          </p>
+        </section>
+
+        <aside class="jw-aside" id="interestAside">
+          ${this.renderInterestAside()}
+        </aside>
+      </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Bandeja "Mi colección de viaje" — cada interés elegido es una etiqueta
+   * de equipaje con su ojal, no un chip de Tailwind.
+   */
+  renderInterestTray() {
+    const chosen = this.wizardData.interests;
+    const total = this.ALL_INTERESTS.length;
 
     return `
-      <div class="space-y-6">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white">❤️ Tus Preferencias</h3>
-
-        <!-- Intereses -->
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            ¿Qué te interesa? (Selecciona varios) <span class="text-red-500">*</span>
-          </label>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="interestsContainer">
-            ${allInterests.map(interest => this.renderInterestCheckbox(interest)).join('')}
-          </div>
-          <p class="text-xs text-gray-500 mt-2">Selecciona al menos un interés para personalizar tu itinerario</p>
-          <div id="interestsError" class="hidden mt-2 p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
-            <p class="text-sm text-red-600 dark:text-red-400">⚠️ Debes seleccionar al menos un interés</p>
-          </div>
-        </div>
-
-        <!-- ⚡ INTENSITY LEVELS SLIDER -->
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            ⚡ Intensidad del Viaje: <span class="text-blue-600 dark:text-blue-400 font-bold" id="intensityLabel">${intensityLabels[this.wizardData.pace].icon} ${intensityLabels[this.wizardData.pace].label}</span>
-          </label>
-          <div class="px-2">
-            <input
-              type="range"
-              id="intensitySlider"
-              min="0"
-              max="4"
-              step="1"
-              value="${currentIntensityIndex}"
-              class="w-full h-3 bg-gradient-to-r from-green-200 via-yellow-200 to-red-200 dark:from-green-800 dark:via-yellow-800 dark:to-red-800 rounded-lg appearance-none cursor-pointer"
-              style="accent-color: #3b82f6;"
-              onchange="window.SmartGeneratorWizard.updateIntensity(this.value)"
-            >
-            <div class="flex justify-between text-xs text-gray-500 mt-2 px-1">
-              ${intensityLevels.map((level, idx) => `
-                <div class="text-center flex-1">
-                  <div class="text-lg">${intensityLabels[level].icon}</div>
-                  <div class="font-medium">${intensityLabels[level].label}</div>
-                  <div class="text-gray-400">${intensityLabels[level].desc}</div>
+      <h4 class="jw-tray__title">
+        <img src="/images/illustrations/generated/decorations/washi-blue.webp" alt="" width="18" height="18" aria-hidden="true">
+        Mi colección de viaje
+      </h4>
+      <div class="jw-tray__row">
+        ${chosen.length === 0
+          ? '<p class="jw-tray__empty">Todavía no has elegido nada… ¡empieza por lo que más te emocione!</p>'
+          : chosen.map(id => {
+              const meta = this.ALL_INTERESTS.find(i => i.id === id);
+              if (!meta) return '';
+              return `
+                <div class="jw-tag">
+                  <img src="${INTEREST_IMAGES[id]}" alt="" aria-hidden="true" loading="eager">
+                  <span class="jw-tag__name">${INTEREST_SHORT[id] || meta.label}</span>
+                  <button type="button" class="jw-tag__off"
+                          onclick="window.SmartGeneratorWizard.toggleInterest('${id}')"
+                          aria-label="Quitar ${meta.label} de tu colección">✕</button>
                 </div>
-              `).join('')}
-            </div>
-          </div>
-          <p class="text-xs text-gray-500 mt-2">💡 Días más llenos = más actividades y experiencias</p>
+              `;
+            }).join('')}
+        <div class="jw-tray__count">
+          <b>${chosen.length}/${total}</b>
+          <span>seleccionados</span>
         </div>
+      </div>
+    `;
+  },
 
-        <!-- 👥 COMPANION TYPE SELECTOR -->
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            👥 ¿Con quién viajas?
-          </label>
-          <div class="grid grid-cols-2 gap-3">
-            ${this.renderCompanionOption(null, 'Sin especificar', '👤', 'Genérico')}
-            ${this.renderCompanionOption('solo', 'Viajo sola/o', '🧍', 'Flexible')}
-            ${this.renderCompanionOption('couple', 'Pareja', '❤️', 'Romántico')}
-            ${this.renderCompanionOption('family', 'Familia', '👨‍👩‍👧‍👦', 'Pausado')}
-            ${this.renderCompanionOption('seniors', 'Seniors', '👴👵', 'Relajado')}
-            ${this.renderCompanionOption('friends', 'Amigos', '🎉', 'Intenso')}
-          </div>
+  /**
+   * Columna narrativa: el gato "ve" el viaje que se está formando.
+   * Las miniaturas flotantes son las postales ya elegidas (no arte fijo),
+   * así el panel reacciona de verdad a lo que hace el usuario.
+   */
+  renderInterestAside() {
+    const chosen = this.wizardData.interests;
+
+    return `
+      <div class="jw-dream">
+        <div class="jw-dream__bubbles">
+          ${chosen.map(id => `<img class="jw-dream__thumb" src="${INTEREST_IMAGES[id]}" alt="" aria-hidden="true" loading="eager">`).join('')}
         </div>
+        <p class="jw-dream__note">${chosen.length
+          ? '¡Ya veo por dónde va tu aventura!'
+          : 'Elige algo y te digo qué imagino…'}</p>
+      </div>
 
-        <!-- 🔧 Antes había un <select> "¿A qué hora prefieres empezar tus días?"
-             que el usuario podía cambiar libremente, pero smart-itinerary-
-             generator.js (generateSingleDay(), línea ~1466) SIEMPRE usa
-             intensityConfig.startTime (derivado del ritmo/intensidad de
-             arriba) para armar el día - la selección del usuario nunca
-             llegaba a afectar nada. Mostrar un control editable que en
-             realidad no hace nada rompe la confianza en el resto de los
-             controles que sí funcionan. En vez de arreglar esto tocando la
-             lógica central de generación (mayor riesgo, sin poder probarlo
-             contigo ahora), se reemplaza por un indicador honesto: la hora
-             real que va a usar, derivada del ritmo elegido, actualizada en
-             vivo si cambias el slider de arriba. -->
-        <div id="startTimeInfo" class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-800 dark:text-blue-300">
-          ${this.renderStartTimeInfo()}
+      <img class="jw-aside__cat" src="/images/illustrations/generated/characters/cat-wizard.webp"
+           alt="" aria-hidden="true" loading="eager" width="128">
+
+      <div class="jw-vibe">
+        <p class="jw-vibe__title">Tu viaje tiene una vibra…</p>
+        <div class="jw-vibe__row" aria-live="polite">
+          ${chosen.length === 0
+            ? '<span class="jw-vibe__empty">todavía por descubrir ✿</span>'
+            : chosen.slice(0, 4).map(id => `<span class="jw-chip">${VIBE_LABELS[id] || INTEREST_SHORT[id]}</span>`).join('')}
         </div>
       </div>
     `;
@@ -1207,13 +1459,21 @@ export const SmartGeneratorWizard = {
 
     const labelElement = document.getElementById('intensityLabel');
     if (labelElement) {
-      labelElement.textContent = `${label.icon} ${label.label}`;
+      // Sin el emoji: los iconos pequeños del wizard son ilustración o SVG,
+      // nunca emoji (regla de la dirección de arte).
+      labelElement.textContent = label.label;
     }
 
     const startTimeInfoElement = document.getElementById('startTimeInfo');
     if (startTimeInfoElement) {
       startTimeInfoElement.innerHTML = this.renderStartTimeInfo();
     }
+
+    // Marca viva de la escala del slider + pasaporte al día
+    document.querySelectorAll('.jw-slider__ticks > span').forEach((el, i) => {
+      el.classList.toggle('is-on', intensityLevels[i] === this.wizardData.pace);
+    });
+    this.refreshPassport();
 
     this.saveToSessionStorage();
   },
@@ -1305,26 +1565,44 @@ export const SmartGeneratorWizard = {
   renderCompanionOption(type, label, icon, desc) {
     const isSelected = this.wizardData.companionType === type;
     const img = COMPANION_IMAGES[type] || null;
+    // Mismo principio que las postales: el <input> real sigue ahí (lo lee
+    // saveStep2Data vía .companion-radio:checked y lo usa el teclado), solo
+    // que oculto bajo la viñeta.
     return `
-      <label class="relative flex items-center gap-3 p-2 pr-3 border-2 ${isSelected ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30' : 'border-gray-300 dark:border-gray-600'}
-                     rounded-xl cursor-pointer hover:border-purple-400 transition overflow-hidden">
+      <label class="jw-option">
         <input
           type="radio"
           name="companionType"
-          class="companion-radio absolute top-2 right-2 w-4 h-4 z-10"
+          class="companion-radio jw-option__input"
           data-companion="${type}"
+          onchange="window.SmartGeneratorWizard.onCompanionChange()"
           ${isSelected ? 'checked' : ''}
         >
-        ${img
-          ? `<img src="${img}" alt="${label}" class="w-14 h-14 rounded-lg object-cover shrink-0" loading="lazy">`
-          : `<span class="text-2xl w-14 h-14 flex items-center justify-center shrink-0">${icon}</span>`
-        }
-        <div class="flex-1 min-w-0">
-          <div class="font-semibold text-sm text-gray-700 dark:text-gray-200">${label}</div>
-          <div class="text-xs text-gray-500">${desc}</div>
-        </div>
+        <span class="jw-option__art">
+          ${img
+            ? `<img src="${img}" alt="" aria-hidden="true" loading="eager">`
+            : `<span class="jw-option__none" aria-hidden="true">—</span>`}
+        </span>
+        <span class="jw-option__label">${label}</span>
+        <span class="jw-option__desc">${desc}</span>
+        <span class="jw-option__check" aria-hidden="true"></span>
       </label>
     `;
+  },
+
+  /**
+   * El pasaporte de la derecha refleja ritmo y compañía en vivo: si no se
+   * repinta al elegir, el usuario ve un documento que contradice lo que
+   * acaba de marcar.
+   */
+  onCompanionChange() {
+    this.saveStep2Data();
+    this.refreshPassport();
+  },
+
+  refreshPassport() {
+    const aside = document.getElementById('passportAside');
+    if (aside) aside.innerHTML = this.renderPassport();
   },
 
   /**
@@ -1335,39 +1613,39 @@ export const SmartGeneratorWizard = {
   renderInterestCheckbox(interest) {
     const isChecked = this.wizardData.interests.includes(interest.id);
     const weight = this.wizardData.interestWeights[interest.id] || 3;
-    const img = INTEREST_IMAGES[interest.id] || null;
+    const img = INTEREST_IMAGES[interest.id];
+    const kanji = INTEREST_KANJI[interest.id] || '旅';
+
     return `
-      <div class="border-2 ${isChecked ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-300 dark:border-gray-600'}
-                   rounded-xl hover:border-blue-400 transition overflow-hidden">
-        <label class="flex items-center gap-3 p-2 pr-3 cursor-pointer">
-          <input
-            type="checkbox"
-            class="interest-checkbox w-5 h-5 shrink-0"
-            data-interest="${interest.id}"
-            onchange="window.SmartGeneratorWizard.toggleInterest('${interest.id}')"
-            ${isChecked ? 'checked' : ''}
-          >
-          ${img
-            ? `<img src="${img}" alt="" class="w-12 h-12 rounded-lg object-cover shrink-0" loading="lazy">`
-            : `<span class="text-xl w-12 h-12 flex items-center justify-center shrink-0">${interest.icon}</span>`
-          }
-          <span class="text-sm font-medium text-gray-700 dark:text-gray-200">${interest.label}</span>
-        </label>
+      <label class="jw-postcard">
+        <input
+          type="checkbox"
+          class="interest-checkbox jw-postcard__input"
+          data-interest="${interest.id}"
+          onchange="window.SmartGeneratorWizard.toggleInterest('${interest.id}')"
+          ${isChecked ? 'checked' : ''}
+        >
+        <span class="jw-postcard__check" aria-hidden="true"></span>
+        <span class="jw-postcard__art">
+          <img src="${img}" alt="" aria-hidden="true" loading="eager" width="660" height="495">
+          <span class="jw-postcard__hanko" aria-hidden="true"><i>${kanji}</i></span>
+        </span>
+        <span class="jw-postcard__label">${interest.label}</span>
         ${isChecked ? `
-          <div class="flex flex-wrap items-center gap-1 px-3 pb-3 -mt-1" onclick="event.stopPropagation()">
-            <span class="text-xs text-gray-500 dark:text-gray-400 mr-1 whitespace-nowrap">Prioridad:</span>
+          <span class="jw-weight" onclick="event.preventDefault(); event.stopPropagation();">
+            <span class="jw-weight__hint">prioridad</span>
             ${[1, 2, 3, 4, 5].map(n => `
               <button
                 type="button"
+                class="jw-weight__dot ${n <= weight ? 'jw-weight__dot--on' : ''}"
                 onclick="window.SmartGeneratorWizard.setInterestWeight('${interest.id}', ${n})"
-                class="text-lg leading-none transition shrink-0"
-                style="color: ${n <= weight ? '#facc15' : '#d1d5db'}"
-                title="Prioridad ${n}/5"
-              >★</button>
+                aria-label="Prioridad ${n} de 5 para ${interest.label}"
+                aria-pressed="${n === weight}"
+              ></button>
             `).join('')}
-          </div>
+          </span>
         ` : ''}
-      </div>
+      </label>
     `;
   },
 
@@ -1385,6 +1663,16 @@ export const SmartGeneratorWizard = {
       this.wizardData.interests.splice(idx, 1);
       delete this.wizardData.interestWeights[interestId];
     }
+
+    // ⚠️ validateField('interests') llama a saveStep2Data(), que RELEE el DOM
+    // (.interest-checkbox:checked) y pisa lo que acabamos de calcular. Cuando
+    // el usuario clica la postal eso da igual (el input ya cambió solo), pero
+    // el "✕" de la etiqueta de equipaje en la bandeja llama a esta función sin
+    // tocar ningún input — sin esta sincronización el interés se volvía a
+    // añadir de inmediato y la etiqueta parecía no poder quitarse.
+    const input = document.querySelector(`.interest-checkbox[data-interest="${interestId}"]`);
+    if (input) input.checked = this.wizardData.interests.includes(interestId);
+
     this.validateField('interests');
     this.saveToSessionStorage();
     this.refreshInterestsContainer();
@@ -1405,19 +1693,25 @@ export const SmartGeneratorWizard = {
   refreshInterestsContainer() {
     const container = document.getElementById('interestsContainer');
     if (!container) return;
-    const allInterests = [
-      { id: 'cultural', label: 'Cultura & Templos', icon: '⛩️' },
-      { id: 'food', label: 'Gastronomía', icon: '🍜' },
-      { id: 'shopping', label: 'Compras', icon: '🛍️' },
-      { id: 'nature', label: 'Naturaleza', icon: '🌸' },
-      { id: 'art', label: 'Arte & Museos', icon: '🎨' },
-      { id: 'anime', label: 'Anime & Manga', icon: '🎌' },
-      { id: 'nightlife', label: 'Vida Nocturna', icon: '🌃' },
-      { id: 'technology', label: 'Tecnología', icon: '🤖' },
-      { id: 'history', label: 'Historia', icon: '📜' },
-      { id: 'photography', label: 'Fotografía', icon: '📸' }
-    ];
-    container.innerHTML = allInterests.map(interest => this.renderInterestCheckbox(interest)).join('');
+
+    container.innerHTML = this.ALL_INTERESTS.map(interest => this.renderInterestCheckbox(interest)).join('');
+
+    // La bandeja de etiquetas y el panel del gato son parte del mismo
+    // estado: si solo se repintaran las postales, la colección y la "vibra"
+    // quedarían mostrando la selección anterior.
+    const tray = document.getElementById('interestTray');
+    if (tray) tray.innerHTML = this.renderInterestTray();
+
+    const aside = document.getElementById('interestAside');
+    if (aside) aside.innerHTML = this.renderInterestAside();
+
+    // innerHTML descarta los listeners que restoreFormValues() había puesto
+    // sobre los checkboxes anteriores. El onchange inline sigue vivo (viaja
+    // en el string), pero re-atamos para conservar el mismo comportamiento
+    // que el resto del wizard y no depender de un solo camino.
+    container.querySelectorAll('.interest-checkbox').forEach(cb => {
+      cb.addEventListener('change', () => this.saveStep2Data());
+    });
   },
 
   /**
@@ -1445,60 +1739,299 @@ export const SmartGeneratorWizard = {
   /**
    * STEP 3: Hoteles & Must-See
    */
+  /**
+   * STEP 3: "Estilo de viaje" (ref `Itinerary wizard 4`).
+   *
+   * Recibe el slider de intensidad y "¿con quién viajas?" que antes vivían
+   * en el Step 2, y conserva debajo hoteles/imperdibles/evitar tal cual
+   * estaban (mismos ids, mismos handlers, misma validación).
+   * El reskin visual de los controles de esta sección es la Fase 2 —
+   * aquí solo se reubican dentro de los paneles de papel.
+   */
   renderStep3() {
     const selectedCities = this.wizardData.cities;
+    const hotelStays = this.getHotelStays();
     const includesTokyo = selectedCities.some(c => c.toLowerCase() === 'tokyo');
     const includesOsaka = selectedCities.some(c => c.toLowerCase() === 'osaka');
 
-    return `
-      <div class="space-y-6">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white">🏨 Hoteles & Lugares Imperdibles</h3>
+    const intensityLevels = ['light', 'moderate', 'packed', 'extreme', 'maximum'];
+    const intensityLabels = {
+      light: { icon: '🐢', label: 'Tranquilo', desc: '2-3/día' },
+      moderate: { icon: '🚶', label: 'Moderado', desc: '4-5/día' },
+      packed: { icon: '🏃', label: 'Intenso', desc: '6-8/día' },
+      extreme: { icon: '⚡', label: 'Extremo', desc: '9-11/día' },
+      maximum: { icon: '🌪️', label: 'Máximo', desc: '12-15/día' }
+    };
+    const currentIntensityIndex = intensityLevels.indexOf(this.wizardData.pace);
 
+    return `
+      <div class="jw-screen jw-screen--style"><div class="jw-catnote">
+        <img class="jw-catnote__cat" src="/images/illustrations/generated/characters/cat-explorer.webp"
+             alt="" aria-hidden="true" loading="eager" width="118">
+        <div class="jw-catnote__paper">
+          <h3>¡Ahora cuéntame cómo te gusta viajar!</h3>
+          <p>Así puedo planear una aventura que se adapte perfecto a ti.</p>
+        </div>
+      </div>
+
+      <div class="jw-grid">
+       <div>
+        <section class="jw-panel jw-panel--taped" style="margin-bottom:18px">
+
+          <!-- FILA DE PREFERENCIA: sello kanji vertical + opciones (ref 4) -->
+          <div class="jw-pref">
+            <div class="jw-pref__head">
+              <span class="jw-pref__kanji" aria-hidden="true"><i>疲</i></span>
+              <div>
+                <p class="jw-pref__title" id="paceLabel">Ritmo del viaje</p>
+                <p class="jw-pref__q">¿Cómo te gusta aprovechar tus días?</p>
+              </div>
+            </div>
+            <div class="jw-pref__body">
+              <p class="jw-slider__value">
+                <span id="intensityLabel">${intensityLabels[this.wizardData.pace].label}</span>
+              </p>
+              <input
+                type="range"
+                id="intensitySlider"
+                class="jw-slider"
+                min="0" max="4" step="1"
+                value="${currentIntensityIndex}"
+                aria-labelledby="paceLabel"
+                onchange="window.SmartGeneratorWizard.updateIntensity(this.value)"
+              >
+              <div class="jw-slider__ticks" aria-hidden="true">
+                ${intensityLevels.map(level => `
+                  <span class="${level === this.wizardData.pace ? 'is-on' : ''}">
+                    <b>${intensityLabels[level].label}</b>
+                    <i>${intensityLabels[level].desc}</i>
+                  </span>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+
+          <div class="jw-pref">
+            <div class="jw-pref__head">
+              <span class="jw-pref__kanji" aria-hidden="true"><i>同</i></span>
+              <div>
+                <p class="jw-pref__title" id="companionLabel">Compañía</p>
+                <p class="jw-pref__q">¿Con quién viajas?</p>
+              </div>
+            </div>
+            <div class="jw-pref__body">
+              <div class="jw-options" role="radiogroup" aria-labelledby="companionLabel">
+                ${this.renderCompanionOption(null, 'Sin especificar', '👤', 'Genérico')}
+                ${this.renderCompanionOption('solo', 'Viajo sola/o', '🧍', 'Flexible')}
+                ${this.renderCompanionOption('couple', 'Pareja', '❤️', 'Romántico')}
+                ${this.renderCompanionOption('family', 'Familia', '👨‍👩‍👧‍👦', 'Pausado')}
+                ${this.renderCompanionOption('seniors', 'Seniors', '👴👵', 'Relajado')}
+                ${this.renderCompanionOption('friends', 'Amigos', '🎉', 'Intenso')}
+              </div>
+            </div>
+          </div>
+
+          <!-- 🔧 Indicador honesto: el generador SIEMPRE deriva la hora de
+               inicio del ritmo elegido (intensityConfig.startTime), así que
+               aquí se muestra, no se pide. Ver nota histórica en el commit
+               que eliminó el <select> de "hora de inicio". -->
+          <p id="startTimeInfo" class="jw-tip" style="margin-top:6px">
+            ${this.renderStartTimeInfo()}
+          </p>
+        </section>
+
+       </div>
+       <aside class="jw-aside" id="passportAside">
+         ${this.renderPassport()}
+       </aside>
+      </div>
+
+        <div class="space-y-6 jw-style-details">
         ${includesTokyo ? YamanoteHelper.render() : ''}
         ${includesOsaka ? OsakaLoopHelper.render() : ''}
 
         <!-- Hoteles por ciudad -->
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            ¿En qué hoteles te quedarás? (Opcional pero recomendado)
-          </label>
-          <p class="text-sm text-gray-500 mb-4">
-            Ordenamos las actividades de cada día para que empiecen y terminen cerca de donde te hospedas 🎯
-            El <strong>área/barrio</strong> (ej. Shinjuku, Gion) es el dato más importante - si el nombre exacto del hotel no se encuentra, igual usamos el barrio como referencia.
+        <section class="jw-panel">
+          <h3 class="jw-panel__title">Dónde vas a dormir <em class="jw-opt">opcional</em></h3>
+          <p class="jw-hint">
+            Ordenamos cada día para que empiece y termine cerca de tu alojamiento.
+            El <strong>área o barrio</strong> es el dato que más ayuda: si el nombre exacto
+            del hotel no se encuentra, el barrio nos sirve igual.
           </p>
-          <div class="space-y-3">
-            ${selectedCities.map(city => this.renderHotelInput(city)).join('')}
+          <div class="jw-lodges">
+            ${hotelStays.map(stay => this.renderHotelInput(stay)).join('')}
           </div>
-        </div>
+        </section>
 
         <!-- Must-See Places -->
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Lugares que NO te quieres perder (Opcional)
-          </label>
+        <section class="jw-panel">
+          <h3 class="jw-panel__title">Lo que no te quieres perder <em class="jw-opt">opcional</em></h3>
           <div id="mustSeeList" class="space-y-2 mb-2">
             ${this.wizardData.mustSee.map((place, idx) => this.renderMustSeeItem(place, idx)).join('')}
           </div>
-          <button
+          <button type="button"
             onclick="window.SmartGeneratorWizard.addMustSeePlace()"
-            class="w-full py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 transition"
+            class="jw-add"
           >
             + Agregar lugar imperdible
           </button>
-        </div>
+        </section>
 
         <!-- Avoid Places -->
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Lugares o actividades que prefieres evitar (Opcional)
+        <section class="jw-panel">
+          <label class="jw-panel__title" for="avoidPlaces">
+            Lo que prefieres evitar <em class="jw-opt">opcional</em>
           </label>
           <textarea
             id="avoidPlaces"
             rows="2"
-            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-            placeholder="Ej: clubes, museos de guerra, lugares muy turísticos..."
+            placeholder="Ej: clubes, museos de guerra, lugares muy turísticos…"
           >${this.wizardData.avoid.join(', ')}</textarea>
+        </section>
         </div>
+      </div>
+    `;
+  },
+
+  /**
+   * PASAPORTE JAPITIN (ref `Itinerary wizard 4`, columna derecha).
+   *
+   * Es el espejo del Step 3: refleja lo que el usuario ya decidió, con la
+   * ilustración del pasaporte como marco real (images/wizard/passport-
+   * spread.webp) y el texto en HTML encima — el asset no lleva texto
+   * incrustado precisamente para que estos valores puedan ser dinámicos.
+   *
+   * Solo muestra campos que EXISTEN en wizardData. Las referencias enseñan
+   * también transporte/alojamiento/horario, pero el modelo de datos no los
+   * tiene y no se inventan campos muertos solo por parecerse al mockup.
+   */
+  renderPassport() {
+    const d = this.wizardData;
+    const paceLabel = { light: 'Tranquilo', moderate: 'Equilibrado', packed: 'Intenso', extreme: 'Extremo', maximum: 'Máximo' }[d.pace] || 'Equilibrado';
+    const companionLabel = { solo: 'Sola/o', couple: 'En pareja', family: 'En familia', seniors: 'Seniors', friends: 'Con amigos' }[d.companionType] || 'Por definir';
+    // El nombre va en un pasaporte: primer nombre, capitalizado y corto.
+    // Sin esto, una cuenta sin displayName mostraba el prefijo crudo del
+    // email ("claude.uitest.japitin") desbordando la página del documento.
+    const rawName = window.AuthHandler?.currentUser?.displayName
+      || window.AuthHandler?.currentUser?.email?.split('@')[0]
+      || 'Viajera';
+    const firstName = rawName.split(/[\s._-]+/)[0].slice(0, 14);
+    const traveler = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+    const nights = d.totalDays > 0 ? `${d.totalDays} días` : '—';
+    const budget = d.dailyBudget ? `¥${Number(d.dailyBudget).toLocaleString('es')} / día` : '—';
+
+    const rows = [
+      ['Ritmo', paceLabel],
+      ['Compañía', companionLabel],
+      ['Duración', nights],
+      ['Presupuesto', budget],
+      ['Ciudades', d.cities.length ? d.cities.slice(0, 3).join(', ') + (d.cities.length > 3 ? '…' : '') : '—']
+    ];
+
+    return `
+      <div class="jw-passport">
+        <img class="jw-passport__paper" src="/images/wizard/passport-spread.webp"
+             alt="" aria-hidden="true" loading="eager">
+        <div class="jw-passport__inner">
+          <p class="jw-passport__brand">PASAPORTE <b>JAPITIN</b></p>
+          <div class="jw-passport__id">
+            <img class="jw-passport__photo" src="/images/illustrations/generated/characters/cat-thinking.webp"
+                 alt="" aria-hidden="true" loading="eager">
+            <div>
+              <p class="jw-passport__name">${traveler}</p>
+              <p class="jw-passport__role">Explorador${traveler.endsWith('a') ? 'a' : ''} ${paceLabel}</p>
+            </div>
+          </div>
+          <dl class="jw-passport__rows">
+            ${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}
+          </dl>
+          <span class="jw-passport__stamp" aria-hidden="true"><i>旅</i></span>
+        </div>
+      </div>
+
+      <img class="jw-aside__cat" src="/images/illustrations/generated/characters/cat-suitcase.webp"
+           alt="" aria-hidden="true" loading="eager" width="150">
+
+      <p class="jw-tip">
+        <b>Tip Japitin:</b> podrás ajustar todo esto después si quieres cambiar algo de tu viaje.
+      </p>
+    `;
+  },
+
+  /**
+   * STEP 4: "¡Magia Japitin!" (ref `Itinerary wizard 5`).
+   *
+   * Antesala de la generación: el gato mago recapitula lo que le contaste
+   * como una cadena de tarjetas que desemboca en un boleto ("= tu
+   * itinerario"). No introduce datos nuevos ni valida nada propio — el
+   * botón dispara el mismo generateItinerary() de siempre.
+   */
+  renderStep4() {
+    const d = this.wizardData;
+    const cities = d.cities.length ? d.cities : ['—'];
+    const citiesLabel = cities.slice(0, 3).join(', ') + (cities.length > 3 ? ` + ${cities.length - 3} más` : '');
+    const interestLabels = d.interests
+      .map(id => (this.ALL_INTERESTS.find(i => i.id === id) || {}).label)
+      .filter(Boolean);
+    const interestsLabel = interestLabels.slice(0, 3).join(', ') + (interestLabels.length > 3 ? ` + ${interestLabels.length - 3} más` : '');
+    const paceLabel = { light: 'Tranquilo', moderate: 'Equilibrado', packed: 'Intenso', extreme: 'Extremo', maximum: 'Máximo' }[d.pace] || 'Equilibrado';
+    const companionLabel = { solo: 'Sola/o', couple: 'En pareja', family: 'En familia', seniors: 'Seniors', friends: 'Con amigos' }[d.companionType] || 'Sin especificar';
+
+    const chain = [
+      { n: 1, title: 'TUS DESTINOS', sub: 'Los lugares que elegiste', chips: cities.slice(0, 3), extra: cities.length > 3 ? `+ ${cities.length - 3} más` : '' },
+      { n: 2, title: 'TUS INTERESES', sub: 'Lo que te apasiona', chips: interestLabels.slice(0, 2), extra: interestLabels.length > 2 ? `+ ${interestLabels.length - 2} más` : '' },
+      { n: 3, title: 'TU ESTILO', sub: 'Cómo te gusta viajar', chips: [paceLabel, companionLabel], extra: '' },
+      { n: 4, title: 'JAPITIN ORGANIZA', sub: 'Creando tu aventura ideal', chips: [`${d.totalDays} días`], extra: '' }
+    ];
+
+    return `
+      <div class="jw-screen jw-screen--summary"><div class="jw-catnote">
+        <img class="jw-catnote__cat" src="/images/illustrations/generated/characters/cat-wizard.webp"
+             alt="" aria-hidden="true" loading="eager" width="118">
+        <div class="jw-catnote__paper">
+          <h3>¡Magia Japitin en acción!</h3>
+          <p>Voy a crear el itinerario perfecto para ti con todo lo que me contaste.</p>
+        </div>
+      </div>
+
+      <div class="jw-grid">
+        <section class="jw-panel jw-panel--taped">
+          <h3 class="jw-panel__title">Esto es lo que me contaste</h3>
+          <div class="jw-chain">
+            ${chain.map(c => `
+              <div class="jw-chain__card">
+                <span class="jw-chain__num">${c.n}</span>
+                <p class="jw-chain__title">${c.title}</p>
+                <p class="jw-chain__sub">${c.sub}</p>
+                <div class="jw-chain__chips">
+                  ${c.chips.map(ch => `<span class="jw-chip">${ch}</span>`).join('')}
+                  ${c.extra ? `<span class="jw-chain__more">${c.extra}</span>` : ''}
+                </div>
+              </div>
+            `).join('')}
+            <span class="jw-chain__eq" aria-hidden="true">=</span>
+            <div class="jw-chain__ticket">
+              <span class="jw-chain__ticket-label">TU ITINERARIO</span>
+              <span class="jw-chain__ticket-sub">está listo para nacer</span>
+              <span class="jw-chain__ticket-stamp" aria-hidden="true"><i>完成</i></span>
+            </div>
+          </div>
+        </section>
+
+        <aside class="jw-aside">
+          <h3 class="jw-panel__title">Resumen de tu aventura</h3>
+          <dl class="jw-summary">
+            <div><dt>Destino</dt><dd>${citiesLabel}</dd></div>
+            <div><dt>Duración</dt><dd>${d.totalDays} días</dd></div>
+            <div><dt>Estilo de viaje</dt><dd>${paceLabel} · ${companionLabel}</dd></div>
+            <div><dt>Intereses principales</dt><dd>${interestsLabel || '—'}</dd></div>
+          </dl>
+          <p class="jw-tip">
+            Voy a buscar actividades, restaurantes, rutas y experiencias que te van a encantar.
+            <b>¡Prepárate para vivir Japón a tu manera!</b>
+          </p>
+        </aside>
+      </div>
       </div>
     `;
   },
@@ -1506,29 +2039,61 @@ export const SmartGeneratorWizard = {
   /**
    * Helper para renderizar input de hotel
    */
-  renderHotelInput(city) {
-    const hotel = this.wizardData.hotels[city.toLowerCase()] || { name: '', area: '' };
+  getHotelStays() {
+    const route = this.wizardData.dayAllocationMode === 'manual' && this.wizardData.cityStops.length
+      ? this.wizardData.cityStops.filter(stop => !stop.isDayTrip)
+      : this.wizardData.cities.map(city => ({city}));
+    const totals = route.reduce((result, stop) => {
+      const cityKey = stop.city.toLowerCase(); result[cityKey] = (result[cityKey] || 0) + 1; return result;
+    }, {});
+    const visits = {};
+    return route.map(stop => {
+      const cityKey = stop.city.toLowerCase();
+      visits[cityKey] = (visits[cityKey] || 0) + 1;
+      const repeated = totals[cityKey] > 1;
+      return {
+        city: stop.city,
+        visitIndex: visits[cityKey],
+        visitCount: totals[cityKey],
+        key: repeated ? `${cityKey}-stay-${visits[cityKey]}` : cityKey,
+        label: repeated ? `${stop.city} · estancia ${visits[cityKey]}` : stop.city
+      };
+    });
+  },
+
+  renderHotelInput(stay) {
+    const legacyKey = stay.city.toLowerCase();
+    const hotel = this.wizardData.hotels[stay.key] || (stay.visitIndex === 1 ? this.wizardData.hotels[legacyKey] : null) || { name: '', area: '' };
+    // Ficha de alojamiento: una tarjeta de registro de ryokan, con la ciudad
+    // como pestaña. Los data-city y las clases hotel-name-input /
+    // hotel-area-input son contrato con saveStep3Data() — no tocar.
     return `
-      <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
-        <div class="flex items-center gap-2 mb-3">
-          <span class="text-xl">${CITY_ICONS[city.toLowerCase()] || '📍'}</span>
-          <span class="font-semibold text-gray-700 dark:text-gray-200">${city}</span>
-        </div>
-        <div class="space-y-2">
-          <input
-            type="text"
-            class="hotel-name-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-            data-city="${city.toLowerCase()}"
-            placeholder="Nombre del hotel"
-            value="${hotel.name}"
-          >
-          <input
-            type="text"
-            class="hotel-area-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-            data-city="${city.toLowerCase()}"
-            placeholder="Área (Ej: Shinjuku, Shibuya, Gion...)"
-            value="${hotel.area}"
-          >
+      <div class="jw-lodge">
+        <span class="jw-lodge__tab">${stay.label}</span>
+        ${stay.visitCount > 1 ? `<span class="jw-lodge__stay">ALOJAMIENTO ${String(stay.visitIndex).padStart(2, '0')}</span>` : ''}
+        <div class="jw-lodge__fields">
+          <label class="jw-field">
+            <span class="jw-field__label">Hotel</span>
+            <input
+              type="text"
+              class="hotel-name-input"
+              data-city="${legacyKey}"
+              data-hotel-key="${stay.key}"
+              placeholder="Nombre del hotel"
+              value="${hotel.name}"
+            >
+          </label>
+          <label class="jw-field">
+            <span class="jw-field__label">Área o barrio</span>
+            <input
+              type="text"
+              class="hotel-area-input"
+              data-city="${legacyKey}"
+              data-hotel-key="${stay.key}"
+              placeholder="Ej: Shinjuku, Gion…"
+              value="${hotel.area}"
+            >
+          </label>
         </div>
       </div>
     `;
@@ -1538,27 +2103,38 @@ export const SmartGeneratorWizard = {
    * Helper para renderizar item de must-see
    */
   renderMustSeeItem(place, idx) {
+    // Cada imperdible es una entrada de lista escrita a mano, con su viñeta
+    // de tinta. Las clases mustSee-name-input / mustSee-city-select y
+    // data-idx son contrato con saveStep3Data() — no tocar.
     return `
-      <div class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+      <div class="jw-wish">
+        <span class="jw-wish__bullet" aria-hidden="true"></span>
         <input
           type="text"
-          class="mustSee-name-input flex-1 px-3 py-2 border-0 bg-transparent dark:text-white"
+          class="mustSee-name-input jw-wish__name"
           data-idx="${idx}"
           placeholder="Nombre del lugar"
           value="${place.name}"
+          aria-label="Nombre del lugar imperdible ${idx + 1}"
         >
         <select
-          class="mustSee-city-select px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white"
+          class="mustSee-city-select jw-wish__city"
           data-idx="${idx}"
+          aria-label="Ciudad del lugar imperdible ${idx + 1}"
         >
-          <option value="">Ciudad...</option>
+          <option value="">Ciudad…</option>
           ${this.wizardData.cities.map(city => `<option value="${city}" ${place.city === city ? 'selected' : ''}>${city}</option>`).join('')}
         </select>
         <button
+          type="button"
           onclick="window.SmartGeneratorWizard.removeMustSeePlace(${idx})"
-          class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
+          class="jw-wish__del"
+          aria-label="Quitar este lugar"
         >
-          ✕
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <path d="M6 18L18 6M6 6l12 12"/>
+          </svg>
         </button>
       </div>
     `;
@@ -1569,7 +2145,7 @@ export const SmartGeneratorWizard = {
    */
   renderFooterButtons() {
     const isFirstStep = this.currentStep === 1;
-    const isLastStep = this.currentStep === 3;
+    const isLastStep = this.currentStep === this.TOTAL_STEPS;
     // 🆕 Las 3 fases internas del Step 1 (basics/map/days) traen su propio
     // botón de avance inline - basics/map llaman a goToStep1Phase(), y days
     // llama directo a nextStep() (la navegación externa). Mostrar TAMBIÉN el
@@ -1578,35 +2154,26 @@ export const SmartGeneratorWizard = {
     // las 3 fases, no solo basics/map.
     const hideOuterNext = this.currentStep === 1;
 
+    const arrow = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+    const arrowBack = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>';
+
     return `
-      <button
-        onclick="window.SmartGeneratorWizard.close()"
-        class="px-6 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
-      >
+      <button type="button" class="jw-foot__cancel" onclick="window.SmartGeneratorWizard.close()">
         Cancelar
       </button>
-      <div class="flex gap-3">
+      <div class="jw-foot__right">
         ${!isFirstStep ? `
-          <button
-            onclick="window.SmartGeneratorWizard.prevStep()"
-            class="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-          >
-            ← Anterior
+          <button type="button" class="jw-btn-back" onclick="window.SmartGeneratorWizard.prevStep()">
+            ${arrowBack} Volver
           </button>
         ` : ''}
         ${hideOuterNext ? '' : !isLastStep ? `
-          <button
-            onclick="window.SmartGeneratorWizard.nextStep()"
-            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            Siguiente →
+          <button type="button" class="jw-btn-ticket" onclick="window.SmartGeneratorWizard.nextStep()">
+            Continuar ${arrow}
           </button>
         ` : `
-          <button
-            onclick="window.SmartGeneratorWizard.generateItinerary()"
-            class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition font-semibold shadow-lg"
-          >
-            🚀 ¡Generar Itinerario!
+          <button type="button" class="jw-btn-ticket jw-btn-ticket--go" onclick="window.SmartGeneratorWizard.generateItinerary()">
+            ✨ Ver mi aventura ${arrow}
           </button>
         `}
       </div>
@@ -1695,6 +2262,8 @@ export const SmartGeneratorWizard = {
     if (arrivalTimeInput) {
       this.wizardData.arrivalTime = arrivalTimeInput.value || null;
     }
+    const departureTimeInput = document.getElementById('departureTime');
+    if (departureTimeInput) this.wizardData.departureTime = departureTimeInput.value || null;
 
     // 🛬🛫 Aeropuertos de llegada/salida
     const arrivalAirportSelect = document.getElementById('arrivalAirport');
@@ -1724,8 +2293,18 @@ export const SmartGeneratorWizard = {
    * Guarda datos del Step 2
    */
   saveStep2Data() {
-    this.wizardData.interests = Array.from(document.querySelectorAll('.interest-checkbox:checked'))
-      .map(cb => cb.dataset.interest);
+    // ⚠️ Los intereses (Step 2) y el ritmo/compañía (Step 3) ya NO están en
+    // la misma pantalla. Sin este guard, llamar a saveStep2Data() desde el
+    // Step 3 encontraría cero `.interest-checkbox` en el DOM y vaciaría
+    // wizardData.interests en silencio — exactamente el bug que ya ocurrió
+    // con las ciudades cuando pasaron del checkbox al mapa (ver nota en
+    // saveStep1Data). Solo se sobrescribe lo que esté realmente montado.
+    const interestNodes = document.querySelectorAll('.interest-checkbox');
+    if (interestNodes.length > 0) {
+      this.wizardData.interests = Array.from(interestNodes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.dataset.interest);
+    }
 
     const paceRadio = document.querySelector('.pace-radio:checked');
     if (paceRadio) {
@@ -1755,11 +2334,13 @@ export const SmartGeneratorWizard = {
     this.wizardData.hotels = {};
     document.querySelectorAll('.hotel-name-input').forEach(input => {
       const city = input.dataset.city;
-      const areaInput = document.querySelector(`.hotel-area-input[data-city="${city}"]`);
+      const hotelKey = input.dataset.hotelKey || city;
+      const areaInput = document.querySelector(`.hotel-area-input[data-hotel-key="${hotelKey}"]`);
       if (input.value.trim()) {
-        this.wizardData.hotels[city] = {
+        this.wizardData.hotels[hotelKey] = {
           name: input.value.trim(),
-          area: areaInput ? areaInput.value.trim() : ''
+          area: areaInput ? areaInput.value.trim() : '',
+          city
         };
       }
     });
@@ -1806,6 +2387,18 @@ export const SmartGeneratorWizard = {
         window.Notifications?.show(`❌ Necesitas al menos ${this.wizardData.cities.length} días para ${this.wizardData.cities.length} ciudades (1 día mínimo por ciudad)`, 'error');
         return false;
       }
+      if (this.wizardData.tripStartDate && this.wizardData.tripEndDate) {
+        const start = new Date(`${this.wizardData.tripStartDate}T00:00:00`);
+        const end = new Date(`${this.wizardData.tripEndDate}T00:00:00`);
+        if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end < start) {
+          window.Notifications?.show('❌ La fecha de regreso debe ser posterior a la fecha de salida', 'error');
+          return false;
+        }
+      }
+      if (this.wizardData.travelerAges.length > this.wizardData.groupSize) {
+        window.Notifications?.show('❌ Hay más edades registradas que personas en el grupo', 'error');
+        return false;
+      }
       // 🆕 La validación "los días deben sumar exacto" ya no aplica: la barra
       // de días arrastrable (seedEvenDayAllocation + clamp en cada drag)
       // garantiza que cityStops siempre sume exactamente totalDays por
@@ -1817,8 +2410,23 @@ export const SmartGeneratorWizard = {
         return false;
       }
     } else if (this.currentStep === 3) {
+      // El ritmo y la compañía viven ahora aquí (venían del Step 2), así que
+      // hay que persistir AMBOS bloques antes de avanzar.
+      this.saveStep2Data();
       this.saveStep3Data();
-      // Step 3 es opcional, no requiere validación estricta
+      // Hoteles/imperdibles siguen siendo opcionales: sin validación estricta.
+    } else if (this.currentStep === 4) {
+      // Paso 4 no captura datos propios; solo confirma que lo esencial de
+      // los pasos anteriores sigue en pie antes de disparar la generación
+      // (generateItinerary() llama a esto).
+      if (this.wizardData.cities.length === 0) {
+        window.Notifications?.show('❌ Selecciona al menos una ciudad', 'error');
+        return false;
+      }
+      if (this.wizardData.interests.length === 0) {
+        window.Notifications?.show('❌ Selecciona al menos un interés', 'error');
+        return false;
+      }
     }
     return true;
   },
@@ -1829,7 +2437,7 @@ export const SmartGeneratorWizard = {
   nextStep() {
     if (!this.validateCurrentStep()) return;
 
-    if (this.currentStep < 3) {
+    if (this.currentStep < this.TOTAL_STEPS) {
       this.currentStep++;
       this.saveToSessionStorage(); // 💾 Guardar progreso
       this.renderWizard();
@@ -1841,7 +2449,12 @@ export const SmartGeneratorWizard = {
    */
   prevStep() {
     if (this.currentStep > 1) {
+      // Persistir lo que haya en pantalla antes de desmontarlo: al volver
+      // del Step 3 el ritmo/compañía se perderían si no se guardan aquí
+      // (antes daba igual porque volver del 3 no tenía datos que perder).
+      this.saveCurrentStepData();
       this.currentStep--;
+      this.saveToSessionStorage();
       this.renderWizard();
     }
   },
@@ -1854,6 +2467,8 @@ export const SmartGeneratorWizard = {
     if (modal) {
       modal.remove();
     }
+    document.body.classList.remove('jw-open');
+    if (this._escapeHandler) document.removeEventListener('keydown', this._escapeHandler);
     // No borramos el sessionStorage aquí, solo cuando se completa o el usuario lo cancela explícitamente
   },
 
@@ -2089,7 +2704,7 @@ export const SmartGeneratorWizard = {
       // default 'basics' para compatibilidad con sesiones guardadas antes
       // de que existiera step1Phase
       this.step1Phase = data.step1Phase || 'basics';
-      this.wizardData = data.wizardData || this.wizardData;
+      this.wizardData = this.normalizeWizardData(data.wizardData);
 
       console.log('📂 Progreso cargado desde sessionStorage:', data);
       return true;
@@ -2132,7 +2747,9 @@ export const SmartGeneratorWizard = {
    * Genera MÚLTIPLES VARIACIONES de itinerarios
    */
   async generateItinerary() {
+    if (this.isGenerating) return;
     if (!this.validateCurrentStep()) return;
+    this.isGenerating = true;
 
     console.log('🚀 Generando itinerarios con:', this.wizardData);
 
@@ -2144,20 +2761,20 @@ export const SmartGeneratorWizard = {
     const modal = document.getElementById('smartGeneratorWizard');
     if (modal) {
       modal.innerHTML = `
-        <div class="flex items-center justify-center h-full p-12">
-          <div class="text-center max-w-2xl">
-            <div class="relative mb-8">
-              <div class="animate-spin rounded-full h-24 w-24 border-b-4 border-t-4 border-purple-600 mx-auto"></div>
-              <div class="absolute inset-0 flex items-center justify-center">
-                <span class="text-4xl">🎨</span>
-              </div>
+        <div class="jw-making" role="status" aria-live="polite">
+          <div class="jw-making__sheet">
+            <div class="jw-making__scene" aria-hidden="true">
+              <span class="jw-making__sun"></span>
+              <span class="jw-making__train">🚃</span>
+              <span class="jw-making__route"></span>
             </div>
 
-            <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Generando 3 Variaciones</h3>
-            <p class="text-lg text-gray-600 dark:text-gray-400 mb-6">Creando itinerarios personalizados para ti</p>
+            <span class="jw-making__eyebrow">旅を作っています · Preparando tu viaje</span>
+            <h3>Japitin está trazando tu aventura</h3>
+            <p>Combinamos tus gustos, ritmo y ruta en tres propuestas distintas.</p>
 
             <!-- Pasos de progreso -->
-            <div class="space-y-3 text-left bg-gray-50 dark:bg-gray-800 rounded-xl p-6 mb-4">
+            <div class="jw-making__steps">
               <div class="flex items-center gap-3 text-blue-600 dark:text-blue-400" id="step1">
                 <div class="animate-pulse">⏳</div>
                 <span class="font-medium">Analizando tus preferencias...</span>
@@ -2176,8 +2793,8 @@ export const SmartGeneratorWizard = {
               </div>
             </div>
 
-            <p class="text-sm text-gray-500">
-              ⏱️ Tiempo estimado: <span class="font-bold">10-20 segundos</span>
+            <p class="jw-making__time">
+              Esto suele tomar <strong>10–20 segundos</strong>. No cierres esta ventana.
             </p>
           </div>
         </div>
@@ -2197,8 +2814,9 @@ export const SmartGeneratorWizard = {
       this.markStepActive('step2');
       // Convertir hoteles a formato con coordenadas
       const hotelsWithCoords = {};
-      for (const [city, hotelData] of Object.entries(this.wizardData.hotels)) {
+      for (const [hotelKey, hotelData] of Object.entries(this.wizardData.hotels)) {
         if (hotelData.name && hotelData.area) {
+          const city = hotelData.city || hotelKey.replace(/-stay-\d+$/, '');
           // Usar IntelligentGeocoder para buscar coordenadas
           const query = `${hotelData.name}, ${hotelData.area}, ${city}, Japan`;
           console.log(`🔍 Buscando coordenadas para: ${query}`);
@@ -2242,13 +2860,14 @@ export const SmartGeneratorWizard = {
               }
 
               if (result && result.lat && result.lng) {
-                hotelsWithCoords[city] = {
+                hotelsWithCoords[hotelKey] = {
                   name: hotelData.name,
                   lat: result.lat,
                   lng: result.lng,
-                  area: hotelData.area
+                  area: hotelData.area,
+                  city
                 };
-                console.log(`✅ Hotel encontrado en ${city}:`, hotelsWithCoords[city]);
+                console.log(`✅ Hotel encontrado para ${hotelKey}:`, hotelsWithCoords[hotelKey]);
               } else {
                 console.warn(`⚠️ No se encontraron coordenadas para hotel en ${city}`);
               }
@@ -2285,6 +2904,9 @@ export const SmartGeneratorWizard = {
         tripStartDate: this.wizardData.tripStartDate,
         tripEndDate: this.wizardData.tripEndDate,
         arrivalTime: this.wizardData.arrivalTime,
+        departureTime: this.wizardData.departureTime,
+        arrivalAirport: this.wizardData.arrivalAirport,
+        departureAirport: this.wizardData.departureAirport,
         // 🛬🛫 Ciudades de los aeropuertos: en modo auto el generador ordena la
         // ruta para empezar/terminar ahí (día 1 con jetlag = ciudad de llegada)
         arrivalCityKey: getAirportByCode(this.wizardData.arrivalAirport)?.cityKey || null,
@@ -2306,11 +2928,16 @@ export const SmartGeneratorWizard = {
 
       // Mostrar selector de variaciones
       this.showVariationsSelector(variations);
+      this.isGenerating = false;
 
     } catch (error) {
       console.error('❌ Error generando itinerario:', error);
       window.Notifications?.show('❌ Error al generar itinerario: ' + error.message, 'error');
-      this.close();
+      this.isGenerating = false;
+      // Mantener todos los datos y volver al resumen para que se pueda reintentar.
+      this.currentStep = 4;
+      this.saveToSessionStorage();
+      this.renderWizard();
     }
   },
 
@@ -2353,17 +2980,18 @@ export const SmartGeneratorWizard = {
     this.comparisonMode = false; // Por defecto vista grid
 
     modal.innerHTML = `
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div class="jvv-sheet bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
+        <div class="jvv-head bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
           <div class="flex justify-between items-center">
             <div>
-              <h2 class="text-2xl font-bold mb-2">🎨 ¡3 Itinerarios Creados!</h2>
-              <p class="text-purple-100">Elige el que más te guste o crea uno personalizado</p>
+              <span class="jvv-head__eyebrow">旅程案 · Tres rutas posibles</span>
+              <h2 class="text-2xl font-bold mb-2">Tu viaje puede tomar tres caminos</h2>
+              <p class="text-purple-100">Hojea las propuestas y elige la que más se parece a ti.</p>
             </div>
             <button
               onclick="window.SmartGeneratorWizard.toggleComparisonMode()"
-              class="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-lg font-semibold transition flex items-center gap-2"
+              class="jvv-compare px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-lg font-semibold transition flex items-center gap-2"
             >
               <span id="comparisonToggleIcon">📊</span>
               <span id="comparisonToggleText">Modo Comparación</span>
@@ -2372,14 +3000,14 @@ export const SmartGeneratorWizard = {
         </div>
 
         <!-- Content Container -->
-        <div id="variationsContent" class="flex-1 overflow-y-auto p-6">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div id="variationsContent" class="jvv-content flex-1 overflow-y-auto p-6">
+          <div class="jvv-grid grid grid-cols-1 md:grid-cols-3 gap-6">
             ${variations.map(variation => this.renderVariationCard(variation)).join('')}
           </div>
         </div>
 
         <!-- Footer -->
-        <div class="border-t border-gray-200 dark:border-gray-700 p-4 sm:p-6 flex justify-between items-center gap-2">
+        <div class="jvv-foot border-t border-gray-200 dark:border-gray-700 p-4 sm:p-6 flex justify-between items-center gap-2">
           <button
             onclick="window.SmartGeneratorWizard.cancelFromVariations()"
             class="px-4 sm:px-6 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition text-sm"
@@ -2457,149 +3085,87 @@ export const SmartGeneratorWizard = {
    */
   renderComparisonView(variations) {
     const maxDays = Math.max(...variations.map(v => v.itinerary.days.length));
+    const paceLabels = {
+      light: '🐢 Ligero', moderate: '🚶 Moderado', packed: '🏃 Intenso',
+      extreme: '⚡ Extremo', maximum: '🔥 Máximo'
+    };
+    const pace = paceLabels[this.wizardData.pace] || '🚶 Moderado';
 
     return `
-      <div class="space-y-6">
-        <!-- Summary Table -->
-        <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl p-6">
-          <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">📋 Resumen Comparativo</h3>
-          <div class="grid grid-cols-4 gap-4">
-            <div class="font-semibold text-gray-700 dark:text-gray-300">Criterio</div>
-            ${variations.map(v => `
-              <div class="text-center">
-                <div class="text-3xl mb-2">${v.icon}</div>
-                <div class="font-bold text-gray-900 dark:text-white">${v.name}</div>
-              </div>
-            `).join('')}
-
-            <div class="text-gray-600 dark:text-gray-400">📅 Días</div>
-            ${variations.map(v => `
-              <div class="text-center font-semibold text-gray-900 dark:text-white">${v.itinerary.days.length}</div>
-            `).join('')}
-
-            <div class="text-gray-600 dark:text-gray-400">🎯 Actividades</div>
-            ${variations.map(v => {
+      <div class="jvc-view">
+        <section class="jvc-manifest" aria-labelledby="comparison-summary-title">
+          <div class="jvc-section-title">
+            <div><span>比較表 · MANIFIESTO</span><h3 id="comparison-summary-title">Compara el carácter de cada ruta</h3></div>
+            <p>Los mismos días, tres maneras de vivirlos.</p>
+          </div>
+          <div class="jvc-routes">
+            ${variations.map((v, index) => {
               const total = v.itinerary.days.reduce((sum, day) => sum + day.activities.length, 0);
-              return `<div class="text-center font-semibold text-gray-900 dark:text-white">${total}</div>`;
-            }).join('')}
-
-            <div class="text-gray-600 dark:text-gray-400">💰 Presupuesto</div>
-            ${variations.map(v => `
-              <div class="text-center font-semibold text-gray-900 dark:text-white">¥${(v.itinerary.totalBudget || 0).toLocaleString()}</div>
-            `).join('')}
-
-            <div class="text-gray-600 dark:text-gray-400">⚡ Ritmo</div>
-            ${variations.map(() => {
-              // 🔧 v.name.includes('Relajado'/'Equilibrado') (versión anterior) no
-              // coincidía con NINGÚN nombre real de las 9 plantillas de arquetipo
-              // (Cultural Explorer, Ultimate Foodie, etc.) - siempre caía en
-              // "🏃 Intenso" sin importar el ritmo real, para las 3 columnas.
-              // Además el ritmo NO varía entre variaciones (viene de una sola
-              // config del wizard, no del arquetipo) - se muestra el valor real
-              // (this.wizardData.pace), igual en las 3 columnas porque
-              // genuinamente es el mismo, en vez de fingir que difiere.
-              const paceLabels = {
-                light: '🐢 Ligero', moderate: '🚶 Moderado', packed: '🏃 Intenso',
-                extreme: '⚡ Extremo', maximum: '🔥 Máximo'
-              };
-              const pace = paceLabels[this.wizardData.pace] || '🚶 Moderado';
-              return `<div class="text-center font-semibold text-gray-900 dark:text-white">${pace}</div>`;
+              return `<article class="jvc-route jvc-route--${index + 1}">
+                <div class="jvc-route__number">RUTA ${String(index + 1).padStart(2, '0')}</div>
+                <div class="jvc-route__identity"><span>${v.icon}</span><h4>${v.name}</h4></div>
+                <dl class="jvc-route__facts">
+                  <div><dt>Días</dt><dd>${v.itinerary.days.length}</dd></div>
+                  <div><dt>Paradas</dt><dd>${total}</dd></div>
+                  <div><dt>Presupuesto</dt><dd>¥${(v.itinerary.totalBudget || 0).toLocaleString()}</dd></div>
+                  <div><dt>Ritmo</dt><dd>${pace}</dd></div>
+                </dl>
+                <button onclick="window.SmartGeneratorWizard.selectVariation('${v.id}', ${JSON.stringify(v.itinerary).replace(/"/g, '&quot;')})" class="jvc-choose">Elegir esta ruta <span>→</span></button>
+              </article>`;
             }).join('')}
           </div>
+        </section>
 
-          <!-- Action Buttons -->
-          <div class="grid grid-cols-3 gap-4 mt-6">
-            ${variations.map(v => `
-              <button
-                onclick="window.SmartGeneratorWizard.selectVariation('${v.id}', ${JSON.stringify(v.itinerary).replace(/"/g, '&quot;')})"
-                class="py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg font-semibold transition shadow-md hover:shadow-lg"
-              >
-                ✅ Elegir ${v.name}
-              </button>
-            `).join('')}
+        <section class="jvc-notebook" aria-labelledby="comparison-days-title">
+          <div class="jvc-section-title jvc-section-title--days">
+            <div><span>旅の日記 · CUADERNO</span><h3 id="comparison-days-title">Mira cómo cambia cada día</h3></div>
+            <button onclick="window.SmartGeneratorWizard.showHybridBuilder()" class="jvc-hybrid">✂️ Mezclar mis días</button>
           </div>
-        </div>
-
-        <!-- Day-by-Day Comparison -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border-2 border-purple-200 dark:border-purple-700">
-          <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white">📅 Comparación Día por Día</h3>
-            <button
-              onclick="window.SmartGeneratorWizard.showHybridBuilder()"
-              class="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-lg font-semibold transition shadow-md hover:shadow-lg flex items-center gap-2"
-            >
-              🎨 Crear Híbrido
-            </button>
-          </div>
-
-          <div class="space-y-6">
+          <div class="jvc-days">
             ${Array.from({length: maxDays}, (_, i) => {
               const dayNumber = i + 1;
               return `
-                <div class="border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                  <div class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-2 font-bold">
-                    📅 Día ${dayNumber}
-                  </div>
-                  <div class="grid grid-cols-3 divide-x divide-gray-200 dark:divide-gray-700">
+                <article class="jvc-day">
+                  <div class="jvc-day__tab"><small>DÍA</small><strong>${String(dayNumber).padStart(2, '0')}</strong></div>
+                  <div class="jvc-day__routes">
                     ${variations.map((v, vIndex) => {
                       const day = v.itinerary.days[i];
                       if (!day) {
-                        return `<div class="p-4 bg-gray-50 dark:bg-gray-900/50 text-center text-gray-400">Sin actividades</div>`;
+                        return `<div class="jvc-day__route jvc-day__route--empty">Sin actividades</div>`;
                       }
                       return `
-                        <div class="p-4 bg-white dark:bg-gray-800">
-                          <div class="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-2">
-                            ${v.icon} ${v.name}
-                          </div>
-                          <div class="space-y-2">
+                        <div class="jvc-day__route">
+                          <h4>${v.icon} ${v.name}</h4>
+                          <ol>
                             ${day.activities.slice(0, 4).map(act => `
-                              <div class="text-sm">
-                                <div class="font-semibold text-gray-900 dark:text-white">${act.title || act.name || 'Actividad'}</div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">
-                                  ${this.translateCategory(act.category)} • ${Math.floor(act.duration / 60)}h ${act.duration % 60}m
-                                </div>
-                              </div>
+                              <li><strong>${act.title || act.name || 'Actividad'}</strong><small>${this.translateCategory(act.category)} · ${Math.floor(act.duration / 60)}h ${act.duration % 60}m</small></li>
                             `).join('')}
                             ${day.activities.length > 4 ? `
-                              <div class="text-xs text-purple-600 dark:text-purple-400 font-semibold">
-                                +${day.activities.length - 4} actividades más
-                              </div>
+                              <li class="jvc-day__more">+${day.activities.length - 4} paradas más</li>
                             ` : ''}
-                          </div>
-                          <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between text-xs">
-                            <span class="text-gray-600 dark:text-gray-400">💰 ¥${((day.budgetBreakdown?.total ?? day.budget) || 0).toLocaleString()}</span>
-                            <span class="text-gray-600 dark:text-gray-400">${day.activities.length} act.</span>
-                          </div>
+                          </ol>
+                          <div class="jvc-day__total"><span>¥${((day.budgetBreakdown?.total ?? day.budget) || 0).toLocaleString()}</span><span>${day.activities.length} paradas</span></div>
                         </div>
                       `;
                     }).join('')}
                   </div>
-                </div>
+                </article>
               `;
             }).join('')}
           </div>
-        </div>
+        </section>
 
-        <!-- Tags Comparison -->
-        <div class="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 rounded-xl p-6">
-          <h3 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">🏷️ Categorías de Interés</h3>
-          <div class="grid grid-cols-3 gap-4">
+        <section class="jvc-tags">
+          <div class="jvc-section-title"><div><span>荷札 · ETIQUETAS</span><h3>La personalidad de cada viaje</h3></div></div>
+          <div class="jvc-tags__grid">
             ${variations.map(v => `
-              <div class="space-y-2">
-                <div class="font-semibold text-center text-gray-900 dark:text-white">
-                  ${v.icon} ${v.name}
-                </div>
-                <div class="flex flex-wrap gap-2 justify-center">
-                  ${v.tags.map(tag => `
-                    <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-xs font-semibold">
-                      ${tag}
-                    </span>
-                  `).join('')}
-                </div>
+              <div class="jvc-tag-group">
+                <strong>${v.icon} ${v.name}</strong>
+                <div>${v.tags.map(tag => `<span>${tag}</span>`).join('')}</div>
               </div>
             `).join('')}
           </div>
-        </div>
+        </section>
       </div>
     `;
   },
@@ -2614,118 +3180,109 @@ export const SmartGeneratorWizard = {
     const maxDays = Math.max(...this.currentVariations.map(v => v.itinerary.days.length));
 
     // Inicializar selección híbrida (por defecto variación 0 para todos los días)
-    if (!this.hybridSelection) {
-      this.hybridSelection = Array(maxDays).fill(0);
+    if (!Array.isArray(this.hybridSelection) || this.hybridSelection.length !== maxDays) {
+      this.hybridSelection = Array.from({length: maxDays}, (_, dayIndex) =>
+        Math.max(0, this.currentVariations.findIndex(v => v.itinerary.days[dayIndex]))
+      );
     }
+    this.hybridSelection = this.hybridSelection.map((variationIndex, dayIndex) =>
+      this.currentVariations[variationIndex]?.itinerary.days[dayIndex]
+        ? variationIndex
+        : Math.max(0, this.currentVariations.findIndex(v => v.itinerary.days[dayIndex]))
+    );
+
+    const selectedBudget = this.hybridSelection.reduce((sum, variationIndex, dayIndex) => {
+      const day = this.currentVariations[variationIndex]?.itinerary.days[dayIndex];
+      return sum + (day?.budgetBreakdown?.total ?? day?.budget ?? 0);
+    }, 0);
 
     modal.innerHTML = `
-      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
-        <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-cyan-600 p-6 text-white">
-          <div class="flex justify-between items-center">
+      <div class="jvh-sheet w-full max-w-7xl max-h-[90vh] overflow-hidden flex flex-col">
+        <header class="jvh-head">
+          <div class="jvh-head__inner">
             <div>
-              <h2 class="text-2xl font-bold mb-2">🎨 Constructor de Itinerario Híbrido</h2>
-              <p class="text-blue-100">Selecciona qué variación usar para cada día</p>
+              <span class="jvh-eyebrow">切り貼り · TALLER DE RUTA</span>
+              <h2>Arma tu viaje, día por día</h2>
+              <p>Recorta tus días favoritos de cada propuesta y únelos en una sola ruta.</p>
             </div>
             <button
               onclick="window.SmartGeneratorWizard.showVariationsSelector(window.SmartGeneratorWizard.currentVariations)"
-              class="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-lg font-semibold transition"
+              class="jvh-back"
             >
-              ← Volver
+              ← Ver las tres rutas
             </button>
           </div>
-        </div>
+          <div class="jvh-summary" aria-live="polite">
+            <span><strong>${maxDays}</strong> días cosidos</span>
+            <span><strong>¥${selectedBudget.toLocaleString()}</strong> estimados</span>
+            <span>Una elección por día</span>
+          </div>
+        </header>
 
-        <!-- Hybrid Builder Content -->
-        <div class="flex-1 overflow-y-auto p-6">
-          <div class="space-y-4">
+        <div class="jvh-content flex-1 overflow-y-auto">
+          <div class="jvh-days">
             ${Array.from({length: maxDays}, (_, i) => {
               const dayNumber = i + 1;
+              const selectedVariation = this.currentVariations[this.hybridSelection[i]];
               return `
-                <div class="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-                  <div class="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50 px-6 py-3">
-                    <div class="flex items-center justify-between">
-                      <h3 class="text-lg font-bold text-gray-900 dark:text-white">📅 Día ${dayNumber}</h3>
-                      <div class="text-sm text-gray-600 dark:text-gray-400">
-                        Seleccionado: <span class="font-bold text-purple-600 dark:text-purple-400" id="selectedVar${i}">
-                          ${this.currentVariations[this.hybridSelection[i]].name}
-                        </span>
-                      </div>
+                <section class="jvh-day" id="hybridDay${i}" aria-labelledby="hybridDayTitle${i}">
+                  <div class="jvh-day__head">
+                    <div class="jvh-day__number"><small>DÍA</small><strong>${String(dayNumber).padStart(2, '0')}</strong></div>
+                    <div>
+                      <h3 id="hybridDayTitle${i}">${selectedVariation.icon} ${selectedVariation.name}</h3>
+                      <p>Esta página usará la propuesta seleccionada.</p>
                     </div>
                   </div>
 
-                  <div class="grid grid-cols-3 divide-x divide-gray-200 dark:divide-gray-700">
+                  <div class="jvh-options" role="radiogroup" aria-label="Ruta para el día ${dayNumber}">
                     ${this.currentVariations.map((v, vIndex) => {
                       const day = v.itinerary.days[i];
                       const isSelected = this.hybridSelection[i] === vIndex;
 
                       if (!day) {
-                        return `<div class="p-4 bg-gray-50 dark:bg-gray-900/50 text-center text-gray-400">Sin actividades</div>`;
+                        return `<div class="jvh-option jvh-option--empty" aria-disabled="true"><span>${v.icon} ${v.name}</span><em>No incluye este día</em></div>`;
                       }
 
                       return `
-                        <div class="p-4 ${isSelected ? 'bg-purple-50 dark:bg-purple-900/30 border-4 border-purple-500' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700'} cursor-pointer transition"
+                        <button type="button" role="radio" aria-checked="${isSelected}" class="jvh-option ${isSelected ? 'is-selected' : ''}"
                              onclick="window.SmartGeneratorWizard.selectDayVariation(${i}, ${vIndex})">
-
-                          <!-- Header -->
-                          <div class="flex items-center justify-between mb-3">
-                            <div class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                              ${isSelected ? '✅' : ''} ${v.icon} ${v.name}
-                            </div>
-                          </div>
-
-                          <!-- Activities -->
-                          <div class="space-y-2">
+                          <span class="jvh-option__route"><b>${v.icon}</b>${v.name}</span>
+                          <span class="jvh-option__mark">${isSelected ? '選' : ''}</span>
+                          <span class="jvh-option__activities">
                             ${day.activities.slice(0, 3).map(act => `
-                              <div class="text-sm bg-white dark:bg-gray-800 p-2 rounded border border-gray-200 dark:border-gray-700">
-                                <div class="font-semibold text-gray-900 dark:text-white truncate">${act.name}</div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">
-                                  ${act.category} • ${Math.floor(act.duration / 60)}h ${act.duration % 60}m
-                                </div>
-                              </div>
+                              <span><strong>${act.title || act.name || 'Actividad'}</strong><small>${this.translateCategory(act.category)} · ${Math.floor(act.duration / 60)}h ${act.duration % 60}m</small></span>
                             `).join('')}
                             ${day.activities.length > 3 ? `
-                              <div class="text-xs text-center text-purple-600 dark:text-purple-400 font-semibold">
-                                +${day.activities.length - 3} más
-                              </div>
+                              <em>+${day.activities.length - 3} paradas más</em>
                             ` : ''}
-                          </div>
-
-                          <!-- Stats -->
-                          <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between text-xs">
-                            <span class="text-gray-600 dark:text-gray-400">💰 ¥${(day.budgetBreakdown?.total ?? day.budget)?.toLocaleString() || '0'}</span>
-                            <span class="text-gray-600 dark:text-gray-400">${day.activities.length} actividades</span>
-                          </div>
-
-                          <!-- Select Button -->
-                          <button class="w-full mt-3 py-2 ${isSelected ? 'bg-purple-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'} rounded-lg font-semibold transition">
-                            ${isSelected ? '✅ Seleccionado' : 'Usar Esta Variación'}
-                          </button>
-                        </div>
+                          </span>
+                          <span class="jvh-option__stats"><span>¥${(day.budgetBreakdown?.total ?? day.budget ?? 0).toLocaleString()}</span><span>${day.activities.length} paradas</span></span>
+                          <span class="jvh-option__action">${isSelected ? 'Página elegida' : 'Elegir esta página'} →</span>
+                        </button>
                       `;
                     }).join('')}
                   </div>
-                </div>
+                </section>
               `;
             }).join('')}
           </div>
         </div>
 
-        <!-- Footer with Save -->
-        <div class="border-t border-gray-200 dark:border-gray-700 p-6 flex justify-between items-center">
+        <footer class="jvh-foot">
           <button
             onclick="window.SmartGeneratorWizard.showVariationsSelector(window.SmartGeneratorWizard.currentVariations)"
-            class="px-6 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+            class="jvh-cancel"
           >
             Cancelar
           </button>
           <button
             onclick="window.SmartGeneratorWizard.saveHybridItinerary()"
-            class="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-bold transition shadow-lg hover:shadow-xl flex items-center gap-2"
+            class="jvh-save"
+            ${this.isSavingHybrid ? 'disabled aria-busy="true"' : ''}
           >
-            💾 Guardar Itinerario Híbrido
+            ${this.isSavingHybrid ? 'Cosiendo páginas…' : 'Guardar mi ruta combinada →'}
           </button>
-        </div>
+        </footer>
       </div>
     `;
   },
@@ -2734,19 +3291,37 @@ export const SmartGeneratorWizard = {
    * Selecciona qué variación usar para un día específico
    */
   selectDayVariation(dayIndex, variationIndex) {
+    if (!Array.isArray(this.hybridSelection) ||
+        !this.currentVariations?.[variationIndex]?.itinerary.days[dayIndex]) return;
     this.hybridSelection[dayIndex] = variationIndex;
-    // Actualizar la vista
     this.showHybridBuilder();
+    requestAnimationFrame(() => {
+      const selected = document.querySelector(`#hybridDay${dayIndex} .jvh-option.is-selected`);
+      document.getElementById(`hybridDay${dayIndex}`)?.scrollIntoView({block: 'center'});
+      selected?.focus({preventScroll: true});
+    });
   },
 
   /**
    * 💾 Guarda el itinerario híbrido creado por el usuario
    */
   async saveHybridItinerary() {
-    if (!this.currentVariations || !this.hybridSelection) {
-      window.Notifications?.show('⚠️ Error creando híbrido', 'error');
+    if (this.isSavingHybrid) return;
+    if (!this.currentVariations || !Array.isArray(this.hybridSelection)) {
+      window.Notifications?.show('⚠️ No pudimos leer tu combinación. Inténtalo de nuevo.', 'error');
       return;
     }
+
+    const hasInvalidDay = this.hybridSelection.some((variationIndex, dayIndex) =>
+      !this.currentVariations[variationIndex]?.itinerary.days[dayIndex]
+    );
+    if (hasInvalidDay) {
+      window.Notifications?.show('⚠️ Elige una propuesta disponible para cada día.', 'error');
+      this.showHybridBuilder();
+      return;
+    }
+
+    this.isSavingHybrid = true;
 
     console.log('🎨 Creando itinerario híbrido con selección:', this.hybridSelection);
 
@@ -2778,11 +3353,12 @@ export const SmartGeneratorWizard = {
     const modal = document.getElementById('smartGeneratorWizard');
     if (modal) {
       modal.innerHTML = `
-        <div class="flex items-center justify-center h-full p-12">
-          <div class="text-center">
-            <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mx-auto mb-4"></div>
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">💾 Guardando itinerario híbrido...</h3>
-            <p class="text-gray-600 dark:text-gray-400">🎨 Combinando lo mejor de cada variación</p>
+        <div class="jvh-loading">
+          <div class="jvh-loading__paper" role="status" aria-live="polite">
+            <div class="jvh-loading__stitch"><i></i><i></i><i></i></div>
+            <span>製本中 · ENCUADERNANDO</span>
+            <h3>Cosiendo tu ruta combinada…</h3>
+            <p>Estamos uniendo cada página elegida en un solo cuaderno.</p>
           </div>
         </div>
       `;
@@ -2796,6 +3372,7 @@ export const SmartGeneratorWizard = {
 
       // 🗑️ Limpiar sessionStorage y datos temporales
       this.clearSessionStorage();
+      this.isSavingHybrid = false;
       this.hybridSelection = null;
       this.currentVariations = null;
 
@@ -2813,7 +3390,8 @@ export const SmartGeneratorWizard = {
     } catch (error) {
       console.error('❌ Error guardando itinerario híbrido:', error);
       window.Notifications?.show('❌ Error al guardar: ' + error.message, 'error');
-      this.close();
+      this.isSavingHybrid = false;
+      this.showHybridBuilder();
     }
   },
 
@@ -2850,20 +3428,21 @@ export const SmartGeneratorWizard = {
     const { picks, uniqueCount } = this.getSignatureActivities(variation);
 
     return `
-      <div class="border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-purple-500 dark:hover:border-purple-400 transition cursor-pointer overflow-hidden"
+      <article class="jvv-card border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-purple-500 dark:hover:border-purple-400 transition cursor-pointer overflow-hidden"
            onclick="window.SmartGeneratorWizard.selectVariation('${variation.id}', ${JSON.stringify(variation.itinerary).replace(/"/g, '&quot;')})">
 
         <!-- Header -->
-        <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 p-6 text-center">
-          <div class="text-5xl mb-3">${variation.icon}</div>
+        <div class="jvv-card__head bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 p-6 text-center">
+          <span class="jvv-card__number">OPCIÓN ${String((this.currentVariations || []).findIndex(v => v.id === variation.id) + 1).padStart(2, '0')}</span>
+          <div class="jvv-card__icon text-5xl mb-3">${variation.icon}</div>
           <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">${variation.name}</h3>
           <p class="text-sm text-gray-600 dark:text-gray-400">${variation.description}</p>
         </div>
 
         <!-- Tags -->
-        <div class="px-6 py-4 flex flex-wrap gap-2 justify-center bg-white dark:bg-gray-800">
+        <div class="jvv-tags px-6 py-4 flex flex-wrap gap-2 justify-center bg-white dark:bg-gray-800">
           ${variation.tags.map(tag => `
-            <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-xs font-semibold">
+            <span class="jvv-tag px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-xs font-semibold">
               ${tag}
             </span>
           `).join('')}
@@ -2871,7 +3450,7 @@ export const SmartGeneratorWizard = {
 
         <!-- Actividades emblema: lo que REALMENTE distingue esta opción -->
         ${picks.length > 0 ? `
-        <div class="px-6 py-3 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
+        <div class="jvv-highlights px-6 py-3 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
           <div class="text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-2">
             ${uniqueCount > 0 ? `⭐ Solo en esta opción (${uniqueCount})` : '⭐ Destacados'}
           </div>
@@ -2888,7 +3467,7 @@ export const SmartGeneratorWizard = {
         ` : ''}
 
         <!-- Stats -->
-        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 space-y-2">
+        <div class="jvv-stats px-6 py-4 bg-gray-50 dark:bg-gray-900/50 space-y-2">
           <div class="flex items-center justify-between text-sm">
             <span class="text-gray-600 dark:text-gray-400">📅 Días</span>
             <span class="font-semibold text-gray-900 dark:text-white">${itinerary.days.length}</span>
@@ -2906,12 +3485,12 @@ export const SmartGeneratorWizard = {
         ${this.renderMLEnhancements(itinerary)}
 
         <!-- Action Button -->
-        <div class="p-6 bg-white dark:bg-gray-800">
+        <div class="jvv-action p-6 bg-white dark:bg-gray-800">
           <button class="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg font-semibold transition shadow-md hover:shadow-lg">
-            ✅ Elegir Este Itinerario
+            Elegir este camino →
           </button>
         </div>
-      </div>
+      </article>
     `;
   },
 
@@ -3032,7 +3611,7 @@ export const SmartGeneratorWizard = {
     const tripId = window.TripsManager?.currentTrip?.id;
     if (!tripId) {
       console.warn('⚠️ No hay trip activo, no se puede guardar');
-      return;
+      throw new Error('No hay un viaje activo donde guardar el itinerario.');
     }
 
     // Guardar en Firebase - mismo documento que lee/escribe ItineraryHandler

@@ -34,7 +34,7 @@
 
 @media (max-width: 768px) {
   /* Buttons (excluir .rounded-full/.sos-button/.header-chip: compactos) */
-  button:not(.rounded-full):not(.sos-button):not(.header-chip),
+  button:not(.rounded-full):not(.sos-button):not(.header-chip):not([class*="jw-"]):not([class*="jc-"]):not([class*="jtd-"]):not([class*="jps-"]),
   .btn,
   a.btn {
     min-height: 44px;
@@ -78,18 +78,23 @@
   left: 0;
   right: 0;
   height: calc(var(--bottom-nav-height) + var(--safe-area-inset-bottom));
-  background: white;
-  border-top: 1px solid #e5e7eb;
+  /* Papel washi, no blanco de app. OJO: este archivo se importa DESPUÉS de
+     mobile-first-redesign.css, así que estas dos declaraciones son las que
+     realmente ganan sobre el contenedor — medido, no supuesto. La barra se
+     define en los dos archivos; el resto de piezas (.mobile-nav-item) solo
+     vive allí. */
+  background: var(--color-washi, #FBF7F1);
+  border-top: 1px solid color-mix(in srgb, var(--color-kasumi, #FF8FBB) 38%, transparent);
   display: none;
   z-index: 1000;
   padding-bottom: var(--safe-area-inset-bottom);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -6px 18px -10px rgba(43, 56, 104, 0.28);
 }
 
 html.dark .mobile-bottom-nav {
-  background: #16213e;
-  border-top-color: #374151;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+  background: #1B2238;
+  border-top-color: color-mix(in srgb, var(--color-kasumi, #FF8FBB) 34%, transparent);
+  box-shadow: 0 -6px 18px -10px rgba(0, 0, 0, 0.7);
 }
 
 @media (max-width: 768px) {
@@ -166,11 +171,11 @@ html.dark .mobile-bottom-nav__item {
 
 .mobile-bottom-nav__item:active {
   transform: scale(0.95);
-  background: rgba(147, 51, 234, 0.05);
+  background: rgba(241, 111, 163, 0.05);
 }
 
 .mobile-bottom-nav__item--active {
-  color: #9333ea;
+  color: #F16FA3;
 }
 
 .mobile-bottom-nav__item--active::before {
@@ -181,7 +186,7 @@ html.dark .mobile-bottom-nav__item {
   transform: translateX(-50%);
   width: 40px;
   height: 3px;
-  background: #9333ea;
+  background: #F16FA3;
   border-radius: 0 0 4px 4px;
 }
 
@@ -221,12 +226,12 @@ html.dark .mobile-bottom-nav__item {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #9333ea 0%, #c026d3 100%);
+  background: linear-gradient(135deg, #F16FA3 0%, #E0537A 100%);
   color: white;
   display: none;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(241, 111, 163, 0.4);
   cursor: pointer;
   z-index: 999;
   border: none;
@@ -244,7 +249,7 @@ html.dark .mobile-bottom-nav__item {
 }
 
 .mobile-fab:hover {
-  box-shadow: 0 6px 16px rgba(147, 51, 234, 0.6);
+  box-shadow: 0 6px 16px rgba(241, 111, 163, 0.6);
 }
 
 .mobile-fab__icon {
@@ -262,7 +267,7 @@ html.dark .mobile-bottom-nav__item {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: rgba(147, 51, 234, 0.1);
+  background: rgba(241, 111, 163, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -309,8 +314,8 @@ html.dark .mobile-bottom-nav__item {
 .pull-to-refresh__spinner {
   width: 30px;
   height: 30px;
-  border: 3px solid rgba(147, 51, 234, 0.2);
-  border-top-color: #9333ea;
+  border: 3px solid rgba(241, 111, 163, 0.2);
+  border-top-color: #F16FA3;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -336,7 +341,7 @@ html.dark .mobile-bottom-nav__item {
   width: 0;
   height: 0;
   border-radius: 50%;
-  background: rgba(147, 51, 234, 0.3);
+  background: rgba(241, 111, 163, 0.3);
   transform: translate(-50%, -50%);
   transition: width 0.3s, height 0.3s;
   pointer-events: none;
@@ -591,7 +596,7 @@ html.dark .mobile-bottom-nav__item {
 
   /* Tap highlight color */
   * {
-    -webkit-tap-highlight-color: rgba(147, 51, 234, 0.1);
+    -webkit-tap-highlight-color: rgba(241, 111, 163, 0.1);
   }
 }
 

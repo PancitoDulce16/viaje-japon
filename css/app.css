@@ -73,3 +73,30 @@
 
 /* 11. Washi UI reskin (nav + itinerario) - debe ir al final, gana el cascade */
 @import './washi-ui.css';
+
+/* 12. Sidebar del itinerario como página de cuaderno - después de
+   washi-ui, que ya reskinea day-ticket/activity-card/eki-stamp */
+@import './itinerary-washi.css';
+
+/* 12b. Chat como hilo de notitas en una libreta */
+@import './chat-washi.css';
+
+/* 12c. Modales compartidos, agrupados por función (no un skin único).
+   Va después de dark-mode-ultra-contrast para poder ganarle el fondo. */
+@import './modals-washi.css';
+
+/* 12d. Crear Nuevo Viaje: escena de escritorio, va al final para ganar
+   el cascade sobre el .modal > div genérico de main.css */
+@import './create-trip-scene.css';
+
+/* 13. Wizard como papelería (postales, sellos, boletos) - después de
+   washi-ui para poder ganarle a los button{} globales de los temas */
+@import './wizard-washi.css';
+@import './wizard-daytrips.css';
+
+/* 14. Generated illustration consumers */
+@import './illustration-library.css';
+@import './reference-experience.css';
+@import './itinerary-polish.css';
+@import './today-mode.css';
+@import './dashboard-scrapbook.css';

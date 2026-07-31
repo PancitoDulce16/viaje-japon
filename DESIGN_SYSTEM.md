@@ -16,6 +16,42 @@ Before shipping any screen, ask: **"Would this make me excited to open the app d
 
 ---
 
+## 0.1 Visual DNA — Kawaii Day / Ninja Night
+
+**Direction reset, 2026-07-15.** A minimalist "Full-Bleed Horizon" hero composition was built, tested, and rejected at this date — see `DEPRECATION_LOG.md`. It solved spacing and hierarchy problems by quietly sanding away everything that made the screen recognizably Japitin. That failure is why this section exists: every rule below is a direct answer to a specific way that attempt went wrong.
+
+**The test:** if someone hid the Japitin logo, would they still know this is Japitin? A screen that would look at home in Notion, Linear, Stripe, Apple Health, or any generic SaaS dashboard has failed this test, no matter how clean its spacing is. Clean and generic is not a compromise — it's the specific failure mode this document exists to prevent. When "make it cleaner" and "make it more memorable" conflict, memorable wins.
+
+Japitin is not a dashboard. It's a handcrafted Japanese travel journal — closer to a Traveler's Notebook, premium washi stationery, or a Kyoto travel magazine than to any piece of software. The reference is `design-reference/visual-dna-reference.png` (saved 2026-07-15). Study it the way an art director studies a mood board — proportions, visual rhythm, how illustration/type/color/decorative detail sit together — don't crop pieces of it into the UI literally. Every new component should look like it was designed by the same artist who made that board, not adapted from a component library.
+
+**The two personalities are not a light/dark palette swap. They are two different moods, and both are mandatory:**
+
+| | ☀️ Light = Kawaii | 🌙 Dark = Ninja |
+|---|---|---|
+| Feeling | Warm, soft, cozy, playful-but-premium | Elegant, mysterious, sophisticated |
+| References | Japanese stationery, washi tape, sakura, watercolor, passport stamps | Kyoto at night, indigo, lanterns, gold accents, quiet neon reflections |
+| Never | Childish, saccharine | Cyberpunk, gaming RGB |
+
+A component that only works in one mode, or that goes flat/generic in the other, isn't finished. This is why `css/theme-kawaii.css` and `css/theme-ninja.css`'s blanket button/text rules exist and must never be routed around by making a new component opt out of *personality* — only opt out of *specific conflicting values* (see the CSS specificity note in `DEPRECATION_LOG.md`'s 2026-07-15 entry for the difference).
+
+**What the product is selling:** anticipation, not itinerary management. The emotional targets are excitement, anticipation, wanderlust, coziness, curiosity, adventure. Never productivity, analytics, corporate efficiency, or "dashboard" as a feeling — even the word "dashboard" in this codebase describes the screen's *technical role*, not the *experience* it should produce.
+
+**Component metaphors** (extends §2's four card families — same instinct, applied everywhere, not just cards):
+- Buttons aren't Bootstrap rectangles — think ink stamps, wax seals, ribbon tabs, paper labels.
+- Confirmations aren't toasts — a booked activity gets stamped "Reservado ✓," like a travel agent stamping a notebook, not a corner popup.
+- Destination cards are collectible postcards (paper texture, a hand-lettered label, a small illustrated scene, a tiny stamp) — never an icon-in-a-colored-rectangle.
+- Empty states are a blank notebook page with a small illustration and a line of copy, never a bare "No hay X todavía."
+- The hero (trip countdown) is the emotional center of the screen — its job is "my Japan adventure is getting closer," not "here is your trip's metadata." Shortening its height (a real, valid fix) must never come at the cost of feeling like a banner.
+
+**The ten signature elements** (the Hanko Ring, the Spiral Page, Washi Tape, the Torii Divider, the Ticket Notch, the Hanging Kanji Tag, the Passport Stamp Set, the Ink Brush Accent, Sakura Drift, the Folded Corner & Paper Clip) are catalogued in full in `SIGNATURE_ELEMENTS.md` — the recurring motifs a cropped, logo-free screenshot should still be recognizable by. Before reaching for a generic rounded rectangle, a stock icon, or a plain button, check whether one of these ten already answers the need.
+
+**Never, regardless of how much whitespace it would buy:**
+- Remove navigation elements (the menu, search, SOS) to simplify a layout. Reorganize; don't delete functionality for space.
+- Flatten a signature component to a generic card/button because the generic version is faster to build or easier to keep consistent across breakpoints.
+- Let desktop become "the mobile layout, stretched." Desktop has more canvas for layered illustration and richer composition, not more margin.
+
+---
+
 ## 1. Foundations
 
 Full rationale for these lives in the visual proposal artifact. Token names below are what `css/tokens.css` implements in Phase 1.

@@ -146,8 +146,18 @@ export const CityRouteMap = {
     return `
       <div class="city-route-map-wrap">
         <div class="city-route-map-canvas">
-          <img src="/images/wizard/route-map-bg.png" alt=""
-               class="city-route-map-bg" onerror="this.style.display='none'" />
+          <!-- Fondo decorativo acuarela (mar, montañas lejanas, pétalos).
+               Deliberadamente NO es un mapa de Japón: el diagrama usa una
+               proyección fisheye no geográfica (ver cabecera del archivo),
+               así que una silueta real desalinearía los pines y prometería
+               una precisión que este diagrama no tiene. El par día/noche
+               se cruza con .dark, igual que el panorama del dashboard. -->
+          <img src="/images/wizard/map-backdrop-day.webp" alt=""
+               class="city-route-map-bg city-route-map-bg--day" loading="eager"
+               onerror="this.style.display='none'" />
+          <img src="/images/wizard/map-backdrop-night.webp" alt=""
+               class="city-route-map-bg city-route-map-bg--night" loading="eager"
+               onerror="this.style.display='none'" />
           ${this.renderDiagram(cities, cityStops)}
         </div>
         <div id="cityRouteChips" class="city-route-chips">
@@ -187,8 +197,8 @@ export const CityRouteMap = {
       <svg viewBox="0 0 ${SVG_WIDTH} ${SVG_HEIGHT}" class="w-full h-auto select-none" id="cityRouteSvg">
         <defs>
           <radialGradient id="cityDotSelected" cx="35%" cy="30%" r="75%">
-            <stop offset="0%" stop-color="#c4b5fd"/>
-            <stop offset="100%" stop-color="#7c3aed"/>
+            <stop offset="0%" stop-color="#FFB4CF"/>
+            <stop offset="100%" stop-color="#F16FA3"/>
           </radialGradient>
         </defs>
         ${hotspots}
@@ -224,12 +234,12 @@ export const CityRouteMap = {
               width="${(hitRight - hitLeft).toFixed(1)}" height="${(hitBottom - hitTop).toFixed(1)}"
               fill="transparent"/>
         <circle class="city-hotspot-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"
-                fill="${isSelected ? 'url(#cityDotSelected)' : '#ffffff'}"
-                stroke="${isSelected ? '#7c3aed' : '#c4b5fd'}" stroke-width="2.5"/>
+                fill="${isSelected ? 'url(#cityDotSelected)' : '#FDF6EC'}"
+                stroke="${isSelected ? '#F16FA3' : '#E8C9D6'}" stroke-width="2.5"/>
         <text x="${x.toFixed(1)}" y="${(y + 5).toFixed(1)}" text-anchor="middle"
               font-size="${isSelected ? 15 : 12}">${icon}</text>
         ${stopCount > 1 ? `
-          <circle cx="${(x + r - 2).toFixed(1)}" cy="${(y - r + 2).toFixed(1)}" r="8" fill="#ec4899"/>
+          <circle cx="${(x + r - 2).toFixed(1)}" cy="${(y - r + 2).toFixed(1)}" r="8" fill="#E0537A"/>
           <text x="${(x + r - 2).toFixed(1)}" y="${(y - r + 6).toFixed(1)}" text-anchor="middle"
                 font-size="9" font-weight="800" fill="white">×${stopCount}</text>
         ` : ''}

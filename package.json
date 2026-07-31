@@ -3,10 +3,11 @@
   "version": "2.2.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "npx vite build",
+    "dev": "vite --port 3000",
+    "build:tailwind": "tailwindcss -i ./css/tailwind.input.css -o ./css/tailwind.min.css --minify",
+    "build": "npm run build:tailwind && npx vite build",
     "build:alt": "chmod +x build.sh && ./build.sh",
-    "preview": "npx vite preview",
+    "preview": "npx vite preview --port 3000",
     "validate": "node validate-imports.js",
     "predeploy": "npm run validate",
     "deploy": "firebase deploy --only hosting"

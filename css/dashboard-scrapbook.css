@@ -1,0 +1,131 @@
+/* Dashboard shell: navegación como objetos de viaje, no barras de app. */
+.japan-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--surface-page) 84%, transparent) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(14px);
+}
+.japan-header::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 7px;
+  background: url('/images/illustrations/generated/signature-elements/ink-brush-accent.png') center / 560px 14px repeat-x !important;
+  opacity: .22;
+}
+.header-brand { position: relative; padding: 4px 18px 5px 9px; transform: rotate(-1deg); }
+.header-brand::after { content: '旅'; position: absolute; right: -6px; top: -7px; width: 30px; height: 30px; display: grid; place-items: center; border: 2px solid color-mix(in srgb,var(--color-kasumi-deep) 65%,transparent); border-radius: 50%; color: var(--color-kasumi-deep); font: 800 .68rem serif; transform: rotate(10deg); opacity: .75; }
+.header-brand-mark { display: none !important; }
+.header-brand-name { color: var(--color-kasumi-deep) !important; font-family: var(--font-hand) !important; font-size: 1.75rem !important; }
+.japan-header .header-chip { min-height: 38px; padding: 7px 13px !important; border: 0 !important; border-radius: 3px !important; background: color-mix(in srgb,var(--surface-page) 82%,#eadbc8) !important; clip-path: polygon(3% 0,97% 3%,100% 90%,94% 100%,4% 96%,0 10%); transform: rotate(var(--chip-tilt,-.35deg)); box-shadow: 0 5px 10px -9px rgba(var(--shadow-rgb),.65) !important; }
+.japan-header .header-chip:nth-child(even) { --chip-tilt:.45deg; }
+.japan-header .header-chip:hover { transform: rotate(0) translateY(-2px) !important; }
+.japan-header .sos-button { border-radius: 50% !important; transform: rotate(7deg); box-shadow: inset 0 0 0 2px rgba(255,255,255,.45),0 4px 9px -7px rgba(130,26,40,.8) !important; }
+
+.japan-nav { position: sticky; top: 59px; z-index: 35; border: 0 !important; background: transparent !important; box-shadow: none !important; pointer-events: none; }
+#tabSelector { width: fit-content; max-width: calc(100vw - 28px) !important; margin-inline: auto; padding: 9px 16px 13px !important; gap: 7px !important; background: color-mix(in srgb,var(--surface-page) 91%,transparent); border: 0; clip-path: polygon(0 7%,4% 2%,10% 6%,17% 1%,24% 5%,32% 1%,40% 6%,48% 2%,56% 6%,64% 1%,72% 5%,80% 1%,88% 6%,96% 2%,100% 7%,99% 91%,94% 98%,86% 93%,78% 99%,70% 94%,62% 98%,54% 93%,46% 99%,38% 94%,30% 98%,22% 93%,14% 99%,6% 94%,1% 98%); filter: drop-shadow(0 8px 7px rgba(var(--shadow-rgb),.1)); pointer-events: auto; }
+#tabSelector .tab-btn { min-height: 38px !important; padding: 7px 11px !important; border: 1px solid color-mix(in srgb,var(--ink) 10%,transparent) !important; border-radius: 2px 9px 2px 9px !important; background: var(--tag-paper,#f6ead8) !important; color: var(--ink-soft) !important; transform: rotate(var(--tag-tilt,-.6deg)); box-shadow: 0 3px 7px -6px rgba(var(--shadow-rgb),.8) !important; }
+#tabSelector .tab-btn:nth-child(3n+2) { --tag-paper:#edf2e5; --tag-tilt:.55deg; }
+#tabSelector .tab-btn:nth-child(3n) { --tag-paper:#e8eff2; --tag-tilt:-.2deg; }
+#tabSelector .tab-btn:hover { transform: rotate(0) translateY(-2px) !important; }
+#tabSelector .tab-btn.active { color: var(--color-kasumi-deep) !important; background:#f6dce2 !important; border-color:color-mix(in srgb,var(--color-kasumi-deep) 35%,transparent) !important; }
+#tabSelector .tab-btn::before { display: none !important; }
+#tabSelector .tab-btn::after { content:''; position:absolute; top:50%; left:5px; width:4px; height:4px; border:1px solid currentColor; border-radius:50%; transform:translateY(-50%); opacity:.5; }
+
+#main-content { padding-top: 12px !important; }
+.countdown-widget { position: relative; border: 0 !important; border-radius: 0 !important; background: color-mix(in srgb,var(--surface-page) 88%,#eadcc9) !important; clip-path: polygon(2% 3%,97% 0,100% 92%,94% 100%,4% 96%,0 9%); transform: rotate(.3deg); box-shadow: none !important; }
+.countdown-widget::before { content:''; position:absolute; width:58px; height:17px; top:-5px; left:50%; background:url('/images/illustrations/generated/signature-elements/washi-tape-pink.png') center/100% 100%; transform:translateX(-50%) rotate(-2deg); opacity:.65; }
+
+.tab-content > .section-title,
+.tab-content > h1:first-child,
+.tab-content > h2:first-child { width: fit-content; margin: 4px auto 24px !important; padding: 8px 28px 10px !important; border: 0 !important; background: transparent !important; color: var(--ink) !important; font-family: var(--font-hand) !important; font-size: clamp(1.45rem,3vw,2rem) !important; transform: rotate(-.4deg); }
+.tab-content > .section-title::after,
+.tab-content > h1:first-child::after,
+.tab-content > h2:first-child::after { content:''; display:block; width:72%; height:8px; margin:0 auto -5px; background:url('/images/illustrations/generated/signature-elements/ink-brush-accent.png') center/100% 100%; opacity:.28; }
+
+.japan-footer { width:min(760px,calc(100% - 32px)); margin:42px auto 22px !important; padding:24px !important; border:0; border-radius:0 !important; background:color-mix(in srgb,var(--surface-page) 88%,#dce5d5) !important; color:var(--ink) !important; clip-path:polygon(0 8%,5% 2%,12% 7%,20% 1%,29% 6%,38% 2%,47% 7%,56% 1%,65% 6%,74% 2%,83% 7%,92% 1%,100% 6%,99% 93%,91% 98%,82% 94%,72% 99%,62% 94%,52% 98%,42% 93%,32% 99%,22% 94%,12% 98%,3% 93%); transform:rotate(-.25deg); }
+.japan-footer .text-white\/80 { color:var(--ink-soft) !important; }
+
+html.dark #tabSelector .tab-btn { --tag-paper:#252e49; }
+html.dark #tabSelector .tab-btn:nth-child(3n+2) { --tag-paper:#29372f; }
+html.dark #tabSelector .tab-btn:nth-child(3n) { --tag-paper:#263747; }
+html.dark #tabSelector .tab-btn.active { background:#3b2d3d !important; }
+
+@media(max-width:767px){
+  .japan-header{min-height:56px}.header-brand-name{font-size:1.45rem!important}.japan-nav{top:56px}#tabSelector{width:100%;max-width:100%!important;margin:0;padding:7px 10px 10px!important;clip-path:none;background:color-mix(in srgb,var(--surface-page) 93%,transparent)}#tabSelector .tab-btn{flex:0 0 auto;min-height:35px!important;padding:6px 10px!important}.countdown-widget{display:none!important}.japan-footer{display:none}
+}
+
+/* Presupuesto: una bandeja bento con recibos, no cuatro KPI cards. */
+.jp-budget-page { position:relative; }
+.jp-budget-head { width:fit-content; margin:0 auto 22px!important; padding:10px 34px 14px; background:color-mix(in srgb,var(--surface-page) 88%,#f0dcc7); clip-path:polygon(2% 4%,97% 0,100% 90%,93% 100%,5% 95%,0 10%); transform:rotate(-.45deg); }
+.jp-budget-head h2 { margin:0!important; font-family:var(--font-hand)!important; font-size:2rem!important; color:var(--ink)!important; }
+.jp-budget-head p { margin-top:2px; }
+.jp-budget-page > .grid { position:relative; gap:0!important; display:grid!important; grid-template-columns:repeat(4,1fr)!important; margin:0 auto 20px; filter:drop-shadow(0 8px 8px rgba(var(--shadow-rgb),.09)); }
+.jp-budget-page .bento-stat { min-height:112px; padding:18px 15px 13px; border:0; border-right:1px dashed rgba(100,78,65,.22); border-radius:0; background:#f7eddd; box-shadow:none; clip-path:polygon(0 3%,6% 0,13% 4%,20% 1%,28% 5%,36% 0,44% 4%,52% 1%,60% 5%,68% 0,76% 4%,84% 1%,92% 5%,100% 1%,99% 96%,92% 100%,84% 96%,76% 99%,68% 95%,60% 100%,52% 96%,44% 99%,36% 95%,28% 100%,20% 96%,12% 99%,4% 95%,0 98%); transform:rotate(var(--receipt-tilt,-.4deg)); }
+.jp-budget-page .bento-stat:nth-child(even){--receipt-tilt:.45deg;background:#f4e7d5}.jp-budget-page .bento-stat:last-child{border-right:0}.jp-budget-page .bento-stat-value{font-family:var(--font-mono);font-size:1.12rem}.jp-budget-page .bento-ticket__stamp{opacity:.22!important}
+.jp-budget-page .bento-wood { max-width:760px; margin-inline:auto; padding:16px; border-radius:26px 18px 28px 16px; background:linear-gradient(145deg,#9a6946,#70452b 60%,#8b5a38); box-shadow:inset 0 0 0 3px rgba(255,228,192,.22),inset 0 5px 10px rgba(45,25,12,.35),0 18px 32px -24px rgba(60,35,20,.7); transform:rotate(.15deg); }
+.jp-budget-page .bento-cell { border-radius:18px 11px 17px 10px; }
+.jp-budget-page .bento-add-btn { position:relative; border:0; border-radius:3px; background:#d35e7f; clip-path:polygon(3% 0,97% 4%,100% 88%,94% 100%,5% 95%,0 11%); box-shadow:0 9px 15px -11px rgba(160,55,88,.75); font-family:var(--font-hand); font-size:1.08rem; }
+.jp-budget-page .bento-detail { border:0; border-left:5px solid var(--cat-color); border-radius:2px; background:color-mix(in srgb,var(--surface-page) 88%,#eee1cc); clip-path:polygon(0 2%,98% 0,100% 95%,96% 100%,2% 97%); box-shadow:none; }
+.jp-budget-page .bento-day-row { border:0; border-bottom:1px dashed rgba(96,75,63,.25); border-radius:0; background:transparent; }
+
+/* Preparación: checklist como maleta abierta y guías como folletos. */
+.jp-prep-page > h2 { width:fit-content; margin:0 auto 25px!important; padding:7px 26px; font-family:var(--font-hand)!important; font-size:2rem!important; transform:rotate(-.5deg); }
+.jp-prep-progress { position:relative; max-width:780px; margin-inline:auto; border:0!important; border-radius:0!important; background:#dce6d3!important; color:var(--ink)!important; clip-path:polygon(1% 5%,5% 1%,11% 6%,18% 2%,25% 7%,33% 1%,41% 5%,49% 0,58% 6%,66% 2%,74% 7%,82% 1%,90% 5%,98% 1%,100% 94%,94% 99%,86% 94%,77% 100%,69% 95%,60% 99%,51% 94%,42% 100%,33% 95%,24% 99%,15% 94%,6% 99%,0 95%); box-shadow:none!important; transform:rotate(.2deg); }
+.jp-prep-progress::before { content:''; position:absolute; top:-4px; right:15%; width:90px; height:22px; background:url('/images/illustrations/generated/signature-elements/washi-tape-blue.png') center/100% 100%; transform:rotate(2deg); opacity:.62; }
+.jp-prep-progress h3 { font-family:var(--font-hand); color:var(--ink)!important; }.jp-prep-progress p{color:var(--ink-soft)!important;opacity:1!important}.jp-prep-progress .bg-white\/30{background:rgba(255,255,255,.58)!important}.jp-prep-progress .bg-white{background:var(--color-matcha)!important}
+.jp-prep-layout { position:relative; align-items:start; gap:32px!important; }
+.jp-prep-layout::before { content:'PACKING'; position:absolute; z-index:-1; top:-18px; left:3%; color:rgba(180,81,111,.09); font:900 clamp(3rem,9vw,7rem)/1 var(--font-mono); letter-spacing:.08em; transform:rotate(-4deg); }
+.jp-prep-checklist { position:relative; padding:30px 26px 26px!important; border:8px solid #8a5a39; border-radius:24px 16px 26px 14px!important; background:#f7eddd!important; box-shadow:inset 0 0 0 2px rgba(255,255,255,.55),0 18px 30px -25px rgba(66,39,24,.72)!important; }
+.jp-prep-checklist::before { content:''; position:absolute; top:-14px; left:50%; width:82px; height:25px; border:6px solid #795033; border-bottom:0; border-radius:28px 28px 0 0; transform:translateX(-50%); }
+.jp-prep-checklist > h3 { font-family:var(--font-hand); font-size:1.55rem!important; text-align:center; }
+.jp-prep-checklist .border { border:0!important; border-bottom:1px dashed rgba(96,74,62,.24)!important; border-radius:0!important; }
+.jp-prep-checklist .category-toggle-btn { padding:12px 5px!important; background:transparent!important; }
+.jp-prep-checklist .category-content { padding:5px 4px 14px!important; background:transparent!important; }
+.jp-prep-checklist .category-content > div { border-radius:2px!important; background:rgba(255,255,255,.3); }
+.jp-prep-checklist .add-item-btn { border:0!important; border-bottom:1px solid var(--color-kasumi)!important; border-radius:0!important; }
+.jp-prep-guides > * { border:0!important; border-radius:2px!important; box-shadow:0 9px 18px -15px rgba(var(--shadow-rgb),.55)!important; clip-path:polygon(2% 2%,98% 0,100% 94%,95% 100%,4% 97%,0 7%); transform:rotate(var(--guide-tilt,.35deg)); }
+.jp-prep-guides > *:nth-child(even){--guide-tilt:-.5deg}.jp-prep-guides > *:nth-child(3n){--guide-tilt:.7deg}
+
+html.dark .jp-budget-head,html.dark .jp-budget-page .bento-stat,html.dark .jp-budget-page .bento-detail,html.dark .jp-prep-checklist{background:#272e47!important}html.dark .jp-prep-progress{background:#29382f!important}
+@media(max-width:767px){.jp-budget-page > .grid{grid-template-columns:repeat(2,1fr)!important}.jp-budget-page .bento-stat{min-height:96px;padding:14px 10px}.jp-budget-page .bento-wood{padding:10px;border-radius:18px}.jp-prep-page{padding-inline:4px!important}.jp-prep-layout{gap:22px!important}.jp-prep-checklist{padding:24px 14px 18px!important;border-width:6px}.jp-prep-progress{padding:20px 16px!important}}
+
+/* Vuelos: cartera de viaje, pases de abordar y hojas impresas. */
+.jp-flights-page>h2,.jp-hotels-page>h2,.jp-transport-page>h2{width:fit-content;margin:0 auto 25px!important;font-family:var(--font-hand)!important;font-size:clamp(1.8rem,4vw,2.35rem)!important;transform:rotate(-.6deg)}
+.jp-flights-page,.jp-hotels-page,.jp-transport-page{position:relative}
+.jp-flights-page::before,.jp-hotels-page::before,.jp-transport-page::before{content:'';display:block;width:100%;height:clamp(210px,22vw,285px);margin:0 0 28px;background-position:center;background-size:cover;background-repeat:no-repeat;clip-path:polygon(0 3%,5% 0,11% 2%,18% 0,25% 3%,33% 0,41% 2%,49% 0,58% 3%,66% 0,74% 2%,82% 0,90% 3%,100% 0,99% 95%,94% 100%,87% 97%,79% 100%,71% 97%,63% 100%,55% 97%,47% 100%,39% 97%,31% 100%,23% 97%,15% 100%,7% 97%,0 100%);filter:drop-shadow(0 12px 13px rgba(var(--shadow-rgb),.11))}
+.jp-flights-page::before{background-image:url('/images/illustrations/generated/travel-sections/flights-japitin.webp')}.jp-hotels-page::before{background-image:url('/images/illustrations/generated/travel-sections/hotels-japitin.webp')}.jp-transport-page::before{background-image:url('/images/illustrations/generated/travel-sections/transport-japitin.webp')}
+.jp-flights-page>h2,.jp-hotels-page>h2,.jp-transport-page>h2{position:absolute;z-index:2;top:clamp(70px,8vw,105px);left:clamp(28px,8vw,108px);max-width:42%;margin:0!important;padding:13px 22px!important;background:rgba(255,250,241,.76);color:#453944!important;clip-path:polygon(2% 3%,98% 0,100% 91%,94% 100%,4% 96%,0 10%);backdrop-filter:blur(3px);filter:drop-shadow(0 7px 8px rgba(78,55,45,.12))}
+.jp-flights-page>h2::after,.jp-hotels-page>h2::after,.jp-transport-page>h2::after{content:'';position:absolute;left:20%;right:12%;bottom:5px;height:5px;background:url('/images/illustrations/generated/signature-elements/ink-brush-accent.png') center/100% 100%;opacity:.2}
+.jp-flight-wallet,.jp-hotel-book{position:relative;border:0!important;border-radius:3px!important;background:color-mix(in srgb,var(--surface-page) 91%,#eadfce)!important;box-shadow:0 15px 24px -24px rgba(var(--shadow-rgb),.7)!important;clip-path:polygon(1% 2%,99% 0,100% 95%,97% 100%,2% 98%,0 6%)}
+.jp-flight-wallet::before{content:'BOARDING DOCUMENTS';position:absolute;right:28px;top:14px;color:rgba(60,91,122,.12);font:900 1.35rem var(--font-mono);letter-spacing:.12em;transform:rotate(3deg)}
+.jp-boarding-pass{position:relative;overflow:visible!important;margin:18px 3px!important;padding:18px 120px 18px 22px!important;border:1px solid rgba(64,93,121,.23)!important;border-left:7px solid #7895ad!important;border-radius:3px!important;background:#eaf0ef!important;background-image:repeating-linear-gradient(0deg,transparent 0 27px,rgba(67,92,112,.045) 28px)!important;box-shadow:0 9px 16px -15px rgba(38,56,72,.8)!important;clip-path:polygon(0 5%,2% 0,98% 2%,100% 8%,99% 94%,97% 100%,2% 98%,0 93%)}
+.jp-boarding-pass::before{content:'JAPITIN\A JP 2027';white-space:pre;position:absolute;right:0;top:0;bottom:0;width:94px;display:grid;place-content:center;border-left:2px dashed rgba(68,92,110,.3);color:#45657e;text-align:center;font:900 .78rem/1.8 var(--font-mono);letter-spacing:.08em}
+.jp-boarding-pass::after{content:'搭乗券';position:absolute;right:27px;bottom:8px;color:rgba(62,85,105,.28);font:700 .8rem serif;transform:rotate(-8deg)}
+.jp-boarding-pass .grid-cols-3 p.font-bold{font-family:var(--font-mono);font-size:1.12rem;letter-spacing:.05em}
+.jp-flight-tools>div{position:relative;border:0!important;border-radius:2px!important;background:#dce7e9!important;color:var(--ink)!important;clip-path:polygon(1% 4%,97% 0,100% 93%,94% 100%,3% 96%,0 9%);box-shadow:none!important;transform:rotate(-.35deg)}
+.jp-flight-tools>div:nth-child(2){background:#e4eadb!important;transform:rotate(.45deg)}
+.jp-flight-tools>div>*,.jp-flight-tools a{color:inherit!important}.jp-flight-tools>div::before{content:'';position:absolute;top:-4px;left:42%;width:70px;height:19px;background:url('/images/illustrations/generated/signature-elements/washi-tape-blue.png') center/100% 100%;opacity:.48}
+.jp-flight-form,.jp-hotel-form,.jp-baggage-sheet{border:0!important;border-radius:2px!important;background:color-mix(in srgb,var(--surface-page) 89%,#f0e2cc)!important;box-shadow:none!important;clip-path:polygon(1% 1%,99% 0,100% 97%,96% 100%,2% 98%,0 5%)}
+
+/* Hoteles: vouchers de reserva y libreta de recepcion. */
+.jp-hotel-book::before{content:'ご予約';position:absolute;right:26px;top:13px;color:rgba(177,77,108,.15);font:900 1.6rem serif;transform:rotate(8deg)}
+.jp-hotel-voucher{position:relative;margin:20px 2px!important;padding:22px 105px 22px 24px!important;border:0!important;border-left:0!important;border-radius:2px!important;background:#f5eadb!important;background-image:linear-gradient(90deg,transparent 0 68%,rgba(165,98,112,.07) 68% 68.5%,transparent 68.5%)!important;box-shadow:0 10px 17px -16px rgba(82,52,43,.8)!important;clip-path:polygon(0 3%,4% 0,9% 2%,15% 0,21% 3%,28% 0,35% 2%,43% 0,51% 3%,59% 0,67% 2%,75% 0,83% 3%,91% 0,100% 2%,99% 96%,95% 100%,89% 97%,82% 100%,74% 97%,66% 100%,58% 97%,50% 100%,42% 97%,34% 100%,26% 97%,18% 100%,10% 97%,2% 100%)}
+.jp-hotel-voucher::before{content:'CONFIRMED\A 予約済';white-space:pre;position:absolute;right:16px;top:50%;padding:8px 10px;border:3px double rgba(170,67,98,.55);border-radius:50%;color:rgba(170,67,98,.72);font:800 .7rem/1.45 var(--font-mono);text-align:center;transform:translateY(-50%) rotate(-9deg)}
+.jp-hotel-voucher .grid>div{padding:10px 15px!important;border:0!important;border-radius:0!important;background:transparent!important;border-left:1px dashed rgba(103,76,63,.25)!important}
+.jp-hotel-search-disabled{border:0!important;border-radius:2px!important;background:#ded7ce!important;color:var(--ink)!important;box-shadow:none!important;clip-path:polygon(1% 3%,98% 0,100% 94%,95% 100%,3% 97%,0 8%)}
+
+/* Transporte: carpeta de boletos JR, horarios y sellos de estacion. */
+.jp-rail-recommendation{position:relative;border:0!important;border-radius:2px!important;background:#d9e7d5!important;color:var(--ink)!important;box-shadow:none!important;clip-path:polygon(1% 5%,6% 1%,13% 5%,21% 0,29% 4%,37% 1%,45% 5%,53% 0,61% 4%,69% 1%,77% 5%,85% 0,93% 4%,99% 1%,100% 95%,94% 100%,86% 96%,78% 100%,70% 96%,62% 100%,54% 96%,46% 100%,38% 96%,30% 100%,22% 96%,14% 100%,6% 96%,0 99%);transform:rotate(.15deg)}
+.jp-rail-recommendation::after{content:'駅';position:absolute;right:25px;top:17px;width:54px;height:54px;display:grid;place-items:center;border:3px double rgba(48,112,76,.3);border-radius:50%;font:900 1.25rem serif;transform:rotate(12deg)}
+.jp-rail-recommendation .bg-white\/20,.jp-rail-recommendation .bg-white\/10,.jp-rail-recommendation .bg-yellow-400\/30{background:rgba(255,255,255,.32)!important;border:0!important;border-radius:2px!important}.jp-rail-recommendation *{color:inherit!important}
+.jp-rail-wallet>div{border:0!important;border-radius:2px 9px 2px 9px!important;background:color-mix(in srgb,var(--surface-page) 90%,#e2dbc9)!important;box-shadow:0 7px 16px -16px rgba(var(--shadow-rgb),.8)!important;transform:rotate(var(--rail-tilt,-.12deg))}.jp-rail-wallet>div:nth-child(even){--rail-tilt:.18deg}.jp-rail-wallet>div>button{border-left:6px solid var(--color-kasumi)!important}.jp-rail-wallet>div:nth-child(3n+2)>button{border-color:#85a8b8!important}.jp-rail-wallet>div:nth-child(3n)>button{border-color:#91a581!important}
+.jp-route-sheet,.jp-jr-calculator{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.jp-rail-ticket{position:relative;border:1px solid rgba(55,91,119,.24)!important;border-left:8px solid #668aa5!important;border-radius:1px!important;background:#e4edf1!important;box-shadow:none!important;clip-path:polygon(0 3%,98% 0,100% 94%,96% 100%,2% 97%)}
+.jp-rail-ticket::after{content:'JR';position:absolute;right:12px;bottom:9px;color:rgba(43,91,121,.16);font:900 2rem var(--font-mono);font-style:italic}
+
+html.dark .jp-flight-wallet,html.dark .jp-hotel-book,html.dark .jp-flight-form,html.dark .jp-hotel-form,html.dark .jp-baggage-sheet,html.dark .jp-rail-wallet>div{background:#272e47!important}.dark .jp-boarding-pass,.dark .jp-rail-ticket{background:#263747!important}.dark .jp-hotel-voucher{background:#352f3d!important}.dark .jp-flight-tools>div{background:#293747!important}.dark .jp-flight-tools>div:nth-child(2),html.dark .jp-rail-recommendation{background:#29382f!important}
+@media(max-width:767px){.jp-flights-page::before,.jp-hotels-page::before,.jp-transport-page::before{height:165px;margin-bottom:18px;background-position:62% center}.jp-flights-page>h2,.jp-hotels-page>h2,.jp-transport-page>h2{top:42px;left:14px;max-width:57%;padding:9px 13px!important;font-size:1.35rem!important}.jp-boarding-pass,.jp-hotel-voucher{padding:18px 15px!important}.jp-boarding-pass::before,.jp-boarding-pass::after,.jp-hotel-voucher::before{display:none}.jp-flight-tools>div{transform:none}.jp-rail-recommendation{padding:20px 16px!important}.jp-rail-recommendation::after{width:38px;height:38px;right:10px;top:8px;font-size:.9rem}.jp-flight-wallet,.jp-hotel-book{padding:18px 12px!important}.jp-flights-page,.jp-hotels-page,.jp-transport-page{padding-inline:4px!important}}

@@ -1,0 +1,62 @@
+/* Final itinerary refinement. Keep this last so older theme layers cannot fight it. */
+@media (min-width: 1180px) {
+  .jp-desktop-rail { display: none !important; }
+  #appDashboard { padding-left: 0 !important; }
+  .japan-header .max-w-7xl,
+  #currentTripHeader,
+  #tabSelector,
+  #main-content > .tab-content { max-width: 1240px !important; }
+}
+
+.japan-nav { border-bottom: 1px solid var(--hairline) !important; box-shadow: 0 4px 18px rgba(var(--shadow-rgb),.05) !important; }
+#tabSelector { gap: 3px !important; padding-block: 7px !important; scrollbar-width: none; }
+#tabSelector::-webkit-scrollbar { display: none; }
+#tabSelector .tab-btn { min-height: 40px; padding: 8px 12px !important; border-radius: 9px !important; font-size: .82rem; }
+#tabSelector .tab-btn::before { height: 2px !important; left: 12px !important; right: 12px !important; }
+
+#main-content { padding-top: 18px !important; }
+.countdown-widget { margin: 0 auto 22px !important; padding: 14px 26px !important; min-height: 0 !important; max-width: 300px !important; }
+.countdown-widget h2 { margin: 0 !important; font-size: .92rem !important; }
+.countdown-widget .days { margin: 1px 0 !important; font-size: 2rem !important; line-height: 1 !important; }
+.countdown-widget p { margin: 4px 0 0 !important; font-size: .67rem !important; }
+
+#content-itinerary { padding-bottom: 40px; }
+#content-itinerary #tripSelectorHeader { margin-inline: auto; }
+.trip-header-banner { margin-bottom: 16px !important; padding: 24px 150px 22px 38px !important; border-radius: 8px 22px 8px 22px !important; }
+.trip-header-banner h3 { margin-bottom: 5px !important; font-size: clamp(1.55rem,3vw,2.15rem) !important; }
+.trip-header-banner .jp-trip-polaroid { width: 112px !important; right: 22px !important; }
+.trip-header-banner .jp-trip-dogwrap { transform: scale(.82); transform-origin: bottom right; }
+.trip-header-banner button { min-height: 36px; padding: 7px 12px !important; font-size: .75rem !important; }
+
+.trip-numbers-wrap { margin-block: 10px 18px !important; }
+.trip-numbers-title { margin-bottom: 7px !important; font-size: .72rem !important; letter-spacing: .08em; }
+.trip-numbers { gap: 8px !important; }
+.trip-num { min-height: 72px !important; padding: 10px 12px !important; box-shadow: none !important; }
+
+#daySelector { margin-bottom: 16px !important; padding-block: 7px !important; gap: 7px !important; }
+#daySelector .day-ticket { min-height: 68px; padding: 9px 11px !important; border-radius: 7px 14px 7px 14px !important; box-shadow: 0 3px 10px rgba(var(--shadow-rgb),.06) !important; }
+#daySelector .day-ticket--active { box-shadow: 0 7px 15px -8px rgba(181,75,117,.45) !important; }
+
+#content-itinerary div:has(> .activity-card) { max-width: 980px; margin-inline: auto; }
+.activity-card { margin-bottom: 10px !important; padding: 14px 16px !important; border-left-width: 3px !important; border-radius: 7px 16px 7px 16px !important; box-shadow: 0 4px 14px rgba(var(--shadow-rgb),.065) !important; }
+.activity-card:hover { transform: translateX(2px) !important; box-shadow: 0 8px 20px rgba(var(--shadow-rgb),.09) !important; }
+.activity-card h3 { font-size: 1rem !important; line-height: 1.25 !important; }
+.activity-thumb { width: 58px !important; height: 54px !important; }
+.activity-card button { min-height: 32px; }
+.activity-card .jp-reservation-chip{display:inline-flex;min-height:25px;align-items:center;gap:5px;padding:3px 8px;border:1px dashed color-mix(in srgb,var(--color-kasumi-deep) 35%,transparent);border-radius:999px;background:transparent!important;color:var(--color-kasumi-deep)!important;font-size:.66rem;font-weight:800}.activity-card .jp-reservation-chip.is-reserved{border-style:solid;border-color:color-mix(in srgb,var(--color-matcha) 42%,transparent);background:color-mix(in srgb,var(--color-matcha) 10%,var(--surface-page))!important;color:var(--color-matcha)!important}
+.travel-time-indicator { max-width: 720px; margin-block: 7px !important; padding-block: 7px !important; box-shadow: none !important; }
+
+/* Pink is an accent, not a surface. */
+#content-itinerary button:not(.day-ticket):not([class*="bg-red"]):not([class*="bg-green"])[class*="bg-pink"],
+#content-itinerary button:not(.day-ticket)[class*="bg-purple"] { background: color-mix(in srgb,var(--color-kasumi) 13%,var(--surface-page)) !important; color: var(--color-kasumi-deep) !important; }
+
+@media (max-width: 767px) {
+  #main-content { padding-top: 6px !important; }
+  .trip-header-banner { padding: 20px 16px 18px 30px !important; margin-bottom: 10px !important; }
+  .trip-header-banner .jp-trip-polaroid,.trip-header-banner .jp-trip-dogwrap { display: none !important; }
+  .trip-header-banner h3 { font-size: 1.35rem !important; }
+  .trip-header-banner p { font-size: .7rem !important; }
+  #content-itinerary div:has(> .activity-card) { padding-left: 24px; }
+  .activity-card { margin-inline: 2px !important; padding: 12px !important; }
+  .activity-thumb { width: 50px !important; height: 48px !important; }
+}

@@ -136,9 +136,23 @@ service cloud.firestore {
       // --- Sub-colección de Chat ---
       match /chat/{messageId} {
         allow read: if isTripMember(tripId);
-        allow create: if isTripMember(tripId);
-        allow update: if isTripMember(tripId) && resource.data.senderId == request.auth.uid;
-        allow delete: if isTripMember(tripId) && resource.data.senderId == request.auth.uid;
+        allow create: if isTripMember(tripId) &&
+                         request.resource.data.userId == request.auth.uid;
+
+        // Cualquier miembro puede añadir reacciones, pero ningún otro campo.
+        // El autor también puede editar su propio mensaje. Se aceptan los tres
+        // nombres históricos para no romper mensajes ya guardados.
+        allow update: if isTripMember(tripId) && (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions']) ||
+          resource.data.userId == request.auth.uid ||
+          resource.data.uid == request.auth.uid ||
+          resource.data.senderId == request.auth.uid
+        );
+        allow delete: if isTripMember(tripId) && (
+          resource.data.userId == request.auth.uid ||
+          resource.data.uid == request.auth.uid ||
+          resource.data.senderId == request.auth.uid
+        );
       }
 
       // --- Sub-colección de Timeline ---

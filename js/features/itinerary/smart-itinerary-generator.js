@@ -3,6 +3,14 @@
 
 import { activities as NEW_ACTIVITY_DATABASE } from '../../../data/activities-database.js';
 import { ATTRACTIONS_DATA } from '../../../data/attractions-data.js';
+import { annotateCityStays } from './city-stay-utils.js';
+import { buildIntercityTransfer, analyzeJourneyTransfers } from './intercity-transfer.js';
+import { filterClosedActivities, scheduleWithinOpeningHours } from './schedule-availability.js';
+import { buildTravelerCapacity } from './traveler-capacity.js';
+import { dateForTripDay, detectDaySeason } from './seasonal-calendar.js';
+import { buildAirportPlan, minutesOf } from './airport-journey.js';
+import { buildHotelTransition } from './hotel-transition.js';
+import { auditMeals, moveShoppingToEnd, analyzeRailPass, buildDayNarrative, ensureDayMemory, applyLodgingConstraints } from './day-adaptation.js';
 
 // Categorías de ATTRACTIONS_DATA que son restaurantes/comida reales (no atracciones turísticas)
 const MEAL_CATEGORY_KEYS = [
@@ -813,6 +821,9 @@ export const SmartItineraryGenerator = {
       arrivalTime = null, // 🆕 'HH:MM' - hora de aterrizaje día 1 (jetlag-aware)
       arrivalCityKey = null,   // 🛬 Ciudad del aeropuerto de llegada (la ruta auto empieza ahí)
       departureCityKey = null, // 🛫 Ciudad del aeropuerto de salida (la ruta auto termina ahí)
+      arrivalAirport = null,
+      departureAirport = null,
+      departureTime = null,
       archetypeInterests = null, // ⚖️ Intereses del arquetipo de variación (boost multiplicativo)
       // 🆕 Nuevos parámetros de contexto
       groupSize = 1,
@@ -839,7 +850,7 @@ export const SmartItineraryGenerator = {
     // permite repetir ciudad - ej. Tokyo -> Kyoto -> Osaka -> Tokyo), se respeta tal
     // cual sin pasar por el scoring automático. Si no, se reparte por intereses.
     const cityDistribution = (cityStops && cityStops.length > 0)
-      ? cityStops.map(stop => ({ city: stop.city, days: stop.days, isDayTrip: !!stop.isDayTrip }))
+      ? cityStops.map(stop => ({ ...stop, city: stop.city, days: stop.days, isDayTrip: !!stop.isDayTrip }))
       : this.distributeDaysAcrossCities(cities, totalDays, interests, interestWeights);
 
     // 🛬🛫 Ordenar la ruta automática según los aeropuertos: el día 1 (jetlag)
@@ -867,6 +878,9 @@ export const SmartItineraryGenerator = {
       }
     }
 
+    // Debe ejecutarse después de cualquier reordenamiento por aeropuertos.
+    annotateCityStays(cityDistribution);
+
     const itinerary = {
       title: `Viaje a Japón - ${totalDays} días`,
       days: [],
@@ -876,20 +890,28 @@ export const SmartItineraryGenerator = {
 
     let currentDayNumber = 1;
     let lastRealHotel = null; // 🆕 último hotel de una parada NO day-trip (para excursiones)
+    let previousStay = null;
 
     // Generar días para cada ciudad
     for (const cityAllocation of cityDistribution) {
-      const { city, days: daysInCity, isDayTrip } = cityAllocation;
+      const { city, days: daysInCity, isDayTrip, stayId, cityVisitIndex, cityVisitCount, stopIndex } = cityAllocation;
       // 🆕 Day trip (excursión de un día, ej. Nara desde Kyoto): no tiene hotel
       // propio, se queda en el de la parada anterior - así que el punto de partida
       // de las rutas de ese día sigue siendo el hotel real donde se está durmiendo.
-      const hotel = isDayTrip ? lastRealHotel : (hotels[city.toLowerCase()] || null);
+      const hotel = isDayTrip ? lastRealHotel : (
+        cityAllocation.hotel || hotels[stayId] || hotels[`${city.toLowerCase()}_${cityVisitIndex}`] || hotels[city.toLowerCase()] || null
+      );
       if (!isDayTrip) lastRealHotel = hotel;
+      const currentStay = { city, stayId, hotel };
+      const transferPlan = !isDayTrip && previousStay ? buildIntercityTransfer(previousStay, currentStay) : null;
+      const hotelTransitionPlan = !isDayTrip && previousStay ? buildHotelTransition(previousStay, currentStay) : null;
 
       for (let dayInCity = 1; dayInCity <= daysInCity; dayInCity++) {
         const isArrivalDay = currentDayNumber === 1;
         const isDepartureDay = currentDayNumber === totalDays;
         const isFirstDayInCity = dayInCity === 1 && currentDayNumber > 1;
+        const arrivalPlan = isArrivalDay ? buildAirportPlan({type:'arrival',airportCode:arrivalAirport,time:arrivalTime,hotel}) : null;
+        const departurePlan = isDepartureDay ? buildAirportPlan({type:'departure',airportCode:departureAirport,time:departureTime,hotel}) : null;
 
         // 🎨 Obtener tema del día (si fue asignado)
         const themedDay = themedDays[currentDayNumber] || null;
@@ -906,6 +928,10 @@ export const SmartItineraryGenerator = {
           isArrivalDay: isArrivalDay,
           isDepartureDay: isDepartureDay,
           isFirstDayInCity: isFirstDayInCity,
+          transferPlan: dayInCity === 1 ? transferPlan : null,
+          hotelTransitionPlan: dayInCity === 1 ? hotelTransitionPlan : null,
+          arrivalPlan,
+          departurePlan,
           isDayTrip: !!isDayTrip, // 🆕 excursión de un día, sin hotel propio
           mustSee: mustSee.filter(m => m.city === city),
           avoid: avoid,
@@ -925,10 +951,34 @@ export const SmartItineraryGenerator = {
           mobilityNeeds: mobilityNeeds
         });
 
+        day.stayId = stayId;
+        day.stopIndex = stopIndex;
+        day.cityVisitIndex = cityVisitIndex;
+        day.cityVisitCount = cityVisitCount;
+        day.cityChapter = cityVisitCount > 1
+          ? (cityVisitIndex === 1 ? `${city} · Llegada` : cityVisitIndex === cityVisitCount ? `${city} · Despedida` : `${city} · Regreso ${cityVisitIndex}`)
+          : city;
+        day.activities = (day.activities || []).map(activity => ({ ...activity, stayId }));
+        const shoppingResult = moveShoppingToEnd(day);
+        day.activities = shoppingResult.day.activities;
+        day.shoppingPlan = shoppingResult.day.shoppingPlan || null;
+        const lodgingAdjusted = applyLodgingConstraints(day);
+        day.activities = lodgingAdjusted.activities;
+        day.lodgingPlan = lodgingAdjusted.lodgingPlan || null;
+        day.mealAudit = auditMeals(day);
+        day.memory = ensureDayMemory(day);
+
         itinerary.days.push(day);
         currentDayNumber++;
       }
+      if (!isDayTrip) previousStay = currentStay;
     }
+
+    itinerary.routeWarnings = analyzeJourneyTransfers(itinerary.days);
+    itinerary.railPassAnalysis = analyzeRailPass(itinerary.days);
+    itinerary.days.forEach((day, index) => {
+      day.narrative = buildDayNarrative(day, index, itinerary.days.length);
+    });
 
     // 📊 RESUMEN FINAL
     const totalActivities = itinerary.days.reduce((sum, day) => sum + (day.activities?.length || 0), 0);
@@ -1099,6 +1149,10 @@ export const SmartItineraryGenerator = {
       isArrivalDay,
       isDepartureDay,
       isFirstDayInCity,
+      transferPlan = null,
+      hotelTransitionPlan = null,
+      arrivalPlan = null,
+      departurePlan = null,
       isDayTrip = false, // 🆕 excursión de un día sin hotel propio (ej. Nara desde Kyoto)
       mustSee,
       avoid,
@@ -1119,7 +1173,8 @@ export const SmartItineraryGenerator = {
     } = options;
 
     // 🌸 SEASON INTELLIGENCE: Detectar temporada y ajustar recomendaciones
-    const season = this.detectSeason(tripStartDate);
+    const tripDayDate = dateForTripDay(tripStartDate, dayNumber);
+    const season = detectDaySeason(tripStartDate, dayNumber, city);
     if (season) {
       console.log(`🌸 Temporada detectada: ${season.name} ${season.inPeak ? '(PEAK!)' : ''}`);
       if (season.tips) {
@@ -1130,6 +1185,7 @@ export const SmartItineraryGenerator = {
     // ⚡ INTENSITY LEVELS: Determinar número de actividades
     const intensityConfig = INTENSITY_LEVELS[pace] || INTENSITY_LEVELS.moderate;
     const { min, max } = intensityConfig.activitiesPerDay;
+    const travelerCapacity = buildTravelerCapacity(travelerAges, mobilityNeeds);
 
     // 📈 PROGRESSIVE ENERGY MANAGEMENT
     const energyLevel = this.calculateEnergyLevel(dayNumber, totalDays, isArrivalDay, isDepartureDay);
@@ -1144,6 +1200,7 @@ export const SmartItineraryGenerator = {
       targetActivities = Math.round(targetActivities * companionConfig.paceMultiplier);
       console.log(`👥 Companion: ${companionConfig.name}, Activities ajustadas a ${targetActivities}`);
     }
+    targetActivities = Math.max(1, Math.round(targetActivities * travelerCapacity.activityMultiplier));
 
     // 🛫 DÍA 1 JETLAG-FRIENDLY: Reducir actividades según hora de aterrizaje real
     // (si no se especificó hora, se asume llegada temprana y se usa el comportamiento
@@ -1165,7 +1222,13 @@ export const SmartItineraryGenerator = {
       }
       console.log(`🛫 Día 1 (JETLAG, llegada ${arrivalTime || 'sin hora'}): ${targetActivities} actividades`);
     } else if (isDepartureDay) {
-      targetActivities = Math.max(2, Math.floor(targetActivities * 0.4));
+      targetActivities = departurePlan?.earlyFlight ? 0 : Math.max(1, Math.floor(targetActivities * 0.4));
+    } else if (transferPlan) {
+      const transferRatio = transferPlan.durationMinutes >= 240 ? 0 : transferPlan.durationMinutes >= 150 ? .35 : transferPlan.durationMinutes >= 60 ? .6 : .8;
+      targetActivities = Math.max(transferPlan.isTravelDay ? 0 : 1, Math.floor(targetActivities * transferRatio));
+      console.log(`🚄 Día ${dayNumber}: traslado ${transferPlan.from} → ${transferPlan.to}; ${targetActivities} actividades`);
+    } else if (hotelTransitionPlan) {
+      targetActivities = Math.max(1, Math.floor(targetActivities * .7));
     }
 
     // 🌐 REAL-TIME GOOGLE PLACES: Buscar actividades
@@ -1253,11 +1316,15 @@ export const SmartItineraryGenerator = {
       console.log(`🛫 Jetlag filter: ${beforeFilter} → ${candidateActivities.length} actividades`);
     }
 
+    const isProtectedMustSee = activity => (mustSee || []).some(must =>
+      activity.name?.toLowerCase().includes(must.name.toLowerCase())
+    );
+
     // 🆕 MOBILITY FILTER: Filtrar por accesibilidad
     if (mobilityNeeds) {
       const beforeFilter = candidateActivities.length;
       candidateActivities = candidateActivities.filter(activity => {
-        return this.isAccessible(activity, mobilityNeeds);
+        return isProtectedMustSee(activity) || this.isAccessible(activity, mobilityNeeds);
       });
       console.log(`♿ Mobility filter (${mobilityNeeds}): ${beforeFilter} → ${candidateActivities.length} actividades`);
     }
@@ -1266,9 +1333,14 @@ export const SmartItineraryGenerator = {
     if (travelerAges.length > 0) {
       const beforeFilter = candidateActivities.length;
       candidateActivities = candidateActivities.filter(activity => {
-        return this.isAgeAppropriate(activity, travelerAges);
+        return isProtectedMustSee(activity) || this.isAgeAppropriate(activity, travelerAges);
       });
       console.log(`🎂 Age filter (${travelerAges.join(', ')}): ${beforeFilter} → ${candidateActivities.length} actividades`);
+    }
+    if (travelerCapacity.needsAdaptation) {
+      candidateActivities = candidateActivities.filter(activity =>
+        isProtectedMustSee(activity) || Number(activity.energy_cost ?? 3) <= travelerCapacity.maxEnergyCost
+      );
     }
 
     // 🆕 DIETARY FILTER: Filtrar restaurantes por restricciones
@@ -1283,21 +1355,18 @@ export const SmartItineraryGenerator = {
     // 🗓️ CLOSED DAY FILTER: Descartar actividades cerradas ese día de la semana (ej.
     // "museo cerrado los lunes"). Solo aplica si conocemos la fecha real del viaje - sin
     // tripStartDate no hay forma de saber a qué día de la semana cae el "Día N".
+    const scheduleAdjustments = [];
     if (tripStartDate) {
-      const realDate = window.TimeUtils.parseDate(tripStartDate);
-      realDate.setDate(realDate.getDate() + (dayNumber - 1));
-      const weekday = realDate.getDay(); // 0=domingo...6=sábado
-      const beforeFilter = candidateActivities.length;
-      candidateActivities = candidateActivities.filter(activity => {
-        if (!activity.closed_days || activity.closed_days.length === 0) return true;
-        const isClosed = activity.closed_days.includes(weekday);
-        if (isClosed) {
-          console.log(`🗓️ Filtrando "${activity.name}" (cerrado los ${['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'][weekday]})`);
-        }
-        return !isClosed;
-      });
-      if (beforeFilter !== candidateActivities.length) {
-        console.log(`🗓️ Closed-day filter: ${beforeFilter} → ${candidateActivities.length} actividades`);
+      const closureAudit = filterClosedActivities(candidateActivities, tripStartDate, dayNumber);
+      candidateActivities = closureAudit.available;
+      if (closureAudit.closed.length) {
+        scheduleAdjustments.push({
+          type: 'closed-day',
+          weekday: closureAudit.weekday.label,
+          affected: closureAudit.closed.map(activity => activity.name),
+          message: `${closureAudit.closed.map(activity => activity.name).join(', ')} no abre el ${closureAudit.weekday.label}; Japitin usó opciones disponibles y podrá reconsiderarlo en otro día compatible.`
+        });
+        console.log(`🗓️ ${closureAudit.closed.length} actividades cerradas el ${closureAudit.weekday.label}`);
       }
     }
 
@@ -1499,41 +1568,92 @@ export const SmartItineraryGenerator = {
     // 3. Optimizar ruta
     const dayStartTime = intensityConfig.startTime;
     const optimizedActivities = this.optimizeActivityOrder(selectedActivities, hotel, dayStartTime, city);
+    const openingAudit = scheduleWithinOpeningHours(optimizedActivities, dayStartTime);
+    if (openingAudit.rejected.length) {
+      openingAudit.rejected.forEach(activity => usedActivities.delete(activity.name));
+      scheduleAdjustments.push({
+        type: 'outside-opening-hours',
+        affected: openingAudit.rejected.map(activity => activity.name),
+        message: `${openingAudit.rejected.map(activity => activity.name).join(', ')} no cabía antes del cierre; se retiró de esta jornada y podrá reaparecer otro día.`
+      });
+    }
 
     // 4. Insertar comidas
-    const withMeals = await this.insertMealsIntoDay(optimizedActivities, hotel, googlePlacesAPI, dailyBudget, city, usedMeals);
+    const withMeals = await this.insertMealsIntoDay(openingAudit.scheduled, hotel, googlePlacesAPI, dailyBudget, city, usedMeals);
+    const dayActivities = departurePlan?.latestActivityEnd == null ? withMeals : withMeals.filter(activity => {
+      const start = minutesOf(activity.time);
+      return start == null || start + (activity.duration || 60) <= departurePlan.latestActivityEnd;
+    });
 
     // 4.5 💰 Calcular presupuesto real predictivo
-    const budgetBreakdown = this.calculateDayBudget(withMeals, dailyBudget);
+    const budgetBreakdown = this.calculateDayBudget(dayActivities, dailyBudget);
+    const airportAccessCost = (arrivalPlan?.access.cost || 0) + (departurePlan?.access.cost || 0);
+    if (airportAccessCost) {
+      budgetBreakdown.transport += airportAccessCost;
+      budgetBreakdown.total += airportAccessCost;
+      budgetBreakdown.remaining = dailyBudget - budgetBreakdown.total;
+      budgetBreakdown.percentage = dailyBudget > 0 ? Math.round((budgetBreakdown.total / dailyBudget) * 100) : 0;
+      budgetBreakdown.airportAccess = airportAccessCost;
+      budgetBreakdown.status = budgetBreakdown.percentage > 110 ? 'over_budget' :
+        budgetBreakdown.percentage > 90 ? 'at_limit' : budgetBreakdown.percentage > 70 ? 'healthy' : 'under_budget';
+    }
+    if (transferPlan) {
+      budgetBreakdown.transport += transferPlan.cost;
+      budgetBreakdown.total += transferPlan.cost;
+      budgetBreakdown.remaining = dailyBudget - budgetBreakdown.total;
+      budgetBreakdown.percentage = dailyBudget > 0 ? Math.round((budgetBreakdown.total / dailyBudget) * 100) : 0;
+      budgetBreakdown.status = budgetBreakdown.percentage > 110 ? 'over_budget' :
+        budgetBreakdown.percentage > 90 ? 'at_limit' : budgetBreakdown.percentage > 70 ? 'healthy' : 'under_budget';
+      budgetBreakdown.intercityTransfer = transferPlan.cost;
+    }
+    if (hotelTransitionPlan?.transport.cost) {
+      budgetBreakdown.transport += hotelTransitionPlan.transport.cost;
+      budgetBreakdown.total += hotelTransitionPlan.transport.cost;
+      budgetBreakdown.remaining = dailyBudget - budgetBreakdown.total;
+      budgetBreakdown.percentage = dailyBudget > 0 ? Math.round((budgetBreakdown.total / dailyBudget) * 100) : 0;
+      budgetBreakdown.hotelTransfer = hotelTransitionPlan.transport.cost;
+      budgetBreakdown.status = budgetBreakdown.percentage > 110 ? 'over_budget' :
+        budgetBreakdown.percentage > 90 ? 'at_limit' : budgetBreakdown.percentage > 70 ? 'healthy' : 'under_budget';
+    }
 
     // 5. Crear estructura del día con ALTERNATIVAS y PHOTO INTELLIGENCE
     const day = {
       day: dayNumber,
-      date: '',
+      date: tripDayDate.iso,
       title: lateArrival ? `Llegada a ${city} (noche) - Directo al hotel` :
              isDayTrip ? `🚃 Excursión a ${city}` :
              isArrivalDay ? `Llegada a ${city}` :
-             isFirstDayInCity ? `Primer día en ${city}` :
+             transferPlan?.isTravelDay ? `Día de viaje · ${transferPlan.from} → ${city}` :
+             hotelTransitionPlan ? `Cambio de alojamiento · ${city}` :
+             isFirstDayInCity ? `Llegada a ${city}` :
              isDepartureDay ? `Último día - Regreso` :
              themedDay && THEMED_DAYS[themedDay] ? THEMED_DAYS[themedDay].name :
              `Explorando ${city}`,
       city: city,
       cities: [{ cityId: city }],
       isDayTrip: isDayTrip, // 🆕 excursión de un día sin hotel propio
+      transferPlan: transferPlan,
+      hotelTransitionPlan: hotelTransitionPlan,
+      arrivalPlan: arrivalPlan,
+      departurePlan: departurePlan,
       lateArrival: lateArrival, // 🆕 día 1 con llegada nocturna: balanceEmptyDays no debe rellenarlo
       budget: dailyBudget,
       budgetBreakdown: budgetBreakdown, // 💰 NUEVO: Presupuesto detallado
       hotel: hotel,
       energyLevel: energyLevel,
       intensity: pace,
+      travelerCapacity,
       theme: themedDay,
       season: season ? {
         name: season.name,
         icon: season.icon,
         inPeak: season.inPeak,
-        tips: season.tips
+        tips: season.tips,
+        key: season.key,
+        art: season.art
       } : null,
-      activities: withMeals.map((act, idx) => {
+      scheduleAdjustments,
+      activities: dayActivities.map((act, idx) => {
         // 📸 Detectar si es buen momento para fotografía
         const activityHour = act.time ? parseInt(act.time.split(':')[0]) : dayStartTime;
         const photoInfo = this.isPhotographyTime(activityHour, act.name);
@@ -1556,6 +1676,7 @@ export const SmartItineraryGenerator = {
           city: act.city || city, // 🏙️ requerido por MasterItineraryOptimizer y otros chequeos de salud
           area: act.area || null, // 🏝️ sub-área (ej. Uji, Miyajima) para el chequeo de clustering geográfico
           openingHours: act.opening_hours || null, // ⏰ {start, end} en horas - para validar que el horario asignado no caiga fuera
+          energyCost: act.energy_cost ?? 3,
           // 🎯 SMART ALTERNATIVES
           alternatives: alternatives.length > 0 ? alternatives.map(alt => ({
             name: alt.name,

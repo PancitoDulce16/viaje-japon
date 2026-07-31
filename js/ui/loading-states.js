@@ -6,6 +6,8 @@
  * IMPROVED.md Priority #3
  */
 
+import { JAPITIN_ILLUSTRATIONS } from './illustration-library.js';
+
 class LoadingStates {
   constructor() {
     this.activeLoaders = new Set();
@@ -14,21 +16,19 @@ class LoadingStates {
   /**
    * Mostrar loading overlay con mensaje
    */
-  show(message = 'Cargando...', emoji = '⏳') {
+  show(message = 'Cargando...', emoji = null) {
     const loaderId = `loader-${Date.now()}`;
 
     const overlay = document.createElement('div');
     overlay.id = loaderId;
-    overlay.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[100000] backdrop-blur-sm';
+    overlay.className = 'jp-loading-overlay';
     overlay.innerHTML = `
-      <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-2xl flex flex-col items-center gap-4 max-w-sm mx-4">
-        <div class="relative">
-          <div class="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
-          <div class="absolute inset-0 flex items-center justify-center text-3xl">
-            ${emoji}
-          </div>
+      <div class="jp-loading-overlay__paper" role="status" aria-live="polite">
+        <div class="jp-loading-overlay__art">
+          <img src="${JAPITIN_ILLUSTRATIONS.loading.route}" alt="" aria-hidden="true">
+          ${emoji ? `<span aria-hidden="true">${emoji}</span>` : ''}
         </div>
-        <p class="text-lg font-semibold text-gray-900 dark:text-white text-center">${message}</p>
+        <p>${message}</p>
       </div>
     `;
 

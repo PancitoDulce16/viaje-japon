@@ -17,7 +17,6 @@ import { FavoritesManager } from '../features/trips/favorites-manager.js';
 import { ItineraryHandler } from '../features/itinerary/itinerary-v3.js'; // Renamed to force cache bypass
 import { TabsHandler } from './tabs.js';
 import { ModalRenderer } from './modals.js';
-import { MapHandler } from '../map/map.js';
 import { AttractionsHandler } from '../api/attractions.js';
 import { PreparationHandler } from '../features/trips/preparation.js';
 import { TransportHandler } from '../api/transport.js';
@@ -63,7 +62,6 @@ import '../core/firebase-config.js';
 import '../core/firebase-resilience.js'; // Sistema de resiliencia para Firebase
 
 // Exportar handlers a window para acceso global
-window.MapHandler = MapHandler;
 window.AttractionsHandler = AttractionsHandler;
 window.TransportHandler = TransportHandler;
 window.TabsHandler = TabsHandler;
@@ -229,14 +227,7 @@ class DashboardManager {
 
     async initializeTabContents() {
         try {
-            // Inicializar MapHandler
-            if (window.MapHandler) {
-                try {
-                    MapHandler.renderMap();
-                } catch (e) {
-                    console.error('❌ Error inicializando MapHandler:', e);
-                }
-            }
+            // El mapa se inicializa al abrir su pestaña.
 
             // Inicializar TabsHandler (Utils)
             if (window.TabsHandler) {
@@ -496,6 +487,10 @@ class DashboardManager {
             activeButton.classList.add('active');
         }
 
+        document.querySelectorAll('.jp-desktop-rail [data-rail-tab]').forEach(button => {
+            button.classList.toggle('active', button.dataset.railTab === tabName);
+        });
+
         // Hide all tab content sections
         const tabContents = document.querySelectorAll('.tab-content');
         tabContents.forEach(content => content.classList.add('hidden'));
@@ -535,18 +530,14 @@ class DashboardManager {
         if (tabName === 'preparation' && window.PreparationHandler) {
             window.PreparationHandler.renderPreparation();
         }
-
-        // 🔥 NUEVO: Sincronizar el mapa con el itinerario cuando se cambie al tab del mapa
-        if (tabName === 'map' && window.MapHandler) {
-            console.log('🗺️ Sincronizando mapa con itinerario...');
-            // Pequeño delay para asegurar que el mapa se haya renderizado
-            setTimeout(() => {
-                window.MapHandler.fixMapSize();
-                window.MapHandler.syncWithItinerary();
-            }, 100);
+        if (tabName === 'map') {
+            window.JapitinPerformance?.loadMap?.().then((mapHandler) => {
+                mapHandler.fixMapSize();
+                mapHandler.syncWithItinerary();
+            }).catch(error => console.error('Error cargando el mapa:', error));
         }
 
-        // 🆕 Inicializar módulos de Utils cuando se cambie al tab
+        // Inicializar módulos de Utils cuando se cambie al tab
         if (tabName === 'utils') {
             console.log('🛠️ Inicializando módulos de Utilidades...');
             setTimeout(() => {

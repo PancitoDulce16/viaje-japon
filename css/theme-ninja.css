@@ -90,15 +90,17 @@
 }
 
 /* Botones estilo ninja
-   (excluir sos-button/header-chip: llevan su propio estilo de header) */
-.dark button:not(.floating-btn):not([class*="bg-"]):not(.sos-button):not(.header-chip) {
+   (excluir sos-button/header-chip: llevan su propio estilo de header;
+   excluir hero-moment__cta/dash-quick-btn: Dashboard Experience,
+   Concept A — llevan sus propios colores en dashboard-hero.css) */
+.dark button:not(.floating-btn):not([class*="bg-"]):not(.sos-button):not(.header-chip):not(.hero-moment__cta):not(.dash-quick-btn):not([class*="jw-"]):not([class*="jc-"]):not([class*="jtd-"]):not([class*="jps-"]) {
     background: var(--gradient-ninja-steel);
     border: 1px solid var(--border-color);
     color: var(--text-primary);
     transition: all 0.2s ease-out;
 }
 
-.dark button:not(.floating-btn):not(.sos-button):not(.header-chip):hover {
+.dark button:not(.floating-btn):not(.sos-button):not(.header-chip):not(.hero-moment__cta):not(.dash-quick-btn):not([class*="jw-"]):not([class*="jc-"]):not([class*="jtd-"]):not([class*="jps-"]):hover {
     border-color: var(--ninja-gold);
     box-shadow: var(--shadow-gold);
 }

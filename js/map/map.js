@@ -149,6 +149,12 @@ const createCustomIcon = (emoji, color = '#dc2626') => {
     });
 };
 
+const DAY_COLORS = ['#c75b87', '#4f8fa8', '#77956f', '#d08a45', '#8569a8', '#c9665c', '#477d78'];
+const createItineraryIcon = (number, dayNumber) => L.divIcon({
+    html: `<span class="jp-route-pin" style="--pin-color:${DAY_COLORS[(dayNumber - 1) % DAY_COLORS.length]}"><b>${number}</b></span>`,
+    className: 'jp-route-pin-wrap', iconSize: [34, 42], iconAnchor: [17, 42], popupAnchor: [0, -39]
+});
+
 export const MapHandler = {
     mapInitialized: false,
     itineraryMarkersLayer: null, // 🔥 Nueva capa para marcadores del itinerario
@@ -165,18 +171,19 @@ export const MapHandler = {
         const daysOptions = this.generateDaysOptions(itinerary);
 
         container.innerHTML = `
-            <div class="max-w-7xl mx-auto p-4 md:p-6">
+            <div class="jp-map-screen max-w-7xl mx-auto p-4 md:p-6">
                 <!-- Header -->
-                <div class="bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl p-6 mb-6 shadow-lg">
-                    <h1 class="text-3xl font-bold mb-2">🗺️ Mapa Interactivo del Viaje</h1>
-                    <p class="text-white/90">Explora todas las ubicaciones de tu aventura por Japón</p>
+                <div class="jp-map-head">
+                    <div><span class="jp-map-head__kicker">TU JAPÓN, A TU MANERA</span><h1>Mapa del viaje <span>✿</span></h1>
+                    <p>Explora los lugares de tu aventura y descubre qué hay cerca.</p></div>
+                    <img src="/images/illustrations/generated/characters/dog-camera.webp" alt="" aria-hidden="true">
                 </div>
 
                 <!-- 🔥 NUEVO: Selector de Día Mejorado -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+                <div class="jp-map-controls">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-bold dark:text-white flex items-center gap-2">
-                            📅 Filtrar por Día
+                            <span>日</span> Elige el día
                         </h3>
                         <button
                             onclick="MapHandler.toggleRouteLines()"
@@ -212,14 +219,17 @@ export const MapHandler = {
                 </div>
 
                 <!-- Map Container -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden mb-6">
+                <div class="jp-map-frame">
+                    <img class="jp-map-frame__paper" src="/images/illustrations/generated/maps/kyoto-district.webp" alt="" aria-hidden="true" loading="lazy">
                     <div id="interactive-map" style="height: 600px; width: 100%;"></div>
+                    <img class="jp-map-frame__mascot" src="/images/illustrations/generated/characters/cat-explorer.webp" alt="" aria-hidden="true">
                 </div>
 
                 <!-- Leyenda y Filtros -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                    <h3 class="text-xl font-bold mb-4 dark:text-white">Leyenda del Mapa</h3>
-                    <div class="grid md:grid-cols-3 gap-4">
+                <div class="jp-map-sheet">
+                    <div class="jp-map-sheet__handle" aria-hidden="true"></div>
+                    <h3 class="text-xl font-bold mb-4 dark:text-white">Lugares en esta área <span>✿</span></h3>
+                    <div class="jp-map-filters">
                         <button onclick="MapHandler.filterMarkers('all')" class="map-filter-btn active" data-filter="all">
                             🗺️ Ver Todo
                         </button>
@@ -527,8 +537,9 @@ export const MapHandler = {
                 });
 
                 // Crear marcador con número de orden
+                const dayColor = DAY_COLORS[(day.day - 1) % DAY_COLORS.length];
                 const marker = L.marker(coords, {
-                    icon: createCustomIcon(`${index + 1}`, '#10b981'), // Verde para itinerario
+                    icon: createItineraryIcon(index + 1, day.day),
                     type: 'itinerary'
                 }).addTo(this.itineraryMarkersLayer);
 
@@ -541,7 +552,7 @@ export const MapHandler = {
                 marker.bindPopup(`
                     <div class="p-3 min-w-[220px]">
                         <div class="flex items-center gap-2 mb-2">
-                            <span class="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
+                            <span style="background:${dayColor}" class="text-white text-xs font-bold px-2 py-1 rounded">
                                 Día ${day.day} - #${index + 1}
                             </span>
                             <span class="text-sm text-gray-600">⏰ ${activityTime}</span>
@@ -552,8 +563,9 @@ export const MapHandler = {
                         ${activityNotes ? `<p class="text-sm text-gray-600 italic mb-2">"${activityNotes}"</p>` : ''}
                         <div class="flex flex-col gap-2 mt-3">
                             <button
-                                onclick="MapHandler.goToItineraryDay(${day.day})"
-                                class="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-sm font-bold py-2 px-4 rounded-lg transition transform hover:scale-105"
+                                onclick="MapHandler.goToItineraryActivity(${day.day}, ${index})"
+                                style="background:${dayColor}"
+                                class="text-white text-sm font-bold py-2 px-4 rounded-lg transition"
                             >
                                 📅 Ver Día ${day.day} completo
                             </button>
@@ -574,7 +586,7 @@ export const MapHandler = {
             // 🔥 Dibujar líneas de ruta entre actividades del mismo día
             if (dayCoordinates.length > 1 && this.showRouteLines) {
                 L.polyline(dayCoordinates, {
-                    color: '#10b981',
+                    color: DAY_COLORS[(day.day - 1) % DAY_COLORS.length],
                     weight: 4,
                     opacity: 0.6,
                     dashArray: '10, 5',
@@ -745,8 +757,24 @@ export const MapHandler = {
         }, 300);
     },
 
+    goToItineraryActivity(dayNumber, activityIndex) {
+        this.goToItineraryDay(dayNumber);
+        setTimeout(() => {
+            const card = document.querySelectorAll('#content-itinerary .activity-card')[activityIndex];
+            if (!card) return;
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            card.classList.add('jp-map-highlight');
+            setTimeout(() => card.classList.remove('jp-map-highlight'), 1800);
+        }, 650);
+    },
+
     // 🔥 ACTUALIZADO: Sincronizar con itinerario cuando cambie
     syncWithItinerary() {
+        const requestedDay = sessionStorage.getItem('japitin_map_day');
+        if (requestedDay) {
+            this.selectedDay = requestedDay;
+            sessionStorage.removeItem('japitin_map_day');
+        }
         console.log('🔄 Sincronizando mapa con itinerario...');
 
         // Re-generar opciones del selector de días
