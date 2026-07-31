@@ -155,3 +155,19 @@
 #content-itinerary #dayOverview .story-desk,
 #content-itinerary #dayOverview .geo-flow{display:none}
 @media(max-width:767px){#content-itinerary #dayOverview{max-height:none;overflow:visible}.day-main-editorial{gap:14px;margin-top:18px}.day-main-activities{gap:13px}}
+
+/* Sidebar nocturno: papel azul tinta, no inversión negra genérica */
+html.dark #content-itinerary #dayOverview{color:#f2ebdf!important;background:linear-gradient(90deg,transparent 0 18px,rgba(213,112,137,.16) 18px 19px,transparent 19px),repeating-linear-gradient(180deg,rgba(255,255,255,.025) 0 27px,rgba(135,158,190,.1) 28px),#191d2b!important;border:1px solid #4c5067!important;box-shadow:0 14px 30px rgba(3,5,12,.32),3px 4px 0 rgba(117,93,119,.15)!important}
+html.dark #content-itinerary #dayOverview .day-info-art{border:1px solid #59576a!important;box-shadow:0 7px 16px rgba(0,0,0,.28)!important}
+html.dark #content-itinerary #dayOverview .day-info-art~div[class*="bg-white"],html.dark #content-itinerary #dayOverview .day-info-art~div[class*="bg-gray"],html.dark #content-itinerary #dayOverview [id^="weather-day-"],html.dark #content-itinerary #dayOverview [id^="budgetDetails_"]{background:#22283a!important;border-color:#555c75!important;box-shadow:none!important}
+html.dark #content-itinerary #dayOverview [id^="weather-day-"]{background:linear-gradient(135deg,#202c42,#25263b)!important;border-left-color:#76a9c5!important}
+html.dark #content-itinerary #dayOverview .bg-blue-50,html.dark #content-itinerary #dayOverview .dark\:bg-blue-800,html.dark #content-itinerary #dayOverview .dark\:bg-blue-900{background:#202d3a!important;border-color:#69879a!important}
+html.dark #content-itinerary #dayOverview .bg-green-50,html.dark #content-itinerary #dayOverview .bg-green-100,html.dark #content-itinerary #dayOverview .dark\:bg-green-900\/20,html.dark #content-itinerary #dayOverview .dark\:bg-green-900\/30{background:#20342f!important;border-color:#527d6e!important}
+html.dark #content-itinerary #dayOverview .bg-red-50,html.dark #content-itinerary #dayOverview .bg-red-100,html.dark #content-itinerary #dayOverview .dark\:bg-red-900\/20,html.dark #content-itinerary #dayOverview .dark\:bg-red-900\/30{background:#3a252d!important;border-color:#92566a!important}
+html.dark #content-itinerary #dayOverview .bg-orange-50,html.dark #content-itinerary #dayOverview .bg-orange-100,html.dark #content-itinerary #dayOverview .bg-yellow-50,html.dark #content-itinerary #dayOverview .bg-yellow-100{background:#3a3024!important;border-color:#947650!important}
+html.dark #content-itinerary #dayOverview .bg-purple-50,html.dark #content-itinerary #dayOverview .dark\:bg-purple-900\/20{background:#2d2940!important;border-color:#6c638c!important}
+html.dark #content-itinerary #dayOverview .text-gray-400,html.dark #content-itinerary #dayOverview .text-gray-500,html.dark #content-itinerary #dayOverview .text-gray-600,html.dark #content-itinerary #dayOverview .dark\:text-gray-300,html.dark #content-itinerary #dayOverview .dark\:text-gray-400{color:#b9bccb!important}
+html.dark #content-itinerary #dayOverview .font-bold,html.dark #content-itinerary #dayOverview .font-semibold{color:#f5efe5!important}
+html.dark #content-itinerary #dayOverview button{box-shadow:none!important}
+html.dark #content-itinerary #dayOverview button:focus-visible{outline:3px solid rgba(231,125,153,.5)!important;outline-offset:2px}
+html.dark #content-itinerary #dayOverview::-webkit-scrollbar-thumb{background:#656a82!important;border:2px solid #191d2b!important}
