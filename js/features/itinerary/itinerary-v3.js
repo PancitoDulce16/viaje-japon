@@ -2992,19 +2992,25 @@ function renderActivities(day){
   const hotelForCity = cityForDay && window.HotelBaseSystem
     ? window.HotelBaseSystem.getHotelForCity(currentItinerary, cityForDay, day.day)
     : (day.hotel || null);
-  const editorialSections = [
+  const dayPrelude = [
     renderAirportPass(day),
     renderScheduleAdjustments(day),
     renderTransferTicket(day),
-    renderHotelTransition(day),
-    renderGeographicFlow(day, hotelForCity),
-    renderDayStoryDesk(day),
-    renderTripCompanion(day)
+    renderHotelTransition(day)
   ].filter(Boolean).join('');
+  const geographicFlow = renderGeographicFlow(day, hotelForCity);
+  const dayMemory = renderDayStoryDesk(day);
+  const dayAssessment = renderTripCompanion(day);
 
   container.innerHTML = `
-    ${editorialSections ? `<div class="day-main-editorial">${editorialSections}</div>` : ''}
-    <div class="day-main-activities" id="dayMainActivities">${activitiesHTML.join('')}</div>`;
+    ${dayPrelude ? `<div class="day-reader-prelude">${dayPrelude}</div>` : ''}
+    ${geographicFlow ? `<section class="day-reader-route" aria-label="Ruta del día">${geographicFlow}</section>` : ''}
+    <section class="day-reader-timeline" aria-label="Timeline del día">
+      <header class="day-reader-chapter"><span>02</span><div><small>一日の旅</small><h2>El día, parada por parada</h2></div></header>
+      <div class="day-main-activities" id="dayMainActivities">${activitiesHTML.join('')}</div>
+    </section>
+    ${dayMemory ? `<section class="day-reader-memory" aria-label="Recuerdo del día">${dayMemory}</section>` : ''}
+    ${dayAssessment ? `<section class="day-reader-assessment" aria-label="Resumen y ajustes">${dayAssessment}</section>` : ''}`;
 
   initializeDragAndDrop(container);
 }
@@ -3127,9 +3133,9 @@ export const ItineraryHandler = {
         <div class="max-w-6xl mx-auto px-6 py-5"><div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" id="daySelector"></div></div>
       </div>
       <div class="max-w-6xl mx-auto p-6 md:p-8">
-        <div class="grid md:grid-cols-3 gap-6">
-          <div class="md:col-span-1"><div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 sticky top-36 fade-in border dark:border-gray-600" id="dayOverview"></div></div>
-          <div class="md:col-span-2"><div class="space-y-4" id="activitiesTimeline"></div></div>
+        <div class="day-reader-layout grid md:grid-cols-3 gap-6">
+          <aside class="day-reader-aside md:col-span-1"><div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 sticky top-36 fade-in border dark:border-gray-600" id="dayOverview"></div></aside>
+          <main class="day-reader-story md:col-span-2"><div id="activitiesTimeline"></div></main>
         </div>
       </div>`;
 
