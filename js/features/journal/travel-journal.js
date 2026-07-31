@@ -20,6 +20,10 @@ import {
   where
 } from 'firebase/firestore';
 
+const escapeMarkup = value => String(value ?? '').replace(/[&<>"']/g, character => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+})[character]);
+
 export class TravelJournal {
   constructor() {
     this.entries = [];
@@ -99,7 +103,8 @@ export class TravelJournal {
    */
   loadFromLocalStorage() {
     const stored = localStorage.getItem('journal_entries');
-    this.entries = stored ? JSON.parse(stored) : [];
+    try { this.entries = stored ? JSON.parse(stored) : []; }
+    catch (error) { console.warn('Diario local inválido; se inicia vacío', error); this.entries = []; }
   }
 
   /**
@@ -206,6 +211,7 @@ export class TravelJournal {
 
     const modal = document.createElement('div');
     modal.className = 'journal-modal-overlay';
+    modal.setAttribute('aria-label', isEdit ? 'Editar entrada del diario' : 'Nueva entrada del diario');
     modal.innerHTML = `
       <div class="journal-modal">
         <div class="modal-header">
@@ -217,7 +223,7 @@ export class TravelJournal {
             <label>Título</label>
             <input type="text" id="entry-title" class="form-input"
               placeholder="Ej: Día increíble en Tokio"
-              value="${entry ? entry.title : ''}">
+              value="${entry ? escapeMarkup(entry.title) : ''}">
           </div>
 
           <div class="form-group">
@@ -229,7 +235,7 @@ export class TravelJournal {
           <div class="form-group">
             <label>Contenido</label>
             <textarea id="entry-content" class="form-textarea" rows="8"
-              placeholder="Escribe tus experiencias, pensamientos, y recuerdos del día...">${entry ? entry.content : ''}</textarea>
+              placeholder="Escribe tus experiencias, pensamientos, y recuerdos del día...">${entry ? escapeMarkup(entry.content) : ''}</textarea>
             <div class="char-count">
               <span id="word-count">0</span> palabras
             </div>
@@ -250,14 +256,14 @@ export class TravelJournal {
             <label>Etiquetas</label>
             <input type="text" id="entry-tags" class="form-input"
               placeholder="Separadas por comas: templo, comida, aventura"
-              value="${entry && entry.tags ? entry.tags.join(', ') : ''}">
+              value="${entry && entry.tags ? escapeMarkup(entry.tags.join(', ')) : ''}">
           </div>
 
           <div class="form-group">
             <label>Ubicación (opcional)</label>
             <input type="text" id="entry-location" class="form-input"
               placeholder="Ej: Shibuya, Tokio"
-              value="${entry ? entry.location || '' : ''}">
+              value="${entry ? escapeMarkup(entry.location || '') : ''}">
           </div>
         </div>
         <div class="modal-footer">
@@ -270,6 +276,7 @@ export class TravelJournal {
     `;
 
     document.body.appendChild(modal);
+    window.JapitinDialog?.enhance(modal, { onClose: () => modal.remove() });
 
     // Word count
     const content = modal.querySelector('#entry-content');
@@ -498,12 +505,12 @@ export class TravelJournal {
           <div class="entry-date">${formattedDate}</div>
           <div class="entry-mood">${moodEmoji}</div>
         </div>
-        <h3 class="entry-title">${entry.title}</h3>
-        ${entry.location ? `<div class="entry-location">📍 ${entry.location}</div>` : ''}
+        <h3 class="entry-title">${escapeMarkup(entry.title)}</h3>
+        ${entry.location ? `<div class="entry-location">📍 ${escapeMarkup(entry.location)}</div>` : ''}
         <div class="entry-content">${this.formatContent(entry.content)}</div>
         ${entry.tags && entry.tags.length > 0 ? `
           <div class="entry-tags">
-            ${entry.tags.map(tag => `<span class="entry-tag">#${tag}</span>`).join('')}
+            ${entry.tags.map(tag => `<span class="entry-tag">#${escapeMarkup(tag)}</span>`).join('')}
           </div>
         ` : ''}
         <div class="entry-footer">
@@ -511,10 +518,10 @@ export class TravelJournal {
             <span>${entry.wordCount || 0} palabras</span>
           </div>
           <div class="entry-actions">
-            <button class="btn-icon edit-entry-btn" data-entry-id="${entry.id}" title="Editar">
+            <button class="btn-icon edit-entry-btn" data-entry-id="${escapeMarkup(entry.id)}" title="Editar">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn-icon delete-entry-btn" data-entry-id="${entry.id}" title="Eliminar">
+            <button class="btn-icon delete-entry-btn" data-entry-id="${escapeMarkup(entry.id)}" title="Eliminar">
               <i class="fas fa-trash"></i>
             </button>
           </div>
@@ -527,7 +534,7 @@ export class TravelJournal {
    * Format content with paragraphs
    */
   formatContent(content) {
-    return content
+    return escapeMarkup(content)
       .split('\n')
       .filter(p => p.trim())
       .map(p => `<p>${p}</p>`)
@@ -554,7 +561,8 @@ export class TravelJournal {
   /**
    * Show journal
    */
-  show() {
+  async show() {
+    if (!this.initialized) await this.initialize();
     const container = document.getElementById('travel-journal-container');
     if (container) {
       // Hide other sections

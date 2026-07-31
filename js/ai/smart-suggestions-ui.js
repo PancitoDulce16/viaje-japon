@@ -2,6 +2,16 @@
 
 import { SuggestionsEngine } from './smart-suggestions-engine.js';
 
+const escapeMarkup = value => String(value ?? '')
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#039;');
+
+const encodePayload = value => encodeURIComponent(JSON.stringify(value ?? null));
+const decodePayload = value => JSON.parse(decodeURIComponent(value));
+
 /**
  * Extensión de SuggestionsEngine con funciones de UI
  */
@@ -64,6 +74,24 @@ Object.assign(SuggestionsEngine, {
     document.body.appendChild(modal);
     window.JapitinDialog?.enhance(modal, { onClose: () => modal.remove() });
 
+    modal.addEventListener('click', event => {
+      const addButton = event.target.closest('[data-suggestion-payload]');
+      if (!addButton) return;
+      addButton.disabled = true;
+      addButton.classList.add('is-loading');
+      this.addSuggestionToItinerary(
+        decodePayload(addButton.dataset.suggestionPayload),
+        addButton.dataset.suggestionType,
+        Number(addButton.dataset.dayNumber),
+        decodePayload(addButton.dataset.suggestionContext),
+        addButton.dataset.gapIndex === '' ? null : Number(addButton.dataset.gapIndex)
+      ).catch(error => {
+        console.error('Error agregando sugerencia:', error);
+        addButton.disabled = false;
+        addButton.classList.remove('is-loading');
+      });
+    });
+
     // Cerrar al hacer click fuera
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
@@ -79,7 +107,7 @@ Object.assign(SuggestionsEngine, {
   renderGapsSection(gaps, dayNumber) {
     if (!gaps || gaps.length === 0) {
       return `
-        <div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-xl border-2 border-gray-200 dark:border-gray-600">
+        <div class="jp-sug-alert bg-gray-50 dark:bg-gray-700 p-6 rounded-xl border-2 border-gray-200 dark:border-gray-600">
           <h3 class="text-xl font-bold text-gray-700 dark:text-gray-200 mb-2">🕐 Huecos de Tiempo</h3>
           <p class="text-gray-600 dark:text-gray-400">✅ No hay huecos significativos en tu día. Tu itinerario está bien distribuido.</p>
         </div>
@@ -92,7 +120,7 @@ Object.assign(SuggestionsEngine, {
       ).join('');
 
       return `
-        <div class="bg-blue-50 dark:bg-blue-900 p-5 rounded-xl border-2 border-blue-300 dark:border-blue-600">
+        <div class="jp-sug-pocket bg-blue-50 dark:bg-blue-900 p-5 rounded-xl border-2 border-blue-300 dark:border-blue-600">
           <div class="mb-4">
             <h4 class="text-lg font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2">
               🕐 Hueco de ${Math.round(gap.duration / 60 * 10) / 10} horas (${gap.startTime} - ${gap.endTime})
@@ -119,7 +147,7 @@ Object.assign(SuggestionsEngine, {
     }).join('');
 
     return `
-      <div class="space-y-4">
+      <div class="jp-sug-section space-y-4">
         <h3 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
           🕐 Huecos de Tiempo (${gaps.length})
         </h3>
@@ -138,7 +166,7 @@ Object.assign(SuggestionsEngine, {
   renderNearbySection(nearby, dayNumber) {
     if (!nearby || nearby.length === 0) {
       return `
-        <div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-xl border-2 border-gray-200 dark:border-gray-600">
+        <div class="jp-sug-alert bg-gray-50 dark:bg-gray-700 p-6 rounded-xl border-2 border-gray-200 dark:border-gray-600">
           <h3 class="text-xl font-bold text-gray-700 dark:text-gray-200 mb-2">📍 Cerca de tus Actividades</h3>
           <p class="text-gray-600 dark:text-gray-400">No hay actividades adicionales cerca de tus paradas actuales.</p>
         </div>
@@ -151,7 +179,7 @@ Object.assign(SuggestionsEngine, {
       ).join('');
 
       return `
-        <div class="bg-green-50 dark:bg-green-900 p-5 rounded-xl border-2 border-green-300 dark:border-green-600">
+        <div class="jp-sug-pocket bg-green-50 dark:bg-green-900 p-5 rounded-xl border-2 border-green-300 dark:border-green-600">
           <h4 class="text-lg font-bold text-green-900 dark:text-green-100 mb-3">
             Ya que estarás en <strong>${opp.nearActivity.title}</strong>...
           </h4>
@@ -163,7 +191,7 @@ Object.assign(SuggestionsEngine, {
     }).join('');
 
     return `
-      <div class="space-y-4">
+      <div class="jp-sug-section space-y-4">
         <h3 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
           📍 Cerca de tus Actividades (${nearby.length})
         </h3>
@@ -181,7 +209,8 @@ Object.assign(SuggestionsEngine, {
 
   renderSuggestionCard(suggestion, type, dayNumber, context, gapIndex) {
     const icon = suggestion.icon || '📍';
-    const name = suggestion.name || suggestion.title;
+    const name = escapeMarkup(suggestion.name || suggestion.title);
+    const safeIcon = escapeMarkup(icon);
     const rating = suggestion.rating ? '⭐'.repeat(Math.round(suggestion.rating)) : '';
     const cost = suggestion.cost !== undefined ? `💴 ¥${suggestion.cost.toLocaleString()}` : '';
 
@@ -205,15 +234,15 @@ Object.assign(SuggestionsEngine, {
         : '';
 
     return `
-      <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-600 transition">
+      <div class="jp-sug-ticket bg-white dark:bg-gray-800 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-600 transition">
         <div class="flex justify-between items-start gap-4">
           <div class="flex-1">
             <h5 class="font-bold text-gray-900 dark:text-white text-lg flex items-center gap-2">
-              ${icon} ${name}
+              ${safeIcon} ${name}
             </h5>
 
             ${suggestion.description ? `
-              <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${suggestion.description}</p>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${escapeMarkup(suggestion.description)}</p>
             ` : ''}
 
             <div class="flex flex-wrap gap-3 mt-2 text-xs text-gray-600 dark:text-gray-300">
@@ -226,8 +255,12 @@ Object.assign(SuggestionsEngine, {
           </div>
 
           <button
-            onclick='SuggestionsEngine.addSuggestionToItinerary(${JSON.stringify(suggestion)}, "${type}", ${dayNumber}, ${JSON.stringify(context)}, ${gapIndex || 'null'})'
-            class="px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white rounded-lg font-semibold transition whitespace-nowrap"
+            data-suggestion-payload="${escapeMarkup(encodePayload(suggestion))}"
+            data-suggestion-context="${escapeMarkup(encodePayload(context))}"
+            data-suggestion-type="${escapeMarkup(type)}"
+            data-day-number="${Number(dayNumber)}"
+            data-gap-index="${gapIndex ?? ''}"
+            class="jp-sug-add px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white rounded-lg font-semibold transition whitespace-nowrap"
           >
             ✅ Agregar
           </button>
@@ -255,7 +288,7 @@ Object.assign(SuggestionsEngine, {
         : 'text-blue-900 dark:text-blue-100';
 
       return `
-        <div class="${bgColor} p-5 rounded-xl border-2">
+        <div class="jp-sug-alert ${bgColor} p-5 rounded-xl border-2">
           <h4 class="${textColor} font-bold text-lg flex items-center gap-2 mb-2">
             ${alert.icon} ${alert.title}
           </h4>
@@ -283,7 +316,7 @@ Object.assign(SuggestionsEngine, {
     }).join('');
 
     return `
-      <div class="space-y-4">
+      <div class="jp-sug-section space-y-4">
         <h3 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
           ⚠️ Alertas (${alerts.length})
         </h3>
@@ -299,7 +332,7 @@ Object.assign(SuggestionsEngine, {
   renderFatigueSection(fatigue) {
     if (!fatigue.hasIssue) {
       return `
-        <div class="bg-green-50 dark:bg-green-900 p-6 rounded-xl border-2 border-green-300 dark:border-green-600">
+        <div class="jp-sug-alert bg-green-50 dark:bg-green-900 p-6 rounded-xl border-2 border-green-300 dark:border-green-600">
           <h3 class="text-xl font-bold text-green-900 dark:text-green-100 mb-2 flex items-center gap-2">
             ✅ Sin señales de fatiga
           </h3>
@@ -309,7 +342,7 @@ Object.assign(SuggestionsEngine, {
     }
 
     return `
-      <div class="bg-orange-50 dark:bg-orange-900 p-6 rounded-xl border-2 border-orange-300 dark:border-orange-600">
+      <div class="jp-sug-alert bg-orange-50 dark:bg-orange-900 p-6 rounded-xl border-2 border-orange-300 dark:border-orange-600">
         <h3 class="text-xl font-bold text-orange-900 dark:text-orange-100 mb-2 flex items-center gap-2">
           ${fatigue.icon} ${fatigue.title}
         </h3>
