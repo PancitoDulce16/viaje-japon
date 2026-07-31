@@ -14,6 +14,8 @@ import { DayExperiencePredictor } from './day-experience-predictor.js'; // 🔮 
 import { hasRemoteAreaConflict } from './smart-itinerary-generator.js'; // 🏝️ Guardia de sub-área remota (Uji/Miyajima)
 import { activityIllustration } from '../../ui/illustration-library.js';
 import { buildDayRouteFlow } from './day-route-flow.js';
+import { createSerialTaskQueue } from '../../core/serial-task-queue.js';
+import { bindTripHeaderActions, buildTripHeaderView } from './trip-header-view.js';
 import { applyManualActivityOrder, moveActivityByOffset, orderActivitiesForDisplay, removeFromManualActivityOrder } from './activity-order.js';
 import { formatTransferDuration } from './intercity-transfer.js';
 import { adaptDayToWeather, regenerateScope, buildDayNarrative, ensureDayMemory, analyzeLodgingDay } from './day-adaptation.js';
@@ -46,7 +48,6 @@ let currentItinerary = null;
 let sortableInstance = null; // 🔥 Para drag & drop
 let isListenerAttached = false;
 let checklistSaveQueue = Promise.resolve(); // Serializa los writes del checklist para evitar que un write más viejo sobreescriba uno más nuevo si llegan fuera de orden
-let itinerarySaveQueue = Promise.resolve(); // Evita que dos mutaciones rápidas se escriban fuera de orden.
 let saveDebounceTimer = null;
 
 // ---- Auth & Firestore validation helper ----
@@ -1248,41 +1249,15 @@ function renderTripSelector(){
   const container=document.getElementById('tripSelectorHeader'); if(!container) return;
   const currentTrip=window.TripsManager?.currentTrip; if(!currentTrip){ container.innerHTML=''; return; }
   const userTrips=window.TripsManager?.userTrips||[];
-  const tripInfo=currentTrip.info||{};
-  const tripName=escapeStoryText(tripInfo.name||'Mi viaje a Japón');
-  const startDate=tripInfo.dateStart ? window.TimeUtils?.formatDate?.(tripInfo.dateStart)||tripInfo.dateStart : 'Fecha por definir';
-  const endDate=tripInfo.dateEnd ? window.TimeUtils?.formatDate?.(tripInfo.dateEnd)||tripInfo.dateEnd : 'Fecha por definir';
-  container.innerHTML = `
-    <div class="trip-header-banner trip-header-banner--journey text-white p-6 rounded-xl mb-6 shadow-lg">
-      <!-- Banner centrado y grande sin icono -->
-      <div class="text-center mb-4">
-        <h3 class="font-bold text-3xl mb-2">${tripName}</h3>
-        <p class="text-sm text-white/90">📅 ${escapeStoryText(startDate)} - ${escapeStoryText(endDate)} • 👥 ${tripInfo.tripType === 'individual' ? 'Viaje Individual' : 'Viaje Grupal'}</p>
-        <div class="mt-2">${renderTripCrowdBadge()}</div>
-      </div>
-
-      <!-- Botones de acción centrados -->
-      <div class="flex gap-2 flex-wrap justify-center">
-        ${currentItinerary ? `<button onclick="window.TodayMode?.open()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm"><i class="fas fa-location-arrow"></i> Modo Hoy</button>`:''}
-        ${userTrips.length>1 ? `<button onclick="TripsManager.showTripsListModal()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">📂 Mis Viajes</button>`:''}
-        <button onclick="TripsManager.showShareCode()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">🔗 Compartir</button>
-        <button onclick="TripsManager.showCreateTripModal()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">➕ Agregar Viaje</button>
-        ${currentItinerary ? `<button onclick="window.PDFExporter?.exportToPDF()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">📄 Exportar PDF</button>`:''}
-        ${currentItinerary ? `<button onclick="window.runMasterOptimization?.()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">🚀 Optimizar Todo</button>`:''}
-        ${currentItinerary ? `<button onclick="window.showBalanceAnalysis?.()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition text-sm font-semibold backdrop-blur-sm">⚖️ Balancear</button>`:''}
-        ${!currentItinerary ? `<button onclick="TripsManager.regenerateItinerary()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg transition text-sm font-bold shadow-md">✨ Crear Itinerario</button>`:''}
-      </div>
-    </div>
-    ${currentItinerary ? renderTripNumbers(currentItinerary) : ''}`;
+  container.innerHTML=buildTripHeaderView({trip:currentTrip,userTripCount:userTrips.length,hasItinerary:Boolean(currentItinerary),crowdHTML:renderTripCrowdBadge(),numbersHTML:currentItinerary?renderTripNumbers(currentItinerary):'',formatDate:value=>window.TimeUtils?.formatDate?.(value)||value});
+  bindTripHeaderActions(container,{today:()=>window.TodayMode?.open(),list:()=>window.TripsManager?.showTripsListModal(),share:()=>window.TripsManager?.showShareCode(),create:()=>window.TripsManager?.showCreateTripModal(),pdf:()=>window.PDFExporter?.exportToPDF(),optimize:()=>window.runMasterOptimization?.(),balance:()=>window.showBalanceAnalysis?.(),regenerate:()=>window.TripsManager?.regenerateItinerary()});
 }
 
 function saveCurrentItineraryToFirebase() {
-  const pendingSave = itinerarySaveQueue
-    .catch(() => undefined)
-    .then(() => persistCurrentItineraryToFirebase());
-  itinerarySaveQueue = pendingSave;
-  return pendingSave;
+  return queuedItinerarySave();
 }
+
+const queuedItinerarySave = createSerialTaskQueue(persistCurrentItineraryToFirebase);
 
 function hasActivityReservation(activityTitle) {
   const normalized = String(activityTitle || '').trim().toLowerCase();
