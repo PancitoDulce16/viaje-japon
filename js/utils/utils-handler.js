@@ -189,7 +189,7 @@ export const UtilsHandler = {
     // ============================================
     // Load Section Content
     // ============================================
-    loadSectionContent(sectionName) {
+    async loadSectionContent(sectionName) {
         const sectionDiv = document.getElementById(`${sectionName}Section`);
         if (!sectionDiv) return;
 
@@ -351,6 +351,18 @@ export const UtilsHandler = {
                         <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Selecciona o crea un viaje primero</p>
                     </div>
                 `;
+            }
+        }
+
+        // Social tools are deferred until their section is actually opened.
+        if ((sectionName === 'polls' || sectionName === 'journal') && !window.SocialFeatures) {
+            sectionDiv.innerHTML = '<div class="jp-utility-loading" role="status">🌸 Preparando este recorte del viaje…</div>';
+            try {
+                await window.JapitinPerformance?.loadSocial?.();
+            } catch (error) {
+                console.error('No se pudieron cargar las herramientas sociales:', error);
+                sectionDiv.innerHTML = `<button type="button" class="journal-card" onclick="UtilsHandler.loadSectionContent('${sectionName}')">No pudimos abrir esta sección. Toca para reintentar.</button>`;
+                return;
             }
         }
 

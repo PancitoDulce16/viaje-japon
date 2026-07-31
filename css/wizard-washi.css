@@ -2146,7 +2146,11 @@ html.dark .jw-sheet .jw-steps__item:not(.jw-steps__item--active) .jw-steps__name
  .jw-head__title{font-size:1.25rem}.jw-head__title span{display:none}.jw-steps{width:100%;overflow:visible}.jw-steps__item{display:none}.jw-steps__item--active{display:block;flex:1;padding-left:1.75rem}.jw-steps__dots{display:none}
  .jw-steps__item--active::after{content:'';position:absolute;left:1.75rem;right:.5rem;bottom:-5px;height:2px;background:linear-gradient(90deg,#d65362 var(--jw-progress,50%),rgba(214,83,98,.16) 0)}
  .jw-body{padding:14px 14px 105px}.jw-screen>.jw-catnote{margin-bottom:16px}
- .jw-template-ticket .flex,.jw-date-ticket{align-items:flex-start!important}.jw-template-ticket button{padding:.7rem .9rem!important}
+ .jw-template-ticket .flex,.jw-date-ticket{align-items:flex-start!important}
+ .jw-template-ticket .flex{gap:12px}.jw-template-ticket .flex>div{min-width:0}
+ .jw-template-ticket button{flex:0 0 auto;max-width:none;padding:.62rem .72rem!important;font-size:.78rem;line-height:1.2;white-space:nowrap}
+ .jw-date-ticket{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+ .jw-date-ticket>button{position:relative;z-index:2;padding:.55rem .7rem;border-radius:3px 9px 3px 9px;background:rgba(255,230,233,.9)}
  .jw-screen--basics .grid.grid-cols-2{grid-template-columns:1fr}.jw-screen--basics #budgetPreview .grid{grid-template-columns:1fr 1fr}
  .jw-screen--basics .jw-diet-grid{grid-template-columns:1fr 1fr}.jw-screen--basics .jw-access-grid{grid-template-columns:1fr}.jw-diet-tag,.jw-access-pass{min-height:44px}.jw-screen--style .jw-lodges{grid-template-columns:1fr}
  .jw-screen--map .jw-mappanel{padding:8px 0}.jw-screen--days>div:first-child{padding:14px}
@@ -2261,7 +2265,7 @@ html.dark .jvv-sheet,html.dark .jvv-sheet * { color:inherit; }
 .jw-date-ticket{position:relative;overflow:hidden}.jw-date-ticket:after{content:"日付";position:absolute;right:18%;top:50%;color:rgba(57,101,76,.09);font:900 3.2rem/1 Georgia,serif;transform:translateY(-50%)}
 .jw-screen--basics .flex.gap-2.mt-2 button{position:relative;border:1px dashed #b99a75!important;border-radius:3px 8px 3px 8px!important;background:#fff8e9!important;box-shadow:1px 2px 0 rgba(76,55,36,.08)}
 .jw-screen--basics .flex.gap-2.mt-2 button:hover{transform:translateY(-2px);box-shadow:2px 4px 0 rgba(76,55,36,.1)}
-@media(max-width:640px){.jw-screen--basics>.space-y-5{padding-inline:4px;border-left:0}.jw-date-ticket:after{right:6%;font-size:2.3rem}.jw-screen--basics .flex.gap-2.mt-2{display:grid;grid-template-columns:1fr}.jw-screen--basics .flex.gap-2.mt-2 button{text-align:left}}
+@media(max-width:640px){.jw-screen--basics>.space-y-5{padding-inline:4px;border-left:0}.jw-date-ticket:after{right:25%;font-size:2rem}.jw-screen--basics .flex.gap-2.mt-2{display:grid;grid-template-columns:1fr}.jw-screen--basics .flex.gap-2.mt-2 button{text-align:left}}
 @media(prefers-reduced-motion:reduce){.jw-sheet,.jw-screen>div,.jw-screen>section,.jw-steps__item--active:before,.jw-card.is-selected:after,.jw-option.is-selected:after,.jw-steps__dots{animation:none!important}.jw-card,.jw-option,.jw-diet-tag,.jw-access-pass{transition:none!important}}
 
 /* Segunda capa: mapa, pasaporte y cierre narran el avance */

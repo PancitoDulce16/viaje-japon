@@ -3132,7 +3132,7 @@ export const ItineraryHandler = {
 
     if(!isListenerAttached){
       console.log('🎯 Attaching event listeners to itinerary container');
-      container.addEventListener('click', (e)=>{
+      container.addEventListener('click', async (e)=>{
         console.log('🖱️ Click detected on:', e.target);
         const addBtn=e.target.closest('[id^="addActivityBtn_"]');
         const optimizeBtn=e.target.closest('[id^="optimizeRouteBtn_"]');
@@ -3167,6 +3167,20 @@ export const ItineraryHandler = {
         else if(suggestionsBtn){
           console.log('💡 Suggestions button clicked');
           const day=parseInt(suggestionsBtn.id.split('_')[1]);
+          if(!window.SuggestionsEngine && window.JapitinPerformance?.loadSuggestions){
+            suggestionsBtn.setAttribute('aria-busy', 'true');
+            suggestionsBtn.classList.add('jp-feature-trigger--loading');
+            window.WashiToast?.show({ message: 'Preparando sugerencias para tu ruta…', type: 'info', duration: 2200 });
+            try {
+              await window.JapitinPerformance.loadSuggestions();
+            } catch(error) {
+              console.error('⚠️ SuggestionsEngine load failed', error);
+              window.WashiToast?.show({ message: 'No pudimos cargar las sugerencias. Inténtalo otra vez.', type: 'error' });
+            } finally {
+              suggestionsBtn.removeAttribute('aria-busy');
+              suggestionsBtn.classList.remove('jp-feature-trigger--loading');
+            }
+          }
           if(window.SuggestionsEngine && window.SuggestionsEngine.showSuggestionsForDay){
             window.SuggestionsEngine.showSuggestionsForDay(day);
           } else {

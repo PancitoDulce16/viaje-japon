@@ -23,6 +23,7 @@
 @import './micro-interactions.css';
 @import './dashboard-hero.css';
 @import './objects.css';
+@import './feature-loading.css';
 
 /* 5. Theme variants */
 @import './theme-kawaii.css';
