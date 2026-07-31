@@ -46,6 +46,7 @@ let currentItinerary = null;
 let sortableInstance = null; // 🔥 Para drag & drop
 let isListenerAttached = false;
 let checklistSaveQueue = Promise.resolve(); // Serializa los writes del checklist para evitar que un write más viejo sobreescriba uno más nuevo si llegan fuera de orden
+let itinerarySaveQueue = Promise.resolve(); // Evita que dos mutaciones rápidas se escriban fuera de orden.
 let saveDebounceTimer = null;
 
 // ---- Auth & Firestore validation helper ----
@@ -201,7 +202,7 @@ export function sanitizeForFirestore(obj) {
   return sanitized;
 }
 
-async function saveCurrentItineraryToFirebase() {
+async function persistCurrentItineraryToFirebase() {
   validateFirestoreAccess('Save itinerary');
 
   const tripId = getCurrentTripId();
@@ -1247,19 +1248,16 @@ function renderTripSelector(){
   const container=document.getElementById('tripSelectorHeader'); if(!container) return;
   const currentTrip=window.TripsManager?.currentTrip; if(!currentTrip){ container.innerHTML=''; return; }
   const userTrips=window.TripsManager?.userTrips||[];
+  const tripInfo=currentTrip.info||{};
+  const tripName=escapeStoryText(tripInfo.name||'Mi viaje a Japón');
+  const startDate=tripInfo.dateStart ? window.TimeUtils?.formatDate?.(tripInfo.dateStart)||tripInfo.dateStart : 'Fecha por definir';
+  const endDate=tripInfo.dateEnd ? window.TimeUtils?.formatDate?.(tripInfo.dateEnd)||tripInfo.dateEnd : 'Fecha por definir';
   container.innerHTML = `
-    <div class="trip-header-banner text-white p-6 rounded-xl mb-6 shadow-lg">
-      <!-- Capa de objetos del diario (art direction: layering, nunca alineado) -->
-      <img class="jp-trip-postmark" src="/images/illustrations/generated/decorations/postmark.webp" alt="" aria-hidden="true">
-      <img class="jp-trip-polaroid" src="/images/illustrations/generated/decorations/polaroid-fuji.webp" alt="" aria-hidden="true">
-      <span class="jp-trip-dogwrap" aria-hidden="true">
-        <img class="jp-trip-dog" src="/images/illustrations/generated/characters/dog-hello.webp" alt="">
-        <span class="jp-trip-bubble">¡Vamos a vivir Japón al máximo!</span>
-      </span>
+    <div class="trip-header-banner trip-header-banner--journey text-white p-6 rounded-xl mb-6 shadow-lg">
       <!-- Banner centrado y grande sin icono -->
       <div class="text-center mb-4">
-        <h3 class="font-bold text-3xl mb-2">${currentTrip.info.name}</h3>
-        <p class="text-sm text-white/90">📅 ${window.TimeUtils.formatDate(currentTrip.info.dateStart)} - ${window.TimeUtils.formatDate(currentTrip.info.dateEnd)} • 👥 ${currentTrip.info.tripType === 'individual' ? 'Viaje Individual' : 'Viaje Grupal'}</p>
+        <h3 class="font-bold text-3xl mb-2">${tripName}</h3>
+        <p class="text-sm text-white/90">📅 ${escapeStoryText(startDate)} - ${escapeStoryText(endDate)} • 👥 ${tripInfo.tripType === 'individual' ? 'Viaje Individual' : 'Viaje Grupal'}</p>
         <div class="mt-2">${renderTripCrowdBadge()}</div>
       </div>
 
@@ -1276,6 +1274,14 @@ function renderTripSelector(){
       </div>
     </div>
     ${currentItinerary ? renderTripNumbers(currentItinerary) : ''}`;
+}
+
+function saveCurrentItineraryToFirebase() {
+  const pendingSave = itinerarySaveQueue
+    .catch(() => undefined)
+    .then(() => persistCurrentItineraryToFirebase());
+  itinerarySaveQueue = pendingSave;
+  return pendingSave;
 }
 
 function hasActivityReservation(activityTitle) {
