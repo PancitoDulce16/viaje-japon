@@ -28,6 +28,8 @@ assert.match(itinerary, /day-reader-memory/);
 assert.match(itinerary, /day-reader-assessment/);
 assert.match(itinerary, /day-moment--\$\{dayMoment\}/);
 assert.match(itinerary, /activity-card--opening/);
+assert.match(itinerary, /activity-card__actions/);
+assert.match(itinerary, /activity-card__meta/);
 assert.match(appCss, /dashboard-hero-lock\.css/);
 assert.match(heroLock, /APPROVED COMPOSITION/);
 assert.match(map, /jp-map-day-select/);

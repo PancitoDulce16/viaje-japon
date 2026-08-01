@@ -2898,9 +2898,9 @@ function renderActivities(day){
         <img class="activity-thumb hidden sm:block" src="${activityThumb(act)}" alt="" loading="eager" onerror="this.hidden=true">
 
         <div class="flex-1 min-w-0">
-          <div class="flex justify-between items-start gap-2">
+          <div class="activity-card__heading flex justify-between items-start gap-2">
             <h3 class="text-lg font-bold dark:text-white mb-1 min-w-0"><span class="sm:hidden">${actIcon} </span>${safeActivityTitle}</h3>
-            <div class="flex gap-1 flex-shrink-0">
+            <div class="activity-card__actions flex gap-1 flex-shrink-0">
               ${act.alternatives && act.alternatives.length > 0 ? `
                 <button
                   type="button"
@@ -2927,7 +2927,7 @@ function renderActivities(day){
               <button type="button" aria-label="Eliminar ${safeActivityTitle}" data-action="delete" data-activity-id="${act.id}" data-day="${day.day}" class="activity-delete-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition">🗑️</button>
             </div>
           </div>
-          <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+          <div class="activity-card__meta flex items-center gap-1.5 mb-1 flex-wrap">
             <span class="text-xs font-bold text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/40 px-2 py-1 rounded whitespace-nowrap">🕐 ${act.time && act.time !== 'NaN:NaN' && !act.time.includes('NaN') ? act.time : '09:00'}</span>
             ${actDuration?`<span class="text-xs bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 px-2 py-1 rounded font-semibold whitespace-nowrap">⏱️ ${actDuration}</span>`:''}
             ${actCost>0?`<span class="text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-white px-2 py-1 rounded font-semibold whitespace-nowrap">¥${Number(actCost).toLocaleString()}</span>`:''}
@@ -2943,7 +2943,7 @@ function renderActivities(day){
               <span>${act.photographyInfo.name}</span>
             </div>
           ` : ''}
-          ${actDesc?`<p class="text-sm text-gray-600 dark:text-gray-300 mt-2">${actDesc}</p>`:''}
+          ${actDesc?`<p class="activity-card__description text-sm text-gray-600 dark:text-gray-300 mt-2">${actDesc}</p>`:''}
           ${act.tips?`<p class="text-xs text-amber-700 dark:text-amber-300 mt-2 bg-amber-50 dark:bg-amber-900/20 px-2 py-1.5 rounded-lg inline-block">💡 ${act.tips}</p>`:''}
           ${act.photographyInfo ? `
             <div class="mt-2 p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg border-l-2 border-purple-400 dark:border-purple-500">
