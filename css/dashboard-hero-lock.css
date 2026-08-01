@@ -1,0 +1,7 @@
+/* APPROVED COMPOSITION — do not restyle during global visual passes. */
+.hero-moment{border:0!important;border-radius:var(--jp-radius-lg)!important;box-shadow:var(--jp-shadow-md)!important}
+.hero-moment__content{align-self:stretch!important;min-height:260px!important;max-width:min(58%,420px)!important;margin:0!important;padding:var(--space-6)!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;backdrop-filter:none!important}
+.hero-moment__content:after{content:none!important}.hero-moment__headline{max-width:none!important}
+.hero-moment__quote{border:1px solid var(--hairline)!important;border-radius:var(--jp-radius-pill)!important;background:rgba(var(--hero-wash-rgb),.75)!important;box-shadow:var(--jp-shadow-sm)!important;transform:none!important}
+html.dark .hero-moment__content{border:0!important;background:transparent!important}
+@media(max-width:640px){.hero-moment__content{max-width:100%!important}}
