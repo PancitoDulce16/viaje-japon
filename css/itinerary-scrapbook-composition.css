@@ -1,0 +1,64 @@
+/* The itinerary is a physical travel desk: indigo table, passport, papers and postcards. */
+.day-reader-desk{max-width:1480px;margin-inline:auto;padding:clamp(20px,3vw,44px)}
+.day-reader-layout{position:relative;gap:clamp(28px,4vw,64px)!important}
+.day-reader-story{position:relative;display:flex;flex-direction:column;gap:clamp(22px,2.5vw,34px)}
+.day-reader-story>#activitiesTimeline{display:flex;flex-direction:column;gap:clamp(22px,2.5vw,34px)!important}
+.day-reader-prelude,.day-reader-route,.day-reader-timeline,.day-reader-memory,.day-reader-assessment{margin:0!important}
+
+/* Passport: one heavy object, never a conventional navigation sidebar. */
+.day-reader-aside{filter:drop-shadow(11px 14px 9px rgb(7 11 24 / 24%))}
+.day-reader-aside #dayOverview{position:relative;isolation:isolate;overflow:auto;max-height:calc(100vh - 162px)!important;padding:22px 17px 20px!important;border:1px solid #ae9470!important;border-radius:5px 13px 7px 9px!important;background:linear-gradient(rgb(249 238 214 / 91%),rgb(237 220 187 / 94%)),url('/images/backgrounds/washi-page-light.webp') center/cover!important;color:#2d3555!important;box-shadow:inset 7px 0 0 rgb(111 64 50 / 10%),3px 4px 0 #745d43!important}
+.day-reader-aside #dayOverview:before{content:'';position:absolute;z-index:5;top:-12px;left:10px;width:58px;height:116px;background:url('/images/illustrations/generated/signature-elements/paper-clip.png') center/contain no-repeat;filter:drop-shadow(2px 3px 2px rgb(0 0 0 / 25%));pointer-events:none}
+.day-reader-aside #dayOverview:after{content:'旅';position:absolute;z-index:2;right:15px;top:118px;display:grid;place-items:center;width:58px;height:58px;border:3px double #bd536c;border-radius:50%;color:#bd536c;font:800 1.25rem var(--jp-font-display);opacity:.62;transform:rotate(7deg);pointer-events:none}
+.day-reader-aside .day-info-art{border-radius:2px 8px 3px 6px!important;box-shadow:2px 3px 0 rgb(61 42 29 / 18%)!important}
+.day-reader-aside .day-index-meta{position:relative;padding-inline:3px}
+.day-reader-aside .season-mark{background:rgb(250 221 219 / 72%)!important;border-radius:2px!important;box-shadow:2px 2px 0 rgb(84 53 43 / 10%)}
+.day-reader-aside :is(p,span,strong,small,h2,h3,label){color:inherit!important}
+
+/* Route sheet: a map strip with a continuous journey, not rows. */
+.day-reader-route:before,.day-reader-memory:before,.day-reader-assessment:before{margin-left:18px!important}
+.day-reader-route .geo-flow{position:relative;overflow:visible;padding:28px 30px 24px!important;border:1px solid #baa17d!important;border-radius:2px 10px 3px 7px!important;background:linear-gradient(rgb(251 241 220 / 92%),rgb(244 228 197 / 94%)),url('/images/backgrounds/washi-page-light.webp') center/cover!important;color:#293454!important;box-shadow:8px 10px 0 rgb(28 23 20 / 18%)!important}
+.day-reader-route .geo-flow:before{content:'';position:absolute;z-index:3;top:-13px;left:42%;width:86px;height:26px;background:url('/images/illustrations/generated/signature-elements/washi-tape-kraft.png') center/100% 100% no-repeat;transform:rotate(-.8deg);pointer-events:none}
+.day-reader-route .geo-flow:after{content:'JAPAN\A MEMORIES';white-space:pre;position:absolute;right:26px;top:20px;width:72px;height:72px;display:grid;place-items:center;border:3px double #cc6079;border-radius:50%;color:#bd536c;font:800 .57rem/1.15 var(--font-mono);text-align:center;opacity:.55;transform:rotate(8deg);pointer-events:none}
+.day-reader-route .geo-flow__head,.day-reader-route .geo-flow__explanation{padding-right:88px}
+.day-reader-route .geo-flow__route{position:relative;display:grid;grid-template-columns:repeat(var(--route-stops,5),minmax(96px,1fr));gap:10px;margin:30px 0 24px!important;padding:0!important}
+.day-reader-route .geo-flow__route:before{content:'';position:absolute;left:5%;right:5%;top:20px;border-top:2px dashed #b8836f}
+.day-reader-route .geo-flow__stop{position:relative;z-index:1;display:flex!important;flex-direction:column;align-items:center;min-height:128px!important;padding:0 6px!important;text-align:center}
+.day-reader-route .geo-flow__stop:not(:last-child):before{display:none!important}
+.day-reader-route .geo-flow__pin{flex:0 0 auto;width:43px!important;height:43px!important;border:2px solid #c69b75!important;background:#f8e9c9!important;box-shadow:0 0 0 5px #f4e4c7,2px 3px 0 rgb(54 39 28 / 18%)}
+.day-reader-route .geo-flow__stop>div{margin-top:10px}.day-reader-route .geo-flow__stop strong{font:800 .78rem/1.12 var(--jp-font-display)!important}.day-reader-route .geo-flow__stop small{margin-top:3px;font-size:.58rem!important}
+.day-reader-route .geo-flow__leg{position:absolute!important;top:48px;right:-19px;z-index:3;max-width:78px;padding:4px 7px!important;border:1px solid #b9a07c;border-radius:3px!important;background:#26314e!important;color:#fff5df!important;font:.55rem var(--font-mono);white-space:normal!important;box-shadow:2px 2px 0 rgb(0 0 0 / 14%)}
+.day-reader-route .geo-flow__metrics{border-block:1px solid #bca47e!important;background:rgb(255 248 232 / 58%)!important}
+.day-reader-route .geo-flow__metrics span{color:#293454!important}
+
+/* Timeline: each stop is a pasted postcard, connected by a pink travel thread. */
+.day-reader-timeline{position:relative;padding:26px clamp(18px,3vw,36px) 34px;background:linear-gradient(90deg,rgb(22 31 55 / 60%),rgb(27 36 62 / 28%));border-radius:2px}
+.day-reader-chapter{color:#fff4e5}.day-reader-chapter h2{color:inherit!important}.day-reader-chapter small{color:#f3a0b6!important}
+.day-reader-timeline .day-main-activities{padding-left:48px!important}
+.day-reader-timeline .day-main-activities:before{left:20px!important;border-left:2px dashed #e98baa!important}
+.day-reader-timeline .activity-card{position:relative;width:min(100%,820px);margin:0 0 22px!important;padding:0!important;border:0!important;border-radius:1px 8px 2px 5px!important;background:linear-gradient(rgb(255 248 232 / 94%),rgb(247 233 207 / 96%)),url('/images/backgrounds/washi-page-light.webp') center/cover!important;color:#283350!important;box-shadow:6px 7px 0 rgb(7 10 20 / 22%)!important}
+.day-reader-timeline .activity-card:nth-of-type(even){margin-left:clamp(8px,2vw,24px)!important}
+.day-reader-timeline .activity-card:after{display:block!important;content:'';position:absolute;top:-10px;left:32%;width:68px;height:20px;background:url('/images/illustrations/generated/signature-elements/washi-tape-pink.png') center/100% 100% no-repeat;opacity:.78;pointer-events:none}
+.day-reader-timeline .activity-card>div{padding:18px!important}.day-reader-timeline .activity-card :is(h3,p,span,small,strong){color:inherit!important}
+.day-reader-timeline .activity-card:before{left:-39px!important;top:26px!important;background:#f39ab3!important;box-shadow:0 0 0 5px #172039!important}
+.day-reader-timeline .activity-thumb{border:6px solid #fffaf0!important;box-shadow:3px 4px 0 rgb(54 38 28 / 18%)!important}
+.day-reader-timeline .activity-card__meta>span:first-child{display:inline-block;padding:3px 8px!important;border:0!important;border-radius:2px!important;background:#d96182!important;color:#fff!important}
+.day-reader-timeline .travel-time-indicator{margin:0 0 20px 12px!important;background:#f2d8cf!important;color:#4d3b42!important;box-shadow:2px 3px 0 rgb(7 10 20 / 12%)!important}
+
+/* Memory and diagnosis overlap like the final pages of the same notebook. */
+.day-reader-memory .story-desk,.day-reader-assessment .trip-companion{position:relative;border:1px solid #bba17c!important;color:#293454!important;background:linear-gradient(rgb(251 241 220 / 94%),rgb(242 225 194 / 96%)),url('/images/backgrounds/washi-page-light.webp') center/cover!important;box-shadow:7px 9px 0 rgb(8 11 19 / 19%)!important}
+.day-reader-memory .story-desk{border-radius:3px 12px 2px 8px!important}.day-reader-memory .story-desk:before{content:'';position:absolute;top:-12px;left:16%;width:78px;height:23px;background:url('/images/illustrations/generated/signature-elements/washi-tape-pink.png') center/100% 100% no-repeat}
+.day-reader-assessment{width:94%;margin-top:-10px!important;margin-left:auto!important}.day-reader-assessment .trip-companion{border-radius:2px 6px 3px 11px!important;transform:rotate(.25deg)!important}.day-reader-assessment .trip-companion>*{transform:rotate(-.25deg)}
+.day-reader-memory :is(h3,strong,small,p,span),.day-reader-assessment :is(h3,strong,small,p,span){color:inherit!important}
+.day-reader-assessment .trip-companion__rail article{background:rgb(255 248 232 / 48%)!important;color:#293454!important}
+
+/* Dark mode changes the desk only; physical objects stay warm. */
+html.dark .day-reader-aside #dayOverview,html.dark .day-reader-route .geo-flow,html.dark .day-reader-memory .story-desk,html.dark .day-reader-assessment .trip-companion{border-color:#a98d69!important;background:linear-gradient(rgb(247 235 211 / 94%),rgb(235 216 183 / 96%)),url('/images/backgrounds/washi-page-light.webp') center/cover!important;color:#293454!important}
+html.dark .day-reader-aside #dayOverview :is(h2,h3,p,strong,span,small,label),html.dark .day-reader-route .geo-flow :is(h3,strong,small,p,span),html.dark .day-reader-memory .story-desk :is(h3,strong,small,p,span),html.dark .day-reader-assessment .trip-companion :is(h3,strong,small,p,span){color:#293454!important;text-shadow:none!important}
+html.dark .day-reader-route .geo-flow__metrics,html.dark .day-reader-route .geo-flow__metrics>*,html.dark .day-reader-memory :is(.story-memory,textarea,input),html.dark .day-reader-assessment :is(article,input){background:rgb(255 248 232 / 48%)!important;border-color:#bca17b!important;color:#293454!important}
+html.dark .day-reader-timeline .day-main-activities .activity-card{border:0!important;background:linear-gradient(rgb(255 248 232 / 94%),rgb(242 226 198 / 96%)),url('/images/backgrounds/washi-page-light.webp') center/cover!important;color:#293454!important;box-shadow:6px 7px 0 rgb(0 0 0 / 28%)!important}html.dark .day-reader-timeline .day-main-activities .activity-card :is(h3,p,span,small,strong){color:#293454!important;text-shadow:none!important}html.dark .day-reader-timeline .day-main-activities .activity-card__meta>span:first-child{color:#fff!important}
+
+@media(min-width:1024px){.day-reader-layout{grid-template-columns:minmax(260px,320px) minmax(0,1fr)!important}.day-reader-route .geo-flow__route{--route-stops:5}}
+@media(max-width:1023px){.day-reader-route .geo-flow__route{display:block}.day-reader-route .geo-flow__route:before{left:20px;right:auto;top:12px;bottom:28px;border-top:0;border-left:2px dashed #b8836f}.day-reader-route .geo-flow__stop{display:grid!important;grid-template-columns:43px minmax(0,1fr)!important;align-items:start;text-align:left;min-height:86px!important;padding:0!important}.day-reader-route .geo-flow__stop>div{margin:5px 0 0 13px}.day-reader-route .geo-flow__leg{position:static!important;grid-column:2;margin:6px 0 0 13px;justify-self:start}}
+@media(max-width:767px){.day-reader-desk{padding:16px 12px}.day-reader-layout{display:block!important}.day-reader-aside{filter:none}.day-reader-aside #dayOverview{max-height:none!important;padding:20px 15px!important}.day-reader-story{gap:32px}.day-reader-story>#activitiesTimeline{gap:32px!important}.day-reader-route .geo-flow{padding:24px 14px 18px!important}.day-reader-route .geo-flow:after{width:54px;height:54px;right:13px;font-size:.45rem}.day-reader-route .geo-flow__head,.day-reader-route .geo-flow__explanation{padding-right:60px}.day-reader-timeline{margin-inline:-12px!important;padding:22px 12px 28px}.day-reader-timeline .day-main-activities{padding-left:32px!important}.day-reader-timeline .day-main-activities:before{left:10px!important}.day-reader-timeline .activity-card,.day-reader-timeline .activity-card:nth-of-type(even){width:100%;margin-left:0!important}.day-reader-timeline .activity-card:before{left:-29px!important}.day-reader-timeline .activity-card>div{padding:14px!important}.day-reader-assessment{width:100%;margin-top:0!important}.day-reader-assessment .trip-companion{transform:none!important}.day-reader-assessment .trip-companion>*{transform:none}}
+@media(prefers-reduced-motion:reduce){.day-reader-assessment .trip-companion,.day-reader-assessment .trip-companion>*{transform:none!important}}
