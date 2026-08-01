@@ -24,6 +24,8 @@ assert.match(itinerary, /day-reader-route/);
 assert.match(itinerary, /day-reader-timeline/);
 assert.match(itinerary, /day-reader-memory/);
 assert.match(itinerary, /day-reader-assessment/);
+assert.match(itinerary, /day-moment--\$\{dayMoment\}/);
+assert.match(itinerary, /activity-card--opening/);
 assert.match(map, /jp-map-day-select/);
 assert.match(map, /jp-map-search/);
 assert.match(budgetTracker, /jp-ledger-form/);

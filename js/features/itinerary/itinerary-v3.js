@@ -2839,6 +2839,7 @@ function renderActivities(day){
     if (r > magicBest) { magicBest = r; magicId = a.id; }
   });
 
+  let previousDayMoment = '';
   sortedActivities.forEach((act,i)=> {
     const votes = act.votes || {};
     const voteCount = Object.keys(votes).length;
@@ -2860,10 +2861,23 @@ function renderActivities(day){
       ? window.TimeUtils.formatDuration(act.duration)
       : (act.duration || '');
     const actCategory = act.categoryName || '';
+    const parsedActivityHour = Number.parseInt(String(act.time || '09:00').split(':')[0], 10);
+    const activityHour = Number.isFinite(parsedActivityHour) ? parsedActivityHour : 9;
+    const dayMoment = activityHour < 11 ? 'morning' : activityHour < 17 ? 'afternoon' : 'evening';
+    const dayMomentMeta = {
+      morning: { icon: '🌅', label: 'Mañana', note: 'El día despierta' },
+      afternoon: { icon: '☀️', label: 'Tarde', note: 'A tu ritmo' },
+      evening: { icon: '🏮', label: 'Noche', note: 'Las últimas luces' }
+    }[dayMoment];
+    const opensDayMoment = dayMoment !== previousDayMoment;
+    previousDayMoment = dayMoment;
 
     // Agregar la actividad
+    if (opensDayMoment) {
+      activitiesHTML.push(`<div class="day-moment day-moment--${dayMoment}" aria-label="${dayMomentMeta.label}: ${dayMomentMeta.note}"><span>${dayMomentMeta.icon}</span><strong>${dayMomentMeta.label}</strong><small>${dayMomentMeta.note}</small></div>`);
+    }
     activitiesHTML.push(`
-    <div class="activity-card bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden fade-in transition-all hover:shadow-xl border-l-4 border-purple-500 dark:border-purple-400 ${checkedActivities[act.id]?'opacity-60':''}" data-activity-id="${act.id}" style="animation-delay:${i*0.05}s">
+    <div class="activity-card activity-card--${dayMoment} ${i === 0 ? 'activity-card--opening' : ''} bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden fade-in transition-all hover:shadow-xl border-l-4 border-purple-500 dark:border-purple-400 ${checkedActivities[act.id]?'opacity-60':''}" data-activity-id="${act.id}" data-day-moment="${dayMoment}" style="animation-delay:${i*0.05}s">
       ${act.id === magicId ? `
         <span class="jp-act-magic" aria-hidden="true">
           <img src="/images/illustrations/generated/characters/dog-camera.webp" alt="">
