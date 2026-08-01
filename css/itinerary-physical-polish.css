@@ -1,0 +1,48 @@
+/* Safe physical polish: preserve layout and logic; distinguish warm objects from the desk. */
+.day-reader-story>#activitiesTimeline{gap:0!important}
+.day-reader-route{margin-bottom:clamp(26px,3vw,38px)!important}
+.day-reader-memory,.day-reader-assessment{margin-top:clamp(28px,3vw,40px)!important}
+
+/* The sticky day index reads as one substantial travel notebook. */
+.day-reader-aside #dayOverview{position:relative;isolation:isolate;padding:18px!important;border:1px solid #b9a17d!important;border-radius:3px 10px 4px 7px!important;background:linear-gradient(rgb(253 246 230 / 92%),rgb(244 231 205 / 95%)),url('/images/backgrounds/washi-page-light.webp') center/cover!important;color:#293454!important;box-shadow:5px 7px 0 rgb(44 33 25 / 18%)!important}
+.day-reader-aside #dayOverview:before{content:'';position:absolute;z-index:4;top:-10px;left:14px;width:42px;height:86px;background:url('/images/illustrations/generated/signature-elements/paper-clip.png') center/contain no-repeat;filter:drop-shadow(1px 2px 1px rgb(0 0 0 / 24%));pointer-events:none}
+.day-reader-aside #dayOverview:after{content:'旅';position:absolute;z-index:3;right:14px;top:20px;display:grid;place-items:center;width:48px;height:48px;border:2px double #c35e78;border-radius:50%;color:#b54f69;font:800 1rem var(--jp-font-display);opacity:.58;transform:rotate(7deg);pointer-events:none}
+.day-reader-aside #dayOverview :is(h2,h3,p,strong,span,small,label){color:inherit!important;text-shadow:none!important}
+.day-reader-aside .day-info-art{border-radius:2px 7px 2px 5px!important;box-shadow:2px 3px 0 rgb(63 45 31 / 15%)!important}
+.day-reader-aside .season-mark{border-radius:2px!important;background:rgb(249 220 218 / 64%)!important;box-shadow:none!important}
+
+/* Route remains vertical and readable; it becomes a map page, never a compressed strip. */
+.day-reader-route .geo-flow{position:relative;overflow:visible;border:1px solid #bca47f!important;border-radius:2px 9px 3px 6px!important;background:linear-gradient(rgb(253 246 230 / 93%),rgb(245 231 204 / 96%)),url('/images/backgrounds/washi-page-light.webp') center/cover!important;color:#293454!important;box-shadow:5px 7px 0 rgb(45 34 24 / 16%)!important}
+.day-reader-route .geo-flow:before{content:'';position:absolute;z-index:4;top:-11px;left:44%;width:72px;height:22px;background:url('/images/illustrations/generated/signature-elements/washi-tape-kraft.png') center/100% 100% no-repeat;opacity:.78;pointer-events:none}
+.day-reader-route .geo-flow :is(h3,strong,small,p,span){color:inherit!important;text-shadow:none!important}
+.day-reader-route .geo-flow__pin{border-color:#d09b79!important;background:#fff0d2!important;box-shadow:1px 2px 0 rgb(58 41 29 / 14%)}
+.day-reader-route .geo-flow__leg{border-radius:2px!important;background:rgb(44 56 87 / 92%)!important;color:#fff7e8!important;box-shadow:1px 2px 0 rgb(28 21 17 / 12%)}
+.day-reader-route .geo-flow__metrics{border-block:1px solid #bda681!important;background:rgb(255 250 239 / 48%)!important}
+.day-reader-route .geo-flow__metrics>span{color:#293454!important}
+
+/* Stops are individual paper entries without changing their proven DOM geometry. */
+.day-reader-timeline .day-main-activities .activity-card{margin-bottom:14px!important;padding:4px 0!important;border:1px solid #c6b18f!important;border-radius:2px 8px 2px 5px!important;background:linear-gradient(rgb(255 249 236 / 94%),rgb(247 234 210 / 96%)),url('/images/backgrounds/washi-page-light.webp') center/cover!important;color:#293454!important;box-shadow:3px 4px 0 rgb(47 34 25 / 14%)!important}
+.day-reader-timeline .day-main-activities .activity-card>div{padding:13px 15px!important}
+.day-reader-timeline .day-main-activities .activity-card :is(h3,p,span,small,strong){color:inherit!important;text-shadow:none!important}
+.day-reader-timeline .activity-card:before{box-shadow:0 0 0 4px #f2dfbd!important}
+.day-reader-timeline .activity-card__meta>span:first-child{color:#bd4f70!important}
+.day-reader-timeline .travel-time-indicator{margin-block:6px 16px!important;background:#dfeef0!important;color:#334e67!important;box-shadow:1px 2px 0 rgb(38 49 58 / 10%)!important}
+
+/* Final pages share one paper family and retain strong dark ink. */
+.day-reader-memory .story-desk,.day-reader-assessment .trip-companion{position:relative;border:1px solid #bca47f!important;background:linear-gradient(rgb(253 246 230 / 94%),rgb(244 230 203 / 96%)),url('/images/backgrounds/washi-page-light.webp') center/cover!important;color:#293454!important;box-shadow:5px 7px 0 rgb(43 32 24 / 16%)!important}
+.day-reader-memory .story-desk{border-radius:3px 10px 2px 7px!important}.day-reader-assessment .trip-companion{border-radius:2px 7px 3px 10px!important}
+.day-reader-memory .story-desk:before,.day-reader-assessment .trip-companion:before{content:'';position:absolute;z-index:3;top:-11px;left:45%;width:76px;height:22px;background:url('/images/illustrations/generated/signature-elements/washi-tape-pink.png') center/100% 100% no-repeat;opacity:.72;pointer-events:none}
+.day-reader-memory :is(h3,strong,small,p,span),.day-reader-assessment :is(h3,strong,small,p,span){color:inherit!important;text-shadow:none!important}
+.day-reader-memory .story-memory{background:rgb(255 248 234 / 68%)!important;color:#293454!important}
+.day-reader-memory :is(textarea,input){background:rgb(255 252 244 / 80%)!important;border-color:#bca47f!important;color:#293454!important}
+.day-reader-assessment .trip-companion__rail article{background:rgb(255 249 236 / 52%)!important;border-color:#bca47f!important;color:#293454!important}
+.day-reader-assessment .trip-companion__tools{border-color:#bca47f!important}
+
+/* Dark mode is the desk. The travel objects themselves remain warm. */
+html.dark .day-reader-aside #dayOverview,html.dark .day-reader-route .geo-flow,html.dark .day-reader-memory .story-desk,html.dark .day-reader-assessment .trip-companion{border-color:#b29772!important;background:linear-gradient(rgb(250 240 218 / 95%),rgb(238 219 185 / 97%)),url('/images/backgrounds/washi-page-light.webp') center/cover!important;color:#293454!important}
+html.dark .day-reader-aside #dayOverview :is(h2,h3,p,strong,span,small,label),html.dark .day-reader-route .geo-flow :is(h3,strong,small,p,span),html.dark .day-reader-memory .story-desk :is(h3,strong,small,p,span),html.dark .day-reader-assessment .trip-companion :is(h3,strong,small,p,span){color:#293454!important;text-shadow:none!important}
+html.dark .day-reader-timeline .day-main-activities .activity-card{border-color:#b69d78!important;background:linear-gradient(rgb(252 244 226 / 95%),rgb(241 224 195 / 97%)),url('/images/backgrounds/washi-page-light.webp') center/cover!important;color:#293454!important;box-shadow:4px 5px 0 rgb(0 0 0 / 24%)!important}
+html.dark .day-reader-timeline .day-main-activities .activity-card :is(h3,p,span,small,strong){color:#293454!important;text-shadow:none!important}
+html.dark .day-reader-memory :is(.story-memory,textarea,input),html.dark .day-reader-assessment :is(article,input){background:rgb(255 249 236 / 58%)!important;border-color:#b69d78!important;color:#293454!important}
+
+@media(max-width:767px){.day-reader-aside #dayOverview{padding:16px!important}.day-reader-route{margin-bottom:28px!important}.day-reader-memory,.day-reader-assessment{margin-top:30px!important}.day-reader-timeline .day-main-activities .activity-card>div{padding:12px 10px!important}.day-reader-memory .story-desk:before,.day-reader-assessment .trip-companion:before{left:34%}}

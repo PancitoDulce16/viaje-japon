@@ -33,6 +33,7 @@ assert.match(itinerary, /activity-card__meta/);
 assert.match(itinerary, /querySelector\('\.day-ticket--active'\)/);
 assert.match(itinerary, /trip-companion__tools/);
 assert.match(appCss, /dashboard-hero-lock\.css/);
+assert.match(appCss, /itinerary-physical-polish\.css/);
 assert.match(heroLock, /APPROVED COMPOSITION/);
 assert.match(map, /jp-map-day-select/);
 assert.match(map, /jp-map-search/);
