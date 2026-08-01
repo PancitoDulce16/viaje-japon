@@ -1716,6 +1716,11 @@ function renderDayStoryDesk(day) {
   const featuredMeal = day.mealAudit?.featured;
   return `
     <section class="story-desk story-desk--${narrative.color}" aria-label="Relato y herramientas del día">
+      <div class="day-closing-decor day-closing-decor--memory" aria-hidden="true">
+        <img class="day-closing-polaroid" src="/images/illustrations/generated/decorations/polaroid-fuji.webp" alt="">
+        <img class="day-closing-postmark" src="/images/illustrations/generated/decorations/postmark.webp" alt="">
+        <img class="day-closing-mascot" src="/images/illustrations/generated/components/note-sticker-cat-cutout.png" alt="">
+      </div>
       <header class="story-desk__head">
         <div><span>CAPÍTULO ${String(day.day).padStart(2, '0')}</span><h3>${narrative.icon} ${narrative.mood}</h3><p>${narrative.chapter}</p></div>
         <div class="story-desk__actions">
@@ -1752,6 +1757,10 @@ export function renderTripCompanion(day) {
   const statusLabel = { comfortable: 'RESPIRABLE', tight: 'AJUSTADO', impossible: 'REVISAR' }[feasibility.status];
   return `
     <section class="trip-companion trip-companion--${feasibility.status}" aria-labelledby="companionTitle${day.day}">
+      <div class="day-closing-decor day-closing-decor--assessment" aria-hidden="true">
+        <img class="day-closing-postmark" src="/images/illustrations/generated/decorations/postmark.webp" alt="">
+        <span class="day-closing-ticket"><b>旅の思い出</b><small>TRIP MEMORIES</small></span>
+      </div>
       <header class="trip-companion__focus">
         <span>CONTROL DE RUTA · 旅の確認</span>
         <h3 id="companionTitle${day.day}">${feasibility.score}<small>/100</small> · ${statusLabel}</h3>

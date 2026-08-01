@@ -32,6 +32,8 @@ assert.match(itinerary, /activity-card__actions/);
 assert.match(itinerary, /activity-card__meta/);
 assert.match(itinerary, /querySelector\('\.day-ticket--active'\)/);
 assert.match(itinerary, /trip-companion__tools/);
+assert.match(itinerary, /day-closing-decor--memory/);
+assert.match(itinerary, /day-closing-decor--assessment/);
 assert.match(appCss, /dashboard-hero-lock\.css/);
 assert.match(appCss, /day-closing-spread\.css/);
 assert.match(heroLock, /APPROVED COMPOSITION/);
