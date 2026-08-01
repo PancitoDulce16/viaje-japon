@@ -1342,7 +1342,7 @@ function renderDaySelector(){
   // este selector - la página se abría scrolleada a un punto random cada vez que se
   // renderizaba el itinerario (cada balance, cada edición...). Mover solo scrollLeft
   // del contenedor evita tocar el scroll vertical de la página por completo.
-  const activeBtn = container.querySelector('.day-btn.bg-red-600, .day-btn[class*="bg-red-600"]');
+  const activeBtn = container.querySelector('.day-ticket--active');
   if (activeBtn) {
     const containerRect = container.getBoundingClientRect();
     const btnRect = activeBtn.getBoundingClientRect();
@@ -1763,21 +1763,26 @@ export function renderTripCompanion(day) {
         <article role="listitem"><span>RESERVAS</span><strong>${reservations.length ? `${reservations.length} documento(s) listos` : 'Sin documentos vinculados'}</strong><small>${reservations[0]?.confirmation ? `Confirmación ${escapeStoryText(reservations[0].confirmation)}` : 'Añade QR, asiento y política desde Reservas'}</small></article>
       </div>
       ${culture.length ? `<div class="trip-companion__culture">${culture.map(note => `<p><b>${note.icon}</b>${note.text}</p>`).join('')}</div>` : ''}
-      <footer class="trip-companion__controls">
-        <div class="pace-stubs" aria-label="Ritmo del día">
-          ${['relaxed','balanced','intense'].map(pace => `<button type="button" class="${day.pace === pace ? 'is-selected' : ''}" onclick="window.setJapitinPace(${day.day},'${pace}')">${{relaxed:'Suave',balanced:'Equilibrado',intense:'Intenso'}[pace]}</button>`).join('')}
+      <details class="trip-companion__tools">
+        <summary><span>Herramientas del día</span><small>Ritmo, Plan B y exportación</small></summary>
+        <div class="trip-companion__tools-body">
+          <footer class="trip-companion__controls">
+            <div class="pace-stubs" aria-label="Ritmo del día">
+              ${['relaxed','balanced','intense'].map(pace => `<button type="button" class="${day.pace === pace ? 'is-selected' : ''}" onclick="window.setJapitinPace(${day.day},'${pace}')">${{relaxed:'Suave',balanced:'Equilibrado',intense:'Intenso'}[pace]}</button>`).join('')}
+            </div>
+            <button type="button" class="plan-b-ticket ${day.planB ? 'is-active' : ''}" onclick="window.toggleJapitinPlanB(${day.day})">${day.planB ? '☀️ Volver al Plan A' : '☂️ Preparar Plan B'}</button>
+            ${firstVotable ? `<button type="button" class="vote-stamp" onclick="window.voteJapitinActivity(${day.day},'${escapeStoryText(firstVotable.id)}')">♡ Votar primera parada</button>` : ''}
+            <button type="button" class="offline-stub" onclick="window.exportJapitinOffline()">↓ Resumen offline</button>
+          </footer>
+          <div class="trip-companion__exports" aria-label="Exportar y usar durante el viaje">
+            <button type="button" onclick="window.TodayMode?.open()">📍 Estoy viajando ahora</button>
+            <button type="button" onclick="window.PDFExporter?.exportToPDF()">📄 PDF Japitin</button>
+            <button type="button" onclick="window.exportJapitinCalendar()">📅 Calendario</button>
+            <button type="button" onclick="window.exportJapitinMaps()">🗺️ Maps</button>
+          </div>
+          <label class="trip-companion__comment"><span>NOTA PARA EL GRUPO</span><input maxlength="500" placeholder="Ej. Prefiero mantener esta parada…" onkeydown="if(event.key==='Enter'){event.preventDefault();window.commentJapitinDay(${day.day},this.value);this.value=''}"><small>${day.collaboration?.comments?.length || 0} comentario(s) guardado(s)</small></label>
         </div>
-        <button type="button" class="plan-b-ticket ${day.planB ? 'is-active' : ''}" onclick="window.toggleJapitinPlanB(${day.day})">${day.planB ? '☀️ Volver al Plan A' : '☂️ Preparar Plan B'}</button>
-        ${firstVotable ? `<button type="button" class="vote-stamp" onclick="window.voteJapitinActivity(${day.day},'${escapeStoryText(firstVotable.id)}')">♡ Votar primera parada</button>` : ''}
-        <button type="button" class="offline-stub" onclick="window.exportJapitinOffline()">↓ Resumen offline</button>
-      </footer>
-      <div class="trip-companion__exports" aria-label="Exportar y usar durante el viaje">
-        <button type="button" onclick="window.TodayMode?.open()">📍 Estoy viajando ahora</button>
-        <button type="button" onclick="window.PDFExporter?.exportToPDF()">📄 PDF Japitin</button>
-        <button type="button" onclick="window.exportJapitinCalendar()">📅 Calendario</button>
-        <button type="button" onclick="window.exportJapitinMaps()">🗺️ Maps</button>
-      </div>
-      <label class="trip-companion__comment"><span>NOTA PARA EL GRUPO</span><input maxlength="500" placeholder="Ej. Prefiero mantener esta parada…" onkeydown="if(event.key==='Enter'){event.preventDefault();window.commentJapitinDay(${day.day},this.value);this.value=''}"><small>${day.collaboration?.comments?.length || 0} comentario(s) guardado(s)</small></label>
+      </details>
     </section>`;
 }
 

@@ -30,6 +30,8 @@ assert.match(itinerary, /day-moment--\$\{dayMoment\}/);
 assert.match(itinerary, /activity-card--opening/);
 assert.match(itinerary, /activity-card__actions/);
 assert.match(itinerary, /activity-card__meta/);
+assert.match(itinerary, /querySelector\('\.day-ticket--active'\)/);
+assert.match(itinerary, /trip-companion__tools/);
 assert.match(appCss, /dashboard-hero-lock\.css/);
 assert.match(heroLock, /APPROVED COMPOSITION/);
 assert.match(map, /jp-map-day-select/);
