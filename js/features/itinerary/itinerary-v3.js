@@ -3151,9 +3151,9 @@ export const ItineraryHandler = {
       <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-600 sticky top-[72px] z-30 shadow-sm">
         <div class="max-w-6xl mx-auto px-6 py-5"><div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" id="daySelector"></div></div>
       </div>
-      <div class="day-reader-desk">
+      <div class="max-w-6xl mx-auto p-6 md:p-8">
         <div class="day-reader-layout grid md:grid-cols-3 gap-6">
-          <aside class="day-reader-aside md:col-span-1"><div class="fade-in" id="dayOverview"></div></aside>
+          <aside class="day-reader-aside md:col-span-1"><div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 sticky top-36 fade-in border dark:border-gray-600" id="dayOverview"></div></aside>
           <main class="day-reader-story md:col-span-2"><div id="activitiesTimeline"></div></main>
         </div>
       </div>`;
