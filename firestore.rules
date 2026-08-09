@@ -34,9 +34,9 @@ service cloud.firestore {
     function isNewDataValidExpense(data) {
         return data.description is string &&
                data.amountMinor is int && data.amountMinor > 0 &&
-               data.originalCurrency is string &&
+               data.originalCurrency in ['CRC', 'JPY', 'USD'] &&
                data.convertedAmountMinor is int && data.convertedAmountMinor > 0 &&
-               data.baseCurrency is string &&
+               data.baseCurrency in ['CRC', 'JPY', 'USD'] &&
                data.exchangeRate is number && data.exchangeRate > 0 &&
                data.exchangeRateScaled is int && data.exchangeRateScaled > 0 &&
                data.exchangeRateFetchedAt is string &&
@@ -127,7 +127,7 @@ service cloud.firestore {
         allow read: if isTripMember(tripId);
         allow create, update: if isTripMember(tripId) &&
           request.resource.data.amountMinor is int && request.resource.data.amountMinor > 0 &&
-          request.resource.data.currency is string && request.resource.data.minorUnit is int &&
+          request.resource.data.currency in ['CRC', 'JPY', 'USD'] && request.resource.data.minorUnit is int &&
           request.resource.data.updatedBy == request.auth.uid;
         allow delete: if isTripMember(tripId) &&
           get(/databases/$(database)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid;

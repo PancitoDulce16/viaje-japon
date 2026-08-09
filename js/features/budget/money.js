@@ -1,10 +1,16 @@
-export const CURRENCY_DIGITS = { JPY: 0, CRC: 0, USD: 2, EUR: 2, GBP: 2, CAD: 2, AUD: 2 };
+export const SUPPORTED_CURRENCIES = Object.freeze(['CRC', 'JPY', 'USD']);
+export const CURRENCY_DIGITS = Object.freeze({ CRC: 0, JPY: 0, USD: 2 });
 export const DEFAULT_BASE_CURRENCY = 'CRC';
 export const RATE_SCALE = 100000000;
 
 export function currencyScale(currency) { return 10 ** (CURRENCY_DIGITS[currency] ?? 2); }
 
+export function isSupportedCurrency(currency) {
+  return SUPPORTED_CURRENCIES.includes(currency);
+}
+
 export function parseMoneyToMinor(value, currency) {
+  if (!isSupportedCurrency(currency)) return null;
   const text = String(value ?? '').trim().replace(',', '.');
   if (!/^\d+(?:\.\d+)?$/.test(text)) return null;
   const digits = CURRENCY_DIGITS[currency] ?? 2;
@@ -20,6 +26,8 @@ export function rateToScaled(rate) {
 }
 
 export function convertMinorUnits(originalMinor, fromCurrency, toCurrency, rateScaled) {
+  if (!isSupportedCurrency(fromCurrency) || !isSupportedCurrency(toCurrency)) throw new RangeError('Moneda no admitida');
+  if (!Number.isSafeInteger(originalMinor) || originalMinor <= 0 || !Number.isSafeInteger(rateScaled) || rateScaled <= 0) throw new RangeError('Monto o tipo de cambio inválido');
   if (fromCurrency === toCurrency) return originalMinor;
   const numerator = BigInt(originalMinor) * BigInt(rateScaled) * BigInt(currencyScale(toCurrency));
   const denominator = BigInt(RATE_SCALE) * BigInt(currencyScale(fromCurrency));

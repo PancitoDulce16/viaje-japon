@@ -25,6 +25,20 @@ export function filterExpenses(expenses, filters = {}) {
   });
 }
 
+export function historicalConversionForEdit(expense, { amountMinor, originalCurrency, baseCurrency, manualRate = '' }) {
+  if (!expense || manualRate || expenseAmount(expense) !== amountMinor ||
+      expense.originalCurrency !== originalCurrency || expense.baseCurrency !== baseCurrency ||
+      !expense.exchangeRateScaled || !expense.exchangeRateFetchedAt) return null;
+  return {
+    convertedAmountMinor: expense.convertedAmountMinor,
+    rate: expense.exchangeRate,
+    rateScaled: expense.exchangeRateScaled,
+    fetchedAt: Date.parse(expense.exchangeRateFetchedAt),
+    source: expense.exchangeRateSource,
+    automatic: !expense.conversionManual
+  };
+}
+
 function csvCell(value) { return `"${String(value ?? '').replaceAll('"', '""')}"`; }
 
 export function expensesToCsv(expenses, currency = 'JPY') {

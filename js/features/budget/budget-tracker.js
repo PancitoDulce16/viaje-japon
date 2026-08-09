@@ -4,9 +4,9 @@ import {
   serverTimestamp, setDoc, updateDoc
 } from 'firebase/firestore';
 import { deleteObject, getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
-import { expenseAmount, expensesToCsv, filterExpenses, summarizeBudget, toMinorUnits } from './budget-utils.js';
+import { expenseAmount, expensesToCsv, filterExpenses, historicalConversionForEdit, summarizeBudget, toMinorUnits } from './budget-utils.js';
 import { formatFileSize, optimizeImage } from '../../utils/image-optimizer.js';
-import { convertMinorUnits, currencyScale, DEFAULT_BASE_CURRENCY, formatMoneyMinor, parseMoneyToMinor, rateToScaled, RATE_SCALE } from './money.js';
+import { convertMinorUnits, currencyScale, DEFAULT_BASE_CURRENCY, formatMoneyMinor, isSupportedCurrency, parseMoneyToMinor, rateToScaled, RATE_SCALE, SUPPORTED_CURRENCIES } from './money.js';
 import { exchangeRateService } from './exchange-rate-service.js';
 
 export { expenseAmount, expensesToCsv, filterExpenses, summarizeBudget, toMinorUnits } from './budget-utils.js';
@@ -105,7 +105,7 @@ const BudgetTracker = {
     const alertClass = totals.percentUsed >= 100 ? 'budget-alert--danger' : totals.percentUsed >= 80 ? 'budget-alert--warning' : '';
     const alertText = totals.percentUsed >= 100 ? 'Presupuesto excedido' : totals.percentUsed >= 80 ? 'Has alcanzado el 80% del presupuesto' : '';
     const categories = [...new Set([...DEFAULT_EXPENSE_CATEGORIES, ...this.expenses.map((item) => item.category).filter(Boolean)])];
-    const currencies = [...new Set(['JPY', 'USD', 'CRC', ...this.expenses.map((item) => item.originalCurrency).filter(Boolean)])];
+    const currencies = SUPPORTED_CURRENCIES;
     const grouped = filtered.reduce((acc, item) => {
       if (item.baseCurrency && item.baseCurrency !== this.baseCurrency) return acc;
       acc[item.category || 'Otros'] = (acc[item.category || 'Otros'] || 0) + Number(item.convertedAmountMinor ?? expenseAmount(item));
@@ -121,7 +121,7 @@ const BudgetTracker = {
     const maxCategory = Math.max(1, ...Object.values(grouped));
 
     container.innerHTML = `<section class="budget-module jp-budget-page" aria-labelledby="budgetTitle">
-      <header class="budget-module__header"><div><p class="budget-kicker">旅の会計 · CUENTAS DEL VIAJE</p><h2 id="budgetTitle">Presupuesto y gastos</h2><p>Totales en ${this.baseCurrency}; cada recibo conserva su moneda y cambio histórico.</p></div><div><label>Moneda local<select id="baseCurrencySelect">${['CRC','JPY','USD','EUR'].map(c => `<option ${c === this.baseCurrency ? 'selected' : ''}>${c}</option>`).join('')}</select></label><button class="budget-secondary" data-action="gallery">📷 Abrir galería</button></div></header>
+      <header class="budget-module__header"><div><p class="budget-kicker">旅の会計 · CUENTAS DEL VIAJE</p><h2 id="budgetTitle">Presupuesto y gastos</h2><p>Totales en ${this.baseCurrency}; cada recibo conserva su moneda y cambio histórico.</p></div><div><label>Moneda base<select id="baseCurrencySelect">${SUPPORTED_CURRENCIES.map(c => `<option ${c === this.baseCurrency ? 'selected' : ''}>${c}</option>`).join('')}</select></label><button class="budget-secondary" data-action="gallery">📷 Abrir galería</button></div></header>
       ${alertText ? `<div class="budget-alert ${alertClass}" role="alert">${escapeHtml(alertText)} · ${totals.percentUsed.toFixed(1)}% utilizado</div>` : ''}
       ${excludedCount || !budgetMatchesBase ? `<div class="budget-alert budget-alert--warning" role="status">Cambiaste la moneda local. ${excludedCount} gasto(s) y ${!budgetMatchesBase ? 'el presupuesto anterior' : 'sus conversiones anteriores'} permanecen en su moneda base histórica y no se suman como si fueran ${this.baseCurrency}. No se modificó ningún dato.</div>` : ''}
       <div class="budget-summary">
@@ -154,7 +154,7 @@ const BudgetTracker = {
     return `<form id="expenseForm" class="expense-form jp-ledger-form"><h3>${item.id ? 'Editar gasto' : 'Nuevo gasto'}</h3><div class="expense-form__grid">
       <label>Concepto*<input name="description" maxlength="160" required value="${escapeHtml(item.description || item.desc)}"></label>
       <label>Monto original*<input name="amount" type="number" inputmode="decimal" min="0.01" step="any" required value="${item.id ? expenseAmount(item) / currencyScale(item.originalCurrency || 'JPY') : ''}"></label>
-      <label>Moneda*<select name="currency">${['JPY','USD','CRC','EUR'].map(c => `<option ${c === (item.originalCurrency || 'JPY') ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+      <label>Moneda*<select name="currency">${SUPPORTED_CURRENCIES.map(c => `<option ${c === (item.originalCurrency || this.baseCurrency) ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
       <label>Categoría*<select name="category" required>${categories.map((cat) => `<option ${item.category === cat ? 'selected' : ''}>${escapeHtml(cat)}</option>`).join('')}</select></label>
       <label>Nueva categoría<input name="newCategory" maxlength="40" placeholder="Opcional"></label>
       <label>Fecha*<input name="date" type="date" required value="${item.date?.slice(0,10) || new Date().toISOString().slice(0,10)}"></label>
@@ -221,8 +221,17 @@ const BudgetTracker = {
     const category = String(data.get('newCategory') || data.get('category') || '').trim();
     const date = String(data.get('date') || '');
     if (!amountMinor || !description || !category || !date) return this.notify('warning', 'Completa los campos obligatorios con valores válidos.');
+    if (!isSupportedCurrency(originalCurrency) || !isSupportedCurrency(this.baseCurrency)) return this.notify('warning', 'Selecciona CRC, JPY o USD.');
+    const existing = this.editingId !== 'new' ? this.expenses.find((item) => item.id === this.editingId) : null;
     let conversion;
-    try { conversion = await this.resolveConversion(amountMinor, originalCurrency, String(data.get('manualRate') || '')); }
+    try {
+      const historicalConversion = historicalConversionForEdit(existing, {
+        amountMinor, originalCurrency, baseCurrency: this.baseCurrency, manualRate: String(data.get('manualRate') || '')
+      });
+      conversion = historicalConversion
+        ? historicalConversion
+        : await this.resolveConversion(amountMinor, originalCurrency, String(data.get('manualRate') || ''));
+    }
     catch (error) { return this.notify('error', `${error.message}. Reintenta o escribe un tipo de cambio manual.`); }
     const payload = {
       description, desc: description, amountMinor, amount: amountMinor, originalCurrency,
@@ -231,7 +240,9 @@ const BudgetTracker = {
       exchangeRateFetchedAt: new Date(conversion.fetchedAt).toISOString(), exchangeRateSource: conversion.source,
       conversionManual: !conversion.automatic, category, date,
       vendor: String(data.get('vendor') || '').trim(), notes: String(data.get('notes') || '').trim(),
-      createdBy: auth.currentUser.uid, createdByEmail: auth.currentUser.email || '', addedBy: auth.currentUser.email || '',
+      createdBy: existing?.createdBy || auth.currentUser.uid,
+      createdByEmail: existing?.createdByEmail || auth.currentUser.email || '',
+      addedBy: existing?.addedBy || auth.currentUser.email || '',
       updatedAt: serverTimestamp(), timestamp: Date.now()
     };
     try {
@@ -273,7 +284,7 @@ const BudgetTracker = {
   },
 
   async saveBaseCurrency(currency) {
-    if (!['CRC','JPY','USD','EUR'].includes(currency)) return;
+    if (!isSupportedCurrency(currency)) return;
     await setDoc(doc(db, `users/${auth.currentUser.uid}`), { preferences: { baseCurrency: currency } }, { mergeFields: ['preferences.baseCurrency'] });
     this.notify('success', `Moneda local cambiada a ${currency}. Los gastos históricos conservan su conversión original.`);
   },

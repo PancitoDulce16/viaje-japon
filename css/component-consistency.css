@@ -59,7 +59,20 @@ img, svg, video, canvas { max-width: 100%; }
 .budget-module {
   --budget-ink: var(--ink);
   --budget-paper: var(--surface-raised);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1180px;
   color: var(--budget-ink);
+}
+.budget-module :where(.budget-module__header, .budget-actions, .budget-filters, .budget-report, .budget-report-grid, .expense-list, .expense-row) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.budget-module :where(.budget-module__header > *, .budget-report-grid > *, .expense-row > *, p, strong, small) {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .budget-summary__card,
 .budget-filters,
@@ -136,11 +149,15 @@ img, svg, video, canvas { max-width: 100%; }
     white-space: normal;
   }
   .budget-module { width: 100%; }
+  .budget-module__header > div:last-child { width: 100%; }
+  .budget-module__header select,
+  .budget-module__header button { width: 100%; }
   .budget-summary { grid-template-columns: 1fr 1fr; }
   .budget-summary__card { min-width: 0; padding: var(--space-4); }
   .budget-summary__card strong { overflow-wrap: anywhere; }
   .budget-filters > label,
   .gallery-upload > label { flex: 1 1 100%; width: 100%; }
+  .budget-filters { padding-inline: var(--space-3); }
   .budget-filters input,
   .budget-filters select,
   .gallery-upload input,
