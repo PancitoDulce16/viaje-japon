@@ -19,6 +19,9 @@
  */
 
 import { detectJourneyStage, getJourneyMath } from './stage-detector.js';
+import { formatMoneyMinor } from '../budget/money.js';
+
+const safe = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 
 function section(label, innerHtml) {
   if (!innerHtml) return '';
@@ -227,6 +230,7 @@ export function renderProgressiveSkeleton() {
  * @returns {string}
  */
 export function renderProgressiveContent(trip, data = {}) {
+  if (trip && data?.trip) return renderTripDashboard(data);
   const stage = detectJourneyStage(trip);
   const math = getJourneyMath(trip);
 
@@ -244,4 +248,21 @@ export function renderProgressiveContent(trip, data = {}) {
     default:
       return '';
   }
+}
+
+function renderTripDashboard(data) {
+  const { trip, itinerary, budget, tasks, packing, images } = data;
+  const countdown = trip.countdown?.state === 'upcoming' ? `Faltan ${trip.countdown.days} días` : trip.countdown?.state === 'traveling' ? `${trip.countdown.days} días de viaje` : trip.countdown?.state === 'finished' ? 'Viaje finalizado' : 'Fechas por definir';
+  const next = itinerary.next;
+  const recent = budget.recent || [];
+  return `<section class="trip-overview" aria-label="Resumen del viaje">
+    <header class="trip-overview__heading"><div><p class="budget-kicker">旅の概要 · RESUMEN DEL VIAJE</p><h2>${safe(trip.name)}</h2><p>${safe(trip.destination)} · ${safe(trip.dateStart || 'Sin fecha')} — ${safe(trip.dateEnd || 'Sin fecha')}</p></div><strong>${countdown}</strong></header>
+    <div class="trip-overview__lead">
+      <article class="trip-overview__next"><p class="trip-overview__eyebrow">Próxima actividad</p>${next ? `<time>${safe(next.dayDate)} · ${safe(next.time || 'Sin hora')}</time><h3>${safe(next.title || next.name || 'Actividad')}</h3><p>${safe(next.location || next.desc || '')}</p>` : '<div class="dashboard-empty"><h3>Sin actividades próximas</h3><p>Agrega la primera actividad para verla aquí.</p></div>'}<button type="button" onclick="window.DashboardApp?.switchTab('itinerary')">Abrir itinerario</button></article>
+      <article class="trip-overview__finance"><div class="trip-overview__section-head"><div><p class="trip-overview__eyebrow">Presupuesto · ${safe(budget.currency)}</p><h3>${formatMoneyMinor(budget.spentMinor, budget.currency)} gastados</h3></div><strong>${budget.percentUsed.toFixed(1)}%</strong></div><div class="budget-progress"><span style="width:${Math.min(100, budget.percentUsed)}%"></span></div><dl><div><dt>Presupuesto</dt><dd>${formatMoneyMinor(budget.budgetMinor, budget.currency)}</dd></div><div><dt>Disponible</dt><dd>${formatMoneyMinor(budget.availableMinor, budget.currency)}</dd></div></dl>${recent.length ? `<div class="trip-overview__recent">${recent.map((item) => `<span>${safe(item.description || item.desc)} <strong>${formatMoneyMinor(item.convertedAmountMinor || item.amountMinor || 0, item.baseCurrency || budget.currency)}</strong></span>`).join('')}</div>` : '<p class="dashboard-empty">Aún no hay gastos.</p>'}<button type="button" onclick="window.DashboardApp?.switchTab('budget')">Ver reporte financiero</button></article>
+    </div>
+    <div class="trip-overview__progress"><article><div class="trip-overview__section-head"><div><p class="trip-overview__eyebrow">Itinerario</p><h3>${itinerary.completed} de ${itinerary.total} actividades</h3></div><strong>${itinerary.percent}%</strong></div><div class="budget-progress"><span style="width:${itinerary.percent}%"></span></div></article><article><div class="trip-overview__section-head"><div><p class="trip-overview__eyebrow">Pendientes</p><h3>${tasks.pendingCount} por completar</h3></div></div>${tasks.upcoming.length ? tasks.upcoming.slice(0,3).map((task) => `<p class="trip-overview__line"><span>${safe(task.title)}</span><time>${safe(task.dueDate || 'Sin fecha')}</time></p>`).join('') : '<p class="dashboard-empty">No hay tareas próximas.</p>'}<button type="button" onclick="window.TravelTasks?.open()">Administrar pendientes</button></article><article><div class="trip-overview__section-head"><div><p class="trip-overview__eyebrow">Equipaje</p><h3>${packing.packed} empacados · ${packing.pending} pendientes</h3></div><strong>${packing.percent}%</strong></div><div class="budget-progress"><span style="width:${packing.percent}%"></span></div><button type="button" onclick="window.PackingList?.open()">Abrir equipaje</button></article></div>
+    ${images.length ? `<div class="trip-overview__gallery"><div><p class="trip-overview__eyebrow">Últimos recuerdos</p><h3>Galería del viaje</h3></div><div>${images.map((item) => `<img src="${safe(item.url)}" alt="${safe(item.name || 'Imagen del viaje')}" loading="lazy">`).join('')}</div></div>` : ''}
+    <nav class="trip-overview__quick" aria-label="Accesos rápidos"><button onclick="window.DashboardApp?.switchTab('budget');setTimeout(()=>window.BudgetTracker?.addExpenseFromTab(),100)">＋ Registrar gasto</button><button onclick="window.ItineraryBuilderExtensions?.showAddActivityModal()">＋ Agregar actividad</button><button onclick="window.TravelTasks?.open({create:true})">＋ Crear tarea</button><button onclick="window.PackingList?.open({create:true})">＋ Agregar equipaje</button></nav>
+  </section>`;
 }

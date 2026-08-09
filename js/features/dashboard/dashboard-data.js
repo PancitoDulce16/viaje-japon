@@ -1,139 +1,64 @@
-/**
- * 📡 DASHBOARD DATA — Dashboard Experience, slice 3
- *
- * The one place that knows which real Firestore documents feed the
- * Dashboard's progressive content. progressive-content.js stays a pure
- * renderer (data in, HTML out); this module is the only thing that
- * talks to Firestore for dashboard purposes. Fetches only what the
- * current stage actually needs — no speculative reads.
- *
- * No mock data, ever. If a real document doesn't exist yet, the
- * relevant field is simply omitted — progressive-content.js's own
- * empty-state fallbacks (already built in slice 2) handle the rest.
- */
-
 import { db } from '../../core/firebase-config.js';
-import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
-import { summarizeBudget } from '../budget/budget-utils.js';
+import {
+  collection, doc, getAggregateFromServer, getCountFromServer, getDoc, getDocs,
+  limit, orderBy, query, sum, where
+} from 'firebase/firestore';
+import { calculateTripCountdown, summarizeItinerary } from './dashboard-summary.js';
 
-async function safeGetDoc(path, docId) {
-  try {
-    const snap = await getDoc(doc(db, path, docId));
-    return snap.exists() ? snap.data() : null;
-  } catch (error) {
-    console.error(`❌ Dashboard data: error reading ${path}/${docId}`, error);
-    return null;
-  }
+async function optional(work, fallback, label) {
+  try { return await work(); }
+  catch (error) { console.warn(`Dashboard: no se pudo cargar ${label}`, error); return fallback; }
 }
 
-async function safeGetCollection(path) {
-  try { const snap = await getDocs(collection(db, path)); return snap.docs.map(item => ({ id: item.id, ...item.data() })); }
-  catch (error) { console.error(`Dashboard data: error reading ${path}`, error); return []; }
-}
+const rows = (snapshot) => snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
 
-/**
- * @param {string} tripId
- * @param {'dreaming'|'planning'|'preparing'|'traveling'|'remembering'|'lookingBack'} stage
- * @param {object} trip - TripsManager.currentTrip, for the budget estimate calc
- * @param {object|null} [itineraryDoc] - already-fetched itinerary doc, if the
- *   caller fetched it for another reason (see trips-manager.js's
- *   itineraryLoaded dispatch) — avoids a redundant second read.
- * @returns {Promise<object>} data shaped for progressive-content.js
- */
-export async function fetchDashboardData(tripId, stage, trip, itineraryDoc = undefined) {
+export async function fetchDashboardData(tripId, _stage, trip, itineraryDoc = undefined) {
   if (!tripId) return {};
+  const itineraryPromise = itineraryDoc !== undefined
+    ? Promise.resolve(itineraryDoc)
+    : optional(async () => { const snap = await getDoc(doc(db, `trips/${tripId}/data/itinerary`)); return snap.exists() ? snap.data() : null; }, null, 'itinerario');
+  const budgetPromise = optional(async () => { const snap = await getDoc(doc(db, `trips/${tripId}/budget/general`)); return snap.exists() ? snap.data() : null; }, null, 'presupuesto');
 
-  if (stage === 'preparing') {
-    const [reservationsDoc, packingDoc, budgetDoc, expenses, tasks] = await Promise.all([
-      safeGetDoc(`trips/${tripId}/data`, 'reservations'),
-      safeGetDoc(`trips/${tripId}/data`, 'packing'),
-      safeGetDoc(`trips/${tripId}/budget`, 'general'),
-      safeGetCollection(`trips/${tripId}/expenses`),
-      safeGetCollection(`trips/${tripId}/tasks`),
-    ]);
+  const [itinerary, budget] = await Promise.all([itineraryPromise, budgetPromise]);
+  const baseCurrency = budget?.currency || 'CRC';
+  const expensesRef = collection(db, `trips/${tripId}/expenses`);
+  const tasksRef = collection(db, `trips/${tripId}/tasks`);
+  const packingRef = collection(db, `trips/${tripId}/packingItems`);
 
-    const rawItems = packingDoc?.items ?? [];
-    const items = Array.isArray(rawItems) ? rawItems : Object.values(rawItems).flat();
-    const totals = summarizeBudget(expenses, budgetDoc?.amountMinor || 0);
+  const [spentAggregate, recentExpenses, pendingCount, upcomingTasks, packingTotal, packingPacked, recentImages, legacyPacking] = await Promise.all([
+    optional(() => getAggregateFromServer(query(expensesRef, where('baseCurrency', '==', baseCurrency)), { spent: sum('convertedAmountMinor') }), null, 'total gastado'),
+    optional(() => getDocs(query(expensesRef, orderBy('date', 'desc'), limit(3))).then(rows), [], 'gastos recientes'),
+    optional(() => getCountFromServer(query(tasksRef, where('completed', '==', false))).then((snap) => snap.data().count), 0, 'conteo de pendientes'),
+    optional(() => getDocs(query(tasksRef, where('completed', '==', false), orderBy('dueDate', 'asc'), limit(5))).then(rows), [], 'tareas próximas'),
+    optional(() => getCountFromServer(packingRef).then((snap) => snap.data().count), 0, 'conteo de equipaje'),
+    optional(() => getCountFromServer(query(packingRef, where('packed', '==', true))).then((snap) => snap.data().count), 0, 'equipaje empacado'),
+    optional(() => getDocs(query(collection(db, `trips/${tripId}/images`), orderBy('createdAt', 'desc'), limit(4))).then(rows), [], 'galería'),
+    optional(async () => { const snap = await getDoc(doc(db, `trips/${tripId}/data/packing`)); return snap.exists() ? snap.data()?.items || [] : []; }, [], 'equipaje anterior')
+  ]);
 
-    return {
-      reservations: (reservationsDoc?.reservations ?? []).slice(0, 3),
-      packing: { checked: items.filter(i => i.checked).length, total: items.length },
-      budget: { ...totals, currency: budgetDoc?.currency || 'CRC', recent: expenses.sort((a,b) => String(b.date).localeCompare(String(a.date))).slice(0,3) },
-      tasks: tasks.filter(item => !item.completed).sort((a,b) => String(a.dueDate || '9999').localeCompare(String(b.dueDate || '9999'))),
-      travelReadiness: travelReadiness(trip),
-    };
-  }
-
-  if (stage === 'traveling') {
-    const itinDoc = itineraryDoc !== undefined ? itineraryDoc : await safeGetDoc(`trips/${tripId}/data`, 'itinerary');
-    const days = itinDoc?.days ?? [];
-    const todayISO = window.TimeUtils.toISODate(new Date());
-    const todayDay = days.find(d => d.date === todayISO);
-
-    const todayActivities = (todayDay?.activities ?? []).map(a => ({
-      time: a.time || '—',
-      duration: a.duration || '',
-      title: a.title || a.name || 'Actividad',
-      sub: a.desc || a.location || a.station || '',
-    }));
-
-    return { todayActivities };
-    // No IC-card/Suica balance data exists anywhere in the app yet (confirmed
-    // during the Train Pass object audit) — deliberately not populated here
-    // rather than inventing a number. progressive-content.js's own default
-    // ('—') already handles this honestly.
-  }
-
-  if (stage === 'remembering' || stage === 'lookingBack') {
-    const itinDoc = itineraryDoc !== undefined ? itineraryDoc : await safeGetDoc(`trips/${tripId}/data`, 'itinerary');
-    const days = itinDoc?.days ?? [];
-    const citiesVisited = new Set(days.map(d => d.location || d.city).filter(Boolean)).size;
-
-    return {
-      stats: {
-        daysExplored: days.length ? `${days.length} de ${days.length}` : '—',
-        citiesVisited: citiesVisited || '—',
-      }
-    };
-  }
-
-  return {};
-}
-
-/**
- * Reuses the exact same estimate formula trips-manager.js's retired
- * loadTripStatistics() used (¥15,000/día/persona) — extension, not a
- * second independent guess at the number.
- */
-function budgetSummary(trip) {
-  if (!trip?.info?.dateStart || !trip?.info?.dateEnd) return null;
-
-  const tripDays = window.TimeUtils.daysBetween(trip.info.dateStart, trip.info.dateEnd) + 1;
-  const members = trip.members?.length || 1;
-  const estimatedBudget = tripDays * 15000 * members;
-  const spent = (trip.expenses || []).reduce((sum, e) => sum + (e.amount || 0), 0);
+  const legacyItems = Array.isArray(legacyPacking) ? legacyPacking : Object.values(legacyPacking || {}).flat();
+  const packing = packingTotal
+    ? { total: packingTotal, packed: packingPacked }
+    : { total: legacyItems.length, packed: legacyItems.filter((item) => item.checked).length, legacy: legacyItems.length > 0 };
+  packing.pending = packing.total - packing.packed;
+  packing.percent = packing.total ? Math.round(packing.packed / packing.total * 100) : 0;
+  const spentMinor = spentAggregate?.data()?.spent || 0;
+  const budgetMinor = budget?.amountMinor || 0;
+  const itinerarySummary = summarizeItinerary(itinerary?.days || []);
 
   return {
-    spent,
-    estimated: estimatedBudget,
-    progress: estimatedBudget > 0 ? Math.min(100, (spent / estimatedBudget) * 100) : 0,
+    trip: {
+      name: trip?.info?.name || 'Viaje sin nombre', destination: trip?.info?.destination || 'Japón',
+      dateStart: trip?.info?.dateStart || '', dateEnd: trip?.info?.dateEnd || '',
+      countdown: calculateTripCountdown(trip?.info?.dateStart, trip?.info?.dateEnd)
+    },
+    itinerary: itinerarySummary,
+    budget: {
+      currency: baseCurrency, budgetMinor, spentMinor, availableMinor: budgetMinor - spentMinor,
+      percentUsed: budgetMinor ? spentMinor / budgetMinor * 100 : 0, recent: recentExpenses
+    },
+    tasks: { pendingCount, upcoming: upcomingTasks },
+    packing,
+    images: recentImages
   };
-}
-
-/**
- * Flight/accommodation booking status — this was previously shown in the
- * old stat-card grid ("Reservas: N/2 vuelos, N hoteles") and is preserved
- * here rather than dropped, reusing the exact same trip.flights/
- * trip.accommodations fields.
- */
-function travelReadiness(trip) {
-  if (!trip) return null;
-
-  const flightsBooked =
-    (trip.flights?.outbound?.flightNumber ? 1 : 0) +
-    (trip.flights?.return?.flightNumber ? 1 : 0);
-  const accommodationsCount = trip.accommodations?.length || 0;
-
-  return { flightsBooked, accommodationsCount, allReady: flightsBooked === 2 && accommodationsCount > 0 };
 }

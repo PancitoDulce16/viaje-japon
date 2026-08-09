@@ -147,8 +147,28 @@ service cloud.firestore {
       match /tasks/{taskId} {
         allow read: if isTripMember(tripId);
         allow create: if isTripMember(tripId) && request.resource.data.createdBy == request.auth.uid &&
-          request.resource.data.title is string && request.resource.data.title.size() > 0;
-        allow update: if isTripMember(tripId) && request.resource.data.createdBy == resource.data.createdBy;
+          request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 140 &&
+          request.resource.data.category in ['Vuelos','Hospedaje','Documentos','Reservaciones','Pagos','Transporte','Actividades','Otros'] &&
+          request.resource.data.priority in ['Baja','Media','Alta'] && request.resource.data.completed == false;
+        allow update: if isTripMember(tripId) && request.resource.data.createdBy == resource.data.createdBy &&
+          request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 140 &&
+          request.resource.data.category in ['Vuelos','Hospedaje','Documentos','Reservaciones','Pagos','Transporte','Actividades','Otros'] &&
+          request.resource.data.priority in ['Baja','Media','Alta'];
+        allow delete: if isTripMember(tripId) && (resource.data.createdBy == request.auth.uid ||
+          get(/databases/$(database)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid);
+      }
+
+      match /packingItems/{itemId} {
+        allow read: if isTripMember(tripId);
+        allow create: if isTripMember(tripId) && request.resource.data.createdBy == request.auth.uid &&
+          request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 120 &&
+          request.resource.data.category in ['Ropa','Higiene','Tecnología','Documentos','Medicamentos','Accesorios','Otros'] &&
+          request.resource.data.quantity is int && request.resource.data.quantity >= 1 && request.resource.data.quantity <= 99 &&
+          request.resource.data.packed is bool;
+        allow update: if isTripMember(tripId) && request.resource.data.createdBy == resource.data.createdBy &&
+          request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 120 &&
+          request.resource.data.category in ['Ropa','Higiene','Tecnología','Documentos','Medicamentos','Accesorios','Otros'] &&
+          request.resource.data.quantity is int && request.resource.data.quantity >= 1 && request.resource.data.quantity <= 99;
         allow delete: if isTripMember(tripId) && (resource.data.createdBy == request.auth.uid ||
           get(/databases/$(database)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid);
       }
