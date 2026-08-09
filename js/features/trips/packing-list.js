@@ -11,6 +11,7 @@ import {
 export const PackingList = {
   items: [],
   unsubscribe: null,
+  filters: { category: '', status: '' },
 
   // Plantilla predefinida de equipaje para Japón
   defaultItems: [
@@ -155,7 +156,9 @@ export const PackingList = {
     if (!container) return;
 
     // Agrupar por categoría
-    const byCategory = this.items.reduce((acc, item) => {
+    const visibleItems = this.items.filter(item => (!this.filters.category || item.category === this.filters.category) &&
+      (!this.filters.status || (this.filters.status === 'packed') === Boolean(item.checked)));
+    const byCategory = visibleItems.reduce((acc, item) => {
       if (!acc[item.category]) {
         acc[item.category] = [];
       }
@@ -183,6 +186,11 @@ export const PackingList = {
           </div>
         </div>
 
+        <div class="flex gap-3 flex-wrap bg-white dark:bg-gray-800 p-3 rounded-xl">
+          <label>Categoría <select onchange="PackingList.setFilter('category',this.value)" class="dark:bg-gray-700"><option value="">Todas</option>${[...new Set(this.items.map(i => i.category))].map(cat => `<option ${this.filters.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}</select></label>
+          <label>Estado <select onchange="PackingList.setFilter('status',this.value)" class="dark:bg-gray-700"><option value="">Todos</option><option value="pending" ${this.filters.status === 'pending' ? 'selected' : ''}>Pendientes</option><option value="packed" ${this.filters.status === 'packed' ? 'selected' : ''}>Empacados</option></select></label>
+        </div>
+
         <!-- Categorías -->
         ${Object.entries(byCategory).map(([category, categoryItems]) => {
           const categoryChecked = categoryItems.filter(item => item.checked).length;
@@ -193,7 +201,8 @@ export const PackingList = {
             <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg">
               <div class="flex justify-between items-center mb-3">
                 <h4 class="text-md font-bold dark:text-white">${category}</h4>
-                <span class="text-sm font-semibold text-gray-600 dark:text-gray-400">${categoryChecked}/${categoryTotal}</span>
+                <div><span class="text-sm font-semibold text-gray-600 dark:text-gray-400">${categoryChecked}/${categoryTotal}</span>
+                <button type="button" onclick="PackingList.toggleCategory('${category.replaceAll("'", "\\'")}')" class="ml-2 text-xs underline">${categoryChecked === categoryTotal ? 'Desmarcar' : 'Empacar todo'}</button></div>
               </div>
               <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-4">
                 <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full transition-all duration-300" style="width: ${categoryProgress}%"></div>
@@ -204,11 +213,12 @@ export const PackingList = {
                     <input
                       type="checkbox"
                       ${item.checked ? 'checked' : ''}
-                      onchange="PackingList.toggleItem('${category}', ${index})"
+                      onchange="PackingList.toggleItem('${category}', ${this.items.indexOf(item)})"
                       class="w-5 h-5 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
                     >
                     <span class="text-2xl">${item.icon}</span>
-                    <span class="flex-1 dark:text-white ${item.checked ? 'line-through' : ''}">${item.name}</span>
+                    <span class="flex-1 dark:text-white ${item.checked ? 'line-through' : ''}">${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''}${item.owner ? `<small class="block">${item.owner}</small>` : ''}${item.notes ? `<small class="block">${item.notes}</small>` : ''}</span>
+                    ${item.custom ? `<button type="button" onclick="event.preventDefault();PackingList.editItem('${category.replaceAll("'", "\\'")}',${this.items.indexOf(item)})" aria-label="Editar ${item.name}">Editar</button><button type="button" onclick="event.preventDefault();PackingList.deleteItem('${category.replaceAll("'", "\\'")}',${this.items.indexOf(item)})" aria-label="Eliminar ${item.name}">×</button>` : ''}
                   </label>
                 `).join('')}
               </div>
@@ -237,8 +247,7 @@ export const PackingList = {
 
   // Toggle item check
   async toggleItem(category, index) {
-    const categoryItems = this.items.filter(item => item.category === category);
-    const item = categoryItems[index];
+    const item = this.items[index];
 
     if (!item) return;
 
@@ -263,12 +272,19 @@ export const PackingList = {
     if (!category) return;
 
     const icon = prompt('Emoji (opcional):', '📦');
+    if (this.items.some(item => item.name.trim().toLowerCase() === name.trim().toLowerCase())) {
+      if (!confirm('Ya existe un artículo con ese nombre. ¿Agregarlo de todas formas?')) return;
+    }
+    const quantity = Math.max(1, parseInt(prompt('Cantidad:', '1'), 10) || 1);
+    const owner = prompt('Responsable (opcional):', '') || null;
+    const notes = prompt('Notas (opcional):', '') || '';
 
     const newItem = {
       category: category.trim(),
       name: name.trim(),
       icon: icon || '📦',
       checked: false,
+      quantity, owner, notes,
       custom: true
     };
 
@@ -279,6 +295,34 @@ export const PackingList = {
     if (window.Notifications) {
       window.Notifications.success(`✅ "${name}" agregado a la lista`);
     }
+  },
+
+  async toggleCategory(category) {
+    const items = this.items.filter(item => item.category === category);
+    const shouldCheck = items.some(item => !item.checked);
+    items.forEach(item => { item.checked = shouldCheck; });
+    await this.saveList();
+  },
+
+  setFilter(key, value) { this.filters[key] = value; this.renderList(); },
+
+  async editItem(category, categoryIndex) {
+    const item = this.items[categoryIndex];
+    if (!item) return;
+    const name = prompt('Nombre:', item.name);
+    if (!name?.trim()) return;
+    item.name = name.trim();
+    item.quantity = Math.max(1, parseInt(prompt('Cantidad:', String(item.quantity || 1)), 10) || 1);
+    item.owner = prompt('Responsable (opcional):', item.owner || '') || null;
+    item.notes = prompt('Notas:', item.notes || '') || '';
+    await this.saveList();
+  },
+
+  async deleteItem(category, categoryIndex) {
+    const item = this.items[categoryIndex];
+    if (!item || !confirm(`¿Eliminar “${item.name}”?`)) return;
+    this.items.splice(this.items.indexOf(item), 1);
+    await this.saveList();
   },
 
   // Resetear a lista predeterminada

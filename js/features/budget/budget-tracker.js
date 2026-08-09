@@ -1,732 +1,347 @@
-﻿// js/budget-tracker.js - CON MODO COLABORATIVO
-
-import { db, auth } from '../../core/firebase-config.js';
+import { db, auth, storage } from '../../core/firebase-config.js';
 import {
-  collection,
-  addDoc,
-  getDocs,
-  deleteDoc,
-  doc,
-  query,
-  orderBy,
-  onSnapshot
+  addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query,
+  serverTimestamp, setDoc, updateDoc
 } from 'firebase/firestore';
-import { safeJSONParse, safeLocalStorageGet, safeLocalStorageSet } from '../../utils/safe-helpers.js';
+import { deleteObject, getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+import { expenseAmount, expensesToCsv, filterExpenses, summarizeBudget, toMinorUnits } from './budget-utils.js';
+import { formatFileSize, optimizeImage } from '../../utils/image-optimizer.js';
+import { convertMinorUnits, currencyScale, DEFAULT_BASE_CURRENCY, formatMoneyMinor, parseMoneyToMinor, rateToScaled, RATE_SCALE } from './money.js';
+import { exchangeRateService } from './exchange-rate-service.js';
 
-export const BudgetTracker = {
+export { expenseAmount, expensesToCsv, filterExpenses, summarizeBudget, toMinorUnits } from './budget-utils.js';
+
+export const DEFAULT_EXPENSE_CATEGORIES = ['Materiales', 'Transporte', 'Alimentación', 'Servicios', 'Alojamiento', 'Entretenimiento', 'Compras', 'Otros'];
+export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+}[char]));
+
+const BudgetTracker = {
   expenses: [],
-  unsubscribe: null,
+  budget: { amountMinor: 0, currency: DEFAULT_BASE_CURRENCY, minorUnit: 1 },
+  baseCurrency: DEFAULT_BASE_CURRENCY,
+  filters: { from: '', to: '', category: '', currency: '' },
+  expenseUnsubscribe: null,
+  budgetUnsubscribe: null,
+  userUnsubscribe: null,
+  editingId: null,
 
-  // Obtener el tripId actual
   getCurrentTripId() {
-    if (window.TripsManager && window.TripsManager.currentTrip) {
-      return window.TripsManager.currentTrip.id;
-    }
-    return localStorage.getItem('currentTripId');
+    return window.TripsManager?.currentTrip?.id || window.currentTripId || localStorage.getItem('currentTripId');
   },
 
-  // Inicializar listener en tiempo real
+  notify(type, message) {
+    if (window.Notifications?.[type]) window.Notifications[type](message);
+    else if (type === 'error') console.error(message);
+    else console.info(message);
+  },
+
+  getContainer() {
+    return document.getElementById('budgetTrackerContent') || document.getElementById('content-budget');
+  },
+
   initRealtimeSync() {
-    // Si ya hay un listener, limpiarlo
-    if (this.unsubscribe) {
-      this.unsubscribe();
-    }
-
-    // Si no hay usuario, cargar de localStorage
-    if (!auth.currentUser) {
-      console.log('⚠️ Budget: No hay usuario autenticado, usando localStorage');
-      this.expenses = safeLocalStorageGet('expenses', []);
-      this.updateModal();
-      this.renderInTab();
-      return;
-    }
-
+    this.cleanup(false);
     const tripId = this.getCurrentTripId();
-    const userId = auth.currentUser.uid;
-
-    // Si NO hay trip, solo usar localStorage (sin Firestore sync)
-    if (!tripId) {
-      // No crear listener de Firestore, solo usar localStorage
-      this.expenses = safeLocalStorageGet('expenses', []);
-      this.updateModal();
+    if (!auth.currentUser || !tripId) {
+      this.expenses = [];
       this.renderInTab();
       return;
     }
-
-    // 🔥 MODO COLABORATIVO: Usar el trip compartido
-    const expensesRef = collection(db, `trips/${tripId}/expenses`);
-    const q = query(expensesRef, orderBy('timestamp', 'desc'));
-
-    this.unsubscribe = onSnapshot(q, (snapshot) => {
-      this.expenses = [];
-      snapshot.forEach((doc) => {
-        this.expenses.push({
-          id: doc.id,
-          ...doc.data()
-        });
-      });
-
-      // También guardar en localStorage como backup
-      safeLocalStorageSet('expenses', this.expenses);
-
-      // Re-renderizar ambas vistas
-      this.updateModal();
+    this.renderLoading();
+    this.expenseUnsubscribe = onSnapshot(
+      query(collection(db, `trips/${tripId}/expenses`), orderBy('date', 'desc')),
+      (snapshot) => {
+        this.expenses = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+        this.renderInTab();
+        window.dispatchEvent(new CustomEvent('expensesUpdated'));
+      },
+      (error) => this.renderError(`No se pudieron cargar los gastos: ${error.message}`)
+    );
+    this.budgetUnsubscribe = onSnapshot(doc(db, `trips/${tripId}/budget/general`), (snapshot) => {
+      this.budget = snapshot.exists()
+        ? { amountMinor: 0, currency: this.baseCurrency, minorUnit: 1, ...snapshot.data() }
+        : { amountMinor: 0, currency: this.baseCurrency, minorUnit: 1 };
       this.renderInTab();
-
-      console.log('✅ Gastos COMPARTIDOS sincronizados:', this.expenses.length, 'gastos');
-    }, (error) => {
-      console.error('❌ Error en sync de gastos compartidos:', error);
-      // Fallback a localStorage si falla
-      this.expenses = safeLocalStorageGet('expenses', []);
-      this.updateModal();
+    }, (error) => this.renderError(`No se pudo cargar el presupuesto: ${error.message}`));
+    this.userUnsubscribe = onSnapshot(doc(db, `users/${auth.currentUser.uid}`), (snapshot) => {
+      this.baseCurrency = snapshot.data()?.preferences?.baseCurrency || DEFAULT_BASE_CURRENCY;
+      if (!this.budget.amountMinor) this.budget.currency = this.baseCurrency;
       this.renderInTab();
     });
+  },
+
+  renderLoading() {
+    const container = this.getContainer();
+    if (container) container.innerHTML = '<div class="budget-state" role="status">Cargando presupuesto y gastos…</div>';
+  },
+
+  renderError(message) {
+    const container = this.getContainer();
+    if (container) container.innerHTML = `<div class="budget-state budget-state--error" role="alert">${escapeHtml(message)} <button type="button" data-action="retry">Reintentar</button></div>`;
+    container?.querySelector('[data-action="retry"]')?.addEventListener('click', () => this.initRealtimeSync());
+  },
+
+  formatMoney(amountMinor) {
+    return formatMoneyMinor(amountMinor, this.baseCurrency);
   },
 
   renderInTab() {
-    // Notificar a otras vistas (Bento Budget) que los gastos cambiaron —
-    // renderInTab se invoca tras cada sync/alta/baja, es el hook natural
-    window.dispatchEvent(new CustomEvent('expensesUpdated'));
-
-    const container = document.getElementById('budgetTrackerContent');
+    const container = this.getContainer();
     if (!container) return;
-
-    const total = this.expenses.reduce((sum, exp) => sum + exp.amount, 0);
-    const tripId = this.getCurrentTripId();
-
-    // Calcular gastos por categoría
-    const byCategory = this.expenses.reduce((acc, exp) => {
-      const cat = exp.category || 'Otros';
-      acc[cat] = (acc[cat] || 0) + exp.amount;
-      return acc;
-    }, {});
-
-    const categories = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
-    const members = window.TripsManager?.currentTrip?.memberEmails || window.TripsManager?.currentTrip?.data?.memberEmails || [auth.currentUser?.email].filter(Boolean);
-    const sharedExpenses = this.expenses.filter(expense => expense.shared !== false);
-    const sharePerPerson = members.length ? sharedExpenses.reduce((sum, expense) => sum + expense.amount, 0) / members.length : 0;
-    const balances = members.map(email => ({ email, paid: this.expenses.filter(expense => (expense.paidBy || expense.addedBy) === email).reduce((sum, expense) => sum + expense.amount, 0) }));
-
-    container.innerHTML = `
-      <!-- Total Card compacto -->
-      <div class="jp-ledger-total mb-4 p-4 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 text-white rounded-xl shadow-lg">
-        <div class="flex justify-between items-center">
-          <div>
-            <p class="text-sm opacity-90 mb-1">Total Gastado</p>
-            <p class="text-3xl font-bold">¥${total.toLocaleString()}</p>
-            <p class="text-xs opacity-90">~$${Math.round(total / 145)} USD • ${this.expenses.length} gastos</p>
-          </div>
-          <div class="text-right">
-            <p class="text-xs opacity-75 mb-1">${tripId ? '🤝 Colaborativo' : '📱 Local'}</p>
-          </div>
-        </div>
-      </div>
-
-      ${members.length > 1 && sharedExpenses.length ? `<details class="mb-4 p-3 bg-pink-50 dark:bg-gray-800 rounded-lg border border-pink-100 dark:border-gray-700"><summary class="font-bold text-sm cursor-pointer">🤝 Saldos del grupo</summary><div class="mt-3 space-y-2">${balances.map(balance => { const net = balance.paid - sharePerPerson; return `<div class="flex justify-between text-xs"><span>${this.escapeHtml(balance.email.split('@')[0])}</span><b class="${net >= 0 ? 'text-green-600' : 'text-rose-600'}">${net >= 0 ? 'recibe' : 'debe'} ¥${Math.abs(Math.round(net)).toLocaleString()}</b></div>`; }).join('')}</div></details>` : ''}
-
-      <!-- Formulario compacto -->
-      <div class="jp-ledger-form mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-        <h4 class="font-bold mb-2 text-gray-800 dark:text-white text-sm">➕ Agregar Gasto</h4>
-        <div class="grid grid-cols-2 gap-2 mb-2">
-          <input id="expenseDescTab" type="text" class="col-span-2 p-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Descripción">
-          <select id="expenseCategoryTab" class="p-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-            <option value="Comida">🍜 Comida</option>
-            <option value="Transporte">🚇 Transporte</option>
-            <option value="Alojamiento">🏨 Alojamiento</option>
-            <option value="Entretenimiento">🎮 Entretenimiento</option>
-            <option value="Compras">🛍️ Compras</option>
-            <option value="Otros">📦 Otros</option>
-          </select>
-          <input id="expenseAmountTab" type="number" class="p-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="¥ JPY">
-          <select id="expensePayerTab" class="p-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">${members.map(email => `<option value="${this.escapeHtml(email)}" ${email === auth.currentUser?.email ? 'selected' : ''}>Pagó ${this.escapeHtml(email.split('@')[0])}</option>`).join('')}</select>
-          <label class="flex items-center gap-2 p-2 text-xs text-gray-600 dark:text-gray-300"><input id="expenseSharedTab" type="checkbox" checked> Dividir entre todos</label>
-        </div>
-        <button id="addExpenseBtnTab" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-2 rounded-lg transition text-sm">
-          ➕ Agregar
-        </button>
-      </div>
-
-      <!-- Categorías si hay gastos -->
-      ${categories.length > 0 ? `
-        <div class="jp-ledger-categories mb-4 p-3 bg-white dark:bg-gray-800 rounded-lg shadow">
-          <h4 class="font-bold text-sm mb-3 dark:text-white">📊 Por Categoría</h4>
-          <div class="space-y-2">
-            ${categories.map(([cat, amount]) => {
-              const percent = (amount / total * 100).toFixed(1);
-              const icon = this.getCategoryIcon(cat);
-              const color = this.getCategoryColor(cat);
-              return `
-                <div>
-                  <div class="flex justify-between text-xs mb-1">
-                    <span class="dark:text-white">${icon} ${cat}</span>
-                    <span class="font-semibold dark:text-white">¥${amount.toLocaleString()} (${percent}%)</span>
-                  </div>
-                  <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div class="${color} h-2 rounded-full" style="width: ${percent}%"></div>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      ` : ''}
-
-      <!-- Lista de gastos compacta -->
-      <div class="jp-ledger-receipts space-y-2 max-h-96 overflow-y-auto">
-        ${this.expenses.length === 0 ? `
-          <div class="text-center py-8">
-            <div class="text-4xl mb-2">💰</div>
-            <p class="text-gray-500 dark:text-gray-400 text-sm">No hay gastos registrados</p>
-          </div>
-        ` : this.expenses.map((exp) => {
-          const icon = this.getCategoryIcon(exp.category || 'Otros');
-          const color = this.getCategoryColorClass(exp.category || 'Otros');
-          return `
-            <div class="jp-ledger-receipt group p-2 bg-white dark:bg-gray-700 rounded-lg border-l-4 ${color} hover:shadow-md transition">
-              <div class="flex justify-between items-start">
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-1">
-                    <span>${icon}</span>
-                    <span class="dark:text-white font-semibold text-sm">${this.escapeHtml(exp.desc)}</span>
-                  </div>
-                  <div class="flex gap-2 text-xs text-gray-500 dark:text-gray-400">
-                    ${exp.category ? `<span>${exp.category}</span>` : ''}
-                    ${exp.date ? `<span>${new Date(exp.date).toLocaleDateString('es')}</span>` : ''}
-                  </div>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="text-green-600 dark:text-green-400 font-bold text-sm">¥${exp.amount.toLocaleString()}</span>
-                  <button data-expense-id="${exp.id || exp.timestamp}" class="delete-expense-tab opacity-0 group-hover:opacity-100 text-red-600 text-sm">🗑️</button>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    `;
-
-    // Event listeners
-    const addBtn = document.getElementById('addExpenseBtnTab');
-    if (addBtn) {
-      addBtn.addEventListener('click', () => this.addExpenseFromTab());
-    }
-
-    const descInput = document.getElementById('expenseDescTab');
-    const amountInput = document.getElementById('expenseAmountTab');
-
-    if (descInput) {
-      descInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') this.addExpenseFromTab();
-      });
-    }
-
-    if (amountInput) {
-      amountInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') this.addExpenseFromTab();
-      });
-    }
-
-    container.querySelectorAll('.delete-expense-tab').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const expenseId = e.currentTarget.dataset.expenseId;
-        this.deleteExpense(expenseId);
-      });
-    });
-  },
-
-  async addExpenseFromTab() {
-    const descInput = document.getElementById('expenseDescTab');
-    const amountInput = document.getElementById('expenseAmountTab');
-    const categorySelect = document.getElementById('expenseCategoryTab');
-    const payerSelect = document.getElementById('expensePayerTab');
-    const sharedInput = document.getElementById('expenseSharedTab');
-
-    if (!descInput || !amountInput) return;
-
-    const desc = descInput.value.trim();
-    const amount = parseFloat(amountInput.value);
-    const category = categorySelect ? categorySelect.value : 'Otros';
-
-    if (!desc || !amount || amount <= 0) {
-      window.Notifications.warning('⚠️ Por favor completa la descripción y monto');
+    if (!auth.currentUser || !this.getCurrentTripId()) {
+      container.innerHTML = '<div class="budget-state">Selecciona un viaje e inicia sesión para administrar su presupuesto.</div>';
       return;
     }
-
-    const expense = {
-      desc,
-      amount,
-      category,
-      timestamp: Date.now(),
-      date: new Date().toISOString(),
-      addedBy: auth.currentUser ? auth.currentUser.email : 'Usuario local',
-      paidBy: payerSelect?.value || auth.currentUser?.email || 'Usuario local',
-      shared: sharedInput?.checked !== false
-    };
-
-    try {
-      if (!auth.currentUser) {
-        this.expenses.push(expense);
-        localStorage.setItem('expenses', JSON.stringify(this.expenses));
-        this.renderInTab();
-        descInput.value = '';
-        amountInput.value = '';
-        descInput.focus();
-        return;
-      }
-
-      const tripId = this.getCurrentTripId();
-
-      if (!tripId) {
-        this.expenses.push(expense);
-        localStorage.setItem('expenses', JSON.stringify(this.expenses));
-        this.renderInTab();
-      } else {
-        await addDoc(collection(db, `trips/${tripId}/expenses`), expense);
-      }
-
-      descInput.value = '';
-      amountInput.value = '';
-      descInput.focus();
-    } catch (error) {
-      console.error('❌ Error guardando gasto:', error);
-      window.Notifications.error('Error al guardar. Intenta de nuevo.');
-    }
-  },
-
-  updateModal() {
-    const container = document.getElementById('budgetModalContent');
-    if (!container) return;
-
-    const total = this.expenses.reduce((sum, exp) => sum + exp.amount, 0);
-    const tripId = this.getCurrentTripId();
-
-    // Calcular gastos por categoría
-    const byCategory = this.expenses.reduce((acc, exp) => {
-      const cat = exp.category || 'Otros';
-      acc[cat] = (acc[cat] || 0) + exp.amount;
+    const filtered = filterExpenses(this.expenses, this.filters);
+    const reportableExpenses = this.expenses.filter(item => !item.baseCurrency || item.baseCurrency === this.baseCurrency);
+    const reportableFiltered = filtered.filter(item => !item.baseCurrency || item.baseCurrency === this.baseCurrency);
+    const budgetMatchesBase = !this.budget.currency || this.budget.currency === this.baseCurrency;
+    const totals = summarizeBudget(reportableExpenses, budgetMatchesBase ? (this.budget.amountMinor || 0) : 0);
+    const reportTotals = summarizeBudget(reportableFiltered, budgetMatchesBase ? (this.budget.amountMinor || 0) : 0);
+    const excludedCount = this.expenses.length - reportableExpenses.length;
+    const alertClass = totals.percentUsed >= 100 ? 'budget-alert--danger' : totals.percentUsed >= 80 ? 'budget-alert--warning' : '';
+    const alertText = totals.percentUsed >= 100 ? 'Presupuesto excedido' : totals.percentUsed >= 80 ? 'Has alcanzado el 80% del presupuesto' : '';
+    const categories = [...new Set([...DEFAULT_EXPENSE_CATEGORIES, ...this.expenses.map((item) => item.category).filter(Boolean)])];
+    const currencies = [...new Set(['JPY', 'USD', 'CRC', ...this.expenses.map((item) => item.originalCurrency).filter(Boolean)])];
+    const grouped = filtered.reduce((acc, item) => {
+      if (item.baseCurrency && item.baseCurrency !== this.baseCurrency) return acc;
+      acc[item.category || 'Otros'] = (acc[item.category || 'Otros'] || 0) + Number(item.convertedAmountMinor ?? expenseAmount(item));
       return acc;
     }, {});
+    const byOriginalCurrency = filtered.reduce((acc, item) => {
+      const currency = item.originalCurrency || item.currency || this.baseCurrency;
+      const row = acc[currency] ||= { originalMinor: 0, baseMinor: 0 };
+      row.originalMinor += expenseAmount(item);
+      if (!item.baseCurrency || item.baseCurrency === this.baseCurrency) row.baseMinor += Number(item.convertedAmountMinor ?? expenseAmount(item));
+      return acc;
+    }, {});
+    const maxCategory = Math.max(1, ...Object.values(grouped));
 
-    const categories = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
-
-    let syncStatus;
-    if (!auth.currentUser) {
-      syncStatus = '<span class="text-yellow-600 dark:text-yellow-400">📱 Solo local</span>';
-    } else if (tripId) {
-      syncStatus = '<span class="text-green-600 dark:text-green-400">🤝 Modo Colaborativo</span>';
-    } else {
-      syncStatus = '<span class="text-blue-600 dark:text-blue-400">☁️ Sincronizado</span>';
-    }
-
-    container.innerHTML = `
-      <!-- Total Card con mejor diseño -->
-      <div class="mb-6 p-6 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 text-white rounded-2xl shadow-xl">
-        <div class="flex justify-between items-center mb-3">
-          <p class="text-sm opacity-90">Total Gastado</p>
-          <p class="text-xs opacity-90">${syncStatus}</p>
-        </div>
-        <p class="text-4xl font-black mb-2">¥${total.toLocaleString()}</p>
-        <div class="flex justify-between items-center text-sm opacity-90">
-          <span>~$${Math.round(total / 145)} USD</span>
-          <span>${this.expenses.length} gastos</span>
-        </div>
+    container.innerHTML = `<section class="budget-module jp-budget-page" aria-labelledby="budgetTitle">
+      <header class="budget-module__header"><div><p class="budget-kicker">旅の会計 · CUENTAS DEL VIAJE</p><h2 id="budgetTitle">Presupuesto y gastos</h2><p>Totales en ${this.baseCurrency}; cada recibo conserva su moneda y cambio histórico.</p></div><div><label>Moneda local<select id="baseCurrencySelect">${['CRC','JPY','USD','EUR'].map(c => `<option ${c === this.baseCurrency ? 'selected' : ''}>${c}</option>`).join('')}</select></label><button class="budget-secondary" data-action="gallery">📷 Abrir galería</button></div></header>
+      ${alertText ? `<div class="budget-alert ${alertClass}" role="alert">${escapeHtml(alertText)} · ${totals.percentUsed.toFixed(1)}% utilizado</div>` : ''}
+      ${excludedCount || !budgetMatchesBase ? `<div class="budget-alert budget-alert--warning" role="status">Cambiaste la moneda local. ${excludedCount} gasto(s) y ${!budgetMatchesBase ? 'el presupuesto anterior' : 'sus conversiones anteriores'} permanecen en su moneda base histórica y no se suman como si fueran ${this.baseCurrency}. No se modificó ningún dato.</div>` : ''}
+      <div class="budget-summary">
+        ${this.summaryCard('Presupuesto', this.formatMoney(totals.budgetMinor), 'budget')}
+        ${this.summaryCard('Gastado', this.formatMoney(totals.spentMinor), 'spent')}
+        ${this.summaryCard('Disponible', this.formatMoney(totals.availableMinor), totals.availableMinor < 0 ? 'danger' : 'available')}
+        ${this.summaryCard('Utilizado', `${totals.percentUsed.toFixed(1)}%`, totals.percentUsed >= 80 ? 'danger' : 'percent')}
       </div>
-
-      <!-- Gráfico de Categorías -->
-      ${categories.length > 0 ? `
-        <div class="mb-6 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-          <h3 class="font-bold text-lg mb-4 dark:text-white">📊 Por Categoría</h3>
-
-          <!-- Gráfico Circular (Chart.js) -->
-          <div class="mb-6 flex justify-center">
-            <div class="w-64 h-64">
-              <canvas id="budgetPieChart"></canvas>
-            </div>
-          </div>
-
-          <!-- Barras de Progreso -->
-          <div class="space-y-3">
-            ${categories.map(([cat, amount]) => {
-              const percent = (amount / total * 100).toFixed(1);
-              const icon = this.getCategoryIcon(cat);
-              const color = this.getCategoryColor(cat);
-              return `
-                <div>
-                  <div class="flex justify-between text-sm mb-1">
-                    <span class="dark:text-white">${icon} ${cat}</span>
-                    <span class="font-semibold dark:text-white">¥${amount.toLocaleString()} (${percent}%)</span>
-                  </div>
-                  <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                    <div class="${color} h-2.5 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
-      ` : ''}
-
-      <!-- Formulario de Agregar -->
-      <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl">
-        <h3 class="font-bold mb-3 dark:text-white">➕ Agregar Gasto</h3>
-        <div class="grid grid-cols-2 gap-2 mb-2">
-          <input id="expenseDesc" type="text" class="col-span-2 p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition" placeholder="Descripción (ej. Sushi en Shibuya)">
-          <select id="expenseCategory" class="p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-            <option value="Comida">🍜 Comida</option>
-            <option value="Transporte">🚇 Transporte</option>
-            <option value="Alojamiento">🏨 Alojamiento</option>
-            <option value="Entretenimiento">🎮 Entretenimiento</option>
-            <option value="Compras">🛍️ Compras</option>
-            <option value="Otros">📦 Otros</option>
-          </select>
-          <input id="expenseAmount" type="number" class="p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="¥ JPY">
-        </div>
-        <button id="addExpenseBtn" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-3 rounded-lg transition transform hover:scale-105 shadow-lg">
-          ➕ Agregar Gasto
-        </button>
+      <div class="budget-progress" aria-label="${totals.percentUsed.toFixed(1)}% del presupuesto utilizado"><span style="width:${Math.min(100, totals.percentUsed)}%"></span></div>
+      <div class="budget-actions"><form id="budgetForm" class="budget-inline-form"><label>Presupuesto total <input name="amount" inputmode="decimal" type="number" min="1" step="1" required value="${this.budget.amountMinor ? this.budget.amountMinor / (this.budget.minorUnit || 1) : ''}"></label><button type="submit">Guardar presupuesto</button></form><button data-action="new-expense">＋ Registrar gasto</button></div>
+      <div id="expenseFormHost">${this.editingId === 'new' || this.editingId ? this.renderExpenseForm(categories) : ''}</div>
+      <nav class="budget-tabs" aria-label="Vistas del presupuesto"><button class="active" data-view="report">Reporte</button><button data-view="expenses">Gastos (${this.expenses.length})</button></nav>
+      <div class="budget-report">
+        <form id="reportFilters" class="budget-filters"><label>Desde<input type="date" name="from" value="${this.filters.from}"></label><label>Hasta<input type="date" name="to" value="${this.filters.to}"></label><label>Categoría<select name="category"><option value="">Todas</option>${categories.map((cat) => `<option ${this.filters.category === cat ? 'selected' : ''}>${escapeHtml(cat)}</option>`).join('')}</select></label><label>Moneda<select name="currency"><option value="">Todas</option>${currencies.map(c => `<option ${this.filters.currency === c ? 'selected' : ''}>${c}</option>`).join('')}</select></label><button type="button" data-action="clear-filters">Limpiar</button><button type="button" data-action="csv">Exportar CSV</button><button type="button" data-action="print">Imprimir / PDF</button></form>
+        <p class="budget-period-total"><strong>Total del período:</strong> ${this.formatMoney(reportTotals.spentMinor)} · ${filtered.length} gasto(s)</p>
+        <div class="currency-breakdown"><h3>Desglose por moneda original</h3>${Object.entries(byOriginalCurrency).map(([currency,row]) => `<span>${formatMoneyMinor(row.originalMinor,currency)} → ${formatMoneyMinor(row.baseMinor,this.baseCurrency)}</span>`).join(' · ') || 'Sin gastos'}</div>
+        <div class="budget-report-grid"><section><h3>Gastos por categoría</h3><div class="budget-chart" role="img" aria-label="Gráfica de gastos por categoría">${Object.entries(grouped).sort((a,b) => b[1]-a[1]).map(([cat, amount]) => `<div class="budget-chart__row"><span>${escapeHtml(cat)}</span><div><i style="width:${amount / maxCategory * 100}%"></i></div><strong>${this.formatMoney(amount)}</strong></div>`).join('') || '<p class="budget-empty">No hay datos para estos filtros.</p>'}</div></section>
+        <section><h3>Detalle de gastos</h3>${this.renderExpenseList(filtered)}</section></div>
       </div>
-
-      <!-- Lista de Gastos -->
-      <div class="space-y-2 max-h-96 overflow-y-auto">
-        ${this.expenses.length === 0 ? `
-          <div class="text-center py-12">
-            <div class="text-6xl mb-3">💰</div>
-            <p class="text-gray-500 dark:text-gray-400 font-semibold">No hay gastos registrados</p>
-            <p class="text-sm text-gray-400 dark:text-gray-500">¡Agrega tu primer gasto arriba!</p>
-          </div>
-        ` : this.expenses.map((exp) => {
-          const icon = this.getCategoryIcon(exp.category || 'Otros');
-          const color = this.getCategoryColorClass(exp.category || 'Otros');
-          return `
-            <div class="group p-3 bg-white dark:bg-gray-700 rounded-lg border-l-4 ${color} hover:shadow-md transition-all">
-              <div class="flex justify-between items-start">
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="text-lg">${icon}</span>
-                    <span class="dark:text-white font-semibold">${this.escapeHtml(exp.desc)}</span>
-                  </div>
-                  <div class="flex gap-3 text-xs text-gray-500 dark:text-gray-400">
-                    ${exp.category ? `<span>📁 ${exp.category}</span>` : ''}
-                    ${exp.addedBy ? `<span>👤 ${exp.addedBy.split('@')[0]}</span>` : ''}
-                    ${exp.date ? `<span>📅 ${new Date(exp.date).toLocaleDateString('es')}</span>` : ''}
-                  </div>
-                </div>
-                <div class="flex items-center gap-3">
-                  <span class="text-green-600 dark:text-green-400 font-bold text-lg">¥${exp.amount.toLocaleString()}</span>
-                  <button data-expense-id="${exp.id || exp.timestamp}" class="delete-expense opacity-0 group-hover:opacity-100 text-red-600 hover:text-red-700 transition-all transform hover:scale-110">
-                    🗑️
-                  </button>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    `;
-
-    const addBtn = document.getElementById('addExpenseBtn');
-    if (addBtn) {
-      addBtn.addEventListener('click', () => this.addExpense());
-    }
-
-    const descInput = document.getElementById('expenseDesc');
-    const amountInput = document.getElementById('expenseAmount');
-    
-    if (descInput) {
-      descInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') this.addExpense();
-      });
-    }
-    
-    if (amountInput) {
-      amountInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') this.addExpense();
-      });
-    }
-
-    container.querySelectorAll('.delete-expense').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const expenseId = e.currentTarget.dataset.expenseId;
-        this.deleteExpense(expenseId);
-      });
-    });
-
-    // Renderizar gráfico de Chart.js
-    this.renderPieChart(byCategory);
+    </section>`;
+    this.bindEvents();
   },
 
-  renderPieChart(byCategory) {
-    const canvas = document.getElementById('budgetPieChart');
-    if (!canvas || Object.keys(byCategory).length === 0) return;
+  summaryCard(label, value, kind) {
+    return `<article class="budget-summary__card budget-summary__card--${kind}"><span>${label}</span><strong>${value}</strong></article>`;
+  },
 
-    // Destruir gráfico anterior si existe
-    if (this.chartInstance) {
-      this.chartInstance.destroy();
-    }
+  renderExpenseForm(categories) {
+    const item = this.editingId === 'new' ? {} : this.expenses.find((expense) => expense.id === this.editingId) || {};
+    return `<form id="expenseForm" class="expense-form jp-ledger-form"><h3>${item.id ? 'Editar gasto' : 'Nuevo gasto'}</h3><div class="expense-form__grid">
+      <label>Concepto*<input name="description" maxlength="160" required value="${escapeHtml(item.description || item.desc)}"></label>
+      <label>Monto original*<input name="amount" type="number" inputmode="decimal" min="0.01" step="any" required value="${item.id ? expenseAmount(item) / currencyScale(item.originalCurrency || 'JPY') : ''}"></label>
+      <label>Moneda*<select name="currency">${['JPY','USD','CRC','EUR'].map(c => `<option ${c === (item.originalCurrency || 'JPY') ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+      <label>Categoría*<select name="category" required>${categories.map((cat) => `<option ${item.category === cat ? 'selected' : ''}>${escapeHtml(cat)}</option>`).join('')}</select></label>
+      <label>Nueva categoría<input name="newCategory" maxlength="40" placeholder="Opcional"></label>
+      <label>Fecha*<input name="date" type="date" required value="${item.date?.slice(0,10) || new Date().toISOString().slice(0,10)}"></label>
+      <label>Comercio o proveedor<input name="vendor" maxlength="100" value="${escapeHtml(item.vendor)}"></label>
+      <label class="expense-form__wide">Notas<textarea name="notes" maxlength="500">${escapeHtml(item.notes)}</textarea></label>
+      <label>Tipo de cambio manual<input name="manualRate" type="number" min="0" step="any" placeholder="Solo si falla la API"></label>
+      <div id="conversionPreview" class="currency-preview expense-form__wide" role="status">Escribe un monto para ver su equivalente en ${this.baseCurrency}.</div>
+      <label class="expense-form__wide">Comprobante (las fotos grandes se optimizan automáticamente)<input name="receipt" type="file" accept="image/*"></label>
+      </div><div id="expenseUploadStatus" role="status"></div><div class="expense-form__buttons"><button type="button" data-action="cancel-expense">Cancelar</button><button type="submit">${item.id ? 'Actualizar' : 'Guardar'} gasto</button></div></form>`;
+  },
 
-    const ctx = canvas.getContext('2d');
+  renderExpenseList(expenses) {
+    if (!expenses.length) return '<p class="budget-empty">No hay gastos para mostrar.</p>';
+    return `<div class="expense-list">${expenses.map((item) => { const originalCurrency = item.originalCurrency || item.currency || this.baseCurrency; const converted = item.convertedAmountMinor ?? expenseAmount(item); return `<article class="expense-row jp-ledger-receipt"><div><strong>${escapeHtml(item.description || item.desc)}</strong><small>${escapeHtml(item.date?.slice(0,10))} · ${escapeHtml(item.category || 'Otros')}${item.vendor ? ` · ${escapeHtml(item.vendor)}` : ''}</small><small>${formatMoneyMinor(expenseAmount(item), originalCurrency)} → ${formatMoneyMinor(converted, item.baseCurrency || this.baseCurrency)}${item.exchangeRate ? ` · cambio ${item.exchangeRate} (${item.conversionManual ? 'manual' : 'automático'})` : ''}</small></div><strong>${formatMoneyMinor(converted, item.baseCurrency || this.baseCurrency)}</strong><div class="expense-row__actions"><button data-action="edit" data-id="${item.id}" aria-label="Editar ${escapeHtml(item.description || item.desc)}">Editar</button><button data-action="delete" data-id="${item.id}" aria-label="Eliminar ${escapeHtml(item.description || item.desc)}">Eliminar</button></div></article>`; }).join('')}</div>`;
+  },
 
-    // Detectar modo oscuro
-    const isDark = document.documentElement.classList.contains('dark');
-    const textColor = isDark ? '#f1f5f9' : '#1f2937';
-    const gridColor = isDark ? '#475569' : '#e5e7eb';
-
-    // Preparar datos
-    const categories = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
-    const labels = categories.map(([cat]) => `${this.getCategoryIcon(cat)} ${cat}`);
-    const data = categories.map(([, amount]) => amount);
-    const colors = categories.map(([cat]) => this.getCategoryChartColor(cat));
-
-    // Crear gráfico
-    this.chartInstance = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: data,
-          backgroundColor: colors,
-          borderColor: isDark ? '#1e293b' : '#ffffff',
-          borderWidth: 3,
-          hoverOffset: 10
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              color: textColor,
-              padding: 15,
-              font: {
-                size: 12,
-                weight: '600'
-              },
-              usePointStyle: true,
-              pointStyle: 'circle'
-            }
-          },
-          tooltip: {
-            backgroundColor: isDark ? '#1e293b' : '#ffffff',
-            titleColor: textColor,
-            bodyColor: textColor,
-            borderColor: gridColor,
-            borderWidth: 1,
-            padding: 12,
-            displayColors: true,
-            callbacks: {
-              label: function(context) {
-                const label = context.label || '';
-                const value = context.parsed;
-                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                const percent = ((value / total) * 100).toFixed(1);
-                return ` ${label}: ¥${value.toLocaleString()} (${percent}%)`;
-              }
-            }
-          }
-        },
-        cutout: '65%', // Dona con agujero en el centro
-        animation: {
-          animateScale: true,
-          animateRotate: true,
-          duration: 1000,
-          easing: 'easeOutQuart'
-        }
-      }
+  bindEvents() {
+    document.getElementById('budgetForm')?.addEventListener('submit', (event) => this.saveBudget(event));
+    const expenseForm = document.getElementById('expenseForm');
+    expenseForm?.addEventListener('submit', (event) => this.saveExpense(event));
+    expenseForm?.addEventListener('input', () => this.previewConversion(expenseForm));
+    document.getElementById('baseCurrencySelect')?.addEventListener('change', (event) => this.saveBaseCurrency(event.target.value));
+    document.getElementById('reportFilters')?.addEventListener('change', (event) => {
+      this.filters[event.target.name] = event.target.value;
+      this.renderInTab();
+    });
+    this.getContainer()?.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-action]');
+      if (!button) return;
+      const actions = {
+        'new-expense': () => { this.editingId = 'new'; this.renderInTab(); },
+        'cancel-expense': () => { this.editingId = null; this.renderInTab(); },
+        edit: () => { this.editingId = button.dataset.id; this.renderInTab(); },
+        delete: () => this.deleteExpense(button.dataset.id),
+        csv: () => this.exportCsv(),
+        print: () => window.print(),
+        'clear-filters': () => { this.filters = { from: '', to: '', category: '', currency: '' }; this.renderInTab(); },
+        gallery: () => this.openGallery()
+      };
+      actions[button.dataset.action]?.();
     });
   },
 
-  getCategoryChartColor(category) {
-    const colors = {
-      'Comida': '#f59e0b',           // Amber
-      'Transporte': '#3b82f6',       // Blue
-      'Alojamiento': '#8b5cf6',      // Purple
-      'Entretenimiento': '#ec4899',  // Pink
-      'Compras': '#10b981',          // Green
-      'Otros': '#6b7280'             // Gray
-    };
-    return colors[category] || colors['Otros'];
-  },
-
-  async addExpense() {
-    const descInput = document.getElementById('expenseDesc');
-    const amountInput = document.getElementById('expenseAmount');
-    const categorySelect = document.getElementById('expenseCategory');
-
-    if (!descInput || !amountInput) return;
-
-    const desc = descInput.value.trim();
-    const amount = parseFloat(amountInput.value);
-    const category = categorySelect ? categorySelect.value : 'Otros';
-
-    if (!desc || !amount || amount <= 0) {
-      window.Notifications.warning('⚠️ Por favor completa la descripción y monto');
-      return;
-    }
-
-    const expense = {
-      desc,
-      amount,
-      category,
-      timestamp: Date.now(),
-      date: new Date().toISOString(),
-      addedBy: auth.currentUser ? auth.currentUser.email : 'Usuario local'
-    };
-
+  async saveBudget(event) {
+    event.preventDefault();
+    const amountMinor = parseMoneyToMinor(new FormData(event.currentTarget).get('amount'), this.baseCurrency);
+    if (!amountMinor) return this.notify('warning', 'Ingresa un presupuesto mayor que cero.');
     try {
-      if (!auth.currentUser) {
-        // Sin usuario, guardar solo localmente
-        this.expenses.push(expense);
-        localStorage.setItem('expenses', JSON.stringify(this.expenses));
-        this.updateModal();
-        console.log('📱 Gasto guardado localmente');
-        descInput.value = '';
-        amountInput.value = '';
-        descInput.focus();
-        return;
+      await setDoc(doc(db, `trips/${this.getCurrentTripId()}/budget/general`), {
+        amountMinor, currency: this.baseCurrency, minorUnit: currencyScale(this.baseCurrency),
+        updatedBy: auth.currentUser.uid, updatedAt: serverTimestamp(), createdAt: this.budget.createdAt || serverTimestamp()
+      }, { merge: true });
+      this.notify('success', 'Presupuesto guardado.');
+    } catch (error) { this.notify('error', `No se pudo guardar: ${error.message}`); }
+  },
+
+  async saveExpense(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const originalCurrency = String(data.get('currency') || 'JPY');
+    const amountMinor = parseMoneyToMinor(data.get('amount'), originalCurrency);
+    const description = String(data.get('description') || '').trim();
+    const category = String(data.get('newCategory') || data.get('category') || '').trim();
+    const date = String(data.get('date') || '');
+    if (!amountMinor || !description || !category || !date) return this.notify('warning', 'Completa los campos obligatorios con valores válidos.');
+    let conversion;
+    try { conversion = await this.resolveConversion(amountMinor, originalCurrency, String(data.get('manualRate') || '')); }
+    catch (error) { return this.notify('error', `${error.message}. Reintenta o escribe un tipo de cambio manual.`); }
+    const payload = {
+      description, desc: description, amountMinor, amount: amountMinor, originalCurrency,
+      convertedAmountMinor: conversion.convertedAmountMinor, baseCurrency: this.baseCurrency,
+      exchangeRate: conversion.rate, exchangeRateScaled: conversion.rateScaled,
+      exchangeRateFetchedAt: new Date(conversion.fetchedAt).toISOString(), exchangeRateSource: conversion.source,
+      conversionManual: !conversion.automatic, category, date,
+      vendor: String(data.get('vendor') || '').trim(), notes: String(data.get('notes') || '').trim(),
+      createdBy: auth.currentUser.uid, createdByEmail: auth.currentUser.email || '', addedBy: auth.currentUser.email || '',
+      updatedAt: serverTimestamp(), timestamp: Date.now()
+    };
+    try {
+      let expenseId = this.editingId !== 'new' ? this.editingId : null;
+      if (expenseId) await updateDoc(doc(db, `trips/${this.getCurrentTripId()}/expenses/${expenseId}`), payload);
+      else {
+        const created = await addDoc(collection(db, `trips/${this.getCurrentTripId()}/expenses`), { ...payload, createdAt: serverTimestamp() });
+        expenseId = created.id;
       }
+      const file = data.get('receipt');
+      if (file?.size) await this.uploadReceipt(file, expenseId);
+      this.editingId = null;
+      this.notify('success', 'Gasto guardado.');
+    } catch (error) { this.notify('error', `No se pudo guardar el gasto: ${error.message}`); }
+  },
 
-      const tripId = this.getCurrentTripId();
+  async resolveConversion(amountMinor, originalCurrency, manualRate = '') {
+    if (originalCurrency === this.baseCurrency) return { convertedAmountMinor: amountMinor, rate: 1, rateScaled: RATE_SCALE, fetchedAt: Date.now(), source: 'same-currency', automatic: true };
+    let quote;
+    if (manualRate) {
+      const rateScaled = rateToScaled(manualRate);
+      if (!rateScaled) throw new Error('El tipo de cambio manual debe ser mayor que cero');
+      quote = { rate: Number(manualRate), rateScaled, fetchedAt: Date.now(), source: 'manual', automatic: false };
+    } else quote = await exchangeRateService.getRate(originalCurrency, this.baseCurrency);
+    return { ...quote, convertedAmountMinor: convertMinorUnits(amountMinor, originalCurrency, this.baseCurrency, quote.rateScaled) };
+  },
 
-      if (!tripId) {
-        // Sin trip, guardar solo localmente (no en Firestore)
-        console.log('⚠️ No hay trip, guardando solo en localStorage');
-        this.expenses.push(expense);
-        localStorage.setItem('expenses', JSON.stringify(this.expenses));
-        this.updateModal();
-      } else {
-        // 🔥 Modo colaborativo
-        await addDoc(collection(db, `trips/${tripId}/expenses`), expense);
-        console.log('✅ Gasto guardado (COMPARTIDO) en Firebase por:', expense.addedBy);
-      }
+  async previewConversion(form) {
+    const preview = document.getElementById('conversionPreview');
+    const data = new FormData(form);
+    const currency = String(data.get('currency') || 'JPY');
+    const amountMinor = parseMoneyToMinor(data.get('amount'), currency);
+    if (!amountMinor) { preview.textContent = `Escribe un monto válido para ver su equivalente en ${this.baseCurrency}.`; return; }
+    preview.textContent = 'Consultando tipo de cambio…';
+    try {
+      const result = await this.resolveConversion(amountMinor, currency, String(data.get('manualRate') || ''));
+      preview.innerHTML = `<strong>${formatMoneyMinor(amountMinor, currency)}</strong> equivale a <strong>${formatMoneyMinor(result.convertedAmountMinor, this.baseCurrency)}</strong><small>Cambio ${result.rate} · ${result.automatic ? result.source : 'introducido manualmente'} · ${new Date(result.fetchedAt).toLocaleString('es-CR')}</small>`;
+    } catch (error) { preview.innerHTML = `<span role="alert">${escapeHtml(error.message)}. Puedes reintentar o introducir el cambio manualmente.</span>`; }
+  },
 
-      descInput.value = '';
-      amountInput.value = '';
-      descInput.focus();
-    } catch (error) {
-      console.error('❌ Error guardando gasto:', error);
-      window.Notifications.error('Error al guardar. Intenta de nuevo.');
-    }
+  async saveBaseCurrency(currency) {
+    if (!['CRC','JPY','USD','EUR'].includes(currency)) return;
+    await setDoc(doc(db, `users/${auth.currentUser.uid}`), { preferences: { baseCurrency: currency } }, { mergeFields: ['preferences.baseCurrency'] });
+    this.notify('success', `Moneda local cambiada a ${currency}. Los gastos históricos conservan su conversión original.`);
+  },
+
+  async uploadReceipt(file, expenseId) {
+    if (!file.type.startsWith('image/')) throw new Error('El comprobante debe ser una imagen.');
+    const original = file;
+    const optimized = await optimizeImage(file, { maxBytes: MAX_IMAGE_BYTES });
+    file = optimized.file;
+    const tripId = this.getCurrentTripId();
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const storagePath = `trips/${tripId}/images/${auth.currentUser.uid}/${Date.now()}_${safeName}`;
+    const task = uploadBytesResumable(ref(storage, storagePath), file, { contentType: file.type });
+    const status = document.getElementById('expenseUploadStatus');
+    await new Promise((resolve, reject) => task.on('state_changed', (snapshot) => {
+      if (status) status.textContent = `Subiendo comprobante: ${Math.round(snapshot.bytesTransferred / snapshot.totalBytes * 100)}%`;
+    }, reject, resolve));
+    const url = await getDownloadURL(task.snapshot.ref);
+    const metadata = { storagePath, url, name: file.name, type: file.type, size: file.size, originalSize: original.size,
+      optimized: optimized.optimized, expenseId, tripId, userId: auth.currentUser.uid, createdAt: serverTimestamp() };
+    const imageDoc = await addDoc(collection(db, `trips/${tripId}/images`), metadata);
+    await updateDoc(doc(db, `trips/${tripId}/expenses/${expenseId}`), { receiptImageId: imageDoc.id, receiptUrl: url,
+      receiptOptimization: optimized.optimized ? `${formatFileSize(original.size)} → ${formatFileSize(file.size)}` : null });
   },
 
   async deleteExpense(expenseId) {
-    const confirmed = await window.Dialogs.confirm({
-        title: '🗑️ ¿Eliminar Gasto?',
-        message: '¿Estás seguro de que deseas eliminar este gasto?',
-        okText: 'Sí, eliminar',
-        isDestructive: true
-    });
-    if (!confirmed) return;
-    
+    if (!confirm('¿Eliminar este gasto? Esta acción no se puede deshacer.')) return;
+    const item = this.expenses.find((expense) => expense.id === expenseId);
     try {
-      if (!auth.currentUser) {
-        // Sin usuario, eliminar localmente
-        this.expenses = this.expenses.filter(exp => 
-          (exp.id || exp.timestamp.toString()) !== expenseId.toString()
-        );
-        localStorage.setItem('expenses', JSON.stringify(this.expenses));
-        this.updateModal();
-        console.log('📱 Gasto eliminado localmente');
-        return;
+      if (item?.receiptImageId) {
+        const image = window.BudgetGallery?.images?.find((entry) => entry.id === item.receiptImageId);
+        if (image?.storagePath) await deleteObject(ref(storage, image.storagePath)).catch(() => {});
+        await deleteDoc(doc(db, `trips/${this.getCurrentTripId()}/images/${item.receiptImageId}`));
       }
-
-      const tripId = this.getCurrentTripId();
-
-      if (!tripId) {
-        // Sin trip, eliminar solo localmente
-        console.log('⚠️ No hay trip, eliminando solo de localStorage');
-        this.expenses = this.expenses.filter(exp =>
-          (exp.id || exp.timestamp.toString()) !== expenseId.toString()
-        );
-        localStorage.setItem('expenses', JSON.stringify(this.expenses));
-        this.updateModal();
-      } else {
-        // 🔥 Modo colaborativo
-        await deleteDoc(doc(db, `trips/${tripId}/expenses`, expenseId));
-        console.log('✅ Gasto eliminado (COMPARTIDO) de Firebase');
-      }
-    } catch (error) {
-      console.error('❌ Error eliminando gasto:', error);
-      window.Notifications.error('Error al eliminar. Intenta de nuevo.');
-    }
+      await deleteDoc(doc(db, `trips/${this.getCurrentTripId()}/expenses/${expenseId}`));
+      this.notify('success', 'Gasto eliminado.');
+    } catch (error) { this.notify('error', `No se pudo eliminar: ${error.message}`); }
   },
 
-  escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+  exportCsv() {
+    const filtered = filterExpenses(this.expenses, this.filters);
+    const blob = new Blob([`\ufeff${expensesToCsv(filtered, this.budget.currency)}`], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = Object.assign(document.createElement('a'), { href: url, download: `reporte-gastos-${this.getCurrentTripId()}.csv` });
+    anchor.click(); URL.revokeObjectURL(url);
   },
 
-  // 🔥 NUEVO: Obtener icono por categoría
-  getCategoryIcon(category) {
-    const icons = {
-      'Comida': '🍜',
-      'Transporte': '🚇',
-      'Alojamiento': '🏨',
-      'Entretenimiento': '🎮',
-      'Compras': '🛍️',
-      'Otros': '📦'
-    };
-    return icons[category] || '📦';
+  openGallery() {
+    if (window.BudgetGallery) window.BudgetGallery.open();
+    else this.notify('warning', 'La galería todavía se está cargando.');
   },
 
-  // 🔥 NUEVO: Obtener color de barra de progreso por categoría
-  getCategoryColor(category) {
-    const colors = {
-      'Comida': 'bg-gradient-to-r from-orange-400 to-red-500',
-      'Transporte': 'bg-gradient-to-r from-blue-400 to-cyan-500',
-      'Alojamiento': 'bg-gradient-to-r from-purple-400 to-pink-500',
-      'Entretenimiento': 'bg-gradient-to-r from-green-400 to-emerald-500',
-      'Compras': 'bg-gradient-to-r from-yellow-400 to-amber-500',
-      'Otros': 'bg-gradient-to-r from-gray-400 to-slate-500'
-    };
-    return colors[category] || colors['Otros'];
+  updateModal() { this.renderInTab(); },
+  addExpenseFromTab() { this.editingId = 'new'; this.renderInTab(); },
+  cleanup(render = true) {
+    this.expenseUnsubscribe?.(); this.budgetUnsubscribe?.(); this.userUnsubscribe?.();
+    this.expenseUnsubscribe = null; this.budgetUnsubscribe = null; this.userUnsubscribe = null;
+    if (render) this.renderInTab();
   },
-
-  // 🔥 NUEVO: Obtener clase de borde por categoría
-  getCategoryColorClass(category) {
-    const colors = {
-      'Comida': 'border-orange-500',
-      'Transporte': 'border-blue-500',
-      'Alojamiento': 'border-purple-500',
-      'Entretenimiento': 'border-green-500',
-      'Compras': 'border-yellow-500',
-      'Otros': 'border-gray-500'
-    };
-    return colors[category] || colors['Otros'];
-  },
-
-  // Limpiar listener cuando se cierra
-  cleanup() {
-    if (this.unsubscribe) {
-      console.log('[BudgetTracker] 🛑 Deteniendo listener de gastos.');
-      this.unsubscribe();
-      this.unsubscribe = null;
-    }
-    this.expenses = [];
-    localStorage.removeItem('expenses');
-    this.updateModal();
-    this.renderInTab();
-    console.log('[BudgetTracker] 🧹 Estado de gastos limpiado.');
-  },
-
-  // Re-inicializar cuando cambie el trip
-  reinitialize() {
-    this.initRealtimeSync();
-  }
+  reinitialize() { this.initRealtimeSync(); }
 };
-window.BudgetTracker = BudgetTracker;
 
-// ====================================================================================
-// MANEJO DE EVENTOS DE AUTENTICACIÓN
-// ====================================================================================
-window.addEventListener('auth:initialized', (event) => {
-    console.log('[BudgetTracker] ✨ Evento auth:initialized recibido. Inicializando sync de gastos...');
-    BudgetTracker.initRealtimeSync();
-});
-
-window.addEventListener('auth:loggedOut', () => {
-    console.log('[BudgetTracker] 🚫 Evento auth:loggedOut recibido. Limpiando...');
-    BudgetTracker.cleanup();
-});
+export { BudgetTracker };
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+  window.BudgetTracker = BudgetTracker;
+  window.addEventListener('auth:initialized', () => BudgetTracker.initRealtimeSync());
+  window.addEventListener('tripChanged', () => BudgetTracker.reinitialize());
+  window.addEventListener('auth:loggedOut', () => BudgetTracker.cleanup());
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => BudgetTracker.initRealtimeSync());
+  else BudgetTracker.initRealtimeSync();
+}

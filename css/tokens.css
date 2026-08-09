@@ -26,9 +26,27 @@
   /* ---- Color: surface roles (theme-aware, light default) ---- */
   --surface-page: var(--color-washi);
   --surface-page-alt: var(--color-washi-alt);
+  --surface-raised: #FFFCF7;
+  --surface-subtle: #F5EFE5;
+  --surface-overlay: rgba(30, 37, 65, 0.68);
   --ink: var(--color-ai);
   --ink-soft: #5C6690;
+  --ink-muted: #757E9F;
   --hairline: rgba(43, 56, 104, 0.12);
+  --border-strong: rgba(43, 56, 104, 0.22);
+  --accent: #C04F75;
+  --accent-soft: #FCE8EE;
+  --state-success: #397C5B;
+  --state-warning: #8B5E10;
+  --state-error: #B7444F;
+  --focus-ring: #3F93B2;
+  --disabled-opacity: .56;
+  --control-bg: var(--surface-raised);
+  --control-border: var(--border-strong);
+  --control-hover: var(--surface-subtle);
+  --state-success-soft: #E5F3EB;
+  --state-warning-soft: #FFF1D2;
+  --state-error-soft: #FBE8E9;
   --shadow-rgb: 43, 56, 104; /* shadows are indigo-tinted, never neutral grey */
 
   /* ---- Type ---- */
@@ -68,11 +86,28 @@
 
 /* Dark mode: redefine tokens only, never style components inside this block. */
 .dark {
-  --surface-page: #141A2E;
-  --surface-page-alt: #1B2238;
-  --ink: #F2EEE4;
-  --ink-soft: #B7BEDB;
-  --hairline: rgba(242, 238, 228, 0.14);
+  --surface-page: #151A29;
+  --surface-page-alt: #1B2132;
+  --surface-raised: #232A3D;
+  --surface-subtle: #1D2436;
+  --surface-overlay: rgba(8, 12, 22, .76);
+  --ink: #F7F2E9;
+  --ink-soft: #C7CBDA;
+  --ink-muted: #9EA6BD;
+  --hairline: rgba(238, 232, 220, 0.13);
+  --border-strong: rgba(238, 232, 220, 0.23);
+  --accent: #EF8EAB;
+  --accent-soft: #3A2937;
+  --state-success: #82CBA7;
+  --state-warning: #E7BE70;
+  --state-error: #F08A91;
+  --focus-ring: #79C9E0;
+  --control-bg: var(--surface-raised);
+  --control-border: var(--border-strong);
+  --control-hover: var(--surface-subtle);
+  --state-success-soft: #20382F;
+  --state-warning-soft: #3B3222;
+  --state-error-soft: #43272E;
   --color-sora: #22314A;
   --shadow-rgb: 0, 0, 0;
 }

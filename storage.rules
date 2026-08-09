@@ -1,0 +1,24 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isTripMember(tripId) {
+      return request.auth != null &&
+        request.auth.uid in firestore.get(/databases/(default)/documents/trips/$(tripId)).data.members;
+    }
+    match /trips/{tripId}/images/{userId}/{fileName} {
+      allow read: if isTripMember(tripId);
+      allow create: if isTripMember(tripId) && request.auth.uid == userId &&
+        request.resource.size <= 5 * 1024 * 1024 && request.resource.contentType.matches('image/.*');
+      allow update: if false;
+      allow delete: if isTripMember(tripId) && (request.auth.uid == userId ||
+        firestore.get(/databases/(default)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid);
+    }
+    match /trips/{tripId}/photos/{fileName} {
+      allow read: if isTripMember(tripId);
+      allow create: if isTripMember(tripId) && request.resource.size <= 5 * 1024 * 1024 && request.resource.contentType.matches('image/.*');
+      allow update: if false;
+      allow delete: if isTripMember(tripId);
+    }
+    match /{allPaths=**} { allow read, write: if false; }
+  }
+}

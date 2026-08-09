@@ -1715,14 +1715,14 @@ function renderDayStoryDesk(day) {
   const rail = day.day === 1 ? currentItinerary?.railPassAnalysis : null;
   const featuredMeal = day.mealAudit?.featured;
   return `
+    <div class="day-closing-decor day-closing-decor--memory" aria-hidden="true">
+      <img class="day-closing-polaroid" src="/images/illustrations/generated/decorations/polaroid-fuji.png" alt="">
+      <img class="day-closing-postmark" src="/images/illustrations/generated/decorations/postmark.png" alt="">
+      <img class="day-closing-mascot" src="/images/illustrations/generated/components/note-sticker-cat-cutout.png" alt="">
+    </div>
     <section class="story-desk story-desk--${narrative.color}" aria-label="Relato y herramientas del día">
-      <div class="day-closing-decor day-closing-decor--memory" aria-hidden="true">
-        <img class="day-closing-polaroid" src="/images/illustrations/generated/decorations/polaroid-fuji.webp" alt="">
-        <img class="day-closing-postmark" src="/images/illustrations/generated/decorations/postmark.webp" alt="">
-        <img class="day-closing-mascot" src="/images/illustrations/generated/components/note-sticker-cat-cutout.png" alt="">
-      </div>
       <header class="story-desk__head">
-        <div><span>CAPÍTULO ${String(day.day).padStart(2, '0')}</span><h3>${narrative.icon} ${narrative.mood}</h3><p>${narrative.chapter}</p></div>
+        <div><span>CAPÍTULO ${String(day.day).padStart(2, '0')}</span><h3><i aria-hidden="true">${narrative.icon}</i>${narrative.mood}</h3><p>${narrative.chapter}</p></div>
         <div class="story-desk__actions">
           <button type="button" onclick="window.regenerateJapitinDay(${day.day},'day')">↻ Rehacer día</button>
           <button type="button" onclick="window.regenerateJapitinDay(${day.day},'restaurants')">🍜 Solo comidas</button>
@@ -1756,11 +1756,12 @@ export function renderTripCompanion(day) {
   const firstVotable = (day.activities || []).find(activity => activity.id);
   const statusLabel = { comfortable: 'RESPIRABLE', tight: 'AJUSTADO', impossible: 'REVISAR' }[feasibility.status];
   return `
+    <div class="day-closing-decor day-closing-decor--assessment" aria-hidden="true">
+      <img class="day-closing-postmark" src="/images/illustrations/generated/decorations/postmark.png" alt="">
+      <img class="day-closing-torii" src="/images/illustrations/generated/shrines/torii-gate.png" alt="">
+      <img class="day-closing-ticket" src="/images/illustrations/generated/surfaces/trip-memories-ticket.png" alt="">
+    </div>
     <section class="trip-companion trip-companion--${feasibility.status}" aria-labelledby="companionTitle${day.day}">
-      <div class="day-closing-decor day-closing-decor--assessment" aria-hidden="true">
-        <img class="day-closing-postmark" src="/images/illustrations/generated/decorations/postmark.webp" alt="">
-        <span class="day-closing-ticket"><b>旅の思い出</b><small>TRIP MEMORIES</small></span>
-      </div>
       <header class="trip-companion__focus">
         <span>CONTROL DE RUTA · 旅の確認</span>
         <h3 id="companionTitle${day.day}">${feasibility.score}<small>/100</small> · ${statusLabel}</h3>
@@ -3037,8 +3038,10 @@ function renderActivities(day){
       <header class="day-reader-chapter"><span>02</span><div><small>一日の旅</small><h2>El día, parada por parada</h2></div></header>
       <div class="day-main-activities" id="dayMainActivities">${activitiesHTML.join('')}</div>
     </section>
-    ${dayMemory ? `<section class="day-reader-memory" aria-label="Recuerdo del día">${dayMemory}</section>` : ''}
-    ${dayAssessment ? `<section class="day-reader-assessment" aria-label="Resumen y ajustes">${dayAssessment}</section>` : ''}`;
+    ${(dayMemory || dayAssessment) ? `<div class="day-closing-scene">
+      ${dayMemory ? `<section class="day-reader-memory" aria-label="Recuerdo del día">${dayMemory}</section>` : ''}
+      ${dayAssessment ? `<section class="day-reader-assessment" aria-label="Resumen y ajustes">${dayAssessment}</section>` : ''}
+    </div>` : ''}`;
 
   initializeDragAndDrop(container);
 }

@@ -32,13 +32,18 @@ service cloud.firestore {
     }
 
     function isNewDataValidExpense(data) {
-        return data.desc is string &&
-               data.amount is number && data.amount > 0 &&
-               data.category is string &&
-               data.timestamp is number &&
+        return data.description is string &&
+               data.amountMinor is int && data.amountMinor > 0 &&
+               data.originalCurrency is string &&
+               data.convertedAmountMinor is int && data.convertedAmountMinor > 0 &&
+               data.baseCurrency is string &&
+               data.exchangeRate is number && data.exchangeRate > 0 &&
+               data.exchangeRateScaled is int && data.exchangeRateScaled > 0 &&
+               data.exchangeRateFetchedAt is string &&
+               data.category is string && data.date is string &&
                // OJO: es request.auth.token.email — "request.auth.email" no
                // existe en las reglas y hacía fallar TODAS las altas de gastos
-               data.addedBy == request.auth.token.email;
+               data.createdBy == request.auth.uid;
     }
 
     // =====================================================================
@@ -104,9 +109,48 @@ service cloud.firestore {
       // --- Sub-colección de Gastos ---
       match /expenses/{expenseId} {
         allow read: if isTripMember(tripId);
-        allow create: if isTripMember(tripId) && isNewDataValidExpense(request.resource.data);
-        allow delete: if isTripMember(tripId);
+        allow create: if isTripMember(tripId) && (
+          isNewDataValidExpense(request.resource.data) ||
+          (request.resource.data.desc is string && request.resource.data.amount is number &&
+           request.resource.data.amount > 0 && request.resource.data.category is string &&
+           request.resource.data.timestamp is number &&
+           request.resource.data.addedBy == request.auth.token.email)
+        );
+        allow update: if isTripMember(tripId) &&
+          request.resource.data.createdBy == resource.data.createdBy &&
+          isNewDataValidExpense(request.resource.data);
+        allow delete: if isTripMember(tripId) && (resource.data.createdBy == request.auth.uid ||
+          get(/databases/$(database)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid);
+      }
+
+      match /budget/{budgetId} {
+        allow read: if isTripMember(tripId);
+        allow create, update: if isTripMember(tripId) &&
+          request.resource.data.amountMinor is int && request.resource.data.amountMinor > 0 &&
+          request.resource.data.currency is string && request.resource.data.minorUnit is int &&
+          request.resource.data.updatedBy == request.auth.uid;
+        allow delete: if isTripMember(tripId) &&
+          get(/databases/$(database)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid;
+      }
+
+      match /images/{imageId} {
+        allow read: if isTripMember(tripId);
+        allow create: if isTripMember(tripId) && request.resource.data.userId == request.auth.uid &&
+          request.resource.data.tripId == tripId && request.resource.data.storagePath is string &&
+          request.resource.data.url is string && request.resource.data.type.matches('image/.*') &&
+          request.resource.data.size is int && request.resource.data.size <= 5 * 1024 * 1024;
         allow update: if false;
+        allow delete: if isTripMember(tripId) && (resource.data.userId == request.auth.uid ||
+          get(/databases/$(database)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid);
+      }
+
+      match /tasks/{taskId} {
+        allow read: if isTripMember(tripId);
+        allow create: if isTripMember(tripId) && request.resource.data.createdBy == request.auth.uid &&
+          request.resource.data.title is string && request.resource.data.title.size() > 0;
+        allow update: if isTripMember(tripId) && request.resource.data.createdBy == resource.data.createdBy;
+        allow delete: if isTripMember(tripId) && (resource.data.createdBy == request.auth.uid ||
+          get(/databases/$(database)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid);
       }
 
       // --- Sub-colección de Datos (Itinerario, Notas, Packing) ---

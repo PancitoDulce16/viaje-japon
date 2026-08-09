@@ -132,7 +132,7 @@ function renderPreparingContent(trip, math, data) {
   const packingPct = packingProgress.total ? (packingProgress.checked / packingProgress.total) * 100 : 0;
 
   const budgetCard = data?.budget
-    ? travelCard({ label: 'Presupuesto estimado', value: `¥${data.budget.spent.toLocaleString()} de ¥${data.budget.estimated.toLocaleString()}`, progress: data.budget.progress })
+    ? travelCard({ label: `Presupuesto · ${data.budget.currency}`, value: `${data.budget.spentMinor.toLocaleString()} de ${data.budget.budgetMinor.toLocaleString()}`, progress: data.budget.percentUsed })
     : null;
 
   const readiness = data?.travelReadiness;
@@ -151,6 +151,8 @@ function renderPreparingContent(trip, math, data) {
   return (
     section('Reservas', reservations || `<div class="journal-card"><div class="journal-card__title" style="margin-top:0;">Sin reservas todavía</div><div class="journal-card__sub">Hoteles, restaurantes y actividades que confirmes aparecerán aquí.</div></div>`) +
     section('Tu maleta', packingContent) +
+    section('Pendientes', `<div class="journal-card"><div class="journal-card__title" style="margin-top:0;">${data?.tasks?.length || 0} tarea(s) pendiente(s)</div><div class="journal-card__sub">${(data?.tasks || []).slice(0,3).map(task => `${task.dueDate || 'Sin fecha'} · ${task.title}`).join('<br>') || 'Todo listo por ahora.'}</div><button type="button" onclick="window.TravelTasks?.open()">Administrar pendientes</button></div>`) +
+    section('Accesos rápidos', `<div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="travel-card" onclick="window.DashboardApp?.switchTab('budget');setTimeout(()=>window.BudgetTracker?.addExpenseFromTab(),100)">＋ Registrar gasto</button><button type="button" class="travel-card" onclick="window.TravelTasks?.open()">＋ Agregar tarea</button><button type="button" class="travel-card" onclick="window.DashboardApp?.openFloatingModal?.('packing')">＋ Equipaje</button></div>`) +
     (budgetCard ? section('Presupuesto', budgetCard) : '') +
     (readinessCard ? section('Vuelos y hoteles', readinessCard) : '')
   );

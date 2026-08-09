@@ -1,0 +1,5 @@
+.currency-preview { padding:14px; border-left:4px solid #62a2a3; background:#eef7f5; }
+.currency-preview small { display:block; margin-top:5px; color:#657083; }
+.task-board { max-width:850px; }
+.task-done { text-decoration:line-through; opacity:.62; }
+html.dark .currency-preview { background:#1d3440; }

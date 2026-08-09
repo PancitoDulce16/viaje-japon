@@ -47,6 +47,8 @@
 @import './gamification-system.css';
 @import './budget-visual-charts.css';
 @import './bento-budget.css';
+@import './budget-module.css';
+@import './trip-finance-extensions.css';
 @import './global-search-filters.css';
 @import './traveler-profiler.css';
 @import './itinerary-visual-timeline.css';
@@ -107,7 +109,9 @@
 @import './day-index-polish.css';
 @import './itinerary-kawaii-accent.css';
 @import './reference-final-pass.css';
-@import './day-story-architecture.css';
 @import './dashboard-hero-lock.css';
 @import './existing-ui-refinement.css';
+@import './day-story-architecture.css';
 @import './day-closing-spread.css';
+/* 16. Cross-page component contract: accessibility and responsive safeguards. */
+@import './component-consistency.css';

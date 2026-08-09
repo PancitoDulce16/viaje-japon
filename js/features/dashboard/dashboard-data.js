@@ -13,7 +13,8 @@
  */
 
 import { db } from '../../core/firebase-config.js';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
+import { summarizeBudget } from '../budget/budget-utils.js';
 
 async function safeGetDoc(path, docId) {
   try {
@@ -23,6 +24,11 @@ async function safeGetDoc(path, docId) {
     console.error(`❌ Dashboard data: error reading ${path}/${docId}`, error);
     return null;
   }
+}
+
+async function safeGetCollection(path) {
+  try { const snap = await getDocs(collection(db, path)); return snap.docs.map(item => ({ id: item.id, ...item.data() })); }
+  catch (error) { console.error(`Dashboard data: error reading ${path}`, error); return []; }
 }
 
 /**
@@ -38,17 +44,23 @@ export async function fetchDashboardData(tripId, stage, trip, itineraryDoc = und
   if (!tripId) return {};
 
   if (stage === 'preparing') {
-    const [reservationsDoc, packingDoc] = await Promise.all([
+    const [reservationsDoc, packingDoc, budgetDoc, expenses, tasks] = await Promise.all([
       safeGetDoc(`trips/${tripId}/data`, 'reservations'),
       safeGetDoc(`trips/${tripId}/data`, 'packing'),
+      safeGetDoc(`trips/${tripId}/budget`, 'general'),
+      safeGetCollection(`trips/${tripId}/expenses`),
+      safeGetCollection(`trips/${tripId}/tasks`),
     ]);
 
-    const items = packingDoc?.items ?? [];
+    const rawItems = packingDoc?.items ?? [];
+    const items = Array.isArray(rawItems) ? rawItems : Object.values(rawItems).flat();
+    const totals = summarizeBudget(expenses, budgetDoc?.amountMinor || 0);
 
     return {
       reservations: (reservationsDoc?.reservations ?? []).slice(0, 3),
       packing: { checked: items.filter(i => i.checked).length, total: items.length },
-      budget: budgetSummary(trip),
+      budget: { ...totals, currency: budgetDoc?.currency || 'CRC', recent: expenses.sort((a,b) => String(b.date).localeCompare(String(a.date))).slice(0,3) },
+      tasks: tasks.filter(item => !item.completed).sort((a,b) => String(a.dueDate || '9999').localeCompare(String(b.dueDate || '9999'))),
       travelReadiness: travelReadiness(trip),
     };
   }
