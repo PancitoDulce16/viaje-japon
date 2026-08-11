@@ -67,8 +67,26 @@ for (const width of widths) for (const theme of themes) {
       const more = page.locator('.activity-more').first();
       await more.locator('summary').click();
       await expect(more.locator('.activity-more__menu')).toBeVisible();
-      await expect(more.locator('.activity-more__menu button')).toHaveCount(3);
+      await expect(more.locator('.activity-more__menu button')).toHaveCount(4);
       await more.locator('summary').click();
+      const quickEdit = page.locator('.activity-quick-edit').first();
+      await quickEdit.locator('summary').click();
+      await expect(quickEdit.locator('.activity-quick-edit__form')).toBeVisible();
+      await expect(quickEdit.locator('input')).toHaveCount(5);
+      await quickEdit.locator('summary').click();
+      await expect(page.locator('.activity-card').first()).toContainText('07:30–08:30');
+      await expect(page.locator('.activity-card__location button').first()).toHaveText('Ver mapa');
+      const mapFocus = await page.evaluate(() => {
+        window.DashboardApp = { switchTab: () => {} };
+        window.ItineraryHandler.openActivityMap('a1', 1);
+        return {
+          focus: JSON.parse(sessionStorage.getItem('japitin-map-focus')),
+          day: sessionStorage.getItem('japitin_map_day')
+        };
+      });
+      expect(mapFocus.focus).toMatchObject({ activityId: 'a1', day: 1, title: '% Arabica Kyoto' });
+      expect(mapFocus.focus.location).toMatchObject({ lat: 34.995, lng: 135.771 });
+      expect(mapFocus.day).toBe('1');
       const companionCorners = await page.evaluate(async () => {
         const paths = [
           '/images/illustrations/generated/companions/cat-guide.png',
@@ -98,3 +116,29 @@ for (const width of widths) for (const theme of themes) {
     await page.screenshot({ path: target, fullPage: true, animations: 'disabled' });
   });
 }
+
+test('itinerary conflicts expose deterministic schedule actions', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.addInitScript(() => {
+    sessionStorage.setItem('authenticated', 'true');
+    localStorage.setItem('theme-preference', 'light');
+  });
+  await page.goto('/dashboard.html', { waitUntil: 'domcontentloaded' });
+  const conflictingItinerary = structuredClone(itinerary);
+  conflictingItinerary.days[0].activities[1].time = '08:00';
+  conflictingItinerary.days[0].activities[1].travelTimeMinutes = 45;
+  await page.evaluate(async ({ itineraryFixture, tripFixture }) => {
+    document.querySelector('#appDashboard')?.classList.remove('hidden');
+    document.querySelector('#currentTripHeader')?.classList.add('hidden');
+    document.querySelectorAll('.tab-content').forEach(node => node.classList.add('hidden'));
+    document.querySelector('#content-itinerary')?.classList.remove('hidden');
+    const { ItineraryHandler } = await import('/js/features/itinerary/itinerary-v3.js');
+    await ItineraryHandler.preview(itineraryFixture, { day: 1, trip: tripFixture });
+  }, { itineraryFixture: conflictingItinerary, tripFixture: trip });
+  await page.addStyleTag({ content: '#appDashboard.hidden{display:block!important} body > .fixed:not(#mobile-bottom-nav){display:none!important}' });
+
+  const conflict = page.locator('.itinerary-conflict').first();
+  await expect(conflict).toBeVisible();
+  await expect(conflict.locator('.itinerary-conflict__actions button')).toHaveCount(3);
+  await expect(conflict.locator('.itinerary-conflict__actions')).toContainText(/Mover al siguiente espacio|Aumentar margen de traslado/);
+});

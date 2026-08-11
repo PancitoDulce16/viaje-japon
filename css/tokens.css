@@ -85,6 +85,7 @@
   --border: var(--hairline);
   --primary: var(--accent);
   --primary-hover: var(--color-kasumi-deep);
+  --primary-contrast: #FFFFFF;
   --positive: var(--state-success);
   --warning: var(--state-warning);
   --danger: var(--state-error);
@@ -142,6 +143,7 @@
   --color-yuzu: #F4B75F;
   --shadow-rgb: 2, 9, 21;
   --primary-hover: #FF91A8;
+  --primary-contrast: #08172D;
   --information: #81C8E3;
   --decorative-sakura: #FF829E;
   --decorative-matcha: #7FC09A;

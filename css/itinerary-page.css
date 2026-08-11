@@ -281,6 +281,65 @@
 #content-itinerary .activity-more__menu button:hover { background: var(--surface-soft) !important; }
 #content-itinerary .activity-more__menu .activity-delete-btn { color: var(--danger) !important; }
 
+#content-itinerary .activity-quick-edit { margin-top: var(--space-2); }
+#content-itinerary .activity-quick-edit > summary {
+  width: max-content;
+  padding: 5px 0;
+  color: var(--primary);
+  font-size: .72rem;
+  font-weight: 750;
+  cursor: pointer;
+  list-style: none;
+}
+#content-itinerary .activity-quick-edit > summary::-webkit-details-marker { display: none; }
+#content-itinerary .activity-quick-edit > summary:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
+#content-itinerary .activity-quick-edit__form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(78px, 1fr)) auto auto;
+  gap: var(--space-2);
+  align-items: end;
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--jp-radius-sm);
+  background: var(--surface-soft);
+}
+#content-itinerary .activity-quick-edit__form label { position: relative; display: grid; gap: 4px; color: var(--text-muted); font-size: .65rem; font-weight: 700; }
+#content-itinerary .activity-quick-edit__form label > span { position: absolute; right: 8px; bottom: 9px; color: var(--text-muted); font-size: .62rem; }
+#content-itinerary .activity-quick-edit__form input[type="time"],
+#content-itinerary .activity-quick-edit__form input[type="number"] {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 24px 7px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--control-bg);
+  color: var(--text-primary);
+  font: 700 .72rem var(--font-body);
+}
+#content-itinerary .activity-quick-edit__form input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+#content-itinerary .activity-quick-edit__optional { display: flex !important; min-height: 38px; align-items: center; grid-auto-flow: column; justify-content: start; color: var(--text-secondary) !important; white-space: nowrap; }
+#content-itinerary .activity-quick-edit__optional input { width: 18px; height: 18px; accent-color: var(--primary); }
+#content-itinerary .activity-quick-edit__form button,
+#content-itinerary .itinerary-conflict__actions button,
+#content-itinerary .activity-card__location button {
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: .7rem;
+  font-weight: 750;
+}
+#content-itinerary .activity-quick-edit__form button { border-color: var(--primary); background: var(--primary); color: var(--primary-contrast); }
+#content-itinerary .activity-card__location { display: flex; align-items: center; gap: var(--space-2); white-space: normal; }
+#content-itinerary .activity-card__location span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#content-itinerary .activity-card__location button { min-height: 30px; margin-left: auto; padding-block: 4px; color: var(--primary); white-space: nowrap; }
+#content-itinerary .itinerary-conflict { align-items: start; }
+#content-itinerary .itinerary-conflict__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+#content-itinerary .itinerary-conflict__actions button:first-child { border-color: var(--primary); color: var(--primary); }
+
 /* The closing material stays inside the reader instead of becoming a second page. */
 #content-itinerary .day-closing-scene {
   position: relative;
@@ -431,6 +490,12 @@
   #content-itinerary .activity-card h3 { font-size: .9rem !important; }
   #content-itinerary .activity-card__meta > span,
   #content-itinerary .activity-card .jp-reservation-chip { min-height: 26px; padding: 5px 7px; font-size: .63rem; }
+  #content-itinerary .activity-quick-edit__form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #content-itinerary .activity-quick-edit__optional,
+  #content-itinerary .activity-quick-edit__form button { min-height: 44px; }
+  #content-itinerary .activity-card__location { max-width: none; }
+  #content-itinerary .itinerary-conflict__actions { justify-content: stretch; }
+  #content-itinerary .itinerary-conflict__actions button { width: 100%; min-height: 44px; text-align: left; }
 }
 
 @media (prefers-reduced-motion: reduce) {

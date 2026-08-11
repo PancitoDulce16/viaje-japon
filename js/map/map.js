@@ -6,6 +6,13 @@ let map = null;
 let markersLayer = null;
 let nearbyPlacesLayer = null;
 
+const activityCoordinates = activity => {
+    const source = activity?.coordinates || activity?.location;
+    const lat = Array.isArray(source) ? Number(source[0]) : Number(source?.lat ?? source?.latitude);
+    const lng = Array.isArray(source) ? Number(source[1]) : Number(source?.lng ?? source?.longitude);
+    return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+};
+
 // Ubicaciones de hoteles
 const HOTEL_LOCATIONS = [
     {
@@ -518,12 +525,11 @@ export const MapHandler = {
 
             day.activities.forEach((activity, index) => {
                 // Solo mostrar actividades con coordenadas
-                if (!activity.coordinates || !activity.coordinates.lat || !activity.coordinates.lng) {
-                    return;
-                }
+                const coordinates = activityCoordinates(activity);
+                if (!coordinates) return;
 
                 activityCount++;
-                const coords = [activity.coordinates.lat, activity.coordinates.lng];
+                const coords = [coordinates.lat, coordinates.lng];
                 dayCoordinates.push(coords);
 
                 // Guardar para la lista
@@ -569,7 +575,7 @@ export const MapHandler = {
                             >
                                 📅 Ver Día ${day.day} completo
                             </button>
-                            <a href="https://www.google.com/maps/search/?api=1&query=${activity.coordinates.lat},${activity.coordinates.lng}"
+                            <a href="https://www.google.com/maps/search/?api=1&query=${coordinates.lat},${coordinates.lng}"
                                target="_blank"
                                class="text-center text-blue-600 hover:text-blue-800 text-sm font-semibold">
                                 Ver en Google Maps →
@@ -581,6 +587,7 @@ export const MapHandler = {
                 // Guardar tipo para filtrado
                 marker.markerType = 'itinerary';
                 marker.dayNumber = day.day;
+                marker.activityId = String(activity.id || '');
             });
 
             // 🔥 Dibujar líneas de ruta entre actividades del mismo día
@@ -625,7 +632,7 @@ export const MapHandler = {
             const dayNumber = day.day;
             const dayDate = day.date ? ` - ${window.TimeUtils.formatDate(day.date, { month: 'short', day: 'numeric' })}` : '';
             const cityName = day.city || day.cityName || '';
-            const activityCount = day.activities ? day.activities.filter(a => a.coordinates).length : 0;
+            const activityCount = day.activities ? day.activities.filter(activityCoordinates).length : 0;
 
             options += `<option value="${dayNumber}">Día ${dayNumber}${dayDate} ${cityName ? `(${cityName})` : ''} - ${activityCount} lugares</option>`;
         });
@@ -770,9 +777,15 @@ export const MapHandler = {
 
     // 🔥 ACTUALIZADO: Sincronizar con itinerario cuando cambie
     syncWithItinerary() {
+        let requestedFocus = null;
+        try {
+            requestedFocus = JSON.parse(sessionStorage.getItem('japitin-map-focus') || 'null');
+        } catch (error) {
+            console.warn('No se pudo leer el foco solicitado para el mapa', error);
+        }
         const requestedDay = sessionStorage.getItem('japitin_map_day');
-        if (requestedDay) {
-            this.selectedDay = requestedDay;
+        if (requestedDay || requestedFocus?.day) {
+            this.selectedDay = String(requestedDay || requestedFocus.day);
             sessionStorage.removeItem('japitin_map_day');
         }
         console.log('🔄 Sincronizando mapa con itinerario...');
@@ -787,6 +800,15 @@ export const MapHandler = {
 
         // Re-renderizar marcadores
         this.addItineraryMarkers();
+
+        const focusCoordinates = activityCoordinates({
+            coordinates: requestedFocus?.coordinates,
+            location: requestedFocus?.location
+        });
+        if (focusCoordinates) {
+            setTimeout(() => this.focusOnActivity(focusCoordinates.lat, focusCoordinates.lng), 120);
+        }
+        sessionStorage.removeItem('japitin-map-focus');
     },
 
     filterMarkers(filterType) {

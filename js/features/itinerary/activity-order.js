@@ -49,6 +49,78 @@ const clockMinutes = value => {
   return match ? Number(match[1]) * 60 + Number(match[2]) : null;
 };
 
+const formatClock = value => `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
+
+export const SCHEDULE_ACTION_LABELS = Object.freeze({
+  'move-next-slot': 'Mover al siguiente espacio',
+  'reduce-duration': 'Reducir duración',
+  'mark-optional': 'Marcar como opcional',
+  'move-other-day': 'Mover a otro día',
+  'increase-transfer': 'Dar más margen al traslado',
+  edit: 'Completar información'
+});
+
+export function suggestionsForConflict(conflict = {}) {
+  const suggestions = {
+    overlap: ['move-next-slot', 'reduce-duration', 'mark-optional', 'move-other-day'],
+    transfer: ['increase-transfer', 'move-next-slot', 'mark-optional', 'move-other-day'],
+    reservation: ['reduce-duration', 'move-next-slot', 'move-other-day'],
+    'blocking-transfer': ['move-other-day', 'mark-optional'],
+    'outside-day': ['move-next-slot', 'move-other-day', 'mark-optional'],
+    overloaded: ['move-other-day', 'mark-optional'],
+    'missing-time': ['move-next-slot', 'edit'],
+    'missing-location': ['edit']
+  }[conflict.type] || [conflict.action || 'edit'];
+  return [...new Set(suggestions)].filter(Boolean).map(action => ({
+    action,
+    label: SCHEDULE_ACTION_LABELS[action] || 'Revisar actividad'
+  }));
+}
+
+/**
+ * Aplica una sugerencia determinista sobre un día ya cargado. No guarda datos
+ * ni conoce Firestore: el consumidor decide si persiste o revierte el cambio.
+ */
+export function applyScheduleSuggestion(day, conflict = {}, action, options = {}) {
+  const activities = orderActivitiesForDisplay(day, clockMinutes);
+  const activity = activities.find(item => String(item.id) === String(conflict.activityId));
+  if (!activity) return { changed: false, reason: 'activity-not-found' };
+  const previous = structuredClone(activity);
+  const index = activities.indexOf(activity);
+  const start = clockMinutes(activity.time);
+  const duration = Math.max(1, Number(activity.duration || 60));
+  const dayStart = clockMinutes(options.dayStart || day?.dayStart || '07:00');
+  const dayEnd = clockMinutes(options.dayEnd || day?.dayEnd || '23:00');
+
+  if (action === 'mark-optional') {
+    activity.optional = true;
+  } else if (action === 'reduce-duration') {
+    const reduction = Math.max(15, Number(conflict.minutes || 15));
+    activity.duration = Math.max(15, duration - reduction);
+  } else if (action === 'move-next-slot') {
+    const previousActivity = activities[index - 1];
+    const previousStart = clockMinutes(previousActivity?.time);
+    const nextStart = previousActivity && previousStart != null
+      ? previousStart
+        + Math.max(1, Number(previousActivity.duration || 60))
+        + Math.max(0, Number(previousActivity.preparationMinutes || previousActivity.bufferMinutes || 0))
+        + Math.max(0, Number(activity.travelTimeMinutes || activity.transferMinutes || 0))
+      : dayStart;
+    if (nextStart == null || nextStart + duration > dayEnd) return { changed: false, reason: 'no-space' };
+    activity.time = formatClock(nextStart);
+  } else if (action === 'increase-transfer') {
+    if (start == null) return { changed: false, reason: 'missing-time' };
+    const missingMargin = Math.max(5, Number(conflict.minutes || 15));
+    const nextStart = start + missingMargin;
+    if (nextStart + duration > dayEnd) return { changed: false, reason: 'no-space' };
+    activity.time = formatClock(nextStart);
+  } else {
+    return { changed: false, reason: 'external-action' };
+  }
+
+  return { changed: true, activityId: activity.id, previous, next: structuredClone(activity) };
+}
+
 export function duplicateActivity(activity, id = `activity_${Date.now()}`) {
   return { ...structuredClone(activity), id, title: `${activity.title || activity.name || 'Actividad'} (copia)`, completed: false };
 }
@@ -118,5 +190,11 @@ export function analyzeDaySchedule(day, reservations = [], options = {}) {
   }
   if (cursor < dayEnd) freeSlots.push({ start: cursor, end: dayEnd, minutes: dayEnd - cursor });
   const totalCost = activities.reduce((sum, item) => sum + Math.max(0, Number(item.cost || 0)), 0);
-  return { conflicts, activeMinutes, totalCost, freeSlots, load: activeMinutes >= 600 ? 'high' : activeMinutes >= 420 ? 'medium' : 'light' };
+  return {
+    conflicts: conflicts.map(conflict => ({ ...conflict, suggestions: suggestionsForConflict(conflict) })),
+    activeMinutes,
+    totalCost,
+    freeSlots,
+    load: activeMinutes >= 600 ? 'high' : activeMinutes >= 420 ? 'medium' : 'light'
+  };
 }

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { analyzeDaySchedule, applyManualActivityOrder, duplicateActivity, moveActivityBetweenDays, moveActivityByOffset, orderActivitiesForDisplay, removeFromManualActivityOrder } from '../js/features/itinerary/activity-order.js';
+import { analyzeDaySchedule, applyManualActivityOrder, applyScheduleSuggestion, duplicateActivity, moveActivityBetweenDays, moveActivityByOffset, orderActivitiesForDisplay, removeFromManualActivityOrder, suggestionsForConflict } from '../js/features/itinerary/activity-order.js';
 
 const parseTime = value => {
   const [hours, minutes] = String(value).split(':').map(Number);
@@ -48,4 +48,21 @@ assert.ok(analysis.conflicts.some(item => item.type === 'blocking-transfer' && i
 assert.ok(analysis.conflicts.some(item => item.type === 'missing-location' && item.activityId === 'c'));
 assert.equal(analysis.totalCost, 500);
 assert.ok(analysis.freeSlots.some(slot => slot.minutes > 0));
+
+const transferConflict = { type: 'transfer', activityId: 'second', minutes: 25 };
+assert.deepEqual(suggestionsForConflict(transferConflict).slice(0, 2).map(item => item.action), ['increase-transfer', 'move-next-slot']);
+const transferDay = { dayStart: '08:00', dayEnd: '20:00', activities: [
+  { id: 'first', time: '09:00', duration: 60, location: 'A' },
+  { id: 'second', time: '10:15', duration: 60, travelTimeMinutes: 40, location: 'B' }
+] };
+const transferResolution = applyScheduleSuggestion(transferDay, { type: 'transfer', activityId: 'second', minutes: 25 }, 'increase-transfer');
+assert.equal(transferResolution.changed, true);
+assert.equal(transferDay.activities[1].time, '10:40', 'increasing transfer margin must move the activity later');
+assert.equal(transferDay.activities[1].travelTimeMinutes, 40, 'the travel estimate must remain historical data');
+
+const missingTimeDay = { dayStart: '08:00', dayEnd: '20:00', activities: [{ id: 'untimed', duration: 45 }] };
+assert.equal(applyScheduleSuggestion(missingTimeDay, { type: 'missing-time', activityId: 'untimed' }, 'move-next-slot').changed, true);
+assert.equal(missingTimeDay.activities[0].time, '08:00');
+assert.equal(applyScheduleSuggestion(missingTimeDay, { activityId: 'untimed' }, 'mark-optional').changed, true);
+assert.equal(missingTimeDay.activities[0].optional, true);
 console.log('itinerary manual order: ok');
