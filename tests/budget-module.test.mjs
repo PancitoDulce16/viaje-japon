@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { expenseAmount, expensesToCsv, filterExpenses, historicalConversionForEdit, summarizeBudget, toMinorUnits } from '../js/features/budget/budget-utils.js';
+import { expenseAmount, expensesToCsv, filterExpenses, historicalConversionForEdit, isSpendingExpense, recentExpenseSuggestions, summarizeBudget, toMinorUnits } from '../js/features/budget/budget-utils.js';
 
 assert.equal(toMinorUnits('12.34', 100), 1234, 'convierte moneda a unidad mínima');
 assert.equal(toMinorUnits('-1', 100), null, 'rechaza montos negativos');
@@ -19,6 +19,16 @@ assert.deepEqual(summarizeBudget(expenses, 3000), {
 });
 assert.equal(filterExpenses(expenses, { from: '2026-08-02', category: 'Alimentación' }).length, 1);
 assert.equal(filterExpenses(expenses, { currency: 'JPY' }).length, 1);
+assert.equal(isSpendingExpense({ movementType: 'cash-withdrawal' }), false);
+assert.deepEqual(summarizeBudget([...expenses, { movementType: 'cash-withdrawal', convertedAmountMinor: 900 }], 3000), {
+  budgetMinor: 3000, spentMinor: 2450, availableMinor: 550, percentUsed: 2450 / 30
+});
+assert.deepEqual(recentExpenseSuggestions([
+  { description: 'Ramen', category: 'Comida', vendor: 'Ichiran', originalCurrency: 'JPY' },
+  { description: 'Metro', category: 'Transporte', vendor: 'Suica', originalCurrency: 'JPY' },
+  { description: 'Ramen', category: 'Comida', vendor: 'Ichiran', originalCurrency: 'JPY' },
+  { description: 'Cajero', movementType: 'cash-withdrawal', originalCurrency: 'JPY' }
+]), { concepts: ['Ramen', 'Metro'], categories: ['Comida', 'Transporte'], vendors: ['Ichiran', 'Suica'], currency: 'JPY' });
 assert.match(expensesToCsv(expenses), /"Ramen"/);
 assert.match(expensesToCsv(expenses), /"1700","CRC"/, 'exporta monto convertido y moneda base');
 assert.match(expensesToCsv([{ description: 'Comida "especial"' }]), /"Comida ""especial"""/);

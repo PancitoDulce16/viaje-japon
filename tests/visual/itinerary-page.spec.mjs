@@ -67,7 +67,7 @@ for (const width of widths) for (const theme of themes) {
       const more = page.locator('.activity-more').first();
       await more.locator('summary').click();
       await expect(more.locator('.activity-more__menu')).toBeVisible();
-      await expect(more.locator('.activity-more__menu button')).toHaveCount(4);
+      await expect(more.locator('.activity-more__menu button')).toHaveCount(5);
       await more.locator('summary').click();
       const quickEdit = page.locator('.activity-quick-edit').first();
       await quickEdit.locator('summary').click();

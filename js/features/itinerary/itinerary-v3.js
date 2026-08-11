@@ -2975,6 +2975,7 @@ function renderActivities(day){
                   <button type="button" data-action="duplicate" data-activity-id="${act.id}" data-day="${day.day}"><i class="far fa-copy"></i> Duplicar</button>
                   <button type="button" data-action="copy-day" data-activity-id="${act.id}" data-day="${day.day}"><i class="far fa-clone"></i> Copiar a otro día</button>
                   <button type="button" data-action="change-day" data-activity-id="${act.id}" data-day="${day.day}"><i class="far fa-calendar-alt"></i> Cambiar de día</button>
+                  <button type="button" data-action="expense" data-activity-id="${act.id}" data-day="${day.day}"><i class="fas fa-yen-sign"></i> Registrar gasto</button>
                   <button type="button" data-action="delete" data-activity-id="${act.id}" data-day="${day.day}" class="activity-delete-btn"><i class="far fa-trash-alt"></i> Eliminar</button>
                 </div>
               </details>
@@ -3292,6 +3293,7 @@ export const ItineraryHandler = {
         const conflictBtn = e.target.closest('[data-action="resolve-conflict"]');
         const quickSaveBtn = e.target.closest('[data-action="quick-save"]');
         const openMapBtn = e.target.closest('[data-action="open-map"]');
+        const expenseBtn = e.target.closest('[data-action="expense"]');
         const dayBtn=e.target.closest('.day-btn');
 
         // ❌ Event handlers desactivados - botones eliminados
@@ -3300,6 +3302,7 @@ export const ItineraryHandler = {
         // else if(optimizeBtn){ optimizeDayRoute(parseInt(optimizeBtn.id.split('_')[1])); }
 
         if(conflictBtn){ ItineraryHandler.resolveConflict(conflictBtn.dataset); }
+        else if(expenseBtn){ ItineraryHandler.openExpenseForActivity(expenseBtn.dataset.activityId, Number(expenseBtn.dataset.day)); }
         else if(quickSaveBtn){ ItineraryHandler.quickUpdateActivity(quickSaveBtn.closest('form')); }
         else if(openMapBtn){ ItineraryHandler.openActivityMap(openMapBtn.dataset.activityId, Number(openMapBtn.dataset.day)); }
         else if(copyDayBtn){ ItineraryHandler.copyActivityDay(copyDayBtn.dataset.activityId,Number(copyDayBtn.dataset.day)); }
@@ -3849,6 +3852,21 @@ Si ya tienes las coordenadas, simplemente pégalas:
       console.warn('No se pudo conservar el foco del mapa', error);
     }
     window.DashboardApp?.switchTab?.('map');
+  },
+
+  openExpenseForActivity(activityId, dayNumber) {
+    const day = currentItinerary.days.find(item => item.day === dayNumber);
+    const activity = day?.activities?.find(item => String(item.id) === String(activityId));
+    if (!activity) return;
+    window.DashboardApp?.switchTab?.('budget');
+    setTimeout(() => window.BudgetTracker?.addExpenseFromTab?.({
+      description: activity.title || activity.name || 'Gasto de actividad',
+      activityId: String(activity.id),
+      date: day.date || new Date().toISOString().slice(0, 10),
+      category: activity.category || activity.categoryName || 'Otros',
+      originalCurrency: activity.currency || 'JPY',
+      amount: Number(activity.cost || 0) || ''
+    }), 80);
   },
 
   async changeActivityDay(activityId, sourceDayNumber) {

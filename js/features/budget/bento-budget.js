@@ -16,6 +16,7 @@ import { db, auth } from '../../core/firebase-config.js';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { BudgetTracker } from './budget-tracker.js';
 import { BudgetGallery } from './budget-gallery.js';
+import { isSpendingExpense } from './budget-utils.js';
 
 // Config de compartimentos. `key` debe coincidir con las categorías ya
 // usadas por BudgetTracker. `share` = % del presupuesto total por defecto.
@@ -44,7 +45,7 @@ export const BentoBudget = {
   },
 
   getExpenses() {
-    return window.BudgetTracker?.expenses || [];
+    return (window.BudgetTracker?.expenses || []).filter(isSpendingExpense);
   },
 
   /** Presupuesto total del viaje (¥). Editable; con default razonable. */
