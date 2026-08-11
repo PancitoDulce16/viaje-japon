@@ -775,3 +775,24 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+.itinerary-day-metrics,
+.itinerary-free-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: .75rem 0;
+}
+
+.itinerary-day-metrics span,
+.itinerary-free-slots span {
+  padding: .45rem .7rem;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface, #fff) 88%, transparent);
+  font-size: .78rem;
+}
+
+.itinerary-free-slots span::before {
+  content: '○ ';
+  color: #4f9a84;
+}

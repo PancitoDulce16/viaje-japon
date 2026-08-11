@@ -176,7 +176,7 @@ export const MapHandler = {
                 <div class="jp-map-head">
                     <div><span class="jp-map-head__kicker">TU JAPÓN, A TU MANERA</span><h1>Mapa del viaje <span>✿</span></h1>
                     <p>Explora los lugares de tu aventura y descubre qué hay cerca.</p></div>
-                    <img src="/images/illustrations/generated/characters/dog-camera.webp" alt="" aria-hidden="true">
+                    <img src="/images/illustrations/generated/companions/dog-explorer.png" alt="" aria-hidden="true">
                 </div>
 
                 <!-- 🔥 NUEVO: Selector de Día Mejorado -->

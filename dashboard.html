@@ -54,6 +54,10 @@
     <!-- App styles -->
     <link rel="stylesheet" href="/css/app.css">
     <link rel="stylesheet" href="/css/attractions-discovery.css">
+    <link rel="stylesheet" href="/css/bento-budget.css">
+    <link rel="stylesheet" href="/css/budget-module.css">
+    <link rel="stylesheet" href="/css/budget-workspace.css">
+    <link rel="stylesheet" href="/css/expense-split.css">
 
     <!-- Wallpapers inline para máxima prioridad -->
     <style>
@@ -102,21 +106,27 @@
         <div class="floating-shape"></div>
         <div class="floating-shape"></div>
     </div>
+    <button id="notificationBellMobile" class="notification-bell notification-bell--mobile" type="button" aria-label="Abrir centro de notificaciones"><i class="far fa-bell"></i><span hidden>0</span></button>
 
     <!-- APP DASHBOARD -->
     <div id="appDashboard">
         <aside class="jp-desktop-rail" aria-label="Navegación Japitin">
-            <div class="jp-desktop-rail__brand">JAPITÍN<span>✿</span></div>
-            <nav>
-                <button type="button" class="active" data-rail-tab="itinerary" onclick="document.querySelector('.tab-btn[data-tab=&quot;itinerary&quot;]')?.click()"><i class="fas fa-home"></i><span>Inicio</span></button>
-                <button type="button" onclick="window.TripsManager?.showTripsListModal()"><i class="fas fa-suitcase-rolling"></i><span>Viajes</span></button>
-                <button type="button" data-rail-tab="attractions" onclick="document.querySelector('.tab-btn[data-tab=&quot;attractions&quot;]')?.click()"><i class="fas fa-compass"></i><span>Descubrir</span></button>
-                <button type="button" data-rail-tab="itinerary" onclick="document.querySelector('.tab-btn[data-tab=&quot;itinerary&quot;]')?.click()"><i class="far fa-calendar-alt"></i><span>Itinerario</span></button>
-                <button type="button" data-rail-tab="map" onclick="document.querySelector('.tab-btn[data-tab=&quot;map&quot;]')?.click()"><i class="fas fa-map-marked-alt"></i><span>Mapa</span></button>
-                <button type="button" onclick="window.GroupChat?.open()"><i class="far fa-comment-dots"></i><span>Chat</span></button>
-                <button type="button" onclick="window.TravelJournal?.show()"><i class="fas fa-book-open"></i><span>Diario</span></button>
+            <div class="jp-desktop-rail__brand"><span aria-hidden="true">⛩</span><strong>Japitin</strong><small>Tu aventura a Japón</small></div>
+            <nav aria-label="Destinos principales">
+                <span class="jp-desktop-rail__group">Tu viaje</span>
+                <button type="button" class="jps-shell-control active" data-rail-tab="home" onclick="window.DashboardApp?.switchTab('home'); window.JapitinShell?.syncActive('home')"><i class="fas fa-home"></i><span>Inicio</span></button>
+                <button type="button" class="jps-shell-control" data-rail-tab="itinerary" onclick="document.querySelector('.tab-btn[data-tab=&quot;itinerary&quot;]')?.click()"><i class="far fa-calendar-alt"></i><span>Itinerario</span></button>
+                <button type="button" class="jps-shell-control" data-rail-tab="attractions" onclick="document.querySelector('.tab-btn[data-tab=&quot;attractions&quot;]')?.click()"><i class="fas fa-compass"></i><span>Explorar</span></button>
+                <button type="button" class="jps-shell-control" data-rail-tab="hotels" onclick="document.querySelector('.tab-btn[data-tab=&quot;hotels&quot;]')?.click()"><i class="far fa-bookmark"></i><span>Reservaciones</span></button>
+                <button type="button" class="jps-shell-control" data-rail-tab="budget" onclick="document.querySelector('.tab-btn[data-tab=&quot;budget&quot;]')?.click()"><i class="fas fa-yen-sign"></i><span>Gastos</span></button>
+                <span class="jp-desktop-rail__group">Organiza y recuerda</span>
+                <button type="button" class="jps-shell-control" data-rail-tab="preparation" onclick="document.querySelector('.tab-btn[data-tab=&quot;preparation&quot;]')?.click()"><i class="fas fa-box-open"></i><span>Organización</span></button>
+                <button type="button" class="jps-shell-control" onclick="window.TravelJournal?.show()"><i class="far fa-images"></i><span>Recuerdos</span></button>
             </nav>
-            <button type="button" class="jp-desktop-rail__profile" onclick="window.UserMenu?.openProfile()"><i class="fas fa-user"></i><span>Perfil</span></button>
+            <div class="jp-desktop-rail__footer">
+                <button type="button" class="jps-shell-control" onclick="window.UserMenu?.openSettings()"><i class="fas fa-cog"></i><span>Ajustes</span></button>
+                <button type="button" class="jps-shell-control jp-desktop-rail__profile" onclick="window.UserMenu?.openProfile()"><i class="fas fa-user"></i><span>Perfil</span></button>
+            </div>
         </aside>
         <!-- 🎯 SIMPLE FAB BUTTON - Opens Everything -->
         <button id="main-fab-button" style="position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%); color: white; border: none; box-shadow: 0 4px 20px rgba(147,51,234,0.4); cursor: pointer; z-index: 99999; font-size: 24px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="window.showMainMenu()" aria-label="Abrir menú principal">
@@ -134,11 +144,19 @@
                         <span class="header-brand-name">Japitin</span>
                     </div>
 
+                    <button type="button" class="jp-trip-switcher" onclick="window.TripsManager?.showTripsListModal()" aria-label="Cambiar viaje actual">
+                        <i class="fas fa-mountain" aria-hidden="true"></i><span>Viaje actual</span><strong>Japón</strong><i class="fas fa-chevron-down" aria-hidden="true"></i>
+                    </button>
+
+                    <button type="button" class="jp-global-search" onclick="window.GlobalSearch?.open()" aria-label="Buscar en Japitin">
+                        <i class="fas fa-search" aria-hidden="true"></i><span>Buscar lugares, gastos, reservas…</span><kbd>Ctrl K</kbd>
+                    </button>
+
                     <!-- Cluster Desktop -->
                     <div class="hidden lg:flex items-center gap-2.5">
                         <button
                             onclick="window.TripsManager?.showTripsListModal()"
-                            class="header-chip"
+                            class="header-chip jp-legacy-header-action"
                             aria-label="Mis Viajes"
                             title="Ver todos mis viajes"
                         >
@@ -149,7 +167,7 @@
 
                         <button
                             onclick="window.GlobalSearch?.open()"
-                            class="header-chip"
+                            class="header-chip jp-legacy-header-action"
                             aria-label="Buscar"
                             title="Buscar (Ctrl+K)"
                         >
@@ -166,6 +184,8 @@
                         >
                             <i class="fas fa-bell"></i>
                         </button>
+
+                        <button id="themeToggle" class="header-chip header-chip-icon" type="button" aria-label="Cambiar tema" title="Cambiar tema"><i id="darkModeIcon" class="fas fa-adjust"></i></button>
 
                         <button
                             onclick="document.getElementById('emergencyModal')?.classList.add('active'); window.EmergencyAssistant?.init();"
@@ -218,17 +238,6 @@
                 </div>
             </div>
         </header>
-
-        <!-- Resumen del viaje activo (countdown, stats, acciones) - vive fuera del
-             <header> sticky a propósito: este bloque crece con el contenido del
-             viaje (banner + botones + 4 tarjetas de stats), y si vive dentro del
-             header sticky, el header entero intenta pegarse al tope con una altura
-             casi de pantalla completa, rompiendo el layout en móvil. -->
-        <div id="currentTripHeader" class="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-2">
-            <div class="flex items-center gap-2 text-gray-500 dark:text-white/70 text-sm">
-                <i class="fas fa-circle-notch fa-spin"></i> Cargando tus viajes…
-            </div>
-        </div>
 
         <!-- Menú Mobile -->
         <div id="mobileMenu" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
@@ -302,7 +311,11 @@
         <!-- Navegación de Tabs con Mejor Espaciado -->
         <nav class="japan-nav bg-white dark:bg-gray-800 border-b-2 border-gray-100 dark:border-gray-700 shadow-sm" aria-label="Navegación principal">
             <div id="tabSelector" class="max-w-7xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-                <button data-tab="itinerary" class="tab-btn active">
+                <button data-tab="home" class="tab-btn active">
+                    <i class="fas fa-home"></i>
+                    <span class="hidden md:inline ml-2">Resumen</span>
+                </button>
+                <button data-tab="itinerary" class="tab-btn">
                     <i class="far fa-calendar-alt"></i>
                     <span class="hidden md:inline ml-2">Itinerario</span>
                 </button>
@@ -351,6 +364,14 @@
 
         <!-- Contenido Principal -->
         <main id="main-content">
+            <div id="content-home" class="tab-content">
+                <div id="currentTripHeader" class="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-2">
+                    <div class="flex items-center gap-2 text-gray-500 dark:text-white/70 text-sm">
+                        <i class="fas fa-circle-notch fa-spin"></i> Cargando tus viajes…
+                    </div>
+                </div>
+            </div>
+
             <!-- Contador de días para Japón -->
             <div class="countdown-widget" id="countdownWidget">
                 <h2 id="countdownPrefix">Tu aventura</h2>
@@ -386,7 +407,7 @@
                 </div>
             </div>
 
-            <div id="content-itinerary" class="tab-content"></div>
+            <div id="content-itinerary" class="tab-content hidden"></div>
             <div id="content-budget" class="tab-content hidden"></div>
             <div id="content-preparation" class="tab-content hidden"></div>
             <div id="content-flights" class="tab-content hidden"></div>
@@ -494,9 +515,13 @@
 
     <!-- 💰 BUDGET TRACKER - Sistema de tracking de gastos -->
     <script type="module" src="/js/features/budget/budget-tracker.js"></script>
+    <script type="module" src="/js/features/budget/expense-balances.js"></script>
+    <script type="module" src="/js/features/notifications/notification-center.js"></script>
 
     <!-- Galería de comprobantes y fotos asociadas al presupuesto -->
     <script type="module" src="/js/features/budget/budget-gallery.js"></script>
+    <script type="module" src="/js/features/budget/bento-budget.js"></script>
+    <script type="module" src="/js/features/documents/trip-documents.js"></script>
     <script type="module" src="/js/features/trips/travel-tasks.js"></script>
 
     <!-- 🍱 BENTO BUDGET - Presupuesto visual interactivo (tab Presupuesto) -->
@@ -983,6 +1008,7 @@
 
     <!-- 📱 MOBILE-FIRST SYSTEM -->
     <script type="module" src="/js/ui/mobile-first.js"></script>
+    <script type="module" src="/js/ui/shell-controller.js"></script>
 
     <!-- 👤 TRAVELER PROFILES SYSTEM -->
 

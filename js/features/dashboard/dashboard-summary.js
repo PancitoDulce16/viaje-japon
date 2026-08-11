@@ -53,3 +53,24 @@ export function packingProgress(items = []) {
   const packed = items.filter((item) => Boolean(item.packed ?? item.checked)).length;
   return { total, packed, pending: total - packed, percent: total ? Math.round(packed / total * 100) : 0 };
 }
+
+export function prioritizeDashboardActions(data = {}, nowValue = new Date(), limit = 5) {
+  const now = localDate(nowValue);
+  const candidates = [];
+  const add = action => candidates.push({ ...action, score: (action.severity === 'critical' ? 400 : 200) + (action.urgency || 0) + (action.financialImpact || 0) + (action.blocking ? 100 : 0) });
+  for (const task of data.tasks?.upcoming || []) {
+    const due = localDate(task.dueDate);
+    if (due && due < now) add({ id: `task:${task.id}`, kind: 'tasks', severity: 'critical', urgency: 100, blocking: Boolean(task.blocking), title: `Tarea vencida: ${task.title}`, actionLabel: 'Resolver tarea' });
+  }
+  const reservation = data.reservations?.next;
+  if (reservation?.startAt) {
+    const days = Math.ceil((new Date(reservation.startAt) - now) / DAY_MS);
+    if (days <= 7) add({ id: `reservation:${reservation.id}`, kind: 'reservations', severity: days <= 1 ? 'critical' : 'recommendation', urgency: Math.max(0, 90 - days * 10), blocking: ['Vuelo', 'Transporte'].includes(reservation.type), title: `Próxima reservación: ${reservation.title}`, actionLabel: 'Confirmar reservación' });
+  }
+  if (data.reservations?.missingDocuments > 0) add({ id: 'documents:missing', kind: 'documents', severity: 'critical', urgency: 75, blocking: true, title: `${data.reservations.missingDocuments} reservación(es) sin documento`, actionLabel: 'Agregar documento' });
+  if (data.budget?.percentUsed >= 80) add({ id: 'budget:limit', kind: 'budget', severity: data.budget.percentUsed >= 100 ? 'critical' : 'recommendation', urgency: Math.min(100, data.budget.percentUsed), financialImpact: 80, title: `Presupuesto al ${data.budget.percentUsed.toFixed(0)}%`, actionLabel: 'Revisar presupuesto' });
+  if (data.personalBalance?.toPayMinor > 0) add({ id: 'balance:pending', kind: 'balances', severity: 'recommendation', urgency: 45, financialImpact: 60, title: 'Tienes una liquidación pendiente', actionLabel: 'Registrar pago' });
+  if (data.packing?.pending > 0 && data.trip?.countdown?.state === 'upcoming' && data.trip.countdown.days <= 7) add({ id: 'packing:pending', kind: 'packing', severity: data.trip.countdown.days <= 2 ? 'critical' : 'recommendation', urgency: 90 - data.trip.countdown.days * 8, title: `${data.packing.pending} artículo(s) de equipaje pendientes`, actionLabel: 'Completar equipaje' });
+  for (const alert of data.importantAlerts || []) add({ id: `alert:${alert.id}`, kind: 'alerts', severity: alert.severity === 'critical' ? 'critical' : 'recommendation', urgency: Number(alert.urgency || 50), blocking: Boolean(alert.blocking), title: alert.title || alert.message, actionLabel: alert.actionLabel || 'Revisar alerta' });
+  return candidates.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id)).slice(0, limit);
+}

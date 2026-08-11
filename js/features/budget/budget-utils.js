@@ -43,10 +43,11 @@ function csvCell(value) { return `"${String(value ?? '').replaceAll('"', '""')}"
 
 export function expensesToCsv(expenses, currency = 'JPY') {
   const rows = [['Fecha', 'Concepto', 'Categoría', 'Comercio/Proveedor', 'Monto original (minor)', 'Moneda original',
-    'Tipo de cambio', 'Monto convertido (minor)', 'Moneda base', 'Fecha conversión', 'Fuente', 'Manual', 'Notas', 'Creado por']];
+    'Tipo de cambio', 'Monto convertido (minor)', 'Moneda base', 'Fecha conversión', 'Fuente', 'Manual', 'Notas', 'Creado por','Pagador','Método división','Participaciones originales','Participaciones base']];
   expenses.forEach((item) => rows.push([item.date, item.description || item.desc, item.category, item.vendor,
     expenseAmount(item), item.originalCurrency || item.currency || currency, item.exchangeRate,
     item.convertedAmountMinor ?? expenseAmount(item), item.baseCurrency || currency, item.exchangeRateFetchedAt,
-    item.exchangeRateSource, item.conversionManual ? 'Sí' : 'No', item.notes, item.createdByEmail || item.addedBy]));
+    item.exchangeRateSource, item.conversionManual ? 'Sí' : 'No', item.notes, item.createdByEmail || item.addedBy,item.split?.paidBy||'',item.split?.method||'',
+    (item.split?.allocations||[]).map(a=>`${a.userId}:${a.amountMinor}`).join('|'),(item.split?.allocations||[]).map(a=>`${a.userId}:${a.baseAmountMinor}`).join('|')]));
   return rows.map((row) => row.map(csvCell).join(',')).join('\r\n');
 }

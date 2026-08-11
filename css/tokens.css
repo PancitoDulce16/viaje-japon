@@ -1,45 +1,40 @@
-/* ==========================================================================
-   Japitin Design Tokens — single source of truth.
-   See DESIGN_SYSTEM.md for the rationale behind every value here.
-   This file only DEFINES tokens — it must stay free of component rules
-   so the rest of the cascade can adopt it gradually without a big-bang
-   visual change (Phase 1 of the redesign roadmap).
-   ========================================================================== */
-
+/* Japitin semantic design tokens. Components must not decide theme colors. */
 :root {
-  /* ---- Color: brand ---- */
-  --color-sora: #CDEEF7;       /* scene backgrounds, sky washes */
-  --color-sora-deep: #9FD9EE;
-  --color-umi: #4FA9C4;        /* illustration depth, secondary accents */
-  --color-kasumi: #FF8FBB;     /* primary accent */
-  --color-kasumi-deep: #F16FA3;
-  --color-yuzu: #F6923B;       /* reserved — delight/confirmation/primary CTA only, see DESIGN_SYSTEM.md §5 */
-  --color-ai: #2B3868;         /* ink — type, icon strokes, illustration linework */
-  --color-ai-soft: #4A5788;
-  --color-washi: #FBF7F1;      /* card / content surface */
-  --color-washi-alt: #F2ECE1;
+  /* Brand and illustration palette */
+  --color-sora: #CFEAF4;
+  --color-sora-deep: #9BCFE2;
+  --color-umi: #4D95BE;
+  --color-kasumi: #F06A8A;
+  --color-kasumi-deep: #DC4D73;
+  --color-yuzu: #F4A340;
+  --color-ai: #132650;
+  --color-ai-soft: #4D5B82;
+  --color-washi: #FFF9F1;
+  --color-washi-alt: #F7EFE5;
+  --color-matcha: #69B98E;
+  --color-sango: #D94F5C;
 
-  /* ---- Color: semantic (never used as brand accent) ---- */
-  --color-matcha: #5FB489;     /* progress, confirmation, success */
-  --color-sango: #E8615C;      /* SOS / errors only */
-
-  /* ---- Color: surface roles (theme-aware, light default) ---- */
+  /* Semantic surfaces: warm paper by default */
   --surface-page: var(--color-washi);
   --surface-page-alt: var(--color-washi-alt);
-  --surface-raised: #FFFCF7;
-  --surface-subtle: #F5EFE5;
-  --surface-overlay: rgba(30, 37, 65, 0.68);
+  --surface-raised: #FFFDF9;
+  --surface-subtle: #F8F1EA;
+  --surface-ticket: #FFF4EA;
+  --surface-note: #FFF0E8;
+  --surface-map: #EAF4F1;
+  --surface-chat: #FCE9EE;
+  --surface-overlay: rgba(19, 38, 80, .68);
   --ink: var(--color-ai);
-  --ink-soft: #5C6690;
-  --ink-muted: #757E9F;
-  --hairline: rgba(43, 56, 104, 0.12);
-  --border-strong: rgba(43, 56, 104, 0.22);
-  --accent: #C04F75;
-  --accent-soft: #FCE8EE;
+  --ink-soft: #566489;
+  --ink-muted: #737D9C;
+  --hairline: rgba(19, 38, 80, .12);
+  --border-strong: rgba(19, 38, 80, .22);
+  --accent: var(--color-kasumi);
+  --accent-soft: #FDE8ED;
   --state-success: #397C5B;
-  --state-warning: #8B5E10;
-  --state-error: #B7444F;
-  --focus-ring: #3F93B2;
+  --state-warning: #8A5A12;
+  --state-error: #B43E4B;
+  --focus-ring: #4A91C4;
   --disabled-opacity: .56;
   --control-bg: var(--surface-raised);
   --control-border: var(--border-strong);
@@ -47,16 +42,15 @@
   --state-success-soft: #E5F3EB;
   --state-warning-soft: #FFF1D2;
   --state-error-soft: #FBE8E9;
-  --shadow-rgb: 43, 56, 104; /* shadows are indigo-tinted, never neutral grey */
+  --shadow-rgb: 19, 38, 80;
 
-  /* ---- Type ---- */
-  /* Family names must match the Google Fonts request in each HTML <head> exactly. */
+  /* Typography */
   --jp-font-display: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
   --font-body: 'Inter', -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'Consolas', monospace;
-  --font-hand: 'Caveat', 'Segoe Script', cursive; /* handwritten accents: eyebrows, "días", quotes */
+  --font-hand: 'Caveat', 'Segoe Script', cursive;
 
-  /* ---- Spacing scale ---- */
+  /* Spacing */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -66,40 +60,74 @@
   --space-7: 32px;
   --space-8: 48px;
 
-  /* ---- Radius ---- */
-  --jp-radius-sm: 14px;
-  --jp-radius-md: 20px;
+  /* Shape and elevation */
+  --jp-radius-sm: 12px;
+  --jp-radius-md: 18px;
   --jp-radius-lg: 24px;
   --jp-radius-pill: 999px;
+  --jp-shadow-sm: 0 6px 14px -8px rgba(var(--shadow-rgb), .28);
+  --jp-shadow-md: 0 10px 24px -12px rgba(var(--shadow-rgb), .3);
+  --jp-shadow-lg: 0 20px 40px -16px rgba(var(--shadow-rgb), .35);
 
-  /* ---- Shadow (indigo-tinted) ---- */
-  --jp-shadow-sm: 0 6px 14px -8px rgba(var(--shadow-rgb), 0.28);
-  --jp-shadow-md: 0 10px 24px -12px rgba(var(--shadow-rgb), 0.30);
-  --jp-shadow-lg: 0 20px 40px -16px rgba(var(--shadow-rgb), 0.35);
-
-  /* ---- Motion ---- */
+  /* Motion */
   --motion-micro: 120ms;
   --motion-base: 240ms;
   --motion-orchestrated: 480ms;
-  --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-ease: cubic-bezier(.4, 0, .2, 1);
+
+  /* Public semantic API */
+  --background: var(--surface-page);
+  --surface: var(--surface-raised);
+  --surface-soft: var(--surface-subtle);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-soft);
+  --text-muted: var(--ink-muted);
+  --border: var(--hairline);
+  --primary: var(--accent);
+  --primary-hover: var(--color-kasumi-deep);
+  --positive: var(--state-success);
+  --warning: var(--state-warning);
+  --danger: var(--state-error);
+  --information: #397FA3;
+  --decorative-sakura: #EF8EAB;
+  --decorative-matcha: #82B88A;
+  --decorative-lavender: #9A82D8;
+  --decorative-sora: #8DCBE3;
+  --decorative-plum: #7B4777;
+  --decorative-gold: #DDA94F;
+  --font-size-xs: .75rem;
+  --font-size-sm: .875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: clamp(1.75rem, 3vw, 2.75rem);
+  --control-height: 44px;
+  --z-base: 0;
+  --z-sticky: 20;
+  --z-menu: 40;
+  --z-modal: 60;
+  --z-toast: 80;
 }
 
-/* Dark mode: redefine tokens only, never style components inside this block. */
+/* Noche en Japón: the same component structure, token changes only. */
 .dark {
-  --surface-page: #151A29;
-  --surface-page-alt: #1B2132;
-  --surface-raised: #232A3D;
-  --surface-subtle: #1D2436;
-  --surface-overlay: rgba(8, 12, 22, .76);
-  --ink: #F7F2E9;
-  --ink-soft: #C7CBDA;
-  --ink-muted: #9EA6BD;
-  --hairline: rgba(238, 232, 220, 0.13);
-  --border-strong: rgba(238, 232, 220, 0.23);
-  --accent: #EF8EAB;
-  --accent-soft: #3A2937;
+  --surface-page: #08172D;
+  --surface-page-alt: #0D1E38;
+  --surface-raised: #122641;
+  --surface-subtle: #182B49;
+  --surface-ticket: #182943;
+  --surface-note: #2D233D;
+  --surface-map: #102F42;
+  --surface-chat: #2A2038;
+  --surface-overlay: rgba(4, 16, 32, .82);
+  --ink: #FFF1DF;
+  --ink-soft: #E3D8D0;
+  --ink-muted: #B8B1BC;
+  --hairline: rgba(245, 216, 188, .14);
+  --border-strong: rgba(245, 216, 188, .25);
+  --accent: #FF728F;
+  --accent-soft: #3A2437;
   --state-success: #82CBA7;
-  --state-warning: #E7BE70;
+  --state-warning: #F0B65F;
   --state-error: #F08A91;
   --focus-ring: #79C9E0;
   --control-bg: var(--surface-raised);
@@ -108,8 +136,19 @@
   --state-success-soft: #20382F;
   --state-warning-soft: #3B3222;
   --state-error-soft: #43272E;
-  --color-sora: #22314A;
-  --shadow-rgb: 0, 0, 0;
+  --color-sora: #18324D;
+  --color-ai: #FFF1DF;
+  --color-ai-soft: #E3D8D0;
+  --color-yuzu: #F4B75F;
+  --shadow-rgb: 2, 9, 21;
+  --primary-hover: #FF91A8;
+  --information: #81C8E3;
+  --decorative-sakura: #FF829E;
+  --decorative-matcha: #7FC09A;
+  --decorative-lavender: #B39AE8;
+  --decorative-sora: #72B8D6;
+  --decorative-plum: #A2699C;
+  --decorative-gold: #F0BD63;
 }
 
 @media (prefers-reduced-motion: reduce) {

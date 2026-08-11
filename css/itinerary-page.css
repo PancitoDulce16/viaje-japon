@@ -1,0 +1,439 @@
+/* Canonical itinerary composition. One DOM for light and Noche en Japón. */
+#countdownWidget { display: none !important; }
+
+#content-itinerary {
+  width: 100%;
+  max-width: none !important;
+  min-width: 0;
+  padding: 0 0 calc(var(--space-8) * 2) !important;
+  overflow: clip;
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at 4% 22%, color-mix(in srgb, var(--decorative-sakura) 12%, transparent) 0 48px, transparent 49px),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-soft) 42%, transparent), transparent 340px);
+}
+
+.itinerary-page-shell { min-width: 0; }
+.itinerary-trip-header,
+.itinerary-day-nav__inner,
+.itinerary-reader {
+  width: min(1160px, calc(100% - 32px));
+  margin-inline: auto;
+}
+
+.itinerary-trip-header { padding-top: var(--space-5); }
+.itinerary-trip-header .trip-header-banner--journey {
+  position: relative;
+  min-height: 194px;
+  margin: 0 !important;
+  padding: 24px 170px 64px !important;
+  overflow: hidden;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--jp-radius-lg) !important;
+  background-color: var(--surface) !important;
+  background-position: center 66% !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--jp-shadow-md) !important;
+}
+.itinerary-trip-header .trip-header-banner--journey::before {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, transparent) 0 38%, color-mix(in srgb, var(--surface) 70%, transparent) 68%, transparent 100%) !important;
+}
+.trip-header-banner__copy { position: relative; z-index: 3; margin-bottom: var(--space-3) !important; }
+.trip-header-banner__eyebrow {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--primary);
+  font: 750 .66rem/1 var(--font-mono);
+  letter-spacing: .14em;
+}
+.itinerary-trip-header .trip-header-banner h3 {
+  margin: 0 !important;
+  color: var(--text-primary) !important;
+  font: 760 clamp(1.65rem, 3vw, 2.35rem)/1.12 var(--jp-font-display) !important;
+  text-shadow: none !important;
+}
+.itinerary-trip-header .trip-header-banner p { margin: var(--space-2) 0 0; color: var(--text-secondary) !important; }
+.itinerary-trip-header .trip-header-banner > .flex {
+  position: absolute;
+  z-index: 4;
+  right: var(--space-5);
+  bottom: var(--space-4);
+  left: var(--space-5);
+  display: flex !important;
+  max-width: none !important;
+  flex-wrap: nowrap !important;
+  justify-content: center;
+  gap: var(--space-2) !important;
+  overflow-x: auto;
+  padding: 2px;
+  scrollbar-width: none;
+}
+.itinerary-trip-header .trip-header-banner > .flex::-webkit-scrollbar { display: none; }
+.itinerary-trip-header .trip-header-banner button {
+  flex: 0 0 auto;
+  min-height: 38px !important;
+  padding: 8px 12px !important;
+  border: 1px solid var(--control-border) !important;
+  border-radius: var(--jp-radius-pill) !important;
+  background: color-mix(in srgb, var(--control-bg) 92%, transparent) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--jp-shadow-sm) !important;
+  font: 650 .74rem/1 var(--font-body) !important;
+  white-space: nowrap;
+}
+.itinerary-trip-header .trip-header-banner button:hover { background: var(--control-hover) !important; }
+.itinerary-trip-header .jp-trip-dogwrap { z-index: 4; left: 18px; bottom: 42px; display: block !important; }
+.itinerary-trip-header .jp-trip-dog { width: 118px; height: 118px; object-fit: contain; transform: none; filter: drop-shadow(0 8px 10px rgba(var(--shadow-rgb), .18)); }
+.itinerary-trip-header .jp-trip-bubble {
+  left: 88px;
+  bottom: 74px;
+  width: 132px;
+  padding: 7px 10px;
+  border-color: var(--border);
+  background: var(--surface-note);
+  color: var(--text-primary);
+  font-size: .82rem;
+}
+.itinerary-trip-header .jp-trip-polaroid { top: 12px; right: 24px; width: 96px !important; }
+.itinerary-trip-header .jp-trip-postmark { top: 10px; right: 110px; width: 112px; opacity: .38; }
+
+.trip-numbers-wrap { margin: var(--space-4) 0 var(--space-3) !important; }
+.trip-numbers-title { color: var(--text-secondary); }
+.trip-numbers {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  gap: var(--space-2) !important;
+}
+.trip-num {
+  min-height: 68px !important;
+  padding: 9px 11px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--jp-radius-sm) !important;
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+.trip-num__label { color: var(--text-muted) !important; }
+
+.itinerary-day-nav {
+  position: sticky;
+  z-index: var(--z-sticky);
+  top: var(--jp-shell-header, 64px);
+  margin-top: var(--space-2);
+  border-block: 1px solid var(--border);
+  background: color-mix(in srgb, var(--background) 94%, transparent);
+  box-shadow: 0 8px 18px -18px rgba(var(--shadow-rgb), .5);
+  backdrop-filter: blur(10px);
+}
+.itinerary-day-nav__inner { padding-block: var(--space-2); }
+#content-itinerary #daySelector {
+  display: flex !important;
+  width: 100%;
+  margin: 0 !important;
+  gap: var(--space-2) !important;
+  overflow-x: auto;
+  padding: 2px !important;
+  background: transparent !important;
+  scrollbar-width: thin;
+}
+#content-itinerary #daySelector .day-ticket {
+  flex: 0 0 156px;
+  min-height: 68px;
+  padding: 8px 10px !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--jp-radius-sm) !important;
+  background: var(--surface-ticket) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+#content-itinerary #daySelector .day-ticket--active {
+  border-color: color-mix(in srgb, var(--primary) 70%, var(--border)) !important;
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface-ticket)) !important;
+  box-shadow: inset 4px 0 0 var(--primary) !important;
+}
+#content-itinerary #daySelector .day-ticket__kanji { color: var(--primary) !important; }
+#content-itinerary #daySelector .day-ticket__meta,
+#content-itinerary #daySelector .day-ticket__count { color: var(--text-secondary) !important; }
+
+.itinerary-reader { padding-block: var(--space-6); }
+#content-itinerary .day-reader-layout {
+  display: grid;
+  grid-template-columns: minmax(276px, 300px) minmax(0, 1fr);
+  align-items: start;
+  width: 100%;
+  max-width: none !important;
+  gap: var(--space-6);
+}
+#content-itinerary .day-reader-aside { position: sticky; top: 154px; min-width: 0; }
+#content-itinerary .day-reader-overview {
+  max-height: calc(100vh - 172px);
+  overflow: auto;
+  padding: var(--space-4) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--jp-radius-lg) !important;
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--jp-shadow-sm) !important;
+}
+#content-itinerary .day-reader-overview::before { color: var(--primary); }
+#content-itinerary .day-info-art { aspect-ratio: 4 / 2.45 !important; margin-bottom: var(--space-3) !important; border-radius: var(--jp-radius-md) !important; }
+#content-itinerary .day-info-art img { width: 100%; height: 100%; object-fit: cover; }
+#content-itinerary .day-info-art h2 { font-size: 1.25rem !important; }
+#content-itinerary .day-note { margin: 0 0 var(--space-3); color: var(--text-primary) !important; font: 560 1rem/1.35 var(--font-hand) !important; }
+#content-itinerary .day-route-progress,
+#content-itinerary .day-index-stats,
+#content-itinerary .day-diagnostic { border-color: var(--border) !important; }
+#content-itinerary .day-index-meta > p.font-semibold { display: none; }
+#content-itinerary .day-index-timeline { display: none !important; }
+
+#content-itinerary .day-reader-story { min-width: 0; }
+#content-itinerary .day-reader-timeline { margin-top: 0 !important; }
+#content-itinerary .day-reader-chapter { margin-bottom: var(--space-4); }
+#content-itinerary .day-reader-chapter h2 { font-size: clamp(1.55rem, 2.5vw, 2.1rem); }
+#content-itinerary .itinerary-day-metrics,
+#content-itinerary .itinerary-free-slots { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+#content-itinerary .itinerary-day-metrics > span,
+#content-itinerary .itinerary-free-slots > span {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--jp-radius-pill);
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  font-size: .72rem;
+}
+#content-itinerary .itinerary-conflicts { margin-block: var(--space-3) var(--space-5); border-color: var(--border); background: var(--surface); }
+
+#content-itinerary .day-reader-route .geo-flow {
+  border-color: var(--border) !important;
+  background: var(--surface-map) !important;
+  box-shadow: var(--jp-shadow-sm) !important;
+}
+#content-itinerary .day-reader-route :is(h3, strong) { color: var(--text-primary) !important; }
+#content-itinerary .day-reader-route :is(p, small, span) { color: var(--text-secondary) !important; }
+
+#content-itinerary .day-main-activities { width: 100%; max-width: none !important; margin: 0 !important; }
+#content-itinerary .day-reader-timeline .activity-card[data-activity-id] {
+  width: 100%;
+  max-width: none;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  border: 1px solid var(--border) !important;
+  border-left: 4px solid var(--primary) !important;
+  border-radius: var(--jp-radius-md) !important;
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--jp-shadow-sm) !important;
+}
+#content-itinerary .day-reader-timeline .activity-card > div { padding: var(--space-4) !important; gap: var(--space-3) !important; }
+#content-itinerary .day-reader-timeline .activity-thumb { width: 104px !important; height: 88px !important; border-radius: var(--jp-radius-sm); object-fit: cover; }
+#content-itinerary .activity-card h3 { color: var(--text-primary) !important; font-size: 1.02rem !important; }
+#content-itinerary .activity-card__description,
+#content-itinerary .activity-card__location { color: var(--text-secondary) !important; }
+#content-itinerary .activity-card__meta > span,
+#content-itinerary .activity-card .jp-reservation-chip { border-color: var(--border) !important; background: var(--surface-soft) !important; color: var(--text-secondary) !important; }
+#content-itinerary .activity-card__actions { position: relative; align-items: center; }
+#content-itinerary .activity-card__actions > button,
+#content-itinerary .activity-more > summary {
+  display: grid;
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  min-height: 38px !important;
+  place-items: center;
+  padding: 0 !important;
+  border: 1px solid transparent !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  cursor: pointer;
+  list-style: none;
+}
+#content-itinerary .activity-more > summary::-webkit-details-marker { display: none; }
+#content-itinerary .activity-card__actions > button:hover,
+#content-itinerary .activity-more > summary:hover { border-color: var(--border) !important; background: var(--surface-soft) !important; color: var(--text-primary) !important; }
+#content-itinerary .activity-more { position: relative; }
+#content-itinerary .activity-more__menu {
+  position: absolute;
+  z-index: var(--z-menu);
+  top: calc(100% + 6px);
+  right: 0;
+  display: grid;
+  width: 178px;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--jp-radius-sm);
+  background: var(--surface);
+  box-shadow: var(--jp-shadow-md);
+}
+#content-itinerary .activity-more__menu button {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 10px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  text-align: left;
+}
+#content-itinerary .activity-more__menu button:hover { background: var(--surface-soft) !important; }
+#content-itinerary .activity-more__menu .activity-delete-btn { color: var(--danger) !important; }
+
+/* The closing material stays inside the reader instead of becoming a second page. */
+#content-itinerary .day-closing-scene {
+  position: relative;
+  left: auto;
+  width: 100%;
+  margin: var(--space-8) 0 0;
+  padding: 0;
+  overflow: visible;
+  transform: none;
+  background: transparent !important;
+  color: var(--text-primary);
+}
+#content-itinerary .day-closing-scene::before,
+#content-itinerary .day-closing-scene::after { display: none; }
+#content-itinerary .day-reader-memory,
+#content-itinerary .day-reader-assessment { width: 100%; margin: 0 !important; }
+#content-itinerary .day-reader-assessment { margin-top: var(--space-5) !important; }
+#content-itinerary .day-reader-memory::before,
+#content-itinerary .day-reader-assessment::before { position: static; display: block; margin: 0 0 var(--space-2); color: var(--primary); }
+#content-itinerary .day-reader-memory .story-desk,
+#content-itinerary .day-reader-assessment .trip-companion {
+  min-height: 0;
+  padding: var(--space-6) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--jp-radius-lg) !important;
+  background: var(--surface-note) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--jp-shadow-sm) !important;
+  filter: none !important;
+}
+#content-itinerary .day-reader-assessment .trip-companion { background: var(--surface-ticket) !important; }
+#content-itinerary .day-closing-scene :is(h3, strong, label) { color: var(--text-primary) !important; }
+#content-itinerary .day-closing-scene :is(p, small, span) { color: var(--text-secondary) !important; }
+#content-itinerary .day-reader-memory .story-desk__head { gap: var(--space-4); border-color: var(--border) !important; color: var(--text-primary) !important; }
+#content-itinerary .day-reader-memory .story-desk__head h3 { font-size: clamp(1.8rem, 4vw, 2.7rem) !important; }
+#content-itinerary .day-reader-memory .story-desk__actions button { border-color: var(--border) !important; background: var(--surface) !important; color: var(--text-primary) !important; }
+#content-itinerary .day-reader-memory .story-memory {
+  padding: var(--space-4) !important;
+  border: 1px dashed var(--border) !important;
+  border-radius: var(--jp-radius-sm) !important;
+  background: color-mix(in srgb, var(--surface) 76%, transparent) !important;
+}
+#content-itinerary .day-reader-memory .story-memory textarea { border-color: var(--border) !important; background: var(--control-bg) !important; color: var(--text-primary) !important; }
+#content-itinerary .day-reader-assessment .trip-companion__focus { margin-bottom: var(--space-4) !important; }
+#content-itinerary .day-reader-assessment .trip-companion__focus h3 { color: var(--text-primary) !important; font-size: clamp(1.75rem, 4vw, 2.65rem) !important; white-space: normal; }
+#content-itinerary .day-reader-assessment .trip-companion__rail {
+  border: 1px solid var(--border) !important;
+  border-radius: var(--jp-radius-sm) !important;
+  background: color-mix(in srgb, var(--surface) 74%, transparent) !important;
+}
+#content-itinerary .day-reader-assessment .trip-companion__rail article { min-height: 0 !important; padding: var(--space-4) !important; color: var(--text-primary) !important; }
+#content-itinerary .day-reader-assessment .trip-companion__rail article + article { border-color: var(--border) !important; }
+#content-itinerary .day-closing-polaroid { top: 10px; right: 10px; width: 96px; opacity: .45; }
+#content-itinerary .day-closing-decor--memory .day-closing-postmark { top: 82px; right: 16px; width: 78px; opacity: .3; }
+#content-itinerary .day-closing-mascot,
+#content-itinerary .day-closing-ticket,
+#content-itinerary .day-closing-torii,
+#content-itinerary .day-closing-decor--assessment { display: none !important; }
+
+@media (max-width: 1023px) {
+  .itinerary-trip-header,
+  .itinerary-day-nav__inner,
+  .itinerary-reader { width: min(100% - 24px, 920px); }
+  .itinerary-trip-header .trip-header-banner--journey { padding-inline: 130px !important; }
+  .itinerary-trip-header .jp-trip-dog { width: 98px; height: 98px; }
+  .itinerary-trip-header .jp-trip-bubble { display: none; }
+  .itinerary-trip-header .jp-trip-polaroid { width: 78px !important; }
+  .itinerary-trip-header .jp-trip-postmark { right: 82px; width: 92px; }
+  #content-itinerary .day-reader-layout { grid-template-columns: 252px minmax(0, 1fr); gap: var(--space-4); }
+  #content-itinerary .day-reader-timeline .activity-thumb { width: 88px !important; height: 78px !important; }
+}
+
+@media (max-width: 767px) {
+  #content-itinerary { padding-bottom: 92px !important; }
+  .itinerary-trip-header,
+  .itinerary-day-nav__inner,
+  .itinerary-reader { width: calc(100% - 20px); }
+  .itinerary-trip-header { padding-top: var(--space-3); }
+  .itinerary-trip-header .trip-header-banner--journey {
+    min-height: 178px;
+    padding: 18px 72px 58px 18px !important;
+    background-position: center bottom !important;
+  }
+  .itinerary-trip-header .trip-header-banner h3 { font-size: 1.45rem !important; text-align: left; }
+  .itinerary-trip-header .trip-header-banner__copy { text-align: left !important; }
+  .itinerary-trip-header .trip-header-banner p { max-width: 24ch; margin-inline: 0; font-size: .68rem !important; }
+  .itinerary-trip-header .jp-trip-dogwrap { right: 4px; bottom: 48px; left: auto; }
+  .itinerary-trip-header .jp-trip-dog { width: 76px; height: 76px; }
+  .itinerary-trip-header .jp-trip-polaroid,
+  .itinerary-trip-header .jp-trip-postmark { display: none; }
+  .itinerary-trip-header .trip-header-banner > .flex { justify-content: flex-start; }
+  .itinerary-trip-header .trip-header-banner button { min-height: 40px !important; }
+  .trip-numbers-wrap { margin-block: var(--space-3) var(--space-2) !important; }
+  .trip-numbers {
+    display: flex !important;
+    gap: var(--space-2) !important;
+    overflow-x: auto;
+    padding-bottom: var(--space-2);
+    scroll-snap-type: x proximity;
+  }
+  .trip-num { flex: 0 0 104px; scroll-snap-align: start; }
+  .itinerary-day-nav { top: 52px; }
+  #content-itinerary #daySelector .day-ticket { flex-basis: 132px; min-height: 62px; }
+  .itinerary-reader { padding-block: var(--space-4); }
+  #content-itinerary .day-reader-layout { display: block; }
+  #content-itinerary .day-reader-aside { position: static; margin-bottom: var(--space-5); }
+  #content-itinerary .day-reader-overview { max-height: none; padding: var(--space-3) !important; }
+  #content-itinerary .day-info-art { aspect-ratio: 16 / 7 !important; }
+  #content-itinerary .day-note { font-size: .95rem !important; }
+  #content-itinerary .day-index-stats .grid { display: grid !important; grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+  #content-itinerary .day-reader-chapter h2 { font-size: 1.55rem; }
+  #content-itinerary .day-reader-timeline .day-main-activities { padding-left: 20px !important; }
+  #content-itinerary .day-reader-timeline .activity-card[data-activity-id]::before { left: -23px; width: 18px; height: 18px; }
+  #content-itinerary .day-reader-timeline .activity-card > div {
+    display: grid !important;
+    grid-template-columns: 24px 72px minmax(0, 1fr) !important;
+    align-items: start;
+    padding: var(--space-3) !important;
+    gap: var(--space-2) !important;
+  }
+  #content-itinerary .day-reader-timeline .activity-card > div > .flex-col { grid-column: 1; }
+  #content-itinerary .day-reader-timeline .activity-thumb { display: block !important; grid-column: 2; width: 72px !important; height: 72px !important; }
+  #content-itinerary .day-reader-timeline .activity-card > div > div:last-child { grid-column: 3; min-width: 0; }
+  #content-itinerary .activity-card__heading { display: block; }
+  #content-itinerary .activity-card__actions { margin-top: var(--space-2); }
+  #content-itinerary .activity-card__actions > button,
+  #content-itinerary .activity-more > summary { width: 36px; min-width: 36px; height: 36px; min-height: 36px !important; }
+  #content-itinerary .activity-card__description { margin-top: var(--space-2); font-size: .78rem !important; line-height: 1.45; }
+  #content-itinerary .activity-card__location { max-width: 22ch; }
+  #content-itinerary .day-closing-scene { margin-top: var(--space-7); }
+  #content-itinerary .day-reader-memory .story-desk,
+  #content-itinerary .day-reader-assessment .trip-companion { padding: var(--space-4) !important; }
+  #content-itinerary .day-reader-memory .story-desk__head { display: block !important; }
+  #content-itinerary .day-reader-memory .story-desk__actions { margin-top: var(--space-3); }
+  #content-itinerary .day-reader-assessment .trip-companion__rail { display: grid !important; grid-template-columns: 1fr !important; background: color-mix(in srgb, var(--surface) 74%, transparent) !important; }
+  #content-itinerary .day-reader-assessment .trip-companion__rail article { background: transparent !important; }
+  #content-itinerary .day-reader-assessment .trip-companion__rail article + article { border-top: 1px solid var(--border) !important; border-left: 0 !important; }
+  #content-itinerary .day-closing-polaroid,
+  #content-itinerary .day-closing-decor--memory .day-closing-postmark { display: none; }
+}
+
+@media (max-width: 430px) {
+  .itinerary-trip-header,
+  .itinerary-day-nav__inner,
+  .itinerary-reader { width: calc(100% - 16px); }
+  #content-itinerary .day-reader-timeline .activity-card > div { grid-template-columns: 22px 62px minmax(0, 1fr) !important; }
+  #content-itinerary .day-reader-timeline .activity-thumb { width: 62px !important; height: 62px !important; }
+  #content-itinerary .activity-card h3 { font-size: .9rem !important; }
+  #content-itinerary .activity-card__meta > span,
+  #content-itinerary .activity-card .jp-reservation-chip { min-height: 26px; padding: 5px 7px; font-size: .63rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #content-itinerary .activity-card,
+  #content-itinerary .day-ticket { scroll-behavior: auto; transition: none !important; }
+}

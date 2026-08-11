@@ -78,6 +78,12 @@ export const ModalRenderer = {
                                 <input type="text" id="activityTime" placeholder="8:00 AM" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             </div>
                         </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                            <label class="text-sm font-semibold dark:text-white">Duración (min)<input type="number" id="activityDuration" min="5" max="1440" step="5" value="60" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"></label>
+                            <label class="text-sm font-semibold dark:text-white">Traslado previo<input type="number" id="activityTravelTime" min="0" max="480" step="5" value="0" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"></label>
+                            <label class="text-sm font-semibold dark:text-white">Preparación / margen<input type="number" id="activityPreparation" min="0" max="240" step="5" value="0" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"></label>
+                            <label class="flex items-center gap-2 text-sm font-semibold dark:text-white"><input type="checkbox" id="activityOptional"> Actividad opcional</label>
+                        </div>
                         <div class="mt-4 relative">
                             <label for="activityTitle" class="block text-sm font-semibold text-gray-700 dark:text-white mb-2">Título</label>
                             <input type="text" id="activityTitle" required placeholder="Narita Express → Shinjuku" class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" autocomplete="off">
@@ -403,9 +409,9 @@ export const ModalRenderer = {
                              checklist y el botón, reales y reales. -->
                         <div id="tripTypeSelection">
                             <div class="jps-head">
-                                <img class="jps-head__cat" src="/images/illustrations/generated/components/tk-cathead-final.png" alt="" aria-hidden="true">
+                                <img class="jps-head__cat" src="/images/illustrations/generated/companions/cat-guide.png" alt="" aria-hidden="true">
                                 <h3>¿Cómo quieres comenzar tu aventura? <span class="jps-head__flower" aria-hidden="true"><svg viewBox="0 0 24 24" width="1em" height="1em"><g fill="#F4A6C6"><ellipse cx="12" cy="7" rx="3.4" ry="4.2" transform="rotate(0 12 7)"/><ellipse cx="12" cy="7" rx="3.4" ry="4.2" transform="rotate(72 12 12)"/><ellipse cx="12" cy="7" rx="3.4" ry="4.2" transform="rotate(144 12 12)"/><ellipse cx="12" cy="7" rx="3.4" ry="4.2" transform="rotate(216 12 12)"/><ellipse cx="12" cy="7" rx="3.4" ry="4.2" transform="rotate(288 12 12)"/></g><circle cx="12" cy="12" r="2.2" fill="#F7C9DE"/></svg></span></h3>
-                                <img class="jps-head__dog" src="/images/illustrations/generated/components/tk-doghead-final.png" alt="" aria-hidden="true">
+                                <img class="jps-head__dog" src="/images/illustrations/generated/companions/dog-explorer.png" alt="" aria-hidden="true">
                                 <p>Elige la opción que mejor se adapte a tu viaje.</p>
                             </div>
 
@@ -494,8 +500,8 @@ export const ModalRenderer = {
                                 <span class="jps-note__ink" aria-hidden="true">
                                     <b>¿No estás seguro?</b> Empieza con un Viaje Simple. <em>Puedes</em> convertirlo en una aventura completa cuando quieras.
                                 </span>
-                                <img class="jps-note__sticker jps-note__sticker--dog" src="/images/illustrations/generated/components/note-sticker-dog-v2.png" alt="" aria-hidden="true">
-                                <img class="jps-note__sticker jps-note__sticker--cat" src="/images/illustrations/generated/components/note-sticker-cat-cutout.png" alt="" aria-hidden="true">
+                                <img class="jps-note__sticker jps-note__sticker--dog" src="/images/illustrations/generated/companions/dog-explorer.png" alt="" aria-hidden="true">
+                                <img class="jps-note__sticker jps-note__sticker--cat" src="/images/illustrations/generated/companions/cat-guide.png" alt="" aria-hidden="true">
                             </div>
                         </div>
 

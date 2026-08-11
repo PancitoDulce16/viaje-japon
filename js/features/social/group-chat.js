@@ -166,7 +166,7 @@ export const GroupChat = {
             <input type="search" id="chatSearch" placeholder="Buscar mensajes" aria-label="Buscar mensajes">
           </label>
           <button class="jc-thread-card jc-thread-card--active" type="button">
-            <img src="/images/illustrations/generated/characters/dog-camera.webp" alt="" aria-hidden="true">
+            <img src="/images/illustrations/generated/companions/dog-explorer.png" alt="" aria-hidden="true">
             <span><b>${this.escapeHtml(tripName)}</b><small>${this.messages.length ? `${this.messages.length} mensajes` : 'Empieza la conversación'}</small></span>
             <time>ahora</time>
           </button>

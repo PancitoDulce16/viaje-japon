@@ -14,6 +14,8 @@
 
 import { db, auth } from '../../core/firebase-config.js';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { BudgetTracker } from './budget-tracker.js';
+import { BudgetGallery } from './budget-gallery.js';
 
 // Config de compartimentos. `key` debe coincidir con las categorías ya
 // usadas por BudgetTracker. `share` = % del presupuesto total por defecto.
@@ -168,9 +170,15 @@ export const BentoBudget = {
           ${this.renderBentoBox(s)}
         </div>
 
-        <div class="flex justify-center mb-6">
+        <div class="flex justify-center gap-2 flex-wrap mb-6">
           <button onclick="window.BentoBudget.openAddModal()" class="bento-add-btn">
             ➕ Anotar gasto
+          </button>
+          <button type="button" onclick="document.getElementById('budgetTrackerContent')?.scrollIntoView({ behavior: 'smooth', block: 'start' })" class="bento-add-btn">
+            📊 Administrar presupuesto
+          </button>
+          <button type="button" onclick="window.BudgetGallery?.open()" class="bento-add-btn">
+            📷 Galería y comprobantes
           </button>
         </div>
 
@@ -179,8 +187,15 @@ export const BentoBudget = {
 
         <!-- Historial por día -->
         ${this.renderHistory()}
+
+        <!-- Herramientas completas: monedas, filtros, exportación, recibos y balances -->
+        <div class="mt-8" id="budgetTrackerContent"></div>
       </div>
     `;
+
+    // Ambos módulos comparten los gastos. Este contenedor dedicado permite
+    // mostrar las herramientas administrativas sin reemplazar el bento.
+    BudgetTracker.renderInTab();
   },
 
   renderSummaryCards(s) {

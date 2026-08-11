@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';
+import { calculateBalances,calculateSplit,settlementEffect,simplifyBalances } from '../js/features/budget/expense-split-engine.js';
+const people=['ana','luis','maria'].map(userId=>({userId,email:`${userId}@test.local`}));
+const equal=calculateSplit({totalMinor:6000,currency:'JPY',baseTotalMinor:24000,method:'equal',participants:people});assert.deepEqual(equal.map(x=>x.amountMinor),[2000,2000,2000]);assert.equal(equal.reduce((s,x)=>s+x.baseAmountMinor,0),24000);
+const residue=calculateSplit({totalMinor:100,currency:'JPY',method:'equal',participants:people});assert.deepEqual(residue.map(x=>x.amountMinor),[34,33,33]);assert.equal(residue[0].roundingAdjustmentMinor,1);
+const reordered=calculateSplit({totalMinor:100,currency:'JPY',method:'equal',participants:[people[2],people[1],people[0]]});assert.equal(reordered.find(x=>x.userId==='ana').amountMinor,34);
+assert.deepEqual(calculateSplit({totalMinor:6000,currency:'JPY',method:'custom',participants:[{...people[0],valueMinor:3000},{...people[1],valueMinor:1500},{...people[2],valueMinor:1500}]}).map(x=>x.amountMinor),[3000,1500,1500]);
+assert.deepEqual(calculateSplit({totalMinor:10000,currency:'CRC',method:'percentage',participants:[{...people[0],basisPoints:5000},{...people[1],basisPoints:2500},{...people[2],basisPoints:2500}]}).map(x=>x.amountMinor),[5000,2500,2500]);
+assert.deepEqual(calculateSplit({totalMinor:400,currency:'USD',method:'shares',participants:[{...people[0],shares:1},{...people[1],shares:1},{...people[2],shares:2}]}).map(x=>x.amountMinor),[100,100,200]);
+assert.throws(()=>calculateSplit({totalMinor:100,currency:'CRC',method:'custom',participants:[{...people[0],valueMinor:60},{...people[1],valueMinor:30}]}),/sumar/);assert.throws(()=>calculateSplit({totalMinor:100,currency:'CRC',method:'equal',participants:[people[0],people[0]]}),/únicos/);
+const expense={id:'e1',convertedAmountMinor:6000,split:{enabled:true,paidBy:'luis',allocations:equal.map(x=>({...x,baseAmountMinor:x.amountMinor}))}};let result=calculateBalances([expense],[]);assert.deepEqual(result.balances,{ana:-2000,luis:4000,maria:-2000});assert.equal(result.total,0);
+const partial={id:'s1',payerId:'ana',receiverId:'luis',baseAmountMinor:500,status:'confirmed'};result=calculateBalances([expense],[partial,partial]);assert.deepEqual(result.balances,{ana:-1500,luis:3500,maria:-2000});assert.deepEqual(settlementEffect({...partial,status:'voided'}),{});
+const proposal=simplifyBalances(result.balances),rebuilt={...result.balances};for(const transfer of proposal){rebuilt[transfer.payerId]+=transfer.amountMinor;rebuilt[transfer.receiverId]-=transfer.amountMinor;}assert.ok(Object.values(rebuilt).every(value=>value===0));assert.ok(proposal.every(x=>x.proposal));
+const rules=fs.readFileSync(new URL('../firestore.rules',import.meta.url),'utf8');assert.match(rules,/match \/settlements/);assert.match(rules,/receiverId/);assert.match(rules,/resource\.data\.status == 'pending'/);assert.match(rules,/hasOnly\(trip\.data\.members\)/);
+console.log('expense-split: exact divisions, balances, settlements and permissions ok');

@@ -16,7 +16,7 @@ import { activityIllustration } from '../../ui/illustration-library.js';
 import { buildDayRouteFlow } from './day-route-flow.js';
 import { createSerialTaskQueue } from '../../core/serial-task-queue.js';
 import { bindTripHeaderActions, buildTripHeaderView } from './trip-header-view.js';
-import { applyManualActivityOrder, moveActivityByOffset, orderActivitiesForDisplay, removeFromManualActivityOrder } from './activity-order.js';
+import { analyzeDaySchedule, applyManualActivityOrder, duplicateActivity as cloneActivity, moveActivityBetweenDays, moveActivityByOffset, orderActivitiesForDisplay, removeFromManualActivityOrder } from './activity-order.js';
 import { formatTransferDuration } from './intercity-transfer.js';
 import { adaptDayToWeather, regenerateScope, buildDayNarrative, ensureDayMemory, analyzeLodgingDay } from './day-adaptation.js';
 import {
@@ -38,6 +38,14 @@ const SafeTimeUtils = {
     const minutes = parseInt(parts[1], 10);
     if (isNaN(hours) || isNaN(minutes)) return 0;
     return hours * 60 + minutes;
+  },
+  formatDuration: (minutes) => {
+    if (window.TimeUtils?.formatDuration) return window.TimeUtils.formatDuration(minutes);
+    const total = Math.max(0, Math.round(Number(minutes) || 0));
+    const hours = Math.floor(total / 60);
+    const rest = total % 60;
+    if (!hours) return `${rest} min`;
+    return rest ? `${hours} h ${rest} min` : `${hours} h`;
   }
 };
 
@@ -1259,9 +1267,14 @@ function saveCurrentItineraryToFirebase() {
 
 const queuedItinerarySave = createSerialTaskQueue(persistCurrentItineraryToFirebase);
 
-function hasActivityReservation(activityTitle) {
-  const normalized = String(activityTitle || '').trim().toLowerCase();
-  return (window.ReservationsManager?.reservations || []).some(item => String(item.name || '').trim().toLowerCase() === normalized);
+function hasActivityReservation(activityId, activityTitle) {
+  return Boolean(window.ReservationsManager?.forActivity?.(activityId, activityTitle).length);
+}
+
+function activityReservationLabel(activityId, activityTitle) {
+  const item=window.ReservationsManager?.forActivity?.(activityId,activityTitle)?.[0];if(!item)return 'Reserva';
+  const code=item.confirmationCode?` · ••••${String(item.confirmationCode).slice(-4)}`:'';
+  return escapeStoryText(`${item.status}${item.provider?` · ${item.provider}`:''}${code} · ${item.documentCount||0} doc.`);
 }
 
 // Miniatura acuarela por categoría de actividad (Nano Banana, ver
@@ -1718,7 +1731,7 @@ function renderDayStoryDesk(day) {
     <div class="day-closing-decor day-closing-decor--memory" aria-hidden="true">
       <img class="day-closing-polaroid" src="/images/illustrations/generated/decorations/polaroid-fuji.png" alt="">
       <img class="day-closing-postmark" src="/images/illustrations/generated/decorations/postmark.png" alt="">
-      <img class="day-closing-mascot" src="/images/illustrations/generated/components/note-sticker-cat-cutout.png" alt="">
+      <img class="day-closing-mascot" src="/images/illustrations/generated/companions/cat-guide.png" alt="">
     </div>
     <section class="story-desk story-desk--${narrative.color}" aria-label="Relato y herramientas del día">
       <header class="story-desk__head">
@@ -2873,9 +2886,21 @@ function renderActivities(day){
     const actCost = (act.cost ?? act.price);
     const actDesc = act.desc || act.description || '';
     const actDuration = typeof act.duration === 'number'
-      ? window.TimeUtils.formatDuration(act.duration)
+      ? SafeTimeUtils.formatDuration(act.duration)
       : (act.duration || '');
-    const actCategory = act.categoryName || '';
+    const actCategory = act.categoryName || act.category || '';
+    const locationLabel = (() => {
+      if (!act.location) return '';
+      if (typeof act.location === 'string') return act.location;
+      if (typeof act.location === 'object') {
+        const named = act.location.name || act.location.label || act.location.address;
+        if (named) return named;
+        const lat = Number(act.location.lat ?? act.location.latitude);
+        const lng = Number(act.location.lng ?? act.location.longitude);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      }
+      return '';
+    })();
     const parsedActivityHour = Number.parseInt(String(act.time || '09:00').split(':')[0], 10);
     const activityHour = Number.isFinite(parsedActivityHour) ? parsedActivityHour : 9;
     const dayMoment = activityHour < 11 ? 'morning' : activityHour < 17 ? 'afternoon' : 'evening';
@@ -2895,7 +2920,7 @@ function renderActivities(day){
     <div class="activity-card activity-card--${dayMoment} ${i === 0 ? 'activity-card--opening' : ''} bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden fade-in transition-all hover:shadow-xl border-l-4 border-purple-500 dark:border-purple-400 ${checkedActivities[act.id]?'opacity-60':''}" data-activity-id="${act.id}" data-day-moment="${dayMoment}" style="animation-delay:${i*0.05}s">
       ${act.id === magicId ? `
         <span class="jp-act-magic" aria-hidden="true">
-          <img src="/images/illustrations/generated/characters/dog-camera.webp" alt="">
+          <img src="/images/illustrations/generated/companions/dog-explorer.png" alt="">
           <i>¡Este lugar es mágico!</i>
         </span>
       ` : ''}
@@ -2939,7 +2964,14 @@ function renderActivities(day){
                 <span class="text-xs font-bold">${voteCount > 0 ? voteCount : ''}</span>
               </button>
               <button type="button" aria-label="Editar ${safeActivityTitle}" data-action="edit" data-activity-id="${act.id}" data-day="${day.day}" class="activity-edit-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition">✏️</button>
-              <button type="button" aria-label="Eliminar ${safeActivityTitle}" data-action="delete" data-activity-id="${act.id}" data-day="${day.day}" class="activity-delete-btn p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition">🗑️</button>
+              <details class="activity-more">
+                <summary aria-label="Más acciones para ${safeActivityTitle}" title="Más acciones"><i class="fas fa-ellipsis-h" aria-hidden="true"></i></summary>
+                <div class="activity-more__menu">
+                  <button type="button" data-action="duplicate" data-activity-id="${act.id}" data-day="${day.day}"><i class="far fa-copy"></i> Duplicar</button>
+                  <button type="button" data-action="change-day" data-activity-id="${act.id}" data-day="${day.day}"><i class="far fa-calendar-alt"></i> Cambiar de día</button>
+                  <button type="button" data-action="delete" data-activity-id="${act.id}" data-day="${day.day}" class="activity-delete-btn"><i class="far fa-trash-alt"></i> Eliminar</button>
+                </div>
+              </details>
             </div>
           </div>
           <div class="activity-card__meta flex items-center gap-1.5 mb-1 flex-wrap">
@@ -2949,7 +2981,10 @@ function renderActivities(day){
             ${actCost===0?`<span class="text-xs bg-green-50 dark:bg-green-900/40 text-green-600 dark:text-green-300 px-2 py-1 rounded font-semibold whitespace-nowrap">Gratis</span>`:''}
             ${act.rating?`<span class="text-xs bg-yellow-50 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded font-semibold whitespace-nowrap">⭐ ${act.rating}</span>`:''}
             ${actCategory?`<span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">${actCategory}</span>`:''}
-            <button type="button" onclick="ItineraryHandler.openQuickReservation(${day.day}, '${act.id}')" class="jp-reservation-chip ${hasActivityReservation(activityTitle) ? 'is-reserved' : ''}"><i class="fas ${hasActivityReservation(activityTitle) ? 'fa-circle-check' : 'fa-ticket'}"></i>${hasActivityReservation(activityTitle) ? 'Reservado' : 'Reserva'}</button>
+            ${act.optional?'<span class="activity-optional-chip">Opcional</span>':''}
+            ${Number(act.travelTimeMinutes)>0?`<span class="activity-transfer-chip">↔ ${Number(act.travelTimeMinutes)} min traslado</span>`:''}
+            ${Number(act.preparationMinutes)>0?`<span class="activity-buffer-chip">＋ ${Number(act.preparationMinutes)} min margen</span>`:''}
+            <button type="button" onclick="ItineraryHandler.openQuickReservation(${day.day}, '${act.id}')" class="jp-reservation-chip ${hasActivityReservation(act.id, activityTitle) ? 'is-reserved' : ''}" title="Abrir detalles de reservación"><i class="fas ${hasActivityReservation(act.id, activityTitle) ? 'fa-circle-check' : 'fa-ticket'}"></i>${activityReservationLabel(act.id, activityTitle)}</button>
           </div>
           ${renderActivityCrowdBadge(day, act)}
           ${act.photographyInfo ? `
@@ -2965,7 +3000,7 @@ function renderActivities(day){
               <p class="text-xs text-purple-700 dark:text-purple-300">📸 ${act.photographyInfo.description}</p>
             </div>
           ` : ''}
-          ${act.location?`<p class="text-xs text-gray-400 dark:text-gray-400 mt-2 truncate" title="${String(act.location).replace(/"/g,'&quot;')}">📍 ${act.location}</p>`:''}
+          ${locationLabel?`<p class="activity-card__location text-xs text-gray-400 dark:text-gray-400 mt-2 truncate" title="${escapeStoryText(locationLabel)}">📍 ${escapeStoryText(locationLabel)}</p>`:''}
           ${act.station?`<p class="text-xs text-gray-500 dark:text-gray-200 mt-2">🚉 ${act.station}</p>`:''}
           ${act.train?`
             <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-800 rounded-lg border-l-2 border-blue-500 dark:border-blue-400">
@@ -3031,11 +3066,18 @@ function renderActivities(day){
   const dayMemory = renderDayStoryDesk(day);
   const dayAssessment = renderTripCompanion(day);
 
+  const scheduleAnalysis = analyzeDaySchedule(day, window.ReservationsManager?.reservations || []);
+  const formatClockMinutes = value => `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
+  const usefulFreeSlots = scheduleAnalysis.freeSlots.filter(slot => slot.minutes >= 30);
+  const dayScheduleSummary = `<div class="itinerary-day-metrics" aria-label="Resumen del día"><span><strong>${SafeTimeUtils.formatDuration(scheduleAnalysis.activeMinutes)}</strong> planificados</span><span><strong>¥${scheduleAnalysis.totalCost.toLocaleString()}</strong> costo</span><span><strong>${usefulFreeSlots.length}</strong> espacios libres</span></div>${usefulFreeSlots.length ? `<div class="itinerary-free-slots" aria-label="Espacios libres">${usefulFreeSlots.slice(0, 4).map(slot => `<span>${formatClockMinutes(slot.start)}–${formatClockMinutes(slot.end)} · ${slot.minutes} min</span>`).join('')}</div>` : ''}`;
+  const conflictSummary = scheduleAnalysis.conflicts.length ? `<aside class="itinerary-conflicts" aria-label="Advertencias del día"><header><strong>${scheduleAnalysis.conflicts.length} advertencia(s)</strong><span>Carga ${scheduleAnalysis.load}</span></header>${scheduleAnalysis.conflicts.slice(0,5).map(conflict=>`<article class="itinerary-conflict itinerary-conflict--${conflict.severity}"><p>${escapeStoryText(conflict.message)}</p><button type="button" data-action="resolve-conflict" data-conflict-action="${conflict.action}" data-activity-id="${conflict.activityId||''}" data-day="${day.day}">${conflict.action==='reduce-duration'?'Reducir duración':conflict.action==='increase-transfer'?'Aumentar margen':conflict.action==='move-other-day'?'Mover a otro día':conflict.action==='edit'?'Agregar ubicación':'Mover al siguiente espacio'}</button></article>`).join('')}</aside>` : '<p class="itinerary-conflicts itinerary-conflicts--clear">Sin conflictos detectados · carga '+scheduleAnalysis.load+'</p>';
   container.innerHTML = `
     ${dayPrelude ? `<div class="day-reader-prelude">${dayPrelude}</div>` : ''}
     ${geographicFlow ? `<section class="day-reader-route" aria-label="Ruta del día">${geographicFlow}</section>` : ''}
     <section class="day-reader-timeline" aria-label="Timeline del día">
       <header class="day-reader-chapter"><span>02</span><div><small>一日の旅</small><h2>El día, parada por parada</h2></div></header>
+      ${dayScheduleSummary}
+      ${conflictSummary}
       <div class="day-main-activities" id="dayMainActivities">${activitiesHTML.join('')}</div>
     </section>
     ${(dayMemory || dayAssessment) ? `<div class="day-closing-scene">
@@ -3134,6 +3176,22 @@ function initializeDragAndDrop(container) {
   }
 }
 
+function mountItineraryView(container) {
+  container.innerHTML = `
+    <div class="itinerary-page-shell">
+      <div class="itinerary-trip-header"><div id="tripSelectorHeader"></div></div>
+      <nav class="itinerary-day-nav" aria-label="Días del viaje">
+        <div class="itinerary-day-nav__inner"><div id="daySelector"></div></div>
+      </nav>
+      <div class="itinerary-reader">
+        <div class="day-reader-layout">
+          <aside class="day-reader-aside"><div class="day-reader-overview" id="dayOverview"></div></aside>
+          <main class="day-reader-story"><div id="activitiesTimeline"></div></main>
+        </div>
+      </div>
+    </div>`;
+}
+
 // --- API público del handler ---
 export const ItineraryHandler = {
   // Exponer currentItinerary y loadItinerary para que AttractionsHandler pueda acceder
@@ -3147,6 +3205,28 @@ export const ItineraryHandler = {
   refreshReservationStates() {
     render();
   },
+  /**
+   * Monta una vista determinista del itinerario sin leer ni escribir Firestore.
+   * Se usa en el laboratorio visual y en pruebas de regresión; también permite
+   * previsualizar un plan antes de guardarlo. Mantiene exactamente el mismo DOM y
+   * los mismos componentes que la pantalla real.
+   */
+  async preview(itinerary, { day = 1, trip = null } = {}) {
+    const container = document.getElementById('content-itinerary');
+    if (!container || !itinerary?.days?.length) return false;
+    currentItinerary = itinerary;
+    currentDay = itinerary.days.some(item => Number(item.day) === Number(day))
+      ? Number(day)
+      : Number(itinerary.days[0].day || 1);
+    if (trip) {
+      window.TripsManager = window.TripsManager || {};
+      window.TripsManager.currentTrip = trip;
+      window.TripsManager.userTrips = window.TripsManager.userTrips || [trip];
+    }
+    mountItineraryView(container);
+    await render();
+    return true;
+  },
   async loadItinerary(tripId) {
     // Llamar a la función standalone loadItinerary
     await loadItinerary();
@@ -3158,17 +3238,7 @@ export const ItineraryHandler = {
     const tripId=getCurrentTripId(); if(!tripId){ renderEmptyState(); return; }
     await loadItinerary();
     if(!currentItinerary){ renderNoItinerary(); return; }
-    container.innerHTML = `
-      <div class="max-w-6xl mx-auto px-4 pt-6"><div id="tripSelectorHeader"></div></div>
-      <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-600 sticky top-[72px] z-30 shadow-sm">
-        <div class="max-w-6xl mx-auto px-6 py-5"><div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" id="daySelector"></div></div>
-      </div>
-      <div class="max-w-6xl mx-auto p-6 md:p-8">
-        <div class="day-reader-layout grid md:grid-cols-3 gap-6">
-          <aside class="day-reader-aside md:col-span-1"><div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 sticky top-36 fade-in border dark:border-gray-600" id="dayOverview"></div></aside>
-          <main class="day-reader-story md:col-span-2"><div id="activitiesTimeline"></div></main>
-        </div>
-      </div>`;
+    mountItineraryView(container);
 
     if(!isListenerAttached){
       console.log('🎯 Attaching event listeners to itinerary container');
@@ -3187,6 +3257,9 @@ export const ItineraryHandler = {
         const deleteBtn=e.target.closest('.activity-delete-btn');
         const voteBtn = e.target.closest('.activity-vote-btn');
         const moveBtn = e.target.closest('[data-action="move-up"],[data-action="move-down"]');
+        const duplicateBtn = e.target.closest('[data-action="duplicate"]');
+        const changeDayBtn = e.target.closest('[data-action="change-day"]');
+        const conflictBtn = e.target.closest('[data-action="resolve-conflict"]');
         const dayBtn=e.target.closest('.day-btn');
 
         // ❌ Event handlers desactivados - botones eliminados
@@ -3194,7 +3267,10 @@ export const ItineraryHandler = {
         // else if(masterOptimizeBtn){ runMasterOptimization(); }
         // else if(optimizeBtn){ optimizeDayRoute(parseInt(optimizeBtn.id.split('_')[1])); }
 
-        if(mealSuggestionsBtn){
+        if(conflictBtn){ ItineraryHandler.resolveConflict(conflictBtn.dataset); }
+        else if(duplicateBtn){ ItineraryHandler.duplicateActivity(duplicateBtn.dataset.activityId,Number(duplicateBtn.dataset.day)); }
+        else if(changeDayBtn){ ItineraryHandler.changeActivityDay(changeDayBtn.dataset.activityId,Number(changeDayBtn.dataset.day)); }
+        else if(mealSuggestionsBtn){
           console.log('🍽️ Meal suggestions button clicked');
           const day=parseInt(mealSuggestionsBtn.id.split('_')[1]);
           if(window.MealInsertionSystem && window.MealInsertionSystem.showMealSuggestionsModal){
@@ -3291,16 +3367,7 @@ export const ItineraryHandler = {
     const tripId = getCurrentTripId();
     if (tripId && window.ReservationsManager.currentTrip !== tripId) await window.ReservationsManager.init(tripId);
     const name = activity.title || activity.name || 'Actividad';
-    const existing = window.ReservationsManager.reservations.find(item => String(item.name || '').toLowerCase() === name.toLowerCase());
-    if (existing) return window.ReservationsManager.showEditReservationModal(existing.id);
-    window.ReservationsManager.showAddReservationModal();
-    const form = document.querySelector('#reservationForm');
-    if (!form) return;
-    form.elements.type.value = 'activity';
-    form.elements.name.value = name;
-    form.elements.date.value = day.date || '';
-    form.elements.time.value = activity.time || '';
-    form.elements.location.value = activity.location || activity.address || '';
+    window.ReservationsManager.openForActivity(dayNumber, activity.id, name);
   },
 
   // Mostrar modal de actividad (añadir o editar)
@@ -3341,6 +3408,10 @@ export const ItineraryHandler = {
       if (activity) {
         document.getElementById('activityIcon').value = activity.icon || '';
         document.getElementById('activityTime').value = activity.time || '';
+        document.getElementById('activityDuration').value = Number(activity.duration || 60);
+        document.getElementById('activityTravelTime').value = Number(activity.travelTimeMinutes || 0);
+        document.getElementById('activityPreparation').value = Number(activity.preparationMinutes || 0);
+        document.getElementById('activityOptional').checked = Boolean(activity.optional);
         // 🛡️ Data normalization: Filter out "undefined" string
       const cleanTitle = (activity.title && activity.title !== 'undefined' && activity.title !== 'null') ? activity.title : activity.name;
       document.getElementById('activityTitle').value = cleanTitle || '';
@@ -3430,6 +3501,10 @@ Si ya tienes las coordenadas, simplemente pégalas:
     const desc = document.getElementById('activityDesc').value;
     const cost = parseFloat(document.getElementById('activityCost').value) || 0;
     const station = document.getElementById('activityStation').value;
+    const duration = Math.max(5, Number(document.getElementById('activityDuration').value) || 60);
+    const travelTimeMinutes = Math.max(0, Number(document.getElementById('activityTravelTime').value) || 0);
+    const preparationMinutes = Math.max(0, Number(document.getElementById('activityPreparation').value) || 0);
+    const optional = document.getElementById('activityOptional').checked;
 
     if (!title) {
       alert('⚠️ El título es obligatorio');
@@ -3491,6 +3566,7 @@ Si ya tienes las coordenadas, simplemente pégalas:
       desc,
       cost,
       station
+      ,duration, travelTimeMinutes, preparationMinutes, optional
     };
     if (originalActivity?.area) {
       activity.area = originalActivity.area;
@@ -3636,18 +3712,50 @@ Si ya tienes las coordenadas, simplemente pégalas:
 
   async moveActivity(activityId, day, offset) {
     const dayData = currentItinerary.days.find(item => item.day === day);
+    const previousActivities = dayData?.activities?.slice();
+    const previousOrder = dayData?.manualActivityOrder?.slice();
     if (!dayData || !moveActivityByOffset(dayData, activityId, offset, SafeTimeUtils.parseTime)) return;
     dayData.routeFlow = buildDayRouteFlow(dayData, dayData.hotel || null);
     render();
     try {
       await saveCurrentItineraryToFirebase();
-      window.WashiToast?.show({ message: 'Orden y ruta actualizados', type: 'success' });
+      window.WashiToast?.show({ message: 'Orden y ruta actualizados', type: 'success', actionLabel: 'Deshacer', onAction: async()=>{dayData.activities=previousActivities;dayData.manualActivityOrder=previousOrder;dayData.routeFlow=buildDayRouteFlow(dayData,dayData.hotel||null);render();await saveCurrentItineraryToFirebase();} });
     } catch (error) {
       console.error('❌ Error moviendo actividad:', error);
       window.WashiToast?.show({ message: 'No se pudo guardar el nuevo orden', type: 'error' });
       await loadItinerary();
       render();
     }
+  },
+
+  async duplicateActivity(activityId, dayNumber, targetDayNumber = dayNumber) {
+    const source = currentItinerary.days.find(day => day.day === dayNumber);
+    const target = currentItinerary.days.find(day => day.day === targetDayNumber);
+    const original = source?.activities.find(item => String(item.id) === String(activityId));
+    if (!original || !target) return;
+    const copy = cloneActivity(original, `activity_${Date.now()}`);
+    target.activities.push(copy); applyManualActivityOrder(target,target.activities.map(item=>item.id)); target.routeFlow=buildDayRouteFlow(target,target.hotel||null); render();
+    try { await saveCurrentItineraryToFirebase(); window.WashiToast?.show({message:target===source?'Actividad duplicada':'Actividad copiada a otro día',type:'success',actionLabel:'Deshacer',onAction:async()=>{target.activities=target.activities.filter(item=>item.id!==copy.id);removeFromManualActivityOrder(target,copy.id);target.routeFlow=buildDayRouteFlow(target,target.hotel||null);render();await saveCurrentItineraryToFirebase();}}); }
+    catch { target.activities=target.activities.filter(item=>item.id!==copy.id);render();window.WashiToast?.show({message:'No se pudo duplicar la actividad',type:'error'}); }
+  },
+
+  async changeActivityDay(activityId, sourceDayNumber) {
+    const answer = await (window.Dialogs?.prompt?.({title:'Cambiar actividad de día',message:`Elige un día entre 1 y ${currentItinerary.days.length}`,placeholder:String(sourceDayNumber+1)}) ?? Promise.resolve(prompt('¿A qué día quieres moverla?')));
+    const targetDayNumber=Number(answer);if(!Number.isInteger(targetDayNumber)||targetDayNumber===sourceDayNumber)return;
+    const source=currentItinerary.days.find(day=>day.day===sourceDayNumber),target=currentItinerary.days.find(day=>day.day===targetDayNumber);if(!source||!target)return window.WashiToast?.show({message:'Día destino no válido',type:'error'});
+    const moved=moveActivityBetweenDays(source,target,activityId);if(!moved)return;source.routeFlow=buildDayRouteFlow(source,source.hotel||null);target.routeFlow=buildDayRouteFlow(target,target.hotel||null);render();
+    try{await saveCurrentItineraryToFirebase();window.WashiToast?.show({message:`Actividad movida al día ${targetDayNumber}`,type:'success',actionLabel:'Deshacer',onAction:async()=>{moveActivityBetweenDays(target,source,activityId,moved.sourceIndex);source.routeFlow=buildDayRouteFlow(source,source.hotel||null);target.routeFlow=buildDayRouteFlow(target,target.hotel||null);render();await saveCurrentItineraryToFirebase();}});}catch{moveActivityBetweenDays(target,source,activityId,moved.sourceIndex);render();window.WashiToast?.show({message:'No se pudo mover la actividad',type:'error'});}
+  },
+
+  async resolveConflict(data) {
+    const day=currentItinerary.days.find(item=>item.day===Number(data.day)),activity=day?.activities.find(item=>String(item.id)===String(data.activityId));
+    if(data.conflictAction==='move-other-day')return this.changeActivityDay(data.activityId,Number(data.day));
+    if(!activity)return;
+    if(data.conflictAction==='edit')return this.showActivityModal(activity.id,Number(data.day));
+    if(data.conflictAction==='reduce-duration')activity.duration=Math.max(15,Number(activity.duration||60)-15);
+    else if(data.conflictAction==='increase-transfer')activity.travelTimeMinutes=Number(activity.travelTimeMinutes||0)+15;
+    else {const ordered=orderActivitiesForDisplay(day,SafeTimeUtils.parseTime),index=ordered.findIndex(item=>item.id===activity.id),previous=ordered[index-1];if(previous){const end=SafeTimeUtils.parseTime(previous.time)+Number(previous.duration||60)+Number(previous.preparationMinutes||0)+Number(activity.travelTimeMinutes||0);activity.time=`${String(Math.floor(end/60)).padStart(2,'0')}:${String(end%60).padStart(2,'0')}`;}}
+    day.routeFlow=buildDayRouteFlow(day,day.hotel||null);render();try{await saveCurrentItineraryToFirebase();window.WashiToast?.show({message:'Ajuste aplicado; puedes seguir editando',type:'success'});}catch{await loadItinerary();render();window.WashiToast?.show({message:'No se pudo guardar el ajuste',type:'error'});}
   },
 
   // 🔥 NUEVO: Votar por una actividad

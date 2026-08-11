@@ -1,81 +1,23 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
-const { onDocumentDeleted, onDocumentCreated } = require("firebase-functions/v2/firestore");
-const fetch = require("node-fetch");
+const admin=require('firebase-admin');const {onDocumentDeleted,onDocumentWritten}=require('firebase-functions/v2/firestore');const {onSchedule}=require('firebase-functions/v2/scheduler');const {DEFAULTS,key,allowed,quiet,dueAt,dueNow}=require('./reminder-engine');admin.initializeApp();const db=admin.firestore();
 
-admin.initializeApp();
+exports.onTripDeleted=onDocumentDeleted('trips/{tripId}',async event=>db.recursiveDelete(db.collection('trips').doc(event.params.tripId)));
 
-/**
- * Cloud Function para eliminar en cascada todos los datos de un viaje.
- * Se activa cuando un documento en `trips/{tripId}` es eliminado.
- */
-exports.onTripDeleted = onDocumentDeleted('trips/{tripId}', async (event) => {
-    const tripId = event.params.tripId;
-    const path = `trips/${tripId}`;
-    
-    console.log(`🗑️ Iniciando eliminación en cascada para el viaje: ${tripId}`);
-
-    try {
-        // Usar la herramienta CLI de Firebase para borrado recursivo es más seguro
-        // Esta función delega la tarea a la herramienta interna de Firebase
-        // La ruta para recursiveDelete debe ser una colección, pero el trigger es sobre un documento.
-        // Para eliminar subcolecciones, debemos hacerlo manualmente o usar la extensión de Firebase.
-        // Por simplicidad y seguridad, vamos a borrar las subcolecciones conocidas.
-        const db = admin.firestore();
-        await db.recursiveDelete(db.collection('trips').doc(tripId));
-        console.log(`✅ Eliminación en cascada completada para: ${path}`);
-        return null;
-    } catch (error) {
-        console.error(`❌ Error en la eliminación en cascada para ${path}:`, error);
-        // Puedes agregar lógica para reintentar o notificar
-        return null;
-    }
-});
-
-/**
- * Cloud Function para enviar notificaciones cuando se agrega un nuevo gasto.
- */
-exports.onNewExpenseAdded = onDocumentCreated('trips/{tripId}/expenses/{expenseId}', async (event) => {
-    const { tripId } = event.params;
-    const expense = event.data.data();
-
-    console.log(`💸 Nuevo gasto de ${expense.amount} en viaje ${tripId} por ${expense.addedBy}`);
-
-    // 1. Obtener los miembros del viaje
-    const tripRef = admin.firestore().doc(`trips/${tripId}`);
-    const tripSnap = await tripRef.get();
-    if (!tripSnap.exists) {
-        console.error('El viaje no existe.');
-        return null;
-    }
-    const tripMembers = tripSnap.data().members || [];
-
-    // 2. Obtener los tokens de los miembros (excluyendo a quien agregó el gasto)
-    const memberSnaps = await Promise.all(
-        tripMembers.map(memberId => admin.firestore().doc(`users/${memberId}`).get())
-    );
-    const tokens = [];
-    for (const userSnap of memberSnaps) {
-        if (userSnap.exists && userSnap.data().fcmTokens) {
-            tokens.push(...userSnap.data().fcmTokens);
-        }
-    }
-
-    if (tokens.length === 0) {
-        console.log('No hay tokens para enviar notificaciones.');
-        return null;
-    }
-
-    // 3. Crear y enviar la notificación
-    const payload = {
-        notification: {
-            title: `Nuevo gasto en "${tripSnap.data().info.name}"`,
-            body: `${expense.addedBy} agregó un gasto de ¥${expense.amount.toLocaleString()} en ${expense.desc}.`,
-            icon: '/images/icons/icon-192.png',
-            badge: '/images/icons/badge.png' // Opcional: un icono para la barra de notificaciones
-        }
-    };
-
-    console.log(`📤 Enviando notificación a ${tokens.length} token(s).`);
-    return admin.messaging().sendToDevice(tokens, payload);
-});
+async function prefsFor(userId){const snap=await db.doc(`users/${userId}/notificationPreferences/default`).get();return{...DEFAULTS,...(snap.exists?snap.data():{})};}
+async function deliver(userId,notification,prefs){const id=key({...notification,userId}),ref=db.doc(`users/${userId}/notifications/${id}`);let created=false;await db.runTransaction(async transaction=>{const current=await transaction.get(ref);if(current.exists)return;transaction.create(ref,{...notification,recipientId:userId,deduplicationId:id,read:false,hidden:false,channels:['in_app',...(prefs.push?['push']:[])],createdAt:admin.firestore.FieldValue.serverTimestamp()});created=true;});if(!created||!prefs.push||quiet(new Date(),prefs.timeZone,prefs.quietStart,prefs.quietEnd))return;const devices=await db.collection(`users/${userId}/devices`).where('pushEnabled','==',true).get(),rows=devices.docs.filter(d=>d.data().token);if(!rows.length)return;const response=await admin.messaging().sendEachForMulticast({tokens:rows.map(d=>d.data().token),notification:{title:notification.title,body:'Tienes una alerta del viaje. Abre Japitin para ver los detalles.'},data:{actionPath:notification.actionPath||'/dashboard',notificationId:id}});await Promise.all(response.responses.map((result,index)=>{const code=result.error?.code||'';return /registration-token-not-registered|invalid-registration-token/.test(code)?rows[index].ref.delete():null;}));}
+function eventNotification({trip,tripId,type,resourceId,scheduledAt,deduplicationAt,title,message,actionPath='/dashboard'}){return{tripId,tripName:trip.info?.name||'Viaje',type,resourceId,scheduledAt,deduplicationAt:deduplicationAt||scheduledAt,title,message,actionPath};}
+async function processTrip(tripDoc,now){const tripId=tripDoc.id,trip=tripDoc.data(),members=trip.members||[];if(!members.length)return;const [itinerary,reservations,tasks,settlements,documents,reminders,budget,expenses]=await Promise.all([db.doc(`trips/${tripId}/data/itinerary`).get(),db.collection(`trips/${tripId}/reservations`).get(),db.collection(`trips/${tripId}/tasks`).where('completed','==',false).get(),db.collection(`trips/${tripId}/settlements`).where('status','==','pending').get(),db.collection(`trips/${tripId}/documents`).get(),db.collection(`trips/${tripId}/reminders`).where('active','==',true).get(),db.doc(`trips/${tripId}/budget/general`).get(),db.collection(`trips/${tripId}/expenses`).get()]);
+ for(const userId of members){const prefs=await prefsFor(userId),lead=prefs.leadMinutes||120,candidates=[];
+  if(trip.info?.dateStart){const zone=trip.info.timeZone||'Asia/Tokyo',start=require('./timezone').zonedLocalToUtc(`${trip.info.dateStart}T09:00`,zone);candidates.push(eventNotification({trip,tripId,type:'trip_start',resourceId:'trip',scheduledAt:dueAt(start,1440),title:'Tu viaje comienza pronto',message:`Prepárate para ${trip.info.name||'tu viaje'}.`}));}
+  for(const day of itinerary.data()?.days||[])for(const activity of day.activities||[]){const zone=activity.timeZone||day.timeZone||trip.info?.timeZone||'Asia/Tokyo',local=`${day.date}T${activity.time||'09:00'}`;let eventAt;try{eventAt=require('./timezone').zonedLocalToUtc(local,zone);}catch{continue;}candidates.push(eventNotification({trip,tripId,type:'activity',resourceId:activity.id,scheduledAt:dueAt(eventAt,lead),title:'Próxima actividad',message:activity.title||activity.name||'Actividad del itinerario',actionPath:'/dashboard#itinerary'}));}
+  reservations.forEach(doc=>{const r=doc.data(),type=r.type==='Vuelo'?'flight':r.type==='Hospedaje'?'checkin':'reservation',zone=r.timeZone||trip.info?.timeZone||'Asia/Tokyo';let eventAt=r.startAtUtc;try{eventAt=eventAt||require('./timezone').zonedLocalToUtc(r.startAt,zone);}catch{return;}const candidate=dueAt(eventAt,lead);if(candidate)candidates.push(eventNotification({trip,tripId,type,resourceId:doc.id,scheduledAt:candidate,title:type==='flight'?'Vuelo próximo':'Reservación próxima',message:r.title||'Revisa los detalles en Japitin',actionPath:'/dashboard#reservations'}));if(r.requiresDocument&&!r.documentCount)candidates.push(eventNotification({trip,tripId,type:'document',resourceId:`missing-${doc.id}`,scheduledAt:now.toISOString(),deduplicationAt:'missing',title:'Falta documentación',message:`Revisa los documentos de ${r.title||'una reservación'}.`,actionPath:'/dashboard#documents'}));if(r.type==='Hospedaje'&&r.endAt){let endAt=r.endAtUtc;try{endAt=endAt||require('./timezone').zonedLocalToUtc(r.endAt,zone);}catch{return;}candidates.push(eventNotification({trip,tripId,type:'checkout',resourceId:doc.id,scheduledAt:dueAt(endAt,lead),title:'Check-out próximo',message:r.title||'Hospedaje',actionPath:'/dashboard#reservations'}));}});
+  tasks.forEach(doc=>{const task=doc.data();if(!task.dueDate)return;const due=`${task.dueDate}T23:59:00.000Z`,overdue=Date.parse(due)<now;candidates.push(eventNotification({trip,tripId,type:overdue?'task_overdue':'task_due',resourceId:doc.id,scheduledAt:overdue?now.toISOString():dueAt(due,lead),deduplicationAt:due,title:overdue?'Tarea vencida':'Tarea próxima a vencer',message:task.title,actionPath:'/dashboard#tasks'}));});
+  settlements.forEach(doc=>{const s=doc.data();if(s.receiverId===userId)candidates.push(eventNotification({trip,tripId,type:'settlement',resourceId:doc.id,scheduledAt:now.toISOString(),deduplicationAt:'pending',title:'Pago pendiente de confirmar',message:'Revisa una liquidación pendiente dentro de Japitin.',actionPath:'/dashboard#balances'}));});
+  documents.forEach(doc=>{const d=doc.data();if(d.expiresAt)candidates.push(eventNotification({trip,tripId,type:'document',resourceId:doc.id,scheduledAt:dueAt(d.expiresAt,1440),title:'Documento próximo a vencer',message:d.visibleName||'Revisa tus documentos.',actionPath:'/dashboard#documents'}));});
+  reminders.forEach(doc=>{const r=doc.data();if(r.targetUserId===userId)candidates.push(eventNotification({trip,tripId,type:'manual',resourceId:doc.id,scheduledAt:r.scheduledAt,title:r.title,message:r.message||'Recordatorio manual'}));});
+  const budgetMinor=budget.data()?.amountMinor||0,spent=expenses.docs.reduce((sum,d)=>sum+(d.data().convertedAmountMinor||0),0),percent=budgetMinor?spent/budgetMinor*100:0;for(const threshold of [80,90,100])if(percent>=threshold)candidates.push(eventNotification({trip,tripId,type:'budget',resourceId:`threshold-${threshold}`,scheduledAt:now.toISOString(),deduplicationAt:'once',title:`Presupuesto al ${threshold}%`,message:'Revisa el reporte financiero del viaje.',actionPath:'/dashboard#budget'}));
+  if(prefs.dailySummary&&trip.info?.dateStart&&trip.info?.dateEnd){const zone=trip.info.timeZone||'Asia/Tokyo',localDate=new Intl.DateTimeFormat('en-CA',{timeZone:zone,year:'numeric',month:'2-digit',day:'2-digit'}).format(now);if(localDate>=trip.info.dateStart&&localDate<=trip.info.dateEnd){const summaryAt=require('./timezone').zonedLocalToUtc(`${localDate}T08:00`,zone);candidates.push(eventNotification({trip,tripId,type:'daily_summary',resourceId:localDate,scheduledAt:summaryAt,title:'Resumen del día',message:'Consulta las próximas actividades y pendientes del viaje.',actionPath:'/dashboard'}));}}
+  for(const candidate of candidates)if(candidate.scheduledAt&&dueNow(candidate.scheduledAt,now)&&allowed(candidate.type,prefs,tripId))await deliver(userId,candidate,prefs);
+ }}
+exports.processReminders=onSchedule({schedule:'every 15 minutes',timeZone:'UTC',retryCount:3},async()=>{const now=new Date(),trips=await db.collection('trips').get();for(const trip of trips.docs)await processTrip(trip,now);});
+exports.onSplitExpenseChanged=onDocumentWritten('trips/{tripId}/expenses/{expenseId}',async event=>{const after=event.data.after.exists?event.data.after.data():null;if(!after?.split?.enabled)return;const beforeIds=new Set(event.data.before.exists?(event.data.before.data().split?.participantIds||[]):[]),tripSnap=await db.doc(`trips/${event.params.tripId}`).get(),trip=tripSnap.data();for(const userId of after.split.participantIds||[]){if(beforeIds.has(userId)||userId===after.createdBy)continue;const prefs=await prefsFor(userId);if(!allowed('settlement',prefs,event.params.tripId))continue;await deliver(userId,eventNotification({trip,tripId:event.params.tripId,type:'settlement',resourceId:`expense-${event.params.expenseId}`,scheduledAt:new Date().toISOString(),deduplicationAt:'participant-added',title:'Te agregaron a un gasto compartido',message:'Consulta la división dentro de Japitin.',actionPath:'/dashboard#budget'}),prefs);}});
+exports.onSettlementChanged=onDocumentWritten('trips/{tripId}/settlements/{settlementId}',async event=>{if(!event.data.after.exists)return;const after=event.data.after.data(),before=event.data.before.exists?event.data.before.data():null;if(before?.status===after.status)return;const tripSnap=await db.doc(`trips/${event.params.tripId}`).get(),trip=tripSnap.data();for(const userId of new Set([after.payerId,after.receiverId])){const prefs=await prefsFor(userId);if(!allowed('settlement',prefs,event.params.tripId))continue;const title=after.status==='pending'?(userId===after.receiverId?'Pago pendiente de confirmar':'Pago registrado'):after.status==='confirmed'?'Pago confirmado':'Pago anulado';await deliver(userId,eventNotification({trip,tripId:event.params.tripId,type:'settlement',resourceId:event.params.settlementId,scheduledAt:new Date().toISOString(),deduplicationAt:after.status,title,message:'Revisa la liquidación dentro de Japitin.',actionPath:'/dashboard#balances'}),prefs);}});

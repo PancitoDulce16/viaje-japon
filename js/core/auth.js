@@ -65,6 +65,21 @@ export const AuthHandler = {
     }
   },
 
+  showAuthTimeout() {
+    const loadingScreen = document.getElementById('authLoadingScreen');
+    if (!loadingScreen || loadingScreen.classList.contains('hidden')) return;
+    loadingScreen.innerHTML = `
+      <div class="max-w-md px-6 text-center text-white" role="alert" aria-live="assertive">
+        <h2 class="mb-3 text-2xl font-bold">No pudimos verificar tu sesión</h2>
+        <p class="mb-5 text-sm text-white/90">Revisa tu conexión e inténtalo nuevamente. No se inició ninguna sesión alternativa.</p>
+        <div class="flex flex-wrap justify-center gap-3">
+          <button type="button" data-auth-retry class="rounded-lg bg-white px-4 py-2 font-semibold text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Reintentar</button>
+          <a href="/login" class="rounded-lg border border-white/70 px-4 py-2 font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Ir a iniciar sesión</a>
+        </div>
+      </div>`;
+    loadingScreen.querySelector('[data-auth-retry]')?.addEventListener('click', () => window.location.reload());
+  },
+
   // =================================================================================
   // FUNCIÓN 'INIT' RECONSTRUIDA - LA SOLUCIÓN AL PROBLEMA
   // =================================================================================
@@ -78,6 +93,7 @@ export const AuthHandler = {
     }
 
     this.showAuthLoading('Iniciando...');
+    const initializationTimeout = window.setTimeout(() => this.showAuthTimeout(), 15000);
 
     // 1. Configurar la persistencia de la sesión
     try {
@@ -137,6 +153,7 @@ export const AuthHandler = {
         // Este listener permanece activo y detectará los cambios de auth
         let isFirstCall = true;
         this.authUnsubscribe = onAuthStateChanged(auth, (user) => {
+            window.clearTimeout(initializationTimeout);
             console.log('🔔 onAuthStateChanged triggered. User:', user ? user.email : 'null', 'First call:', isFirstCall, 'Redirect handled:', redirectHandled);
 
             if (user) {

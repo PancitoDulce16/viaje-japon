@@ -19,6 +19,19 @@ service firebase.storage {
       allow update: if false;
       allow delete: if isTripMember(tripId);
     }
+    match /trips/{tripId}/documents/{userId}/{documentId}/{fileName} {
+      allow read: if isTripMember(tripId) && (
+        firestore.get(/databases/(default)/documents/trips/$(tripId)/documents/$(documentId)).data.sensitive == false ||
+        request.auth.uid == userId ||
+        firestore.get(/databases/(default)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid
+      );
+      allow create: if isTripMember(tripId) && request.auth.uid == userId &&
+        request.resource.size > 0 && request.resource.size <= 10 * 1024 * 1024 &&
+        request.resource.contentType.matches('(application/pdf|image/jpeg|image/png|image/webp)');
+      allow update: if false;
+      allow delete: if isTripMember(tripId) && (request.auth.uid == userId ||
+        firestore.get(/databases/(default)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid);
+    }
     match /{allPaths=**} { allow read, write: if false; }
   }
 }

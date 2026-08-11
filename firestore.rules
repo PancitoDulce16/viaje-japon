@@ -46,6 +46,22 @@ service cloud.firestore {
                data.createdBy == request.auth.uid;
     }
 
+    function isTripOwner(tripId) {
+      let trip = get(/databases/$(database)/documents/trips/$(tripId));
+      return isSignedIn() && trip.data != null &&
+             trip.data.info is map &&
+             trip.data.info.createdBy == request.auth.uid;
+    }
+
+    function isValidExpenseSplit(data, tripId) {
+      let trip = get(/databases/$(database)/documents/trips/$(tripId));
+      return !('split' in data) || data.split == null ||
+        (data.split.enabled == true && data.split.method in ['equal','custom','percentage','shares'] &&
+         data.split.paidBy in trip.data.members && data.split.participantIds is list &&
+         data.split.participantIds.size() > 0 && data.split.participantIds.hasOnly(trip.data.members) &&
+         data.split.allocations is list && data.split.allocations.size() == data.split.participantIds.size());
+    }
+
     // =====================================================================
     // Reglas para la colección 'users'
     // =====================================================================
@@ -53,10 +69,22 @@ service cloud.firestore {
       // Solo el propio usuario puede leer o escribir su documento principal
       allow read, write: if isSignedIn() && request.auth.uid == userId;
 
-      // Y todos sus subdocumentos
-      match /{document=**} {
+      match /notifications/{notificationId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow create, delete: if false;
+        allow update: if isSignedIn() && request.auth.uid == userId &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read','readAt','hidden','hiddenAt']);
+      }
+      match /notificationPreferences/{preferenceId} {
         allow read, write: if isSignedIn() && request.auth.uid == userId;
       }
+      match /devices/{deviceId} {
+        allow read, create, update, delete: if isSignedIn() && request.auth.uid == userId;
+      }
+      match /packing/{documentId} { allow read, write: if isSignedIn() && request.auth.uid == userId; }
+      match /data/{documentId} { allow read, write: if isSignedIn() && request.auth.uid == userId; }
+      match /gamification/{documentId} { allow read, write: if isSignedIn() && request.auth.uid == userId; }
+      match /savedPosts/{documentId} { allow read, write: if isSignedIn() && request.auth.uid == userId; }
     }
 
     // =====================================================================
@@ -81,7 +109,10 @@ service cloud.firestore {
                     request.auth.uid in resource.data.members;
 
       // QUERIES/LISTADO: Solo el propio usuario puede listar sus viajes
-      allow list: if isSignedIn() && request.auth.uid != null;
+      allow list: if isSignedIn() &&
+                    'members' in resource.data &&
+                    resource.data.members is list &&
+                    request.auth.uid in resource.data.members;
 
       // CREACIÓN: Cualquier usuario autenticado puede crear un nuevo viaje.
       allow create: if isSignedIn() &&
@@ -94,9 +125,12 @@ service cloud.firestore {
                        'members' in resource.data &&
                        resource.data.members is list &&
                        request.auth.uid in resource.data.members &&
-                       // Verificar que NO se modifique el createdBy
-                       (!('info' in request.resource.data) ||
-                        (request.resource.data.info.createdBy == resource.data.info.createdBy));
+                       request.resource.data.info.createdBy == resource.data.info.createdBy &&
+                       request.resource.data.members is list &&
+                       request.resource.data.info.createdBy in request.resource.data.members &&
+                       (request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['members', 'memberEmails']) == false ||
+                        request.auth.uid == resource.data.info.createdBy);
 
       // BORRADO: Solo el dueño del viaje puede eliminarlo.
       // Uses resource.data, not get().
@@ -110,15 +144,16 @@ service cloud.firestore {
       match /expenses/{expenseId} {
         allow read: if isTripMember(tripId);
         allow create: if isTripMember(tripId) && (
-          isNewDataValidExpense(request.resource.data) ||
+          (isNewDataValidExpense(request.resource.data) && isValidExpenseSplit(request.resource.data, tripId)) ||
           (request.resource.data.desc is string && request.resource.data.amount is number &&
            request.resource.data.amount > 0 && request.resource.data.category is string &&
            request.resource.data.timestamp is number &&
            request.resource.data.addedBy == request.auth.token.email)
         );
         allow update: if isTripMember(tripId) &&
+          (resource.data.createdBy == request.auth.uid || isTripOwner(tripId)) &&
           request.resource.data.createdBy == resource.data.createdBy &&
-          isNewDataValidExpense(request.resource.data);
+          isNewDataValidExpense(request.resource.data) && isValidExpenseSplit(request.resource.data, tripId);
         allow delete: if isTripMember(tripId) && (resource.data.createdBy == request.auth.uid ||
           get(/databases/$(database)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid);
       }
@@ -171,6 +206,80 @@ service cloud.firestore {
           request.resource.data.quantity is int && request.resource.data.quantity >= 1 && request.resource.data.quantity <= 99;
         allow delete: if isTripMember(tripId) && (resource.data.createdBy == request.auth.uid ||
           get(/databases/$(database)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid);
+      }
+
+      match /reservations/{reservationId} {
+        allow read: if isTripMember(tripId);
+        allow create: if isTripMember(tripId) && request.resource.data.createdBy == request.auth.uid &&
+          request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 160 &&
+          request.resource.data.type in ['Vuelo','Hospedaje','Transporte','Restaurante','Actividad','Seguro','Entrada','Otro'] &&
+          request.resource.data.status in ['Pendiente','Confirmada','Cancelada','Completada'] &&
+          request.resource.data.startAt is string && request.resource.data.documentCount == 0;
+        allow update: if isTripMember(tripId) && request.resource.data.createdBy == resource.data.createdBy &&
+          request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 160 &&
+          request.resource.data.type in ['Vuelo','Hospedaje','Transporte','Restaurante','Actividad','Seguro','Entrada','Otro'] &&
+          request.resource.data.status in ['Pendiente','Confirmada','Cancelada','Completada'] &&
+          request.resource.data.documentCount is int && request.resource.data.documentCount >= 0;
+        allow delete: if isTripMember(tripId) && resource.data.documentCount == 0;
+      }
+
+      match /documents/{documentId} {
+        allow read: if isTripMember(tripId) && (resource.data.sensitive == false ||
+          resource.data.uploadedBy == request.auth.uid ||
+          get(/databases/$(database)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid);
+        allow create: if isTripMember(tripId) && request.resource.data.uploadedBy == request.auth.uid &&
+          request.resource.data.visibleName is string && request.resource.data.visibleName.size() > 0 && request.resource.data.visibleName.size() <= 160 &&
+          request.resource.data.storagePath is string && !('url' in request.resource.data) &&
+          request.resource.data.mimeType in ['application/pdf','image/jpeg','image/png','image/webp'] &&
+          request.resource.data.size is int && request.resource.data.size > 0 && request.resource.data.size <= 10 * 1024 * 1024 &&
+          request.resource.data.sensitive is bool;
+        allow update: if isTripMember(tripId) && resource.data.uploadedBy == request.auth.uid &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deletionState','deletionRequestedAt']);
+        allow delete: if isTripMember(tripId) && (resource.data.uploadedBy == request.auth.uid ||
+          get(/databases/$(database)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid);
+      }
+
+      match /documentAudit/{auditId} {
+        allow read: if isTripMember(tripId) && get(/databases/$(database)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid;
+        allow create: if isTripMember(tripId) && request.resource.data.actorId == request.auth.uid;
+        allow update, delete: if false;
+      }
+
+      match /settlements/{settlementId} {
+        allow read: if isTripMember(tripId);
+        allow create: if isTripMember(tripId) && request.resource.data.createdBy == request.auth.uid &&
+          request.resource.data.payerId == request.auth.uid &&
+          request.resource.data.payerId in get(/databases/$(database)/documents/trips/$(tripId)).data.members &&
+          request.resource.data.receiverId in get(/databases/$(database)/documents/trips/$(tripId)).data.members &&
+          request.resource.data.payerId != request.resource.data.receiverId &&
+          request.resource.data.amountMinor is int && request.resource.data.amountMinor > 0 &&
+          request.resource.data.baseAmountMinor is int && request.resource.data.baseAmountMinor > 0 &&
+          request.resource.data.currency in ['CRC','JPY','USD'] && request.resource.data.status == 'pending' && request.resource.data.applied == false;
+        allow update: if isTripMember(tripId) && resource.data.status == 'pending' &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','applied','confirmedBy','updatedAt']) &&
+          ((request.resource.data.status == 'confirmed' && request.resource.data.applied == true &&
+            request.resource.data.confirmedBy == request.auth.uid &&
+            request.auth.uid == resource.data.receiverId) ||
+           (request.resource.data.status == 'voided' && request.resource.data.applied == false &&
+            (request.auth.uid == resource.data.createdBy || request.auth.uid == get(/databases/$(database)/documents/trips/$(tripId)).data.info.createdBy)));
+        allow delete: if false;
+      }
+
+      match /reminders/{reminderId} {
+        allow read: if isTripMember(tripId) && resource.data.targetUserId == request.auth.uid;
+        allow create: if isTripMember(tripId) && request.resource.data.createdBy == request.auth.uid &&
+          request.resource.data.targetUserId == request.auth.uid && request.resource.data.type == 'manual' &&
+          request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 100 &&
+          request.resource.data.message is string && request.resource.data.message.size() <= 240 &&
+          request.resource.data.scheduledAt is string && request.resource.data.timeZone is string && request.resource.data.active == true;
+        allow update: if isTripMember(tripId) && resource.data.createdBy == request.auth.uid &&
+          request.resource.data.createdBy == resource.data.createdBy &&
+          request.resource.data.targetUserId == resource.data.targetUserId &&
+          request.resource.data.type == resource.data.type &&
+          request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 100 &&
+          request.resource.data.message is string && request.resource.data.message.size() <= 240 &&
+          request.resource.data.scheduledAt is string && request.resource.data.timeZone is string && request.resource.data.active is bool;
+        allow delete: if isTripMember(tripId) && resource.data.createdBy == request.auth.uid;
       }
 
       // --- Sub-colección de Datos (Itinerario, Notas, Packing) ---

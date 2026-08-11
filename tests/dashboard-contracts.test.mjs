@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const [html, suggestions, wizard, dialog, journal, itinerary, map, budgetTracker, appCss, heroLock] = await Promise.all([
+const [html, suggestions, wizard, dialog, journal, itinerary, map, budgetTracker, appCss, heroLock, dashboardHome, dashboardRenderer] = await Promise.all([
   readFile(new URL('../dashboard.html', import.meta.url), 'utf8'),
   readFile(new URL('../js/ai/smart-suggestions-ui.js', import.meta.url), 'utf8'),
   readFile(new URL('../js/features/itinerary/smart-generator-wizard.js', import.meta.url), 'utf8'),
@@ -11,7 +11,9 @@ const [html, suggestions, wizard, dialog, journal, itinerary, map, budgetTracker
   readFile(new URL('../js/map/map.js', import.meta.url), 'utf8'),
   readFile(new URL('../js/features/budget/budget-tracker.js', import.meta.url), 'utf8'),
   readFile(new URL('../css/app.css', import.meta.url), 'utf8'),
-  readFile(new URL('../css/dashboard-hero-lock.css', import.meta.url), 'utf8')
+  readFile(new URL('../css/dashboard-hero-lock.css', import.meta.url), 'utf8'),
+  readFile(new URL('../css/dashboard-home.css', import.meta.url), 'utf8'),
+  readFile(new URL('../js/features/dashboard/progressive-content.js', import.meta.url), 'utf8')
 ]);
 for (const eager of ['/js/features/trips/pdf-exporter.js', '/js/features/trips/export-manager.js', '/js/features/budget/expense-charts.js']) assert.ok(!html.includes(`src="${eager}"`));
 assert.match(html, /jp-modal-shell/);
@@ -37,6 +39,14 @@ assert.match(itinerary, /day-closing-decor--memory/);
 assert.match(itinerary, /day-closing-decor--assessment/);
 assert.match(appCss, /dashboard-hero-lock\.css/);
 assert.match(appCss, /day-closing-spread\.css/);
+assert.match(appCss, /dashboard-home\.css/);
+assert.match(html, /data-tab="home" class="tab-btn active"/);
+assert.match(html, /id="content-home" class="tab-content"/);
+assert.match(dashboardHome, /\.journey-home__support/);
+assert.match(dashboardHome, /@media \(max-width: 480px\)/);
+assert.match(dashboardRenderer, /Gatito guía leyendo el mapa/);
+assert.match(dashboardRenderer, /Perrito explorador con mochila y cámara/);
+assert.match(dashboardRenderer, /Presupuesto resumido/);
 assert.match(heroLock, /APPROVED COMPOSITION/);
 assert.match(map, /jp-map-day-select/);
 assert.match(map, /jp-map-search/);

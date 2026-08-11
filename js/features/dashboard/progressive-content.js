@@ -20,6 +20,7 @@
 
 import { detectJourneyStage, getJourneyMath } from './stage-detector.js';
 import { formatMoneyMinor } from '../budget/money.js';
+import { prioritizeDashboardActions } from './dashboard-summary.js';
 
 const safe = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 
@@ -250,19 +251,77 @@ export function renderProgressiveContent(trip, data = {}) {
   }
 }
 
-function renderTripDashboard(data) {
-  const { trip, itinerary, budget, tasks, packing, images } = data;
-  const countdown = trip.countdown?.state === 'upcoming' ? `Faltan ${trip.countdown.days} días` : trip.countdown?.state === 'traveling' ? `${trip.countdown.days} días de viaje` : trip.countdown?.state === 'finished' ? 'Viaje finalizado' : 'Fechas por definir';
+function firstName() {
+  const user = window.AuthHandler?.currentUser || window.auth?.currentUser;
+  const source = user?.displayName || user?.email?.split('@')[0] || '';
+  const value = source.trim().split(/[\s._+]+/)[0];
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : 'viajera';
+}
+
+function dashboardDate(value) {
+  if (!value) return 'Fecha por definir';
+  const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return safe(value);
+  return new Intl.DateTimeFormat('es-CR', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+}
+
+function dashboardCountdown(trip) {
+  if (trip.countdown?.state === 'upcoming') return `<span>Faltan</span><strong>${trip.countdown.days}</strong><small>días</small>`;
+  if (trip.countdown?.state === 'traveling') return `<span>Viajando</span><strong>${trip.countdown.days}</strong><small>días restantes</small>`;
+  if (trip.countdown?.state === 'finished') return '<span>Viaje</span><strong>✓</strong><small>completado</small>';
+  return '<span>Fechas</span><strong>—</strong><small>por definir</small>';
+}
+
+export function renderTripDashboard(data) {
+  const { trip, itinerary, budget, tasks, packing, images = [], reservations = {}, weather = null } = data;
   const next = itinerary.next;
-  const recent = budget.recent || [];
-  return `<section class="trip-overview" aria-label="Resumen del viaje">
-    <header class="trip-overview__heading"><div><p class="budget-kicker">旅の概要 · RESUMEN DEL VIAJE</p><h2>${safe(trip.name)}</h2><p>${safe(trip.destination)} · ${safe(trip.dateStart || 'Sin fecha')} — ${safe(trip.dateEnd || 'Sin fecha')}</p></div><strong>${countdown}</strong></header>
-    <div class="trip-overview__lead">
-      <article class="trip-overview__next"><p class="trip-overview__eyebrow">Próxima actividad</p>${next ? `<time>${safe(next.dayDate)} · ${safe(next.time || 'Sin hora')}</time><h3>${safe(next.title || next.name || 'Actividad')}</h3><p>${safe(next.location || next.desc || '')}</p>` : '<div class="dashboard-empty"><h3>Sin actividades próximas</h3><p>Agrega la primera actividad para verla aquí.</p></div>'}<button type="button" onclick="window.DashboardApp?.switchTab('itinerary')">Abrir itinerario</button></article>
-      <article class="trip-overview__finance"><div class="trip-overview__section-head"><div><p class="trip-overview__eyebrow">Presupuesto · ${safe(budget.currency)}</p><h3>${formatMoneyMinor(budget.spentMinor, budget.currency)} gastados</h3></div><strong>${budget.percentUsed.toFixed(1)}%</strong></div><div class="budget-progress"><span style="width:${Math.min(100, budget.percentUsed)}%"></span></div><dl><div><dt>Presupuesto</dt><dd>${formatMoneyMinor(budget.budgetMinor, budget.currency)}</dd></div><div><dt>Disponible</dt><dd>${formatMoneyMinor(budget.availableMinor, budget.currency)}</dd></div></dl>${recent.length ? `<div class="trip-overview__recent">${recent.map((item) => `<span>${safe(item.description || item.desc)} <strong>${formatMoneyMinor(item.convertedAmountMinor || item.amountMinor || 0, item.baseCurrency || budget.currency)}</strong></span>`).join('')}</div>` : '<p class="dashboard-empty">Aún no hay gastos.</p>'}<button type="button" onclick="window.DashboardApp?.switchTab('budget')">Ver reporte financiero</button></article>
+  const nextTitle = next?.title || next?.name || 'Tu primera aventura';
+  const nextPlace = next?.location || next?.city || trip.destination;
+  const mapAsset = /kyoto|kioto|gion|fushimi/i.test(`${nextPlace} ${nextTitle}`)
+    ? '/images/illustrations/generated/maps/kyoto-district.webp'
+    : '/images/illustrations/generated/maps/japan-overview.webp';
+  const nextActions = prioritizeDashboardActions(data);
+  const recommendation = nextActions[0]?.title || (next ? `Prepara lo necesario para ${nextTitle}.` : 'Agrega una actividad y empezamos a explorar.');
+  const budgetPercent = Math.max(0, Math.min(100, Number(budget.percentUsed) || 0));
+  const itineraryPercent = Math.max(0, Math.min(100, Number(itinerary.percent) || 0));
+  const reservation = reservations.next;
+  const taskRows = tasks.upcoming?.slice(0, 4) || [];
+  const memories = images.slice(0, 3);
+
+  return `<section class="journey-home" aria-label="Portada de tu viaje">
+    <header class="journey-home__intro">
+      <div><p class="journey-home__kicker">Tu aventura empieza aquí</p><h1>¡Hola, ${safe(firstName())}! <span aria-hidden="true">🌸</span></h1><p>Planifica, descubre y vive Japón a tu manera.</p></div>
+      <button type="button" class="journey-home__help" onclick="window.NotificationCenter?.open()"><i class="far fa-question-circle" aria-hidden="true"></i><span>¿Qué sigue?</span></button>
+    </header>
+
+    <div class="journey-home__top">
+      <article class="journey-ticket" aria-labelledby="currentTripTitle">
+        <div class="journey-ticket__copy"><p class="journey-home__eyebrow">Tu viaje actual</p><h2 id="currentTripTitle">${safe(trip.name)}</h2><p><i class="fas fa-map-marker-alt" aria-hidden="true"></i> ${safe(trip.destination)} · ${dashboardDate(trip.dateStart)} — ${dashboardDate(trip.dateEnd)}</p><button type="button" onclick="window.DashboardApp?.switchTab('itinerary')">Ver itinerario <span aria-hidden="true">→</span></button></div>
+        <div class="journey-ticket__countdown" aria-label="Cuenta regresiva">${dashboardCountdown(trip)}</div>
+        <div class="journey-ticket__guide"><img src="/images/illustrations/generated/companions/cat-guide.png" alt="Gatito guía leyendo el mapa"><p><strong>Consejo Japitin</strong>${safe(recommendation)}</p></div>
+        <span class="journey-ticket__stamp" aria-hidden="true">日本<br><small>JAPITIN</small></span>
+      </article>
+
+      <section class="journey-route" aria-labelledby="journeyRouteTitle"><div class="journey-home__section-head"><div><p class="journey-home__eyebrow">Tu viaje en progreso</p><h2 id="journeyRouteTitle">${itinerary.completed} de ${itinerary.total} aventuras vividas</h2></div><strong>${itineraryPercent}%</strong></div><div class="journey-route__track"><span style="width:${itineraryPercent}%"></span><i style="left:${itineraryPercent}%" aria-hidden="true">🌸</i></div><div class="journey-route__labels"><span>Comenzamos</span><span>Ahora</span><span>¡A disfrutar!</span></div></section>
     </div>
-    <div class="trip-overview__progress"><article><div class="trip-overview__section-head"><div><p class="trip-overview__eyebrow">Itinerario</p><h3>${itinerary.completed} de ${itinerary.total} actividades</h3></div><strong>${itinerary.percent}%</strong></div><div class="budget-progress"><span style="width:${itinerary.percent}%"></span></div></article><article><div class="trip-overview__section-head"><div><p class="trip-overview__eyebrow">Pendientes</p><h3>${tasks.pendingCount} por completar</h3></div></div>${tasks.upcoming.length ? tasks.upcoming.slice(0,3).map((task) => `<p class="trip-overview__line"><span>${safe(task.title)}</span><time>${safe(task.dueDate || 'Sin fecha')}</time></p>`).join('') : '<p class="dashboard-empty">No hay tareas próximas.</p>'}<button type="button" onclick="window.TravelTasks?.open()">Administrar pendientes</button></article><article><div class="trip-overview__section-head"><div><p class="trip-overview__eyebrow">Equipaje</p><h3>${packing.packed} empacados · ${packing.pending} pendientes</h3></div><strong>${packing.percent}%</strong></div><div class="budget-progress"><span style="width:${packing.percent}%"></span></div><button type="button" onclick="window.PackingList?.open()">Abrir equipaje</button></article></div>
-    ${images.length ? `<div class="trip-overview__gallery"><div><p class="trip-overview__eyebrow">Últimos recuerdos</p><h3>Galería del viaje</h3></div><div>${images.map((item) => `<img src="${safe(item.url)}" alt="${safe(item.name || 'Imagen del viaje')}" loading="lazy">`).join('')}</div></div>` : ''}
-    <nav class="trip-overview__quick" aria-label="Accesos rápidos"><button onclick="window.DashboardApp?.switchTab('budget');setTimeout(()=>window.BudgetTracker?.addExpenseFromTab(),100)">＋ Registrar gasto</button><button onclick="window.ItineraryBuilderExtensions?.showAddActivityModal()">＋ Agregar actividad</button><button onclick="window.TravelTasks?.open({create:true})">＋ Crear tarea</button><button onclick="window.PackingList?.open({create:true})">＋ Agregar equipaje</button></nav>
+
+    <article class="next-stop" aria-labelledby="nextStopTitle">
+      <div class="next-stop__copy"><p class="journey-home__eyebrow">Próxima parada</p><h2 id="nextStopTitle">${safe(nextTitle)}</h2>${next ? `<time datetime="${safe(next.dayDate)}T${safe(next.time || '')}"><i class="far fa-calendar" aria-hidden="true"></i> ${dashboardDate(next.dayDate)} · ${safe(next.time || 'Hora por definir')}</time><p><i class="fas fa-map-marker-alt" aria-hidden="true"></i> ${safe(nextPlace)}</p>` : '<p>Tu itinerario todavía tiene espacio para una sorpresa.</p>'}<div class="next-stop__weather">${weather ? `<span>${safe(window.AppUtils?.getWeatherEmoji?.(weather.icon) || '⛅')}</span><strong>${safe(weather.temp)}°</strong><small>${safe(weather.description)}</small>` : '<span>🌤️</span><strong>—</strong><small>Clima disponible al acercarse</small>'}</div><button type="button" onclick="window.DashboardApp?.switchTab('map')">Ver ruta <span aria-hidden="true">→</span></button></div>
+      <div class="next-stop__map"><img src="${mapAsset}" alt="Mapa ilustrado de la próxima parada"><span class="next-stop__pin" aria-hidden="true"><i class="fas fa-map-pin"></i></span><figure class="next-stop__dog"><img src="/images/illustrations/generated/companions/dog-explorer.png" alt="Perrito explorador con mochila y cámara"><figcaption>Ruta encontrada</figcaption></figure></div>
+    </article>
+
+    <div class="journey-home__support">
+      <article class="journey-note journey-note--tasks"><div class="journey-home__section-head"><div><p class="journey-home__eyebrow">Antes de salir</p><h2>Tareas importantes</h2></div><button type="button" onclick="window.TravelTasks?.open()">Ver ${tasks.pendingCount || 0}</button></div>${taskRows.length ? `<ul>${taskRows.map(task => `<li><i class="far fa-square" aria-hidden="true"></i><span>${safe(task.title)}</span><time>${safe(task.dueDate || '')}</time></li>`).join('')}</ul>` : '<p class="journey-home__empty">Todo listo por ahora. ¡Qué bonito se siente!</p>'}</article>
+      <article class="luggage-tag"><p class="journey-home__eyebrow">Equipaje</p><h2>${packing.packed}/${packing.total}</h2><p>${packing.pending} pendiente${packing.pending === 1 ? '' : 's'}</p><div class="journey-meter"><span style="width:${packing.percent}%"></span></div><button type="button" onclick="window.PackingList?.open()">Abrir lista</button></article>
+      <article class="budget-receipt"><p class="journey-home__eyebrow">Presupuesto resumido</p><h2>${formatMoneyMinor(budget.availableMinor, budget.currency)}</h2><p>disponibles de ${formatMoneyMinor(budget.budgetMinor, budget.currency)}</p><div class="journey-meter"><span style="width:${budgetPercent}%"></span></div><small>${budgetPercent.toFixed(0)}% utilizado</small><button type="button" onclick="window.DashboardApp?.switchTab('budget')">Ver presupuesto</button></article>
+    </div>
+
+    <div class="journey-home__lower">
+      <article class="reservation-ticket"><div><p class="journey-home__eyebrow">Próxima reservación</p><h2>${reservation ? safe(reservation.title || reservation.name || 'Reservación') : 'Sin reservaciones próximas'}</h2><p>${reservation ? `${safe(reservation.location || reservation.type || '')}${reservation.startAt ? ` · ${safe(reservation.startAt)}` : ''}` : 'Cuando confirmes una, aparecerá aquí.'}</p>${reservation ? `<span>${safe(reservation.status || 'Próxima')}</span>` : ''}</div><button type="button" onclick="window.DashboardApp?.openFloatingModal('reservations')">Abrir reservas</button></article>
+
+      <nav class="journey-actions" aria-label="Acciones rápidas"><div class="journey-home__section-head"><div><p class="journey-home__eyebrow">A tu manera</p><h2>Acciones rápidas</h2></div></div><div><button type="button" onclick="window.ItineraryBuilderExtensions?.showAddActivityModal()"><i class="fas fa-torii-gate" aria-hidden="true"></i><span>Actividad</span></button><button type="button" onclick="window.DashboardApp?.openFloatingModal('reservations')"><i class="far fa-calendar-plus" aria-hidden="true"></i><span>Reserva</span></button><button type="button" onclick="window.DashboardApp?.switchTab('map')"><i class="far fa-map" aria-hidden="true"></i><span>Mapa</span></button><button type="button" onclick="window.DashboardApp?.switchTab('budget');setTimeout(()=>window.BudgetTracker?.addExpenseFromTab(),100)"><i class="fas fa-yen-sign" aria-hidden="true"></i><span>Gasto</span></button><button type="button" onclick="TripsManager.showCreateTripModal()"><i class="fas fa-plus" aria-hidden="true"></i><span>Viaje</span></button></div></nav>
+
+      <section class="memory-strip" aria-labelledby="memoriesTitle"><div class="journey-home__section-head"><div><p class="journey-home__eyebrow">Tu historia</p><h2 id="memoriesTitle">Recuerdos recientes</h2></div><button type="button" onclick="window.DashboardApp?.switchTab('utils')">Galería</button></div>${memories.length ? `<div>${memories.map((item, index) => `<figure style="--tilt:${index % 2 ? '2deg' : '-2deg'}"><img src="${safe(item.url)}" alt="${safe(item.name || 'Recuerdo del viaje')}" loading="lazy"><figcaption>${safe(item.name || 'Un momento del viaje')}</figcaption></figure>`).join('')}</div>` : '<div class="memory-strip__empty"><span aria-hidden="true">📷</span><p>Tus primeros recuerdos aparecerán aquí.</p></div>'}</section>
+    </div>
   </section>`;
 }

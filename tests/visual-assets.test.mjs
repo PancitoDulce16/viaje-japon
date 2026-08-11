@@ -33,4 +33,41 @@ assert.match(referenceCss, /hero-moment__content/);
 assert.match(todayCss, /japitin-route-scrapbook-v2\.webp/);
 assert.match(headerView, /trip-header-banner--journey/);
 assert.doesNotMatch(itinerary, /class="jp-trip-(?:postmark|polaroid|dogwrap)"/);
+
+const [designSystem, tokens, lab, agents, inventory, references, catSticker, dogSticker] = await Promise.all([
+  readFile('docs/design/JAPITIN_DESIGN_SYSTEM.md', 'utf8'),
+  readFile('css/tokens.css', 'utf8'),
+  readFile('design-system.html', 'utf8'),
+  readFile('AGENTS.md', 'utf8'),
+  readFile('docs/design/JAPITIN_ASSET_INVENTORY.md', 'utf8'),
+  readFile('docs/design/references/README.md', 'utf8'),
+  readFile('images/illustrations/generated/companions/cat-guide.png'),
+  readFile('images/illustrations/generated/companions/dog-explorer.png')
+]);
+
+assert.match(designSystem, /Japitin es una aplicación de viajes completamente kawaii/);
+assert.match(designSystem, /Noche en Japón/);
+assert.match(designSystem, /retiros de cajero/);
+assert.match(agents, /Las ocho capturas originales del producto/);
+assert.match(agents, /gatito guía/i);
+assert.match(agents, /perrito explorador/i);
+assert.match(tokens, /--surface-ticket:/);
+assert.match(tokens, /--surface-map:/);
+assert.match(tokens, /--surface-page: #08172D/);
+assert.doesNotMatch(tokens, /--surface-page:\s*#000(?:000)?\b/i);
+assert.match(lab, /id="referencias"/);
+assert.match(lab, /Compañeros oficiales/);
+assert.match(lab, /Budget Tracking intuitivo/);
+assert.match(inventory, /variantes opacas/i);
+assert.match(inventory, /RGBA real/i);
+assert.match(references, /descartada como fuente de diseño/);
+
+const pngColorType = buffer => buffer[25];
+const pngWidth = buffer => buffer.readUInt32BE(16);
+const pngHeight = buffer => buffer.readUInt32BE(20);
+assert.ok([4, 6].includes(pngColorType(catSticker)), 'cat sticker PNG must contain an alpha channel');
+assert.ok([4, 6].includes(pngColorType(dogSticker)), 'dog sticker PNG must contain an alpha channel');
+assert.ok(pngWidth(catSticker) > 0 && pngHeight(catSticker) > 0, 'cat sticker must have valid dimensions');
+assert.ok(pngWidth(dogSticker) > 0 && pngHeight(dogSticker) > 0, 'dog sticker must have valid dimensions');
+assert.doesNotMatch(lab, /note-sticker-(?:cat-cutout|dog-v2)|tk-(?:cat|dog)head-final/);
 console.log('visual asset contract: ok');

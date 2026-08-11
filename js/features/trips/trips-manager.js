@@ -1092,7 +1092,7 @@ export const TripsManager = {
         ${renderHeroMoment(this.currentTrip)}
 
         <!-- Botones de acción — preservados tal cual, ver DEPRECATION_LOG.md -->
-        <div class="flex items-center justify-center gap-2 sm:gap-3 flex-wrap px-2">
+        <div class="dashboardLegacyActions flex items-center justify-center gap-2 sm:gap-3 flex-wrap px-2">
           <!-- bg-transparent los exime de los button{} globales de theme-kawaii/ninja
                (que excluyen [class*="bg-"]); el estilo real vive en .jp-trip-action -->
           <button
@@ -1199,8 +1199,8 @@ export const TripsManager = {
     if (topSection) {
       const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab
         || document.querySelector('.mobile-nav-item.active')?.dataset.tab
-        || 'itinerary';
-      topSection.classList.toggle('js-tab-hidden', activeTab !== 'itinerary');
+        || 'home';
+      topSection.classList.toggle('js-tab-hidden', activeTab !== 'home');
     }
 
     this.loadDashboardProgressiveContent(stage);
@@ -1233,6 +1233,7 @@ export const TripsManager = {
 
       const data = await fetchDashboardData(this.currentTrip.id, stage, this.currentTrip, itineraryData);
       container.innerHTML = renderProgressiveContent(this.currentTrip, data);
+      container.closest('#dashboardTopSection')?.classList.add('has-journey-home');
     } catch (error) {
       // Error state per EXPERIENCE_GUIDELINES.md — plain and calm, not
       // personality-forward, explains what happened, one real retry

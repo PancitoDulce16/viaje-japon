@@ -5,7 +5,9 @@ const localRoutes = () => ({
   name: 'japitin-local-routes',
   configureServer(server) {
     server.middlewares.use((req, res, next) => {
-      const path = (req.url || '').split('?')[0].replace(/\/$/, '') || '/';
+      const requestUrl = req.url || '';
+      const path = requestUrl.split('?')[0].replace(/\/$/, '') || '/';
+      const query = requestUrl.includes('?') ? `?${requestUrl.split('?').slice(1).join('?')}` : '';
       if (path === '/dashboard') {
         res.statusCode = 302;
         res.setHeader('Location', '/dashboard.html');
@@ -18,13 +20,21 @@ const localRoutes = () => ({
         res.end();
         return;
       }
+      if (path === '/design-system') {
+        res.statusCode = 302;
+        res.setHeader('Location', `/design-system.html${query}`);
+        res.end();
+        return;
+      }
       next();
     });
   },
   configurePreviewServer(server) {
     server.middlewares.use((req, res, next) => {
-      const path = (req.url || '').split('?')[0].replace(/\/$/, '') || '/';
-      const target = path === '/dashboard' ? '/dashboard.html' : path === '/login' ? '/login.html' : null;
+      const requestUrl = req.url || '';
+      const path = requestUrl.split('?')[0].replace(/\/$/, '') || '/';
+      const query = requestUrl.includes('?') ? `?${requestUrl.split('?').slice(1).join('?')}` : '';
+      const target = path === '/dashboard' ? '/dashboard.html' : path === '/login' ? '/login.html' : path === '/design-system' ? `/design-system.html${query}` : null;
       if (!target) return next();
       res.statusCode = 302;
       res.setHeader('Location', target);

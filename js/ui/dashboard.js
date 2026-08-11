@@ -509,10 +509,10 @@ class DashboardManager {
         // ocupaba más de una pantalla completa antes de llegar al mapa, presupuesto,
         // etc. - "cambiaba de tab" pero se veía exactamente igual porque lo único
         // visible en el primer scroll era este header repetido. Solo tiene sentido
-        // mostrarlo en el tab de Itinerario.
+        // mostrarlo únicamente en Inicio.
         const topSection = document.getElementById('dashboardTopSection');
         if (topSection) {
-            topSection.classList.toggle('js-tab-hidden', tabName !== 'itinerary');
+            topSection.classList.toggle('js-tab-hidden', tabName !== 'home');
         }
 
         // 📊 Refrescar los charts de Analytics con datos actuales al entrar al tab

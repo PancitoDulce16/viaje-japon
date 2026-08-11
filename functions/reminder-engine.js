@@ -1,0 +1,7 @@
+const DEFAULTS={activities:true,flights:true,reservations:true,tasks:true,budget:true,sharedExpenses:true,documents:true,dailySummary:false,push:false,leadMinutes:120,quietStart:'22:00',quietEnd:'07:00',timeZone:'America/Costa_Rica',mutedTripIds:[]};
+function key(input){const{userId,tripId,type,resourceId='general'}=input,scheduledAt=input.deduplicationAt||input.scheduledAt;return [userId,tripId,type,resourceId,String(scheduledAt).slice(0,16)].join('_').replace(/[^a-zA-Z0-9_-]/g,'-').slice(0,500);}
+function allowed(type,prefs,tripId){if((prefs.mutedTripIds||[]).includes(tripId))return false;const map={activity:'activities',flight:'flights',checkin:'reservations',checkout:'reservations',reservation:'reservations',task_due:'tasks',task_overdue:'tasks',settlement:'sharedExpenses',budget:'budget',document:'documents',daily_summary:'dailySummary'};return map[type]?prefs[map[type]]!==false:true;}
+function quiet(now,timeZone,start,end){const hm=new Intl.DateTimeFormat('en-GB',{timeZone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(now);return start<=end?hm>=start&&hm<end:hm>=start||hm<end;}
+function dueAt(eventIso,leadMinutes){const time=Date.parse(eventIso);return Number.isFinite(time)?new Date(time-leadMinutes*60000).toISOString():null;}
+function dueNow(scheduledAt,now,windowMs=16*60000){const time=Date.parse(scheduledAt);return Number.isFinite(time)&&time<=now.getTime()&&time>now.getTime()-windowMs;}
+module.exports={DEFAULTS,key,allowed,quiet,dueAt,dueNow};

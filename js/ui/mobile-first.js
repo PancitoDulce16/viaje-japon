@@ -22,7 +22,7 @@ class MobileFirst {
     this.pullThreshold = 80; // pixels for pull-to-refresh
 
     // Current active tab
-    this.activeTab = 'itinerary';
+    this.activeTab = 'home';
 
     console.log('📱 Mobile-First System initialized');
   }
@@ -71,11 +71,11 @@ class MobileFirst {
 
     nav.innerHTML = `
       <div class="mobile-bottom-nav-items">
-        <div class="mobile-nav-item active" data-tab="home"><i class="fas fa-home"></i><span>Inicio</span></div>
-        <div class="mobile-nav-item" data-tab="itinerary"><i class="far fa-calendar-alt"></i><span>Itinerarios</span></div>
-        <div class="mobile-nav-item mobile-nav-item--create" data-tab="add" aria-label="Agregar viaje"><i class="fas fa-plus"></i><span>Agregar</span></div>
-        <div class="mobile-nav-item" data-tab="map"><i class="fas fa-map-marked-alt"></i><span>Mapa</span></div>
-        <div class="mobile-nav-item" data-tab="journal"><i class="fas fa-book-open"></i><span>Diario</span></div>
+        <button type="button" class="jps-shell-control mobile-nav-item active" data-tab="home"><i class="fas fa-home"></i><span>Inicio</span></button>
+        <button type="button" class="jps-shell-control mobile-nav-item" data-tab="itinerary"><i class="far fa-calendar-alt"></i><span>Itinerarios</span></button>
+        <button type="button" class="jps-shell-control mobile-nav-item mobile-nav-item--create" data-tab="add" aria-label="Abrir acciones rápidas"><i class="fas fa-plus"></i><span>Agregar</span></button>
+        <button type="button" class="jps-shell-control mobile-nav-item" data-tab="attractions"><i class="fas fa-compass"></i><span>Explorar</span></button>
+        <button type="button" class="jps-shell-control mobile-nav-item" data-tab="more"><i class="fas fa-ellipsis-h"></i><span>Más</span></button>
       </div>
     `;
 
@@ -112,10 +112,10 @@ class MobileFirst {
 
     // Handle special tabs
     if (tabName === 'home') {
-      document.querySelector('[data-tab="itinerary"]')?.click();
+      window.DashboardApp?.switchTab('home');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (tabName === 'add') {
-      window.TripsManager?.showCreateTripModal();
+      this.showQuickCreateMenu();
     } else if (tabName === 'journal') {
       window.TravelJournal?.show();
     } else if (tabName === 'tools') {
@@ -133,6 +133,31 @@ class MobileFirst {
     }
 
     console.log('📱 Switched to tab:', tabName);
+  }
+
+  showQuickCreateMenu() {
+    const previousFocus = document.activeElement;
+    const modal = document.createElement('div');
+    modal.className = 'jp-quick-create';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Acción rápida');
+    modal.innerHTML = `<div class="jp-quick-create__sheet"><div class="jp-quick-create__handle"></div><header><div><span class="jp-eyebrow">Un detalle a la vez</span><h2>¿Qué quieres agregar?</h2></div><button class="jps-shell-control jp-button" data-close aria-label="Cerrar"><i class="fas fa-times"></i></button></header><div class="jp-quick-create__grid"><button class="jps-shell-control" data-action="activity"><i class="far fa-calendar-plus"></i><span>Actividad</span></button><button class="jps-shell-control" data-action="expense"><i class="fas fa-yen-sign"></i><span>Gasto</span></button><button class="jps-shell-control" data-action="task"><i class="fas fa-check"></i><span>Tarea</span></button><button class="jps-shell-control" data-action="reservation"><i class="far fa-bookmark"></i><span>Reservación</span></button><button class="jps-shell-control" data-action="document"><i class="far fa-file-alt"></i><span>Documento</span></button><button class="jps-shell-control" data-action="memory"><i class="far fa-image"></i><span>Recuerdo</span></button></div></div>`;
+    const close = () => { modal.remove(); previousFocus?.focus?.(); };
+    modal.querySelector('[data-close]').addEventListener('click', close);
+    modal.addEventListener('click', (event) => { if (event.target === modal) close(); });
+    modal.addEventListener('keydown', (event) => { if (event.key === 'Escape') close(); });
+    modal.querySelectorAll('[data-action]').forEach((button) => button.addEventListener('click', () => {
+      const action = button.dataset.action;
+      if (action === 'expense') document.querySelector('.tab-btn[data-tab="budget"]')?.click();
+      else if (action === 'task' || action === 'document') document.querySelector('.tab-btn[data-tab="preparation"]')?.click();
+      else if (action === 'reservation') document.querySelector('.tab-btn[data-tab="hotels"]')?.click();
+      else if (action === 'memory') window.TravelJournal?.show();
+      else window.ItineraryHandler?.showAddActivityModal?.();
+      close();
+    }));
+    document.body.appendChild(modal);
+    modal.querySelector('button')?.focus();
   }
 
   /**

@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import { DOCUMENT_MAX_BYTES, validateTripDocument, safeStorageName } from '../js/features/documents/document-service.js';
+import { canCreateReservationExpense, groupReservations, maskConfirmation, relatedActivity, validateReservation } from '../js/features/reservations/reservation-utils.js';
+
+const file = (type, size = 100) => ({ type, size });
+assert.equal(validateTripDocument(file('application/pdf')).valid, true);
+assert.equal(validateTripDocument(file('image/webp')).valid, true);
+assert.equal(validateTripDocument(file('text/html')).valid, false);
+assert.equal(validateTripDocument(file('image/png', DOCUMENT_MAX_BYTES + 1)).valid, false);
+assert.equal(safeStorageName('../../pasaporte mío.pdf').includes('/'), false);
+assert.equal(maskConfirmation('ABC123456'), '•••••3456');
+assert.deepEqual(validateReservation({ title:'Vuelo', type:'Vuelo', status:'Confirmada', startAt:'2027-01-01T10:00', endAt:'2027-01-01T09:00', details:{ flightNumber:'JL1' } }).some(Boolean), true);
+assert.equal(validateReservation({ title:'Vuelo', type:'Vuelo', status:'Confirmada', startAt:'2027-01-01T10:00', details:{} }).some((error) => error.includes('vuelo')), true);
+assert.equal(canCreateReservationExpense({ costMinor:100, currency:'CRC', expenseId:null }), true);
+assert.equal(canCreateReservationExpense({ costMinor:100, currency:'CRC', expenseId:'expense-1' }), false);
+assert.equal(relatedActivity([{ day:1, activities:[{ id:'stable-1', title:'Templo' }] }], 'stable-1').activity.title, 'Templo');
+assert.deepEqual(groupReservations([], new Date('2027-01-01')), { upcoming:[], past:[] });
+
+const documentSource = fs.readFileSync(new URL('../js/features/documents/document-service.js', import.meta.url), 'utf8');
+const firestoreRules = fs.readFileSync(new URL('../firestore.rules', import.meta.url), 'utf8');
+const storageRules = fs.readFileSync(new URL('../storage.rules', import.meta.url), 'utf8');
+assert.equal(documentSource.includes('getDownloadURL'), false);
+assert.match(documentSource, /deleteObject[\s\S]*deleteDoc/);
+assert.match(firestoreRules, /!\('url' in request\.resource\.data\)/);
+assert.match(firestoreRules, /resource\.data\.sensitive == false/);
+assert.match(storageRules, /documents\/\{userId\}\/\{documentId\}/);
+assert.match(storageRules, /10 \* 1024 \* 1024/);
+assert.match(storageRules, /allPaths=\*\*/);
+console.log('reservations-documents: ok');
