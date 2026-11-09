@@ -117,7 +117,7 @@
                 <button type="button" class="jps-shell-control active" data-rail-tab="home" onclick="window.DashboardApp?.switchTab('home'); window.JapitinShell?.syncActive('home')"><i class="fas fa-home"></i><span>Inicio</span></button>
                 <button type="button" class="jps-shell-control" data-rail-tab="itinerary" onclick="document.querySelector('.tab-btn[data-tab=&quot;itinerary&quot;]')?.click()"><i class="far fa-calendar-alt"></i><span>Itinerario</span></button>
                 <button type="button" class="jps-shell-control" data-rail-tab="attractions" onclick="document.querySelector('.tab-btn[data-tab=&quot;attractions&quot;]')?.click()"><i class="fas fa-compass"></i><span>Explorar</span></button>
-                <button type="button" class="jps-shell-control" data-rail-tab="hotels" onclick="document.querySelector('.tab-btn[data-tab=&quot;hotels&quot;]')?.click()"><i class="far fa-bookmark"></i><span>Reservaciones</span></button>
+                <button type="button" class="jps-shell-control" data-rail-action="reservations" onclick="window.DashboardApp?.openFloatingModal('reservations')"><i class="far fa-bookmark"></i><span>Reservaciones</span></button>
                 <button type="button" class="jps-shell-control" data-rail-tab="budget" onclick="document.querySelector('.tab-btn[data-tab=&quot;budget&quot;]')?.click()"><i class="fas fa-yen-sign"></i><span>Gastos</span></button>
                 <span class="jp-desktop-rail__group">Organiza y recuerda</span>
                 <button type="button" class="jps-shell-control" data-rail-tab="preparation" onclick="document.querySelector('.tab-btn[data-tab=&quot;preparation&quot;]')?.click()"><i class="fas fa-box-open"></i><span>Organización</span></button>

@@ -86,5 +86,35 @@ for (const width of widths) for (const theme of themes) {
     const target = path.resolve('artifacts/dashboard-home', theme, `${width}.png`);
     fs.mkdirSync(path.dirname(target), { recursive: true });
     await page.screenshot({ path: target, fullPage: true, animations: 'disabled' });
+    const layout = await page.evaluate(() => ['.japan-nav','#main-content','#content-home','#currentTripHeader','.journey-home','.journey-home__intro'].map(selector => {
+      const node = document.querySelector(selector), style = getComputedStyle(node), rect = node.getBoundingClientRect();
+      return {selector,top:rect.top,height:rect.height,padding:style.padding,margin:style.margin,display:style.display};
+    }));
+    fs.writeFileSync(target.replace('.png','.json'),JSON.stringify(layout,null,2));
   });
 }
+
+test('empty home offers the next action and escapes trip names', async ({ page }) => {
+  await page.setViewportSize({width:390,height:844});
+  await page.goto('/dashboard.html',{waitUntil:'domcontentloaded'});
+  await page.evaluate(async dashboardFixture => {
+    document.querySelector('#appDashboard')?.classList.remove('hidden');
+    document.querySelector('#content-home')?.classList.remove('hidden');
+    const { renderTripDashboard } = await import('/js/features/dashboard/progressive-content.js');
+    const empty = structuredClone(dashboardFixture);
+    empty.trip.name = '<img src=x onerror="window.injectionRan=true">';
+    empty.itinerary = {total:0,completed:0,percent:0,next:null};
+    empty.packing = {total:0,packed:0,pending:0,percent:0};
+    empty.tasks = {pendingCount:2,upcoming:[]};
+    empty.budget = {currency:'CRC',budgetMinor:0,spentMinor:0,availableMinor:0,percentUsed:0};
+    document.querySelector('#currentTripHeader').innerHTML = `<div id="dashboardTopSection" class="has-journey-home"><div id="dashboardProgressiveContent">${renderTripDashboard(empty)}</div></div>`;
+    window.DashboardApp = {switchTab:tab => { window.clickedTab = tab; }};
+  },fixture);
+  await expect(page.locator('.luggage-tag')).toContainText('Empieza tu lista');
+  await expect(page.locator('.budget-receipt')).toContainText('Define un presupuesto');
+  await expect(page.locator('.journey-note--tasks')).toContainText('Tienes tareas pendientes');
+  await expect(page.locator('.hero-moment__headline img')).toHaveCount(0);
+  expect(await page.evaluate(() => window.injectionRan)).toBeUndefined();
+  await page.locator('.next-stop button').click();
+  expect(await page.evaluate(() => window.clickedTab)).toBe('itinerary');
+});

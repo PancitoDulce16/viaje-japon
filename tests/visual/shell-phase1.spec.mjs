@@ -5,6 +5,17 @@ import path from 'node:path';
 const widths = [1440, 1024, 768, 390];
 const themes = ['light', 'dark'];
 
+test('desktop reservations shortcut opens reservations', async ({page}) => {
+  await page.setViewportSize({width:1440,height:900});
+  await page.goto('/dashboard.html',{waitUntil:'domcontentloaded'});
+  await page.evaluate(() => {
+    document.querySelector('#appDashboard')?.classList.remove('hidden');
+    window.DashboardApp = {openFloatingModal:name => { window.openedPanel = name; }};
+  });
+  await page.locator('[data-rail-action="reservations"]').click();
+  expect(await page.evaluate(() => window.openedPanel)).toBe('reservations');
+});
+
 for (const width of widths) for (const theme of themes) {
   test(`app shell ${theme} ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });

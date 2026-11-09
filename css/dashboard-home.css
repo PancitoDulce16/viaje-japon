@@ -173,3 +173,50 @@ html .journey-home .memory-strip,html .journey-home .journey-actions { backgroun
   .journey-home__lower { grid-template-columns: 1fr; gap: var(--space-2); }
   .journey-actions { grid-column: auto; }
 }
+
+/* Compact homepage composition; the original panorama and theme pair remain. */
+#appDashboard:has(#content-home:not(.hidden)) { background: var(--background) !important; }
+#content-home .journey-home { max-width: 1120px; margin-inline: auto; gap: var(--space-5); padding: 0; }
+.journey-home__intro .journey-home__kicker { display: none; }
+.journey-home__intro p:last-child { font-size: .88rem; }
+.journey-home .hero-moment--compact { min-height: 310px; padding: 0; }
+.journey-home .hero-moment--compact .hero-moment__content { min-height: 310px !important; max-width: min(62%,540px) !important; padding: var(--space-6) !important; gap: var(--space-3); }
+.hero-moment--compact .hero-moment__headline { overflow-wrap: anywhere; text-wrap: balance; line-height: 1.08; }
+.hero-moment--compact .hero-moment__eyebrow { font-size: 1.25rem; }
+.hero-moment--compact .hero-moment__jp,.hero-moment--compact .hero-moment__countdown-tag,.hero-moment--compact .hero-moment__countdown-stamp { display: none; }
+.hero-moment--compact .hero-moment__countdown { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); padding: 0; margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; transform: none; }
+.hero-moment--compact .hero-moment__countdown::before { content: none; }
+.hero-moment--compact .hero-moment__countdown-label,.hero-moment--compact .hero-moment__countdown-days { font: 500 1rem var(--font-body); color: var(--text-primary); }
+.hero-moment--compact .hero-moment__countdown-num { font-size: 2rem; animation: none; }
+.hero-moment--compact .hero-moment__countdown .hero-moment__cta { margin-top: var(--space-2); min-height: 44px; border-radius: var(--jp-radius-sm); }
+.hero-moment--compact .hero-moment__subtext { font-size: .85rem; max-width: 38ch; }
+.journey-home__top { padding: var(--space-3) var(--space-4); background: var(--surface-note); border-radius: var(--jp-radius-md); }
+.journey-home__top .journey-ticket__guide img { width: 70px; height: 78px; }
+.journey-home__top .journey-ticket__guide p { margin: 0; }
+.journey-route { border-radius: 0; }
+html .journey-home button:not(.hero-moment__cta) { min-height: 44px; background: var(--control-bg) !important; border-color: var(--control-border) !important; color: var(--text-primary) !important; box-shadow: none; }
+html .journey-home button:not(.hero-moment__cta):hover { background: var(--control-hover) !important; border-color: var(--primary) !important; }
+html .journey-home button:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.next-stop { border: 0; border-radius: 0; background: transparent; }
+.next-stop__copy { background: transparent; padding: var(--space-4) 0; }
+.next-stop__map { border-radius: var(--jp-radius-md); max-height: 280px; }
+.journey-home__lower .reservation-ticket { align-items: flex-start; }
+.journey-home__support .journey-note { padding-left: 0; }
+.journey-home__support .budget-receipt { padding-right: 0; }
+.journey-home .journey-actions { padding-inline: 0; }
+@media(max-width:780px) {
+  .journey-home__top { padding: var(--space-3); }
+  .journey-home__top .journey-ticket__guide p { font-size: .82rem; }
+  .journey-home .hero-moment--compact .hero-moment__content { max-width: min(70%,440px) !important; }
+  .next-stop { gap: var(--space-3); }
+  .next-stop__map { min-height: 200px; max-height: 230px; }
+  .journey-home__support .journey-note { padding-inline: 0; }
+  .journey-home__support .luggage-tag { padding-left: 0; }
+}
+@media(max-width:480px) {
+  .journey-home .hero-moment--compact .hero-moment__content { min-height: 320px !important; max-width: 100% !important; padding: var(--space-5) !important; }
+  .hero-moment--compact .hero-moment__headline { max-width: 14ch !important; font-size: 2rem; }
+  .hero-moment--compact .hero-moment__scrim { background: linear-gradient(90deg,rgba(var(--hero-wash-rgb),.94),rgba(var(--hero-wash-rgb),.65) 58%,transparent); }
+  .journey-home__intro p:last-child { max-width: 25ch; }
+  .journey-home__lower .reservation-ticket,.journey-home__lower .memory-strip { padding-inline: 0; }
+}

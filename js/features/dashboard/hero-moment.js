@@ -23,6 +23,8 @@
 
 import { detectJourneyStage, getJourneyMath } from './stage-detector.js';
 
+const escapeText = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 // 🌸 Saludo según hora + nombre (idea #25). Japonés + español, sin emoji.
 // Defensivo: si no hay usuario, el saludo funciona igual sin nombre.
 function greetingLine() {
@@ -104,7 +106,7 @@ function buildContent(trip, stage, math) {
  * @param {object|null} trip - TripsManager.currentTrip, or null/undefined for the empty state
  * @returns {string} HTML for the hero-moment card
  */
-export function renderHeroMoment(trip) {
+export function renderHeroMoment(trip, { compact = false } = {}) {
   const stage = detectJourneyStage(trip);
   const math = getJourneyMath(trip);
   const { eyebrow, headline, subtext, cta, countdown } = buildContent(trip, stage, math);
@@ -126,7 +128,7 @@ export function renderHeroMoment(trip) {
   const ctaHtml = cta ? `<button class="hero-moment__cta" onclick="${cta.action}">${cta.label}</button>` : '';
 
   return `
-    <section class="hero-moment hero-moment--${stage}" aria-label="Estado de tu viaje">
+    <section class="hero-moment hero-moment--${stage}${compact ? ' hero-moment--compact' : ''}" aria-label="Estado de tu viaje">
       ${hasArt ? `
         <img class="hero-moment__art hero-moment__art--day" src="${HERO_ART_DAY}" alt="" aria-hidden="true">
         <img class="hero-moment__art hero-moment__art--night" src="${HERO_ART_NIGHT}" alt="" aria-hidden="true" loading="lazy">
@@ -136,9 +138,9 @@ export function renderHeroMoment(trip) {
       `}
       ${petals}
       <div class="hero-moment__content">
-        <span class="hero-moment__greeting">${greetingLine()}</span>
+        ${compact ? '' : `<span class="hero-moment__greeting">${escapeText(greetingLine())}</span>`}
         ${eyebrow ? `<span class="hero-moment__eyebrow" aria-hidden="true">${eyebrow}</span>` : ''}
-        <h2 class="hero-moment__headline">${headline}</h2>
+        <h2 class="hero-moment__headline">${escapeText(compact ? trip?.info?.name || headline : headline)}</h2>
         ${hasCountdown ? `
           <div class="hero-moment__jp" aria-hidden="true">日本への冒険</div>
           <div class="hero-moment__countdown" role="text" aria-label="Faltan ${countdown} día${countdown === 1 ? '' : 's'}">
@@ -149,13 +151,13 @@ export function renderHeroMoment(trip) {
             <span class="hero-moment__countdown-stamp" aria-hidden="true">日本</span>
             ${ctaHtml}
           </div>
-          <p class="hero-moment__subtext">${subtext}</p>
+          <p class="hero-moment__subtext">${escapeText(subtext)}</p>
         ` : `
-          <p class="hero-moment__subtext">${subtext}</p>
+          <p class="hero-moment__subtext">${escapeText(subtext)}</p>
           ${ctaHtml}
         `}
       </div>
-      ${hasArt && hasCountdown ? `<div class="hero-moment__quote" aria-hidden="true">✦ “Cada día nos acerca más a Japón” <span>♥</span></div>` : ''}
+      ${hasArt && hasCountdown && !compact ? `<div class="hero-moment__quote" aria-hidden="true">✦ “Cada día nos acerca más a Japón” <span>♥</span></div>` : ''}
     </section>
   `;
 }

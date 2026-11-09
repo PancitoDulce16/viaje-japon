@@ -149,7 +149,7 @@ html.dark .dark\:border-gray-700 {
 
 html.dark .bg-gray-600,
 html.dark .hover\:bg-gray-700,
-html.dark button:not([class*="bg-red"]):not([class*="bg-blue"]):not([class*="bg-green"]):not([class*="bg-purple"]):not([class*="bg-pink"]):not([class*="gradient"]):not(.hero-moment__cta):not(.dash-quick-btn):not([class*="jw-"]):not([class*="jc-"]):not([class*="jtd-"]):not([class*="jps-"]) {
+html.dark button:not([class*="bg-red"]):not([class*="bg-blue"]):not([class*="bg-green"]):not([class*="bg-purple"]):not([class*="bg-pink"]):not([class*="gradient"]):not(.hero-moment__cta):not(.dash-quick-btn):not([class*="jw-"]):not([class*="jc-"]):not([class*="jtd-"]):not([class*="jps-"]):not(:where(.journey-home *, .japan-header *, .japan-nav *)) {
   background-color: var(--ultra-dark-elevated) !important;
   color: var(--ultra-white-text) !important;
   border: 1px solid var(--ultra-border) !important;
