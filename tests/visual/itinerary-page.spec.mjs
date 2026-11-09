@@ -63,11 +63,36 @@ for (const width of widths) for (const theme of themes) {
     await expect(page.locator('.activity-card').first()).toContainText('% Arabica Kyoto');
     await expect(page.locator('.jp-trip-dog')).toBeVisible();
     await expect(page.locator('.activity-card__location').first()).not.toContainText('[object Object]');
+    if (width === 390) {
+      await expect(page.locator('.itinerary-route-details')).not.toHaveAttribute('open');
+      await page.locator('.itinerary-route-details > summary').click();
+      await expect(page.locator('.itinerary-route-details .geo-flow')).toBeVisible();
+      await page.locator('.itinerary-route-details > summary').click();
+      await page.locator('.itinerary-closing-details > summary').click();
+      await expect(page.locator('.itinerary-closing-details textarea')).toBeVisible();
+      await expect(page.locator('.itinerary-closing-details')).not.toContainText('Falta una comida clara');
+      await page.locator('.itinerary-closing-details > summary').click();
+      const card = page.locator('.activity-card').first();
+      const description = await card.locator('.activity-card__description').boundingBox();
+      expect(description.width).toBeGreaterThan(180);
+      await card.locator('.activity-more > summary').click();
+      await expect(card.locator('.activity-more__menu')).toBeVisible();
+      await expect(card.locator('.activity-more__menu [data-action="move-up"]')).toBeVisible();
+      await expect(card.locator('.activity-more__menu [data-action="move-down"]')).toBeVisible();
+      await card.locator('.activity-more > summary').click();
+      await card.locator('.activity-quick-edit > summary').click();
+      fs.mkdirSync(path.resolve('artifacts/itinerary-page',theme),{recursive:true});
+      await card.screenshot({path:path.resolve('artifacts/itinerary-page',theme,'390-activity.png')});
+      await expect(card.locator('.activity-quick-edit__form')).toBeVisible();
+      const input = await card.locator('input[name="time"]').boundingBox();
+      expect(input.height).toBeGreaterThanOrEqual(44);
+      await card.locator('.activity-quick-edit > summary').click();
+    }
     if (width === 1440 && theme === 'light') {
       const more = page.locator('.activity-more').first();
       await more.locator('summary').click();
       await expect(more.locator('.activity-more__menu')).toBeVisible();
-      await expect(more.locator('.activity-more__menu button')).toHaveCount(5);
+      await expect(more.locator('.activity-more__menu button')).toHaveCount(7);
       await more.locator('summary').click();
       const quickEdit = page.locator('.activity-quick-edit').first();
       await quickEdit.locator('summary').click();
@@ -141,4 +166,26 @@ test('itinerary conflicts expose deterministic schedule actions', async ({ page 
   await expect(conflict).toBeVisible();
   await expect(conflict.locator('.itinerary-conflict__actions button')).toHaveCount(3);
   await expect(conflict.locator('.itinerary-conflict__actions')).toContainText(/Mover al siguiente espacio|Aumentar margen de traslado/);
+});
+
+test('unpriced activities never claim to be free', async ({ page }) => {
+  await page.goto('/dashboard.html',{waitUntil:'domcontentloaded'});
+  await page.evaluate(async ({itineraryFixture,tripFixture}) => {
+    document.querySelector('#appDashboard')?.classList.remove('hidden');
+    document.querySelectorAll('.tab-content').forEach(node => node.classList.add('hidden'));
+    document.querySelector('#content-itinerary')?.classList.remove('hidden');
+    itineraryFixture.days[0].activities = [
+      {id:'unknown-zero',title:'Precio pendiente',time:'09:00',duration:30,cost:0,costStatus:'unpriced'},
+      {id:'unknown-null',title:'Sin precio',time:'10:00',duration:30,cost:null},
+      {id:'known-free',title:'Entrada gratuita',time:'11:00',duration:30,cost:0}
+    ];
+    const {ItineraryHandler} = await import('/js/features/itinerary/itinerary-v3.js');
+    await ItineraryHandler.preview(itineraryFixture,{day:1,trip:tripFixture});
+  },{itineraryFixture:structuredClone(itinerary),tripFixture:trip});
+  for (const id of ['unknown-zero','unknown-null']) {
+    const card = page.locator(`.activity-card[data-activity-id="${id}"]`);
+    await expect(card).toContainText('Precio por confirmar');
+    await expect(card).not.toContainText('Gratis');
+  }
+  await expect(page.locator('.activity-card[data-activity-id="known-free"]')).toContainText('Gratis');
 });

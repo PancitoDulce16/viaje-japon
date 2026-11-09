@@ -1727,7 +1727,7 @@ function renderDayStoryDesk(day) {
   const memory = ensureDayMemory(day);
   const lodging = analyzeLodgingDay(day);
   const rail = day.day === 1 ? currentItinerary?.railPassAnalysis : null;
-  const featuredMeal = day.mealAudit?.featured;
+  const featuredMeal = day.mealAudit?.featured || day.activities?.find(activity => /^(food|comida)$/i.test(activity.category || '') || /almuerzo|cena|desayuno/i.test(activity.title || activity.name || ''));
   return `
     <div class="day-closing-decor day-closing-decor--memory" aria-hidden="true">
       <img class="day-closing-polaroid" src="/images/illustrations/generated/decorations/polaroid-fuji.png" alt="">
@@ -1743,7 +1743,7 @@ function renderDayStoryDesk(day) {
         </div>
       </header>
       <div class="story-desk__scraps">
-        ${featuredMeal ? `<article><span>🍜 MESA DESTACADA</span><strong>${featuredMeal.title || featuredMeal.name}</strong><small>Integrada cerca de la ruta del día</small></article>` : `<article class="is-note"><span>🍙 PAUSA PENDIENTE</span><strong>Falta una comida clara</strong><small>${day.mealAudit?.issues?.[0] || 'Japitin la revisará al regenerar comidas.'}</small></article>`}
+        ${featuredMeal ? `<article><span>🍜 MESA DESTACADA</span><strong>${escapeStoryText(featuredMeal.title || featuredMeal.name || 'Comida del día')}</strong><small>Integrada cerca de la ruta del día</small></article>` : `<article class="is-note"><span>🍙 PAUSA PENDIENTE</span><strong>Falta una comida clara</strong><small>${day.mealAudit?.issues?.[0] || 'Japitin la revisará al regenerar comidas.'}</small></article>`}
         ${day.shoppingPlan ? `<article><span>🛍️ SIN CARGAR BOLSAS</span><strong>Compras al final</strong><small>${day.shoppingPlan.moved.join(', ')}</small></article>` : ''}
         ${lodging.label ? `<article class="${lodging.isRyokan ? 'is-ryokan' : ''}"><span>🏨 ALOJAMIENTO</span><strong>${lodging.label}</strong><small>${lodging.note}</small></article>` : ''}
         ${rail ? `<article class="${rail.worthIt ? 'is-pass' : 'is-note'}"><span>🎟️ JR PASS</span><strong>${rail.worthIt ? 'Puede compensar' : 'Mejor por separado'}</strong><small>${rail.message}</small></article>` : ''}
@@ -2886,7 +2886,9 @@ function renderActivities(day){
     // categoryIcon vs cost/desc/icon) — normalizar aquí para que la tarjeta
     // muestre toda la info disponible
     const actIcon = act.icon || act.categoryIcon || '📍';
-    const actCost = (act.cost ?? act.price);
+    const rawCost = act.cost ?? act.price;
+    const hasKnownCost = act.costStatus !== 'unpriced' && rawCost != null && rawCost !== '' && Number.isFinite(Number(rawCost)) && Number(rawCost) >= 0;
+    const actCost = hasKnownCost ? Number(rawCost) : null;
     const actDesc = act.desc || act.description || '';
     const actDuration = typeof act.duration === 'number'
       ? SafeTimeUtils.formatDuration(act.duration)
@@ -2936,7 +2938,7 @@ function renderActivities(day){
         <div class="flex flex-col gap-2 items-center">
           <div class="drag-handle text-gray-400 dark:text-gray-500 text-xs cursor-grab active:cursor-grabbing" title="Arrastra para reordenar" aria-hidden="true">⋮⋮</div>
           <div class="activity-order-controls" aria-label="Cambiar posición de ${safeActivityTitle}"><button type="button" data-action="move-up" data-activity-id="${act.id}" data-day="${day.day}" aria-label="Mover ${safeActivityTitle} hacia arriba">↑</button><button type="button" data-action="move-down" data-activity-id="${act.id}" data-day="${day.day}" aria-label="Mover ${safeActivityTitle} hacia abajo">↓</button></div>
-          <input type="checkbox" data-id="${act.id}" aria-label="Marcar ${safeActivityTitle} como completada" ${checkedActivities[act.id]?'checked':''} class="activity-checkbox w-5 h-5 cursor-pointer accent-purple-600 flex-shrink-0" />
+          <label class="activity-complete-control"><input type="checkbox" data-id="${act.id}" aria-label="Marcar ${safeActivityTitle} como completada" ${checkedActivities[act.id]?'checked':''} class="activity-checkbox w-5 h-5 cursor-pointer accent-purple-600 flex-shrink-0" /><span class="sr-only">Actividad completada</span></label>
         </div>
         <!-- eager, NO lazy: loading="lazy" no dispara dentro de los
              contenedores de esta app (html/body llevan overflow:hidden auto,
@@ -2975,6 +2977,8 @@ function renderActivities(day){
               <details class="activity-more">
                 <summary aria-label="Más acciones para ${safeActivityTitle}" title="Más acciones"><i class="fas fa-ellipsis-h" aria-hidden="true"></i></summary>
                 <div class="activity-more__menu">
+                  <button type="button" data-action="move-up" data-activity-id="${act.id}" data-day="${day.day}">↑ Subir actividad</button>
+                  <button type="button" data-action="move-down" data-activity-id="${act.id}" data-day="${day.day}">↓ Bajar actividad</button>
                   <button type="button" data-action="duplicate" data-activity-id="${act.id}" data-day="${day.day}"><i class="far fa-copy"></i> Duplicar</button>
                   <button type="button" data-action="copy-day" data-activity-id="${act.id}" data-day="${day.day}"><i class="far fa-clone"></i> Copiar a otro día</button>
                   <button type="button" data-action="change-day" data-activity-id="${act.id}" data-day="${day.day}"><i class="far fa-calendar-alt"></i> Cambiar de día</button>
@@ -2987,11 +2991,11 @@ function renderActivities(day){
           <div class="activity-card__meta flex items-center gap-1.5 mb-1 flex-wrap">
             <span class="text-xs font-bold text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-900/40 px-2 py-1 rounded whitespace-nowrap">🕐 ${hasValidActivityTime ? `${act.time}–${activityEnd}` : 'Sin hora'}</span>
             ${actDuration?`<span class="text-xs bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 px-2 py-1 rounded font-semibold whitespace-nowrap">⏱️ ${actDuration}</span>`:''}
-            ${actCost>0?`<span class="text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-white px-2 py-1 rounded font-semibold whitespace-nowrap">¥${Number(actCost).toLocaleString()}</span>`:''}
-            ${actCost===0?`<span class="text-xs bg-green-50 dark:bg-green-900/40 text-green-600 dark:text-green-300 px-2 py-1 rounded font-semibold whitespace-nowrap">Gratis</span>`:''}
+            ${hasKnownCost && actCost>0?`<span class="text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-white px-2 py-1 rounded font-semibold whitespace-nowrap">¥${Number(actCost).toLocaleString()}</span>`:''}
+            ${hasKnownCost && actCost===0?`<span class="text-xs bg-green-50 dark:bg-green-900/40 text-green-600 dark:text-green-300 px-2 py-1 rounded font-semibold whitespace-nowrap">Gratis</span>`:''}
             ${act.rating?`<span class="text-xs bg-yellow-50 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded font-semibold whitespace-nowrap">⭐ ${act.rating}</span>`:''}
             ${actCategory?`<span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">${actCategory}</span>`:''}
-            ${act.costStatus === 'unpriced' ? '<span class="activity-optional-chip">Precio por confirmar</span>' : ''}
+            ${!hasKnownCost ? '<span class="activity-optional-chip">Precio por confirmar</span>' : ''}
             ${act.reservationRequired && !hasActivityReservation(act.id, activityTitle) ? '<span class="activity-optional-chip">Reserva pendiente</span>' : ''}
             ${act.optional?'<span class="activity-optional-chip">Opcional</span>':''}
             ${Number(act.travelTimeMinutes)>0?`<span class="activity-transfer-chip">↔ ${Number(act.travelTimeMinutes)} min traslado</span>`:''}
@@ -3088,6 +3092,7 @@ function renderActivities(day){
   const geographicFlow = renderGeographicFlow(day, hotelForCity);
   const dayMemory = renderDayStoryDesk(day);
   const dayAssessment = renderTripCompanion(day);
+  const extrasOpen = window.matchMedia?.('(min-width: 768px)')?.matches ? 'open' : '';
 
   const scheduleAnalysis = analyzeDaySchedule(day, window.ReservationsManager?.reservations || []);
   const formatClockMinutes = value => `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
@@ -3096,17 +3101,17 @@ function renderActivities(day){
   const conflictSummary = scheduleAnalysis.conflicts.length ? `<aside class="itinerary-conflicts" aria-label="Advertencias del día"><header><strong>${scheduleAnalysis.conflicts.length} advertencia(s)</strong><span>Carga ${scheduleAnalysis.load}</span></header>${scheduleAnalysis.conflicts.slice(0,5).map(conflict=>`<article class="itinerary-conflict itinerary-conflict--${conflict.severity}"><p>${escapeStoryText(conflict.message)}</p><div class="itinerary-conflict__actions">${conflict.suggestions.slice(0,3).map(suggestion=>`<button type="button" data-action="resolve-conflict" data-conflict-type="${conflict.type}" data-conflict-minutes="${Number(conflict.minutes||0)}" data-conflict-action="${suggestion.action}" data-activity-id="${conflict.activityId||''}" data-day="${day.day}">${escapeStoryText(suggestion.label || SCHEDULE_ACTION_LABELS[suggestion.action] || 'Revisar')}</button>`).join('')}</div></article>`).join('')}</aside>` : '<p class="itinerary-conflicts itinerary-conflicts--clear">Sin conflictos detectados · carga '+scheduleAnalysis.load+'</p>';
   container.innerHTML = `
     ${dayPrelude ? `<div class="day-reader-prelude">${dayPrelude}</div>` : ''}
-    ${geographicFlow ? `<section class="day-reader-route" aria-label="Ruta del día">${geographicFlow}</section>` : ''}
+    ${geographicFlow ? `<section class="day-reader-route" aria-label="Ruta del día"><details class="itinerary-route-details" ${extrasOpen}><summary>Ruta del día <span>Ver paradas y traslados</span></summary>${geographicFlow}</details></section>` : ''}
     <section class="day-reader-timeline" aria-label="Timeline del día">
       <header class="day-reader-chapter"><span>02</span><div><small>一日の旅</small><h2>El día, parada por parada</h2></div></header>
       ${dayScheduleSummary}
       ${conflictSummary}
       <div class="day-main-activities" id="dayMainActivities">${activitiesHTML.join('')}</div>
     </section>
-    ${(dayMemory || dayAssessment) ? `<div class="day-closing-scene">
+    ${(dayMemory || dayAssessment) ? `<div class="day-closing-scene"><details class="itinerary-closing-details" ${extrasOpen}><summary>Recuerdos y ajustes del día <span>Notas, fotos y revisión</span></summary>
       ${dayMemory ? `<section class="day-reader-memory" aria-label="Recuerdo del día">${dayMemory}</section>` : ''}
       ${dayAssessment ? `<section class="day-reader-assessment" aria-label="Resumen y ajustes">${dayAssessment}</section>` : ''}
-    </div>` : ''}`;
+    </details></div>` : ''}`;
 
   initializeDragAndDrop(container);
 }

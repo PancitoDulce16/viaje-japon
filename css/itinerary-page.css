@@ -518,3 +518,45 @@ html #content-itinerary .itinerary-day-nav {
   outline: 3px solid var(--focus-ring) !important;
   outline-offset: 3px;
 }
+
+/* Reading rhythm: avoid the landing-page spacing inherited by every section. */
+#content-itinerary .itinerary-page-shell,
+#content-itinerary .day-reader-route,
+#content-itinerary .day-reader-timeline,
+#content-itinerary .day-reader-memory,
+#content-itinerary .day-reader-assessment { padding: 0; }
+#content-itinerary .day-reader-story { display: grid; gap: var(--space-5); }
+#content-itinerary .day-reader-route::before,
+#content-itinerary .day-reader-timeline::before { margin-bottom: var(--space-3); }
+#content-itinerary .day-closing-scene { margin-top: var(--space-4); }
+#content-itinerary .day-reader-timeline .activity-card[data-activity-id] { border-left-width: 2px !important; box-shadow: none !important; }
+#content-itinerary .activity-card__description { line-height: 1.6; }
+#content-itinerary .activity-more__menu { max-height:min(340px,60dvh); overflow-y:auto; }
+#content-itinerary .activity-card:has(.activity-more[open]) { z-index:var(--z-menu); }
+#content-itinerary .activity-complete-control { display:grid; place-items:center; width:44px; height:44px; cursor:pointer; }
+#content-itinerary .day-reader-route::before { content: none; }
+#content-itinerary :is(.itinerary-route-details,.itinerary-closing-details) > summary { min-height: 48px; padding: var(--space-3) 0; color: var(--text-primary); font: 700 .95rem/1.5 var(--font-body); cursor: pointer; border-block: 1px solid var(--border); }
+#content-itinerary :is(.itinerary-route-details,.itinerary-closing-details) > summary::marker { color: var(--primary); }
+#content-itinerary :is(.itinerary-route-details,.itinerary-closing-details) > summary span { display: inline; margin-left: var(--space-2); font-size: .75rem; font-weight: 400; color: var(--text-secondary); }
+#content-itinerary :is(.itinerary-route-details,.itinerary-closing-details)[open] > summary { margin-bottom: var(--space-3); }
+#content-itinerary .activity-card__location button,
+#content-itinerary .activity-quick-edit__form input,
+#content-itinerary .activity-more__menu button { min-height: 44px !important; }
+@media(max-width:767px) {
+  #content-itinerary .itinerary-day-nav { top: 60px; }
+  #content-itinerary .day-reader-aside { margin-bottom: var(--space-4); }
+  #content-itinerary .day-reader-overview { box-shadow: none !important; }
+  #content-itinerary .day-reader-timeline .activity-card > div { grid-template-columns: 44px minmax(0,1fr) !important; }
+  #content-itinerary .activity-order-controls { display:none; }
+  #content-itinerary .day-reader-timeline .activity-thumb { grid-column: 2; grid-row: 1; width: 64px !important; height: 64px !important; }
+  #content-itinerary .day-reader-timeline .activity-card > div > div:last-child { grid-column: 2; grid-row: 1; }
+  #content-itinerary .activity-card:has(.activity-thumb) h3 { padding-left: 76px; min-height: 64px; display: flex; align-items: center; margin-bottom: var(--space-2); overflow-wrap: anywhere; }
+  #content-itinerary .activity-card__actions { display: flex; max-width:none !important; flex-wrap:nowrap; justify-content: flex-end; margin: 0 0 var(--space-2); }
+  #content-itinerary .activity-card__meta { gap: var(--space-2); }
+  #content-itinerary .activity-card__description { font-size: .875rem !important; }
+  #content-itinerary .activity-card__location { max-width: none; flex-wrap: wrap; }
+  #content-itinerary .activity-card__location span { flex: 1; }
+  #content-itinerary .activity-quick-edit__form { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  #content-itinerary .activity-quick-edit__form > label:first-child,#content-itinerary .activity-quick-edit__form > button { grid-column:1 / -1; }
+  #content-itinerary .activity-card .activity-thumb { pointer-events: none; }
+}
