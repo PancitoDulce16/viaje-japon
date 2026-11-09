@@ -19,6 +19,7 @@
  */
 
 import { detectJourneyStage, getJourneyMath } from './stage-detector.js';
+import { renderHeroMoment } from './hero-moment.js';
 import { formatMoneyMinor } from '../budget/money.js';
 import { prioritizeDashboardActions } from './dashboard-summary.js';
 
@@ -294,15 +295,10 @@ export function renderTripDashboard(data) {
       <button type="button" class="journey-home__help" onclick="window.NotificationCenter?.open()"><i class="far fa-question-circle" aria-hidden="true"></i><span>¿Qué sigue?</span></button>
     </header>
 
+    ${renderHeroMoment({ info: { name: trip.name, destination: trip.destination, dateStart: trip.dateStart, dateEnd: trip.dateEnd } })}
     <div class="journey-home__top">
-      <article class="journey-ticket" aria-labelledby="currentTripTitle">
-        <div class="journey-ticket__copy"><p class="journey-home__eyebrow">Tu viaje actual</p><h2 id="currentTripTitle">${safe(trip.name)}</h2><p><i class="fas fa-map-marker-alt" aria-hidden="true"></i> ${safe(trip.destination)} · ${dashboardDate(trip.dateStart)} — ${dashboardDate(trip.dateEnd)}</p><button type="button" onclick="window.DashboardApp?.switchTab('itinerary')">Ver itinerario <span aria-hidden="true">→</span></button></div>
-        <div class="journey-ticket__countdown" aria-label="Cuenta regresiva">${dashboardCountdown(trip)}</div>
-        <div class="journey-ticket__guide"><img src="/images/illustrations/generated/companions/cat-guide.png" alt="Gatito guía leyendo el mapa"><p><strong>Consejo Japitin</strong>${safe(recommendation)}</p></div>
-        <span class="journey-ticket__stamp" aria-hidden="true">日本<br><small>JAPITIN</small></span>
-      </article>
-
-      <section class="journey-route" aria-labelledby="journeyRouteTitle"><div class="journey-home__section-head"><div><p class="journey-home__eyebrow">Tu viaje en progreso</p><h2 id="journeyRouteTitle">${itinerary.completed} de ${itinerary.total} aventuras vividas</h2></div><strong>${itineraryPercent}%</strong></div><div class="journey-route__track"><span style="width:${itineraryPercent}%"></span><i style="left:${itineraryPercent}%" aria-hidden="true">🌸</i></div><div class="journey-route__labels"><span>Comenzamos</span><span>Ahora</span><span>¡A disfrutar!</span></div></section>
+      <aside class="journey-ticket__guide"><img src="/images/illustrations/generated/companions/cat-guide.png" alt="Gatito guía leyendo el mapa"><p><strong>Consejo Japitin</strong>${safe(recommendation)}</p></aside>
+      <section class="journey-route" aria-labelledby="journeyRouteTitle"><div class="journey-home__section-head"><h2 id="journeyRouteTitle">${itinerary.total ? `${itinerary.completed} de ${itinerary.total} aventuras vividas` : 'Tu historia está por comenzar'}</h2>${itinerary.total ? `<strong>${itineraryPercent}%</strong>` : ''}</div>${itinerary.total ? `<div class="journey-route__track"><span style="width:${itineraryPercent}%"></span><i style="left:${itineraryPercent}%" aria-hidden="true">🌸</i></div>` : '<p>Guarda tus primeras actividades en el itinerario.</p>'}</section>
     </div>
 
     <article class="next-stop" aria-labelledby="nextStopTitle">

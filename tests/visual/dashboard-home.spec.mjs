@@ -9,8 +9,8 @@ const fixture = {
   trip: {
     name: 'Japón 2026',
     destination: 'Tokio, Kyoto y Osaka',
-    dateStart: '2026-08-21',
-    dateEnd: '2026-09-02',
+    dateStart: '2027-02-15',
+    dateEnd: '2027-03-06',
     countdown: { state: 'upcoming', days: 11 }
   },
   itinerary: {
@@ -63,6 +63,18 @@ for (const width of widths) for (const theme of themes) {
     }, { selectedTheme: theme, dashboardFixture: fixture });
     await page.addStyleTag({ content: '#appDashboard.hidden{display:block!important} body > .fixed:not(#mobile-bottom-nav){display:none!important}' });
     await expect(page.locator('.journey-home')).toBeVisible();
+    await expect(page.locator('.journey-home .hero-moment')).toBeVisible();
+    const scene = page.locator(`.hero-moment__art--${theme === 'dark' ? 'night' : 'day'}`);
+    await expect(scene).toHaveCSS('opacity', '1');
+    await page.locator('.hero-moment__art').evaluateAll(async images => {
+      await Promise.all(images.map(image => image.decode()));
+    });
+    if (theme === 'dark') {
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+      const animation = await page.locator('.hero-moment__petal').first().evaluate(node => getComputedStyle(node, '::after').animationName);
+      expect(animation).toBe('fireflyPulse');
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+    }
     await expect(page.locator('.next-stop')).toContainText('Camino del Filósofo');
     await expect(page.locator('.journey-ticket__guide img')).toBeVisible();
     await expect(page.locator('.next-stop__dog')).toBeVisible();
