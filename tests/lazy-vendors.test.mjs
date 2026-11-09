@@ -9,7 +9,7 @@ const context = { window: {}, Map, console, document: {
   head: { appendChild: node => scripts.push(node) }
 } };
 vm.createContext(context);
-vm.runInContext(fs.readFileSync(new URL('../js/performance/lazy-vendors.js', import.meta.url), 'utf8'), context);
+vm.runInContext(fs.readFileSync(new URL('../js/performance/lazy-vendors.js', import.meta.url), 'utf8').replace(/^export /gm, ''), context);
 const load = context.window.JapitinPerformance.loadScript;
 const first = load('chart');
 assert.equal(load('chart'), first, 'concurrent requests share one script');

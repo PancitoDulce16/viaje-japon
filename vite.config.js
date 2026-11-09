@@ -12,7 +12,7 @@ const runtimeAssets = () => {
     apply: 'build',
     configResolved(config) { root = config.root; output = resolve(root, config.build.outDir); },
     closeBundle() {
-      for (const name of ['images', 'data', 'css', 'manifest.json', 'service-worker.js', 'firebase-messaging-sw.js']) {
+      for (const name of ['images', 'data', 'css', 'fonts', 'manifest.json', 'service-worker.js', 'firebase-messaging-sw.js']) {
         const source = resolve(root, name);
         if (existsSync(source)) cpSync(source, resolve(output, name), { recursive: true });
       }

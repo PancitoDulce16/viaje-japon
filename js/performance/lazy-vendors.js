@@ -1,8 +1,8 @@
-const urls = { chart: 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js', jspdf: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', html2pdf: 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js', leaflet: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js' };
+const urls = { html2canvas: 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js', chart: 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js', jspdf: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', html2pdf: 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js', leaflet: 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js' };
 const pending = new Map();
-function loadScript(name) {
+export function loadScript(name) {
   if (!urls[name]) return Promise.reject(new Error(`Recurso desconocido: ${name}`));
-  if ((name === 'chart' && window.Chart) || (name === 'jspdf' && window.jspdf) || (name === 'html2pdf' && window.html2pdf) || (name === 'leaflet' && window.L)) return Promise.resolve();
+  if ((name === 'html2canvas' && window.html2canvas) || (name === 'chart' && window.Chart) || (name === 'jspdf' && window.jspdf) || (name === 'html2pdf' && window.html2pdf) || (name === 'leaflet' && window.L)) return Promise.resolve();
   if (pending.has(name)) return pending.get(name);
   const promise = new Promise((resolve, reject) => { const script = document.createElement('script'); script.src = urls[name]; script.async = true; script.onload = resolve; script.onerror = () => reject(new Error(`No se pudo cargar ${name}`)); document.head.appendChild(script); });
   pending.set(name, promise);
@@ -25,7 +25,7 @@ async function loadCharts() {
   return analyticsReady;
 }
 async function loadExports({ pdf = false } = {}) {
-  if (pdf) await Promise.all([loadScript('jspdf'), loadScript('html2pdf')]);
+  if (pdf) await loadScript('jspdf');
   exportReady ||= Promise.all([import('../features/trips/pdf-exporter.js'), import('../features/trips/export-manager.js')]).catch(error => { exportReady = null; throw error; });
   return exportReady;
 }
