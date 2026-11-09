@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+globalThis.window = {};
+globalThis.localStorage = { getItem: () => null, setItem() {}, removeItem() {} };
+const { MLIntegration } = await import('../js/ai/ml-integration.js');
+const { DayRegenerator } = await import('../js/features/itinerary/day-regenerator.js');
+const { PreferencePredictor } = await import('../js/ai/preference-predictor.js');
+const { ExpertDecisionEngine } = await import('../js/ai/expert-decision-engine.js');
+const integration = new MLIntegration();
+assert.ok(integration.dayRegenerator instanceof DayRegenerator);
+assert.ok(integration.preferencePredictor instanceof PreferencePredictor);
+assert.ok(integration.expertEngine instanceof ExpertDecisionEngine);
+assert.ok(window.MLIntegration instanceof MLIntegration);
+console.log('ML initialization: constructors resolve through module dependencies');

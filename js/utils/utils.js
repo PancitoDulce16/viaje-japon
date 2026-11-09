@@ -1,5 +1,7 @@
 // js/utils.js - Con APIs reales
 
+import { loadOptionalLocalConfig } from '../core/local-config.js';
+
 export const AppUtils = {
     // Valores por defecto seguros; se sobreescriben con las keys reales por loadLocalConfig()
     // (Firebase Hosting sirve el código sin procesar por Vite, así que import.meta.env
@@ -15,11 +17,9 @@ export const AppUtils = {
     // Carga las keys reales desde config-local.js (no trackeado en git, pero sí desplegado)
     async loadLocalConfig() {
         try {
-            const localConfig = await import('../config-local.js');
-            if (localConfig.LOCAL_CONFIG) {
-                this.EXCHANGE_RATE_API_KEY = localConfig.LOCAL_CONFIG.EXCHANGE_RATE_API_KEY || '';
-                this.OPENWEATHER_API_KEY = localConfig.LOCAL_CONFIG.OPENWEATHER_API_KEY || '';
-            }
+            const localConfig = await loadOptionalLocalConfig();
+            this.EXCHANGE_RATE_API_KEY = localConfig.EXCHANGE_RATE_API_KEY || '';
+            this.OPENWEATHER_API_KEY = localConfig.OPENWEATHER_API_KEY || '';
         } catch (e) {
             // config-local.js no existe (ej. clon nuevo del repo) - usar valores por defecto
             console.log('ℹ️ AppUtils: no hay configuración local (config-local.js no encontrado)');

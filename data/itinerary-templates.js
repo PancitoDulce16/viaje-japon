@@ -8,7 +8,10 @@
  * Los usuarios pueden cargar estas plantillas y personalizarlas según sus necesidades.
  */
 
+import { JAPAN_FEBRUARY_2027 } from './templates/japan-february-2027.js';
+
 export const ITINERARY_TEMPLATES = [
+  JAPAN_FEBRUARY_2027,
   {
     id: 'japan-15-days-complete',
     name: '🇯🇵 Japón 15 Días - Experiencia Completa',

@@ -12,7 +12,7 @@
  * - Preserva otros días intactos
  */
 
-class DayRegenerator {
+export class DayRegenerator {
   constructor() {
     this.regenerationOptions = [
       {

@@ -6,6 +6,7 @@ import { doc, setDoc, getDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 // Local cities fallback provider
 import { searchCities } from '../../../data/japan-cities.js';
 import { APP_CONFIG } from '../../core/config.js';
+import { renderTemplatePlanning } from './template-planning.js';
 import { ActivityAutocomplete } from './activity-autocomplete.js';
 import { LocationAutocomplete } from '../../ui/location-autocomplete.js'; // 📍 Autocompletado de ubicaciones
 import { RouteOptimizer } from '../../map/route-optimizer-v2.js'; // 🗺️ Optimizador de rutas
@@ -1471,7 +1472,7 @@ function renderQuickStats(day) {
         <div class="flex flex-col items-center">
           <span class="text-green-600 dark:text-green-400 text-xl mb-1">💰</span>
           <span class="text-xs text-gray-600 dark:text-gray-400">Costo</span>
-          <span class="font-bold text-gray-900 dark:text-white">${totalCost > 0 ? '¥' + Math.round(totalCost).toLocaleString() : 'Gratis'}</span>
+          <span class="font-bold text-gray-900 dark:text-white">${day.activities?.some(a => a.costStatus === 'unpriced') ? 'Por confirmar' : totalCost > 0 ? '¥' + Math.round(totalCost).toLocaleString() : 'Gratis'}</span>
         </div>
         <div class="flex flex-col items-center">
           <span class="${alertColor} text-xl mb-1">${alertsCount > 0 ? '🚨' : '✅'}</span>
@@ -1866,9 +1867,9 @@ function renderDayOverview(day){
   }
 
   // Obtener hotel de la ciudad si existe
-  let hotelForCity = null;
+  let hotelForCity = day.hotel || null;
   if (cityForDay && currentItinerary && window.HotelBaseSystem) {
-    hotelForCity = window.HotelBaseSystem.getHotelForCity(currentItinerary, cityForDay, day.day);
+    hotelForCity = window.HotelBaseSystem.getHotelForCity(currentItinerary, cityForDay, day.day) || hotelForCity;
   }
 
   // Debug: Log day data to see what fields are available
@@ -1995,6 +1996,7 @@ function renderDayOverview(day){
       </div>
     `}
     ${dayNote(day) ? `<div class="day-note">${dayNote(day)}</div>` : ''}
+    ${day.notes ? `<p class="day-user-note">${escapeStoryText(day.notes)}</p>` : ''}
     <div class="day-route-progress mb-4" style="--day-progress:${progress}%">
       <div class="flex justify-between text-sm mb-1 dark:text-gray-100"><span>Ruta del día</span><span>${completed}/${day.activities.length}</span></div>
       <div class="day-route-progress__track w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2"><div class="day-route-progress__fill bg-red-600 dark:bg-red-500 h-2 rounded-full transition-all duration-500" style="width:${progress}%"></div></div>
@@ -2032,8 +2034,9 @@ function renderDayOverview(day){
               class="text-xs text-blue-600 dark:text-blue-200 hover:underline"
             >Cambiar</button>
           </div>
-          <p class="text-sm font-bold text-gray-900 dark:text-white">${hotelForCity.name}</p>
-          ${hotelForCity.address ? `<p class="text-xs text-gray-600 dark:text-gray-300 mt-1">${hotelForCity.address}</p>` : ''}
+          <p class="text-sm font-bold text-gray-900 dark:text-white">${escapeStoryText(hotelForCity.name)}</p>
+          ${hotelForCity.status === 'por-confirmar' ? '<p class="jp-template-planning__warning">Hotel por confirmar</p>' : ''}
+          ${hotelForCity.address ? `<p class="text-xs text-gray-600 dark:text-gray-300 mt-1">${escapeStoryText(hotelForCity.address)}</p>` : ''}
           ${hotelForCity.rating ? `<p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">⭐ ${hotelForCity.rating}</p>` : ''}
         </div>
       ` : cityForDay ? `
@@ -2988,6 +2991,8 @@ function renderActivities(day){
             ${actCost===0?`<span class="text-xs bg-green-50 dark:bg-green-900/40 text-green-600 dark:text-green-300 px-2 py-1 rounded font-semibold whitespace-nowrap">Gratis</span>`:''}
             ${act.rating?`<span class="text-xs bg-yellow-50 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded font-semibold whitespace-nowrap">⭐ ${act.rating}</span>`:''}
             ${actCategory?`<span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">${actCategory}</span>`:''}
+            ${act.costStatus === 'unpriced' ? '<span class="activity-optional-chip">Precio por confirmar</span>' : ''}
+            ${act.reservationRequired && !hasActivityReservation(act.id, activityTitle) ? '<span class="activity-optional-chip">Reserva pendiente</span>' : ''}
             ${act.optional?'<span class="activity-optional-chip">Opcional</span>':''}
             ${Number(act.travelTimeMinutes)>0?`<span class="activity-transfer-chip">↔ ${Number(act.travelTimeMinutes)} min traslado</span>`:''}
             ${Number(act.preparationMinutes)>0?`<span class="activity-buffer-chip">＋ ${Number(act.preparationMinutes)} min margen</span>`:''}
@@ -3011,8 +3016,8 @@ function renderActivities(day){
               <span>${act.photographyInfo.name}</span>
             </div>
           ` : ''}
-          ${actDesc?`<p class="activity-card__description text-sm text-gray-600 dark:text-gray-300 mt-2">${actDesc}</p>`:''}
-          ${act.tips?`<p class="text-xs text-amber-700 dark:text-amber-300 mt-2 bg-amber-50 dark:bg-amber-900/20 px-2 py-1.5 rounded-lg inline-block">💡 ${act.tips}</p>`:''}
+          ${actDesc?`<p class="activity-card__description text-sm text-gray-600 dark:text-gray-300 mt-2">${escapeStoryText(actDesc)}</p>`:''}
+          ${act.tips?`<p class="text-xs text-amber-700 dark:text-amber-300 mt-2 bg-amber-50 dark:bg-amber-900/20 px-2 py-1.5 rounded-lg inline-block">💡 ${escapeStoryText(act.tips)}</p>`:''}
           ${act.photographyInfo ? `
             <div class="mt-2 p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg border-l-2 border-purple-400 dark:border-purple-500">
               <p class="text-xs text-purple-700 dark:text-purple-300">📸 ${act.photographyInfo.description}</p>
@@ -3210,6 +3215,7 @@ function mountItineraryView(container) {
   container.innerHTML = `
     <div class="itinerary-page-shell">
       <div class="itinerary-trip-header"><div id="tripSelectorHeader"></div></div>
+      ${renderTemplatePlanning(currentItinerary?.templatePlanning)}
       <nav class="itinerary-day-nav" aria-label="Días del viaje">
         <div class="itinerary-day-nav__inner"><div id="daySelector"></div></div>
       </nav>

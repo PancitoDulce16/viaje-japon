@@ -1,5 +1,24 @@
 // vite.config.js - Configuración optimizada para la aplicación
 import { defineConfig } from 'vite';
+import { cpSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+// Runtime image/data URLs and service workers are not discovered by Rollup's
+// module graph. Include them in the production artifact as well as source hosting.
+const runtimeAssets = () => {
+  let root, output;
+  return {
+    name: 'japitin-runtime-assets',
+    apply: 'build',
+    configResolved(config) { root = config.root; output = resolve(root, config.build.outDir); },
+    closeBundle() {
+      for (const name of ['images', 'data', 'css', 'manifest.json', 'service-worker.js', 'firebase-messaging-sw.js']) {
+        const source = resolve(root, name);
+        if (existsSync(source)) cpSync(source, resolve(output, name), { recursive: true });
+      }
+    }
+  };
+};
 
 const localRoutes = () => ({
   name: 'japitin-local-routes',
@@ -44,7 +63,7 @@ const localRoutes = () => ({
 });
 
 export default defineConfig({
-  plugins: [localRoutes()],
+  plugins: [localRoutes(), runtimeAssets()],
   server: {
     port: 3000,
     host: true,

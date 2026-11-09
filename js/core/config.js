@@ -9,6 +9,8 @@
 // git (ver .gitignore) que sí está presente en disco al desplegar, por lo que
 // se sube con `firebase deploy` sin llegar nunca al repositorio de GitHub.
 
+import { loadOptionalLocalConfig } from './local-config.js';
+
 export const APP_CONFIG = {
   // Valor por defecto seguro; se sobreescribe con la key real por loadLocalConfig()
   GOOGLE_PLACES_API_KEY: '',
@@ -16,11 +18,7 @@ export const APP_CONFIG = {
   // Carga las keys reales desde config-local.js (no trackeado en git, pero sí desplegado)
   async loadLocalConfig() {
     try {
-      const localConfig = await import('../config-local.js');
-      if (localConfig.LOCAL_CONFIG) {
-        Object.assign(this, localConfig.LOCAL_CONFIG);
-        console.log('✅ Configuración local cargada');
-      }
+      Object.assign(this, await loadOptionalLocalConfig());
     } catch (e) {
       // config-local.js no existe (ej. clon nuevo del repo) - usar valores por defecto
       console.log('ℹ️ No hay configuración local (config-local.js no encontrado)');

@@ -12,7 +12,7 @@
  * - Recomendaciones contextuales
  */
 
-class ExpertDecisionEngine {
+export class ExpertDecisionEngine {
   constructor() {
     this.rules = this.initializeRules();
     this.compatibilityMatrix = this.initializeCompatibilityMatrix();

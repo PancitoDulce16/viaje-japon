@@ -84,8 +84,8 @@
   --text-muted: var(--ink-muted);
   --border: var(--hairline);
   --primary: var(--accent);
-  --primary-hover: var(--color-kasumi-deep);
-  --primary-contrast: #FFFFFF;
+  --primary-hover: color-mix(in srgb, var(--accent) 85%, var(--surface-raised));
+  --primary-contrast: var(--color-ai);
   --positive: var(--state-success);
   --warning: var(--state-warning);
   --danger: var(--state-error);

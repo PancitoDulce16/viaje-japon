@@ -578,7 +578,7 @@ export const ModalRenderer = {
                                                 class="w-full p-3 border-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-purple-500 focus:outline-none font-semibold"
                                             >
                                                 <option value="">Sin plantilla · Itinerario vacío</option>
-                                                <option value="otaku-paradise">Otaku Paradise · 16 días</option>
+                                                <!-- Options are supplied by the shared template catalog. -->
                                             </select>
                                         </div>
                                         <div class="bg-purple-100 dark:bg-purple-900/30 rounded-lg p-4 text-sm jpf-tip">

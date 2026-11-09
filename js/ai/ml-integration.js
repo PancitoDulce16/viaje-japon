@@ -11,13 +11,18 @@
  * Con el SmartItineraryGenerator existente
  */
 
-class MLIntegration {
+import { PreferencePredictor } from './preference-predictor.js';
+import { ExpertDecisionEngine } from './expert-decision-engine.js';
+import { DayRegenerator } from '../features/itinerary/day-regenerator.js';
+import { GeneticRouteOptimizer } from '../map/genetic-route-optimizer.js';
+
+export class MLIntegration {
   constructor() {
     // Inicializar sistemas ML
-    this.preferencePredictor = new window.PreferencePredictor();
-    this.expertEngine = new window.ExpertDecisionEngine();
+    this.preferencePredictor = new PreferencePredictor();
+    this.expertEngine = new ExpertDecisionEngine();
     this.geneticOptimizer = null; // Se inicializa cuando se necesita
-    this.dayRegenerator = new window.DayRegenerator();
+    this.dayRegenerator = new DayRegenerator();
 
     console.log('🤖 ML Integration initialized');
   }
@@ -129,7 +134,7 @@ class MLIntegration {
 
     // Inicializar optimizador si no existe
     if (!this.geneticOptimizer) {
-      this.geneticOptimizer = new window.GeneticRouteOptimizer({
+      this.geneticOptimizer = new GeneticRouteOptimizer({
         populationSize: 50, // Población más pequeña para rapidez
         generations: 30,     // Menos generaciones para rapidez
         mutationRate: 0.15

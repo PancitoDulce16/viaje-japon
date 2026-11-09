@@ -9,8 +9,8 @@
 // 📦 --- CONFIGURACIÓN DEL CACHÉ ---
 // IMPORTANTE: Cambia este número de versión CADA VEZ que hagas un cambio en los
 // archivos de la aplicación (JS, CSS, HTML) para forzar la actualización.
-const STATIC_CACHE_VERSION = 'japan-trip-planner-static-v19.0';
-const DYNAMIC_CACHE_VERSION = 'japan-trip-planner-dynamic-v19.0';
+const STATIC_CACHE_VERSION = 'japan-trip-planner-static-v20.0';
+const DYNAMIC_CACHE_VERSION = 'japan-trip-planner-dynamic-v20.0';
 const STATIC_CACHE_NAME = `static-${STATIC_CACHE_VERSION}`;
 const DYNAMIC_CACHE_NAME = `dynamic-${DYNAMIC_CACHE_VERSION}`;
 
@@ -55,7 +55,8 @@ self.addEventListener('activate', event => {
             return Promise.all(
                 cacheNames.map(cacheName => {
                     // Si el nombre del caché no es el actual, se elimina.
-                    if (cacheName !== STATIC_CACHE_NAME && cacheName !== DYNAMIC_CACHE_NAME) {
+                    const belongsToJapitin = /^(static|dynamic)-japan-trip-planner-/.test(cacheName);
+                    if (belongsToJapitin && cacheName !== STATIC_CACHE_NAME && cacheName !== DYNAMIC_CACHE_NAME) {
                         console.log(`[SW] 🗑️ Limpiando caché antiguo: ${cacheName}`);
                         return caches.delete(cacheName);
                     }
@@ -77,9 +78,10 @@ const networkFirst = (request) => {
         .then(networkResponse => {
             return networkResponse;
         })
-        .catch(() => {
+        .catch(async () => {
             console.log(`[SW] ❌ Red falló para ${request.url}. Sirviendo desde caché como fallback.`);
-            return caches.match(request) || caches.match('/index.html');
+            return await caches.match(request) || await caches.match('/index.html') ||
+                new Response('<!doctype html><html lang="es"><meta charset="utf-8"><title>Japitin · Sin conexión</title><h1>Un momento sin conexión</h1><p>Volvé a conectarte para abrir tu cuaderno de viaje.</p></html>', { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
         });
 };
 
@@ -141,9 +143,13 @@ self.addEventListener('fetch', event => {
 
     const isExternalDomain = externalDomains.some(domain => url.hostname.includes(domain));
 
-    if (request.method !== 'GET' || url.protocol.startsWith('chrome-extension') || isExternalDomain) {
+    if (request.method !== 'GET' || url.origin !== self.location.origin || url.protocol.startsWith('chrome-extension') || isExternalDomain) {
         return; // Dejar que el navegador maneje estas solicitudes directamente
     }
+
+    // Auth and proxy responses may contain personal or live data. Never cache them.
+    if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/__/') ||
+        ['/flightsProxy', '/hotelsProxy'].includes(url.pathname)) return;
 
     // --- REGLA 1.5: NUNCA interceptar config-local.js ---
     // Se carga vía dynamic import() para las API keys locales; interceptarlo con

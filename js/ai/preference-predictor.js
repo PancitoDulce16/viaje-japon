@@ -13,7 +13,7 @@
  * - No requiere APIs externas
  */
 
-class PreferencePredictor {
+export class PreferencePredictor {
   constructor() {
     this.STORAGE_KEY = 'ml_preference_predictor';
     this.MIN_ACTIONS_FOR_PREDICTION = 5; // Mínimo de acciones para hacer predicciones confiables

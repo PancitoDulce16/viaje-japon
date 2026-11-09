@@ -1,138 +1,38 @@
-// js/features/itinerary/city-route-map.js
-//
-// Mapa de selección de ciudades para el Step 1 del wizard: reemplaza el grid
-// de checkboxes de texto plano por un diagrama clicable con posiciones reales
-// (lat/lng reales, proyectadas), siguiendo el mismo patrón de hit-target ya
-// probado en yamanote-helper.js (grupo + rect invisible que cubre punto+label
-// + onclick + panel de info pareado vía window.CityRouteMap).
-//
-// No es una silueta literal de Japón (los modelos de imagen no son confiables
-// reproduciendo fronteras geográficas precisas) - es un diagrama de ruta no
-// literal sobre un fondo decorativo, con posiciones relativas basadas en
-// lat/lng reales pero con una proyección "fisheye" (ver más abajo) que
-// prioriza legibilidad sobre precisión geográfica exacta.
+// City selection: geographic coastline with separated, connected city labels.
 
+import { JAPAN_OUTLINE } from '../../../data/japan-outline.js';
 import { CITY_COORDINATES, CITY_ICONS } from '../../../data/city-coordinates.js';
 
-// 🔧 Una proyección equirectangular lineal 1:1 deja el diagrama casi
-// inutilizable: 14 de las 19 ciudades (el "golden route" Tokio-Kioto-Osaka-
-// Nara-Hakone-Kamakura) caben en una porción chica del mapa, mientras Sapporo
-// (norte) y Fukuoka (suroeste) están cientos de km más lejos y estiran el
-// canvas - confirmado visualmente con Playwright: el cluster de Kanto
-// (Tokio/Kamakura/Hakone/Yokohama) quedaba con hit-rects superpuestos en
-// >1000px² cada uno, imposible de tocar de forma confiable.
-// Fix: proyección tipo "mapa de metro" (igual criterio que usan mapas de
-// transporte reales, no geográficamente exactos pero topológicamente
-// correctos) - expande radialmente las ciudades cercanas al centro y
-// comprime las lejanas, aplicando r' = r^0.55 sobre la distancia al
-// centroide. Coherente con la decisión ya tomada de que este es un diagrama
-// de ruta no-literal, no un mapa preciso.
-const FISHEYE_POWER = 0.55;
-const CANVAS_SIZE = 720;
-const PADDING = 80;
-
-function equirectRaw(lat, lng) {
-  // Corrección de longitud por coseno de latitud media, para no estirar el
-  // eje horizontal (1° de longitud vale menos km cuanto más al norte).
-  const latMid = 38;
-  return { x: lng * Math.cos(latMid * Math.PI / 180), y: -lat };
+const SVG_WIDTH = 720;
+const SVG_HEIGHT = 720;
+// Coastline and anchors share one projection; displaced labels have leader lines.
+function projectCoordinate(lat, lng) {
+  return { x: 60 + (lng - 128) * 34, y: 660 - (lat - 30) * 40 };
 }
-
-const RAW_POINTS = Object.fromEntries(
-  Object.entries(CITY_COORDINATES).map(([key, [lat, lng]]) => [key, equirectRaw(lat, lng)])
-);
-
-const CENTROID = (() => {
-  const pts = Object.values(RAW_POINTS);
-  return {
-    x: pts.reduce((s, p) => s + p.x, 0) / pts.length,
-    y: pts.reduce((s, p) => s + p.y, 0) / pts.length,
-  };
-})();
-
-const FISHEYE_POINTS_RAW = Object.fromEntries(
-  Object.entries(RAW_POINTS).map(([key, p]) => {
-    const dx = p.x - CENTROID.x, dy = p.y - CENTROID.y;
-    const r = Math.sqrt(dx * dx + dy * dy) || 0.0001;
-    const theta = Math.atan2(dy, dx);
-    const rPrime = Math.pow(r, FISHEYE_POWER);
-    return [key, { x: rPrime * Math.cos(theta), y: rPrime * Math.sin(theta) }];
-  })
-);
-
-// 🔧 El fisheye radial (arriba) separa bien CLUSTERS enteros de los outliers
-// (Sapporo/Fukuoka), pero ciudades DENTRO del mismo cluster (ej. Tokio/
-// Kamakura/Hakone/Yokohama, todas a distancia y ángulo similar del centroide)
-// quedan casi igual de apiñadas que antes - confirmado visualmente, seguían
-// superpuestas. Fix: pasada de relajación por colisión - empuja pares de
-// puntos más cerca que MIN_DIST a lo largo de la línea que los une, iterado
-// varias veces. Esto SÍ garantiza separación mínima local sin importar la
-// geometría real, que es la propiedad que realmente necesito (hit-rects sin
-// superponerse), no solo un ajuste estético del fisheye.
-function relaxCollisions(points, minDist, iterations = 40) {
-  const keys = Object.keys(points);
-  const pts = Object.fromEntries(keys.map(k => [k, { ...points[k] }]));
-  for (let iter = 0; iter < iterations; iter++) {
-    for (let i = 0; i < keys.length; i++) {
-      for (let j = i + 1; j < keys.length; j++) {
-        const a = pts[keys[i]], b = pts[keys[j]];
-        let dx = b.x - a.x, dy = b.y - a.y;
-        let dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < minDist) {
-          if (dist < 0.001) { dx = 1; dy = 0; dist = 1; } // puntos coincidentes: separar en una dirección arbitraria
-          const push = (minDist - dist) / 2;
-          const ux = dx / dist, uy = dy / dist;
-          a.x -= ux * push; a.y -= uy * push;
-          b.x += ux * push; b.y += uy * push;
-        }
-      }
+const ANCHORS = Object.fromEntries(Object.entries(CITY_COORDINATES).map(
+  ([key, [lat, lng]]) => [key, projectCoordinate(lat, lng)]
+));
+const PROJECTED = structuredClone(ANCHORS);
+for (let iteration = 0; iteration < 100; iteration++) {
+  const points = Object.values(PROJECTED);
+  for (let i = 0; i < points.length; i++) for (let j = i + 1; j < points.length; j++) {
+    const a = points[i], b = points[j];
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const distance = Math.hypot(dx, dy) || 1;
+    if (distance < 66) {
+      const push = (66 - distance) / 2;
+      a.x -= dx / distance * push; a.y -= dy / distance * push;
+      b.x += dx / distance * push; b.y += dy / distance * push;
     }
   }
-  return pts;
 }
-
-const FISHEYE_RAW_BOUNDS = (() => {
-  const pts = Object.values(FISHEYE_POINTS_RAW);
-  const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
-  return { w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
-})();
-// 0.11 -> 0.16: ahora TODAS las ciudades muestran su nombre siempre (antes
-// solo las seleccionadas), así que necesitan más espacio vertical debajo
-// del punto para el label, no solo espacio para el punto mismo.
-const MIN_DIST = Math.max(FISHEYE_RAW_BOUNDS.w, FISHEYE_RAW_BOUNDS.h) * 0.16;
-
-const FISHEYE_POINTS = relaxCollisions(FISHEYE_POINTS_RAW, MIN_DIST);
-
-// Reescalar los puntos ya relajados para llenar el canvas con padding fijo.
-const FISHEYE_BOUNDS = (() => {
-  const pts = Object.values(FISHEYE_POINTS);
-  return {
-    minX: Math.min(...pts.map(p => p.x)), maxX: Math.max(...pts.map(p => p.x)),
-    minY: Math.min(...pts.map(p => p.y)), maxY: Math.max(...pts.map(p => p.y)),
-  };
-})();
-
-const SVG_WIDTH = CANVAS_SIZE;
-const SVG_HEIGHT = CANVAS_SIZE;
-
-const PROJECTED = (() => {
-  const { minX, maxX, minY, maxY } = FISHEYE_BOUNDS;
-  const spanX = maxX - minX || 1, spanY = maxY - minY || 1;
-  const usableW = SVG_WIDTH - PADDING * 2, usableH = SVG_HEIGHT - PADDING * 2;
-  const scale = Math.min(usableW / spanX, usableH / spanY);
-  const offsetX = PADDING + (usableW - spanX * scale) / 2;
-  const offsetY = PADDING + (usableH - spanY * scale) / 2;
-  return Object.fromEntries(
-    Object.entries(FISHEYE_POINTS).map(([key, p]) => [
-      key,
-      { x: offsetX + (p.x - minX) * scale, y: offsetY + (p.y - minY) * scale }
-    ])
-  );
-})();
-
-function project(cityKey) {
-  return PROJECTED[cityKey] || { x: SVG_WIDTH / 2, y: SVG_HEIGHT / 2 };
-}
+function project(cityKey) { return PROJECTED[cityKey] || { x: 360, y: 360 }; }
+const COASTLINE = JAPAN_OUTLINE.map(polygon => polygon.map(ring =>
+  ring.map(([lng, lat], index) => {
+    const { x, y } = projectCoordinate(lat, lng);
+    return `${index ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ') + ' Z'
+).join(' ')).join(' ');
 
 export const CityRouteMap = {
 
@@ -146,12 +46,6 @@ export const CityRouteMap = {
     return `
       <div class="city-route-map-wrap">
         <div class="city-route-map-canvas">
-          <!-- Fondo decorativo acuarela (mar, montañas lejanas, pétalos).
-               Deliberadamente NO es un mapa de Japón: el diagrama usa una
-               proyección fisheye no geográfica (ver cabecera del archivo),
-               así que una silueta real desalinearía los pines y prometería
-               una precisión que este diagrama no tiene. El par día/noche
-               se cruza con .dark, igual que el panorama del dashboard. -->
           <img src="/images/wizard/map-backdrop-day.webp" alt=""
                class="city-route-map-bg city-route-map-bg--day" loading="eager"
                onerror="this.style.display='none'" />
@@ -163,6 +57,9 @@ export const CityRouteMap = {
         <div id="cityRouteChips" class="city-route-chips">
           ${this.renderChips(cityStops)}
         </div>
+        <details class="city-route-list"><summary>Elegir ciudades por nombre</summary><div class="city-route-city-list">
+          ${this.renderCityList(cities)}
+        </div></details>
       </div>
     `;
   },
@@ -174,10 +71,23 @@ export const CityRouteMap = {
   refresh() {
     const wizardData = window.SmartGeneratorWizard?.wizardData;
     if (!wizardData) return;
+    const activeCity = document.activeElement?.dataset.cityHotspot;
+    const activeChoice = document.activeElement?.dataset.cityChoice;
     const canvas = document.querySelector('.city-route-map-canvas svg');
     if (canvas) canvas.outerHTML = this.renderDiagram(wizardData.cities, wizardData.cityStops);
     const chips = document.getElementById('cityRouteChips');
     if (chips) chips.innerHTML = this.renderChips(wizardData.cityStops);
+    const list = document.querySelector('.city-route-city-list');
+    if (list) list.innerHTML = this.renderCityList(wizardData.cities);
+    const focusTarget = activeCity ? document.querySelector(`[data-city-hotspot="${activeCity}"]`) : activeChoice ? list?.querySelector(`[data-city-choice="${activeChoice}"]`) : null;
+    focusTarget?.focus();
+  },
+
+  renderCityList(cities = []) {
+    return Object.keys(CITY_COORDINATES).map(key => {
+      const name = window.SmartGeneratorWizard?.cityLabel?.(key) || key;
+      return `<button type="button" data-city-choice="${key}" aria-pressed="${cities.includes(name)}" onclick="window.CityRouteMap.handleClick('${key}')">${CITY_ICONS[key]} ${name}</button>`;
+    }).join('');
   },
 
   renderDiagram(cities, cityStops) {
@@ -195,12 +105,11 @@ export const CityRouteMap = {
 
     return `
       <svg viewBox="0 0 ${SVG_WIDTH} ${SVG_HEIGHT}" class="w-full h-auto select-none" id="cityRouteSvg">
-        <defs>
-          <radialGradient id="cityDotSelected" cx="35%" cy="30%" r="75%">
-            <stop offset="0%" stop-color="#FFB4CF"/>
-            <stop offset="100%" stop-color="#F16FA3"/>
-          </radialGradient>
-        </defs>
+        <path class="city-route-land" d="${COASTLINE}" aria-hidden="true" />
+        ${Object.keys(CITY_COORDINATES).map(key => {
+          const a = ANCHORS[key], p = project(key);
+          return `<path class="city-route-anchor" d="M${a.x},${a.y} L${p.x},${p.y}" /><circle class="city-route-location" cx="${a.x}" cy="${a.y}" r="3" />`;
+        }).join('')}
         ${hotspots}
       </svg>
     `;
@@ -228,23 +137,23 @@ export const CityRouteMap = {
     const hitBottom = labelY + 4;
 
     return `
-      <g class="city-hotspot ${isSelected ? 'is-selected' : ''}" data-city-hotspot="${cityKey}"
+      <g class="city-hotspot ${isSelected ? 'is-selected' : ''}" data-city-hotspot="${cityKey}" role="button" tabindex="0" aria-label="${displayName}" aria-pressed="${isSelected}"
+         onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.CityRouteMap.handleClick('${cityKey}'); }"
          onclick="window.CityRouteMap.handleClick('${cityKey}')">
         <rect x="${hitLeft.toFixed(1)}" y="${hitTop.toFixed(1)}"
               width="${(hitRight - hitLeft).toFixed(1)}" height="${(hitBottom - hitTop).toFixed(1)}"
               fill="transparent"/>
         <circle class="city-hotspot-dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r}"
-                fill="${isSelected ? 'url(#cityDotSelected)' : '#FDF6EC'}"
-                stroke="${isSelected ? '#F16FA3' : '#E8C9D6'}" stroke-width="2.5"/>
+                stroke-width="2.5"/>
         <text x="${x.toFixed(1)}" y="${(y + 5).toFixed(1)}" text-anchor="middle"
               font-size="${isSelected ? 15 : 12}">${icon}</text>
         ${stopCount > 1 ? `
-          <circle cx="${(x + r - 2).toFixed(1)}" cy="${(y - r + 2).toFixed(1)}" r="8" fill="#E0537A"/>
+          <circle cx="${(x + r - 2).toFixed(1)}" cy="${(y - r + 2).toFixed(1)}" r="8" class="city-route-repeat"/>
           <text x="${(x + r - 2).toFixed(1)}" y="${(y - r + 6).toFixed(1)}" text-anchor="middle"
-                font-size="9" font-weight="800" fill="white">×${stopCount}</text>
+                font-size="9" font-weight="800" class="city-route-repeat-label">×${stopCount}</text>
         ` : ''}
         <text x="${x.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle"
-              font-size="${isSelected ? 12 : 10.5}" font-weight="${isSelected ? 700 : 600}"
+              font-size="${isSelected ? 14 : 13}" font-weight="${isSelected ? 700 : 600}"
               fill="currentColor" opacity="${isSelected ? 1 : 0.75}"
               class="city-hotspot-label">${displayName}</text>
       </g>

@@ -15,6 +15,7 @@ import {
   arrayUnion,
   deleteDoc
 } from 'firebase/firestore';
+import { instantiateTemplate, persistTemplateTrip, templateCatalog, shiftCalendarDate, parseCalendarDate, templateStartDate } from '../itinerary/template-library.js';
 import { detectJourneyStage } from '../dashboard/stage-detector.js';
 import { renderHeroMoment } from '../dashboard/hero-moment.js';
 import { renderProgressiveContent, renderProgressiveSkeleton } from '../dashboard/progressive-content.js';
@@ -28,11 +29,7 @@ export const TripsManager = {
   // Generar código único de 6 caracteres
   generateTripCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Sin caracteres confusos
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
+    return Array.from(crypto.getRandomValues(new Uint8Array(6)), value => chars[value % chars.length]).join('');
   },
 
   // Inicializar trips del usuario
@@ -146,8 +143,12 @@ export const TripsManager = {
     }
 
     try {
+      if (tripData.useTemplate && !tripData.templateId) throw new Error('Elegí una plantilla antes de crear el viaje.');
+      const prepared = tripData.useTemplate && tripData.templateId
+        ? instantiateTemplate(tripData.templateId, { dateStart: tripData.dateStart, dateEnd: tripData.dateEnd }) : null;
+      if (prepared) tripData = { ...prepared.tripData, ...tripData, accommodations: prepared.tripData.accommodations, cities: prepared.tripData.cities };
       const userId = auth.currentUser.uid;
-      const tripId = `trip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const tripId = `trip_${crypto.randomUUID()}`;
       const shareCode = this.generateTripCode();
 
       // 🔧 Firestore rechaza el documento COMPLETO si cualquier campo es
@@ -156,24 +157,28 @@ export const TripsManager = {
       // plantillas del wizard) tumbaba toda la creación del viaje con
       // "Unsupported field value: undefined". Fallback a hoy/+6 días en vez
       // de dejar que undefined llegue a setDoc().
-      const todayISO = new Date().toISOString().split('T')[0];
-      const fallbackEnd = new Date();
-      fallbackEnd.setDate(fallbackEnd.getDate() + 6);
+      const dateStart = tripData.dateStart || templateStartDate({});
+      const dateEnd = tripData.dateEnd || shiftCalendarDate(dateStart, 6);
+      parseCalendarDate(dateStart);
+      parseCalendarDate(dateEnd);
+      if (dateEnd < dateStart) throw new Error('La fecha final debe ser igual o posterior a la inicial.');
+      const name = String(tripData.name || '').trim();
+      if (!name || name.length > 120) throw new Error('Escribí un nombre de viaje de hasta 120 caracteres.');
 
       const newTrip = {
         info: {
-          name: tripData.name,
+          name,
           destination: tripData.destination || 'Japón',
-          dateStart: tripData.dateStart || todayISO,
-          dateEnd: tripData.dateEnd || fallbackEnd.toISOString().split('T')[0],
+          dateStart,
+          dateEnd,
           createdBy: userId,
           createdAt: new Date().toISOString(),
           shareCode: shareCode, // Código compartible
-          creatorEmail: auth.currentUser.email,
+          creatorEmail: auth.currentUser.email || null,
           templateUsed: tripData.templateId || null // Track template usado
         },
         members: [userId],
-        memberEmails: [auth.currentUser.email],
+        memberEmails: auth.currentUser.email ? [auth.currentUser.email] : [],
         flights: {
           outbound: tripData.outboundFlight || null,
           return: tripData.returnFlight || null
@@ -186,21 +191,18 @@ export const TripsManager = {
         expenses: []
       };
 
-      await setDoc(doc(db, 'trips', tripId), newTrip);
+      const tripRef = doc(db, 'trips', tripId);
+      await persistTemplateTrip({
+        saveTrip: data => setDoc(tripRef, data),
+        saveItinerary: data => setDoc(doc(db, 'trips', tripId, 'data', 'itinerary'), data),
+        removeNewTrip: () => deleteDoc(tripRef)
+      }, newTrip, prepared?.itineraryData);
 
-      // 🔥 NUEVO: Si hay template, cargar itinerario
-      if (tripData.useTemplate && tripData.templateId) {
-        console.log(`📋 Cargando template: ${tripData.templateId}`);
-        await this.loadTemplateItinerary(tripId, tripData.templateId);
-      }
-
-      // 🎏 Tracking de achievements — inicializa para este viaje nuevo
-      // primero (trackAction requiere que initialize() ya haya corrido
-      // para el tripId activo, y un viaje recién creado nunca fue
-      // inicializado todavía).
       if (window.Achievements) {
-        await window.Achievements.initialize(tripId);
-        await window.Achievements.trackAction('tripsCreated', 1);
+        try {
+          await window.Achievements.initialize(tripId);
+          await window.Achievements.trackAction('tripsCreated', 1);
+        } catch (error) { console.warn('No se pudo actualizar el logro; el viaje sigue guardado.', error); }
       }
 
       Notifications.success(
@@ -210,71 +212,24 @@ export const TripsManager = {
 
       console.log('✅ Viaje creado:', tripId, 'Código:', shareCode);
 
-      // 🔥 IMPORTANTE: Esperar un poco para que Firebase propague
-      setTimeout(() => {
-        this.selectTrip(tripId);
-      }, 500);
+      await this.selectTrip(tripId);
 
       return tripId;
     } catch (error) {
       console.error('❌ Error creando viaje:', error);
-      Notifications.error('Error al crear el viaje. Inténtalo de nuevo.');
+      Notifications.error(error.message || 'Error al crear el viaje. Intentá de nuevo.');
       throw error;
     }
   },
 
   // 🔥 NUEVO: Cargar itinerario desde template
   async loadTemplateItinerary(tripId, templateId) {
-    try {
-      console.log(`🔥 Cargando template "${templateId}" para trip ${tripId}`);
-
-      // Cargar template desde attractions.json
-      const response = await fetch(`/data/attractions.json?v=${Date.now()}`);
-      const data = await response.json();
-
-      if (!data.suggestedItinerary) {
-        console.error('❌ Template no tiene suggestedItinerary');
-        return;
-      }
-
-      // Crear estructura de itinerario para Firestore
-      const itineraryData = {
-        days: data.suggestedItinerary.map(day => ({
-          day: day.day,
-          date: day.date,
-          title: day.title,
-          city: day.city || day.location,
-          cityId: day.cityId || 'tokyo',
-          location: day.location,
-          budget: day.budget || 0,
-          hotel: day.hotel || '',
-          activities: day.activities.map(act => ({
-            id: act.id,
-            time: act.time,
-            duration: act.duration || 60,
-            activity: act.activity || act.title,
-            name: act.name || act.title,
-            title: act.title,
-            location: act.location,
-            notes: act.notes || '',
-            category: act.category || 'other',
-            coordinates: act.coordinates || null
-          }))
-        })),
-        hotels: {}, // Se puede agregar después
-        version: 'v3'
-      };
-
-      // Guardar en Firestore (en la ruta correcta donde se lee)
-      const itineraryRef = doc(db, 'trips', tripId, 'data', 'itinerary');
-      await setDoc(itineraryRef, itineraryData);
-
-      console.log(`✅ Template cargado: ${data.suggestedItinerary.length} días`);
-
-    } catch (error) {
-      console.error('❌ Error cargando template:', error);
-      Notifications.error('El viaje se creó pero hubo un error cargando el template.');
-    }
+    const trip = await getDoc(doc(db, 'trips', tripId));
+    if (!trip.exists()) throw new Error('No encontramos el viaje para cargar la plantilla.');
+    const info = trip.data().info;
+    const prepared = instantiateTemplate(templateId, { dateStart: info.dateStart, dateEnd: info.dateEnd });
+    await setDoc(doc(db, 'trips', tripId, 'data', 'itinerary'), prepared.itineraryData);
+    return prepared.itineraryData;
   },
 
   // Seleccionar trip actual
@@ -898,7 +853,7 @@ export const TripsManager = {
         Notifications.warning('Por favor completa todos los campos obligatorios');
         return;
       }
-      if (new Date(dateEnd) <= new Date(dateStart)) {
+      if (new Date(dateEnd) < new Date(dateStart)) {
         Notifications.warning('La fecha de fin debe ser posterior a la fecha de inicio');
         return;
       }
@@ -946,6 +901,8 @@ export const TripsManager = {
   showSimpleTripForm() {
     document.getElementById('tripTypeSelection').classList.add('hidden');
     document.getElementById('simpleTripForm').classList.remove('hidden');
+    const templateSelect = document.getElementById('simpleTripTemplate');
+    if (templateSelect) templateSelect.innerHTML = '<option value="">Sin plantilla · Itinerario vacío</option>' + templateCatalog.map(template => `<option value="${template.id}">${template.name} · ${template.duration} días</option>`).join('');
 
     // Setup del formulario simple
     setTimeout(() => {
@@ -954,6 +911,20 @@ export const TripsManager = {
         // 🔥 FIX: Remover listeners anteriores clonando el form
         const newForm = simpleForm.cloneNode(true);
         simpleForm.parentNode.replaceChild(newForm, simpleForm);
+
+        const templateSelect = newForm.querySelector('#simpleTripTemplate');
+        const startInput = newForm.querySelector('#simpleTripDateStart');
+        const endInput = newForm.querySelector('#simpleTripDateEnd');
+        const updateTemplateDates = (useDefault = false) => {
+          const template = templateCatalog.find(item => item.id === templateSelect?.value);
+          if (!template) return;
+          if (useDefault && template.defaultStartDate) startInput.value = template.defaultStartDate;
+          if (startInput.value) endInput.value = shiftCalendarDate(startInput.value, template.duration - 1);
+          const nameInput = newForm.querySelector('#simpleTripName');
+          if (!nameInput.value.trim()) nameInput.value = template.name;
+        };
+        templateSelect?.addEventListener('change', () => updateTemplateDates(true));
+        startInput?.addEventListener('change', () => updateTemplateDates());
 
         newForm.addEventListener('submit', async (e) => {
           e.preventDefault();
@@ -978,12 +949,19 @@ export const TripsManager = {
             return;
           }
 
-          if (new Date(formData.dateEnd) <= new Date(formData.dateStart)) {
+          if (new Date(formData.dateEnd) < new Date(formData.dateStart)) {
             alert('⚠️ La fecha de fin debe ser posterior a la fecha de inicio');
             return;
           }
 
-          await this.createTrip(formData);
+          const submitButton = newForm.querySelector('[type="submit"]');
+          if (submitButton.disabled) return;
+          submitButton.disabled = true;
+          try {
+            const id = await this.createTrip(formData);
+            if (!id) return;
+          } catch { return; }
+          finally { submitButton.disabled = false; }
           this.closeCreateTripModal();
 
           // 🆕 Si el viaje se creó sin template, no queda ningún itinerario - en vez
@@ -1045,7 +1023,8 @@ export const TripsManager = {
       destination: document.getElementById('tripDestination').value || 'Japón',
       dateStart: document.getElementById('tripDateStart').value,
       dateEnd: document.getElementById('tripDateEnd').value,
-      useTemplate: useTemplate, // 🔥 NUEVO: Solo usar plantilla si está marcado
+      useTemplate: useTemplate,
+      templateId: useTemplate ? 'japan-15-days-complete' : null,
       outboundFlight: {
         flightNumber: document.getElementById('outboundFlightNumber').value,
         airline: document.getElementById('outboundAirline').value,
@@ -1068,7 +1047,7 @@ export const TripsManager = {
       return;
     }
 
-    if (new Date(formData.dateEnd) <= new Date(formData.dateStart)) {
+    if (new Date(formData.dateEnd) < new Date(formData.dateStart)) {
       alert('⚠️ La fecha de fin debe ser posterior a la fecha de inicio');
       return;
     }

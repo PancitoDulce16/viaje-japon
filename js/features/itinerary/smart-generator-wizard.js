@@ -12,6 +12,8 @@ import { CityRouteMap } from './city-route-map.js';
 import { DayAllocationBar } from './day-allocation-bar.js';
 import { getDayTripSuggestions } from './day-trip-recommender.js';
 import { analyzeRoutePressure } from './route-pressure.js';
+import { openTemplateLibrary } from './template-selector.js';
+import { instantiateTemplate } from './template-library.js';
 import { CITY_ICONS } from '../../../data/city-coordinates.js';
 
 // Postales acuarela de cada interés (Step 2). Sustituyen a los antiguos
@@ -390,15 +392,13 @@ export const SmartGeneratorWizard = {
         this.renderWizard();
         return;
       }
-      // Solo sembrar si falta info (días nulos o la suma no cuadra) - si el
-      // usuario ya ajustó el reparto y vuelve a entrar a esta fase, NO
-      // queremos pisar sus cambios con un reseeding determinístico.
+      // Initialize a new route once. Preserve edited days even when unbalanced.
       if (this.wizardData.dayAllocationMode === 'manual') {
         const stops = this.wizardData.cityStops;
-        const hasNulls = stops.some(s => !s.days || s.days < 1);
-        const sum = stops.reduce((s, x) => s + (x.days || 0), 0);
-        if (hasNulls || sum !== this.wizardData.totalDays) {
+        if (stops.every(stop => stop.days == null)) {
           this.seedEvenDayAllocation();
+        } else {
+          stops.forEach(stop => { if (stop.days == null) stop.days = 1; });
         }
       }
     }
@@ -440,7 +440,7 @@ export const SmartGeneratorWizard = {
     return `
       <div class="space-y-6 animate-fadeInUp jw-screen jw-screen--basics">
         <div class="jw-catnote">
-          <img class="jw-catnote__cat" src="/images/illustrations/generated/characters/cat-explorer.webp"
+          <img class="jw-catnote__cat" src="/images/illustrations/generated/companions/cat-guide.png"
                alt="" aria-hidden="true" loading="eager" width="118">
           <div class="jw-catnote__paper">
             <h3>¡Empecemos tu aventura!</h3>
@@ -739,7 +739,7 @@ export const SmartGeneratorWizard = {
     return `
       <div class="jw-screen jw-screen--map">
       <div class="jw-catnote">
-        <img class="jw-catnote__cat" src="/images/illustrations/generated/characters/cat-explorer.webp"
+        <img class="jw-catnote__cat" src="/images/illustrations/generated/companions/cat-guide.png"
              alt="" aria-hidden="true" loading="eager" width="118">
         <div class="jw-catnote__paper">
           <h3>¡Empecemos tu aventura!</h3>
@@ -908,7 +908,7 @@ export const SmartGeneratorWizard = {
     this.wizardData.dayAllocationMode = mode;
     if (mode === 'manual') {
       if (this.wizardData.cityStops.length === 0) this.syncCityStopsWithCities();
-      this.seedEvenDayAllocation();
+      if (this.wizardData.cityStops.every(stop => stop.days == null)) this.seedEvenDayAllocation();
     }
     this.saveToSessionStorage();
     this.renderWizard();
@@ -949,17 +949,15 @@ export const SmartGeneratorWizard = {
    * Llamado desde el toggle 🚃 de la barra de días (fase 'days').
    */
   setCityStopDayTrip(idx, isDayTrip) {
-    this.wizardData.cityStops[idx].isDayTrip = isDayTrip;
+    if (idx < 0 || !this.wizardData.cityStops[idx] || (idx === 0 && isDayTrip)) return;
+    this.wizardData.cityStops[idx].isDayTrip = !!isDayTrip;
     this.saveToSessionStorage();
     DayAllocationBar.refresh();
   },
 
   addSuggestedDayTrip(baseCity, destination) {
-    let baseIdx = this.wizardData.cityStops.findIndex(stop => !stop.isDayTrip && stop.city === baseCity);
-    if (baseIdx < 0) {
-      this.wizardData.cityStops = [{ city: baseCity, days: this.wizardData.totalDays, isDayTrip: false }];
-      baseIdx = 0;
-    }
+    const baseIdx = this.wizardData.cityStops.findIndex(stop => !stop.isDayTrip && stop.city === baseCity);
+    if (baseIdx < 0) return;
     const base = this.wizardData.cityStops[baseIdx];
     if (base.days == null) base.days = this.wizardData.totalDays;
     if (base.days <= 1 || this.wizardData.cityStops.some(stop => stop.isDayTrip && stop.city === destination)) return;
@@ -1323,7 +1321,7 @@ export const SmartGeneratorWizard = {
     return `
       <div class="jw-screen jw-screen--interests">
       <div class="jw-catnote">
-        <img class="jw-catnote__cat" src="/images/illustrations/generated/characters/cat-explorer.webp"
+        <img class="jw-catnote__cat" src="/images/illustrations/generated/companions/cat-guide.png"
              alt="" aria-hidden="true" loading="eager" width="118">
         <div class="jw-catnote__paper">
           <h3>Cuéntame qué cosas hacen que un viaje sea inolvidable para ti.</h3>
@@ -1766,7 +1764,7 @@ export const SmartGeneratorWizard = {
 
     return `
       <div class="jw-screen jw-screen--style"><div class="jw-catnote">
-        <img class="jw-catnote__cat" src="/images/illustrations/generated/characters/cat-explorer.webp"
+        <img class="jw-catnote__cat" src="/images/illustrations/generated/companions/cat-guide.png"
              alt="" aria-hidden="true" loading="eager" width="118">
         <div class="jw-catnote__paper">
           <h3>¡Ahora cuéntame cómo te gusta viajar!</h3>
@@ -2399,10 +2397,18 @@ export const SmartGeneratorWizard = {
         window.Notifications?.show('❌ Hay más edades registradas que personas en el grupo', 'error');
         return false;
       }
-      // 🆕 La validación "los días deben sumar exacto" ya no aplica: la barra
-      // de días arrastrable (seedEvenDayAllocation + clamp en cada drag)
-      // garantiza que cityStops siempre sume exactamente totalDays por
-      // construcción - no hay forma de dejarla desbalanceada desde la UI.
+      if (this.wizardData.dayAllocationMode === 'manual') {
+        const stops = this.wizardData.cityStops;
+        if (stops[0]?.isDayTrip) {
+          window.Notifications?.show('La primera parada necesita una base: desmarcá la excursión antes de continuar.', 'error');
+          return false;
+        }
+        const assigned = stops.reduce((sum, stop) => sum + Number(stop.days || 0), 0);
+        if (stops.some(stop => !Number.isInteger(stop.days) || stop.days < 1) || assigned !== this.wizardData.totalDays) {
+          window.Notifications?.show(`Revisa los días: asignaste ${assigned} de ${this.wizardData.totalDays}. Ajusta las ciudades que prefieras.`, 'error');
+          return false;
+        }
+      }
     } else if (this.currentStep === 2) {
       this.saveStep2Data();
       if (this.wizardData.interests.length === 0) {
@@ -2476,192 +2482,20 @@ export const SmartGeneratorWizard = {
    * 🆕 Muestra el selector de plantillas
    */
   async showTemplateSelector() {
-    try {
-      // Cargar templates desde attractions.json
-      const response = await fetch(`/data/attractions.json?v=${Date.now()}`);
-      const data = await response.json();
-
-      if (!data.templateInfo) {
-        window.Notifications?.show('❌ No se encontraron plantillas disponibles', 'error');
-        return;
-      }
-
-      const template = data.templateInfo;
-
-      // Crear modal de selección de templates
-      const modalHTML = `
-        <div id="templateSelectorModal" class="jp-modal-shell jp-template-modal fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Plantillas de itinerarios">
-          <div class="jp-modal-paper bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-
-            <!-- Header -->
-            <div class="jp-modal-head bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
-              <div class="flex items-center justify-between">
-                <div>
-                  <h2 class="text-2xl font-bold">📋 Plantillas de Itinerarios</h2>
-                  <p class="text-purple-100 mt-1">Selecciona una plantilla para empezar</p>
-                </div>
-                <button onclick="document.getElementById('templateSelectorModal').remove()" class="jp-modal-close text-white hover:bg-white/20 rounded-lg p-2 transition" aria-label="Cerrar plantillas">
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <!-- Template Card -->
-            <div class="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-              <div class="template-card border-2 border-purple-200 dark:border-purple-800 rounded-xl overflow-hidden hover:shadow-xl transition cursor-pointer"
-                   onclick="window.SmartGeneratorWizard.loadTemplate('${template.id}')">
-
-                <!-- Template Header -->
-                <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 p-6 border-b-2 border-purple-200 dark:border-purple-800">
-                  <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                      <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">${template.name}</h3>
-                      <p class="text-gray-700 dark:text-gray-300 mb-4">${template.description}</p>
-
-                      <div class="flex flex-wrap gap-2 mb-4">
-                        <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 rounded-full text-sm font-semibold">
-                          📅 ${template.duration} días
-                        </span>
-                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 rounded-full text-sm font-semibold">
-                          💰 ¥${template.totalBudget.toLocaleString()}
-                        </span>
-                        <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 rounded-full text-sm font-semibold">
-                          🏙️ ${template.cities.length} ciudades
-                        </span>
-                      </div>
-
-                      <div class="flex flex-wrap gap-2">
-                        ${template.cities.map(city => `
-                          <span class="px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-xs">
-                            ${city}
-                          </span>
-                        `).join('')}
-                      </div>
-                    </div>
-
-                    <div class="ml-4">
-                      <div class="text-5xl">🇯🇵</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Highlights -->
-                <div class="p-6 bg-white dark:bg-gray-800">
-                  <h4 class="font-bold text-gray-900 dark:text-white mb-3">✨ Experiencias Destacadas:</h4>
-                  <div class="grid grid-cols-2 gap-3">
-                    ${template.highlights.slice(0, 8).map(highlight => `
-                      <div class="flex items-start gap-2">
-                        <span class="text-lg">⭐</span>
-                        <span class="text-sm text-gray-700 dark:text-gray-300">${highlight}</span>
-                      </div>
-                    `).join('')}
-                  </div>
-
-                  <div class="mt-6 p-4 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                    <p class="text-center text-gray-800 dark:text-gray-200 font-semibold">
-                      👆 Haz clic en esta tarjeta para cargar esta plantilla
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="p-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-              <button onclick="document.getElementById('templateSelectorModal').remove()"
-                      class="w-full px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-bold rounded-lg transition">
-                ❌ Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // Agregar modal al DOM
-      document.body.insertAdjacentHTML('beforeend', modalHTML);
-      const templateDialog = document.getElementById('templateSelectorModal');
-      window.JapitinDialog?.enhance(templateDialog, { onClose: () => templateDialog.remove() });
-
-    } catch (error) {
-      console.error('❌ Error cargando templates:', error);
-      window.Notifications?.show('❌ Error cargando plantillas', 'error');
-    }
+    return openTemplateLibrary({ onCreate: prepared => this.loadTemplate(prepared.template.id, { dateStart: prepared.tripData.dateStart }) });
   },
 
   /**
    * 🆕 Carga una plantilla específica
    */
-  async loadTemplate(templateId) {
-    try {
-      console.log(`🔥 Cargando template: ${templateId}`);
-
-      // Cerrar modal de selección
-      const selectorModal = document.getElementById('templateSelectorModal');
-      if (selectorModal) selectorModal.remove();
-
-      // Mostrar loading
-      window.Notifications?.show('⏳ Cargando plantilla...', 'info');
-
-      // Cargar template desde attractions.json
-      const response = await fetch(`/data/attractions.json?v=${Date.now()}`);
-      const data = await response.json();
-
-      if (!data.suggestedItinerary || !data.templateInfo) {
-        window.Notifications?.show('❌ Template no válido', 'error');
-        return;
-      }
-
-      // 🔧 TripsManager.createTrip() escribe tripData.dateStart/dateEnd
-      // directo a Firestore (info.dateStart: tripData.dateStart, sin
-      // default) - esta plantilla nunca las incluía, así que setDoc()
-      // rechazaba el documento entero con "Unsupported field value:
-      // undefined". Como el template no trae fechas reales, se usa hoy
-      // como inicio y se calcula el fin según la duración del template.
-      const duration = data.templateInfo.duration || 7;
-      const dateStart = new Date();
-      const dateEnd = new Date(dateStart);
-      dateEnd.setDate(dateEnd.getDate() + duration - 1);
-      const toISODate = window.TimeUtils
-        ? (d) => window.TimeUtils.toISODate(d)
-        : (d) => d.toISOString().split('T')[0];
-
-      // Crear un nuevo trip con el template
-      const tripData = {
-        name: data.templateInfo.name,
-        cities: data.templateInfo.cities,
-        dateStart: toISODate(dateStart),
-        dateEnd: toISODate(dateEnd),
-        totalDays: duration,
-        budget: data.templateInfo.totalBudget,
-        status: 'draft',
-        templateId: templateId,
-        createdAt: new Date().toISOString()
-      };
-
-      // Crear el trip usando TripsManager
-      const newTripId = await window.TripsManager.createTrip(tripData);
-
-      if (newTripId) {
-        // El template ya se cargó automáticamente en createTrip (línea 180)
-        window.Notifications?.show(`✅ Plantilla "${data.templateInfo.name}" cargada con éxito`, 'success');
-
-        // Cerrar wizard
-        this.close();
-
-        // Opcional: Redirigir al nuevo trip o recargar la vista
-        setTimeout(() => {
-          window.location.reload(); // O navegar al trip específico
-        }, 1000);
-      } else {
-        window.Notifications?.show('❌ Error creando el viaje', 'error');
-      }
-
-    } catch (error) {
-      console.error('❌ Error cargando template:', error);
-      window.Notifications?.show('❌ Error cargando la plantilla', 'error');
-    }
+  async loadTemplate(templateId, options = {}) {
+    if (!window.TripsManager) throw new Error('La app sigue cargando. Intentá de nuevo en un momento.');
+    const prepared = instantiateTemplate(templateId, options);
+    const newTripId = await window.TripsManager.createTrip(prepared.tripData);
+    if (!newTripId) throw new Error('Iniciá sesión para guardar tu viaje.');
+    this.close();
+    window.DashboardApp?.switchTab('itinerary');
+    return newTripId;
   },
 
   /**

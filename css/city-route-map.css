@@ -1,345 +1,51 @@
-/* css/city-route-map.css
-   Mapa de selección de ciudades del wizard (Step 1, fase "map"). */
-
-.city-route-map-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* El lienzo es una hoja de papel con esquinas irregulares, no una card
-   morada con border-radius uniforme (ver css/wizard-washi.css). */
-.city-route-map-canvas {
-  position: relative;
-  border-radius: 6px 18px 6px 18px;
-  overflow: hidden;
-  background: var(--color-washi, #FBF7F1);
-  border: 1px solid var(--hairline, rgba(43, 56, 104, 0.12));
-  box-shadow: 0 8px 20px -14px rgba(43, 56, 104, 0.4);
-  padding: 12px;
-}
-
-html.dark .city-route-map-canvas {
-  background: #1B2238;
-}
-
-.city-route-map-bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
-  transition: opacity 480ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Crossfade día/noche: mismo patrón que el panorama del dashboard */
-.city-route-map-bg--day { opacity: 0.85; }
+/* City selection and day controls share the Japitin semantic theme. */
+.city-route-map-wrap { display: flex; flex-direction: column; gap: var(--space-4); font-family: var(--font-body); }
+.city-route-map-canvas { position: relative; overflow: hidden; border-radius: var(--jp-radius-md); background: var(--surface-map); border: 1px solid var(--border); box-shadow: var(--jp-shadow-sm); padding: var(--space-3); }
+.city-route-map-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; transition: opacity var(--motion-micro); }
+.city-route-map-bg--day { opacity: .85; }
 .city-route-map-bg--night { opacity: 0; }
 html.dark .city-route-map-bg--day { opacity: 0; }
-html.dark .city-route-map-bg--night { opacity: 0.8; }
+html.dark .city-route-map-bg--night { opacity: .3; }
+#cityRouteSvg { position: relative; z-index: 1; width: 100%; height: auto; color: var(--text-primary); }
+.city-route-land { fill: var(--surface-map); stroke: var(--positive); stroke-width: 1.8; stroke-linejoin: round; }
+.city-route-anchor { fill: none; stroke: var(--text-secondary); stroke-width: 1; opacity: .65; pointer-events: none; }
+.city-route-location { fill: var(--primary); pointer-events: none; }
+.city-hotspot-label { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
+.city-hotspot { cursor: pointer; }
+.city-hotspot-dot { fill: var(--surface); stroke: var(--border-strong); transition: r var(--motion-micro), fill var(--motion-micro); }
+.city-hotspot:hover .city-hotspot-dot, .city-hotspot:focus-visible .city-hotspot-dot { stroke: var(--primary); stroke-width: 4px; }
+.city-hotspot.is-selected .city-hotspot-dot { fill: var(--accent-soft); stroke: var(--primary); }
+.city-hotspot:focus-visible { outline: none; }
+.city-route-chips { min-height: var(--control-height); }
+.city-route-chip { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3); border: 1px solid var(--border); border-radius: var(--jp-radius-sm); background: var(--surface-ticket); color: var(--text-primary); font-size: var(--font-size-sm); font-weight: 650; }
+.city-route-chip-btn { display: inline-grid; place-items: center; min-width: var(--control-height); min-height: var(--control-height); padding: 0; border: 1px solid var(--border); border-radius: var(--jp-radius-sm); background: var(--surface); color: var(--text-primary); font-weight: 800; }
+.city-route-chip-btn-remove { color: var(--danger); }
+.city-route-list > summary { min-height: var(--control-height); padding: var(--space-3) 0; cursor: pointer; color: var(--text-primary); font-weight: 650; }
+.city-route-city-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--space-2); }
+.city-route-city-list button { min-height: var(--control-height); padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--jp-radius-sm); background: var(--surface); color: var(--text-primary); text-align: left; }
+.city-route-city-list button[aria-pressed="true"] { border-color: var(--primary); background: var(--accent-soft); }
+.day-allocation-bar { display: flex; width: 100%; height: 72px; border: 1px solid var(--border); border-radius: var(--jp-radius-sm); overflow: hidden; background: var(--surface); }
+.day-segment { position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; min-width: 0; color: var(--text-primary); font: 700 var(--font-size-sm)/1.35 var(--font-body); overflow: hidden; }
+.day-segment-label { overflow: hidden; text-overflow: ellipsis; padding: var(--space-1); }
+.day-segment.is-day-trip { background-image: repeating-linear-gradient(45deg, color-mix(in srgb, var(--surface) 25%, transparent), color-mix(in srgb, var(--surface) 25%, transparent) 6px, transparent 6px, transparent 12px); }
+.day-trip-toggle-chip { min-height: var(--control-height); padding: var(--space-2) var(--space-3); border: 1px solid var(--border-strong); border-radius: var(--jp-radius-pill); background: var(--surface); color: var(--text-primary); font: 650 var(--font-size-xs)/1.4 var(--font-body); white-space: normal; }
+.day-trip-toggle-chip.is-active { background: var(--accent-soft); border-color: var(--primary); color: var(--text-primary); }
+.day-stop-controls { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-4); font-family: var(--font-body); }
+.day-stop-control-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--jp-radius-sm); background: var(--surface); }
+.day-stop-control-city { flex: 1 1 auto; min-width: 90px; color: var(--text-primary); font-size: var(--font-size-sm); font-weight: 650; }
+.day-stop-stepper { flex: 0 0 auto; display: flex; align-items: center; gap: var(--space-2); }
+.day-stop-stepper-btn { display: inline-grid; place-items: center; width: var(--control-height); min-width: var(--control-height); min-height: var(--control-height); padding: 0; border: 1px solid var(--border-strong); border-radius: var(--jp-radius-sm); background: var(--surface-soft); color: var(--text-primary); font: 800 1.2rem/1 var(--font-body); }
+.day-stop-stepper-btn:disabled { opacity: var(--disabled-opacity); cursor: not-allowed; }
+.day-stop-stepper-value { min-width: 54px; text-align: center; color: var(--text-primary); font-size: var(--font-size-sm); font-weight: 700; }
+.day-segment-drag-handle { position: absolute; inset: 0 0 auto auto; display: grid; place-items: center; width: 28px; height: 28px; cursor: grab; touch-action: none; }
+.day-segment-drag-handle:active { cursor: grabbing; }
+.day-divider { position: relative; width: 10px; flex-shrink: 0; cursor: ew-resize; touch-action: none; z-index: 2; background: var(--surface); }
+.day-divider::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 4px; height: 24px; border-radius: var(--jp-radius-pill); background: var(--border-strong); }
+.day-divider:hover::after, .day-divider.is-dragging::after { background: var(--primary); }
+.day-allocation-total { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2); color: var(--text-secondary); font: 500 var(--font-size-sm)/1.5 var(--font-body); margin-bottom: var(--space-2); }
+.day-allocation-help { color: var(--text-secondary); font: 500 var(--font-size-sm)/1.6 var(--font-body); margin-block: var(--space-3); }
+.city-route-map-wrap button:focus-visible, .day-stop-controls button:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .city-route-map-bg, .city-hotspot-dot { transition: none; } }
 
-@media (prefers-reduced-motion: reduce) {
-  .city-route-map-bg { transition: none; }
-}
-
-#cityRouteSvg {
-  position: relative;
-  z-index: 1;
-  color: #3b0764; /* usado por fill="currentColor" en los labels de ciudad */
-}
-
-html.dark #cityRouteSvg {
-  color: #f3e8ff;
-}
-
-.city-hotspot-label {
-  paint-order: stroke;
-  stroke: white;
-  stroke-width: 3px;
-  stroke-linejoin: round;
-}
-
-html.dark .city-hotspot-label {
-  stroke: #1e1b2e;
-}
-
-.city-hotspot {
-  cursor: pointer;
-}
-
-.city-hotspot-dot {
-  transition: r 0.2s ease, fill 0.2s ease, stroke 0.2s ease;
-}
-
-.city-hotspot:hover .city-hotspot-dot {
-  stroke: #F16FA3;
-}
-
-.city-hotspot.is-selected .city-hotspot-dot {
-  filter: drop-shadow(0 2px 6px rgba(241, 111, 163, 0.5));
-}
-
-.city-route-chips {
-  min-height: 40px;
-}
-
-.city-route-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: white;
-  border: 2px solid #ddd6fe;
-  border-radius: 999px;
-  padding: 6px 8px 6px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #4c1d95;
-}
-
-html.dark .city-route-chip {
-  background: rgba(76, 29, 149, 0.3);
-  border-color: #6d28d9;
-  color: #e9d5ff;
-}
-
-.city-route-chip-btn {
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #ede9fe;
-  color: #7c3aed;
-  font-weight: 800;
-  line-height: 1;
-  min-width: 0;
-  padding: 0;
-}
-
-html.dark .city-route-chip-btn {
-  background: #4c1d95;
-  color: #ddd6fe;
-}
-
-.city-route-chip-btn-remove {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-html.dark .city-route-chip-btn-remove {
-  background: #7f1d1d;
-  color: #fca5a5;
-}
-
-/* ==========================================
-   Barra de días arrastrable (Step 1, fase "days")
-   ========================================== */
-
-.day-allocation-bar {
-  display: flex;
-  width: 100%;
-  height: 64px;
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.day-segment {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: white;
-  font-weight: 700;
-  font-size: 13px;
-  transition: background-color 0.2s ease;
-  overflow: hidden;
-}
-
-.day-segment.is-day-trip {
-  background-image: repeating-linear-gradient(
-    45deg, rgba(255,255,255,0.25), rgba(255,255,255,0.25) 6px,
-    transparent 6px, transparent 12px
-  );
-}
-
-.day-trip-toggle-chip {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 2px solid #ddd6fe;
-  background: white;
-  color: #4c1d95;
-  min-width: 0;
-  white-space: nowrap;
-}
-
-html.dark .day-trip-toggle-chip {
-  background: rgba(76, 29, 149, 0.2);
-  border-color: #6d28d9;
-  color: #e9d5ff;
-}
-
-.day-trip-toggle-chip.is-active {
-  background: #7c3aed;
-  border-color: #7c3aed;
-  color: white;
-}
-
-/* Lista explícita de steppers +/- por parada - fallback garantizado para
-   quien no descubra el gesto de arrastrar la barra. */
-.day-stop-controls {
-  margin-top: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.day-stop-control-row {
-  /* 🔧 grid-template-columns: 1fr auto auto (versión anterior) recortaba el
-     texto del chip de excursión contra el borde del viewport en pantallas
-     angostas (390px) en vez de envolver a otra línea - confirmado
-     visualmente ("Marcar excur..." cortado). flex+wrap deja que el chip
-     baje a su propia línea cuando no cabe, en vez de recortarse. */
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 10px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-}
-
-html.dark .day-stop-control-row {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.day-stop-control-city {
-  flex: 1 1 auto;
-  min-width: 90px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
-}
-
-html.dark .day-stop-control-city {
-  color: #e5e7eb;
-}
-
-.day-stop-stepper {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.day-stop-stepper-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: #ede9fe;
-  color: #7c3aed;
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  padding: 0;
-}
-
-.day-stop-stepper-btn:disabled {
-  opacity: 0.35;
-}
-
-html.dark .day-stop-stepper-btn {
-  background: #4c1d95;
-  color: #ddd6fe;
-}
-
-.day-stop-stepper-value {
-  font-size: 13px;
-  font-weight: 700;
-  color: #374151;
-  min-width: 52px;
-  text-align: center;
-}
-
-html.dark .day-stop-stepper-value {
-  color: #e5e7eb;
-}
-
-.day-trip-toggle-chip.is-active {
-  background: #7c3aed;
-  border-color: #7c3aed;
-  color: white;
-}
-
-.day-segment-drag-handle {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: grab;
-  opacity: 0.7;
-  /* Permite drag vertical/tap normal en el resto de la página; el gesto de
-     reordenar SortableJS necesita capturar el pointer sin que el navegador
-     lo interprete como scroll - scoped solo a este handle, NO global (ver
-     historial de bugs de scroll roto por overflow/touch-action globales
-     esta sesión). */
-  touch-action: none;
-}
-
-.day-segment-drag-handle:active {
-  cursor: grabbing;
-}
-
-.day-divider {
-  position: relative;
-  width: 10px;
-  flex-shrink: 0;
-  cursor: ew-resize;
-  touch-action: none;
-  z-index: 2;
-}
-
-.day-divider::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 4px;
-  height: 24px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.day-divider:hover::after,
-.day-divider.is-dragging::after {
-  background: white;
-  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.3);
-}
-
-.day-allocation-total {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-  color: #6b7280;
-}
-
-html.dark .day-allocation-total {
-  color: #9ca3af;
-}
+.city-route-repeat { fill: var(--primary); }
+.city-route-repeat-label { fill: var(--primary-contrast); }

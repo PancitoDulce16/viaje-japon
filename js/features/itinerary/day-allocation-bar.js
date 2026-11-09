@@ -1,39 +1,26 @@
 // js/features/itinerary/day-allocation-bar.js
 //
-// Barra segmentada arrastrable para repartir totalDays entre las paradas de
-// la ruta (Step 1, fase 'days' del wizard). Reemplaza los inputs numéricos
-// que debían sumar exacto al total con bloqueo duro si no cuadraban.
-//
-// La propiedad clave: cada arrastre de un divisor SOLO transfiere días entre
-// el par de segmentos adyacentes (izq += x, der -= x), nunca crea ni destruye
-// días. Como el punto de partida (seedEvenDayAllocation, en el wizard) ya
-// suma exacto, la suma total es invariante en CUALQUIER secuencia de
-// arrastres - la clase de bug "Asignados 21/20" queda eliminada por
-// construcción, no por una validación que revisa después del hecho.
+// Reparto de dias: botones independientes; divisores transfieren entre vecinos.
 
 import { CITY_ICONS } from '../../../data/city-coordinates.js';
 
-// 🔧 Paleta curada en vez de ciclar hue algorítmicamente (hue = idx*47%360):
-// el ciclo de HSL producía combinaciones de bajo contraste con el texto
-// blanco (ej. amarillo/rosa adyacentes, reportado por un usuario real como
-// ilegible). Todos estos tonos son suficientemente oscuros/saturados para
-// texto blanco encima, y coherentes con la paleta morado/rosa del resto de
-// la app.
-const SEGMENT_COLORS = ['#7c3aed', '#ec4899', '#2563eb', '#059669', '#ea580c', '#0891b2', '#dc2626', '#9333ea'];
+const SEGMENT_COLORS = ['var(--decorative-lavender)', 'var(--decorative-sakura)', 'var(--decorative-sora)', 'var(--decorative-matcha)', 'var(--decorative-gold)', 'var(--decorative-plum)'];
 
 export const DayAllocationBar = {
 
   dragState: null,
 
   render(cityStops, totalDays) {
+    const assigned = cityStops.reduce((sum, stop) => sum + Number(stop.days || 0), 0);
     return `
-      <div class="day-allocation-total">
-        <span>Repartiendo ${totalDays} día${totalDays === 1 ? '' : 's'} entre ${cityStops.length} parada${cityStops.length === 1 ? '' : 's'}</span>
+      <div class="day-allocation-total" role="status">
+        <span>Asignados ${assigned}/${totalDays} · Repartiendo ${totalDays} día${totalDays === 1 ? '' : 's'} entre ${cityStops.length} parada${cityStops.length === 1 ? '' : 's'}</span>
         <span>Arrastra un bloque por el ícono ⋮⋮ para reordenar</span>
       </div>
       <div class="day-allocation-bar" id="dayAllocationBar" data-total-days="${totalDays}">
         ${cityStops.map((stop, idx) => this.renderSegmentAndDivider(stop, idx, cityStops.length)).join('')}
       </div>
+      <p class="day-allocation-help">Cada botón cambia solo esta ciudad. ${assigned === totalDays ? 'Marcar una excursión conserva los días de todas las ciudades.' : assigned < totalDays ? `Te faltan ${totalDays - assigned} días por asignar.` : `Quita ${assigned - totalDays} días donde prefieras antes de continuar.`}</p>
       ${this.renderStopControls(cityStops)}
     `;
   },
@@ -54,20 +41,20 @@ export const DayAllocationBar = {
         ${cityStops.map((stop, idx) => {
           const cityKey = stop.city.toLowerCase();
           const icon = CITY_ICONS[cityKey] || '📍';
-          const canBeDayTrip = idx > 0;
+          const canBeDayTrip = idx > 0 || stop.isDayTrip;
           const canDecrease = stop.days > 1;
           return `
             <div class="day-stop-control-row">
               <span class="day-stop-control-city">${icon} ${stop.city}</span>
               <div class="day-stop-stepper">
-                <button type="button" class="day-stop-stepper-btn" ${!canDecrease ? 'disabled' : ''}
+                <button type="button" class="day-stop-stepper-btn" data-allocation-action="decrease-${idx}" ${!canDecrease ? 'disabled' : ''}
                         onclick="window.DayAllocationBar.nudgeSegmentDays(${idx}, -1)" aria-label="Quitar un día">−</button>
                 <span class="day-stop-stepper-value">${stop.days} día${stop.days === 1 ? '' : 's'}</span>
-                <button type="button" class="day-stop-stepper-btn"
+                <button type="button" class="day-stop-stepper-btn" data-allocation-action="increase-${idx}"
                         onclick="window.DayAllocationBar.nudgeSegmentDays(${idx}, 1)" aria-label="Agregar un día">+</button>
               </div>
               ${canBeDayTrip ? `
-                <button type="button" class="day-trip-toggle-chip ${stop.isDayTrip ? 'is-active' : ''}"
+                <button type="button" data-allocation-action="trip-${idx}" class="day-trip-toggle-chip ${stop.isDayTrip ? 'is-active' : ''}" aria-pressed="${!!stop.isDayTrip}"
                         onclick="window.SmartGeneratorWizard.setCityStopDayTrip(${idx}, ${!stop.isDayTrip})">
                   🚃 ${stop.isDayTrip ? 'Es excursión ✓' : 'Marcar excursión'}
                 </button>
@@ -79,27 +66,12 @@ export const DayAllocationBar = {
     `;
   },
 
-  /**
-   * Mismo invariante que el drag de divisores (transferir SOLO entre un par
-   * de paradas, nunca crear/destruir días), pero disparado por un botón en
-   * vez de arrastrar - garantiza que la suma siga siendo exacta.
-   */
+  // Los botones modifican exclusivamente la parada elegida.
   nudgeSegmentDays(idx, direction) {
     const stops = window.SmartGeneratorWizard.wizardData.cityStops;
-    // Preferir intercambiar con la parada siguiente; si idx es la última,
-    // usar la anterior.
-    const neighborIdx = idx < stops.length - 1 ? idx + 1 : idx - 1;
-    if (neighborIdx < 0) return;
-
-    if (direction > 0) {
-      if (stops[neighborIdx].days <= 1) return; // el vecino no puede bajar de 1
-      stops[idx].days += 1;
-      stops[neighborIdx].days -= 1;
-    } else {
-      if (stops[idx].days <= 1) return; // esta parada no puede bajar de 1
-      stops[idx].days -= 1;
-      stops[neighborIdx].days += 1;
-    }
+    if (!stops[idx] || ![-1, 1].includes(direction)) return;
+    if (stops[idx].days + direction < 1) return;
+    stops[idx].days += direction;
     window.SmartGeneratorWizard.saveToSessionStorage();
     this.refresh();
   },
@@ -118,7 +90,7 @@ export const DayAllocationBar = {
     const color = SEGMENT_COLORS[idx % SEGMENT_COLORS.length];
     return `
       <div class="day-segment ${stop.isDayTrip ? 'is-day-trip' : ''}" data-segment-idx="${idx}"
-           style="flex: ${stop.days} 1 0%; background: ${color};">
+           style="flex: ${stop.days} 1 0%; background: color-mix(in srgb, ${color} 25%, var(--surface)); border-bottom: 4px solid ${color};">
         <span class="day-segment-drag-handle" data-drag-handle-idx="${idx}">⋮⋮</span>
         <span class="day-segment-label">${icon} ${stop.city} · ${stop.days}d${stop.isDayTrip ? ' 🚃' : ''}</span>
       </div>
@@ -134,8 +106,11 @@ export const DayAllocationBar = {
     if (!wizardData) return;
     const container = document.getElementById('dayAllocationBar')?.parentElement;
     if (container) {
+      const focusAction = document.activeElement?.dataset.allocationAction;
       container.innerHTML = this.render(wizardData.cityStops, wizardData.totalDays);
       this.attachHandlers();
+      const focusTarget = focusAction && container.querySelector(`[data-allocation-action="${focusAction}"]`);
+      if (focusTarget && !focusTarget.disabled) focusTarget.focus();
     }
   },
 
@@ -180,9 +155,9 @@ export const DayAllocationBar = {
         ghostClass: 'sortable-ghost',
         chosenClass: 'sortable-chosen',
         onEnd: (evt) => {
-          if (evt.oldIndex !== evt.newIndex) {
-            window.SmartGeneratorWizard.reorderCityStops(evt.oldIndex, evt.newIndex);
-          }
+          const from = evt.oldDraggableIndex ?? evt.oldIndex;
+          const to = evt.newDraggableIndex ?? evt.newIndex;
+          if (from !== to) window.SmartGeneratorWizard.reorderCityStops(from, to);
           // 🆕 SortableJS solo mueve los .day-segment que arrastra - los
           // .day-divider intercalados (fuera del selector `draggable`) se
           // quedan en su posición de DOM original, quedando desalineados de
@@ -208,7 +183,7 @@ export const DayAllocationBar = {
     const bar = document.getElementById('dayAllocationBar');
     const dividerCount = stops.length - 1;
     const usablePx = bar.getBoundingClientRect().width - dividerCount * 10; // 10px = ancho fijo del divisor en CSS
-    const pxPerDay = usablePx / wizardData.totalDays;
+    const pxPerDay = usablePx / stops.reduce((sum, stop) => sum + stop.days, 0);
 
     this.dragState = {
       d, startX: e.clientX,
@@ -221,9 +196,11 @@ export const DayAllocationBar = {
       this.onDividerPointerUp(ev, dividerEl);
       dividerEl.removeEventListener('pointermove', onMove);
       dividerEl.removeEventListener('pointerup', onUp);
+      dividerEl.removeEventListener('pointercancel', onUp);
     };
     dividerEl.addEventListener('pointermove', onMove);
     dividerEl.addEventListener('pointerup', onUp);
+    dividerEl.addEventListener('pointercancel', onUp);
   },
 
   onDividerPointerMove(e) {
@@ -242,7 +219,7 @@ export const DayAllocationBar = {
   },
 
   onDividerPointerUp(e, dividerEl) {
-    dividerEl.releasePointerCapture(e.pointerId);
+    if (dividerEl.hasPointerCapture(e.pointerId)) dividerEl.releasePointerCapture(e.pointerId);
     dividerEl.classList.remove('is-dragging');
     this.dragState = null;
     window.SmartGeneratorWizard.saveToSessionStorage();

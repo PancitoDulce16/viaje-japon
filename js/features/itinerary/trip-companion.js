@@ -26,14 +26,15 @@ export function analyzeDayFeasibility(day) {
       issues.push({ severity: 'high', type: 'last-entry', message: `${name(activity)} queda después de la última entrada.` });
     }
   });
-  if (activities.length > 6 || scheduled > 600) issues.push({ severity: 'medium', type: 'density', message: 'El día tiene poco espacio para pausas e imprevistos.' });
-  if ((day.routeFlow?.totalTravelMinutes || day.travelMinutes || 0) > 180) issues.push({ severity: 'medium', type: 'travel', message: 'Hay más de tres horas de desplazamientos.' });
+  if (activities.length > 6 || scheduled > 600) issues.push({ severity: scheduled > 720 ? 'high' : 'medium', type: 'density', message: scheduled > 720 ? 'Hay más de doce horas planificadas: conviene recortar la jornada.' : 'El día tiene poco espacio para pausas e imprevistos.' });
+  const explicitTravel = activities.filter(activity => /transport|train|ferry|traslado/i.test(activity.category || '')).reduce((sum, activity) => sum + duration(activity), 0);
+  if (Math.max(day.routeFlow?.totalTravelMinutes || day.travelMinutes || 0, explicitTravel) > 180) issues.push({ severity: 'medium', type: 'travel', message: 'Hay más de tres horas de desplazamientos.' });
   const lastFinish = activities.reduce((latest, activity) => Math.max(latest, (minutes(activity.time) ?? 0) + duration(activity)), 0);
   const lastTrain = minutes(day.lastTrainTime || day.transportPlan?.lastTrain);
   if (lastTrain !== null && lastFinish > lastTrain - 20) issues.push({ severity: 'high', type: 'last-train', message: 'El cierre del día no deja margen suficiente para el último tren.' });
   if (day.hasLuggage && (day.transferCount || day.transportPlan?.transfers || 0) > 2) issues.push({ severity: 'medium', type: 'luggage', message: 'Demasiados transbordos para viajar con equipaje.' });
   const score = Math.max(0, 100 - issues.reduce((sum, issue) => sum + (issue.severity === 'high' ? 25 : 12), 0));
-  return { score, status: score >= 85 ? 'comfortable' : score >= 60 ? 'tight' : 'impossible', issues };
+  return { score, status: !issues.length ? 'comfortable' : score >= 60 ? 'tight' : 'impossible', issues };
 }
 
 export function explainDayOptimization(day) {

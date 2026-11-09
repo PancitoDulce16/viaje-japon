@@ -6,6 +6,9 @@ node_modules/
 functions/node_modules/
 public/
 dist/
+artifacts/
+test-results/
+playwright-report/
 .env
 .env.local
 .firebase/

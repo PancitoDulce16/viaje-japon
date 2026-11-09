@@ -14,7 +14,7 @@
  * - Converge a la ruta óptima en segundos
  */
 
-class GeneticRouteOptimizer {
+export class GeneticRouteOptimizer {
   constructor(options = {}) {
     this.config = {
       populationSize: 100,      // Población por generación

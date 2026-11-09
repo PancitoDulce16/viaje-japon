@@ -34,7 +34,21 @@
       "validate-imports.js",
       "js/dev/**",
       "**/*.example.js",
-      "**/*.example.json"
+      "**/*.example.json",
+      "tests/**",
+      "artifacts/**",
+      "test-results/**",
+      "playwright-report/**",
+      "docs/**",
+      "gemini-backup/**",
+      "package.json",
+      "package-lock.json",
+      "playwright.config.js",
+      "vite.config.js",
+      "postcss.config.js",
+      "tailwind.config.js",
+      "functions/**",
+      "scripts/**"
     ],
     "headers": [
       {
