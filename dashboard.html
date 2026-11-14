@@ -313,7 +313,7 @@
             <div id="tabSelector" class="max-w-7xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
                 <button data-tab="home" class="tab-btn active">
                     <i class="fas fa-home"></i>
-                    <span class="hidden md:inline ml-2">Resumen</span>
+                    <span class="hidden md:inline ml-2">Inicio</span>
                 </button>
                 <button data-tab="itinerary" class="tab-btn">
                     <i class="far fa-calendar-alt"></i>
@@ -321,11 +321,11 @@
                 </button>
                 <button data-tab="budget" class="tab-btn">
                     <span>🍱</span>
-                    <span class="hidden md:inline ml-2">Presupuesto</span>
+                    <span class="hidden md:inline ml-2">Gastos</span>
                 </button>
                 <button data-tab="preparation" class="tab-btn">
                     <i class="fas fa-tasks"></i>
-                    <span class="hidden md:inline ml-2">Preparación</span>
+                    <span class="hidden md:inline ml-2">Organización</span>
                 </button>
                 <button data-tab="flights" class="tab-btn">
                     <i class="fas fa-plane"></i>
@@ -345,7 +345,7 @@
                 </button>
                 <button data-tab="attractions" class="tab-btn">
                     <i class="fas fa-landmark"></i>
-                    <span class="hidden md:inline ml-2">Atracciones</span>
+                    <span class="hidden md:inline ml-2">Explorar</span>
                 </button>
                 <button data-tab="essentials" class="tab-btn">
                     <i class="fas fa-store"></i>
@@ -357,10 +357,12 @@
                 </button>
                 <button data-tab="analytics" class="tab-btn">
                     <i class="fas fa-chart-pie"></i>
-                    <span class="hidden md:inline ml-2">Analytics</span>
+                    <span class="hidden md:inline ml-2">Estadísticas</span>
                 </button>
             </div>
         </nav>
+
+        <div id="itinerarySaveStatus" class="jp-save-status" role="status" aria-live="polite" hidden></div>
 
         <!-- Contenido Principal -->
         <main id="main-content">

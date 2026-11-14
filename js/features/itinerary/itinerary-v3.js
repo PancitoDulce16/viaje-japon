@@ -1,3 +1,4 @@
+import { itinerarySaveStatus } from '../../core/itinerary-save-status.js';
 ﻿// js/itinerary.js — VERSIÓN MEJORADA con Creación Dinámica + AI Insights Button
 
 import { db, auth } from '../../core/firebase-config.js';
@@ -225,7 +226,7 @@ async function persistCurrentItineraryToFirebase() {
     const itineraryRef = doc(db, `trips/${tripId}/data`, 'itinerary');
     // Sanitizar datos antes de guardar para evitar undefined
     const sanitizedData = sanitizeForFirestore(currentItinerary);
-    await setDoc(itineraryRef, sanitizedData);
+    await itinerarySaveStatus.track(() => setDoc(itineraryRef, sanitizedData));
     console.log('✅ Itinerary saved to Firebase');
     return true;
   } catch (error) {

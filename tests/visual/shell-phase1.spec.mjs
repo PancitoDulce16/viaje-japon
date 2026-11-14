@@ -5,6 +5,24 @@ import path from 'node:path';
 const widths = [1440, 1024, 768, 390];
 const themes = ['light', 'dark'];
 
+test('itinerary save status reflects completed and rejected writes', async ({ page }) => {
+  await page.goto('/dashboard.html', { waitUntil: 'domcontentloaded' });
+  await page.evaluate(async () => {
+    const { itinerarySaveStatus } = await import('/js/core/itinerary-save-status.js');
+    window.finishWrite = null;
+    window.writeResult = itinerarySaveStatus.track(() => new Promise(resolve => { window.finishWrite = resolve; }));
+  });
+  const status = page.locator('#itinerarySaveStatus');
+  await expect(status).toContainText('guardando cambios');
+  await page.evaluate(async () => { window.finishWrite(); await window.writeResult; });
+  await expect(status).toContainText('cambios guardados');
+  await page.evaluate(async () => {
+    const { itinerarySaveStatus } = await import('/js/core/itinerary-save-status.js');
+    await itinerarySaveStatus.track(() => Promise.reject(new Error('write denied'))).catch(() => {});
+  });
+  await expect(status).toContainText('no se pudieron guardar');
+});
+
 test('desktop reservations shortcut opens reservations', async ({page}) => {
   await page.setViewportSize({width:1440,height:900});
   await page.goto('/dashboard.html',{waitUntil:'domcontentloaded'});
@@ -31,7 +49,11 @@ for (const width of widths) for (const theme of themes) {
     }, theme);
     await page.addStyleTag({ content: '#appDashboard.hidden{display:block!important} body > .fixed:not(#mobile-bottom-nav){display:none!important}' });
     await expect(page.locator('.japan-header')).toBeVisible();
-    if (width >= 1180) await expect(page.locator('.jp-desktop-rail')).toBeVisible();
+    if (width >= 1180) {
+      await expect(page.locator('.jp-desktop-rail')).toBeVisible();
+      await expect(page.locator('#tabSelector [data-tab="home"]')).toBeHidden();
+      await expect(page.locator('#tabSelector [data-tab="flights"]')).toBeVisible();
+    }
     if (width <= 768) await expect(page.locator('#mobile-bottom-nav')).toBeVisible({ timeout: 15000 });
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(2);

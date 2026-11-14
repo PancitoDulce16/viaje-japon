@@ -37,3 +37,15 @@ html .japan-nav { background: var(--background) !important; border: 0 !important
 html .japan-nav #tabSelector .tab-btn { min-height: 44px !important; border: 0 !important; border-bottom: 2px solid transparent !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; color: var(--text-secondary) !important; transform: none !important; }
 html .japan-nav #tabSelector .tab-btn.active,html .japan-nav #tabSelector .tab-btn[aria-selected="true"] { color: var(--text-primary) !important; border-bottom-color: var(--primary) !important; background: var(--surface-soft) !important; }
 html .japan-nav #tabSelector .tab-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: -3px; }
+
+/* Desktop rail owns primary destinations; keep the remaining tools in reach. */
+@media(min-width:1180px) {
+  html .japan-nav #tabSelector .tab-btn:is([data-tab="home"],[data-tab="itinerary"],[data-tab="budget"],[data-tab="preparation"],[data-tab="attractions"]) { display:none!important; }
+}
+.jp-save-status { padding:var(--space-2) var(--space-4); color:var(--text-secondary); background:var(--surface-note); border-bottom:1px solid var(--border); font-size:.85rem; }
+.jp-save-status[hidden] { display:none; }
+.jp-save-status[data-state="error"] { color:var(--danger); }
+@media(max-width:768px) {
+  html .mobile-bottom-nav { position:fixed!important; inset:auto 0 0!important; width:100%; margin:0!important; }
+  html .mobile-bottom-nav .mobile-nav-item span { font-size:.7rem!important; }
+}

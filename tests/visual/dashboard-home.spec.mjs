@@ -64,6 +64,10 @@ for (const width of widths) for (const theme of themes) {
     await page.addStyleTag({ content: '#appDashboard.hidden{display:block!important} body > .fixed:not(#mobile-bottom-nav){display:none!important}' });
     await expect(page.locator('.journey-home')).toBeVisible();
     await expect(page.locator('.journey-home .hero-moment')).toBeVisible();
+    if (width === 390) {
+      const hero = await page.locator('.hero-moment--compact').boundingBox();
+      expect(hero.height).toBeLessThan(300);
+    }
     const scene = page.locator(`.hero-moment__art--${theme === 'dark' ? 'night' : 'day'}`);
     await expect(scene).toHaveCSS('opacity', '1');
     await page.locator('.hero-moment__art').evaluateAll(async images => {
