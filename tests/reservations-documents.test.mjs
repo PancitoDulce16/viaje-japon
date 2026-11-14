@@ -21,7 +21,7 @@ const documentSource = fs.readFileSync(new URL('../js/features/documents/documen
 const firestoreRules = fs.readFileSync(new URL('../firestore.rules', import.meta.url), 'utf8');
 const storageRules = fs.readFileSync(new URL('../storage.rules', import.meta.url), 'utf8');
 assert.equal(documentSource.includes('getDownloadURL'), false);
-assert.match(documentSource, /deleteObject[\s\S]*deleteDoc/);
+assert.match(documentSource, /deleteObject[\s\S]*transaction\.delete/);
 assert.match(firestoreRules, /!\('url' in request\.resource\.data\)/);
 assert.match(firestoreRules, /resource\.data\.sensitive == false/);
 assert.match(storageRules, /documents\/\{userId\}\/\{documentId\}/);
