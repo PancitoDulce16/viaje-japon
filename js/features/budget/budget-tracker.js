@@ -68,23 +68,26 @@ const BudgetTracker = {
 
   async createExpenseForReservation(reservation) {
     const tripId = this.getCurrentTripId();
+    if (reservation?.tripId && reservation.tripId !== tripId) throw new Error('El viaje activo cambió. Abre la reserva desde su viaje.');
     if (!tripId || !auth.currentUser || !reservation?.id || !reservation.costMinor) throw new Error('La reservación no tiene un costo válido.');
+    const baseCurrency = this.baseCurrency;
+    const userId = auth.currentUser.uid;
     const reservationRef = doc(db, `trips/${tripId}/reservations/${reservation.id}`);
     const expenseRef = doc(collection(db, `trips/${tripId}/expenses`));
-    const rate = await exchangeRateService.getRate(reservation.currency, this.baseCurrency);
-    const convertedAmountMinor = convertMinorUnits(reservation.costMinor, reservation.currency, this.baseCurrency, rate.rateScaled);
+    const rate = await exchangeRateService.getRate(reservation.currency, baseCurrency);
+    const convertedAmountMinor = convertMinorUnits(reservation.costMinor, reservation.currency, baseCurrency, rate.rateScaled);
     await runTransaction(db, async (transaction) => {
       const current = await transaction.get(reservationRef);
       if (!current.exists()) throw new Error('La reservación ya no existe.');
       if (current.data().expenseId) throw new Error('Esta reservación ya tiene un gasto vinculado.');
       transaction.set(expenseRef, {
         description: reservation.title, amountMinor: reservation.costMinor, originalCurrency: reservation.currency,
-        convertedAmountMinor, baseCurrency: this.baseCurrency,
+        convertedAmountMinor, baseCurrency,
         exchangeRate: rate.rate, exchangeRateScaled: rate.rateScaled,
         exchangeRateFetchedAt: new Date(rate.fetchedAt).toISOString(), exchangeRateSource: rate.source,
         category: reservation.type === 'Hospedaje' ? 'Alojamiento' : reservation.type === 'Transporte' || reservation.type === 'Vuelo' ? 'Transporte' : 'Otros',
         date: reservation.startAt.slice(0, 10), merchant: reservation.provider || '', notes: 'Creado desde reservaciones',
-        reservationId: reservation.id, createdBy: auth.currentUser.uid, createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+        reservationId: reservation.id, createdBy: userId, createdAt: serverTimestamp(), updatedAt: serverTimestamp()
       });
       transaction.update(reservationRef, { expenseId: expenseRef.id, updatedAt: serverTimestamp() });
     });

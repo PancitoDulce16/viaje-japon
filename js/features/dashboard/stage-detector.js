@@ -9,26 +9,34 @@
  * dates alone. The Dashboard only needs to tell Dreaming, Planning,
  * Preparing, Traveling, Remembering, and Looking-back apart.
  *
- * Always goes through window.TimeUtils for date math — never raw
- * `new Date(dateString)` arithmetic (see CLAUDE.md's import-rules /
- * known-landmines notes on 'YYYY-MM-DD' off-by-one bugs).
+ * Uses local calendar dates without depending on a global script having
+ * finished loading. Date-only strings must never shift through UTC parsing.
  */
+
+import { localDate } from './dashboard-summary.js';
 
 const PREPARING_WINDOW_DAYS = 14;
 const REMEMBERING_WINDOW_DAYS = 30;
+
+function tripDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))) return null;
+  const date = localDate(value);
+  return date && date.getFullYear() === Number(value.slice(0, 4)) && date.getMonth() + 1 === Number(value.slice(5, 7)) && date.getDate() === Number(value.slice(8, 10)) ? date : null;
+}
+
+const daysBetween = (start, end) => Math.round((Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()) - Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())) / 86400000);
 
 /**
  * @param {object|null} trip - the active trip (TripsManager.currentTrip shape)
  * @returns {'dreaming'|'planning'|'preparing'|'traveling'|'remembering'|'lookingBack'}
  */
-export function detectJourneyStage(trip) {
-  if (!trip?.info?.dateStart || !trip?.info?.dateEnd) {
+export function detectJourneyStage(trip, nowValue = new Date()) {
+  const math = getJourneyMath(trip, nowValue);
+  if (!math) {
     return 'dreaming'; // no trip yet, or a trip with no dates committed
   }
 
-  const today = new Date();
-  const daysUntilStart = window.TimeUtils.daysBetween(today, trip.info.dateStart);
-  const daysSinceEnd = window.TimeUtils.daysBetween(trip.info.dateEnd, today);
+  const { daysUntilStart, daysSinceEnd } = math;
 
   if (daysUntilStart > PREPARING_WINDOW_DAYS) return 'planning';
   if (daysUntilStart > 0) return 'preparing';
@@ -40,14 +48,14 @@ export function detectJourneyStage(trip) {
 /**
  * Helper the hero-moment renderer needs alongside the stage itself.
  */
-export function getJourneyMath(trip) {
-  if (!trip?.info?.dateStart || !trip?.info?.dateEnd) return null;
-
-  const today = new Date();
+export function getJourneyMath(trip, nowValue = new Date()) {
+  const start = tripDate(trip?.info?.dateStart), end = tripDate(trip?.info?.dateEnd);
+  const today = localDate(nowValue);
+  if (!start || !end || !today || end < start) return null;
   return {
-    daysUntilStart: window.TimeUtils.daysBetween(today, trip.info.dateStart),
-    daysSinceEnd: window.TimeUtils.daysBetween(trip.info.dateEnd, today),
-    dayOfTrip: window.TimeUtils.daysBetween(trip.info.dateStart, today) + 1,
-    totalDays: window.TimeUtils.daysBetween(trip.info.dateStart, trip.info.dateEnd) + 1
+    daysUntilStart: daysBetween(today, start),
+    daysSinceEnd: daysBetween(end, today),
+    dayOfTrip: daysBetween(start, today) + 1,
+    totalDays: daysBetween(start, end) + 1
   };
 }

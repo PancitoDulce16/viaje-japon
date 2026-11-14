@@ -1,3 +1,5 @@
+import { reservationStart } from './reservation-summary.js';
+
 export const RESERVATION_TYPES=Object.freeze(['Vuelo','Hospedaje','Transporte','Restaurante','Actividad','Seguro','Entrada','Otro']);
 export const RESERVATION_STATES=Object.freeze(['Pendiente','Confirmada','Cancelada','Completada']);
 
@@ -11,11 +13,13 @@ export function validateReservation(data) {
   if(!String(data.title||'').trim())errors.push('El título es obligatorio.');
   if(!RESERVATION_TYPES.includes(data.type))errors.push('Selecciona un tipo válido.');
   if(!RESERVATION_STATES.includes(data.status))errors.push('Selecciona un estado válido.');
-  if(!data.startAt||Number.isNaN(new Date(data.startAt).getTime()))errors.push('Indica fecha y hora de inicio.');
-  if(data.endAt&&new Date(data.endAt)<new Date(data.startAt))errors.push('La finalización debe ser posterior al inicio.');
+  const start = reservationStart(data.startAt), end = data.endAt ? reservationStart(data.endAt) : null;
+  if(!start)errors.push('Indica fecha y hora de inicio válidas.');
+  if(data.endAt&&!end)errors.push('Indica fecha y hora de finalización válidas.');
+  if(start&&end&&end.date<start.date)errors.push('La finalización debe ser posterior al inicio.');
   if(data.costMinor!=null&&(!Number.isSafeInteger(data.costMinor)||data.costMinor<=0))errors.push('El costo debe ser positivo.');
   if(data.type==='Vuelo'&&!String(data.details?.flightNumber||'').trim())errors.push('Indica el número de vuelo.');
-  if(data.type==='Restaurante'&&data.details?.partySize!=null&&data.details.partySize<1)errors.push('La cantidad de personas no es válida.');
+  if(data.type==='Restaurante'&&data.details?.partySize!=null&&(!Number.isSafeInteger(data.details.partySize)||data.details.partySize<1))errors.push('La cantidad de personas no es válida.');
   return errors;
 }
 
