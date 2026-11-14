@@ -39,6 +39,8 @@ Validación de esta tanda: 136 casos de navegador aprobados, incluidos los recor
 
 `test:rules` ahora termina con error si no existe un emulador disponible, evitando confundir una prueba omitida con una prueba aprobada.
 
+**Actualización posterior: regla publicada.** Tras iniciar sesión con una cuenta administradora, `firebase deploy --only firestore:rules --project japan-itin-dev` terminó correctamente. Firebase confirmó la publicación del ruleset `b033cfbd-d549-49aa-9998-842832a3f36c` el 14 de noviembre de 2026. El bloqueo de publicación manual queda resuelto; sigue pendiente otorgar permisos adecuados a la cuenta de publicación automática de GitHub. Falta confirmar el recorrido con la sesión real del celular.
+
 Último control: `npm test`, imports, compilación, artefacto y arranque aprobados; 128 pruebas de navegador aprobadas. Después se ajustó el encuadre móvil de Mis viajes y se repitieron sus pruebas específicas. Se usan datos simulados; falta comprobar la cuenta y el dispositivo reales de la usuaria.
 
 | Área | Fallo | Reparación y prueba |
