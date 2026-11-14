@@ -1,0 +1,21 @@
+/* Keep the collection inside the viewport despite legacy mobile modal rules. */
+#modal-trips-list {
+  inset: 0;
+  height: 100dvh;
+  max-height: none;
+  overflow: hidden;
+  padding: 1rem;
+}
+#modal-trips-list > div {
+  min-height: 0;
+  margin: 0 !important;
+  max-width: min(72rem, 100%) !important;
+  max-height: calc(100dvh - 2rem) !important;
+  overflow-y: auto;
+}
+#modal-trips-list .trip-card { min-width: 0; }
+#modal-trips-list .trip-card > .grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+#modal-trips-list .trip-card > .flex:last-child { flex-wrap: wrap; }
+#modal-trips-list .trip-card > .flex:last-child button { min-width: max-content; }

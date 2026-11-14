@@ -1,0 +1,70 @@
+# Japitín: revisión de estabilidad
+
+## Orden acordado
+
+1. Reparar y comprobar el funcionamiento.
+2. Mejorar los flujos existentes después de estabilizarlos.
+3. Trabajar el diseño después.
+
+Un módulo con pruebas locales aprobadas no equivale a un flujo completo comprobado con cuentas, permisos, conexión y servicios reales. No se declara la aplicación libre de todos los fallos posibles.
+
+## Revisión general del 14 de noviembre de 2026
+
+| Comprobación | Resultado | Alcance |
+| --- | --- | --- |
+| Sintaxis de JavaScript | 347 archivos aprobados | Archivos versionados de aplicación, funciones, datos y workers |
+| Suite de navegador existente | 115 casos aprobados | Componentes, itinerario, plantillas, exportación PDF, presupuesto, navegación y formularios |
+| Dependencias de producción | 0 vulnerabilidades reportadas por `npm audit --omit=dev` | Avisos conocidos del registro al ejecutar la consulta; no sustituye una auditoría del código |
+| Artefacto compilado | Aprobado | Recursos, workers, iconos y exclusión de configuración local |
+| Arranque del artefacto | Aprobado | Inicio de sesión y dashboard compilados, sin sesión real |
+
+## Fallos reparados en esta revisión
+
+Último control: `npm test`, imports, compilación, artefacto y arranque aprobados; 128 pruebas de navegador aprobadas. Después se ajustó el encuadre móvil de Mis viajes y se repitieron sus pruebas específicas. Se usan datos simulados; falta comprobar la cuenta y el dispositivo reales de la usuaria.
+
+| Área | Fallo | Reparación y prueba |
+| --- | --- | --- |
+| Mis viajes | Dependencia del global TimeUtils, tarjetas incompletas que interrumpían toda la lista y errores de conexión presentados como colección vacía | Dependencia explícita, datos opcionales seguros, carga/error/reintento diferenciados y descarte de callbacks antiguos; menú real a 390 y 1440 px en ambos temas |
+| Mis viajes móvil | Reglas generales recortaban el encabezado y desbordaban acciones | Panel limitado al viewport, estadísticas en tres columnas y acciones que pueden ocupar otra fila |
+| Equipaje | Una acción de categoría también modificaba artículos ocultos por responsable o estado | Se aplica a la selección visible; regresión con artículos de dos personas |
+| Equipaje | Envíos repetidos y errores sin gestionar al guardar, marcar o eliminar | Bloqueo durante guardado, restauración de casilla y conservación del formulario ante rechazo |
+| Equipaje | Una respuesta tardía podía instalar un listener del viaje anterior | Lecturas y suscripciones vinculadas al viaje, usuario y versión de carga |
+| Equipaje | Cantidades fraccionarias y lotes demasiado grandes | Validación de enteros entre 1 y 99; lotes de hasta 500 escrituras |
+| Equipaje | Un formulario abierto podía utilizar el viaje cambiado después | El formulario conserva el viaje de origen; se rechazan escrituras de formularios desactualizados |
+| Exportación PNG | La importación npm de html2canvas no se resolvía en publicación de código fuente | Se reutiliza el cargador de proveedor existente; prueba de módulo nativo sin transformación de Vite |
+| Actualizaciones | El cambio de versión borraba localStorage y podía perder borradores o preferencias | Se conserva el almacenamiento y no se fuerza la recarga de formularios activos |
+| Workers y notificaciones | La limpieza desregistraba workers activos y borraba cachés ajenas | Se elimina únicamente `/sw.js` y su caché obsoleta `japitin-v1`; se conserva el worker de Firebase Messaging |
+| Chat | La confirmación tardía de un envío borraba mensajes nuevos o el borrador de otro viaje | Se conserva el contenido posterior, se vincula la limpieza al viaje y usuario originales y se bloquean envíos duplicados |
+
+## Reparaciones previas cubiertas por regresiones
+
+- Selección de viaje y cargas tardías del inicio.
+- Guardados de tareas y reservas, reintentos, doble envío y formularios desactualizados.
+- Conservación de vínculos con gastos y contadores de documentos al editar reservas.
+- Cierre y cancelación de documentos, cargas tardías, limpieza de vistas previas y eliminación recuperable.
+- Inicialización de fechas sin depender del orden de scripts globales.
+- Enlace entre próxima actividad, día del mapa y direcciones.
+
+## Cobertura que sigue pendiente
+
+### Hallazgos abiertos de alta prioridad
+
+- **Dependencias de funciones del servidor**: auditoría separada de `functions/package-lock.json` reporta 16 dependencias afectadas (1 crítica, 4 altas, 10 moderadas, 1 baja). No están incluidas en el resultado limpio del paquete raíz. Requieren actualización y pruebas del servidor; no se aplicó una migración mayor automática dentro de la reparación del menú móvil.
+
+- **Copias de seguridad/importación (`export-import-system.js`)**: conserva referencias a `window.firebase.auth()` de la API antigua; la exportación de viajes usa una consulta y un campo de propietario que no corresponden al modelo colaborativo actual. Además, algunas rutas informan éxito aunque fallen secciones. Requiere reparar y probar exportación/restauración antes de confiar en una copia como respaldo completo.
+- **Publicación real frente a compilación**: no cambiar `firebase.json` a `dist` sin comprobar configuración opcional, rutas y carga diferida. La publicación de código fuente está documentada como intencional en `js/core/config.js`. La exportación PNG incompatible ya se reparó de forma compatible con ese modo.
+
+Estos hallazgos permanecen abiertos; las comprobaciones generales aprobadas no los convierten en reparados.
+
+| Área | Trabajo necesario antes de declararla comprobada |
+| --- | --- |
+| Autenticación y permisos | Sesiones reales de propietario, integrante e invitado; caducidad y revocación de acceso |
+| Firebase | Ejecutar reglas en emuladores y verificar operaciones con Auth, Firestore y Storage integrados |
+| Datos colaborativos | Dos sesiones simultáneas, cambios de viaje, desconexión, reconexión y conflictos |
+| Publicación | Firebase está configurado para servir código fuente de forma intencional; las pruebas de `dist` no cubren por sí solas esa publicación. Ampliar la comprobación del modo publicado antes de modificar esa configuración |
+| Herramientas secundarias | Revisar diario, fotos, chat, compras, favoritos, emergencias, herramientas culturales y notificaciones de extremo a extremo |
+| Importación y exportación | Archivos malformados, tamaños grandes, restauración y conservación de datos privados |
+| Móvil y accesibilidad | Recorridos completos con teclado, lector de pantalla, zoom y dispositivo táctil; los cuatro anchos locales cubren solo parte de estas condiciones |
+| Offline | Arranque sin red, cambios pendientes, reconexión y recuperación sin pérdida de datos |
+
+Las comprobaciones locales usan datos de prueba y simulaciones cuando el flujo requiere identidad o escritura. El despliegue y los servicios reales no quedan certificados por estas pruebas.

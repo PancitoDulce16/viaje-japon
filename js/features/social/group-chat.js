@@ -782,26 +782,46 @@ export const GroupChat = {
       return;
     }
 
+    const user = auth.currentUser;
+    const originalValue = input.value;
+    const draftKey = this.preferenceKey('draft');
+    const reply = this.replyingTo;
+    const key = `${tripId}:${user.uid}`;
+    this.pendingSends ||= new Set();
+    if (this.pendingSends.has(key)) return;
+    this.pendingSends.add(key);
+    const button = document.getElementById('sendMessageBtn');
+    if (button) button.disabled = true;
+    const isCurrent = () => this.getCurrentTripId() === tripId && auth.currentUser?.uid === user.uid && document.getElementById('chatInput') === input;
+
     try {
       const messagesRef = collection(db, `trips/${tripId}/chat`);
       await addDoc(messagesRef, {
         message: message,
-        userId: auth.currentUser.uid,
-        userEmail: auth.currentUser.email,
-        userName: auth.currentUser.displayName || auth.currentUser.email.split('@')[0],
+        userId: user.uid,
+        userEmail: user.email || '',
+        userName: user.displayName || user.email?.split('@')[0] || 'Viajero',
         timestamp: serverTimestamp(),
         createdAt: new Date().toISOString(),
-        ...(this.replyingTo ? { replyTo: this.replyingTo } : {})
+        ...(reply ? { replyTo: reply } : {})
       });
 
-      input.value = '';
-      localStorage.removeItem(this.preferenceKey('draft'));
-      this.cancelReply();
-      window.Notifications?.show('Mensaje enviado', 'success');
+      // A user may already be writing the next message, or viewing another trip.
+      try {
+        if (auth.currentUser?.uid === user.uid && localStorage.getItem(draftKey) === originalValue) localStorage.removeItem(draftKey);
+      } catch { /* A local storage failure cannot turn a confirmed send into a failed send. */ }
+      if (isCurrent()) {
+        if (input.value === originalValue) input.value = '';
+        if (this.replyingTo === reply) this.cancelReply();
+        window.Notifications?.show('Mensaje enviado', 'success');
+      }
 
     } catch (error) {
       console.error('❌ Error sending message:', error);
-      window.Notifications?.error('Error al enviar mensaje');
+      if (isCurrent()) window.Notifications?.error('Error al enviar mensaje. Tu borrador se conserva.');
+    } finally {
+      this.pendingSends.delete(key);
+      if (button) button.disabled = false;
     }
   },
 

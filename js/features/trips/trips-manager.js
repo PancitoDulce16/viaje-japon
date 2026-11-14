@@ -1,6 +1,7 @@
 ﻿// js/trips-manager.js - Sistema de Gestión de Viajes con Invitación Mejorada
 
 import { db, auth } from '../../core/firebase-config.js';
+import { TimeUtils } from '../../utils/time-utils.js';
 import { Notifications } from '../../core/notifications.js';
 import {
   collection,
@@ -25,6 +26,7 @@ export const TripsManager = {
   currentTrip: null,
   userTrips: [],
   unsubscribe: null,
+  tripsLoadState: 'idle',
 
   // Generar código único de 6 caracteres
   generateTripCode() {
@@ -40,6 +42,9 @@ export const TripsManager = {
     }
 
     const userId = auth.currentUser.uid;
+    const loadVersion = this._tripsLoadVersion = (this._tripsLoadVersion || 0) + 1;
+    this.tripsLoadState = 'loading';
+    this.renderTripsList();
 
     console.log('🔍 DEBUG TripsManager - Inicializando listener de trips para userId:', userId);
 
@@ -63,6 +68,8 @@ export const TripsManager = {
     const q = query(tripsRef, where('members', 'array-contains', userId));
 
     this.unsubscribe = onSnapshot(q, (snapshot) => {
+      if (loadVersion !== this._tripsLoadVersion || auth.currentUser?.uid !== userId) return;
+      this.tripsLoadState = 'ready';
       this.userTrips = [];
       snapshot.forEach((doc) => {
         this.userTrips.push({
@@ -115,6 +122,8 @@ export const TripsManager = {
         this.updateTripHeaderEmpty();
       }
     }, (error) => {
+      if (loadVersion !== this._tripsLoadVersion || auth.currentUser?.uid !== userId) return;
+      this.tripsLoadState = 'error';
       console.error('❌ ERROR en TripsManager onSnapshot - Full details:', {
         code: error.code,
         message: error.message,
@@ -129,9 +138,7 @@ export const TripsManager = {
       }
 
       // Mostrar mensaje al usuario
-      this.userTrips = [];
       this.renderTripsList();
-      this.updateTripHeaderEmpty();
     });
   },
 
@@ -545,9 +552,6 @@ export const TripsManager = {
 
   // ===== RENDER MEJORADO DE LISTA DE VIAJES =====
   renderTripsList() {
-    const container = document.getElementById('tripsListContainer');
-    if (!container) return;
-
     // Actualizar badge de cantidad de viajes
     const updateBadges = () => {
       const badge1 = document.getElementById('tripsCountBadge');
@@ -556,6 +560,17 @@ export const TripsManager = {
       if (badge2) badge2.textContent = this.userTrips.length;
     };
     updateBadges();
+    const container = document.getElementById('tripsListContainer');
+    if (!container) return;
+    if (this.tripsLoadState === 'error') {
+      container.innerHTML = '<p role="alert">No pudimos cargar tus viajes. Revisá tu conexión y volvé a intentarlo.</p><button type="button" data-retry-trips>Reintentar</button>';
+      container.querySelector('[data-retry-trips]').onclick = () => this.initUserTrips();
+      return;
+    }
+    if (this.userTrips.length === 0 && ['idle', 'loading'].includes(this.tripsLoadState)) {
+      container.innerHTML = '<p role="status">Cargando tus viajes…</p>';
+      return;
+    }
 
     // ===== EMPTY STATE =====
     if (this.userTrips.length === 0) {
@@ -592,17 +607,22 @@ export const TripsManager = {
     }
 
     // ===== CALCULAR STATS DE CADA VIAJE =====
-    const tripsWithStats = this.userTrips.map(trip => {
+    const tripsWithStats = this.userTrips.map(value => {
+      const trip = { ...value, info: { ...value.info, name: String(value.info?.name || 'Viaje sin nombre') }, members: Array.isArray(value.members) ? value.members : [] };
       const today = new Date();
-      const totalDays = window.TimeUtils.daysBetween(trip.info.dateStart, trip.info.dateEnd) + 1;
-      const daysUntil = window.TimeUtils.daysBetween(today, trip.info.dateStart);
-      const daysRemaining = window.TimeUtils.daysBetween(today, trip.info.dateEnd);
+      const hasDates = TimeUtils.parseDate(trip.info.dateStart) && TimeUtils.parseDate(trip.info.dateEnd) && TimeUtils.daysBetween(trip.info.dateStart, trip.info.dateEnd) >= 0;
+      const totalDays = hasDates ? TimeUtils.daysBetween(trip.info.dateStart, trip.info.dateEnd) + 1 : '—';
+      const daysUntil = TimeUtils.daysBetween(today, trip.info.dateStart);
+      const daysRemaining = TimeUtils.daysBetween(today, trip.info.dateEnd);
 
       let status = 'upcoming'; // upcoming, ongoing, past
       let statusText = 'Próximo';
       let statusColor = 'blue';
 
-      if (daysRemaining < 0) {
+      if (!hasDates) {
+        statusText = 'Fechas pendientes';
+        statusColor = 'gray';
+      } else if (daysRemaining < 0) {
         status = 'past';
         statusText = 'Finalizado';
         statusColor = 'gray';
@@ -671,6 +691,7 @@ export const TripsManager = {
 
   // Render individual trip card
   renderTripCard(trip) {
+    const safe = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
     const isActive = this.currentTrip && this.currentTrip.id === trip.id;
     const { stats } = trip;
 
@@ -690,7 +711,7 @@ export const TripsManager = {
             : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-purple-300'
         }"
         onclick="TripsManager.selectTrip('${trip.id}'); TripsManager.closeTripsListModal()"
-        data-trip-name="${trip.info.name.toLowerCase()}"
+        data-trip-name="${safe(trip.info.name.toLowerCase())}"
       >
         <!-- Badge de activo -->
         ${isActive ? `
@@ -703,7 +724,7 @@ export const TripsManager = {
 
         <!-- Header del card -->
         <div class="mb-4">
-          <h3 class="font-bold text-xl dark:text-white mb-2 pr-20">${trip.info.name}</h3>
+          <h3 class="font-bold text-xl dark:text-white mb-2 pr-20">${safe(trip.info.name)}</h3>
 
           <!-- Status badge -->
           <div class="flex items-center gap-2 mb-3">
@@ -720,9 +741,9 @@ export const TripsManager = {
           <!-- Fechas -->
           <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
             <i class="fas fa-calendar-alt"></i>
-            <span>${window.TimeUtils.formatDate(trip.info.dateStart)}</span>
+            <span>${TimeUtils.formatDate(trip.info.dateStart) || 'Fecha pendiente'}</span>
             <span>→</span>
-            <span>${window.TimeUtils.formatDate(trip.info.dateEnd)}</span>
+            <span>${TimeUtils.formatDate(trip.info.dateEnd) || 'Fecha pendiente'}</span>
           </div>
         </div>
 
@@ -737,7 +758,7 @@ export const TripsManager = {
             <div class="text-xs text-gray-600 dark:text-gray-400">viajeros</div>
           </div>
           <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2">
-            <div class="text-2xl font-bold text-green-600 dark:text-green-400">${trip.info.shareCode || 'N/A'}</div>
+            <div class="text-2xl font-bold text-green-600 dark:text-green-400">${safe(trip.info.shareCode || 'N/A')}</div>
             <div class="text-xs text-gray-600 dark:text-gray-400">código</div>
           </div>
         </div>
@@ -1652,6 +1673,8 @@ export const TripsManager = {
 
   // Cleanup
   cleanup(isRealLogout = false) {
+    this._tripsLoadVersion = (this._tripsLoadVersion || 0) + 1;
+    this.tripsLoadState = 'idle';
     this._tripSelectionVersion = (this._tripSelectionVersion || 0) + 1;
     this._dashboardLoadVersion = (this._dashboardLoadVersion || 0) + 1;
     if (this.unsubscribe) {

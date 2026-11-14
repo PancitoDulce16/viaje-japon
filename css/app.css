@@ -126,5 +126,6 @@
 @import './dashboard-home.css';
 @import './itinerary-page.css';
 @import './template-library.css';
+@import './trips-list.css';
 
 .activity-optional-chip,.activity-transfer-chip,.activity-buffer-chip{padding:.22rem .48rem;border:1px solid var(--hairline);border-radius:999px;background:var(--surface-soft);color:var(--text-secondary);font-size:.68rem;font-weight:700}.itinerary-conflicts{display:grid;gap:.55rem;margin:0 0 1rem;padding:clamp(.75rem,2vw,1rem);border:1px solid var(--hairline);background:var(--surface-elevated);color:var(--text-primary)}.itinerary-conflicts>header{display:flex;justify-content:space-between;gap:1rem}.itinerary-conflict{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.65rem .75rem;border-left:4px solid var(--color-kitsune);background:var(--surface-soft)}.itinerary-conflict--critical{border-left-color:var(--color-sango)}.itinerary-conflict p{margin:0;font-size:.84rem}.itinerary-conflict button{flex:none}.itinerary-conflicts--clear{display:block;color:var(--text-secondary)}@media(max-width:640px){.itinerary-conflict{align-items:flex-start;flex-direction:column}.activity-card__actions{max-width:8.5rem;flex-wrap:wrap}}

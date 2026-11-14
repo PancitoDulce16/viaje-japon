@@ -359,7 +359,7 @@
                     const regs = await navigator.serviceWorker.getRegistrations();
                     for (const reg of regs) {
                         const scriptURL = (reg.active || reg.waiting || reg.installing)?.scriptURL || '';
-                        if (scriptURL && !scriptURL.endsWith('/service-worker.js')) {
+                        if (scriptURL && new URL(scriptURL).origin === window.location.origin && new URL(scriptURL).pathname === '/sw.js') {
                             console.warn('[SW] 🧟 Desregistrando service worker zombie:', scriptURL);
                             await reg.unregister();
                         }

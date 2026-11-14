@@ -10,7 +10,7 @@
  *   const timeStr = TimeUtils.formatTime(870);
  */
 
-const TimeUtils = {
+export const TimeUtils = {
   /**
    * Parses a time string and converts it to minutes since midnight
    * @param {string} timeStr - Time string in formats: "14:30", "2:30pm", "9am", etc.

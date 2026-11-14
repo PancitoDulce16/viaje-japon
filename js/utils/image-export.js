@@ -1,6 +1,7 @@
 // js/utils/image-export.js - Exportación compartida de elementos del DOM como imagen
 // Usado por TripCardsGenerator y TripStoryGenerator (antes cada uno reimplementaba
 // su propia copia de este pipeline).
+import { loadScript } from '../performance/lazy-vendors.js';
 
 /**
  * Convierte un nombre en un slug seguro para nombres de archivo.
@@ -16,7 +17,8 @@ export function slugifyFilename(name, fallback = 'japitin-trip') {
  * @returns {Promise<boolean>} true si se descargó, false si no se pudo generar el blob
  */
 export async function downloadElementAsImage(element, filename) {
-  const { default: html2canvas } = await import('html2canvas');
+  await loadScript('html2canvas');
+  const html2canvas = window.html2canvas;
   const canvas = await html2canvas(element, {
     backgroundColor: null,
     scale: 2,
