@@ -35,6 +35,10 @@ Un módulo con pruebas locales aprobadas no equivale a un flujo completo comprob
 
 Validación de esta tanda: 136 casos de navegador aprobados, incluidos los recorridos anteriores en 320, 390, 768 y 1440 px y ambos temas. SOS incluye desplazamiento táctil real mediante CDP. Suite de lógica, imports, compilación, artefacto y arranque aprobados. Reglas ejecutadas dos veces en emulador con resultados aprobados después de reproducir el fallo original. Esto no certifica aún la publicación remota ni una sesión real del dispositivo de la usuaria. Las capturas originales continúan ausentes localmente, según el registro de referencias; se inspeccionaron las capturas nuevas sin presentarlas como canónicas.
 
+**Resultado remoto de `6fbbaa1`**: Hosting se publicó correctamente y se comprobó por HTTP que sirve `mobile-stability.css` y el gestor de viajes actualizado. La verificación de reglas en GitHub también pasó. La publicación de reglas fue rechazada por `firebaserules.googleapis.com` con HTTP 403 (`The caller does not have permission`). Por tanto, la causa de la consulta está reparada y comprobada localmente, pero su regla todavía no está publicada. Hace falta una sesión administradora autorizada o conceder a la cuenta de publicación el permiso correspondiente. Ejecución: https://github.com/PancitoDulce16/viaje-japon/actions/runs/43652988179 . No se considera cerrado el fallo de sincronización de viajes mientras falte este paso.
+
+`test:rules` ahora termina con error si no existe un emulador disponible, evitando confundir una prueba omitida con una prueba aprobada.
+
 Último control: `npm test`, imports, compilación, artefacto y arranque aprobados; 128 pruebas de navegador aprobadas. Después se ajustó el encuadre móvil de Mis viajes y se repitieron sus pruebas específicas. Se usan datos simulados; falta comprobar la cuenta y el dispositivo reales de la usuaria.
 
 | Área | Fallo | Reparación y prueba |
@@ -74,7 +78,7 @@ Estos hallazgos permanecen abiertos; las comprobaciones generales aprobadas no l
 | Área | Trabajo necesario antes de declararla comprobada |
 | --- | --- |
 | Autenticación y permisos | Sesiones reales de propietario, integrante e invitado; caducidad y revocación de acceso |
-| Firebase | Ejecutar reglas en emuladores y verificar operaciones con Auth, Firestore y Storage integrados |
+| Firebase | Reglas de pertenencia y gastos comprobadas en emulador; pendiente publicar la regla corregida y verificar Auth, Firestore y Storage con sesiones reales |
 | Datos colaborativos | Dos sesiones simultáneas, cambios de viaje, desconexión, reconexión y conflictos |
 | Publicación | Firebase está configurado para servir código fuente de forma intencional; las pruebas de `dist` no cubren por sí solas esa publicación. Ampliar la comprobación del modo publicado antes de modificar esa configuración |
 | Herramientas secundarias | Revisar diario, fotos, chat, compras, favoritos, emergencias, herramientas culturales y notificaciones de extremo a extremo |

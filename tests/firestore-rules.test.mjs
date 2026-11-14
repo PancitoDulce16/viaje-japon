@@ -4,8 +4,8 @@ import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebas
 import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
 
 if (!process.env.FIRESTORE_EMULATOR_HOST) {
-  console.log('firestore-rules: omitido (requiere Firebase Emulator)');
-  process.exit(0);
+  console.error('firestore-rules: requiere Firebase Emulator. Ejecutá npm run test:rules:emulator; la comprobación no se ha realizado.');
+  process.exit(1);
 }
 
 const projectId = 'japitin-rules-test';
