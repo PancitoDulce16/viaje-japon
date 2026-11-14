@@ -19,6 +19,7 @@ const owner = testEnv.authenticatedContext(ownerId).firestore();
 const member = testEnv.authenticatedContext(memberId).firestore();
 const outsider = testEnv.authenticatedContext(outsiderId).firestore();
 
+await testEnv.clearFirestore();
 await testEnv.withSecurityRulesDisabled(async context => {
   const admin = context.firestore();
   await setDoc(doc(admin, `trips/${tripId}`), {
@@ -26,6 +27,13 @@ await testEnv.withSecurityRulesDisabled(async context => {
     members: [ownerId, memberId],
     memberEmails: ['owner@example.test', 'member@example.test']
   });
+  for (let index = 1; index <= 4; index++) await setDoc(doc(admin, `trips/member-trip-${index}`), {
+    info: { createdBy: memberId, name: `Viaje ${index}` }, members: [memberId]
+  });
+  await setDoc(doc(admin, 'trips/outsider-trip'), {
+    info: { createdBy: outsiderId, name: 'Otro usuario' }, members: [outsiderId]
+  });
+  await setDoc(doc(admin, 'trips/legacy-without-members'), { info: { name: 'Registro incompleto' } });
   await setDoc(doc(admin, `trips/${tripId}/expenses/expense-owner`), {
     description: 'Hotel', amountMinor: 10000, originalCurrency: 'CRC',
     convertedAmountMinor: 10000, baseCurrency: 'CRC', exchangeRate: 1,
@@ -37,7 +45,11 @@ await testEnv.withSecurityRulesDisabled(async context => {
 try {
   await assertSucceeds(getDoc(doc(member, `trips/${tripId}`)));
   await assertFails(getDoc(doc(outsider, `trips/${tripId}`)));
-  await assertSucceeds(getDocs(query(collection(member, 'trips'), where('members', 'array-contains', memberId))));
+  const ownTrips = await assertSucceeds(getDocs(query(collection(member, 'trips'), where('members', 'array-contains', memberId))));
+  assert.equal(ownTrips.size, 5, 'all five own/shared trips load without exposing another user’s trip');
+  assert.equal(ownTrips.docs.some(trip => trip.id === 'outsider-trip'), false);
+  await assertFails(getDocs(collection(member, 'trips')));
+  await assertFails(getDocs(query(collection(outsider, 'trips'), where('members', 'array-contains', memberId))));
   await assertFails(getDocs(collection(outsider, 'trips')));
 
   await assertFails(updateDoc(doc(member, `trips/${tripId}`), { members: [ownerId, memberId, outsiderId] }));

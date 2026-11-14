@@ -206,9 +206,9 @@ export const BudgetCalculator = {
             ${this.formatBudget(amount)} <span class="text-xs text-gray-600 dark:text-gray-400">(~$${usd})</span>
           </span>
         </div>
-        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-          <div class="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all"
-               style="width: ${percentage}%"></div>
+        <div class="jp-budget-progress w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2" role="progressbar" aria-label="${label}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.max(0, Math.min(100, percentage))}">
+          <div class="jp-budget-progress__fill bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all"
+               style="width: ${Math.max(0, Math.min(100, percentage))}%"></div>
         </div>
         <p class="text-xs text-gray-600 dark:text-gray-400 mt-1 font-bold">${percentage}% del total</p>
       </div>

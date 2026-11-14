@@ -47,7 +47,8 @@ for (const width of [390, 1440]) for (const theme of ['light', 'dark']) {
       await window.TripsManager.initUserTrips();
       window.tripListeners.at(-1).error(new Error('offline'));
     });
-    await expect(modal.getByRole('alert')).toContainText('No pudimos cargar');
+    await expect(modal.getByRole('alert')).toContainText('No pudimos actualizar');
+    await expect(modal.locator('.trip-card')).toHaveCount(3);
     expect(await page.evaluate(() => window.TripsManager.currentTrip.id)).toBe('saved');
     await modal.getByRole('button', { name: 'Reintentar', exact: true }).click();
     await page.evaluate(() => window.tripListeners.at(-1).success({ forEach: fn => fn({ id: 'saved', data: () => ({ info: { name: 'Japón guardado' }, members: ['me'] }) }) }));

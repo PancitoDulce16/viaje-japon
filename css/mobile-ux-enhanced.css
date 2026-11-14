@@ -575,9 +575,8 @@ html.dark .mobile-bottom-nav__item {
      flotantes): estaban diseñadas para 3s/20s (movimiento suave, gentle)
      y este "*" las forzaba a 0.2s !important - se veían "moviéndose muy
      rápido"/tembloroso en vez de flotar. */
-  *:not(.maneki-neko):not(.floating-shape) {
-    animation-duration: 0.2s !important;
-  }
+  /* Keep each component's duration. Shortening infinite decorative animations
+     makes petals and fireflies race rather than reducing rendering work. */
 
   /* Optimize font rendering */
   body {

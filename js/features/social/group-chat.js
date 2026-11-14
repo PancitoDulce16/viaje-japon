@@ -148,7 +148,7 @@ export const GroupChat = {
     const currentUser = auth.currentUser;
     const tripName = window.TripsManager?.currentTrip?.info?.name || 'Chat del Viaje';
 
-    const me = (currentUser.displayName || currentUser.email.split('@')[0] || 'Tú').split(/[\s._-]+/)[0];
+    const me = (currentUser.displayName || currentUser.email?.split('@')[0] || 'Tú').split(/[\s._-]+/)[0];
 
     const participantNames = [...new Set(this.messages.map(message =>
       message.userName || message.userEmail?.split('@')[0]
@@ -213,9 +213,9 @@ export const GroupChat = {
           <div id="chatReplyPreview" class="jc-reply-preview" hidden></div>
           <div class="jc-compose__row">
             <button type="button" class="jc-tool jc-tool--plus" onclick="GroupChat.toggleToolTray()" aria-label="Abrir herramientas" aria-expanded="false">＋</button>
+            <button type="button" class="jc-tool jc-tool--stickers" onclick="GroupChat.toggleStickerPicker()" aria-label="Abrir stickers" aria-controls="chatStickerPicker" aria-expanded="false">🐾<small>Stickers</small></button>
             <div id="chatToolTray" class="jc-tooltray" hidden>
               <button type="button" class="jc-tool" id="chatEmojiBtn" aria-label="Agregar flor de sakura"><span>🌸</span><small>Sakura</small></button>
-              <button type="button" class="jc-tool" onclick="GroupChat.toggleStickerPicker()" aria-label="Abrir stickers"><span>🐾</span><small>Sticker</small></button>
               <button type="button" class="jc-tool" onclick="GroupChat.sharePhoto()" aria-label="Compartir foto"><span>📷</span><small>Foto</small></button>
               <button type="button" class="jc-tool" onclick="GroupChat.shareAttachment()" aria-label="Adjuntar archivo o audio"><span>📎</span><small>Adjunto</small></button>
               <button type="button" class="jc-tool" onclick="GroupChat.createQuickPoll()" aria-label="Crear encuesta"><span>📊</span><small>Encuesta</small></button>
@@ -499,7 +499,14 @@ export const GroupChat = {
 
   toggleStickerPicker() {
     const picker = document.getElementById('chatStickerPicker');
-    if (picker) picker.hidden = !picker.hidden;
+    if (!picker) return;
+    picker.hidden = !picker.hidden;
+    document.querySelector('.jc-tool--stickers')?.setAttribute('aria-expanded', String(!picker.hidden));
+    const tray = document.getElementById('chatToolTray');
+    if (tray) tray.hidden = true;
+    const plus = document.querySelector('.jc-tool--plus');
+    plus?.setAttribute('aria-expanded', 'false');
+    plus?.classList.remove('active');
   },
 
   toggleToolTray() {
@@ -513,23 +520,29 @@ export const GroupChat = {
 
   async sendSticker(stickerIndex, label) {
     const tripId = this.getCurrentTripId();
-    if (!tripId || !auth.currentUser || !Number.isInteger(stickerIndex) || stickerIndex < 0 || stickerIndex > 8) return;
+    const user = auth.currentUser;
+    if (!tripId || !user || this.sendingSticker || !Number.isInteger(stickerIndex) || stickerIndex < 0 || stickerIndex > 8) return;
+    this.sendingSticker = true;
     try {
       await addDoc(collection(db, `trips/${tripId}/chat`), {
         message: label,
         stickerIndex,
-        userId: auth.currentUser.uid,
-        userEmail: auth.currentUser.email,
-        userName: auth.currentUser.displayName || auth.currentUser.email.split('@')[0],
+        userId: user.uid,
+        userEmail: user.email || '',
+        userName: user.displayName || user.email?.split('@')[0] || 'Viajero',
         timestamp: serverTimestamp(),
         createdAt: new Date().toISOString()
       });
+      if (tripId !== this.getCurrentTripId() || user.uid !== auth.currentUser?.uid) return;
       const picker = document.getElementById('chatStickerPicker');
       if (picker) picker.hidden = true;
+      document.querySelector('.jc-tool--stickers')?.setAttribute('aria-expanded', 'false');
       window.Notifications?.show('Sticker enviado', 'success');
     } catch (error) {
       console.error('Error enviando sticker:', error);
       window.Notifications?.error('No se pudo enviar el sticker');
+    } finally {
+      this.sendingSticker = false;
     }
   },
 

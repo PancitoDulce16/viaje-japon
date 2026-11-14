@@ -256,7 +256,7 @@ export const PreparationHandler = {
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <div class="w-24 h-2 bg-gray-200 dark:bg-gray-600 rounded-full">
+                                    <div class="jp-category-progress w-24 h-2 bg-gray-200 dark:bg-gray-600 rounded-full">
                                         <div class="h-2 bg-${cat.color}-500 rounded-full transition-all" style="width: ${progress}%"></div>
                                     </div>
                                     <span class="text-gray-400 category-arrow" data-category="${key}">▼</span>

@@ -42,6 +42,12 @@ export const TripsManager = {
     }
 
     const userId = auth.currentUser.uid;
+    if (this._tripsUserId && this._tripsUserId !== userId) {
+      this.userTrips = [];
+      this.currentTrip = null;
+    }
+    this._tripsUserId = userId;
+    this.tripsLoadError = null;
     const loadVersion = this._tripsLoadVersion = (this._tripsLoadVersion || 0) + 1;
     this.tripsLoadState = 'loading';
     this.renderTripsList();
@@ -70,6 +76,7 @@ export const TripsManager = {
     this.unsubscribe = onSnapshot(q, (snapshot) => {
       if (loadVersion !== this._tripsLoadVersion || auth.currentUser?.uid !== userId) return;
       this.tripsLoadState = 'ready';
+      this.tripsLoadError = null;
       this.userTrips = [];
       snapshot.forEach((doc) => {
         this.userTrips.push({
@@ -124,6 +131,7 @@ export const TripsManager = {
     }, (error) => {
       if (loadVersion !== this._tripsLoadVersion || auth.currentUser?.uid !== userId) return;
       this.tripsLoadState = 'error';
+      this.tripsLoadError = error.code || 'unavailable';
       console.error('❌ ERROR en TripsManager onSnapshot - Full details:', {
         code: error.code,
         message: error.message,
@@ -562,9 +570,10 @@ export const TripsManager = {
     updateBadges();
     const container = document.getElementById('tripsListContainer');
     if (!container) return;
-    if (this.tripsLoadState === 'error') {
-      container.innerHTML = '<p role="alert">No pudimos cargar tus viajes. Revisá tu conexión y volvé a intentarlo.</p><button type="button" data-retry-trips>Reintentar</button>';
-      container.querySelector('[data-retry-trips]').onclick = () => this.initUserTrips();
+    const loadNotice = this.tripsLoadState === 'error'
+      ? `<div class="trips-load-notice"><p role="alert">${this.tripsLoadError === 'permission-denied' ? 'No pudimos actualizar tus viajes por un problema de permisos de la sesión.' : 'No pudimos actualizar tus viajes. Revisá tu conexión.'} ${this.userTrips.length ? 'Se muestran los viajes cargados anteriormente.' : 'Volvé a intentarlo.'}</p><button type="button" onclick="TripsManager.initUserTrips()" data-retry-trips>Reintentar</button></div>` : '';
+    if (loadNotice && this.userTrips.length === 0) {
+      container.innerHTML = loadNotice;
       return;
     }
     if (this.userTrips.length === 0 && ['idle', 'loading'].includes(this.tripsLoadState)) {
@@ -651,7 +660,7 @@ export const TripsManager = {
     });
 
     // ===== RENDER GRID DE CARDS =====
-    container.innerHTML = `
+    container.innerHTML = `${loadNotice}
       <!-- Barra de búsqueda y acciones -->
       <div class="mb-6 flex flex-col md:flex-row gap-3">
         <div class="flex-1 relative">
@@ -1673,6 +1682,8 @@ export const TripsManager = {
 
   // Cleanup
   cleanup(isRealLogout = false) {
+    this._tripsUserId = null;
+    this.tripsLoadError = null;
     this._tripsLoadVersion = (this._tripsLoadVersion || 0) + 1;
     this.tripsLoadState = 'idle';
     this._tripSelectionVersion = (this._tripSelectionVersion || 0) + 1;
@@ -1725,7 +1736,7 @@ if (auth.currentUser) {
 window.addEventListener('auth:initialized', (event) => {
     console.log('[TripsManager] ✨ Evento auth:initialized recibido. Inicializando viajes...');
     // Solo inicializar si no se inicializó antes
-    if (TripsManager.userTrips.length === 0) {
+    if (TripsManager._tripsUserId !== auth.currentUser?.uid || !TripsManager.unsubscribe) {
         TripsManager.initUserTrips();
     } else {
         console.log('[TripsManager] ✅ Trips ya inicializados, saltando...');

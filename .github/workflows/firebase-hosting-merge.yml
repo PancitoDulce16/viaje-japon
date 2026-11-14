@@ -26,3 +26,27 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JAPAN_ITIN_DEV }}
           channelId: live
           projectId: japan-itin-dev
+  deploy_firestore_rules:
+    needs: build_and_deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - name: Verify membership rules in the emulator
+        run: npx --yes firebase-tools@14.27.0 emulators:exec --only firestore --project demo-japitin-rules "npm run test:rules"
+      - name: Deploy verified Firestore rules
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JAPAN_ITIN_DEV }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/japitin-firestore-service-account.json
+        run: |
+          trap 'rm -f "$GOOGLE_APPLICATION_CREDENTIALS"' EXIT
+          node -e "require('node:fs').writeFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS, process.env.FIREBASE_SERVICE_ACCOUNT, {mode: 0o600})"
+          npx --yes firebase-tools@14.27.0 deploy --only firestore:rules --project japan-itin-dev --non-interactive

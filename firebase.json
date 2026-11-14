@@ -13,6 +13,7 @@
     "public": ".",
     "ignore": [
       "firebase.json",
+      "*-debug.log",
       "**/.*",
       "**/node_modules/**",
       "**/dist/**",

@@ -109,9 +109,9 @@ service cloud.firestore {
                     request.auth.uid in resource.data.members;
 
       // QUERIES/LISTADO: Solo el propio usuario puede listar sus viajes
+      // array-contains proves membership, but cannot prove separate field/type
+      // guards over every potential document. Keep those checks on get above.
       allow list: if isSignedIn() &&
-                    'members' in resource.data &&
-                    resource.data.members is list &&
                     request.auth.uid in resource.data.members;
 
       // CREACIÓN: Cualquier usuario autenticado puede crear un nuevo viaje.

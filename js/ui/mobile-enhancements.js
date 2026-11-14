@@ -43,7 +43,7 @@ export const MobileEnhancements = {
     this.handleOrientation();
 
     // Prevenir zoom no deseado
-    this.preventUnwantedZoom();
+    // Preserve pinch zoom and normal repeated taps for accessibility.
 
     // Agregar soporte para swipe gestures
     this.addSwipeGestures();
@@ -71,19 +71,8 @@ export const MobileEnhancements = {
       window.addEventListener('touchmove', () => {}, { passive: true });
     }
 
-    // Prevenir scroll bouncing en iOS en modales
-    document.addEventListener('touchmove', (e) => {
-      const modal = e.target.closest('.modal');
-      if (modal && modal.classList.contains('active')) {
-        const scrollContainer = e.target.closest('.modal > div');
-        if (scrollContainer) {
-          const isScrollable = scrollContainer.scrollHeight > scrollContainer.clientHeight;
-          if (!isScrollable) {
-            e.preventDefault();
-          }
-        }
-      }
-    }, { passive: false });
+    // Nested modal bodies own their scrolling. CSS overscroll-behavior prevents
+    // scroll chaining without cancelling the touchmove needed to scroll them.
   },
 
   // Verificar soporte para passive listeners
@@ -244,13 +233,7 @@ export const MobileEnhancements = {
   },
 
   onSwipeDown() {
-    // Cerrar modales con swipe down
-    const activeModal = document.querySelector('.modal.active');
-    if (activeModal) {
-      console.log('👆 Cerrando modal con swipe down');
-      activeModal.classList.remove('active');
-      document.body.style.overflow = '';
-    }
+    // A downward gesture is also ordinary scrolling; only explicit close controls dismiss dialogs.
   },
 
   // Fix para focus en inputs en iOS

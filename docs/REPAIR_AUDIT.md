@@ -20,6 +20,21 @@ Un módulo con pruebas locales aprobadas no equivale a un flujo completo comprob
 
 ## Fallos reparados en esta revisión
 
+### Incidencias móviles reportadas después del primer control
+
+- **Causa del listado rechazado**: el emulador reprodujo `permission-denied` en `allow list` con la consulta `members array-contains uid`. Las comprobaciones separadas de existencia y tipo no podían demostrarse para la consulta. La regla de listado conserva autenticación y pertenencia; la lectura individual mantiene sus comprobaciones de tipo. La regresión ahora comprueba cinco viajes propios/compartidos, otro usuario y documentos incompletos, y rechaza consultas sin filtro o con el usuario ajeno.
+- **Publicación de reglas**: el workflow anterior publicaba únicamente Hosting. Se añadió un trabajo separado para verificar las reglas en emulador y publicarlas con la identidad de servicio ya configurada. La credencial temporal se escribe fuera del árbol público. Falta confirmar el resultado remoto y que esa identidad tenga permiso de publicación de reglas.
+- **Lista ya cargada**: un error posterior ya no oculta las tarjetas; distingue permisos de conexión y permite reintentar. Los cambios de usuario descartan los datos de la cuenta anterior.
+- **SOS**: se retiró la cancelación global de `touchmove`, que ignoraba los cuerpos desplazables anidados, y el cierre global por deslizar hacia abajo. El cuerpo tiene scroll independiente y el cierre permanece accesible.
+- **Animaciones**: se eliminó la regla universal móvil que reemplazaba duraciones decorativas por 0,2 segundos. Se mantienen las preferencias de movimiento reducido.
+- **Stickers**: acceso visible junto al compositor, envío protegido contra repetición y cuentas sin correo. A 320 y 390 px, el campo de escritura dispone de su propia fila.
+- **Barra inferior**: cinco columnas de igual anchura, sin solapamiento, con controles de al menos 44 px; se probó desde 320 px.
+- **Barras de presupuesto**: el relleno extra provenía de una regla de transporte aplicada a cualquier degradado verde. Se limitó a transporte y se contienen los rellenos dentro de las pistas.
+- **Explorar**: los filtros se desplazan horizontalmente y los selectores/contadores conservan dos columnas en móvil.
+- **Accesibilidad**: panel limitado al viewport con scroll incluso a 360 px de alto, cierre con Escape, interruptores que reflejan su estado y recuperación de preferencias corruptas o almacenamiento no disponible.
+
+Validación de esta tanda: 136 casos de navegador aprobados, incluidos los recorridos anteriores en 320, 390, 768 y 1440 px y ambos temas. SOS incluye desplazamiento táctil real mediante CDP. Suite de lógica, imports, compilación, artefacto y arranque aprobados. Reglas ejecutadas dos veces en emulador con resultados aprobados después de reproducir el fallo original. Esto no certifica aún la publicación remota ni una sesión real del dispositivo de la usuaria. Las capturas originales continúan ausentes localmente, según el registro de referencias; se inspeccionaron las capturas nuevas sin presentarlas como canónicas.
+
 Último control: `npm test`, imports, compilación, artefacto y arranque aprobados; 128 pruebas de navegador aprobadas. Después se ajustó el encuadre móvil de Mis viajes y se repitieron sus pruebas específicas. Se usan datos simulados; falta comprobar la cuenta y el dispositivo reales de la usuaria.
 
 | Área | Fallo | Reparación y prueba |

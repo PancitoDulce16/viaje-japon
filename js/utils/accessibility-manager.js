@@ -34,17 +34,20 @@ class AccessibilityManager {
    * Load saved settings
    */
   loadSettings() {
-    const saved = localStorage.getItem('japitin_a11y_settings');
-    if (saved) {
-      this.settings = { ...this.settings, ...JSON.parse(saved) };
-    }
+    try {
+      const saved = JSON.parse(localStorage.getItem('japitin_a11y_settings') || 'null');
+      if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+        for (const key of Object.keys(this.settings)) if (typeof saved[key] === 'boolean') this.settings[key] = saved[key];
+      }
+    } catch (error) { console.warn('No se pudieron leer las preferencias de accesibilidad.', error); }
   }
 
   /**
    * Save settings
    */
   saveSettings() {
-    localStorage.setItem('japitin_a11y_settings', JSON.stringify(this.settings));
+    try { localStorage.setItem('japitin_a11y_settings', JSON.stringify(this.settings)); }
+    catch (error) { console.warn('No se pudieron guardar las preferencias de accesibilidad.', error); }
   }
 
   /**
@@ -83,7 +86,7 @@ class AccessibilityManager {
     // Tab trap for modals
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Tab') {
-        const modal = document.querySelector('[role="dialog"]:not(.hidden)');
+        const modal = [...document.querySelectorAll('[role="dialog"]')].filter(node => node.getClientRects().length && getComputedStyle(node).visibility !== 'hidden').at(-1);
         if (modal) {
           this.trapFocus(e, modal);
         }
@@ -298,8 +301,17 @@ class AccessibilityManager {
    * Toggle setting
    */
   toggleSetting(setting) {
+    if (!Object.hasOwn(this.settings, setting)) return;
     this.settings[setting] = !this.settings[setting];
     this.applySettings();
+    const button = document.querySelector(`#a11yPanel [data-setting="${setting}"]`);
+    if (button) {
+      button.setAttribute('aria-checked', String(this.settings[setting]));
+      button.classList.toggle('bg-purple-600', this.settings[setting]);
+      button.classList.toggle('bg-gray-300', !this.settings[setting]);
+      button.firstElementChild.classList.toggle('translate-x-6', this.settings[setting]);
+      button.firstElementChild.classList.toggle('translate-x-1', !this.settings[setting]);
+    }
 
     // Announce change
     const settingNames = {
@@ -398,6 +410,9 @@ class AccessibilityManager {
     `;
 
     document.body.appendChild(panel);
+    panel.addEventListener('keydown', event => {
+      if (event.key === 'Escape') { event.stopPropagation(); this.hidePanel(); }
+    });
     this.announce('Panel de accesibilidad abierto');
   }
 
@@ -416,6 +431,7 @@ class AccessibilityManager {
         <button onclick="window.AccessibilityManager.toggleSetting('${setting}')"
                 class="relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${isEnabled ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'}"
                 role="switch"
+                data-setting="${setting}"
                 aria-checked="${isEnabled}"
                 aria-label="Alternar ${label}">
           <span class="inline-block w-4 h-4 transform transition-transform ${isEnabled ? 'translate-x-6' : 'translate-x-1'} bg-white rounded-full"></span>

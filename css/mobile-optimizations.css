@@ -309,7 +309,7 @@
    ======================================== */
 @media (max-width: 768px) {
     /* Hero recommendation más compacto */
-    .bg-gradient-to-r.from-green-500 {
+    #content-transport .bg-gradient-to-r.from-green-500 {
         padding: 16px !important;
     }
 

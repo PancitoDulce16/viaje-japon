@@ -1,0 +1,79 @@
+/* Scope layout repairs so global mobile utilities cannot turn tracks into cards. */
+.jp-budget-progress, .jp-category-progress {
+  display: block !important;
+  height: .5rem !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+.jp-budget-progress > div, .jp-category-progress > div {
+  display: block !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: 100%;
+}
+#emergencyModal { inset: 0; height: 100dvh; max-height: none; overflow: hidden; }
+#emergencyModal > .modal-content {
+  display: flex;
+  flex-direction: column;
+  height: auto !important;
+  max-height: calc(100dvh - 2rem) !important;
+  max-width: min(72rem, calc(100% - 2rem)) !important;
+  overflow: hidden;
+  margin: 0 !important;
+}
+#emergencyModal .modal-header { display: flex; flex-direction: row; align-items: flex-start; gap: 1rem; flex: none; }
+#emergencyModal .modal-header h2 { flex: 1; min-width: 0; margin: 0; }
+#emergencyModal .close-modal { flex: none; min-width: 44px; min-height: 44px; }
+#emergencyContent { min-height: 0; overflow-y: auto !important; overscroll-behavior: contain; }
+#a11yPanel {
+  width: min(24rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 7rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+#a11yPanel [role="switch"] { flex: none; }
+.jc-compose__row > .jc-tool--stickers {
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  flex: 0 0 44px; width: 44px; height: 44px;
+}
+.jc-tool--stickers small { font-size: .6rem; }
+.jc-compose .jc-sticker-picker { left: 0; width: min(32rem, 100%); max-height: min(20rem, 50dvh); overflow-y: auto; }
+.jc-compose .jc-sticker-grid { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+.jc-compose .jc-sticker-grid button { min-width: 0; }
+.trips-load-notice { margin-bottom: 1rem; padding: 1rem; border: 1px solid var(--border); background: var(--surface-note); color: var(--text-primary); }
+@media (max-width: 768px) {
+  html .mobile-bottom-nav-items {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 0 !important; width: 100%; max-width: 100%; margin: 0 auto;
+  }
+  html .mobile-bottom-nav .mobile-nav-item {
+    width: 100%; min-width: 0 !important; min-height: 60px !important;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; padding: 4px 0 !important; transform: none !important;
+  }
+  html .mobile-bottom-nav .mobile-nav-item span { font-size: .68rem !important; line-height: 1.2; white-space: nowrap; }
+  html .mobile-bottom-nav .mobile-nav-item i { flex: none; font-size: 1.25rem; }
+  html .mobile-bottom-nav .mobile-nav-item--create i { width: 36px; height: 36px; }
+  .jp-attractions-page .jp-attractions-filters { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; overflow-x: auto; }
+  .jp-attractions-page .jp-attractions-filters button { flex: 0 0 auto; width: auto !important; }
+  .jp-attractions-page .jp-attractions-advanced, .jp-attractions-page .jp-attractions-stats { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .jp-attractions-page .jp-attractions-advanced > div { min-width: 0; }
+  .jp-attractions-page .jp-attractions-advanced select { max-width: 100%; }
+}
+@media (max-width: 480px) {
+  /* Leave the writing field usable instead of squeezing it between four controls. */
+  #modal-chat .jc-compose__row { display: grid; grid-template-columns: 44px minmax(0, 1fr) 46px; gap: 6px; }
+  #modal-chat .jc-input { grid-column: 1 / 3; grid-row: 1; width: 100%; }
+  #modal-chat .jc-send { grid-column: 3; grid-row: 1; }
+  #modal-chat .jc-tool--plus { grid-column: 1; grid-row: 2; }
+  #modal-chat .jc-tool--stickers { grid-column: 2; grid-row: 2; justify-self: start; }
+  #modal-chat .jc-head { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; gap: 6px; }
+  #modal-chat .jc-head__text { grid-column: 1 / -1; grid-row: 1; padding-right: 36px; }
+  #modal-chat .jc-head__cat { display: none; }
+  #modal-chat .jc-head > button { grid-row: 2; }
+}
