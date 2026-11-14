@@ -5,6 +5,7 @@ import {
 } from 'firebase/firestore';
 import { calculateTripCountdown, summarizeItinerary } from './dashboard-summary.js';
 import { calculateBalances } from '../budget/expense-split-engine.js';
+import { localReservationMinute, nextActiveReservation } from '../reservations/reservation-summary.js';
 
 async function optional(work, fallback, label) {
   try { return await work(); }
@@ -15,6 +16,7 @@ const rows = (snapshot) => snapshot.docs.map((item) => ({ id: item.id, ...item.d
 
 export async function fetchDashboardData(tripId, _stage, trip, itineraryDoc = undefined) {
   if (!tripId) return {};
+  const now = new Date();
   const itineraryPromise = itineraryDoc !== undefined
     ? Promise.resolve(itineraryDoc)
     : optional(async () => { const snap = await getDoc(doc(db, `trips/${tripId}/data/itinerary`)); return snap.exists() ? snap.data() : null; }, null, 'itinerario');
@@ -36,7 +38,7 @@ export async function fetchDashboardData(tripId, _stage, trip, itineraryDoc = un
     optional(() => getCountFromServer(query(packingRef, where('packed', '==', true))).then((snap) => snap.data().count), 0, 'equipaje empacado'),
     optional(() => getDocs(query(collection(db, `trips/${tripId}/images`), orderBy('createdAt', 'desc'), limit(4))).then(rows), [], 'galería'),
     optional(async () => { const snap = await getDoc(doc(db, `trips/${tripId}/data/packing`)); return snap.exists() ? snap.data()?.items || [] : []; }, [], 'equipaje anterior'),
-    optional(() => getDocs(query(reservationsRef, where('startAt', '>=', new Date().toISOString().slice(0, 16)), orderBy('startAt', 'asc'), limit(1))).then(rows), [], 'próxima reservación'),
+    optional(() => getDocs(query(reservationsRef, where('startAt', '>=', localReservationMinute(now)), orderBy('startAt', 'asc'))).then(rows), [], 'próxima reservación'),
     optional(() => getCountFromServer(query(reservationsRef, where('status', '==', 'Pendiente'))).then((snap) => snap.data().count), 0, 'reservaciones pendientes'),
     optional(() => getCountFromServer(query(reservationsRef, where('requiresDocument', '==', true), where('documentCount', '==', 0))).then((snap) => snap.data().count), 0, 'documentos faltantes'),
     optional(() => getDocs(query(expensesRef,where('split.enabled','==',true))).then(rows), [], 'gastos divididos'),
@@ -75,7 +77,7 @@ export async function fetchDashboardData(tripId, _stage, trip, itineraryDoc = un
     tasks: { pendingCount, upcoming: upcomingTasks },
     packing,
     images: recentImages,
-    reservations: { next: nextReservations[0] || null, pendingCount: pendingReservations, missingDocuments },
+    reservations: { next: nextActiveReservation(nextReservations, now), pendingCount: pendingReservations, missingDocuments },
     personalBalance: { netMinor:personalBalance,toPayMinor:Math.max(0,-personalBalance),toReceiveMinor:Math.max(0,personalBalance),currency:baseCurrency },
     importantAlerts,
     weather

@@ -24,6 +24,7 @@ import { formatMoneyMinor } from '../budget/money.js';
 import { dashboardFocus, normalizeActivityTime } from './dashboard-summary.js';
 import { activityDirectionsUrl } from '../../map/activity-location.js';
 import './next-stop-navigation.js';
+import { renderReservationTicket } from './reservation-ticket.js';
 
 const safe = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 
@@ -330,7 +331,7 @@ export function renderTripDashboard(data) {
     </div>
 
     <div class="journey-home__lower">
-      <article class="reservation-ticket"><div><p class="journey-home__eyebrow">Próxima reservación</p><h2>${reservation ? safe(reservation.title || reservation.name || 'Reservación') : 'Sin reservaciones próximas'}</h2><p>${reservation ? `${safe(reservation.location || reservation.type || '')}${reservation.startAt ? ` · ${safe(reservation.startAt)}` : ''}` : 'Cuando confirmes una, aparecerá aquí.'}</p>${reservation ? `<span>${safe(reservation.status || 'Próxima')}</span>` : ''}</div><button type="button" onclick="window.DashboardApp?.openFloatingModal('reservations')">Abrir reservas</button></article>
+      ${renderReservationTicket(reservation)}
 
       <nav class="journey-actions" aria-label="Acciones rápidas"><div class="journey-home__section-head"><div><p class="journey-home__eyebrow">A tu manera</p><h2>Acciones rápidas</h2></div></div><div><button type="button" onclick="window.ItineraryBuilderExtensions?.showAddActivityModal()"><i class="fas fa-torii-gate" aria-hidden="true"></i><span>Actividad</span></button><button type="button" onclick="window.DashboardApp?.openFloatingModal('reservations')"><i class="far fa-calendar-plus" aria-hidden="true"></i><span>Reserva</span></button><button type="button" onclick="window.DashboardApp?.switchTab('map')"><i class="far fa-map" aria-hidden="true"></i><span>Mapa</span></button><button type="button" onclick="window.DashboardApp?.switchTab('budget');setTimeout(()=>window.BudgetTracker?.addExpenseFromTab(),100)"><i class="fas fa-yen-sign" aria-hidden="true"></i><span>Gasto</span></button><button type="button" onclick="TripsManager.showCreateTripModal()"><i class="fas fa-plus" aria-hidden="true"></i><span>Viaje</span></button></div></nav>
 

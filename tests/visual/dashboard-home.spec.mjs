@@ -31,7 +31,7 @@ const fixture = {
   },
   packing: { total: 12, packed: 6, pending: 6, percent: 50 },
   budget: { currency: 'CRC', budgetMinor: 115580, spentMinor: 38450, availableMinor: 77130, percentUsed: 33.27, recent: [] },
-  reservations: { next: { title: 'Ryokan Sakura', location: 'Kyoto', startAt: '21 ago · 15:00', status: 'Confirmada' }, pendingCount: 0, missingDocuments: 0 },
+  reservations: { next: { id: 'ryokan-1', title: 'Ryokan Sakura', location: 'Kyoto', startAt: '2027-02-21T15:00', status: 'Confirmada', requiresDocument: true, documentCount: 0 }, pendingCount: 0, missingDocuments: 0 },
   personalBalance: { netMinor: 0, toPayMinor: 0, toReceiveMinor: 0, currency: 'CRC' },
   importantAlerts: [],
   images: [
@@ -97,6 +97,49 @@ for (const width of widths) for (const theme of themes) {
     fs.writeFileSync(target.replace('.png','.json'),JSON.stringify(layout,null,2));
   });
 }
+
+test('reservation editor supports keyboard navigation and restores focus', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/dashboard.html', { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => window.ReservationsManager);
+  await page.evaluate(() => {
+    const trigger = document.createElement('button');
+    trigger.id = 'reservationTestTrigger';
+    trigger.textContent = 'Abrir reservación';
+    document.body.append(trigger);
+    trigger.focus();
+    window.ReservationsManager.showReservationModal({ title: 'Ryokan Sakura', type: 'Hospedaje', status: 'Confirmada', startAt: '2027-02-21T15:00', provider: 'Ryokan', details: {} });
+  });
+  const dialog = page.getByRole('dialog', { name: 'Editar reservación' });
+  const close = dialog.getByRole('button', { name: 'Cerrar', exact: true });
+  await expect(close).toBeFocused();
+  await expect(dialog.getByLabel('Proveedor', { exact: true })).toHaveValue('Ryokan');
+  await page.keyboard.press('Shift+Tab');
+  await expect(dialog.getByRole('button', { name: 'Guardar reservación' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(page.locator('#reservationTestTrigger')).toBeFocused();
+});
+
+test('reservation shortcuts keep the reservation context', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/dashboard.html', { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => window.ReservationsManager && window.TripDocuments);
+  await page.evaluate(async data => {
+    const { renderTripDashboard } = await import('/js/features/dashboard/progressive-content.js');
+    document.querySelector('#currentTripHeader').innerHTML = `<div id="dashboardTopSection" class="has-journey-home"><div id="dashboardProgressiveContent">${renderTripDashboard(data)}</div></div>`;
+    window.ReservationsManager.openReservation = id => { window.reservationOpened = id; };
+    window.TripDocuments.open = context => { window.documentContext = context; };
+  }, fixture);
+  const ticket = page.locator('.reservation-ticket');
+  await expect(ticket.locator('time')).toHaveAttribute('datetime', '2027-02-21T15:00');
+  await expect(ticket.locator('time')).toContainText('15:00');
+  await expect(ticket).toContainText('Falta adjuntar el documento requerido');
+  await ticket.getByRole('button', { name: 'Ver reserva', exact: true }).click();
+  expect(await page.evaluate(() => window.reservationOpened)).toBe('ryokan-1');
+  await ticket.getByRole('button', { name: 'Adjuntar documento' }).click();
+  expect(await page.evaluate(() => window.documentContext)).toEqual({ reservationId: 'ryokan-1' });
+});
 
 test('next stop selects its day and coordinates on the map', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
