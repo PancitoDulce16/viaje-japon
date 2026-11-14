@@ -234,9 +234,12 @@ export const TripsManager = {
 
   // Seleccionar trip actual
   async selectTrip(tripId, _isRetry = false) {
+    const selection = this._tripSelectionVersion = (this._tripSelectionVersion || 0) + 1;
+    this._dashboardLoadVersion = (this._dashboardLoadVersion || 0) + 1;
     try {
       const tripRef = doc(db, 'trips', tripId);
       const tripSnap = await getDoc(tripRef);
+      if (selection !== this._tripSelectionVersion) return;
 
       if (tripSnap.exists()) {
         this.currentTrip = {
@@ -306,12 +309,14 @@ export const TripsManager = {
 
         // Esperar a que TODOS terminen (no falla si uno falla)
         await Promise.allSettled(initPromises);
+        if (selection !== this._tripSelectionVersion) return;
 
         this.closeTripsListModal();
 
         console.log('🔄 Todos los módulos re-inicializados para el trip:', tripId);
       }
     } catch (error) {
+      if (selection !== this._tripSelectionVersion) return;
       // 🛡️ Justo después de crear un trip, el listener onSnapshot de la query
       // de trips puede disparar un auto-select inmediato (antes del setTimeout
       // de createTrip) cuando las reglas de seguridad de Firestore todavía no
@@ -321,6 +326,7 @@ export const TripsManager = {
       if (error.code === 'permission-denied' && !_isRetry) {
         console.warn('⚠️ Permission-denied seleccionando trip recién creado, reintentando en 800ms...');
         await new Promise(resolve => setTimeout(resolve, 800));
+        if (selection !== this._tripSelectionVersion) return;
         return this.selectTrip(tripId, true);
       }
       console.error('❌ Error seleccionando trip:', error);
@@ -1188,10 +1194,13 @@ export const TripsManager = {
   // Contenido progresivo (experiences/dashboard.md, slice 2/3) — carga
   // datos reales de forma asíncrona y los pinta debajo del Hero Moment.
   async loadDashboardProgressiveContent(stage) {
+    const version = this._dashboardLoadVersion = (this._dashboardLoadVersion || 0) + 1;
     if (!this.currentTrip) return;
+    const trip = this.currentTrip;
 
     const container = document.getElementById('dashboardProgressiveContent');
     if (!container) return;
+    const isCurrent = () => version === this._dashboardLoadVersion && this.currentTrip === trip && container.isConnected && document.getElementById('dashboardProgressiveContent') === container;
 
     try {
       // El doc de itinerario se lee UNA vez acá, siempre — no solo para las
@@ -1200,8 +1209,9 @@ export const TripsManager = {
       // (ai-control-panel.js, kawaii-animations.js, analytics-integration.js)
       // que dependían de que el viejo loadTripStatistics() lo disparara
       // siempre. Perderlo habría roto esos tres sistemas silenciosamente.
-      const itineraryRef = doc(db, `trips/${this.currentTrip.id}/data`, 'itinerary');
+      const itineraryRef = doc(db, `trips/${trip.id}/data`, 'itinerary');
       const itinerarySnap = await getDoc(itineraryRef);
+      if (!isCurrent()) return;
       const itineraryData = itinerarySnap.exists() ? itinerarySnap.data() : null;
 
       if (itineraryData) {
@@ -1210,10 +1220,12 @@ export const TripsManager = {
         }));
       }
 
-      const data = await fetchDashboardData(this.currentTrip.id, stage, this.currentTrip, itineraryData);
-      container.innerHTML = renderProgressiveContent(this.currentTrip, data);
+      const data = await fetchDashboardData(trip.id, stage, trip, itineraryData);
+      if (!isCurrent()) return;
+      container.innerHTML = renderProgressiveContent(trip, data);
       container.closest('#dashboardTopSection')?.classList.add('has-journey-home');
     } catch (error) {
+      if (!isCurrent()) return;
       // Error state per EXPERIENCE_GUIDELINES.md — plain and calm, not
       // personality-forward, explains what happened, one real retry
       // action (not "reload the whole page").
@@ -1640,6 +1652,8 @@ export const TripsManager = {
 
   // Cleanup
   cleanup(isRealLogout = false) {
+    this._tripSelectionVersion = (this._tripSelectionVersion || 0) + 1;
+    this._dashboardLoadVersion = (this._dashboardLoadVersion || 0) + 1;
     if (this.unsubscribe) {
       console.log('[TripsManager] 🛑 Deteniendo listener de viajes.');
       this.unsubscribe();
