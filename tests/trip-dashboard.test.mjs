@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { calculateTripCountdown, classifyTasks, packingProgress, prioritizeDashboardActions, summarizeItinerary } from '../js/features/dashboard/dashboard-summary.js';
+import { calculateTripCountdown, classifyTasks, dashboardFocus, packingProgress, prioritizeDashboardActions, summarizeItinerary } from '../js/features/dashboard/dashboard-summary.js';
 
 const today = new Date('2026-08-09T12:00:00');
 assert.deepEqual(calculateTripCountdown('2026-08-19', '2026-08-29', today), { state:'upcoming', days:10 });
@@ -34,6 +34,22 @@ assert.equal(actions.length, 5);
 assert.equal(actions[0].id, 'alert:sync');
 assert.ok(actions.some(item => item.id === 'documents:missing'));
 assert.ok(actions.every((item, index) => !index || actions[index - 1].score >= item.score));
+
+const focusData = {
+  trip: { dateStart: '2026-08-10', dateEnd: '2026-08-20' },
+  itinerary: { next: { title: 'Templo' } },
+  packing: { pending: 2 }
+};
+assert.equal(dashboardFocus(focusData, today).kind, 'packing');
+assert.equal(dashboardFocus({ ...focusData, packing: { pending: 0 } }, today).kind, 'itinerary');
+assert.equal(dashboardFocus(focusData, new Date('2026-08-12T12:00:00')).kind, 'map');
+assert.equal(dashboardFocus({ ...focusData, itinerary: { next: null } }, new Date('2026-08-12T12:00:00')).kind, 'itinerary');
+const finishedData = { ...focusData, tasks: { upcoming: [{ id: 'old', title: 'Empacar', dueDate: '2026-08-08' }] } };
+assert.equal(dashboardFocus(finishedData, new Date('2026-09-01T12:00:00')).kind, 'memories');
+assert.equal(dashboardFocus({ ...finishedData, personalBalance: { toReceiveMinor: 500 } }, new Date('2026-09-01T12:00:00')).kind, 'balances');
+assert.equal(dashboardFocus({}, today).state, 'unknown');
+assert.equal(prioritizeDashboardActions({ reservations: { next: { startAt: '2026-07-01T10:00:00' } } }, today).length, 0);
+assert.equal(prioritizeDashboardActions({ reservations: { next: { startAt: 'not-a-date' } } }, today).length, 0);
 
 const rules = await readFile(new URL('../firestore.rules', import.meta.url), 'utf8');
 assert.match(rules, /match \/tasks\/\{taskId\}/);

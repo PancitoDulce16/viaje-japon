@@ -21,7 +21,7 @@
 import { detectJourneyStage, getJourneyMath } from './stage-detector.js';
 import { renderHeroMoment } from './hero-moment.js';
 import { formatMoneyMinor } from '../budget/money.js';
-import { prioritizeDashboardActions } from './dashboard-summary.js';
+import { dashboardFocus } from './dashboard-summary.js';
 
 const safe = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 
@@ -281,8 +281,19 @@ export function renderTripDashboard(data) {
   const mapAsset = /kyoto|kioto|gion|fushimi/i.test(`${nextPlace} ${nextTitle}`)
     ? '/images/illustrations/generated/maps/kyoto-district.webp'
     : '/images/illustrations/generated/maps/japan-overview.webp';
-  const nextActions = prioritizeDashboardActions(data);
-  const recommendation = nextActions[0]?.title || (next ? `Prepara lo necesario para ${nextTitle}.` : 'Agrega una actividad y empezamos a explorar.');
+  const focus = dashboardFocus(data);
+  const focusActions = {
+    tasks: 'window.TravelTasks?.open()',
+    reservations: "window.DashboardApp?.openFloatingModal('reservations')",
+    documents: "window.DashboardApp?.openFloatingModal('reservations')",
+    budget: "window.DashboardApp?.switchTab('budget')",
+    balances: "window.DashboardApp?.switchTab('budget')",
+    packing: 'window.PackingList?.open()',
+    alerts: 'window.NotificationCenter?.open()',
+    memories: 'window.TravelJournal?.show()',
+    map: "window.DashboardApp?.switchTab('map')",
+    itinerary: "window.DashboardApp?.switchTab('itinerary')"
+  };
   const budgetPercent = Math.max(0, Math.min(100, Number(budget.percentUsed) || 0));
   const itineraryPercent = Math.max(0, Math.min(100, Number(itinerary.percent) || 0));
   const reservation = reservations.next;
@@ -291,13 +302,13 @@ export function renderTripDashboard(data) {
 
   return `<section class="journey-home" aria-label="Portada de tu viaje">
     <header class="journey-home__intro">
-      <div><p class="journey-home__kicker">Tu aventura empieza aquí</p><h1>¡Hola, ${safe(firstName())}! <span aria-hidden="true">🌸</span></h1><p>Planifica, descubre y vive Japón a tu manera.</p></div>
+      <div><p class="journey-home__kicker">Tu aventura empieza aquí</p><h1>¡Hola, ${safe(firstName())}! <span aria-hidden="true">🌸</span></h1><p>${safe(focus.subtitle)}</p></div>
       <button type="button" class="journey-home__help" onclick="window.NotificationCenter?.open()"><i class="far fa-question-circle" aria-hidden="true"></i><span>¿Qué sigue?</span></button>
     </header>
 
     ${renderHeroMoment({ info: { name: trip.name, destination: trip.destination, dateStart: trip.dateStart, dateEnd: trip.dateEnd } }, { compact: true })}
     <div class="journey-home__top">
-      <aside class="journey-ticket__guide"><img src="/images/illustrations/generated/companions/cat-guide.png" alt="Gatito guía leyendo el mapa"><p><strong>Consejo Japitin</strong>${safe(recommendation)}</p></aside>
+      <aside class="journey-ticket__guide"><img src="/images/illustrations/generated/companions/cat-guide.png" alt="Gatito guía leyendo el mapa"><div class="journey-ticket__advice"><p><strong>Consejo Japitin</strong>${safe(focus.title)}</p><button type="button" class="journey-ticket__action" onclick="${safe(focusActions[focus.kind])}">${safe(focus.actionLabel)} <span aria-hidden="true">→</span></button></div></aside>
       <section class="journey-route" aria-labelledby="journeyRouteTitle"><div class="journey-home__section-head"><h2 id="journeyRouteTitle">${itinerary.total ? `${itinerary.completed} de ${itinerary.total} aventuras vividas` : 'Tu historia está por comenzar'}</h2>${itinerary.total ? `<strong>${itineraryPercent}%</strong>` : ''}</div>${itinerary.total ? `<div class="journey-route__track"><span style="width:${itineraryPercent}%"></span><i style="left:${itineraryPercent}%" aria-hidden="true">🌸</i></div>` : '<p>Guarda tus primeras actividades en el itinerario.</p>'}</section>
     </div>
 

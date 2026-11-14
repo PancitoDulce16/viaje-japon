@@ -65,7 +65,7 @@ export function prioritizeDashboardActions(data = {}, nowValue = new Date(), lim
   const reservation = data.reservations?.next;
   if (reservation?.startAt) {
     const days = Math.ceil((new Date(reservation.startAt) - now) / DAY_MS);
-    if (days <= 7) add({ id: `reservation:${reservation.id}`, kind: 'reservations', severity: days <= 1 ? 'critical' : 'recommendation', urgency: Math.max(0, 90 - days * 10), blocking: ['Vuelo', 'Transporte'].includes(reservation.type), title: `Próxima reservación: ${reservation.title}`, actionLabel: 'Confirmar reservación' });
+    if (days >= 0 && days <= 7) add({ id: `reservation:${reservation.id}`, kind: 'reservations', severity: days <= 1 ? 'critical' : 'recommendation', urgency: Math.max(0, 90 - days * 10), blocking: ['Vuelo', 'Transporte'].includes(reservation.type), title: `Próxima reservación: ${reservation.title}`, actionLabel: 'Ver reservación' });
   }
   if (data.reservations?.missingDocuments > 0) add({ id: 'documents:missing', kind: 'documents', severity: 'critical', urgency: 75, blocking: true, title: `${data.reservations.missingDocuments} reservación(es) sin documento`, actionLabel: 'Agregar documento' });
   if (data.budget?.percentUsed >= 80) add({ id: 'budget:limit', kind: 'budget', severity: data.budget.percentUsed >= 100 ? 'critical' : 'recommendation', urgency: Math.min(100, data.budget.percentUsed), financialImpact: 80, title: `Presupuesto al ${data.budget.percentUsed.toFixed(0)}%`, actionLabel: 'Revisar presupuesto' });
@@ -73,4 +73,34 @@ export function prioritizeDashboardActions(data = {}, nowValue = new Date(), lim
   if (data.packing?.pending > 0 && data.trip?.countdown?.state === 'upcoming' && data.trip.countdown.days <= 7) add({ id: 'packing:pending', kind: 'packing', severity: data.trip.countdown.days <= 2 ? 'critical' : 'recommendation', urgency: 90 - data.trip.countdown.days * 8, title: `${data.packing.pending} artículo(s) de equipaje pendientes`, actionLabel: 'Completar equipaje' });
   for (const alert of data.importantAlerts || []) add({ id: `alert:${alert.id}`, kind: 'alerts', severity: alert.severity === 'critical' ? 'critical' : 'recommendation', urgency: Number(alert.urgency || 50), blocking: Boolean(alert.blocking), title: alert.title || alert.message, actionLabel: alert.actionLabel || 'Revisar alerta' });
   return candidates.sort((a, b) => b.score - a.score || a.id.localeCompare(b.id)).slice(0, limit);
+}
+
+// One next step with a known destination, derived from real trip data.
+export function dashboardFocus(data = {}, nowValue = new Date()) {
+  const trip = data.trip || {};
+  const countdown = calculateTripCountdown(trip.dateStart, trip.dateEnd, nowValue);
+  const state = countdown.state;
+  const subtitle = state === 'traveling'
+    ? 'Tu siguiente parada y lo necesario para disfrutar el día.'
+    : state === 'finished'
+      ? 'Guarda tus recuerdos y cierra los detalles de tu aventura.'
+      : state === 'upcoming'
+        ? 'Prepara tu aventura, un paso a la vez.'
+        : 'Elige tus fechas y empieza a imaginar tu aventura.';
+  if (state === 'finished') {
+    const balance = data.personalBalance;
+    if (balance?.toPayMinor > 0 || balance?.toReceiveMinor > 0) {
+      return { state, subtitle, kind: 'balances', title: 'Revisa los saldos pendientes de tu viaje.', actionLabel: 'Ver gastos compartidos' };
+    }
+    return { state, subtitle, kind: 'memories', title: 'Tu aventura merece un lugar en tu diario.', actionLabel: 'Abrir recuerdos' };
+  }
+  const actionable = new Set(['tasks', 'reservations', 'documents', 'budget', 'balances', 'packing', 'alerts']);
+  const action = prioritizeDashboardActions({ ...data, trip: { ...trip, countdown } }, nowValue).find(item => actionable.has(item.kind));
+  if (action) return { ...action, state, subtitle };
+  if (data.itinerary?.next) return {
+    state, subtitle, kind: state === 'traveling' ? 'map' : 'itinerary',
+    title: state === 'traveling' ? 'Tu próxima aventura te espera. Consulta la ruta antes de salir.' : 'Dale una mirada a tu próxima parada y prepara sus detalles.',
+    actionLabel: state === 'traveling' ? 'Ver mapa' : 'Ver itinerario'
+  };
+  return { state, subtitle, kind: 'itinerary', title: state === 'traveling' ? 'Elige qué quieres descubrir hoy.' : 'Agrega tu primera actividad y empezamos a explorar.', actionLabel: 'Abrir itinerario' };
 }

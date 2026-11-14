@@ -98,6 +98,38 @@ for (const width of widths) for (const theme of themes) {
   });
 }
 
+for (const scenario of ['task', 'traveling', 'finished']) {
+  test(`guide opens the next action: ${scenario}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/dashboard.html', { waitUntil: 'domcontentloaded' });
+    await page.evaluate(async ({ dashboardFixture, scenario }) => {
+      document.querySelector('#appDashboard')?.classList.remove('hidden');
+      const data = structuredClone(dashboardFixture);
+      data.trip.dateStart = scenario === 'task' ? '2099-01-01' : '2000-01-01';
+      data.trip.dateEnd = scenario === 'finished' ? '2000-01-02' : '2099-01-02';
+      data.tasks.upcoming = scenario === 'task' ? [{ id: 'late', title: '<img src=x onerror=alert(1)>', dueDate: '2000-01-01' }] : [];
+      data.reservations = {};
+      data.packing.pending = 0;
+      data.budget.percentUsed = 0;
+      const { renderTripDashboard } = await import('/js/features/dashboard/progressive-content.js');
+      document.querySelector('#currentTripHeader').innerHTML = `<div id="dashboardTopSection" class="has-journey-home"><div id="dashboardProgressiveContent">${renderTripDashboard(data)}</div></div>`;
+      window.TravelTasks = { open: () => { window.guideDestination = 'tasks'; } };
+      window.DashboardApp = { switchTab: tab => { window.guideDestination = tab; } };
+    }, { dashboardFixture: fixture, scenario });
+    await expect(page.locator('.journey-ticket__advice img')).toHaveCount(0);
+    if (scenario === 'finished') {
+      await expect(page.locator('.journey-home__intro')).toContainText('recuerdos');
+      await expect(page.locator('.journey-ticket__advice')).not.toContainText('vencida');
+    }
+    await page.locator('.journey-ticket__action').click();
+    if (scenario === 'finished') {
+      await expect(page.getByRole('heading', { name: /Mi Diario de Viaje/ })).toBeVisible();
+    } else {
+      expect(await page.evaluate(() => window.guideDestination)).toBe({ task: 'tasks', traveling: 'map' }[scenario]);
+    }
+  });
+}
+
 test('empty home offers the next action and escapes trip names', async ({ page }) => {
   await page.setViewportSize({width:390,height:844});
   await page.goto('/dashboard.html',{waitUntil:'domcontentloaded'});

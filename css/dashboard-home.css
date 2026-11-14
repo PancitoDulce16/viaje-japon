@@ -35,6 +35,8 @@
 .journey-ticket__guide img { width: 116px; max-height: 132px; object-fit: contain; object-position: bottom; filter: drop-shadow(var(--jp-shadow-sm)); }
 .journey-ticket__guide p { align-self: center; margin: 0; padding: var(--space-3); border: 1px solid var(--hairline); border-radius: var(--jp-radius-sm) var(--jp-radius-sm) var(--jp-radius-sm) 2px; background: var(--surface-note); color: var(--ink-soft); font: 600 .74rem/1.45 var(--font-hand); transform: rotate(-1deg); }
 .journey-ticket__guide strong { display: block; color: var(--accent); font-family: var(--font-body); }
+.journey-ticket__advice { min-width: 0; display: grid; gap: var(--space-2); align-self: center; }
+.journey-ticket__advice .journey-ticket__action { justify-self: start; text-align: left; }
 .journey-ticket__stamp { position: absolute; right: 18px; top: 14px; color: var(--accent); font: 800 1.05rem/1 var(--font-mono); text-align: center; opacity: .22; transform: rotate(8deg); }.journey-ticket__stamp small { font-size: .47rem; }
 
 .journey-route { display: flex; flex-direction: column; justify-content: center; padding: clamp(20px,2.5vw,30px); border-radius: var(--jp-radius-md); background: var(--surface-subtle); }
