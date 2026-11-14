@@ -37,6 +37,9 @@
 .journey-ticket__guide strong { display: block; color: var(--accent); font-family: var(--font-body); }
 .journey-ticket__advice { min-width: 0; display: grid; gap: var(--space-2); align-self: center; }
 .journey-ticket__advice .journey-ticket__action { justify-self: start; text-align: left; }
+.next-stop__directions { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; margin-left: var(--space-2); padding: var(--space-2) var(--space-3); border: 1px solid var(--control-border); border-radius: var(--jp-radius-sm); background: var(--control-bg); color: var(--text-primary); font: 750 .82rem var(--font-body); text-decoration: none; }
+.next-stop__directions:hover { background: var(--control-hover); border-color: var(--primary); }
+.next-stop__directions:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
 .journey-ticket__stamp { position: absolute; right: 18px; top: 14px; color: var(--accent); font: 800 1.05rem/1 var(--font-mono); text-align: center; opacity: .22; transform: rotate(8deg); }.journey-ticket__stamp small { font-size: .47rem; }
 
 .journey-route { display: flex; flex-direction: column; justify-content: center; padding: clamp(20px,2.5vw,30px); border-radius: var(--jp-radius-md); background: var(--surface-subtle); }

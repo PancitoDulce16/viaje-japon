@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import { activityCoordinates, activityDirectionsUrl, activityMapFocus } from '../js/map/activity-location.js';
+import { openNextStopMap } from '../js/features/dashboard/next-stop-navigation.js';
+
+assert.deepEqual(activityCoordinates({ coordinates: [35, 135] }), { lat: 35, lng: 135 });
+assert.deepEqual(activityCoordinates({ location: { latitude: '35', longitude: '135' } }), { lat: 35, lng: 135 });
+assert.deepEqual(activityCoordinates({ coordinates: { lat: null, lng: '' }, location: [34, 135] }), { lat: 34, lng: 135 });
+assert.deepEqual(activityCoordinates({ coordinates: [0, 0] }), { lat: 0, lng: 0 });
+for (const coordinates of [[null, null], ['', ''], [91, 135], [35, 181], ['abc', 135]]) assert.equal(activityCoordinates({ coordinates }), null);
+assert.equal(activityCoordinates({ location: 'Kyoto' }), null);
+assert.equal(activityDirectionsUrl({}), null);
+assert.equal(new URL(activityDirectionsUrl({ coordinates: [35, 135] })).searchParams.get('destination'), '35,135');
+const place = { id: 'a1', dayNumber: 4, title: 'Temple & garden', city: 'Kyoto', coordinates: [35, 135] };
+assert.equal(new URL(activityDirectionsUrl({ title: place.title, city: place.city })).searchParams.get('destination'), 'Temple & garden, Kyoto, Japan');
+assert.equal(activityMapFocus(place, 'trip-1').day, 4);
+assert.equal(activityMapFocus(null), null);
+
+const storage = new Map([['japitin_map_day', '9']]);
+globalThis.sessionStorage = { setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key) };
+let selected;
+globalThis.window = { TripsManager: { currentTrip: { id: 'trip-1' } }, DashboardApp: { switchTab: tab => { selected = tab; } } };
+openNextStopMap({ dataset: { mapActivity: JSON.stringify(place) } });
+assert.equal(selected, 'map');
+assert.equal(storage.get('japitin_map_day'), '4');
+assert.equal(JSON.parse(storage.get('japitin-map-focus')).tripId, 'trip-1');
+openNextStopMap({ dataset: { mapActivity: JSON.stringify({ title: 'No day yet' }) } });
+assert.equal(storage.has('japitin_map_day'), false);
+selected = null;
+openNextStopMap({ dataset: { mapActivity: 'invalid JSON' } });
+assert.equal(selected, null);
+delete globalThis.window;
+delete globalThis.sessionStorage;
+console.log('activity location and dashboard map navigation: ok');

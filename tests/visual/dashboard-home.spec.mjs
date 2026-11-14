@@ -17,7 +17,7 @@ const fixture = {
     total: 10,
     completed: 3,
     percent: 30,
-    next: { title: 'Camino del Filósofo', location: 'Kyoto', dayDate: '2026-08-22', time: '08:00' }
+    next: { id: 'walk', dayNumber: 4, title: 'Camino del Filósofo', city: 'Kyoto', dayDate: '2026-08-22', time: '8:00', coordinates: { lat: 35.026, lng: 135.794 } }
   },
   weather: { temp: 28, description: 'parcialmente nublado', icon: '02d' },
   tasks: {
@@ -97,6 +97,35 @@ for (const width of widths) for (const theme of themes) {
     fs.writeFileSync(target.replace('.png','.json'),JSON.stringify(layout,null,2));
   });
 }
+
+test('next stop selects its day and coordinates on the map', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/dashboard.html', { waitUntil: 'domcontentloaded' });
+  await page.evaluate(async data => {
+    const { renderTripDashboard } = await import('/js/features/dashboard/progressive-content.js');
+    document.querySelector('#currentTripHeader').innerHTML = `<div id="dashboardTopSection" class="has-journey-home"><div id="dashboardProgressiveContent">${renderTripDashboard(data)}</div></div>`;
+    window.DashboardApp = { switchTab: tab => { window.nextStopTab = tab; } };
+  }, fixture);
+  await expect(page.locator('.next-stop time')).toContainText('08:00');
+  await expect(page.locator('.next-stop time')).toHaveAttribute('datetime', '2026-08-22T08:00');
+  await expect(page.locator('.next-stop__copy')).toContainText('Kyoto');
+  const directions = page.getByRole('link', { name: /Cómo llegar/ });
+  const destination = new URL(await directions.getAttribute('href')).searchParams.get('destination');
+  expect(destination).toBe('35.026,135.794');
+  await page.locator('.next-stop button').click();
+  expect(await page.evaluate(() => window.nextStopTab)).toBe('map');
+  expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem('japitin-map-focus')))).toMatchObject({ day: 4, activityId: 'walk', coordinates: { lat: 35.026, lng: 135.794 } });
+  await page.evaluate(async () => {
+    const { MapHandler } = await import('/js/map/map.js');
+    MapHandler.addItineraryMarkers = () => {};
+    MapHandler.focusOnActivity = (lat, lng) => { window.nextStopCoordinates = [lat, lng]; };
+    MapHandler.syncWithItinerary();
+    window.nextStopDay = MapHandler.selectedDay;
+  });
+  expect(await page.evaluate(() => window.nextStopDay)).toBe('4');
+  await expect.poll(() => page.evaluate(() => window.nextStopCoordinates)).toEqual([35.026, 135.794]);
+  expect(await page.evaluate(() => sessionStorage.getItem('japitin-map-focus'))).toBeNull();
+});
 
 for (const scenario of ['task', 'traveling', 'finished']) {
   test(`guide opens the next action: ${scenario}`, async ({ page }) => {

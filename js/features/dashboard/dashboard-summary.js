@@ -21,14 +21,20 @@ export function calculateTripCountdown(startValue, endValue, nowValue = new Date
 export function activityDateTime(day, activity) {
   const date = String(day?.date || '').slice(0, 10);
   if (!date) return null;
-  const time = /^\d{1,2}:\d{2}$/.test(activity?.time || '') ? activity.time : '23:59';
+  const time = normalizeActivityTime(activity?.time) || '23:59';
   const value = new Date(`${date}T${time}:00`);
   return Number.isNaN(value.getTime()) ? null : value;
 }
 
+export function normalizeActivityTime(value) {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(String(value || '').trim());
+  if (!match || Number(match[1]) > 23 || Number(match[2]) > 59) return null;
+  return `${match[1].padStart(2, '0')}:${match[2]}`;
+}
+
 export function summarizeItinerary(days = [], nowValue = new Date()) {
   const now = new Date(nowValue);
-  const activities = days.flatMap((day) => (day.activities || []).map((activity) => ({ ...activity, dayDate: day.date, at: activityDateTime(day, activity) })))
+  const activities = days.flatMap((day, dayIndex) => (day.activities || []).map((activity) => ({ ...activity, city: activity.city || day.city || '', dayNumber: day.day ?? dayIndex + 1, dayDate: day.date, at: activityDateTime(day, activity) })))
     .filter((activity) => activity.at).sort((a, b) => a.at - b.at);
   const completed = activities.filter((activity) => activity.at < now).length;
   return {

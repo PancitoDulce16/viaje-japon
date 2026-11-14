@@ -1,17 +1,11 @@
 // js/map.js - Mapa Interactivo con Leaflet
 import { GooglePlacesAPI } from '../api/google-places.js';
 import { APP_CONFIG } from '../core/config.js';
+import { activityCoordinates } from './activity-location.js';
 
 let map = null;
 let markersLayer = null;
 let nearbyPlacesLayer = null;
-
-const activityCoordinates = activity => {
-    const source = activity?.coordinates || activity?.location;
-    const lat = Array.isArray(source) ? Number(source[0]) : Number(source?.lat ?? source?.latitude);
-    const lng = Array.isArray(source) ? Number(source[1]) : Number(source?.lng ?? source?.longitude);
-    return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
-};
 
 // Ubicaciones de hoteles
 const HOTEL_LOCATIONS = [

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { calculateTripCountdown, classifyTasks, dashboardFocus, packingProgress, prioritizeDashboardActions, summarizeItinerary } from '../js/features/dashboard/dashboard-summary.js';
+import { calculateTripCountdown, classifyTasks, dashboardFocus, normalizeActivityTime, packingProgress, prioritizeDashboardActions, summarizeItinerary } from '../js/features/dashboard/dashboard-summary.js';
 
 const today = new Date('2026-08-09T12:00:00');
 assert.deepEqual(calculateTripCountdown('2026-08-19', '2026-08-29', today), { state:'upcoming', days:10 });
@@ -22,6 +22,15 @@ assert.deepEqual(packingProgress([{packed:true},{packed:false},{checked:true}]),
 assert.deepEqual(summarizeItinerary([], today), { total:0, completed:0, percent:0, next:null });
 const itinerary = summarizeItinerary([{ date:'2026-08-09', activities:[{title:'Templo',time:'08:00'},{title:'Cena',time:'18:00'}] }], today);
 assert.equal(itinerary.completed, 1); assert.equal(itinerary.next.title, 'Cena'); assert.equal(itinerary.percent, 50);
+const nextStop = summarizeItinerary([{ day: 4, city: 'Kyoto', date: '2026-08-10', activities: [{ title: 'Templo', time: '8:05' }] }], today).next;
+assert.equal(nextStop.city, 'Kyoto');
+assert.equal(nextStop.dayNumber, 4);
+assert.equal(nextStop.at.getHours(), 8);
+assert.equal(nextStop.at.getMinutes(), 5);
+assert.equal(normalizeActivityTime('8:05'), '08:05');
+assert.equal(normalizeActivityTime('24:00'), null);
+assert.equal(normalizeActivityTime('12:60'), null);
+assert.equal(normalizeActivityTime(''), null);
 
 const actions = prioritizeDashboardActions({
   trip: { countdown: { state: 'upcoming', days: 2 } },

@@ -21,7 +21,9 @@
 import { detectJourneyStage, getJourneyMath } from './stage-detector.js';
 import { renderHeroMoment } from './hero-moment.js';
 import { formatMoneyMinor } from '../budget/money.js';
-import { dashboardFocus } from './dashboard-summary.js';
+import { dashboardFocus, normalizeActivityTime } from './dashboard-summary.js';
+import { activityDirectionsUrl } from '../../map/activity-location.js';
+import './next-stop-navigation.js';
 
 const safe = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 
@@ -277,7 +279,11 @@ export function renderTripDashboard(data) {
   const { trip, itinerary, budget, tasks, packing, images = [], reservations = {}, weather = null } = data;
   const next = itinerary.next;
   const nextTitle = next?.title || next?.name || 'Tu primera aventura';
-  const nextPlace = next?.location || next?.city || trip.destination;
+  const nextPlace = (typeof next?.location === 'string' && next.location) || next?.city || trip.destination;
+  const nextTime = normalizeActivityTime(next?.time);
+  const nextDateTime = `${next?.dayDate || ''}${nextTime ? `T${nextTime}` : ''}`;
+  const directionsUrl = next ? activityDirectionsUrl(next, trip.destination) : null;
+  const nextMapAction = next ? 'window.JapitinDashboardNavigation.openNextStopMap(this)' : "window.DashboardApp?.switchTab('itinerary')";
   const mapAsset = /kyoto|kioto|gion|fushimi/i.test(`${nextPlace} ${nextTitle}`)
     ? '/images/illustrations/generated/maps/kyoto-district.webp'
     : '/images/illustrations/generated/maps/japan-overview.webp';
@@ -291,7 +297,7 @@ export function renderTripDashboard(data) {
     packing: 'window.PackingList?.open()',
     alerts: 'window.NotificationCenter?.open()',
     memories: 'window.TravelJournal?.show()',
-    map: "window.DashboardApp?.switchTab('map')",
+    map: nextMapAction,
     itinerary: "window.DashboardApp?.switchTab('itinerary')"
   };
   const budgetPercent = Math.max(0, Math.min(100, Number(budget.percentUsed) || 0));
@@ -308,12 +314,12 @@ export function renderTripDashboard(data) {
 
     ${renderHeroMoment({ info: { name: trip.name, destination: trip.destination, dateStart: trip.dateStart, dateEnd: trip.dateEnd } }, { compact: true })}
     <div class="journey-home__top">
-      <aside class="journey-ticket__guide"><img src="/images/illustrations/generated/companions/cat-guide.png" alt="Gatito guía leyendo el mapa"><div class="journey-ticket__advice"><p><strong>Consejo Japitin</strong>${safe(focus.title)}</p><button type="button" class="journey-ticket__action" onclick="${safe(focusActions[focus.kind])}">${safe(focus.actionLabel)} <span aria-hidden="true">→</span></button></div></aside>
+      <aside class="journey-ticket__guide"><img src="/images/illustrations/generated/companions/cat-guide.png" alt="Gatito guía leyendo el mapa"><div class="journey-ticket__advice"><p><strong>Consejo Japitin</strong>${safe(focus.title)}</p><button type="button" class="journey-ticket__action" data-map-activity="${safe(JSON.stringify(next))}" onclick="${safe(focusActions[focus.kind])}">${safe(focus.actionLabel)} <span aria-hidden="true">→</span></button></div></aside>
       <section class="journey-route" aria-labelledby="journeyRouteTitle"><div class="journey-home__section-head"><h2 id="journeyRouteTitle">${itinerary.total ? `${itinerary.completed} de ${itinerary.total} aventuras vividas` : 'Tu historia está por comenzar'}</h2>${itinerary.total ? `<strong>${itineraryPercent}%</strong>` : ''}</div>${itinerary.total ? `<div class="journey-route__track"><span style="width:${itineraryPercent}%"></span><i style="left:${itineraryPercent}%" aria-hidden="true">🌸</i></div>` : '<p>Guarda tus primeras actividades en el itinerario.</p>'}</section>
     </div>
 
     <article class="next-stop" aria-labelledby="nextStopTitle">
-      <div class="next-stop__copy"><p class="journey-home__eyebrow">Próxima parada</p><h2 id="nextStopTitle">${safe(nextTitle)}</h2>${next ? `<time datetime="${safe(next.dayDate)}T${safe(next.time || '')}"><i class="far fa-calendar" aria-hidden="true"></i> ${dashboardDate(next.dayDate)} · ${safe(next.time || 'Hora por definir')}</time><p><i class="fas fa-map-marker-alt" aria-hidden="true"></i> ${safe(nextPlace)}</p>` : '<p>Tu itinerario todavía tiene espacio para una sorpresa.</p>'}<div class="next-stop__weather">${weather ? `<span>${safe(window.AppUtils?.getWeatherEmoji?.(weather.icon) || '⛅')}</span><strong>${safe(weather.temp)}°</strong><small>${safe(weather.description)}</small>` : '<span>🌤️</span><strong>—</strong><small>Clima disponible al acercarse</small>'}</div><button type="button" onclick="window.DashboardApp?.switchTab('${next ? 'map' : 'itinerary'}')">${next ? 'Ver mapa' : 'Armar mi itinerario'} <span aria-hidden="true">→</span></button></div>
+      <div class="next-stop__copy"><p class="journey-home__eyebrow">Próxima parada</p><h2 id="nextStopTitle">${safe(nextTitle)}</h2>${next ? `<time datetime="${safe(nextDateTime)}"><i class="far fa-calendar" aria-hidden="true"></i> ${dashboardDate(next.dayDate)} · ${safe(nextTime || 'Hora por definir')}</time><p><i class="fas fa-map-marker-alt" aria-hidden="true"></i> ${safe(nextPlace)}</p>` : '<p>Tu itinerario todavía tiene espacio para una sorpresa.</p>'}<div class="next-stop__weather">${weather ? `<span>${safe(window.AppUtils?.getWeatherEmoji?.(weather.icon) || '⛅')}</span><strong>${safe(weather.temp)}°</strong><small>${safe(weather.description)}</small>` : '<span>🌤️</span><strong>—</strong><small>Clima disponible al acercarse</small>'}</div><button type="button" data-map-activity="${safe(JSON.stringify(next))}" onclick="${safe(nextMapAction)}">${next ? 'Ver mapa' : 'Armar mi itinerario'} <span aria-hidden="true">→</span></button>${directionsUrl ? `<a class="next-stop__directions" href="${safe(directionsUrl)}" target="_blank" rel="noopener noreferrer">C&#243;mo llegar <span aria-hidden="true">&#8599;</span><span class="sr-only"> (abre Google Maps en otra pesta&#241;a)</span></a>` : ''}</div>
       <div class="next-stop__map"><img src="${mapAsset}" alt="Mapa ilustrado de la próxima parada"><span class="next-stop__pin" aria-hidden="true"><i class="fas fa-map-pin"></i></span><figure class="next-stop__dog"><img src="/images/illustrations/generated/companions/dog-explorer.png" alt="Perrito explorador con mochila y cámara"><figcaption>${next ? 'A explorar' : 'Tu viaje empieza aquí'}</figcaption></figure></div>
     </article>
 
