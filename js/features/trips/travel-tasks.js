@@ -11,6 +11,14 @@ export const TravelTasks = {
   filters: { status:'pending', category:'', priority:'', assignee:'' },
   get tripId() { return window.TripsManager?.currentTrip?.id || localStorage.getItem('currentTripId'); },
   notify(type, text) { window.Notifications?.[type]?.(text); },
+  async setCompleted(id, completed, tripId = this.tripId) {
+    if (!auth.currentUser || !tripId || tripId !== this.tripId || !id || String(id).includes('/') || typeof completed !== 'boolean') throw new Error('No se puede actualizar esta tarea.');
+    await updateDoc(doc(db, `trips/${tripId}/tasks/${id}`), { completed, completedAt: completed ? serverTimestamp() : null, updatedAt: serverTimestamp() });
+    if (this.tripId === tripId) {
+      const task = this.tasks.find(item => item.id === id);
+      if (task) task.completed = completed;
+    }
+  },
   open(options = {}) {
     if (!this.tripId || !auth.currentUser) return;
     this.close(); this.editingId = options.create ? 'new' : null;

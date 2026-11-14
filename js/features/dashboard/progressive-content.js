@@ -25,6 +25,7 @@ import { dashboardFocus, normalizeActivityTime } from './dashboard-summary.js';
 import { activityDirectionsUrl } from '../../map/activity-location.js';
 import './next-stop-navigation.js';
 import { renderReservationTicket } from './reservation-ticket.js';
+import { renderDashboardTasks } from './dashboard-tasks.js';
 
 const safe = (value = '') => String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 
@@ -304,7 +305,7 @@ export function renderTripDashboard(data) {
   const budgetPercent = Math.max(0, Math.min(100, Number(budget.percentUsed) || 0));
   const itineraryPercent = Math.max(0, Math.min(100, Number(itinerary.percent) || 0));
   const reservation = reservations.next;
-  const taskRows = tasks.upcoming?.slice(0, 4) || [];
+  const taskRows = tasks.upcoming?.filter(task => !task.completed) || [];
   const memories = images.slice(0, 3);
 
   return `<section class="journey-home" aria-label="Portada de tu viaje">
@@ -325,7 +326,7 @@ export function renderTripDashboard(data) {
     </article>
 
     <div class="journey-home__support">
-      <article class="journey-note journey-note--tasks"><div class="journey-home__section-head"><div><p class="journey-home__eyebrow">Antes de salir</p><h2>Tareas importantes</h2></div><button type="button" onclick="window.TravelTasks?.open()">Ver ${tasks.pendingCount || 0}</button></div>${taskRows.length ? `<ul>${taskRows.map(task => `<li><i class="far fa-square" aria-hidden="true"></i><span>${safe(task.title)}</span><time>${safe(task.dueDate || '')}</time></li>`).join('')}</ul>` : `<p class="journey-home__empty">${tasks.pendingCount ? 'Tienes tareas pendientes. Abre la lista para revisarlas.' : 'Sin tareas pendientes registradas. Puedes preparar tu lista antes de salir.'}</p>`}</article>
+      <article class="journey-note journey-note--tasks"><div class="journey-home__section-head"><div><p class="journey-home__eyebrow">Antes de salir</p><h2>Tareas importantes</h2></div><button type="button" onclick="window.TravelTasks?.open()">Ver ${tasks.pendingCount || 0}</button></div>${taskRows.length ? `<ul>${renderDashboardTasks(taskRows, trip.id)}</ul>` : `<p class="journey-home__empty">${tasks.pendingCount ? 'Tienes tareas pendientes. Abre la lista para revisarlas.' : 'Sin tareas pendientes registradas. Puedes preparar tu lista antes de salir.'}</p>`}</article>
       <article class="luggage-tag"><p class="journey-home__eyebrow">Equipaje</p><h2>${packing.total ? `${packing.packed}/${packing.total}` : 'Tu maleta'}</h2><p>${packing.total ? `${packing.pending} pendiente${packing.pending === 1 ? '' : 's'}` : 'Empieza tu lista de equipaje'}</p>${packing.total ? `<div class="journey-meter"><span style="width:${packing.percent}%"></span></div>` : ''}<button type="button" onclick="window.PackingList?.open()">Abrir lista</button></article>
       <article class="budget-receipt"><p class="journey-home__eyebrow">Presupuesto resumido</p><h2>${budget.budgetMinor > 0 ? formatMoneyMinor(budget.availableMinor, budget.currency) : 'A tu medida'}</h2><p>${budget.budgetMinor > 0 ? `disponibles de ${formatMoneyMinor(budget.budgetMinor, budget.currency)}` : 'Define un presupuesto para empezar'}</p>${budget.budgetMinor > 0 ? `<div class="journey-meter"><span style="width:${budgetPercent}%"></span></div><small>${budgetPercent.toFixed(0)}% utilizado</small>` : ''}<button type="button" onclick="window.DashboardApp?.switchTab('budget')">Ver presupuesto</button></article>
     </div>

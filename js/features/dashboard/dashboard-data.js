@@ -33,7 +33,7 @@ export async function fetchDashboardData(tripId, _stage, trip, itineraryDoc = un
     optional(() => getAggregateFromServer(query(expensesRef, where('baseCurrency', '==', baseCurrency)), { spent: sum('convertedAmountMinor') }), null, 'total gastado'),
     optional(() => getDocs(query(expensesRef, orderBy('date', 'desc'), limit(3))).then(rows), [], 'gastos recientes'),
     optional(() => getCountFromServer(query(tasksRef, where('completed', '==', false))).then((snap) => snap.data().count), 0, 'conteo de pendientes'),
-    optional(() => getDocs(query(tasksRef, where('completed', '==', false), orderBy('dueDate', 'asc'), limit(5))).then(rows), [], 'tareas próximas'),
+    optional(() => getDocs(query(tasksRef, where('completed', '==', false), orderBy('dueDate', 'asc'))).then(rows), [], 'tareas próximas'),
     optional(() => getCountFromServer(packingRef).then((snap) => snap.data().count), 0, 'conteo de equipaje'),
     optional(() => getCountFromServer(query(packingRef, where('packed', '==', true))).then((snap) => snap.data().count), 0, 'equipaje empacado'),
     optional(() => getDocs(query(collection(db, `trips/${tripId}/images`), orderBy('createdAt', 'desc'), limit(4))).then(rows), [], 'galería'),
@@ -65,6 +65,7 @@ export async function fetchDashboardData(tripId, _stage, trip, itineraryDoc = un
 
   return {
     trip: {
+      id: tripId,
       name: trip?.info?.name || 'Viaje sin nombre', destination: trip?.info?.destination || 'Japón',
       dateStart: trip?.info?.dateStart || '', dateEnd: trip?.info?.dateEnd || '',
       countdown: calculateTripCountdown(trip?.info?.dateStart, trip?.info?.dateEnd)

@@ -7,6 +7,7 @@ const themes = ['light', 'dark'];
 
 const fixture = {
   trip: {
+    id: 'trip-dashboard-test',
     name: 'Japón 2026',
     destination: 'Tokio, Kyoto y Osaka',
     dateStart: '2027-02-15',
@@ -95,6 +96,43 @@ for (const width of widths) for (const theme of themes) {
       return {selector,top:rect.top,height:rect.height,padding:style.padding,margin:style.margin,display:style.display};
     }));
     fs.writeFileSync(target.replace('.png','.json'),JSON.stringify(layout,null,2));
+  });
+}
+
+for (const outcome of ['saved', 'failed']) {
+  test(`dashboard task completion ${outcome}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/dashboard.html', { waitUntil: 'domcontentloaded' });
+    await page.evaluate(async data => {
+      const { TravelTasks } = await import('/js/features/trips/travel-tasks.js');
+      const { renderTripDashboard } = await import('/js/features/dashboard/progressive-content.js');
+      document.querySelector('#currentTripHeader').innerHTML = `<div id="dashboardTopSection" class="has-journey-home"><div id="dashboardProgressiveContent">${renderTripDashboard(data)}</div></div>`;
+      TravelTasks.setCompleted = (id, completed, tripId) => {
+        window.taskWrite = { id, completed, tripId };
+        return new Promise((resolve, reject) => { window.confirmTaskWrite = resolve; window.rejectTaskWrite = reject; });
+      };
+      window.TripsManager = { loadDashboardProgressiveContent: () => { window.taskRefreshCount = (window.taskRefreshCount || 0) + 1; } };
+    }, fixture);
+    const row = page.locator('.dashboard-task').first();
+    const checkbox = row.getByRole('checkbox');
+    await checkbox.check();
+    await expect(checkbox).toBeDisabled();
+    await expect(row.getByRole('status')).toContainText('Guardando');
+    expect(await page.evaluate(() => window.taskWrite)).toEqual({ id: 't1', completed: true, tripId: 'trip-dashboard-test' });
+    await page.evaluate(outcome => {
+      if (outcome === 'saved') window.confirmTaskWrite();
+      else window.rejectTaskWrite(new Error('permission denied'));
+    }, outcome);
+    await expect(checkbox).toBeEnabled();
+    if (outcome === 'saved') {
+      await expect(checkbox).toBeChecked();
+      await expect(row.getByRole('status')).toContainText('Tarea completada');
+      expect(await page.evaluate(() => window.taskRefreshCount)).toBe(1);
+    } else {
+      await expect(checkbox).not.toBeChecked();
+      await expect(row.getByRole('status')).toContainText('No se pudo guardar');
+      expect(await page.evaluate(() => window.taskRefreshCount || 0)).toBe(0);
+    }
   });
 }
 
