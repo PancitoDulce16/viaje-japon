@@ -20,7 +20,7 @@ Se recuperó la implementación desplegada de `onNewExpenseAdded` desde su archi
 
 Funciones publicadas explícitamente: `restoreUserBackup`, `onNewExpenseAdded` y `onTripDeleted`. Las funciones de recordatorios que solo estaban en el código local no se activaron. La función de restauración usa el bucket `japan-itin-dev.firebasestorage.app`, una instancia de ejecución por contenedor y un máximo de dos contenedores.
 
-La cuenta `github-action-1071850135@japan-itin-dev.iam.gserviceaccount.com` se identificó por el ID y la descripción del repositorio y recibió los roles adicionales `roles/firebaserules.admin` y `roles/firebasestorage.viewer`. El segundo permite leer la configuración del bucket, sin permisos para leer sus objetos. No se añadieron roles generales de administración. CI ejecuta pruebas y reglas en emuladores antes de publicar Hosting y publica reglas de Firestore/Storage cuando cambian.
+La cuenta `github-action-1071850135@japan-itin-dev.iam.gserviceaccount.com` se identificó por el ID y la descripción del repositorio y se confirmó mediante una huella de su identidad emitida por CI, sin publicar credenciales. Recibió `roles/firebaserules.admin` y `roles/firebasestorage.viewer` en el proyecto, más `roles/storage.bucketViewer` únicamente sobre el bucket de la aplicación. Los dos permisos de lectura son para configuración y metadatos del bucket, sin acceso a sus objetos. No se añadieron roles generales de administración. CI ejecuta pruebas y reglas en emuladores antes de publicar Hosting y publica reglas de Firestore/Storage cuando cambian.
 
 El bucket carecía de CORS. Se aplicó `storage-cors.json` para las descargas autenticadas del navegador. Esto no cambia los permisos de lectura de objetos. Para reproducir la configuración con una sesión administradora: `gsutil cors set docs/ops/storage-cors.json gs://japan-itin-dev.firebasestorage.app`.
 
@@ -30,6 +30,8 @@ El bucket carecía de CORS. Se aplicó `storage-cors.json` para las descargas au
 - Emuladores de Firestore y Storage: pertenencia, aislamiento de copias, adjuntos, marcas temporales, idempotencia, rollback, reintentos y denegación de acceso ajeno. Se comprueba que el cliente no pueda falsificar trabajos de importación.
 - Navegador: descarga de JSON real con itinerario y PDF; restauración y errores de copia previa, en claro/oscuro a 390 y 1440 px. Suite completa de 140 casos aprobada antes del ajuste final de recuperación de la copia previa; sus cuatro casos específicos se repiten tras ese ajuste.
 - Funciones activas verificadas en Node 22 y endpoint público de restauración rechazando peticiones sin autenticación con HTTP 401. No se restauraron ni duplicaron viajes reales de la usuaria durante las pruebas.
+- Publicación automática confirmada: [pruebas, reglas de Firestore/Storage y Hosting aprobados](https://github.com/PancitoDulce16/viaje-japon/actions/runs/43747994807). Se verificó por HTTP que el sitio sirve el módulo nuevo y la acción para recuperar la copia previa.
+- GitHub Pages también se recuperó: `data/ideas.md` tenía una codificación antigua que rompía Jekyll. Se convirtió a UTF-8 preservando el contenido; la [publicación pasó](https://github.com/PancitoDulce16/viaje-japon/actions/runs/43747994641).
 
 Las capturas originales siguen ausentes localmente. Se inspeccionaron las nuevas capturas en ambos temas, conservando los componentes existentes.
 

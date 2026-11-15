@@ -70,7 +70,7 @@ Validación de esta tanda: 136 casos de navegador aprobados, incluidos los recor
 
 ### Hallazgos abiertos de alta prioridad
 
-**Actualización del 15 de noviembre de 2026:** los cuatro pendientes de respaldo, restauración, dependencias del servidor y permisos de reglas se repararon. Detalles, alcance, configuración y pruebas en [BACKUP_REPAIR.md](ops/BACKUP_REPAIR.md). Las notas históricas siguientes describen el estado anterior y no sustituyen esa actualización. La verificación remota de CI se registra al finalizar la publicación.
+**Actualización del 15 de noviembre de 2026:** los cuatro pendientes de respaldo, restauración, dependencias del servidor y permisos de reglas se repararon. Detalles, alcance, configuración y pruebas en [BACKUP_REPAIR.md](ops/BACKUP_REPAIR.md). Las notas históricas siguientes describen el estado anterior y no sustituyen esa actualización. La [publicación automática de pruebas, reglas y web](https://github.com/PancitoDulce16/viaje-japon/actions/runs/43747994807) terminó correctamente; GitHub Pages también publicó después de reparar la codificación de un archivo de notas.
 
 Revisión posterior a la publicación manual de reglas:
 
