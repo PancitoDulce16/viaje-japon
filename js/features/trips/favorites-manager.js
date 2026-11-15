@@ -5,27 +5,51 @@ import {
   doc,
   setDoc,
   getDoc,
-  onSnapshot
+  onSnapshot,
+  runTransaction
 } from 'firebase/firestore';
 
 export const FavoritesManager = {
   favorites: [],
   unsubscribe: null,
+  scope() { const uid=auth.currentUser?.uid || null;return {uid,tripId:uid?this.getCurrentTripId():null}; },
+  sameScope(scope) { const current=this.scope();return scope.uid===current.uid&&scope.tripId===current.tripId; },
+  cacheKey(scope=this.scope()) {return `japitin_favorites_${scope.uid || 'guest'}_${scope.tripId || 'personal'}`;},
+  readCache(scope=this.scope()) {try{const data=JSON.parse(localStorage.getItem(this.cacheKey(scope)) || '[]');return Array.isArray(data)?data.filter(item=>item&&typeof item.name==='string'):[];}catch{return [];}},
+  cache(scope,items) {try{localStorage.setItem(this.cacheKey(scope),JSON.stringify(items));}catch{ /* A confirmed cloud save remains valid when local caching is unavailable. */ }},
+  async mutateFavorite(change) {
+    const scope=this.scope();
+    try {
+      let items;
+      if(scope.uid) {
+        const target=scope.tripId?doc(db,`trips/${scope.tripId}/data`,'favorites'):doc(db,`users/${scope.uid}/data`,'favorites');
+        items=await runTransaction(db,async transaction=>{
+          if(!this.sameScope(scope))throw new Error('El viaje o la cuenta cambió.');
+          const snapshot=await transaction.get(target);
+          if(!this.sameScope(scope))throw new Error('Context changed');
+          const stored=snapshot.exists()?snapshot.data().items:[];
+          const next=change(Array.isArray(stored)?stored:[]);
+          transaction.set(target,{items:next,lastUpdated:new Date().toISOString(),updatedBy:scope.uid});
+          return next;
+        });
+      } else {
+        items=change(this.readCache(scope));
+        localStorage.setItem(this.cacheKey(scope),JSON.stringify(items));
+      }
+      if(!this.sameScope(scope))return false;
+      this.favorites=items.filter(item=>item&&typeof item.name==='string');this.cache(scope,items);this.updateFavoritesUI();return true;
+    } catch(error) {
+      if(this.sameScope(scope))window.Notifications?.error('No se pudo guardar el favorito. Podés volver a intentarlo.');
+      return false;
+    }
+  },
 
   // Inicializar
   async init() {
     console.log('⭐ Inicializando Favorites Manager...');
 
     // Cargar desde localStorage
-    const localData = localStorage.getItem('favorites');
-    if (localData) {
-      try {
-        this.favorites = JSON.parse(localData);
-      } catch (e) {
-        console.error('Error parsing favorites:', e);
-        this.favorites = [];
-      }
-    }
+    this.favorites=this.readCache();
 
     // Sincronizar con Firebase si hay usuario
     if (auth.currentUser) {
@@ -37,10 +61,13 @@ export const FavoritesManager = {
 
   // Inicializar sync
   async initSync() {
+    const version=this.syncVersion=(this.syncVersion || 0)+1;
     if (this.unsubscribe) {
       this.unsubscribe();
     }
 
+    const scope=this.scope();
+    this.favorites=this.readCache(scope);this.updateFavoritesUI();
     if (!auth.currentUser) return;
 
     const tripId = this.getCurrentTripId();
@@ -59,19 +86,22 @@ export const FavoritesManager = {
     }
 
     this.unsubscribe = onSnapshot(favoritesRef, (docSnapshot) => {
+      if(version!==this.syncVersion || !this.sameScope(scope))return;
       if (docSnapshot.exists()) {
-        this.favorites = docSnapshot.data().items || [];
+        const items=docSnapshot.data().items;
+        this.favorites = Array.isArray(items)?items.filter(item=>item&&typeof item.name==='string'):[];
       } else {
         this.favorites = [];
       }
 
-      localStorage.setItem('favorites', JSON.stringify(this.favorites));
+      this.cache(scope,this.favorites);
 
       // Actualizar UI de favoritos
       this.updateFavoritesUI();
 
       console.log('✅ Favoritos sincronizados:', this.favorites.length);
     }, (error) => {
+      if(version!==this.syncVersion || !this.sameScope(scope))return;
       console.error('❌ ERROR en FavoritesManager onSnapshot - Full details:', {
         code: error.code,
         message: error.message,
@@ -80,7 +110,7 @@ export const FavoritesManager = {
         path: tripId ? `trips/${tripId}/data/favorites` : `users/${userId}/data/favorites`
       });
       // Fallback a localStorage
-      this.favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      this.favorites = this.readCache(scope);
       this.updateFavoritesUI();
     });
   },
@@ -112,15 +142,14 @@ export const FavoritesManager = {
       category: place.category || 'Atracción',
       icon: place.icon || '📍',
       description: place.description || '',
-      lat: place.lat || null,
-      lng: place.lng || null,
+      lat: place.lat ?? null,
+      lng: place.lng ?? null,
       addedAt: new Date().toISOString(),
       addedBy: auth.currentUser ? auth.currentUser.email : 'Usuario local'
     };
 
-    this.favorites.push(favorite);
-
-    await this.saveFavorites();
+    const saved=await this.mutateFavorite(items=>items.some(item=>item?.name===favorite.name&&item?.city===favorite.city)?items:[...items,favorite]);
+    if(!saved)return;
 
     if (window.Notifications) {
       window.Notifications.success(`⭐ ${place.name} agregado a favoritos`);
@@ -128,7 +157,7 @@ export const FavoritesManager = {
 
     // Vibración
     if (window.MobileEnhancements) {
-      window.MobileEnhancements.vibrate([30, 50, 30]);
+      window.MobileEnhancements.vibrate?.([30, 50, 30]);
     }
   },
 
@@ -139,9 +168,7 @@ export const FavoritesManager = {
     if (index === -1) return;
 
     const favorite = this.favorites[index];
-    this.favorites.splice(index, 1);
-
-    await this.saveFavorites();
+    if(!await this.mutateFavorite(items=>items.filter(item=>item?.id!==favoriteId)))return;
 
     if (window.Notifications) {
       window.Notifications.info(`Removido: ${favorite.name}`);
@@ -154,36 +181,7 @@ export const FavoritesManager = {
   },
 
   // Guardar favoritos
-  async saveFavorites() {
-    localStorage.setItem('favorites', JSON.stringify(this.favorites));
-
-    this.updateFavoritesUI();
-
-    if (!auth.currentUser) return;
-
-    try {
-      const tripId = this.getCurrentTripId();
-      const userId = auth.currentUser.uid;
-
-      let favoritesRef;
-
-      if (tripId) {
-        favoritesRef = doc(db, `trips/${tripId}/data`, 'favorites');
-      } else {
-        favoritesRef = doc(db, `users/${userId}/data`, 'favorites');
-      }
-
-      await setDoc(favoritesRef, {
-        items: this.favorites,
-        lastUpdated: new Date().toISOString(),
-        updatedBy: auth.currentUser.email
-      });
-
-      console.log('✅ Favoritos guardados');
-    } catch (error) {
-      console.error('❌ Error guardando favoritos:', error);
-    }
-  },
+  async saveFavorites() { return this.mutateFavorite(() => [...this.favorites]); },
 
   // Actualizar UI de favoritos
   updateFavoritesUI() {
@@ -397,10 +395,10 @@ export const FavoritesManager = {
 
   // Limpiar estado
   cleanup() {
+    this.syncVersion=(this.syncVersion || 0)+1;
     if (this.unsubscribe) this.unsubscribe();
     this.unsubscribe = null;
     this.favorites = [];
-    localStorage.removeItem('favorites');
     this.updateFavoritesUI();
     console.log('[FavoritesManager] 🧹 Estado de favoritos limpiado.');
   }

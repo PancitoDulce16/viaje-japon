@@ -68,6 +68,14 @@ Validación de esta tanda: 136 casos de navegador aprobados, incluidos los recor
 
 ## Cobertura que sigue pendiente
 
+### Revisión de favoritos, compras y preparación
+
+- **Favoritos reparados:** se informa éxito solo después de confirmar la escritura. Agregar/quitar usa transacciones sobre la lista del servidor para conservar cambios de otras personas. Las cachés se separan por cuenta y viaje; los listeners antiguos se descartan y los errores no recuperan datos del viaje anterior. Se conservan coordenadas con valor cero y se toleran cachés inválidas o almacenamiento local no disponible después de un guardado en nube confirmado.
+- **Compras, pendiente:** el guardado todavía absorbe errores y sus acciones pueden mostrar éxito aunque fallen. Las cargas asíncronas pueden resolver para un viaje anterior. Los totales de compras realizadas no aplican la cantidad de forma consistente.
+- **Preparación, pendiente:** los diálogos de agregar/eliminar vuelven a consultar el viaje al cerrarse y la asignación de responsables puede anunciar éxito después de un fallo de guardado. Se requiere vincular cada operación al viaje y elemento originales.
+
+Se añadieron regresiones de favoritos para fallos y reintentos, cambios de cuenta y viaje, cachés corruptas, adiciones concurrentes, valores cero y cambio de identidad durante la lectura transaccional. Las dos áreas pendientes no se consideran reparadas por aprobar esas pruebas.
+
 ### Hallazgos abiertos de alta prioridad
 
 **Actualización del 15 de noviembre de 2026:** los cuatro pendientes de respaldo, restauración, dependencias del servidor y permisos de reglas se repararon. Detalles, alcance, configuración y pruebas en [BACKUP_REPAIR.md](ops/BACKUP_REPAIR.md). Las notas históricas siguientes describen el estado anterior y no sustituyen esa actualización. La [publicación automática de pruebas, reglas y web](https://github.com/PancitoDulce16/viaje-japon/actions/runs/43747994807) terminó correctamente; GitHub Pages también publicó después de reparar la codificación de un archivo de notas.
