@@ -1,0 +1,27 @@
+/* Keep edited memories readable and their actions inside the mobile viewport. */
+html .journal-modal-overlay .journal-modal .modal-header {
+  background: var(--surface-note) !important;
+}
+html .journal-modal-overlay .journal-modal .modal-header h3 {
+  color: var(--ink) !important;
+  text-shadow: none !important;
+}
+html .journal-modal-overlay .journal-modal .form-textarea {
+  background: var(--control-bg) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--control-border) !important;
+}
+html #photoDetailContent [data-gallery-comment-row] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+}
+html #photoDetailContent #galleryCommentInput {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+html #photoDetailContent [data-gallery-send] {
+  width: auto !important;
+  white-space: nowrap;
+}

@@ -1,3 +1,4 @@
+import { convertChatMessage } from './chat-conversions.js';
 ﻿// js/group-chat.js - CHAT GRUPAL EN TIEMPO REAL
 
 import { db, auth } from '../../core/firebase-config.js';
@@ -745,36 +746,7 @@ export const GroupChat = {
     if (!messageText) return;
     document.querySelectorAll('.jc-actions[open]').forEach(menu => menu.removeAttribute('open'));
 
-    if (type === 'activity') {
-      const day = window.ItineraryHandler?.currentDay || window.ItineraryHandler?.currentItinerary?.days?.[0]?.day || 1;
-      this.close();
-      window.DashboardApp?.switchTab('itinerary');
-      setTimeout(() => {
-        window.ItineraryHandler?.showActivityModal(null, day);
-        const title = document.getElementById('activityTitle');
-        const desc = document.getElementById('activityDesc');
-        if (title) title.value = messageText.slice(0, 90);
-        if (desc) desc.value = `Creado desde el chat · ${messageText}`;
-      }, 120);
-      return;
-    }
-
-    if (type === 'expense') {
-      const amountValue = await window.Dialogs?.prompt({ title: 'Convertir en gasto', message: messageText, placeholder: 'Monto (ej. 2500)' });
-      const amount = Number(String(amountValue || '').replace(/[^0-9.]/g, ''));
-      if (!amount || amount <= 0) return;
-      try {
-        await addDoc(collection(db, `trips/${this.getCurrentTripId()}/expenses`), {
-          desc: messageText.slice(0, 160), amount, category: 'Otros', timestamp: Date.now(),
-          date: new Date().toISOString(), addedBy: auth.currentUser?.email || 'Usuario local', sourceMessageId: messageId
-        });
-        window.Notifications?.show('Gasto creado desde el chat', 'success');
-      } catch (error) {
-        console.error('Error creando gasto:', error);
-        window.Notifications?.error('No se pudo crear el gasto');
-      }
-      return;
-    }
+    if(type==='activity'||type==='expense')return convertChatMessage.call(this,messageId,type,messageText);
 
     if (type === 'task') {
       const preparation = window.PreparationHandler;

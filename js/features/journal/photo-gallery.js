@@ -1,3 +1,5 @@
+import { galleryState, galleryText as safe, galleryImageUrl, commentIdentity } from './gallery-state.js';
+import { enhanceDialog } from '../../ui/dialog-a11y.js';
 ﻿// js/photo-gallery.js - Galería de fotos compartidas con upload, comentarios y likes
 
 import { auth, db, storage } from '../../core/firebase-config.js';
@@ -5,6 +7,7 @@ import { collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, query, 
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 
 export const PhotoGallery = {
+    ...galleryState,
     currentTripId: null,
     unsubscribers: [],
     currentView: 'grid', // grid | detail
@@ -123,7 +126,7 @@ export const PhotoGallery = {
                 </div>
 
                 <!-- Photo Detail Modal -->
-                <div id="photoDetailModal" class="hidden fixed inset-0 bg-black/80 z-50 overflow-y-auto" onclick="PhotoGallery.closeDetail(event)">
+                <div id="photoDetailModal" class="hidden fixed inset-0 bg-black/80 z-[10001] overflow-y-auto" onclick="PhotoGallery.closeDetail(event)">
                     <div class="min-h-screen px-4 py-8">
                         <div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-2xl" onclick="event.stopPropagation()">
                             <div id="photoDetailContent">
@@ -158,10 +161,12 @@ export const PhotoGallery = {
         }
 
         this.selectedFile = file;
+        const selection=this.selectionVersion=(this.selectionVersion||0)+1,scope=this.galleryScope();
 
         // Show preview
         const reader = new FileReader();
         reader.onload = (e) => {
+            if(selection!==this.selectionVersion||this.selectedFile!==file||!this.isGalleryCurrent(scope))return;
             const preview = document.getElementById('photoPreview');
             const previewImage = document.getElementById('previewImage');
             const uploadBtn = document.getElementById('uploadBtn');
@@ -169,176 +174,31 @@ export const PhotoGallery = {
             if (preview && previewImage && uploadBtn) {
                 previewImage.src = e.target.result;
                 preview.classList.remove('hidden');
-                uploadBtn.disabled = false;
+                uploadBtn.disabled = Boolean(this.uploadPending);
             }
         };
         reader.readAsDataURL(file);
     },
 
-    clearPreview() {
-        this.selectedFile = null;
-        const preview = document.getElementById('photoPreview');
-        const uploadBtn = document.getElementById('uploadBtn');
-        const fileInput = document.getElementById('photoInput');
 
-        if (preview) preview.classList.add('hidden');
-        if (uploadBtn) uploadBtn.disabled = true;
-        if (fileInput) fileInput.value = '';
-    },
 
     // ============================================
     // UPLOAD PHOTO
     // ============================================
-    async uploadPhoto() {
-        const tripId = window.currentTripId || localStorage.getItem('currentTripId');
 
-        if (!tripId || !auth.currentUser) {
-            alert('Debes estar autenticado y tener un viaje activo');
-            return;
-        }
-
-        if (!this.selectedFile) {
-            alert('Selecciona una foto primero');
-            return;
-        }
-
-        const captionInput = document.getElementById('photoCaption');
-        const caption = captionInput?.value.trim() || '';
-
-        const uploadBtn = document.getElementById('uploadBtn');
-        const progress = document.getElementById('uploadProgress');
-        const progressBar = document.getElementById('progressBar');
-        const progressText = document.getElementById('progressText');
-
-        try {
-            // Deshabilitar botón y mostrar progress
-            if (uploadBtn) uploadBtn.disabled = true;
-            if (progress) progress.classList.remove('hidden');
-
-            // Upload to Firebase Storage
-            const timestamp = Date.now();
-            const fileName = `${auth.currentUser.uid}_${timestamp}_${this.selectedFile.name}`;
-            const storageRef = ref(storage, `trips/${tripId}/photos/${fileName}`);
-
-            if (progressText) progressText.textContent = 'Subiendo foto...';
-            if (progressBar) progressBar.style.width = '30%';
-
-            await uploadBytes(storageRef, this.selectedFile);
-
-            if (progressBar) progressBar.style.width = '60%';
-            if (progressText) progressText.textContent = 'Obteniendo URL...';
-
-            const photoURL = await getDownloadURL(storageRef);
-
-            if (progressBar) progressBar.style.width = '90%';
-            if (progressText) progressText.textContent = 'Guardando en base de datos...';
-
-            // Save to Firestore
-            const photoId = timestamp.toString();
-            const photoRef = doc(db, `trips/${tripId}/photos/${photoId}`);
-
-            await setDoc(photoRef, {
-                photoURL,
-                storagePath: `trips/${tripId}/photos/${fileName}`,
-                caption,
-                userId: auth.currentUser.uid,
-                userName: auth.currentUser.displayName || 'Usuario',
-                userPhoto: auth.currentUser.photoURL || null,
-                uploadedAt: serverTimestamp(),
-                likes: [],
-                comments: []
-            });
-
-            // Log to timeline
-            if (window.logTimelineActivity) {
-                window.logTimelineActivity('photo', {
-                    description: 'subió una nueva foto',
-                    photoURL,
-                    caption
-                });
-            }
-
-            if (progressBar) progressBar.style.width = '100%';
-            if (progressText) progressText.textContent = '¡Foto subida! ✓';
-
-            // Limpiar formulario
-            setTimeout(() => {
-                this.clearPreview();
-                if (captionInput) captionInput.value = '';
-                if (progress) progress.classList.add('hidden');
-                if (progressBar) progressBar.style.width = '0%';
-                if (uploadBtn) uploadBtn.disabled = false;
-            }, 1000);
-
-        } catch (error) {
-            console.error('Error uploading photo:', error);
-            alert('Error al subir la foto: ' + error.message);
-
-            if (uploadBtn) uploadBtn.disabled = false;
-            if (progress) progress.classList.add('hidden');
-        }
-    },
 
     // ============================================
     // LOAD GALLERY
     // ============================================
     currentFilter: 'all',
 
-    async loadGallery() {
-        const tripId = window.currentTripId || localStorage.getItem('currentTripId');
-        const container = document.getElementById('photoGalleryGrid');
 
-        if (!container) return;
-
-        if (!auth.currentUser) {
-            container.innerHTML = `
-                <div class="col-span-full text-center py-8">
-                    <p class="text-4xl mb-3">🔒</p>
-                    <p class="text-gray-600 dark:text-gray-400">Debes estar autenticado</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Inicia sesión para ver y subir fotos</p>
-                </div>
-            `;
-            return;
-        }
-
-        if (!tripId) {
-            container.innerHTML = `
-                <div class="col-span-full text-center py-8">
-                    <p class="text-4xl mb-3">✈️</p>
-                    <p class="text-gray-600 dark:text-gray-400">No hay viaje activo</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Selecciona o crea un viaje primero</p>
-                </div>
-            `;
-            return;
-        }
-
-        try {
-            const photosRef = collection(db, `trips/${tripId}/photos`);
-            const photosQuery = query(photosRef, orderBy('uploadedAt', 'desc'));
-
-            // Real-time listener
-            const unsubscribe = onSnapshot(photosQuery, (snapshot) => {
-                const photos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                this.renderGallery(photos, tripId);
-            });
-
-            this.unsubscribers.push(unsubscribe);
-        } catch (error) {
-            console.error('Error loading gallery:', error);
-            container.innerHTML = `
-                <div class="col-span-full text-center py-8">
-                    <p class="text-4xl mb-3">⚠️</p>
-                    <p class="text-gray-600 dark:text-gray-400">Error al cargar fotos</p>
-                    <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">${error.message}</p>
-                </div>
-            `;
-        }
-    },
 
     // ============================================
     // RENDER GALLERY
     // ============================================
     renderGallery(photos, tripId) {
+        photos=photos.map(photo=>this.normalizePhoto(photo));
         const container = document.getElementById('photoGalleryGrid');
         if (!container) return;
 
@@ -369,11 +229,11 @@ export const PhotoGallery = {
             const hasLiked = photo.likes?.includes(userId);
 
             return `
-                <div class="relative group cursor-pointer" onclick="PhotoGallery.showDetail('${photo.id}', '${tripId}')">
+                <div class="relative group cursor-pointer" data-gallery-open="${safe(photo.id)}">
                     <div class="aspect-square overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700">
                         <img
-                            src="${photo.photoURL}"
-                            alt="${photo.caption || 'Foto del viaje'}"
+                            src="${safe(galleryImageUrl(photo.photoURL))}"
+                            alt="${safe(photo.caption || 'Foto del viaje')}"
                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                             loading="lazy"
                         >
@@ -382,8 +242,8 @@ export const PhotoGallery = {
                     <!-- Overlay -->
                     <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
                         <div class="absolute bottom-2 left-2 right-2">
-                            <p class="text-white text-xs font-bold mb-1">${photo.userName}</p>
-                            ${photo.caption ? `<p class="text-white text-xs line-clamp-2">${photo.caption}</p>` : ''}
+                            <p class="text-white text-xs font-bold mb-1">${safe(photo.userName)}</p>
+                            ${photo.caption ? `<p class="text-white text-xs line-clamp-2">${safe(photo.caption)}</p>` : ''}
                             <div class="flex items-center gap-3 mt-2 text-white text-xs">
                                 <span>${hasLiked ? '❤️' : '🤍'} ${likeCount}</span>
                                 <span>💬 ${commentCount}</span>
@@ -393,22 +253,30 @@ export const PhotoGallery = {
                 </div>
             `;
         }).join('');
+        container.querySelectorAll('[data-gallery-open]').forEach(button=>button.onclick=()=>this.showDetail(button.dataset.galleryOpen,tripId));
     },
 
     // ============================================
     // PHOTO DETAIL VIEW
     // ============================================
     async showDetail(photoId, tripId) {
+        const scope=this.galleryScope();if(!this.isGalleryCurrent(scope)||tripId!==scope.tripId)return;
+        const request=this.detailRequest=(this.detailRequest||0)+1,originalModal=document.getElementById('photoDetailModal');
         try {
             const photoRef = doc(db, `trips/${tripId}/photos/${photoId}`);
             const photoSnap = await getDoc(photoRef);
 
+            if(!this.isGalleryCurrent(scope)||request!==this.detailRequest||document.getElementById('photoDetailModal')!==originalModal)return;
             if (!photoSnap.exists()) {
                 alert('Foto no encontrada');
                 return;
             }
 
-            const photo = { id: photoSnap.id, ...photoSnap.data() };
+            const photo=this.normalizePhoto({...photoSnap.data(),id:photoId});
+            const previousInput=this.detailPhotoId===photoId?document.getElementById('galleryCommentInput'):null;
+            const draft=previousInput?.value||'',hadFocus=originalModal?.contains(document.activeElement);
+            const focusedAction=document.activeElement?.hasAttribute('data-gallery-send')?'[data-gallery-send]':document.activeElement?.hasAttribute('data-gallery-like')?'[data-gallery-like]':'#galleryCommentInput';
+            this.detailPhotoId=photoId;this.detailPhoto=photo;
             const userId = auth.currentUser?.uid;
             const hasLiked = photo.likes?.includes(userId);
 
@@ -422,10 +290,10 @@ export const PhotoGallery = {
                 <div class="flex items-center justify-between p-4 border-b dark:border-gray-700">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold">
-                            ${photo.userName.charAt(0).toUpperCase()}
+                            ${safe(photo.userName.charAt(0).toUpperCase())}
                         </div>
                         <div>
-                            <h5 class="font-bold text-gray-800 dark:text-white">${photo.userName}</h5>
+                            <h5 class="font-bold text-gray-800 dark:text-white">${safe(photo.userName)}</h5>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
                                 ${photo.uploadedAt ? new Date(photo.uploadedAt.seconds * 1000).toLocaleDateString() : 'Reciente'}
                             </p>
@@ -442,19 +310,19 @@ export const PhotoGallery = {
                 <!-- Photo -->
                 <div class="relative">
                     <img
-                        src="${photo.photoURL}"
-                        alt="${photo.caption || 'Foto del viaje'}"
+                        src="${safe(galleryImageUrl(photo.photoURL))}"
+                        alt="${safe(photo.caption || 'Foto del viaje')}"
                         class="w-full max-h-96 object-contain bg-black"
                     >
                 </div>
 
                 <!-- Caption & Actions -->
                 <div class="p-4 space-y-4">
-                    ${photo.caption ? `<p class="text-gray-800 dark:text-white">${photo.caption}</p>` : ''}
+                    ${photo.caption ? `<p class="text-gray-800 dark:text-white">${safe(photo.caption)}</p>` : ''}
 
                     <div class="flex items-center gap-4">
                         <button
-                            onclick="PhotoGallery.toggleLike('${tripId}', '${photoId}')"
+                            data-gallery-like
                             class="flex items-center gap-2 px-4 py-2 rounded-lg transition ${hasLiked ? 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}"
                         >
                             <span class="text-xl">${hasLiked ? '❤️' : '🤍'}</span>
@@ -462,7 +330,7 @@ export const PhotoGallery = {
                         </button>
                         ${photo.userId === userId ? `
                             <button
-                                onclick="PhotoGallery.deletePhoto('${tripId}', '${photoId}', '${photo.storagePath}')"
+                                data-gallery-delete
                                 class="ml-auto bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition"
                             >
                                 🗑️ Eliminar
@@ -478,16 +346,16 @@ export const PhotoGallery = {
                             ${photo.comments && photo.comments.length > 0 ? photo.comments.map((comment, idx) => `
                                 <div class="flex gap-3">
                                     <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                                        ${comment.userName.charAt(0).toUpperCase()}
+                                        ${safe(comment.userName.charAt(0).toUpperCase())}
                                     </div>
                                     <div class="flex-1">
                                         <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
-                                            <p class="font-semibold text-sm text-gray-800 dark:text-white">${comment.userName}</p>
-                                            <p class="text-sm text-gray-700 dark:text-gray-300">${comment.text}</p>
+                                            <p class="font-semibold text-sm text-gray-800 dark:text-white">${safe(comment.userName)}</p>
+                                            <p class="text-sm text-gray-700 dark:text-gray-300">${safe(comment.text)}</p>
                                         </div>
                                         ${comment.userId === userId ? `
                                             <button
-                                                onclick="PhotoGallery.deleteComment('${tripId}', '${photoId}', ${idx})"
+                                                data-gallery-delete-comment="${safe(commentIdentity(comment))}"
                                                 class="text-xs text-red-500 hover:text-red-600 mt-1"
                                             >
                                                 Eliminar
@@ -498,16 +366,16 @@ export const PhotoGallery = {
                             `).join('') : '<p class="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No hay comentarios aún</p>'}
                         </div>
 
-                        <div class="flex gap-2">
+                        <div class="flex gap-2" data-gallery-comment-row>
                             <input
                                 type="text"
-                                id="commentInput_${photoId}"
+                                id="galleryCommentInput" maxlength="2000" aria-label="Comentario"
                                 placeholder="Escribe un comentario..."
                                 class="flex-1 p-3 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                                onkeypress="if(event.key === 'Enter') PhotoGallery.addComment('${tripId}', '${photoId}')"
+
                             >
                             <button
-                                onclick="PhotoGallery.addComment('${tripId}', '${photoId}')"
+                                data-gallery-send
                                 class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg font-bold transition"
                             >
                                 Enviar
@@ -517,14 +385,23 @@ export const PhotoGallery = {
                 </div>
             `;
 
-            modal.classList.remove('hidden');
+            content.querySelector('[data-gallery-like]').onclick=()=>this.toggleLike(tripId,photoId);
+            const remove=content.querySelector('[data-gallery-delete]');if(remove)remove.onclick=()=>this.deletePhoto(tripId,photoId,photo.storagePath);
+            content.querySelector('[data-gallery-send]').onclick=()=>this.addComment(tripId,photoId);
+            const input=content.querySelector('#galleryCommentInput');input.value=draft;input.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();this.addComment(tripId,photoId);}};
+            content.querySelectorAll('[data-gallery-delete-comment]').forEach(button=>button.onclick=()=>this.deleteComment(tripId,photoId,button.dataset.galleryDeleteComment));
+            const wasHidden=modal.classList.contains('hidden');modal.classList.remove('hidden');
+            modal.setAttribute('aria-label','Detalle de la foto');
+            if(wasHidden)this.detailCleanup=enhanceDialog(modal,{onClose:()=>this.closeDetailModal()});
+            else if(hadFocus)content.querySelector(focusedAction)?.focus();
         } catch (error) {
             console.error('Error loading photo detail:', error);
-            alert('Error al cargar los detalles de la foto');
+            if(this.isGalleryCurrent(scope)&&request===this.detailRequest)window.Notifications?.error('No se pudieron cargar los detalles de la foto');
         }
     },
 
     closeDetailModal() {
+        this.detailRequest=(this.detailRequest||0)+1;this.detailPhotoId=null;this.detailCleanup?.();this.detailCleanup=null;
         const modal = document.getElementById('photoDetailModal');
         if (modal) modal.classList.add('hidden');
     },
@@ -538,102 +415,14 @@ export const PhotoGallery = {
     // ============================================
     // LIKES
     // ============================================
-    async toggleLike(tripId, photoId) {
-        if (!auth.currentUser) {
-            alert('Debes estar autenticado');
-            return;
-        }
 
-        try {
-            const userId = auth.currentUser.uid;
-            const photoRef = doc(db, `trips/${tripId}/photos/${photoId}`);
-            const photoSnap = await getDoc(photoRef);
-
-            if (!photoSnap.exists()) return;
-
-            const currentLikes = photoSnap.data().likes || [];
-            const hasLiked = currentLikes.includes(userId);
-
-            if (hasLiked) {
-                await updateDoc(photoRef, {
-                    likes: currentLikes.filter(id => id !== userId)
-                });
-            } else {
-                await updateDoc(photoRef, {
-                    likes: [...currentLikes, userId]
-                });
-            }
-
-            // Recargar detalle
-            this.showDetail(photoId, tripId);
-        } catch (error) {
-            console.error('Error toggling like:', error);
-        }
-    },
 
     // ============================================
     // COMMENTS
     // ============================================
-    async addComment(tripId, photoId) {
-        if (!auth.currentUser) {
-            alert('Debes estar autenticado');
-            return;
-        }
 
-        const input = document.getElementById(`commentInput_${photoId}`);
-        const text = input?.value.trim();
 
-        if (!text) {
-            alert('Escribe un comentario');
-            return;
-        }
 
-        try {
-            const photoRef = doc(db, `trips/${tripId}/photos/${photoId}`);
-            const photoSnap = await getDoc(photoRef);
-
-            if (!photoSnap.exists()) return;
-
-            const currentComments = photoSnap.data().comments || [];
-
-            await updateDoc(photoRef, {
-                comments: [...currentComments, {
-                    userId: auth.currentUser.uid,
-                    userName: auth.currentUser.displayName || 'Usuario',
-                    text,
-                    createdAt: new Date().toISOString()
-                }]
-            });
-
-            // Limpiar input y recargar
-            if (input) input.value = '';
-            this.showDetail(photoId, tripId);
-        } catch (error) {
-            console.error('Error adding comment:', error);
-            alert('Error al agregar comentario');
-        }
-    },
-
-    async deleteComment(tripId, photoId, commentIndex) {
-        if (!confirm('¿Eliminar este comentario?')) return;
-
-        try {
-            const photoRef = doc(db, `trips/${tripId}/photos/${photoId}`);
-            const photoSnap = await getDoc(photoRef);
-
-            if (!photoSnap.exists()) return;
-
-            const currentComments = photoSnap.data().comments || [];
-            currentComments.splice(commentIndex, 1);
-
-            await updateDoc(photoRef, { comments: currentComments });
-
-            this.showDetail(photoId, tripId);
-        } catch (error) {
-            console.error('Error deleting comment:', error);
-            alert('Error al eliminar comentario');
-        }
-    },
 
     // ============================================
     // DELETE PHOTO
@@ -679,12 +468,12 @@ export const PhotoGallery = {
     // ============================================
     // Cleanup
     // ============================================
-    cleanup() {
-        this.unsubscribers.forEach(unsub => unsub());
-        this.unsubscribers = [];
-        this.selectedFile = null;
-    }
+
 };
 
 // Exportar para uso global
 window.PhotoGallery = PhotoGallery;
+window.addEventListener('tripSelected',()=>{PhotoGallery.cleanup();if(document.getElementById('photoGalleryGrid'))PhotoGallery.loadGallery();});
+window.addEventListener('auth:loggedOut',()=>{PhotoGallery.cleanup();const grid=document.getElementById('photoGalleryGrid');if(grid)grid.textContent='Inicia sesi\u00f3n para ver tus fotos.';});
+
+window.addEventListener('auth:initialized',()=>{if(document.getElementById('photoGalleryGrid'))PhotoGallery.loadGallery();});

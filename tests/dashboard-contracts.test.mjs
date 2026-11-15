@@ -20,7 +20,7 @@ assert.match(html, /jp-modal-shell/);
 assert.match(suggestions, /aria-labelledby/);
 assert.match(suggestions, /data-suggestion-payload/);
 assert.doesNotMatch(suggestions, /onclick='SuggestionsEngine\.addSuggestionToItinerary/);
-assert.match(journal, /if \(!this\.initialized\) await this\.initialize\(\)/);
+assert.match(journal, /await this\.initialize\(\)/);
 assert.match(journal, /escapeMarkup/);
 assert.match(itinerary, /day-route-progress/);
 assert.match(itinerary, /<details class="day-index-timeline/);

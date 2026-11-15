@@ -6,19 +6,8 @@
  * No external APIs required - uses Firebase + localStorage
  */
 
-import { db, auth } from '../../core/firebase-config.js';
-import {
-  collection,
-  addDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query,
-  orderBy,
-  onSnapshot,
-  where
-} from 'firebase/firestore';
+import { journalState } from './journal-state.js';
+import { enhanceDialog } from '../../ui/dialog-a11y.js';
 
 const escapeMarkup = value => String(value ?? '').replace(/[&<>"']/g, character => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -34,108 +23,6 @@ export class TravelJournal {
 
   /**
    * Initialize journal
-   */
-  async initialize() {
-    if (this.initialized) return;
-
-    console.log('📔 Travel Journal initializing...');
-
-    // Get current trip ID
-    this.currentTripId = this.getCurrentTripId();
-
-    // Load entries
-    await this.loadEntries();
-
-    // Setup UI
-    this.setupUI();
-
-    // Setup real-time sync
-    if (this.currentTripId && auth.currentUser) {
-      this.setupRealtimeSync();
-    }
-
-    this.initialized = true;
-    console.log('✅ Travel Journal ready with', this.entries.length, 'entries');
-  }
-
-  /**
-   * Get current trip ID
-   */
-  getCurrentTripId() {
-    if (window.TripsManager && window.TripsManager.currentTrip) {
-      return window.TripsManager.currentTrip.id;
-    }
-    return localStorage.getItem('currentTripId');
-  }
-
-  /**
-   * Load entries from Firebase or localStorage
-   */
-  async loadEntries() {
-    // Try Firebase first
-    if (this.currentTripId && auth.currentUser) {
-      try {
-        const entriesRef = collection(db, `trips/${this.currentTripId}/journal`);
-        const q = query(entriesRef, orderBy('timestamp', 'desc'));
-        const snapshot = await getDocs(q);
-
-        this.entries = [];
-        snapshot.forEach((doc) => {
-          this.entries.push({
-            id: doc.id,
-            ...doc.data()
-          });
-        });
-
-        // Save to localStorage as backup
-        localStorage.setItem('journal_entries', JSON.stringify(this.entries));
-      } catch (error) {
-        console.error('❌ Error loading from Firebase:', error);
-        this.loadFromLocalStorage();
-      }
-    } else {
-      this.loadFromLocalStorage();
-    }
-  }
-
-  /**
-   * Load from localStorage
-   */
-  loadFromLocalStorage() {
-    const stored = localStorage.getItem('journal_entries');
-    try { this.entries = stored ? JSON.parse(stored) : []; }
-    catch (error) { console.warn('Diario local inválido; se inicia vacío', error); this.entries = []; }
-  }
-
-  /**
-   * Setup real-time sync
-   */
-  setupRealtimeSync() {
-    if (this.unsubscribe) {
-      this.unsubscribe();
-    }
-
-    const entriesRef = collection(db, `trips/${this.currentTripId}/journal`);
-    const q = query(entriesRef, orderBy('timestamp', 'desc'));
-
-    this.unsubscribe = onSnapshot(q, (snapshot) => {
-      this.entries = [];
-      snapshot.forEach((doc) => {
-        this.entries.push({
-          id: doc.id,
-          ...doc.data()
-        });
-      });
-
-      localStorage.setItem('journal_entries', JSON.stringify(this.entries));
-      this.renderEntries();
-    }, (error) => {
-      console.error('❌ Realtime sync error:', error);
-    });
-  }
-
-  /**
-   * Setup UI
    */
   setupUI() {
     // Create journal container if doesn't exist
@@ -199,7 +86,7 @@ export class TravelJournal {
   setupEventListeners() {
     const addBtn = document.getElementById('add-journal-entry-btn');
     if (addBtn) {
-      addBtn.addEventListener('click', () => this.showEntryModal());
+      addBtn.onclick=()=>this.showEntryModal();
     }
   }
 
@@ -207,6 +94,8 @@ export class TravelJournal {
    * Show entry creation modal
    */
   showEntryModal(entry = null) {
+    const scope=this.journalScope(),entryId=entry?.id||crypto.randomUUID();
+    this.entryModals ||= new Set();
     const isEdit = !!entry;
 
     const modal = document.createElement('div');
@@ -229,7 +118,7 @@ export class TravelJournal {
           <div class="form-group">
             <label>Fecha</label>
             <input type="date" id="entry-date" class="form-input"
-              value="${entry ? entry.date : new Date().toISOString().split('T')[0]}">
+              value="${escapeMarkup(entry ? entry.date : new Date().toISOString().split('T')[0])}">
           </div>
 
           <div class="form-group">
@@ -276,7 +165,9 @@ export class TravelJournal {
     `;
 
     document.body.appendChild(modal);
-    window.JapitinDialog?.enhance(modal, { onClose: () => modal.remove() });
+    this.entryModals.add(modal);
+    enhanceDialog(modal,{onClose:()=>modal.remove()});
+    modal.querySelectorAll('input,textarea').forEach(input=>{const label=input.parentElement.querySelector('label');if(label)label.htmlFor=input.id;});
 
     // Word count
     const content = modal.querySelector('#entry-content');
@@ -309,6 +200,7 @@ export class TravelJournal {
 
     // Save handler
     modal.querySelector('#save-entry-btn').addEventListener('click', async () => {
+      if(modal.saving)return;
       const title = modal.querySelector('#entry-title').value.trim();
       const date = modal.querySelector('#entry-date').value;
       const contentText = modal.querySelector('#entry-content').value.trim();
@@ -334,109 +226,17 @@ export class TravelJournal {
         timestamp: entry ? entry.timestamp : Date.now()
       };
 
-      if (isEdit) {
-        await this.updateEntry(entry.id, entryData);
-      } else {
-        await this.addEntry(entryData);
-      }
+      modal.saving=true;const controls=[...modal.querySelectorAll('input,textarea,button')];controls.forEach(control=>control.disabled=true);
+      try{
+        const saved=isEdit?await this.updateEntry(entryId,entryData,scope):await this.addEntry(entryData,scope,entryId);
+        if(saved){modal.remove();this.entryModals.delete(modal);}
+      }finally{modal.saving=false;controls.forEach(control=>control.disabled=false);}
 
-      modal.remove();
     });
   }
 
   /**
    * Add new entry
-   */
-  async addEntry(entryData) {
-    try {
-      // Save to Firebase if available
-      if (this.currentTripId && auth.currentUser) {
-        const entriesRef = collection(db, `trips/${this.currentTripId}/journal`);
-        const docRef = await addDoc(entriesRef, entryData);
-        entryData.id = docRef.id;
-      } else {
-        entryData.id = `local_${Date.now()}`;
-      }
-
-      // Add to local array
-      this.entries.unshift(entryData);
-
-      // Save to localStorage
-      localStorage.setItem('journal_entries', JSON.stringify(this.entries));
-
-      // Re-render
-      this.renderEntries();
-
-      console.log('✅ Entry added successfully');
-    } catch (error) {
-      console.error('❌ Error adding entry:', error);
-      alert('Error al guardar la entrada. Intenta de nuevo.');
-    }
-  }
-
-  /**
-   * Update entry
-   */
-  async updateEntry(entryId, entryData) {
-    try {
-      // Update in Firebase if available
-      if (this.currentTripId && auth.currentUser && !entryId.startsWith('local_')) {
-        const entryRef = doc(db, `trips/${this.currentTripId}/journal`, entryId);
-        await updateDoc(entryRef, entryData);
-      }
-
-      // Update in local array
-      const index = this.entries.findIndex(e => e.id === entryId);
-      if (index !== -1) {
-        this.entries[index] = { ...this.entries[index], ...entryData };
-      }
-
-      // Save to localStorage
-      localStorage.setItem('journal_entries', JSON.stringify(this.entries));
-
-      // Re-render
-      this.renderEntries();
-
-      console.log('✅ Entry updated successfully');
-    } catch (error) {
-      console.error('❌ Error updating entry:', error);
-      alert('Error al actualizar la entrada. Intenta de nuevo.');
-    }
-  }
-
-  /**
-   * Delete entry
-   */
-  async deleteEntry(entryId) {
-    if (!confirm('¿Estás segura de que quieres eliminar esta entrada?')) {
-      return;
-    }
-
-    try {
-      // Delete from Firebase if available
-      if (this.currentTripId && auth.currentUser && !entryId.startsWith('local_')) {
-        const entryRef = doc(db, `trips/${this.currentTripId}/journal`, entryId);
-        await deleteDoc(entryRef);
-      }
-
-      // Remove from local array
-      this.entries = this.entries.filter(e => e.id !== entryId);
-
-      // Save to localStorage
-      localStorage.setItem('journal_entries', JSON.stringify(this.entries));
-
-      // Re-render
-      this.renderEntries();
-
-      console.log('✅ Entry deleted successfully');
-    } catch (error) {
-      console.error('❌ Error deleting entry:', error);
-      alert('Error al eliminar la entrada. Intenta de nuevo.');
-    }
-  }
-
-  /**
-   * Render all entries
    */
   renderEntries() {
     const container = document.getElementById('journal-entries-list');
@@ -446,6 +246,8 @@ export class TravelJournal {
     this.updateStats();
 
     // Render entries
+    if(this.loadState==='loading'&&!this.entries.length){container.innerHTML='<p role="status">Cargando diario...</p>';return;}
+    if(this.loadState==='error'&&!this.entries.length){container.innerHTML='<p role="alert">No se pudo cargar el diario de este viaje.</p><button onclick="window.TravelJournal.loadEntries()">Reintentar</button>';return;}
     if (this.entries.length === 0) {
       container.innerHTML = `
         <div class="journal-empty-state">
@@ -460,7 +262,7 @@ export class TravelJournal {
       return;
     }
 
-    container.innerHTML = this.entries.map(entry => this.renderEntry(entry)).join('');
+    container.innerHTML = (this.loadState==='error'?'<p role="alert">No se pudo sincronizar. Se muestra la copia local de este viaje.</p>':'')+this.entries.map(entry => this.renderEntry(entry)).join('');
 
     // Setup entry action listeners
     container.querySelectorAll('.edit-entry-btn').forEach(btn => {
@@ -492,12 +294,12 @@ export class TravelJournal {
     }[entry.mood] || '🙂';
 
     const entryDate = window.TimeUtils ? window.TimeUtils.parseDate(entry.date) : new Date(entry.date);
-    const formattedDate = (entryDate || new Date(entry.date)).toLocaleDateString('es-ES', {
+    const formattedDate = Number.isFinite(entryDate?.getTime()) ? entryDate.toLocaleDateString('es-ES', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric'
-    });
+    }) : 'Fecha no disponible';
 
     return `
       <div class="journal-entry">
@@ -562,7 +364,7 @@ export class TravelJournal {
    * Show journal
    */
   async show() {
-    if (!this.initialized) await this.initialize();
+    await this.initialize();
     const container = document.getElementById('travel-journal-container');
     if (container) {
       // Hide other sections
@@ -586,8 +388,13 @@ export class TravelJournal {
   }
 }
 
+Object.assign(TravelJournal.prototype,journalState);
+
 // Global instance
 if (typeof window !== 'undefined') {
   window.TravelJournal = new TravelJournal();
+  window.addEventListener('tripSelected',()=>window.TravelJournal.reinitialize());
+  window.addEventListener('auth:initialized',()=>window.TravelJournal.reinitialize());
+  window.addEventListener('auth:loggedOut',()=>window.TravelJournal.cleanup());
   console.log('📔 Travel Journal loaded!');
 }

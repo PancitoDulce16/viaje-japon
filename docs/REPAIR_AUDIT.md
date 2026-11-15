@@ -135,3 +135,35 @@ Se repararon los fallos solicitados sin redisenar las pantallas:
 Validacion: pruebas nuevas `shopping-preparation-repairs.test.mjs`, `favorite-insertion.test.mjs` y navegador `shopping-preparation-repairs.spec.mjs` (390/1440 px, claro/oscuro), ademas de suites existentes y compilacion. Las pruebas usan contextos aislados y errores simulados: no modifican datos privados de usuarios. Capturas de revision en `artifacts/repair-{shopping,preparation}-*.png` (no versionadas). Los originales visuales siguen ausentes localmente, como documenta `docs/design/references/README.md`; se conserva la implementacion visual existente. La confirmacion remota del despliegue se registra al finalizar.
 
 Resultado local: `npm test`, `npm run validate`, `npm run build`, `npm run test:build` y `npm run test:production` aprobados. La bateria de navegador completo ejecuto 144 casos: 142 aprobados y dos interrumpidos mientras Vite recargaba por ediciones activas. Reejecutados sin editar fuentes los 20 casos de documentos, estabilidad movil y compras/preparacion/favoritos: todos aprobados. La prueba nueva usa CSS real de Tailwind y app, texto malicioso, fallo/reintento, edicion, precio cero y persistencia real del helper de favoritos sobre almacenamiento simulado; no comprueba una cuenta Firebase real.
+
+
+## 15 de noviembre: segunda tanda, chat/diario/galeria (primeros 20 pendientes)
+
+Se aplica la primera lista pendiente de 20, dejando Ramen/Goshuin/diagnostico para otra tanda:
+
+1. Chat a gasto conserva viaje y usuario antes de abrir el dialogo y verifica ambos antes de escribir.
+2. Montos se validan con el parser monetario existente: coma decimal admitida segun moneda, negativos y separadores ambiguos rechazados. Se almacena el esquema canonico de unidades menores.
+3. Conversiones bloquean doble envio y usan un documento determinista por mensaje, con transaccion para no duplicar el gasto.
+4. El mensaje mostrado en el dialogo de gasto se escapa como texto.
+5. Chat a actividad obtiene el dia seleccionado mediante la API real del itinerario.
+6. La apertura retrasada de actividad se cancela si cambia el contexto original.
+7. Diario se reinicializa con el viaje/cuenta actuales al abrirlo y en eventos de seleccion/autenticacion.
+8. Cache de diario separado por cuenta/viaje. La copia global antigua no se atribuye a una cuenta nueva.
+9. Cargas y suscripciones del diario descartan respuestas anteriores y desuscriben el contexto viejo.
+10. El editor conserva contenido y permanece abierto tras fallar crear o actualizar.
+11. El editor bloquea doble envio y conserva un identificador por formulario para reintentos sin duplicados.
+12. Cache de diario invalido o con filas incompletas no bloquea la pantalla; campos de lista y texto se normalizan.
+13. Galeria usa el viaje seleccionado en TripsManager, con contexto de cuenta/version durante lecturas y escrituras.
+14. Cambios de filtro sustituyen la suscripcion existente y descartan callbacks viejos.
+15. Errores asincronos de la suscripcion muestran un error y boton Reintentar.
+16. Subida captura archivo/descripcion/version; su finalizacion no borra selecciones o textos posteriores. Se elimina la limpieza diferida insegura.
+17. Si falla guardar metadatos, se verifica el documento en servidor antes de limpiar el binario. Si no se puede confirmar o limpiar, se conserva un pendiente por cuenta y se reintenta en la siguiente subida; no se borra a ciegas una foto posiblemente confirmada.
+18. Likes usan operaciones atomicas de union/eliminacion, conservando likes ajenos.
+19. Comentarios nuevos usan union atomica y bloqueo de doble envio; borrados buscan identidad estable dentro de una transaccion. El borrador no se limpia tras fallar ni si fue editado durante el envio.
+20. Galeria escapa nombres, descripciones y comentarios, valida protocolos de imagen y usa acciones sin identificadores interpolados como JavaScript.
+
+Tambien se mantiene el foco al refrescar el detalle de la foto (Escape sigue cerrando), se contiene el compositor movil y se corrige contraste del editor mediante tokens compartidos. Se conserva la estructura visual existente; los originales de referencia siguen ausentes localmente, segun `docs/design/references/README.md`.
+
+Pruebas nuevas: `tests/chat-journal-gallery-repairs.test.mjs` y `tests/visual/chat-journal-gallery-repairs.spec.mjs`. Simulan viajes/cuentas, errores, escrituras concurrentes, almacenamiento, cargas tardias, conversiones repetidas y recuperacion de archivos; no usan datos privados reales. Las capturas locales se guardan en `artifacts/story-{journal,gallery}-*.png`, sin versionarlas.
+
+Resultado local de esta tanda: `npm test`, `npm run validate`, `npm run build`, `npm run test:build` y `npm run test:production` aprobados. Bateria completa de Playwright: **148/148 aprobados** en una ejecucion sin editar fuentes. Se inspeccionaron capturas claras/oscuras en movil y escritorio. La verificacion autenticada contra datos reales no forma parte de estas pruebas.
