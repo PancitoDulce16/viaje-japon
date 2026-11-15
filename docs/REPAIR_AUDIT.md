@@ -70,15 +70,17 @@ Validación de esta tanda: 136 casos de navegador aprobados, incluidos los recor
 
 ### Hallazgos abiertos de alta prioridad
 
+**Actualización del 15 de noviembre de 2026:** los cuatro pendientes de respaldo, restauración, dependencias del servidor y permisos de reglas se repararon. Detalles, alcance, configuración y pruebas en [BACKUP_REPAIR.md](ops/BACKUP_REPAIR.md). Las notas históricas siguientes describen el estado anterior y no sustituyen esa actualización. La verificación remota de CI se registra al finalizar la publicación.
+
 Revisión posterior a la publicación manual de reglas:
 
 - **Chat, corregido en esta tanda**: fotos, archivos y encuestas capturaban el viaje después de cerrar diálogos; cambiar de viaje o cuenta durante la captura podía dirigir la operación al contexto nuevo. Edición y eliminación tenían el mismo problema. Ahora se vinculan al contexto original y se descartan si cambia, se respetan cancelaciones, se admiten cuentas sin correo y se bloquean envíos estructurados repetidos. Regresiones específicas cubren estos casos y reintentos.
 - **Respaldo, aún abierto**: además de la autenticación antigua y la consulta incorrecta, el archivo JSON incluye indiscriminadamente localStorage (potencialmente sesión, borradores y respaldos anidados). La restauración escribe IDs existentes y puede sobrescribir viajes. La copia a la nube usa una ruta sin reglas habilitadas. Requiere una reparación completa; no confiar todavía en esta herramienta como respaldo completo.
 - **Publicación automática**: la cuenta de GitHub sigue sin permiso de reglas. Estas se comprueban en emulador en cada publicación y solo se intenta publicarlas si cambió `firestore.rules`, evitando intentos innecesarios en cambios de chat o estilos. La regla vigente de viajes ya se publicó manualmente.
 
-- **Dependencias de funciones del servidor**: auditoría separada de `functions/package-lock.json` reporta 16 dependencias afectadas (1 crítica, 4 altas, 10 moderadas, 1 baja). No están incluidas en el resultado limpio del paquete raíz. Requieren actualización y pruebas del servidor; no se aplicó una migración mayor automática dentro de la reparación del menú móvil.
+- **Dependencias de funciones del servidor, resuelto**: las 16 dependencias afectadas se actualizaron y la auditoría del paquete `functions` ahora reporta cero avisos conocidos. Las funciones activas se migraron a Node 22 y APIs modulares de Admin.
 
-- **Copias de seguridad/importación (`export-import-system.js`)**: conserva referencias a `window.firebase.auth()` de la API antigua; la exportación de viajes usa una consulta y un campo de propietario que no corresponden al modelo colaborativo actual. Además, algunas rutas informan éxito aunque fallen secciones. Requiere reparar y probar exportación/restauración antes de confiar en una copia como respaldo completo.
+- **Copias de seguridad/importación, resuelto**: se sustituyó la implementación antigua por `backup-service.js` y restauración validada en el servidor. Lecturas completas por pertenencia, adjuntos incluidos, preferencias explícitas, archivos privados en Storage, copias nuevas, operación idempotente y limpieza en caso de error. Se admiten respaldos antiguos sin inventar sus datos faltantes.
 - **Publicación real frente a compilación**: no cambiar `firebase.json` a `dist` sin comprobar configuración opcional, rutas y carga diferida. La publicación de código fuente está documentada como intencional en `js/core/config.js`. La exportación PNG incompatible ya se reparó de forma compatible con ese modo.
 
 Estos hallazgos permanecen abiertos; las comprobaciones generales aprobadas no los convierten en reparados.

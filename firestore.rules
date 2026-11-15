@@ -83,6 +83,10 @@ service cloud.firestore {
       }
       match /packing/{documentId} { allow read, write: if isSignedIn() && request.auth.uid == userId; }
       match /data/{documentId} { allow read, write: if isSignedIn() && request.auth.uid == userId; }
+      match /backupImports/{importId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow write: if false;
+      }
       match /gamification/{documentId} { allow read, write: if isSignedIn() && request.auth.uid == userId; }
       match /savedPosts/{documentId} { allow read, write: if isSignedIn() && request.auth.uid == userId; }
     }

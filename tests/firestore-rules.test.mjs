@@ -50,6 +50,10 @@ try {
   assert.equal(ownTrips.docs.some(trip => trip.id === 'outsider-trip'), false);
   await assertFails(getDocs(collection(member, 'trips')));
   await assertFails(getDocs(query(collection(outsider, 'trips'), where('members', 'array-contains', memberId))));
+  await assertFails(setDoc(doc(owner,'users/owner/backupImports/forged'),{status:'running',createdTripIds:['trip-secure']}));
+  await testEnv.withSecurityRulesDisabled(async context=>setDoc(doc(context.firestore(),'users/owner/backupImports/progress'),{status:'complete'}));
+  await assertSucceeds(getDoc(doc(owner,'users/owner/backupImports/progress')));
+  await assertFails(getDoc(doc(outsider,'users/owner/backupImports/progress')));
   await assertFails(getDocs(collection(outsider, 'trips')));
 
   await assertFails(updateDoc(doc(member, `trips/${tripId}`), { members: [ownerId, memberId, outsiderId] }));

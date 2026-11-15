@@ -791,7 +791,7 @@ class SettingsUI {
         </h3>
 
         <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-          Respalda y restaura toda tu información: configuraciones, itinerarios, logros y más.
+          Respalda tus viajes, preferencias y archivos accesibles. La restauración crea copias privadas sin reemplazar tus viajes actuales.
         </p>
 
         <!-- EXPORTAR -->

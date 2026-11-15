@@ -32,6 +32,12 @@ service firebase.storage {
       allow delete: if isTripMember(tripId) && (request.auth.uid == userId ||
         firestore.get(/databases/(default)/documents/trips/$(tripId)).data.info.createdBy == request.auth.uid);
     }
+    match /backups/{userId}/{fileName} {
+      allow read, delete: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null && request.auth.uid == userId &&
+        fileName.matches('[a-zA-Z0-9-]+[.]json') && request.resource.size > 0 &&
+        request.resource.size <= 50 * 1024 * 1024 && request.resource.contentType == 'application/json';
+    }
     match /{allPaths=**} { allow read, write: if false; }
   }
 }

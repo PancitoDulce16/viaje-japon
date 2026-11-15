@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url);
+const {createExpenseNotificationHandler}=require('../functions/expense-notifications.js');
+let importing=false;const sends=[],removed=[];
+const members=['author','member','optout'];
+const db={doc:path=>({get:async()=>path==='trips/A'?{exists:true,data:()=>({members,restoreState:importing?'importing':'complete',info:{name:'Japón'}})}:path.includes('/notificationPreferences/')?{exists:true,data:()=>({push:!path.includes('optout')})}:{exists:true,data:()=>({email:`${path.split('/')[1]}@example.test`,fcmTokens:path.includes('member')?['legacy','duplicate']:['must-not-send']})},update:async value=>removed.push(value)}),collection:path=>({where:()=>({get:async()=>({docs:path.includes('member')?[{data:()=>({token:'duplicate'}),ref:{delete:async()=>removed.push('device')}},{data:()=>({token:'device'}),ref:{delete:async()=>removed.push('device')}}]:[]})})})};
+const messaging={sendEachForMulticast:async payload=>{sends.push(payload);return{responses:payload.tokens.map(token=>token==='device'?{error:{code:'messaging/registration-token-not-registered'}}:{success:true})};}};
+const handler=createExpenseNotificationHandler({db,messaging});
+await handler({params:{tripId:'A'},data:{data:()=>({createdBy:'author',amountMinor:10000})}});
+assert.deepEqual(sends[0].tokens,['legacy','duplicate','device']);assert.equal(sends[0].notification.body.includes('10000'),false);assert.deepEqual(removed,['device']);
+importing=true;await handler({params:{tripId:'A'},data:{data:()=>({createdBy:'author'})}});assert.equal(sends.length,1);
+console.log('server expense notifications: modular Admin API, legacy and device tokens, dedupe, author/opt-out exclusion and import silence ok');

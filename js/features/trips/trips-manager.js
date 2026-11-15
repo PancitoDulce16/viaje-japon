@@ -79,6 +79,7 @@ export const TripsManager = {
       this.tripsLoadError = null;
       this.userTrips = [];
       snapshot.forEach((doc) => {
+        if (doc.data().restoreState === 'importing') return;
         this.userTrips.push({
           id: doc.id,
           ...doc.data()
