@@ -72,7 +72,7 @@ export const Dialogs = {
    * @param {string} [options.cancelText='Cancelar'] - Texto del botón de cancelación.
    * @returns {Promise<string|null>} - Promesa que se resuelve con el valor del input o `null` si se cancela.
    */
-  prompt({ title, message, placeholder = '', inputType = 'text', okText = 'Aceptar', cancelText = 'Cancelar' }) {
+  prompt({ title, message, placeholder = '', defaultValue = '', inputType = 'text', okText = 'Aceptar', cancelText = 'Cancelar' }) {
     return new Promise((resolve) => {
       this.removeExisting();
 
@@ -107,6 +107,7 @@ export const Dialogs = {
       const input = document.getElementById('dialogInput');
       const dialog = document.getElementById('customDialog');
 
+      input.value=String(defaultValue);
       input.focus();
 
       const cleanup = (value) => {

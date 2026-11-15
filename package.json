@@ -12,7 +12,7 @@
     "test": "npm run test:budget && npm run test:splits && npm run test:notifications && npm run test:security && npm run test:dashboard && npm run test:reservations && npm run test:itinerary && npm run test:visual",
     "test:rules": "node tests/firestore-rules.test.mjs && node tests/backup-restore.test.mjs && node tests/backup-storage-rules.test.mjs",
     "test:rules:emulator": "npx --yes firebase-tools@14.27.0 emulators:exec --only firestore,storage --project demo-japitin-rules \"npm run test:rules\"",
-    "test:security": "node tests/security-regressions.test.mjs && node tests/service-worker.test.mjs && node tests/cache-preservation.test.mjs && node tests/chat-send-regressions.test.mjs && node tests/chat-dialog-regressions.test.mjs && node tests/backup-format.test.mjs && node tests/favorites-regressions.test.mjs",
+    "test:security": "node tests/security-regressions.test.mjs && node tests/service-worker.test.mjs && node tests/cache-preservation.test.mjs && node tests/chat-send-regressions.test.mjs && node tests/chat-dialog-regressions.test.mjs && node tests/backup-format.test.mjs && node tests/favorites-regressions.test.mjs && node tests/shopping-preparation-repairs.test.mjs && node tests/favorite-insertion.test.mjs",
     "test:budget": "node tests/budget-module.test.mjs && node tests/multi-currency.test.mjs",
     "test:splits": "node tests/expense-split.test.mjs",
     "test:notifications": "node tests/notifications.test.mjs && node tests/server-expense-notifications.test.mjs",

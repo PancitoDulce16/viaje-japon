@@ -1,3 +1,5 @@
+import { preparationState } from './preparation-state.js';
+import { shoppingText as safe } from './shopping-state.js';
 ﻿// js/preparation.js - Tab de Preparación con Modo Colaborativo
 
 import { db, auth } from '../../core/firebase-config.js';
@@ -11,7 +13,7 @@ import {
 export const PreparationHandler = {
     init() {
         this.renderPreparation();
-        this.initRealtimeSync();
+        return this.initRealtimeSync();
     },
     packingList: {
         documents: [],
@@ -32,89 +34,6 @@ export const PreparationHandler = {
     },
 
     // 🔥 Inicializar listener en tiempo real
-    async initRealtimeSync() {
-        // Si ya hay un listener, limpiarlo
-        if (this.unsubscribe) {
-            this.unsubscribe();
-        }
-
-        // Si no hay usuario, cargar de localStorage
-        if (!auth.currentUser) {
-            const saved = localStorage.getItem('packingList');
-            if (saved) {
-                this.packingList = JSON.parse(saved);
-            } else {
-                this.initializeDefaultPackingList();
-            }
-            this.renderPreparation();
-            return;
-        }
-
-        const tripId = this.getCurrentTripId();
-        const userId = auth.currentUser.uid;
-
-        // Si NO hay trip, usar el sistema antiguo (por usuario)
-        if (!tripId) {
-            console.log('⚠️ Packing: No hay trip seleccionado, usando modo individual');
-            const packingRef = doc(db, `users/${userId}/packing`, 'list');
-
-            this.unsubscribe = onSnapshot(packingRef, (docSnapshot) => {
-                if (docSnapshot.exists()) {
-                    this.packingList = docSnapshot.data().items || this.getDefaultPackingList();
-                } else {
-                    this.initializeDefaultPackingList();
-                }
-                
-                localStorage.setItem('packingList', JSON.stringify(this.packingList));
-                this.renderPreparation();
-                
-                console.log('✅ Packing list (individual) sincronizado');
-            }, (error) => {
-                console.error('❌ Error en sync de packing list:', error);
-                const saved = localStorage.getItem('packingList');
-                this.packingList = saved ? JSON.parse(saved) : this.getDefaultPackingList();
-                this.renderPreparation();
-            });
-
-            return;
-        }
-
-        // 🔥 MODO COLABORATIVO: Usar el trip compartido
-        console.log('🤝 Packing: Modo colaborativo activado para trip:', tripId);
-        const packingRef = doc(db, `trips/${tripId}/data`, 'packing');
-
-        this.unsubscribe = onSnapshot(packingRef, (docSnapshot) => {
-            if (docSnapshot.exists()) {
-                this.packingList = docSnapshot.data().items || this.getDefaultPackingList();
-            } else {
-                this.initializeDefaultPackingList();
-            }
-            
-            // También guardar en localStorage como backup
-            localStorage.setItem('packingList', JSON.stringify(this.packingList));
-            
-            // Re-renderizar
-            this.renderPreparation();
-            
-            console.log('✅ Packing list COMPARTIDO sincronizado');
-        }, (error) => {
-            console.error('❌ Error en sync de packing list compartido:', error);
-            const saved = localStorage.getItem('packingList');
-            this.packingList = saved ? JSON.parse(saved) : this.getDefaultPackingList();
-            this.renderPreparation();
-        });
-    },
-
-    // Inicializar lista por defecto
-    initializeDefaultPackingList() {
-        const defaults = this.getDefaultPackingList();
-        Object.keys(defaults).forEach(category => {
-            if (!this.packingList[category] || this.packingList[category].length === 0) {
-                this.packingList[category] = defaults[category];
-            }
-        });
-    },
-
     getDefaultPackingList() {
         const defaultItems = {
             documents: ['Pasaporte (válido 6+ meses)', 'Visa (si aplica)', 'JR Pass voucher', 'Seguro de viaje', 'Reservas de hotel', 'Boletos de avión'],
@@ -183,7 +102,7 @@ export const PreparationHandler = {
                             <h3 class="text-2xl font-bold">${progress === 100 ? '¡Todo Listo! 🎊' : '¿Listo para Japón?'}</h3>
                             <p class="text-sm opacity-90">${checkedItems} de ${totalItems} items completados</p>
                             ${progress === 100 ? '<p class="text-xs mt-1 font-bold">¡Excelente preparación! Ya puedes viajar tranquilo.</p>' : ''}
-                            <p class="text-xs mt-1">${syncStatus}</p>
+                            <p class="text-xs mt-1">${this.packingLoadState==='error'?'No se pudo sincronizar. Se muestra la copia local de este viaje.':this.packingLoadState==='loading'?'Sincronizando...':syncStatus}</p>
                         </div>
                         <div class="text-5xl ${progress === 100 ? 'animate-bounce' : ''}">${progress === 100 ? '🎉' : progress > 75 ? '🛫' : progress > 50 ? '📦' : progress > 25 ? '📝' : '✈️'}</div>
                     </div>
@@ -220,6 +139,7 @@ export const PreparationHandler = {
             </div>
         `;
 
+        for(const category of this.expandedPacking||[]){const section=container.querySelector(`.category-content[data-category="${category}"]`);section?.classList.remove('hidden');const arrow=container.querySelector(`.category-arrow[data-category="${category}"]`);if(arrow)arrow.textContent='\u25b2';}
         this.attachEventListeners();
     },
 
@@ -272,11 +192,11 @@ export const PreparationHandler = {
                                             data-category="${key}"
                                             data-index="${index}"
                                         >
-                                        <span class="flex-1 dark:text-gray-300 ${item.checked ? 'line-through' : ''}">${item.name}</span>
-                                        ${memberEmails.length > 1 ? `<select class="packing-owner max-w-24 p-1 text-xs rounded border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200" data-category="${key}" data-index="${index}" aria-label="Responsable de ${item.name}"><option value="">Sin asignar</option>${memberEmails.map(email => `<option value="${email}" ${item.owner === email ? 'selected' : ''}>${email.split('@')[0]}</option>`).join('')}</select>` : (item.owner ? `<small class="text-xs text-pink-600">${item.owner.split('@')[0]}</small>` : '')}
+                                        <span class="flex-1 dark:text-gray-300 ${item.checked ? 'line-through' : ''}">${safe(item.name)}</span>
+                                        ${memberEmails.length > 1 ? `<select class="packing-owner max-w-24 p-1 text-xs rounded border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200" data-category="${key}" data-index="${index}" aria-label="Responsable de ${safe(item.name)}"><option value="">Sin asignar</option>${memberEmails.map(email => `<option value="${safe(email)}" ${item.owner === email ? 'selected' : ''}>${safe(email.split('@')[0])}</option>`).join('')}</select>` : (item.owner ? `<small class="text-xs text-pink-600">${safe(item.owner.split('@')[0])}</small>` : '')}
                                         ${!item.isDefault ? `
                                             <button
-                                                class="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition text-sm delete-item-btn"
+                                                class="text-red-500 hover:text-red-700 transition text-sm delete-item-btn"
                                                 data-category="${key}"
                                                 data-index="${index}"
                                                 title="Eliminar"
@@ -410,70 +330,18 @@ export const PreparationHandler = {
         const content = document.querySelector(`.category-content[data-category="${category}"]`);
         const arrow = document.querySelector(`.category-arrow[data-category="${category}"]`);
         
+        this.expandedPacking ||= new Set();
         if (content && arrow) {
             if (content.classList.contains('hidden')) {
+                this.expandedPacking.add(category);
                 content.classList.remove('hidden');
                 arrow.textContent = '▲';
             } else {
+                this.expandedPacking.delete(category);
                 content.classList.add('hidden');
                 arrow.textContent = '▼';
             }
         }
-    },
-
-    async toggleItem(category, index) {
-        if (this.packingList[category] && this.packingList[category][index]) {
-            this.packingList[category][index].checked = !this.packingList[category][index].checked;
-            
-            try {
-                if (!auth.currentUser) {
-                    // Sin usuario, solo guardar localmente
-                    localStorage.setItem('packingList', JSON.stringify(this.packingList));
-                    this.renderPreparation();
-                    return;
-                }
-
-                const tripId = this.getCurrentTripId();
-
-                if (!tripId) {
-                    // Modo individual
-                    const userId = auth.currentUser.uid;
-                    const packingRef = doc(db, `users/${userId}/packing`, 'list');
-                    
-                    await setDoc(packingRef, {
-                        items: this.packingList,
-                        lastUpdated: new Date().toISOString(),
-                        updatedBy: auth.currentUser.email
-                    });
-                    
-                    console.log('✅ Packing list sincronizado (individual)');
-                } else {
-                    // 🔥 Modo colaborativo
-                    const packingRef = doc(db, `trips/${tripId}/data`, 'packing');
-                    
-                    await setDoc(packingRef, {
-                        items: this.packingList,
-                        lastUpdated: new Date().toISOString(),
-                        updatedBy: auth.currentUser.email
-                    });
-                    
-                    console.log('✅ Packing list sincronizado (COMPARTIDO) por:', auth.currentUser.email);
-                }
-            } catch (error) {
-                console.error('❌ Error guardando packing list:', error);
-                // Revertir cambio si falla
-                this.packingList[category][index].checked = !this.packingList[category][index].checked;
-                this.renderPreparation();
-                window.Notifications.error('Error al sincronizar. Intenta de nuevo.');
-            }
-        }
-    },
-
-    async assignItem(category, index, owner) {
-        if (!this.packingList[category]?.[index]) return;
-        this.packingList[category][index].owner = owner || null;
-        await this.savePackingList(owner ? 'Responsable asignado' : 'Responsable removido');
-        window.Notifications?.show(owner ? `Asignado a ${owner.split('@')[0]}` : 'Tarea sin asignar', 'success');
     },
 
     getTotalItems() {
@@ -484,81 +352,6 @@ export const PreparationHandler = {
         return Object.values(this.packingList).reduce((total, items) => 
             total + items.filter(i => i.checked).length, 0
         );
-    },
-
-    async addCustomItem(category) {
-        const itemName = await window.Dialogs.prompt({
-            title: '➕ Agregar Item Personalizado',
-            message: `Ingresa el nombre del item para la categoría "${category}".`,
-            placeholder: 'Ej: Batería extra'
-        });
-        if (!itemName) return; // El usuario canceló
-
-        if (!this.packingList[category]) {
-            this.packingList[category] = [];
-        }
-
-        this.packingList[category].push({
-            name: itemName.trim(),
-            checked: false,
-            isDefault: false // Item personalizado, puede ser eliminado
-        });
-
-        await this.savePackingList('Item agregado');
-    },
-
-    async deleteCustomItem(category, index) {
-        const confirmed = await window.Dialogs.confirm({
-            title: '🗑️ ¿Eliminar Item?',
-            message: 'Esta acción no se puede deshacer. ¿Estás seguro?',
-            okText: 'Sí, eliminar',
-            isDestructive: true
-        });
-        if (!confirmed) return;
-
-        if (this.packingList[category] && this.packingList[category][index]) {
-            this.packingList[category].splice(index, 1);
-            await this.savePackingList('Item eliminado');
-        }
-    },
-
-    async savePackingList(successMessage = 'Lista guardada') {
-        try {
-            if (!auth.currentUser) {
-                // Sin usuario, solo guardar localmente
-                localStorage.setItem('packingList', JSON.stringify(this.packingList));
-                this.renderPreparation();
-                return;
-            }
-
-            const tripId = this.getCurrentTripId();
-
-            if (!tripId) {
-                // Modo individual
-                const userId = auth.currentUser.uid;
-                const packingRef = doc(db, `users/${userId}/packing`, 'list');
-
-                await setDoc(packingRef, {
-                    items: this.packingList,
-                    lastUpdated: new Date().toISOString(),
-                    updatedBy: auth.currentUser.email
-                });
-            } else {
-                // Modo colaborativo
-                const packingRef = doc(db, `trips/${tripId}/data`, 'packing');
-
-                await setDoc(packingRef, {
-                    items: this.packingList,
-                    lastUpdated: new Date().toISOString(),
-                    updatedBy: auth.currentUser.email
-                });
-            }
-
-            console.log('✅', successMessage);
-        } catch (error) {
-            console.error('❌ Error guardando packing list:', error);
-            window.Notifications.error('Error al guardar. Intenta de nuevo.');
-        }
     },
 
     attachEventListeners() {
@@ -606,19 +399,7 @@ export const PreparationHandler = {
     },
 
     // Re-inicializar cuando cambie el trip
-    reinitialize() {
-        this.initRealtimeSync();
-    },
-
-    // Cleanup
-    cleanup() {
-        if (this.unsubscribe) this.unsubscribe();
-        this.unsubscribe = null;
-        this.packingList = this.getDefaultPackingList();
-        localStorage.removeItem('packingList');
-        this.renderPreparation();
-        console.log('[PreparationHandler] 🧹 Estado de preparación limpiado.');
-    }
+    ...preparationState
 };
 
 // Exponer globalmente

@@ -1,3 +1,4 @@
+import { insertFavorite, favoriteScopeIsCurrent } from './favorite-insertion.js';
 import { itinerarySaveStatus } from '../../core/itinerary-save-status.js';
 ﻿// js/itinerary.js — VERSIÓN MEJORADA con Creación Dinámica + AI Insights Button
 
@@ -1267,7 +1268,7 @@ function saveCurrentItineraryToFirebase() {
   return queuedItinerarySave();
 }
 
-const queuedItinerarySave = createSerialTaskQueue(persistCurrentItineraryToFirebase);
+const queuedItinerarySave = createSerialTaskQueue(operation=>operation?operation():persistCurrentItineraryToFirebase());
 
 function hasActivityReservation(activityId, activityTitle) {
   return Boolean(window.ReservationsManager?.forActivity?.(activityId, activityTitle).length);
@@ -3236,6 +3237,15 @@ function mountItineraryView(container) {
 
 // --- API público del handler ---
 export const ItineraryHandler = {
+  async addFavoriteToItinerary(favorite,scope){
+    return queuedItinerarySave(async()=>{
+      const itinerary=await insertFavorite(favorite,scope);
+      if(!favoriteScopeIsCurrent(scope))return false;
+      currentItinerary=itinerary;
+      try{await render();}catch(error){console.error('Saved itinerary could not be rendered',error);}
+      return true;
+    });
+  },
   // Exponer currentItinerary y loadItinerary para que AttractionsHandler pueda acceder
   get currentItinerary() {
     return currentItinerary;

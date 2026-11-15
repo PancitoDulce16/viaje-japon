@@ -779,10 +779,12 @@ export const GroupChat = {
     if (type === 'task') {
       const preparation = window.PreparationHandler;
       if (!preparation) return window.Notifications?.warning('Preparación todavía está cargando');
-      preparation.packingList.misc ||= [];
-      preparation.packingList.misc.push({ name: messageText.slice(0, 160), checked: false, isDefault: false, sourceMessageId: messageId });
-      await preparation.savePackingList('Tarea creada desde el chat');
-      window.Notifications?.show('Tarea añadida a Preparación', 'success');
+      const scope=preparation.packingScope();
+      if(scope.tripId!==this.getCurrentTripId())return;
+      await preparation.changePacking(scope,list=>{
+        if(!list.misc.some(item=>item.sourceMessageId===messageId))list.misc.push({id:`chat_${messageId}`,name:messageText.slice(0,160),checked:false,isDefault:false,sourceMessageId:messageId});
+        return list;
+      },'Tarea creada desde el chat');
     }
   },
 

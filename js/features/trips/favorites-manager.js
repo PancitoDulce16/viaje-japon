@@ -1,3 +1,4 @@
+import { shoppingText as safe } from './shopping-state.js';
 ﻿// js/favorites-manager.js - Sistema de favoritos para atracciones y lugares
 
 import { db, auth } from '../../core/firebase-config.js';
@@ -181,7 +182,7 @@ export const FavoritesManager = {
   },
 
   // Guardar favoritos
-  async saveFavorites() { return this.mutateFavorite(() => [...this.favorites]); },
+
 
   // Actualizar UI de favoritos
   updateFavoritesUI() {
@@ -246,7 +247,7 @@ export const FavoritesManager = {
       }
       acc[fav.city].push(fav);
       return acc;
-    }, {});
+    }, Object.create(null));
 
     container.innerHTML = `
       <div class="space-y-6">
@@ -259,41 +260,41 @@ export const FavoritesManager = {
         ${Object.entries(byCity).map(([city, cityFavorites]) => `
           <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg">
             <h4 class="text-lg font-bold dark:text-white mb-4 flex items-center gap-2">
-              📍 ${city}
+              📍 ${safe(city)}
               <span class="text-sm font-normal text-gray-500 dark:text-gray-400">(${cityFavorites.length})</span>
             </h4>
             <div class="space-y-3">
               ${cityFavorites.map(fav => `
-                <div class="flex items-center gap-3 p-3 rounded-lg border-2 border-purple-200 dark:border-purple-800 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition group">
-                  <div class="text-3xl">${fav.icon}</div>
-                  <div class="flex-1">
-                    <h5 class="font-semibold dark:text-white">${fav.name}</h5>
-                    ${fav.description ? `<p class="text-sm text-gray-600 dark:text-gray-400">${fav.description}</p>` : ''}
+                <div class="flex flex-wrap items-center gap-3 p-3 rounded-lg border-2 border-purple-200 dark:border-purple-800 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition group">
+                  <div class="text-3xl">${safe(fav.icon)}</div>
+                  <div class="flex-1 min-w-0 break-words">
+                    <h5 class="font-semibold dark:text-white">${safe(fav.name)}</h5>
+                    ${fav.description ? `<p class="text-sm text-gray-600 dark:text-gray-400">${safe(fav.description)}</p>` : ''}
                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      ${fav.category} • Agregado ${new Date(fav.addedAt).toLocaleDateString('es')}
+                      ${safe(fav.category)} • Agregado ${new Date(fav.addedAt).toLocaleDateString('es')}
                     </p>
                   </div>
-                  <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                    ${fav.lat && fav.lng ? `
+                  <div class="flex flex-wrap gap-2 transition">
+                    ${fav.lat!=null && fav.lng!=null && Number.isFinite(Number(fav.lat)) && Number.isFinite(Number(fav.lng)) ? `
                       <button
-                        onclick="FavoritesManager.showOnMap(${fav.lat}, ${fav.lng})"
+                        data-favorite-action="map" data-favorite-id="${safe(fav.id)}"
                         class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition"
-                        title="Ver en mapa"
+                        title="Ver en mapa" aria-label="Ver en mapa"
                       >
                         🗺️
                       </button>
                     ` : ''}
                     <button
-                      onclick="FavoritesManager.addToItinerary('${fav.name.replace(/'/g, "\\'")}', '${fav.city}')"
+                      data-favorite-action="add" data-favorite-id="${safe(fav.id)}"
                       class="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition"
-                      title="Agregar al itinerario"
+                      title="Agregar al itinerario" aria-label="Agregar al itinerario"
                     >
                       ➕
                     </button>
                     <button
-                      onclick="FavoritesManager.removeFavorite('${fav.id}')"
+                      data-favorite-action="remove" data-favorite-id="${safe(fav.id)}"
                       class="bg-red-500 text-white p-2 rounded-lg hover:bg-red-600 transition"
-                      title="Remover"
+                      title="Remover" aria-label="Remover"
                     >
                       🗑️
                     </button>
@@ -312,14 +313,20 @@ export const FavoritesManager = {
         </button>
       </div>
     `;
+    container.querySelectorAll('[data-favorite-action]').forEach(button=>button.addEventListener('click',()=>{
+      const favorite=this.favorites.find(item=>item.id===button.dataset.favoriteId);if(!favorite)return;
+      const action=button.dataset.favoriteAction;
+      if(action==='map')this.showOnMap(Number(favorite.lat),Number(favorite.lng));
+      if(action==='remove')this.removeFavorite(favorite.id);
+      if(action==='add')this.addToItinerary(favorite.id);
+    }));
   },
 
   // Mostrar en mapa
   showOnMap(lat, lng) {
     // Cambiar a tab de mapa
-    if (window.AppCore) {
-      window.AppCore.switchTab('map');
-    }
+    if(window.DashboardApp)window.DashboardApp.switchTab('map');
+    else window.AppCore?.switchTab('map');
 
     // Centrar mapa
     if (window.MapHandler && window.MapHandler.map) {
@@ -335,40 +342,28 @@ export const FavoritesManager = {
   },
 
   // Agregar al itinerario
-  async addToItinerary(placeName, city) {
-    try {
-      const { ItineraryHandler } = await import('../itinerary/itinerary-v3.js');
-
-      const currentTripId = window.TripsManager?.currentTripId;
-
-      if (!currentTripId) {
-        if (window.Notifications) {
-          window.Notifications.warning('⚠️ Por favor selecciona un viaje primero');
-        }
-        return;
-      }
-
-      const activity = {
-        time: '10:00',
-        activity: `Visitar ${placeName}`,
-        location: placeName,
-        notes: `📍 ${city}`
-      };
-
-      if (window.Notifications) {
-        window.Notifications.success(`✅ "${placeName}" listo para agregar al itinerario`);
-      }
-
-      // Cambiar a tab de itinerario
-      if (window.AppCore) {
-        window.AppCore.switchTab('itinerary');
-      }
-    } catch (error) {
-      console.error('Error agregando al itinerario:', error);
-      if (window.Notifications) {
-        window.Notifications.error('❌ Error al agregar al itinerario');
-      }
-    }
+  async addToItinerary(id,city){
+    const favorite=this.favorites.find(item=>item.id===id)||(city?this.favorites.find(item=>item.name===id&&item.city===city):null);
+    const scope=this.scope();
+    if(!favorite||!scope.uid||!scope.tripId){window.Notifications?.error('Selecciona un viaje con itinerario.');return false;}
+    this.pendingInsertions ||= new Set();const key=JSON.stringify([scope.uid,scope.tripId,favorite.id]);if(this.pendingInsertions.has(key))return false;
+    this.pendingInsertions.add(key);
+    try{
+      const handler=window.ItineraryHandler||(await import('../itinerary/itinerary-v3.js')).ItineraryHandler;
+      if(!this.sameScope(scope))return false;
+      const days=handler.currentItinerary?.days?.filter(day=>day&&Number.isSafeInteger(Number(day.day))&&Number(day.day)>0);
+      if(!Array.isArray(days)||!days.length)throw new Error('Abre o crea el itinerario del viaje primero.');
+      const selected=await window.Dialogs.prompt({title:'Agregar al itinerario',message:`Elige el n\u00famero de d\u00eda (${days.map(day=>Number(day.day)).join(', ')}).`,placeholder:String(handler.__getCurrentDay?.()||days[0].day),inputType:'number'});
+      if(selected==null||String(selected).trim()==='')return false;
+      const day=Number(selected);if(!Number.isSafeInteger(day)||!days.some(item=>Number(item.day)===day))throw new Error('Selecciona un d\u00eda existente.');
+      if(!this.sameScope(scope))return false;
+      const saved=await handler.addFavoriteToItinerary({...favorite},{...scope,day});
+      if(!saved||!this.sameScope(scope))return false;
+      window.Notifications?.success('Lugar guardado en el itinerario.');
+      document.getElementById('modal-favorites')?.classList.remove('active');document.body.style.overflow='';
+      window.DashboardApp?.switchTab('itinerary');return true;
+    }catch(error){if(this.sameScope(scope))window.Notifications?.error(error.message||'No se pudo guardar el lugar.');return false;}
+    finally{this.pendingInsertions.delete(key);}
   },
 
   // Exportar favoritos

@@ -1,3 +1,5 @@
+import { shoppingState, shoppingText as safe } from './shopping-state.js';
+import { enhanceDialog } from '../../ui/dialog-a11y.js';
 ﻿// js/shopping-tracker.js - Sistema de seguimiento de compras para viajes
 
 /**
@@ -44,159 +46,11 @@ export const ShoppingTracker = {
   /**
    * Inicializa el tracker para un trip específico
    */
-  async init(tripId) {
-    this.currentTripId = tripId;
-    await this.loadShoppingList();
-    console.log('✅ Shopping Tracker iniciado para trip:', tripId);
-  },
+  ...shoppingState,
 
-  /**
-   * Carga la lista de compras desde Firestore
-   */
-  async loadShoppingList() {
-    if (!this.currentTripId) return;
-
-    try {
-      const { doc, getDoc } = await import('firebase/firestore');
-      const db = window.db;
-
-      const shoppingRef = doc(db, 'trips', this.currentTripId, 'data', 'shopping');
-      const shoppingDoc = await getDoc(shoppingRef);
-
-      if (shoppingDoc.exists()) {
-        this.shoppingList = shoppingDoc.data().items || [];
-        console.log('📦 Lista de compras cargada:', this.shoppingList.length, 'items');
-      } else {
-        this.shoppingList = [];
-      }
-    } catch (error) {
-      console.error('❌ Error cargando lista de compras:', error);
-      this.shoppingList = [];
-    }
-  },
-
-  /**
-   * Guarda la lista de compras en Firestore
-   */
-  async saveShoppingList() {
-    if (!this.currentTripId) return;
-
-    try {
-      const { doc, setDoc } = await import('firebase/firestore');
-      const db = window.db;
-
-      const shoppingRef = doc(db, 'trips', this.currentTripId, 'data', 'shopping');
-      await setDoc(shoppingRef, {
-        items: this.shoppingList,
-        lastUpdated: new Date().toISOString()
-      });
-
-      console.log('💾 Lista de compras guardada');
-    } catch (error) {
-      console.error('❌ Error guardando lista de compras:', error);
-    }
-  },
-
-  /**
-   * Agrega un item a la lista de compras
-   */
-  async addItem(itemData) {
-    const newItem = {
-      id: `shop_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: itemData.name,
-      category: itemData.category || 'other',
-      store: itemData.store || null,
-      estimatedPrice: itemData.estimatedPrice || 0,
-      actualPrice: null,
-      priority: itemData.priority || 'medium', // low, medium, high
-      status: 'pending', // pending, purchased, skipped
-      notes: itemData.notes || '',
-      plannedDay: itemData.plannedDay || null,
-      purchasedDate: null,
-      weight: itemData.weight || 0, // en kg para logística
-      quantity: itemData.quantity || 1,
-      createdAt: new Date().toISOString()
-    };
-
-    this.shoppingList.push(newItem);
-    await this.saveShoppingList();
-
-    window.Notifications?.show(`✅ "${newItem.name}" agregado a la lista`, 'success');
-    this.renderShoppingTracker();
-
-    return newItem.id;
-  },
-
-  /**
-   * Marca un item como comprado
-   */
-  async markAsPurchased(itemId, actualPrice) {
-    const item = this.shoppingList.find(i => i.id === itemId);
-    if (!item) return;
-
-    item.status = 'purchased';
-    item.actualPrice = actualPrice || item.estimatedPrice;
-    item.purchasedDate = new Date().toISOString();
-
-    await this.saveShoppingList();
-    window.Notifications?.show(`✅ "${item.name}" marcado como comprado`, 'success');
-    this.renderShoppingTracker();
-  },
-
-  /**
-   * Elimina un item de la lista
-   */
-  async deleteItem(itemId) {
-    const itemIndex = this.shoppingList.findIndex(i => i.id === itemId);
-    if (itemIndex === -1) return;
-
-    const item = this.shoppingList[itemIndex];
-    this.shoppingList.splice(itemIndex, 1);
-
-    await this.saveShoppingList();
-    window.Notifications?.show(`🗑️ "${item.name}" eliminado`, 'info');
-    this.renderShoppingTracker();
-  },
-
-  /**
-   * Edita un item existente
-   */
-  async editItem(itemId, updatedData) {
-    const item = this.shoppingList.find(i => i.id === itemId);
-    if (!item) return;
-
-    Object.assign(item, updatedData);
-    await this.saveShoppingList();
-
-    window.Notifications?.show(`✅ "${item.name}" actualizado`, 'success');
-    this.renderShoppingTracker();
-  },
-
-  /**
-   * Calcula estadísticas de compras
-   */
-  getStats() {
-    const stats = {
-      total: this.shoppingList.length,
-      pending: this.shoppingList.filter(i => i.status === 'pending').length,
-      purchased: this.shoppingList.filter(i => i.status === 'purchased').length,
-      skipped: this.shoppingList.filter(i => i.status === 'skipped').length,
-      totalEstimated: this.shoppingList.reduce((sum, i) => sum + (i.estimatedPrice * i.quantity), 0),
-      totalActual: this.shoppingList
-        .filter(i => i.status === 'purchased')
-        .reduce((sum, i) => sum + (i.actualPrice || i.estimatedPrice), 0),
-      totalWeight: this.shoppingList
-        .filter(i => i.status === 'purchased')
-        .reduce((sum, i) => sum + (i.weight * i.quantity), 0)
-    };
-
-    return stats;
-  },
-
-  /**
-   * Abre el modal del Shopping Tracker
-   */
   open() {
+    const tripId=window.TripsManager?.currentTrip?.id;
+    if(tripId!==this.currentTripId)this.init(tripId);
     this.renderShoppingTracker();
   },
 
@@ -211,7 +65,7 @@ export const ShoppingTracker = {
     const stats = this.getStats();
 
     const modalHTML = `
-      <div id="shoppingTrackerModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div id="shoppingTrackerModal" class="fixed inset-0 z-[10001] flex items-center justify-center bg-black/60 backdrop-blur-sm">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
 
           <!-- Header -->
@@ -229,7 +83,7 @@ export const ShoppingTracker = {
             </div>
 
             <!-- Stats Bar -->
-            <div class="mt-4 grid grid-cols-4 gap-3">
+            <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div class="bg-white/10 backdrop-blur rounded-lg p-3">
                 <div class="text-xs text-purple-100">Total Items</div>
                 <div class="text-2xl font-bold">${stats.total}</div>
@@ -243,7 +97,7 @@ export const ShoppingTracker = {
                 <div class="text-lg font-bold">¥${stats.totalEstimated.toLocaleString()}</div>
               </div>
               <div class="bg-white/10 backdrop-blur rounded-lg p-3">
-                <div class="text-xs text-purple-100">Gastado</div>
+                <div class="text-xs text-purple-100">Gastado registrado</div>
                 <div class="text-lg font-bold text-yellow-300">¥${stats.totalActual.toLocaleString()}</div>
               </div>
             </div>
@@ -258,7 +112,8 @@ export const ShoppingTracker = {
           </div>
 
           <!-- Shopping List -->
-          <div class="flex-1 overflow-y-auto p-6">
+          <div class="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6">
+            ${stats.missingActual ? `<p role="status">${stats.missingActual} compras sin precio real registrado.</p>` : ""}
             ${this.renderShoppingList()}
           </div>
 
@@ -275,12 +130,18 @@ export const ShoppingTracker = {
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+    const modal=document.getElementById('shoppingTrackerModal');
+    modal.addEventListener('click',event=>{const button=event.target.closest('[data-shopping-action]');if(!button)return;const id=button.dataset.shoppingId;({purchase:()=>this.showPurchaseDialog(id),edit:()=>this.editItem(id),delete:()=>this.deleteItem(id)})[button.dataset.shoppingAction]?.();});
+    enhanceDialog(modal,{onClose:()=>this.close()});
   },
 
   /**
    * Renderiza la lista de items
    */
   renderShoppingList() {
+    if(this.loadState==='loading')return '<p role="status">Cargando compras...</p>';
+    if(this.loadState==='error')return '<p role="alert">No se pudieron cargar las compras.</p><button onclick="window.ShoppingTracker.loadShoppingList()">Reintentar</button>';
+
     if (this.shoppingList.length === 0) {
       return `
         <div class="text-center py-12">
@@ -330,6 +191,7 @@ export const ShoppingTracker = {
    * Renderiza un item individual
    */
   renderShoppingItem(item) {
+    item=this.normalizeItem(item);if(!item)return "";
     const category = this.CATEGORIES[item.category];
     const isPurchased = item.status === 'purchased';
     const isSkipped = item.status === 'skipped';
@@ -342,12 +204,12 @@ export const ShoppingTracker = {
 
     return `
       <div class="border-2 ${isPurchased ? 'border-green-300 bg-green-50 dark:bg-green-900/20' : isSkipped ? 'border-gray-300 bg-gray-50 dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'} rounded-xl p-4 hover:shadow-lg transition">
-        <div class="flex items-start justify-between">
+        <div class="flex flex-wrap items-start justify-between gap-2">
           <!-- Item Info -->
           <div class="flex-1">
             <div class="flex items-center gap-2 mb-2">
               <h4 class="text-lg font-bold text-gray-900 dark:text-white ${isPurchased ? 'line-through' : ''}">
-                ${item.name}
+                ${safe(item.name)}
               </h4>
               ${isPurchased ? '<span class="text-xl">✅</span>' : ''}
               ${isSkipped ? '<span class="text-xl">⏭️</span>' : ''}
@@ -360,7 +222,7 @@ export const ShoppingTracker = {
 
               ${item.store ? `
                 <span class="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full text-xs">
-                  📍 ${this.STORES[item.store]?.name || item.store}
+                  📍 ${safe(this.STORES[item.store]?.name || item.store)}
                 </span>
               ` : ''}
 
@@ -372,16 +234,16 @@ export const ShoppingTracker = {
             </div>
 
             ${item.notes ? `
-              <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${item.notes}</p>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${safe(item.notes)}</p>
             ` : ''}
 
-            <div class="flex items-center gap-4 text-sm">
+            <div class="flex flex-wrap items-center gap-4 text-sm">
               <span class="text-gray-700 dark:text-gray-300">
                 💰 Estimado: <strong>¥${(item.estimatedPrice * item.quantity).toLocaleString()}</strong>
               </span>
               ${isPurchased ? `
                 <span class="text-green-700 dark:text-green-300">
-                  ✅ Real: <strong>¥${item.actualPrice.toLocaleString()}</strong>
+                  ✅ Real: <strong>¥${item.actualPrice===null ? "Sin registrar" : (item.actualPrice*item.quantity).toLocaleString()}</strong>
                 </span>
               ` : ''}
               ${item.weight > 0 ? `
@@ -395,16 +257,16 @@ export const ShoppingTracker = {
           <!-- Actions -->
           <div class="flex flex-col gap-2 ml-4">
             ${!isPurchased && !isSkipped ? `
-              <button onclick="window.ShoppingTracker.showPurchaseDialog('${item.id}')"
+              <button data-shopping-action="purchase" data-shopping-id="${safe(item.id)}"
                       class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition">
                 ✅ Comprado
               </button>
-              <button onclick="window.ShoppingTracker.editItem('${item.id}')"
+              <button data-shopping-action="edit" data-shopping-id="${safe(item.id)}"
                       class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition">
                 ✏️ Editar
               </button>
             ` : ''}
-            <button onclick="window.ShoppingTracker.deleteItem('${item.id}')"
+            <button data-shopping-action="delete" data-shopping-id="${safe(item.id)}"
                     class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition">
               🗑️
             </button>
@@ -417,9 +279,12 @@ export const ShoppingTracker = {
   /**
    * Muestra el formulario para agregar un item
    */
-  showAddItemForm() {
+  showAddItemForm(editId=null) {
+    const context=this.context();if(!this.isCurrent(context)||this.loadState!=='ready')return;
+    const item=editId?this.shoppingList.find(row=>row.id===editId):null;if(editId&&!item)return;
+    document.getElementById('addItemForm')?.remove();
     const formHTML = `
-      <div id="addItemForm" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div id="addItemForm" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black/70 backdrop-blur-sm">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
 
           <div class="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
@@ -432,7 +297,7 @@ export const ShoppingTracker = {
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Nombre del producto <span class="text-red-500">*</span>
               </label>
-              <input type="text" id="itemName"
+              <input type="text" id="itemName" maxlength="160"
                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                      placeholder="Ej: Nintendo Switch">
             </div>
@@ -466,16 +331,16 @@ export const ShoppingTracker = {
             <div class="grid grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Precio estimado (JPY)
+                  Precio estimado por unidad (JPY)
                 </label>
-                <input type="number" id="itemPrice" value="0" min="0" step="100"
+                <input type="number" id="itemPrice" value="0" min="0" step="1"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
               </div>
               <div>
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Cantidad
                 </label>
-                <input type="number" id="itemQuantity" value="1" min="1"
+                <input type="number" id="itemQuantity" value="1" min="1" max="999" step="1"
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
               </div>
             </div>
@@ -506,7 +371,7 @@ export const ShoppingTracker = {
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Notas (opcional)
               </label>
-              <textarea id="itemNotes" rows="2"
+              <textarea id="itemNotes" maxlength="2000" rows="2"
                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
                         placeholder="Ej: Comprar en oferta, tax-free"></textarea>
             </div>
@@ -528,67 +393,44 @@ export const ShoppingTracker = {
     `;
 
     document.body.insertAdjacentHTML('beforeend', formHTML);
+    const form=document.getElementById('addItemForm');form.shoppingContext=context;form.shoppingItem=item?{...item}:null;
+    if(item){form.querySelector('h2').textContent='Editar art\u00edculo';form.querySelector('button').textContent='Guardar cambios';
+      for(const [field,key] of Object.entries({itemName:'name',itemCategory:'category',itemStore:'store',itemPrice:'estimatedPrice',itemQuantity:'quantity',itemPriority:'priority',itemWeight:'weight',itemNotes:'notes'})){
+        const input=form.querySelector('#'+field);if(key==='store'&&item.store&&!this.STORES[item.store])input.add(new Option(item.store,item.store));input.value=item[key]??'';
+      }
+    }
+    form.querySelectorAll('input,select,textarea').forEach(input=>{const label=input.parentElement.querySelector('label');if(label)label.htmlFor=input.id;});
+    enhanceDialog(form,{onClose:()=>{if(!form.saving)form.remove();}});
   },
 
   /**
    * Guarda un nuevo item desde el formulario
    */
-  saveNewItem() {
-    const name = document.getElementById('itemName')?.value.trim();
-    const category = document.getElementById('itemCategory')?.value;
-    const store = document.getElementById('itemStore')?.value || null;
-    const price = parseFloat(document.getElementById('itemPrice')?.value) || 0;
-    const quantity = parseInt(document.getElementById('itemQuantity')?.value) || 1;
-    const priority = document.getElementById('itemPriority')?.value || 'medium';
-    const weight = parseFloat(document.getElementById('itemWeight')?.value) || 0;
-    const notes = document.getElementById('itemNotes')?.value.trim();
-
-    if (!name) {
-      window.Notifications?.show('❌ El nombre es obligatorio', 'error');
-      return;
-    }
-
-    this.addItem({
-      name,
-      category,
-      store,
-      estimatedPrice: price,
-      quantity,
-      priority,
-      weight,
-      notes
-    });
-
-    // Cerrar formulario
-    document.getElementById('addItemForm')?.remove();
-  },
-
-  /**
-   * Muestra diálogo para marcar como comprado
-   */
   showPurchaseDialog(itemId) {
+    const context=this.context();if(!this.isCurrent(context))return;
+    document.getElementById("purchaseDialog")?.remove();
     const item = this.shoppingList.find(i => i.id === itemId);
     if (!item) return;
 
     const dialogHTML = `
-      <div id="purchaseDialog" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div id="purchaseDialog" class="fixed inset-0 z-[10002] flex items-center justify-center bg-black/70 backdrop-blur-sm">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6">
           <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
             ✅ Marcar como comprado
           </h3>
 
           <p class="text-gray-700 dark:text-gray-300 mb-4">
-            <strong>${item.name}</strong>
+            <strong>${safe(item.name)}</strong>
           </p>
 
           <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Precio real (JPY)
+            Precio real por unidad (JPY)
           </label>
-          <input type="number" id="actualPrice" value="${item.estimatedPrice}" min="0" step="100"
+          <input type="number" id="actualPrice" value="${item.estimatedPrice}" min="0" step="1"
                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white mb-4">
 
           <div class="flex gap-3">
-            <button onclick="window.ShoppingTracker.confirmPurchase('${itemId}')"
+            <button data-confirm-purchase
                     class="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition">
               ✅ Confirmar
             </button>
@@ -602,19 +444,14 @@ export const ShoppingTracker = {
     `;
 
     document.body.insertAdjacentHTML('beforeend', dialogHTML);
+    const dialog=document.getElementById('purchaseDialog');dialog.shoppingContext=context;
+    dialog.querySelector('[data-confirm-purchase]').onclick=()=>this.confirmPurchase(itemId);
+    dialog.querySelector('label').htmlFor='actualPrice';
+    enhanceDialog(dialog,{onClose:()=>{if(!dialog.saving)dialog.remove();}});
   },
 
   /**
    * Confirma la compra con el precio real
-   */
-  confirmPurchase(itemId) {
-    const actualPrice = parseFloat(document.getElementById('actualPrice')?.value) || 0;
-    this.markAsPurchased(itemId, actualPrice);
-    document.getElementById('purchaseDialog')?.remove();
-  },
-
-  /**
-   * Cierra el modal del tracker
    */
   close() {
     const modal = document.getElementById('shoppingTrackerModal');
@@ -624,6 +461,8 @@ export const ShoppingTracker = {
 
 // Exportar globalmente
 window.ShoppingTracker = ShoppingTracker;
+window.addEventListener('tripSelected',event=>ShoppingTracker.init(event.detail?.trip?.id||null));
+window.addEventListener('auth:loggedOut',()=>ShoppingTracker.init(null));
 
 console.log('✅ Shopping Tracker cargado');
 

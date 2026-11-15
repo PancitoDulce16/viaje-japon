@@ -105,3 +105,33 @@ Estos hallazgos permanecen abiertos; las comprobaciones generales aprobadas no l
 | Offline | Arranque sin red, cambios pendientes, reconexión y recuperación sin pérdida de datos |
 
 Las comprobaciones locales usan datos de prueba y simulaciones cuando el flujo requiere identidad o escritura. El despliegue y los servicios reales no quedan certificados por estas pruebas.
+
+
+## 15 de noviembre: compras, preparacion y favoritos (lista de 20 fixes)
+
+Se repararon los fallos solicitados sin redisenar las pantallas:
+
+1. Formularios de compras ligados al viaje y usuario originales.
+2. Lecturas atrasadas descartadas al cambiar viaje, repetir carga o confirmar una escritura.
+3. Exito de compras solamente despues de la confirmacion de Firestore.
+4. Sin mutaciones optimistas que permanezcan como guardadas tras un fallo.
+5. Formulario y valores conservados para reintentar.
+6. Bloqueo de doble envio mientras se guarda.
+7. Transacciones sobre la lista remota para conservar cambios compartidos.
+8. Boton Editar conectado al formulario completo; solo guarda los campos modificados.
+9. Precio real cero conservado.
+10. Totales reales multiplicados por cantidad y precios identificados por unidad; precios desconocidos no cuentan como compras gratis.
+11. Cantidades enteras, JPY enteros, peso y precios finitos no negativos validados.
+12. Filas incompletas normalizadas para mostrarlas; una raiz corrupta muestra error y permite reintentar, sin sobrescribirla.
+13. Compras con texto escapado y acciones por atributos de datos, sin JavaScript interpolado.
+14. Cache de Preparacion separado por cuenta y viaje; el cache global antiguo no se asigna a otra cuenta.
+15. Suscripciones de Preparacion descartan resultados de sesiones anteriores.
+16. Borrado por identidad del articulo capturada antes del dialogo, sin reutilizar indices tras confirmarlo. Los articulos antiguos reciben identidades deterministas que se persisten al escribir.
+17. Dialogos de articulos nuevos conservan el contexto original.
+18. Asignaciones y casillas se confirman por transaccion; errores conservan el estado previo. Nombres de articulos nuevos conservados para reintentar. La conversion de chat a tarea usa el mismo guardado y evita duplicados por mensaje.
+19. Favoritos se insertan realmente en el dia elegido del documento de itinerario, mediante transaccion y la cola de guardados existente. Sin itinerario o con dia invalido se informa el error.
+20. Favoritos escapan nombre, ciudad, descripcion, icono, categoria e identificadores. Acciones sin codigo interpolado, visibles al tacto; coordenadas cero aceptadas.
+
+Validacion: pruebas nuevas `shopping-preparation-repairs.test.mjs`, `favorite-insertion.test.mjs` y navegador `shopping-preparation-repairs.spec.mjs` (390/1440 px, claro/oscuro), ademas de suites existentes y compilacion. Las pruebas usan contextos aislados y errores simulados: no modifican datos privados de usuarios. Capturas de revision en `artifacts/repair-{shopping,preparation}-*.png` (no versionadas). Los originales visuales siguen ausentes localmente, como documenta `docs/design/references/README.md`; se conserva la implementacion visual existente. La confirmacion remota del despliegue se registra al finalizar.
+
+Resultado local: `npm test`, `npm run validate`, `npm run build`, `npm run test:build` y `npm run test:production` aprobados. La bateria de navegador completo ejecuto 144 casos: 142 aprobados y dos interrumpidos mientras Vite recargaba por ediciones activas. Reejecutados sin editar fuentes los 20 casos de documentos, estabilidad movil y compras/preparacion/favoritos: todos aprobados. La prueba nueva usa CSS real de Tailwind y app, texto malicioso, fallo/reintento, edicion, precio cero y persistencia real del helper de favoritos sobre almacenamiento simulado; no comprueba una cuenta Firebase real.
