@@ -20,7 +20,7 @@ Se recuperó la implementación desplegada de `onNewExpenseAdded` desde su archi
 
 Funciones publicadas explícitamente: `restoreUserBackup`, `onNewExpenseAdded` y `onTripDeleted`. Las funciones de recordatorios que solo estaban en el código local no se activaron. La función de restauración usa el bucket `japan-itin-dev.firebasestorage.app`, una instancia de ejecución por contenedor y un máximo de dos contenedores.
 
-La cuenta `github-action-1071850135@japan-itin-dev.iam.gserviceaccount.com` se identificó por el ID y la descripción del repositorio y recibió únicamente el rol adicional `roles/firebaserules.admin`. No se añadieron roles generales de administración. CI ejecuta pruebas y reglas en emuladores antes de publicar Hosting y publica reglas de Firestore/Storage cuando cambian.
+La cuenta `github-action-1071850135@japan-itin-dev.iam.gserviceaccount.com` se identificó por el ID y la descripción del repositorio y recibió los roles adicionales `roles/firebaserules.admin` y `roles/firebasestorage.viewer`. El segundo permite leer la configuración del bucket, sin permisos para leer sus objetos. No se añadieron roles generales de administración. CI ejecuta pruebas y reglas en emuladores antes de publicar Hosting y publica reglas de Firestore/Storage cuando cambian.
 
 El bucket carecía de CORS. Se aplicó `storage-cors.json` para las descargas autenticadas del navegador. Esto no cambia los permisos de lectura de objetos. Para reproducir la configuración con una sesión administradora: `gsutil cors set docs/ops/storage-cors.json gs://japan-itin-dev.firebasestorage.app`.
 

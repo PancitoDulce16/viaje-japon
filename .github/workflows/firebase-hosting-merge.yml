@@ -49,7 +49,7 @@ jobs:
       - name: Check whether rules changed
         id: rules_changes
         run: |
-          if git diff --quiet "${{ github.event.before }}" "$GITHUB_SHA" -- firestore.rules storage.rules; then
+          if git diff --quiet "${{ github.event.before }}" "$GITHUB_SHA" -- firestore.rules storage.rules .github/workflows/firebase-hosting-merge.yml; then
             echo 'changed=false' >> "$GITHUB_OUTPUT"
           else
             echo 'changed=true' >> "$GITHUB_OUTPUT"
@@ -62,4 +62,5 @@ jobs:
         run: |
           trap 'rm -f "$GOOGLE_APPLICATION_CREDENTIALS"' EXIT
           node -e "require('node:fs').writeFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS, process.env.FIREBASE_SERVICE_ACCOUNT, {mode: 0o600})"
+          node -e "const c=JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT); console.log('Rules publisher fingerprint: '+require('node:crypto').createHash('sha256').update(c.client_email).digest('hex'))"
           npx --yes firebase-tools@14.27.0 deploy --only firestore:rules,storage --project japan-itin-dev --non-interactive

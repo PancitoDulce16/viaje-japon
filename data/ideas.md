@@ -1,76 +1,76 @@
-# >‡ PLAN COMPLETO: MINI IA PARA JAPAN ITINERARY PLANNER
+# >√† PLAN COMPLETO: MINI IA PARA JAPAN ITINERARY PLANNER
 
-## <Ø OBJETIVO
+## <¬Ø OBJETIVO
 Crear una inteligencia artificial **propia** sin usar APIs externas (no ChatGPT, no Gemini).
 Todo el aprendizaje y decisiones se hacen DENTRO de la app.
 
 ---
 
-## =  NIVEL 1: MACHINE LEARNING B¡SICO (YA TENEMOS ALGO)
+## =√ä NIVEL 1: MACHINE LEARNING B√ÅSICO (YA TENEMOS ALGO)
 
 ###  1. Sistema de Aprendizaje por Refuerzo Simple
-**QuÈ hace:** La app aprende de las acciones del usuario
-**CÛmo funciona:**
-- Usuario completa/salta/edita actividades í App guarda en localStorage
-- App calcula pesos para cada categorÌa/interÈs
-- PrÛximo itinerario usa esos pesos para mejorar recomendaciones
+**Qu√© hace:** La app aprende de las acciones del usuario
+**C√≥mo funciona:**
+- Usuario completa/salta/edita actividades ‚Äô App guarda en localStorage
+- App calcula pesos para cada categor√≠a/inter√©s
+- Pr√≥ximo itinerario usa esos pesos para mejorar recomendaciones
 
 **Ya implementado en:** `smart-itinerary-generator.js:1460-1621`
 
-### <ï 2. Predictor de Preferencias (NUEVO)
-**QuÈ hace:** Predice quÈ le gustar· al usuario ANTES de que lo haga
+### <‚Ä¢ 2. Predictor de Preferencias (NUEVO)
+**Qu√© hace:** Predice qu√© le gustar√° al usuario ANTES de que lo haga
 **Algoritmo:**
 ```javascript
-// An·lisis de patrones
-if (usuario completÛ 8/10 templos) {
+// An√°lisis de patrones
+if (usuario complet√≥ 8/10 templos) {
   confianza_templos = 80%
-  prÛximo_itinerario += m·s templos
+  pr√≥ximo_itinerario += m√°s templos
 }
 
-if (usuario skipeÛ 3/3 actividades nocturnas) {
+if (usuario skipe√≥ 3/3 actividades nocturnas) {
   confianza_nightlife = 0%
-  prÛximo_itinerario -= nightlife
+  pr√≥ximo_itinerario -= nightlife
 }
 ```
 
-**ImplementaciÛn:**
+**Implementaci√≥n:**
 - Matriz de preferencias: `{ temples: 0.8, nightlife: 0.1, food: 0.9 }`
-- Se actualiza cada acciÛn del usuario
+- Se actualiza cada acci√≥n del usuario
 - Se usa para scoring de actividades
 
 ---
 
-## >Í NIVEL 2: ALGORITMOS DE OPTIMIZACI”N
+## >√™ NIVEL 2: ALGORITMOS DE OPTIMIZACI√ìN
 
-### <ï 3. Algoritmo GenÈtico para Rutas ”ptimas
-**QuÈ hace:** Encuentra la MEJOR ruta entre actividades (menos tiempo de viaje)
-**CÛmo funciona:**
+### <‚Ä¢ 3. Algoritmo Gen√©tico para Rutas √ìptimas
+**Qu√© hace:** Encuentra la MEJOR ruta entre actividades (menos tiempo de viaje)
+**C√≥mo funciona:**
 ```
-GeneraciÛn 1: 100 rutas aleatorias
-ì
-Evaluar: øCu·l minimiza tiempo de transporte?
-ì
+Generaci√≥n 1: 100 rutas aleatorias
+‚Äú
+Evaluar: ¬øCu√°l minimiza tiempo de transporte?
+‚Äú
 Seleccionar: Top 20 mejores rutas
-ì
+‚Äú
 "Reproducir": Combinar las mejores rutas
-ì
-MutaciÛn: Cambiar orden de 1-2 actividades
-ì
-GeneraciÛn 2: 100 nuevas rutas (70% mejores, 30% mutadas)
-ì
+‚Äú
+Mutaci√≥n: Cambiar orden de 1-2 actividades
+‚Äú
+Generaci√≥n 2: 100 nuevas rutas (70% mejores, 30% mutadas)
+‚Äú
 Repetir 50 generaciones
-ì
+‚Äú
 Resultado: MEJOR RUTA POSIBLE
 ```
 
 **Ventajas:**
-- Encuentra rutas que un humano no verÌa
+- Encuentra rutas que un humano no ver√≠a
 - Se ejecuta en 2-3 segundos
-- Mejora con cada generaciÛn
+- Mejora con cada generaci√≥n
 
-### <ï 4. Sistema de RecomendaciÛn Colaborativo (Sin Backend)
-**QuÈ hace:** "Usuarios como t˙ tambiÈn visitaron..."
-**CÛmo funciona SIN servidor:**
+### <‚Ä¢ 4. Sistema de Recomendaci√≥n Colaborativo (Sin Backend)
+**Qu√© hace:** "Usuarios como t√∫ tambi√©n visitaron..."
+**C√≥mo funciona SIN servidor:**
 ```javascript
 // 1. Crear "perfil" del usuario
 userProfile = {
@@ -80,14 +80,14 @@ userProfile = {
   budget_level: 'moderate'
 }
 
-// 2. Comparar con perfiles "sintÈticos" pre-calculados
+// 2. Comparar con perfiles "sint√©ticos" pre-calculados
 syntheticProfiles = {
   cultural_foodie: { similarity: 0.9, recommends: ['Fushimi Inari', 'Dotonbori'] },
   tech_enthusiast: { similarity: 0.3, recommends: ['Akihabara', 'TeamLab'] },
   ...
 }
 
-// 3. Recomendar basado en perfil m·s similar
+// 3. Recomendar basado en perfil m√°s similar
 if (similarity > 0.7) {
   suggest = syntheticProfiles[bestMatch].recommends
 }
@@ -95,40 +95,40 @@ if (similarity > 0.7) {
 
 ---
 
-## <® NIVEL 3: PROCESAMIENTO DE LENGUAJE NATURAL SIMPLE
+## <¬® NIVEL 3: PROCESAMIENTO DE LENGUAJE NATURAL SIMPLE
 
-### <ï 5. Parser de IntenciÛn (NLP B·sico)
-**QuÈ hace:** Entender comandos del usuario en lenguaje natural
+### <‚Ä¢ 5. Parser de Intenci√≥n (NLP B√°sico)
+**Qu√© hace:** Entender comandos del usuario en lenguaje natural
 **Sin usar API externa:**
 ```javascript
 // Banco de patrones
 patterns = {
-  add_cultural: /agrega.*templo|m·s.*cultura|quiero.*santuario/i,
-  make_cheaper: /m·s.*barato|reduce.*precio|econÛmico/i,
-  less_walking: /menos.*caminar|cansado|m·s.*cerca/i,
-  more_food: /m·s.*comida|hambre|restaurante/i
+  add_cultural: /agrega.*templo|m√°s.*cultura|quiero.*santuario/i,
+  make_cheaper: /m√°s.*barato|reduce.*precio|econ√≥mico/i,
+  less_walking: /menos.*caminar|cansado|m√°s.*cerca/i,
+  more_food: /m√°s.*comida|hambre|restaurante/i
 }
 
 // Analizar input del usuario
-userInput = "Agrega m·s templos al dÌa 3"
-ì
+userInput = "Agrega m√°s templos al d√≠a 3"
+‚Äú
 Match: add_cultural
-ì
+‚Äú
 Action: filterActivities(day: 3, category: 'cultural', type: 'temple')
 ```
 
 **Comandos soportados:**
-- "Hazlo m·s econÛmico"
-- "Agrega m·s tiempo para comida"
+- "Hazlo m√°s econ√≥mico"
+- "Agrega m√°s tiempo para comida"
 - "Reduce las caminatas"
-- "M·s actividades culturales"
+- "M√°s actividades culturales"
 - "Quita actividades nocturnas"
 
-### <ï 6. Generador de Descripciones Inteligentes
-**QuÈ hace:** Crea descripciones ˙nicas para cada dÌa
+### <‚Ä¢ 6. Generador de Descripciones Inteligentes
+**Qu√© hace:** Crea descripciones √∫nicas para cada d√≠a
 **Sin IA externa:**
 ```javascript
-// An·lisis del dÌa
+// An√°lisis del d√≠a
 day = {
   activities: [senso_ji, ueno_park, akihabara],
   categories: [cultural: 2, technology: 1],
@@ -138,12 +138,12 @@ day = {
 
 // Plantillas inteligentes
 templates = {
-  cultural_heavy: "DÌa lleno de historia y tradiciÛn en {area}. Visitar·s {count} lugares culturales.",
-  mixed: "DÌa equilibrado combinando {cat1} y {cat2}.",
-  food_focused: "°DÌa gastronÛmico! Explorar·s la escena culinaria de {area}."
+  cultural_heavy: "D√≠a lleno de historia y tradici√≥n en {area}. Visitar√°s {count} lugares culturales.",
+  mixed: "D√≠a equilibrado combinando {cat1} y {cat2}.",
+  food_focused: "¬°D√≠a gastron√≥mico! Explorar√°s la escena culinaria de {area}."
 }
 
-// Seleccionar template seg˙n an·lisis
+// Seleccionar template seg√∫n an√°lisis
 if (categories.cultural > 60%) {
   description = templates.cultural_heavy
     .replace('{area}', dominantArea)
@@ -153,10 +153,10 @@ if (categories.cultural > 60%) {
 
 ---
 
-## =. NIVEL 4: PREDICCI”N Y AN¡LISIS
+## =. NIVEL 4: PREDICCI√ìN Y AN√ÅLISIS
 
-### <ï 7. Predictor de EnergÌa y Burnout
-**QuÈ hace:** Predice cu·ndo el usuario se cansar·
+### <‚Ä¢ 7. Predictor de Energ√≠a y Burnout
+**Qu√© hace:** Predice cu√°ndo el usuario se cansar√°
 **Algoritmo:**
 ```javascript
 energyModel = {
@@ -174,7 +174,7 @@ if (activitiesPerDay > 6) energyLevel -= 10%
 if (walking > 15km) energyLevel -= 15%
 if (hasRestDay) energyLevel += 20%
 
-// Ajustar itinerario basado en predicciÛn
+// Ajustar itinerario basado en predicci√≥n
 if (predictedEnergy < 60%) {
   suggestLighterDay()
   addRestTime()
@@ -182,8 +182,8 @@ if (predictedEnergy < 60%) {
 }
 ```
 
-### <ï 8. Detector de AnomalÌas
-**QuÈ hace:** Detecta itinerarios "raros" o poco realistas
+### <‚Ä¢ 8. Detector de Anomal√≠as
+**Qu√© hace:** Detecta itinerarios "raros" o poco realistas
 **Ejemplos:**
 ```javascript
 anomalies = {
@@ -203,14 +203,14 @@ if (anomalies.too_much_walking) {
 
 ---
 
-## <Ø NIVEL 5: SISTEMA EXPERTO (REGLAS INTELIGENTES)
+## <¬Ø NIVEL 5: SISTEMA EXPERTO (REGLAS INTELIGENTES)
 
-### <ï 9. Motor de Decisiones Basado en Reglas
-**QuÈ hace:** Toma decisiones complejas como un experto
+### <‚Ä¢ 9. Motor de Decisiones Basado en Reglas
+**Qu√© hace:** Toma decisiones complejas como un experto
 **Reglas:**
 ```javascript
 rules = [
-  // Regla 1: DÌa lluvioso
+  // Regla 1: D√≠a lluvioso
   {
     if: weather.rain > 70%,
     then: [
@@ -219,7 +219,7 @@ rules = [
     ]
   },
 
-  // Regla 2: Grupo con niÒos
+  // Regla 2: Grupo con ni√±os
   {
     if: travelerAges.includes(age < 12),
     then: [
@@ -234,12 +234,12 @@ rules = [
     if: dailyBudget < 8000,
     then: [
       prioritize: ['free temples', 'parks', 'walking tours'],
-      suggest: '•100 shops, convenience store meals',
+      suggest: '¬•100 shops, convenience store meals',
       avoid: ['premium restaurants', 'paid attractions > 2000']
     ]
   },
 
-  // Regla 4: Primera vez en JapÛn
+  // Regla 4: Primera vez en Jap√≥n
   {
     if: userProfile.trips_to_japan == 0,
     then: [
@@ -250,8 +250,8 @@ rules = [
 ]
 ```
 
-### <ï 10. An·lisis de Compatibilidad de Actividades
-**QuÈ hace:** Determina quÈ actividades funcionan bien juntas
+### <‚Ä¢ 10. An√°lisis de Compatibilidad de Actividades
+**Qu√© hace:** Determina qu√© actividades funcionan bien juntas
 **Matriz de compatibilidad:**
 ```javascript
 compatibility = {
@@ -259,15 +259,15 @@ compatibility = {
   'temple + nightlife': 0.2,   // Baja compatibilidad
   'museum + museum': 0.4,      // Puede ser aburrido
   'food market + restaurant': 0.3, // Muy similar
-  'shopping + shopping': 0.6,  // OK si son ·reas diferentes
+  'shopping + shopping': 0.6,  // OK si son √°reas diferentes
   'cultural + nature': 0.8     // Buena variedad
 }
 
-// Usar para construir dÌas balanceados
+// Usar para construir d√≠as balanceados
 day_activities = selectActivities()
-ì
+‚Äú
 checkCompatibility()
-ì
+‚Äú
 if (compatibility_score < 0.5) {
   replaceActivity(lowest_scoring)
 }
@@ -275,39 +275,39 @@ if (compatibility_score < 0.5) {
 
 ---
 
-## =Ä NIVEL 6: FUNCIONES AVANZADAS SIN IA
+## =‚Ç¨ NIVEL 6: FUNCIONES AVANZADAS SIN IA
 
-###  11. Sistema de ExportaciÛn Multi-Formato
+###  11. Sistema de Exportaci√≥n Multi-Formato
 - **YA IMPLEMENTADO** 
 - PDF, Google Calendar, Maps, Checklist
 
 ###  12. Preview de Presupuesto Real-Time
 - **YA IMPLEMENTADO** 
-- C·lculo autom·tico + comparaciÛn con promedio
+- C√°lculo autom√°tico + comparaci√≥n con promedio
 
-### <ï 13. Regenerar Solo Un DÌa
-**QuÈ hace:** Permite regenerar un dÌa especÌfico sin perder el resto
+### <‚Ä¢ 13. Regenerar Solo Un D√≠a
+**Qu√© hace:** Permite regenerar un d√≠a espec√≠fico sin perder el resto
 **Flujo:**
 ```
-Usuario: "No me gusta el DÌa 3"
-ì
-BotÛn: "= Regenerar este dÌa"
-ì
-Opciones: "M·s cultural", "M·s econÛmico", "Menos caminata"
-ì
-Regenerar SOLO dÌa 3 con nuevos par·metros
-ì
-Mantener dÌas 1,2,4,5,6,7 intactos
+Usuario: "No me gusta el D√≠a 3"
+‚Äú
+Bot√≥n: "= Regenerar este d√≠a"
+‚Äú
+Opciones: "M√°s cultural", "M√°s econ√≥mico", "Menos caminata"
+‚Äú
+Regenerar SOLO d√≠a 3 con nuevos par√°metros
+‚Äú
+Mantener d√≠as 1,2,4,5,6,7 intactos
 ```
 
-### <ï 14. IntegraciÛn de Clima en Tiempo Real
+### <‚Ä¢ 14. Integraci√≥n de Clima en Tiempo Real
 **API:** OpenWeatherMap (gratuita)
-**QuÈ hace:**
-- Muestra pronÛstico para fechas del viaje
-- Alerta: "† Lluvia dÌa 3-4, considera actividades indoor"
-- Auto-ajusta: Si lluvia > 70%, cambia outdoor í indoor
+**Qu√© hace:**
+- Muestra pron√≥stico para fechas del viaje
+- Alerta: "¬† Lluvia d√≠a 3-4, considera actividades indoor"
+- Auto-ajusta: Si lluvia > 70%, cambia outdoor ‚Äô indoor
 
-### <ï 15. Modo Colaborativo con VotaciÛn
+### <‚Ä¢ 15. Modo Colaborativo con Votaci√≥n
 **Sin backend real-time:**
 ```javascript
 // Firebase Realtime Database (gratis)
@@ -323,59 +323,59 @@ tripVotes = {
 [=M 3] [=N 1] Visitar TeamLab Borderless
 ```
 
-### <ï 16. Tracking de Viaje en Vivo
-**QuÈ hace:** Durante el viaje, hacer check-in en actividades
+### <‚Ä¢ 16. Tracking de Viaje en Vivo
+**Qu√© hace:** Durante el viaje, hacer check-in en actividades
 **Flujo:**
 ```
 Durante el viaje:
-   "øCompletaste Senso-ji?"
-    í SÕ: +3 puntos a 'cultural'
-    í NO: øPor quÈ? (muy lejos, muy caro, no interesante)
+   "¬øCompletaste Senso-ji?"
+    ‚Äô S√ç: +3 puntos a 'cultural'
+    ‚Äô NO: ¬øPor qu√©? (muy lejos, muy caro, no interesante)
 
-  P "øTe gustÛ?" (1-5 estrellas)
-    í 5 estrellas: aumentar peso de categorÌa
-    í 1-2 estrellas: reducir peso
+  P "¬øTe gust√≥?" (1-5 estrellas)
+    ‚Äô 5 estrellas: aumentar peso de categor√≠a
+    ‚Äô 1-2 estrellas: reducir peso
 
-  =P "øCu·nto tiempo te tomÛ?"
-    í Actualizar estimaciones para futuros viajeros
+  =P "¬øCu√°nto tiempo te tom√≥?"
+    ‚Äô Actualizar estimaciones para futuros viajeros
 
-DespuÈs del viaje:
-  í Mini IA aprende de TODA la experiencia
-  í PrÛximo itinerario ser· 50% mejor
+Despu√©s del viaje:
+  ‚Äô Mini IA aprende de TODA la experiencia
+  ‚Äô Pr√≥ximo itinerario ser√° 50% mejor
 ```
 
-### <ï 17. Simulador de Ritmo Visual
-**QuÈ hace:** Muestra gr·fico de intensidad hora por hora
-**VisualizaciÛn:**
+### <‚Ä¢ 17. Simulador de Ritmo Visual
+**Qu√© hace:** Muestra gr√°fico de intensidad hora por hora
+**Visualizaci√≥n:**
 ```
-DÌa 3:
-9am  ààààààààëë (80% intensidad - Templo)
-11am àààààëëëëë (50% - JardÌn relajado)
-1pm  àààààààààà (100% - Rush hour en Shibuya)
-3pm  ààààààëëëë (60% - Shopping)
-6pm  ààààààààëë (80% - Cena en izakaya)
-9pm  àààëëëëëëë (30% - Regreso al hotel)
+D√≠a 3:
+9am  ÀÜÀÜÀÜÀÜÀÜÀÜÀÜÀÜ‚Äò‚Äò (80% intensidad - Templo)
+11am ÀÜÀÜÀÜÀÜÀÜ‚Äò‚Äò‚Äò‚Äò‚Äò (50% - Jard√≠n relajado)
+1pm  ÀÜÀÜÀÜÀÜÀÜÀÜÀÜÀÜÀÜÀÜ (100% - Rush hour en Shibuya)
+3pm  ÀÜÀÜÀÜÀÜÀÜÀÜ‚Äò‚Äò‚Äò‚Äò (60% - Shopping)
+6pm  ÀÜÀÜÀÜÀÜÀÜÀÜÀÜÀÜ‚Äò‚Äò (80% - Cena en izakaya)
+9pm  ÀÜÀÜÀÜ‚Äò‚Äò‚Äò‚Äò‚Äò‚Äò‚Äò (30% - Regreso al hotel)
 
 Total walking: 8.5km
 Energy needed: 75%
 Rest time: 2 hours
 ```
 
-### <ï 18. Comparador Side-by-Side de Variaciones
-**QuÈ hace:** Ver las 3 variaciones lado a lado
+### <‚Ä¢ 18. Comparador Side-by-Side de Variaciones
+**Qu√© hace:** Ver las 3 variaciones lado a lado
 **UI:**
 ```
                  ,                  ,                 
-  VariaciÛn A      VariaciÛn B       VariaciÛn C    
-  <≠ Cultural      <\ Foodie         ñ Balanced   
+  Variaci√≥n A      Variaci√≥n B       Variaci√≥n C    
+  <¬≠ Cultural      <\ Foodie         ‚Äì Balanced   
                  <                  <                 $
- DÌa 1:           DÌa 1:            DÌa 1:          
+ D√≠a 1:           D√≠a 1:            D√≠a 1:          
  " Senso-ji       " Tsukiji Market  " Meiji Shrine  
  " Ueno Park      " Ramen Tour      " Harajuku      
  " Museum         " Izakaya         " Shibuya       
                                                     
  Presupuesto:     Presupuesto:      Presupuesto:    
- •9,000           •12,500           •10,200         
+ ¬•9,000           ¬•12,500           ¬•10,200         
                                                     
  Caminata:        Caminata:         Caminata:       
  12km             8km               10km            
@@ -383,18 +383,18 @@ Rest time: 2 hours
 
 [Seleccionar A]  [Seleccionar B]   [Seleccionar C]
 
-       O crear hÌbrido:
+       O crear h√≠brido:
 
-[DÌa 1 de A] + [DÌa 2 de B] + [DÌa 3 de C] = VariaciÛn Personalizada
+[D√≠a 1 de A] + [D√≠a 2 de B] + [D√≠a 3 de C] = Variaci√≥n Personalizada
 ```
 
-### <ï 19. Sistema de Badges y GamificaciÛn
-**QuÈ hace:** Premios por completar objetivos
+### <‚Ä¢ 19. Sistema de Badges y Gamificaci√≥n
+**Qu√© hace:** Premios por completar objetivos
 **Badges:**
 ```javascript
 badges = {
   temple_hunter: {
-    name: "=’ Temple Hunter",
+    name: "=√ï Temple Hunter",
     description: "Visitaste 10+ templos",
     unlocked: user.temples_visited >= 10
   },
@@ -407,26 +407,26 @@ badges = {
 
   early_bird: {
     name: "< Early Bird",
-    description: "Empezaste antes de las 8am todos los dÌas",
+    description: "Empezaste antes de las 8am todos los d√≠as",
     unlocked: user.avg_start_time < 8
   },
 
   budget_master: {
-    name: "=∞ Budget Master",
+    name: "=¬∞ Budget Master",
     description: "Completaste el viaje 20% bajo presupuesto",
     unlocked: user.actual_spent < user.budget * 0.8
   },
 
   explorer: {
-    name: "=˙ Explorer",
+    name: "=√∫ Explorer",
     description: "Visitaste 3+ ciudades",
     unlocked: user.cities_visited >= 3
   }
 }
 ```
 
-### <ï 20. Detector de Multitudes (Google Places API)
-**QuÈ hace:** Evita lugares muy llenos
+### <‚Ä¢ 20. Detector de Multitudes (Google Places API)
+**Qu√© hace:** Evita lugares muy llenos
 **API:** Google Places Popular Times (gratis)
 **Flujo:**
 ```javascript
@@ -444,10 +444,10 @@ popularTimes = googlePlaces.getPopularTimes('Senso-ji')
   }
 }
 
-// RecomendaciÛn inteligente
+// Recomendaci√≥n inteligente
 if (current_plan.senso_ji_time == '10am') {
-  alert("† Senso-ji muy lleno a las 10am (90% capacidad)")
-  suggest("=° Mejor visitar a las 3pm (40% capacidad)")
+  alert("¬† Senso-ji muy lleno a las 10am (90% capacidad)")
+  suggest("=¬° Mejor visitar a las 3pm (40% capacidad)")
 
   // Auto-ajuste
   if (user_accepts) {
@@ -458,25 +458,25 @@ if (current_plan.senso_ji_time == '10am') {
 
 ---
 
-## =» ROADMAP DE IMPLEMENTACI”N
+## =√à ROADMAP DE IMPLEMENTACI√ìN
 
 ### FASE 1 (Ya completado )
-- [x] Sistema de ExportaciÛn
+- [x] Sistema de Exportaci√≥n
 - [x] Preview de Presupuesto Real-Time
 
 ### FASE 2 (Core Mini IA)
-- [ ] Predictor de Preferencias (ML b·sico)
+- [ ] Predictor de Preferencias (ML b√°sico)
 - [ ] Motor de Decisiones (Sistema Experto)
-- [ ] Detector de AnomalÌas
-- [ ] An·lisis de Compatibilidad
+- [ ] Detector de Anomal√≠as
+- [ ] An√°lisis de Compatibilidad
 
-### FASE 3 (OptimizaciÛn)
-- [ ] Algoritmo GenÈtico para Rutas
-- [ ] Predictor de EnergÌa/Burnout
-- [ ] Sistema de RecomendaciÛn Colaborativo
+### FASE 3 (Optimizaci√≥n)
+- [ ] Algoritmo Gen√©tico para Rutas
+- [ ] Predictor de Energ√≠a/Burnout
+- [ ] Sistema de Recomendaci√≥n Colaborativo
 
 ### FASE 4 (UX Avanzado)
-- [ ] Regenerar Solo Un DÌa
+- [ ] Regenerar Solo Un D√≠a
 - [ ] Clima en Tiempo Real
 - [ ] Simulador de Ritmo Visual
 - [ ] Comparador Side-by-Side
@@ -484,16 +484,16 @@ if (current_plan.senso_ji_time == '10am') {
 ### FASE 5 (Social & Tracking)
 - [ ] Modo Colaborativo
 - [ ] Tracking de Viaje en Vivo
-- [ ] Badges y GamificaciÛn
+- [ ] Badges y Gamificaci√≥n
 
-### FASE 6 (NLP B·sico)
-- [ ] Parser de IntenciÛn
+### FASE 6 (NLP B√°sico)
+- [ ] Parser de Intenci√≥n
 - [ ] Generador de Descripciones
 - [ ] Detector de Multitudes
 
 ---
 
-## <ì TECNOLOGÕAS REQUERIDAS (Todo Gratis/Local)
+## <‚Äú TECNOLOG√çAS REQUERIDAS (Todo Gratis/Local)
 
 ### Machine Learning Local
 - **TensorFlow.js** - ML en el navegador
@@ -501,12 +501,12 @@ if (current_plan.senso_ji_time == '10am') {
 - **LocalStorage** - Guardar modelos entrenados
 
 ### Algoritmos
-- JavaScript puro (no necesita librerÌas)
-- Algoritmo GenÈtico: implementaciÛn propia
+- JavaScript puro (no necesita librer√≠as)
+- Algoritmo Gen√©tico: implementaci√≥n propia
 - Sistema Experto: if/else inteligentes
 
 ### APIs Gratuitas
-- OpenWeatherMap: Clima (1000 calls/dÌa gratis)
+- OpenWeatherMap: Clima (1000 calls/d√≠a gratis)
 - Google Places: Popular Times (sin costo en basic)
 
 ### Storage
@@ -515,16 +515,16 @@ if (current_plan.senso_ji_time == '10am') {
 
 ---
 
-## =° RESULTADO FINAL
+## =¬° RESULTADO FINAL
 
 Una app que:
 1. **Aprende** de cada usuario
-2. **Predice** lo que le gustar·
-3. **Optimiza** rutas autom·ticamente
+2. **Predice** lo que le gustar√°
+3. **Optimiza** rutas autom√°ticamente
 4. **Detecta** problemas antes de que pasen
 5. **Se adapta** en tiempo real
 6. **Mejora** con cada viaje
 
 Todo sin usar ChatGPT, Gemini, o cualquier IA externa.
 
-**Es TU Mini IA, corriendo 100% en TU cÛdigo** =Ä
+**Es TU Mini IA, corriendo 100% en TU c√≥digo** =‚Ç¨
