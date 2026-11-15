@@ -12,7 +12,7 @@
     "test": "npm run test:budget && npm run test:splits && npm run test:notifications && npm run test:security && npm run test:dashboard && npm run test:reservations && npm run test:itinerary && npm run test:visual",
     "test:rules": "node tests/firestore-rules.test.mjs",
     "test:rules:emulator": "firebase emulators:exec --only firestore \"npm run test:rules\"",
-    "test:security": "node tests/security-regressions.test.mjs && node tests/service-worker.test.mjs && node tests/cache-preservation.test.mjs && node tests/chat-send-regressions.test.mjs",
+    "test:security": "node tests/security-regressions.test.mjs && node tests/service-worker.test.mjs && node tests/cache-preservation.test.mjs && node tests/chat-send-regressions.test.mjs && node tests/chat-dialog-regressions.test.mjs",
     "test:budget": "node tests/budget-module.test.mjs && node tests/multi-currency.test.mjs",
     "test:splits": "node tests/expense-split.test.mjs",
     "test:notifications": "node tests/notifications.test.mjs",

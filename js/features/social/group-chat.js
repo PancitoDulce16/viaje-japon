@@ -547,58 +547,78 @@ export const GroupChat = {
   },
 
   async sharePhoto() {
+    const context = this.captureMessageContext();
+    if (!context) return;
     const imageUrl = await window.Dialogs?.prompt({ title: 'Enviar foto', message: 'Pega el enlace público de tu foto.', placeholder: 'https://…' });
     let publicUrl = '';
     try { const parsed = new URL(imageUrl); if (['https:', 'http:'].includes(parsed.protocol)) publicUrl = parsed.href; } catch { /* invalid URL */ }
     if (!publicUrl) return imageUrl && window.Notifications?.warning('Ese enlace de foto no es válido');
     const caption = await window.Dialogs?.prompt({ title: 'Mensaje de la foto', message: 'Agrega un texto opcional.', placeholder: 'Mira esta foto…' });
-    try {
-      await addDoc(collection(db, `trips/${this.getCurrentTripId()}/chat`), {
-        message: String(caption || 'Momento del viaje').slice(0, 500), imageUrl: publicUrl,
-        userId: auth.currentUser.uid,
-        userEmail: auth.currentUser.email, userName: auth.currentUser.displayName || auth.currentUser.email.split('@')[0],
-        timestamp: serverTimestamp(), createdAt: new Date().toISOString()
-      });
-      window.Notifications?.show('Foto enviada', 'success');
-    } catch (error) {
-      console.error('Error compartiendo foto:', error);
-      window.Notifications?.error('No se pudo publicar la foto');
-    }
+    if (caption === null || caption === undefined) return;
+    return this.sendStructuredMessage({ message: String(caption || 'Momento del viaje').slice(0, 500), imageUrl: publicUrl }, context);
   },
 
   async shareAttachment() {
+    const context = this.captureMessageContext();
+    if (!context) return;
     const kind = await window.Dialogs?.prompt({ title: 'Adjuntar al chat', message: 'Escribe “audio” para una nota de voz o “archivo” para un documento.', placeholder: 'audio o archivo' });
     if (!kind) return;
     const urlValue = await window.Dialogs?.prompt({ title: kind.toLowerCase().includes('audio') ? 'Nota de voz' : 'Adjuntar archivo', message: 'Pega un enlace público HTTPS.', placeholder: 'https://…' });
     const url = this.normalizedMediaUrl(urlValue);
     if (!url) return urlValue && window.Notifications?.warning('El enlace no es válido');
     const isAudio = kind.toLowerCase().includes('audio');
-    const name = isAudio ? 'Nota de voz' : (await window.Dialogs?.prompt({ title: 'Nombre del archivo', message: '¿Cómo quieres mostrarlo?', placeholder: 'Reserva del hotel.pdf' }) || 'Archivo adjunto');
-    await this.sendStructuredMessage({ message: name, ...(isAudio ? { audioUrl: url } : { fileUrl: url, fileName: name }) });
+    let name = 'Nota de voz';
+    if (!isAudio) {
+      const answer = await window.Dialogs?.prompt({ title: 'Nombre del archivo', message: '¿Cómo quieres mostrarlo?', placeholder: 'Reserva del hotel.pdf' });
+      if (answer === null || answer === undefined) return;
+      name = answer.trim() || 'Archivo adjunto';
+    }
+    await this.sendStructuredMessage({ message: name, ...(isAudio ? { audioUrl: url } : { fileUrl: url, fileName: name }) }, context);
   },
 
   async createQuickPoll() {
+    const context = this.captureMessageContext();
+    if (!context) return;
     const question = await window.Dialogs?.prompt({ title: 'Encuesta rápida', message: 'Pregunta para el grupo.', placeholder: '¿Dónde cenamos?' });
     if (!question) return;
     const optionsValue = await window.Dialogs?.prompt({ title: 'Opciones', message: 'Sepáralas con comas (2 a 4 opciones).', placeholder: 'Ramen, Sushi, Izakaya' });
+    if (optionsValue === null || optionsValue === undefined) return;
     const options = String(optionsValue || '').split(',').map(value => value.trim()).filter(Boolean).slice(0, 4);
     if (options.length < 2) return window.Notifications?.warning('Agrega al menos dos opciones');
-    await this.sendStructuredMessage({ message: question, poll: { question: question.slice(0, 160), options } });
+    await this.sendStructuredMessage({ message: question, poll: { question: question.slice(0, 160), options } }, context);
   },
 
-  async sendStructuredMessage(extra) {
+  captureMessageContext() {
     const tripId = this.getCurrentTripId();
-    if (!tripId || !auth.currentUser) return;
+    const user = auth.currentUser;
+    return tripId && user ? { tripId, user } : null;
+  },
+
+  isMessageContextCurrent(context) {
+    return Boolean(context && context.tripId === this.getCurrentTripId() && context.user.uid === auth.currentUser?.uid);
+  },
+
+  async sendStructuredMessage(extra, context = this.captureMessageContext()) {
+    if (!this.isMessageContextCurrent(context)) return false;
+    const { tripId, user } = context;
+    const key = `${tripId}:${user.uid}`;
+    this.pendingStructuredSends ||= new Set();
+    if (this.pendingStructuredSends.has(key)) return false;
+    this.pendingStructuredSends.add(key);
     try {
       await addDoc(collection(db, `trips/${tripId}/chat`), {
-        ...extra, userId: auth.currentUser.uid, userEmail: auth.currentUser.email,
-        userName: auth.currentUser.displayName || auth.currentUser.email.split('@')[0],
+        ...extra, userId: user.uid, userEmail: user.email || '',
+        userName: user.displayName || user.email?.split('@')[0] || 'Viajero',
         timestamp: serverTimestamp(), createdAt: new Date().toISOString()
       });
-      window.Notifications?.show('Enviado al chat', 'success');
+      if (this.isMessageContextCurrent(context)) window.Notifications?.show('Enviado al chat', 'success');
+      return true;
     } catch (error) {
       console.error('Error enviando adjunto:', error);
-      window.Notifications?.error('No se pudo enviar');
+      if (this.isMessageContextCurrent(context)) window.Notifications?.error('No se pudo enviar. Podés volver a intentarlo.');
+      return false;
+    } finally {
+      this.pendingStructuredSends.delete(key);
     }
   },
 
@@ -839,6 +859,8 @@ export const GroupChat = {
   },
 
   async deleteMessage(messageId) {
+    const context = this.captureMessageContext();
+    if (!context) return;
     const confirmed = await window.Dialogs?.confirm({
       title: '🗑️ ¿Eliminar Mensaje?',
       message: '¿Estás seguro de que deseas eliminar este mensaje?',
@@ -846,17 +868,17 @@ export const GroupChat = {
       isDestructive: true
     });
 
-    if (!confirmed) return;
+    if (!confirmed || !this.isMessageContextCurrent(context)) return;
 
-    const tripId = this.getCurrentTripId();
+    const tripId = context.tripId;
     if (!tripId) return;
 
     try {
       await deleteDoc(doc(db, `trips/${tripId}/chat`, messageId));
-      window.Notifications?.show('Mensaje eliminado', 'success');
+      if (this.isMessageContextCurrent(context)) window.Notifications?.show('Mensaje eliminado', 'success');
     } catch (error) {
       console.error('❌ Error deleting message:', error);
-      window.Notifications?.error('Error al eliminar mensaje');
+      if (this.isMessageContextCurrent(context)) window.Notifications?.error('Error al eliminar mensaje');
     }
   },
 
@@ -938,16 +960,18 @@ export const GroupChat = {
   },
 
   async editMessage(messageId) {
+    const context = this.captureMessageContext();
+    if (!context) return;
     const message = this.messages.find(item => item.id === messageId);
     if (!message || (message.userId ?? message.uid) !== auth.currentUser?.uid) return;
     const edited = await window.Dialogs?.prompt({ title: 'Editar mensaje', message: 'Actualiza el texto.', placeholder: 'Mensaje', defaultValue: message.message ?? message.text ?? '' });
-    if (!edited?.trim()) return;
+    if (!edited?.trim() || !this.isMessageContextCurrent(context)) return;
     try {
-      await updateDoc(doc(db, `trips/${this.getCurrentTripId()}/chat`, messageId), { message: edited.trim().slice(0, 500), editedAt: new Date().toISOString() });
-      window.Notifications?.show('Mensaje editado', 'success');
+      await updateDoc(doc(db, `trips/${context.tripId}/chat`, messageId), { message: edited.trim().slice(0, 500), editedAt: new Date().toISOString() });
+      if (this.isMessageContextCurrent(context)) window.Notifications?.show('Mensaje editado', 'success');
     } catch (error) {
       console.error('Error editando mensaje:', error);
-      window.Notifications?.error('No se pudo editar');
+      if (this.isMessageContextCurrent(context)) window.Notifications?.error('No se pudo editar');
     }
   },
 

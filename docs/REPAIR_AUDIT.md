@@ -70,6 +70,12 @@ Validación de esta tanda: 136 casos de navegador aprobados, incluidos los recor
 
 ### Hallazgos abiertos de alta prioridad
 
+Revisión posterior a la publicación manual de reglas:
+
+- **Chat, corregido en esta tanda**: fotos, archivos y encuestas capturaban el viaje después de cerrar diálogos; cambiar de viaje o cuenta durante la captura podía dirigir la operación al contexto nuevo. Edición y eliminación tenían el mismo problema. Ahora se vinculan al contexto original y se descartan si cambia, se respetan cancelaciones, se admiten cuentas sin correo y se bloquean envíos estructurados repetidos. Regresiones específicas cubren estos casos y reintentos.
+- **Respaldo, aún abierto**: además de la autenticación antigua y la consulta incorrecta, el archivo JSON incluye indiscriminadamente localStorage (potencialmente sesión, borradores y respaldos anidados). La restauración escribe IDs existentes y puede sobrescribir viajes. La copia a la nube usa una ruta sin reglas habilitadas. Requiere una reparación completa; no confiar todavía en esta herramienta como respaldo completo.
+- **Publicación automática**: la cuenta de GitHub sigue sin permiso de reglas. Estas se comprueban en emulador en cada publicación y solo se intenta publicarlas si cambió `firestore.rules`, evitando intentos innecesarios en cambios de chat o estilos. La regla vigente de viajes ya se publicó manualmente.
+
 - **Dependencias de funciones del servidor**: auditoría separada de `functions/package-lock.json` reporta 16 dependencias afectadas (1 crítica, 4 altas, 10 moderadas, 1 baja). No están incluidas en el resultado limpio del paquete raíz. Requieren actualización y pruebas del servidor; no se aplicó una migración mayor automática dentro de la reparación del menú móvil.
 
 - **Copias de seguridad/importación (`export-import-system.js`)**: conserva referencias a `window.firebase.auth()` de la API antigua; la exportación de viajes usa una consulta y un campo de propietario que no corresponden al modelo colaborativo actual. Además, algunas rutas informan éxito aunque fallen secciones. Requiere reparar y probar exportación/restauración antes de confiar en una copia como respaldo completo.
@@ -80,7 +86,7 @@ Estos hallazgos permanecen abiertos; las comprobaciones generales aprobadas no l
 | Área | Trabajo necesario antes de declararla comprobada |
 | --- | --- |
 | Autenticación y permisos | Sesiones reales de propietario, integrante e invitado; caducidad y revocación de acceso |
-| Firebase | Reglas de pertenencia y gastos comprobadas en emulador; pendiente publicar la regla corregida y verificar Auth, Firestore y Storage con sesiones reales |
+| Firebase | Regla corregida publicada manualmente; pendientes permisos de publicación automática y verificación de Auth, Firestore y Storage con sesiones reales |
 | Datos colaborativos | Dos sesiones simultáneas, cambios de viaje, desconexión, reconexión y conflictos |
 | Publicación | Firebase está configurado para servir código fuente de forma intencional; las pruebas de `dist` no cubren por sí solas esa publicación. Ampliar la comprobación del modo publicado antes de modificar esa configuración |
 | Herramientas secundarias | Revisar diario, fotos, chat, compras, favoritos, emergencias, herramientas culturales y notificaciones de extremo a extremo |

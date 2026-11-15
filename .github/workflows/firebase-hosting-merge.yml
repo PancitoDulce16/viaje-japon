@@ -31,6 +31,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -42,7 +44,16 @@ jobs:
       - run: npm ci
       - name: Verify membership rules in the emulator
         run: npx --yes firebase-tools@14.27.0 emulators:exec --only firestore --project demo-japitin-rules "npm run test:rules"
+      - name: Check whether rules changed
+        id: rules_changes
+        run: |
+          if git diff --quiet HEAD^ HEAD -- firestore.rules; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
       - name: Deploy verified Firestore rules
+        if: steps.rules_changes.outputs.changed == 'true'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JAPAN_ITIN_DEV }}
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/japitin-firestore-service-account.json
